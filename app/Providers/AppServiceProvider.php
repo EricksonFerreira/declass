@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Booking;
 use App\Services\BookingService;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,10 +14,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(BookingService::class, function ($app) {
-            $bookingService = new BookingService(new Booking());
-            return $bookingService;
-        });
+        Paginator::useBootstrapFour();
+
+        // $this->app->singleton(BookingService::class, function ($app) {
+        //     $bookingService = new BookingService(new Booking());
+        //     return $bookingService;
+        // });
     }
 
     /**

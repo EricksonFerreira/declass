@@ -336,7 +336,17 @@ return [
 
                 [
                     'text' => 'sidebar.usuario',
-                    'url' => 'admin/settings',
+                    'url' => 'usuario',
+                    'icon' => 'fas fa-fw fa-user',
+                ],
+                [
+                    'text' => 'sidebar.regra',
+                    'url' => 'regra',
+                    'icon' => 'fas fa-fw fa-user',
+                ],
+                [
+                    'text' => 'sidebar.permissao',
+                    'url' => 'permissao',
                     'icon' => 'fas fa-fw fa-user',
                 ],
                 [

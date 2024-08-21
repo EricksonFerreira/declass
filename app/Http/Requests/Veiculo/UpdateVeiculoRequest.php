@@ -1,0 +1,98 @@
+<?php
+
+namespace App\Http\Requests\Veiculo;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class UpdateVeiculoRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     */
+    public function authorize(): bool
+    {
+        return true;
+    }
+
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     */
+    public function rules(): array
+    {
+        return [
+            'status_veiculo_id' => 'required|string|max:2',
+            'ano_fabricacao' => 'required|integer|min:1900|max:' . date('Y'),
+            'ano_modelo' => 'required|integer|min:1900|max:' . (date('Y') + 1),
+            'placa_licenca' => 'required|string|max:10',
+            'chassi' => 'required|string|max:17',
+            'renavam' => 'required|string|max:11',
+            'cor' => 'required|string|max:50',
+            'numero_motor' => 'required|string|max:50',
+            'data_placa_licenca' => 'required|date',
+            'data_compra' => 'required|date',
+            'data_validade' => 'required|date',
+            'data_proxima_manutencao' => 'required|date',
+            'data_proxima_inspecao' => 'required|date',
+            'data_vendido' => 'nullable|date',
+            'kms' => 'required|integer|min:0',
+            'limite_kms' => 'required|integer|min:0',
+            'proxima_revisao_kms' => 'required|integer|min:0',
+            'proxima_manutencao_kms' => 'required|integer|min:0',
+            'vendido' => 'required|string|in:N,S',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'status_veiculo_id.required' => 'O campo status é obrigatório',
+            'status_veiculo_id.max' => 'O campo status deve ter no máximo 1 caractere',
+            'ano_fabricacao.required' => 'O campo ano de fabricação é obrigatório',
+            'ano_fabricacao.integer' => 'O campo ano de fabricação deve ser um número inteiro',
+            'ano_fabricacao.min' => 'O campo ano de fabricação deve ser no mínimo 1900',
+            'ano_fabricacao.max' => 'O campo ano de fabricação deve ser no máximo o ano atual',
+            'ano_modelo.required' => 'O campo ano do modelo é obrigatório',
+            'ano_modelo.integer' => 'O campo ano do modelo deve ser um número inteiro',
+            'ano_modelo.min' => 'O campo ano do modelo deve ser no mínimo 1900',
+            'ano_modelo.max' => 'O campo ano do modelo deve ser no máximo o próximo ano',
+            'placa_licenca.required' => 'O campo placa é obrigatório',
+            'placa_licenca.max' => 'O campo placa deve ter no máximo 10 caracteres',
+            'chassi.required' => 'O campo chassi é obrigatório',
+            'chassi.max' => 'O campo chassi deve ter no máximo 17 caracteres',
+            'renavam.required' => 'O campo RENAVAM é obrigatório',
+            'renavam.max' => 'O campo RENAVAM deve ter no máximo 11 caracteres',
+            'cor.required' => 'O campo cor é obrigatório',
+            'cor.max' => 'O campo cor deve ter no máximo 50 caracteres',
+            'numero_motor.required' => 'O campo número do motor é obrigatório',
+            'numero_motor.max' => 'O campo número do motor deve ter no máximo 50 caracteres',
+            'data_placa_licenca.required' => 'O campo data de emissão da placa/licença é obrigatório',
+            'data_placa_licenca.date' => 'O campo data de emissão da placa/licença deve ser uma data válida',
+            'data_compra.required' => 'O campo data de compra é obrigatório',
+            'data_compra.date' => 'O campo data de compra deve ser uma data válida',
+            'data_validade.required' => 'O campo data de validade é obrigatório',
+            'data_validade.date' => 'O campo data de validade deve ser uma data válida',
+            'data_proxima_manutencao.required' => 'O campo data da próxima manutenção é obrigatório',
+            'data_proxima_manutencao.date' => 'O campo data da próxima manutenção deve ser uma data válida',
+            'data_proxima_inspecao.required' => 'O campo data da próxima inspeção é obrigatório',
+            'data_proxima_inspecao.date' => 'O campo data da próxima inspeção deve ser uma data válida',
+            'data_vendido.date' => 'O campo data de venda deve ser uma data válida',
+            'kms.required' => 'O campo quilometragem atual é obrigatório',
+            'kms.integer' => 'O campo quilometragem atual deve ser um número inteiro',
+            'kms.min' => 'O campo quilometragem atual deve ser no mínimo 0',
+            'limite_kms.required' => 'O campo limite de quilometragem é obrigatório',
+            'limite_kms.integer' => 'O campo limite de quilometragem deve ser um número inteiro',
+            'limite_kms.min' => 'O campo limite de quilometragem deve ser no mínimo 0',
+            'proxima_revisao_kms.required' => 'O campo quilometragem da próxima revisão é obrigatório',
+            'proxima_revisao_kms.integer' => 'O campo quilometragem da próxima revisão deve ser um número inteiro',
+            'proxima_revisao_kms.min' => 'O campo quilometragem da próxima revisão deve ser no mínimo 0',
+            'proxima_manutencao_kms.required' => 'O campo quilometragem da próxima manutenção é obrigatório',
+            'proxima_manutencao_kms.integer' => 'O campo quilometragem da próxima manutenção deve ser um número inteiro',
+            'proxima_manutencao_kms.min' => 'O campo quilometragem da próxima manutenção deve ser no mínimo 0',
+            'vendido.required' => 'O campo status de venda é obrigatório',
+            'vendido.in' => 'O campo status de venda deve ser "N" (Não Vendido) ou "S" (Vendido)',
+        ];
+    }
+}

@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'AdminLTE 3',
+    'title' => 'Xpand Cars',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -63,8 +63,9 @@ return [
     |
     */
 
-    'logo' => '<b>Admin</b>LTE',
-    'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+    'logo' => '<b>XPAND</b>cars',
+    'logo_img' => 'assets/imgs/logo.png',
+    // 'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
@@ -330,160 +331,154 @@ return [
             'label_color' => 'success',
         ],
         [
-            'text' => 'sidebar.configuracao_usuario',
-            'icon' => 'fa fas fa-user-cog',
-            'submenu' => [
-
-                [
-                    'text' => 'sidebar.usuario',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-fw fa-user',
-                ],
-                [
-                    'text' => 'sidebar.termo_consentimento',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-file-signature',
-                ],
-            ],
+            'header' => 'sidebar.configuracao_usuario',
+            'classes' => 'text-bold text-secondary text-uppercase mt-1',
+            'icon_color' => 'yellow',
+        ],
+        [
+            'text' => 'sidebar.usuario',
+            'url' => 'usuario',
+            'icon_color' => 'yellow',
+            'icon' => 'fas fa-fw fa-user',
+        ],
+        [
+            'text' => 'sidebar.regra',
+            'url' => 'regra',
+            'icon_color' => 'yellow',
+            'icon' => 'fas fa-key',
+        ],
+        [
+            'text' => 'sidebar.permissao',
+            'url' => 'permissao',
+            'icon_color' => 'yellow',
+            'icon' => 'fas fa-lock',
+        ],
+        [
+            'text' => 'sidebar.termo_consentimento',
+            'url' => 'termo_consentimento',
+            'icon_color' => 'yellow',
+            'icon' => 'fas fa-file-signature',
+        ],
+        [
+            'header' => 'sidebar.configuracao_reserva',
+            'classes' => 'text-bold text-secondary text-uppercase mt-1',
+        ],
+        [
+            'text' => 'sidebar.pais',
+            'url' => 'pais',
+            'icon' => 'fas fa-globe',
+        ],
+        [
+            'text' => 'sidebar.estacao',
+            'url' => 'estacao',
+            'icon' => 'fas fa-map-marker-alt',
+        ],
+        [
+            'text' => 'sidebar.dia_de_trabalho',
+            'url' => 'dia_util',
+            'icon' => 'fas fa-calendar-day',
+        ],
+        [
+            'text' => 'sidebar.horario_diario',
+            'url' => 'horario_diario',
+            'icon' => 'fas fa-clock',
+        ],
+        [
+            'header' => 'sidebar.configuracao_frota',
+            'classes' => 'text-bold text-secondary text-uppercase mt-1',
         ],
 
         [
-            'text' => 'sidebar.configuracao_reserva',
-            'icon'=>'fas fa-cogs',
-            'submenu' => [
-                [
-                    'text' => 'sidebar.pais',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-globe',
-                ],
-                [
-                    'text' => 'sidebar.estacao',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-map-marker-alt',
-                ],
-                [
-                    'text' => 'sidebar.dia_de_trabalho',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-calendar-day',
-                ],
-                [
-                    'text' => 'sidebar.horario_diario',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-clock',
-                ],
-                [
-                    'text' => 'sidebar.horario_funcionamento',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-clock',
-                ],
-                [
-                    'text' => 'sidebar.fora_horario',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-exclamation-circle',
-                ],
-            ],
+            'text' => 'sidebar.veiculo',
+            'url' => 'veiculo',
+            'icon' => 'fas fa-car',
         ],
+
         [
             'text' => 'sidebar.configuracao_frota',
-            'icon'=>'fas fa-truck',
+            'icon' => 'fas fa-cogs ',
             'submenu' => [
-
                 [
                     'text' => 'sidebar.tipo_frota',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-truck',
+                    'url' => 'tipo_frota',
+                    'icon' => 'fas fa-list-alt',
                 ],
                 [
                     'text' => 'sidebar.caracteristica_tipo_frota',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-cogs',
+                    'url' => 'caracteristica_frota',
+                    'icon' => 'fas fa-th',
                 ],
                 [
-                    'text' => 'sidebar.frota',
-                    'url' => 'admin/settings',
-                    'icon' => 'fas fa-truck',
+                    'text' => 'sidebar.caracteristica_valor_tipo_frota',
+                    'url' => 'tipovalorcaracteristicafrota',
+                    'icon' => 'fas fa-tag ',
+                ],
+            ],
+            ],
+        [
+            'text' => 'sidebar.configuracao_veiculo',
+            'icon' => 'fas fa-wrench ',
+            'submenu' => [
+                [
+                    'text' => 'sidebar.grupo_frota',
+                    'url' => 'grupo_frota',
+                    'icon' => 'fas fa-th-list',
                 ],
                 [
-                    'text' => 'sidebar.veiculo_e_opcional',
-                    'icon' => 'fas fa-car',
-                    'submenu' => [
-                        [
-                            'text' => 'sidebar.veiculo_e_opcional.veiculo',
-                            'icon' => 'fas fa-car',
-                            'url' => '#',
-                        ],
-                        [
-                            'text' => 'sidebar.veiculo_e_opcional.opcional',
-                            'icon' => 'fas fa-cogs',
-                            'url' => '#',
-                            'submenu' => [
-                                [
-                                    'text' => 'sidebar.veiculo_e_opcional.veiculo.opcional.extra',
-                                    'icon' => 'fas fa-plus-circle',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'sidebar.veiculo_e_opcional.veiculo.opcional.taxa',
-                                    'icon' => 'fas fa-money-bill-wave',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'sidebar.veiculo_e_opcional.veiculo.opcional.seguro',
-                                    'icon' => 'fas fa-shield-alt',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'sidebar.veiculo_e_opcional.veiculo.opcional.seguro_opcional',
-                                    'icon' => 'fas fa-shield-alt',
-                                    'url' => '#',
-                                ],
-                                [
-                                    'text' => 'sidebar.veiculo_e_opcional.veiculo.opcional.excesso_seguro',
-                                    'icon' => 'fas fa-exclamation-circle',
-                                    'url' => '#',
-                                ],
-                            ],
-                        ],
-                    ],
+                    'text' => 'sidebar.marca',
+                    'url' => 'marca',
+                    'icon' => 'fas fa-certificate ',
+                ],
+                [
+                    'text' => 'sidebar.modelo',
+                    'url' => 'modelo',
+                    'icon' => 'fas fa-truck ',
+                ],
+                [
+                    'text' => 'sidebar.segmento',
+                    'url' => 'segmento',
+                    'icon' => 'fas fa-bars ',
+                ],
+                [
+                    'text' => 'sidebar.status_veiculo',
+                    'url' => 'status_veiculo',
+                    'icon' => 'fas fa-tachometer-alt ',
                 ],
             ],
         ],
         [
-            'text' => 'sidebar.transacao_e_pagamento',
-            'icon'=>'fas fa-exchange-alt',
-            'submenu' => [
-
-                [
-                    'text' => 'sidebar.transacao_e_pagamento.tarifa_reserva',
-                    'icon' => 'fas fa-exchange-alt',
-                    'icon_color' => 'blue',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'sidebar.transacao_e_pagamento.grupo_tarifa',
-                    'icon' => 'fas fa-tag',
-                    'icon_color' => 'blue',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'sidebar.transacao_e_pagamento.preco_tarifa',
-                    'icon' => 'fas fa-dollar-sign',
-                    'icon_color' => 'blue',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'sidebar.transacao_e_pagamento.tipo_transacao',
-                    'icon' => 'fas fa-money-check-alt',
-                    'icon_color' => 'blue',
-                    'url' => '#',
-                ],
-                [
-                    'text' => 'sidebar.transacao_e_pagamento.metodo_pagamento',
-                    'icon' => 'fas fa-credit-card',
-                    'icon_color' => 'blue',
-                    'url' => '#',
-                ],
-            ],
+            'header' => 'sidebar.transacao_e_pagamento',
+            'classes' => 'text-bold text-secondary text-uppercase mt-1',
+        ],
+        [
+            'text' => 'sidebar.transacao_e_pagamento.tarifa_reserva',
+            'icon' => 'fas fa-exchange-alt',
+            'icon_color' => 'cyan',
+            'url' => '#',
+        ],
+        [
+            'text' => 'sidebar.transacao_e_pagamento.grupo_tarifa',
+            'icon' => 'fas fa-tag',
+            'icon_color' => 'cyan',
+            'url' => '#',
+        ],
+        [
+            'text' => 'sidebar.transacao_e_pagamento.preco_tarifa',
+            'icon' => 'fas fa-dollar-sign',
+            'icon_color' => 'cyan',
+            'url' => '#',
+        ],
+        [
+            'text' => 'sidebar.transacao_e_pagamento.tipo_transacao',
+            'icon' => 'fas fa-money-check-alt',
+            'icon_color' => 'cyan',
+            'url' => 'tipotransacao',
+        ],
+        [
+            'text' => 'sidebar.transacao_e_pagamento.metodo_pagamento',
+            'icon' => 'fas fa-credit-card',
+            'icon_color' => 'cyan',
+            'url' => '#',
         ],
         // ['header' => 'Colors'],
         // [

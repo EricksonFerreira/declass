@@ -19,6 +19,21 @@ return new class extends Migration
             $table->string('password');
             $table->rememberToken();
             $table->timestamps();
+
+            // Novos campos adicionados
+            $table->string('type', 20)->nullable();
+            $table->string('gender', 10)->nullable();
+            $table->string('phone', 20)->nullable();
+            $table->string('mobile', 20)->nullable();
+            $table->string('fax', 20)->nullable();
+            $table->string('address', 255)->nullable();
+            $table->string('place', 100)->nullable();
+            $table->string('city', 100)->nullable();
+            $table->string('zip_code', 20)->nullable();
+            $table->string('country', 2)->nullable();
+            $table->string('tax_number', 20)->nullable();
+            $table->date('date_of_birth')->nullable();
+            $table->string('place_of_birth', 100)->nullable();
         });
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
