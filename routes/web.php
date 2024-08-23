@@ -159,20 +159,58 @@ Route::middleware('auth')
 });
 
 
-Route::middleware('web')
+Route::middleware('auth')
     ->group(function() {
         require base_path('routes/grupos/termo_consentimento.php');
 
 });
 
-Route::middleware('web')
+Route::middleware('auth')
     ->group(function() {
         require base_path('routes/grupos/veiculo.php');
 
 });
 
-Route::middleware('web')
+Route::middleware('auth')
     ->group(function() {
         require base_path('routes/grupos/status_veiculo.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/movimentacao.php');
+
+});
+
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/reserva.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/tempo_entre_entacao.php');
+
+});
+
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/opcional.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/tipo_opcional.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/opcional_grupo_veiculo.php');
 
 });

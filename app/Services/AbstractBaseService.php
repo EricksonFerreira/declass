@@ -14,6 +14,10 @@ abstract class AbstractBaseService implements BaseServiceInterface
         return $this->model->all();
     }
 
+    public function getAllForSelect($key = 'id', $value = 'nome'){
+        return $this->formatArraySelect($this->model->all(),$key,$value);
+    }
+
     public function getAllWithFiltersAndPagination($filters = [], $perPage = 15, $with = [], $orderBy = 'id', $order = 'asc')
     {
 

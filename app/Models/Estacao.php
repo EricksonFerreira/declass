@@ -64,4 +64,29 @@ class Estacao extends Model
            return $horario;
        });
    }
+
+
+    // Relacionamento com as reservas onde esta estação é a de retirada
+    public function reservasRetirada()
+    {
+        return $this->hasMany(Reserva::class, 'estacao_retirada_id');
+    }
+
+    // Relacionamento com as reservas onde esta estação é a de devolução
+    public function reservasDevolucao()
+    {
+        return $this->hasMany(Reserva::class, 'estacao_devolucao_id');
+    }
+
+    // Relacionamento com os tempos de deslocamento onde esta estação é a origem
+    public function temposOrigem()
+    {
+        return $this->hasMany(TempoEntreEntacao::class, 'estacao_origem_id');
+    }
+
+    // Relacionamento com os tempos de deslocamento onde esta estação é o destino
+    public function temposDestino()
+    {
+        return $this->hasMany(TempoEntreEntacao::class, 'estacao_destino_id');
+    }
 }

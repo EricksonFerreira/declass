@@ -20,7 +20,8 @@ return [
 
     // Sidebar
     'sidebar.reserva' => 'Reservas',
-    'sidebar.pagamento' => 'Pagamentos',
+    'sidebar.movimentacoes' => 'Movimentações',
+    'sidebar.tempo_estacoes' => 'Tempo entre Entações',
     'sidebar.configuracao_usuario' => 'Configuração do Usuário',
     'sidebar.usuario' => 'Usuários',
     'sidebar.regra' => 'Regras',
@@ -34,6 +35,9 @@ return [
     'sidebar.horario_funcionamento' => 'Horários de Funcionamento',
     'sidebar.fora_horario' => 'Fora do Horário',
     'sidebar.veiculo' => 'Veículos',
+    'sidebar.configuracao_opcionais' => 'Configuração Opcionais',
+    'sidebar.tipos_opcionais' => 'Tipos de Opcionais',
+    'sidebar.opcionais' => 'Opcionais',
     'sidebar.configuracao_frota' => 'Configuração de Frotas',
     'sidebar.tipo_frota' => 'Tipos de Frotas',
     'sidebar.caracteristica_tipo_frota' => 'Caracteristicas do Tipo de Frota',

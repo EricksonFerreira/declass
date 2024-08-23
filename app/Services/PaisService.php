@@ -27,10 +27,7 @@ class PaisService extends AbstractBaseService
     {
         return $this->model;
     }
-    public function getAllForSelect(){
-        $data = $this->model->select('sigla', 'nome')->distinct()->get();
-        return $this->formatArraySelect($data,'sigla','nome');
-    }
+
     public function getAllForSelectId(){
         $data = $this->model->select('id', 'nome')->distinct()->get();
         return $this->formatArraySelect($data,'id','nome');

@@ -172,12 +172,12 @@ return [
     |
     */
 
-    'classes_auth_card' => 'card-outline card-primary',
+    'classes_auth_card' => 'bg-gradient-dark',
     'classes_auth_header' => '',
-    'classes_auth_body' => '',
-    'classes_auth_footer' => '',
-    'classes_auth_icon' => '',
-    'classes_auth_btn' => 'btn-flat btn-primary',
+    'classes_auth_body' => 'bg-gradient-dark',
+    'classes_auth_footer' => 'text-left text-light',
+    'classes_auth_icon' => 'fa-fw text-light',
+    'classes_auth_btn' => 'btn-flat btn-light',
 
     /*
     |--------------------------------------------------------------------------
@@ -197,8 +197,8 @@ return [
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-primary elevation-4',
-    'classes_sidebar_nav' => '',
+    'classes_sidebar' => 'sidebar-dark-white',
+    'classes_sidebar_nav' => 'nav-child-indent',
     'classes_topnav' => 'navbar-white navbar-light',
     'classes_topnav_nav' => 'navbar-expand',
     'classes_topnav_container' => 'container',
@@ -216,8 +216,8 @@ return [
     */
 
     'sidebar_mini' => 'lg',
-    'sidebar_collapse' => false,
-    'sidebar_collapse_auto_size' => false,
+    'sidebar_collapse' => true,
+    'sidebar_collapse_auto_size' => true,
     'sidebar_collapse_remember' => false,
     'sidebar_collapse_remember_no_transition' => true,
     'sidebar_scrollbar_theme' => 'os-theme-light',
@@ -264,7 +264,7 @@ return [
     'register_url' => 'register',
     'password_reset_url' => 'password/reset',
     'password_email_url' => 'password/email',
-    'profile_url' => false,
+    'profile_url' => true,
 
     /*
     |--------------------------------------------------------------------------
@@ -318,17 +318,24 @@ return [
         ],
         [
             'text' => 'sidebar.reserva',
-            'url' => 'admin/reservas',
-            'icon' => 'fas fa-fw fa-file',
-            'label' => 4,
-            'label_color' => 'success',
+            'url' => 'reserva',
+            'icon' => 'fas fa-calendar-check',
+            // 'label' => 4,
+            // 'label_color' => 'success',
         ],
         [
-            'text' => 'sidebar.pagamento',
-            'url' => 'admin/pagamentos',
-            'icon' => 'fas fa-credit-card',
-            'label' => 4,
-            'label_color' => 'success',
+            'text' => 'sidebar.movimentacoes',
+            'url' => 'movimentacao',
+            'icon' => 'fas fa-truck-moving',
+            // 'label' => 4,
+            // 'label_color' => 'success',
+        ],
+        [
+            'text' => 'sidebar.tempo_estacoes',
+            'url' => 'tempo_entre_entacao',
+            'icon' => 'fas fa-stopwatch',
+            // 'label' => 4,
+            // 'label_color' => 'success',
         ],
         [
             'header' => 'sidebar.configuracao_usuario',
@@ -414,7 +421,23 @@ return [
                     'icon' => 'fas fa-tag ',
                 ],
             ],
+        ],
+        [
+            'text' => 'sidebar.configuracao_opcionais',
+            'icon' => 'fas fa-wrench ',
+            'submenu' => [
+                [
+                    'text' => 'sidebar.tipos_opcionais',
+                    'url' => 'tipo_opcional',
+                    'icon' => 'fas fa-th-list',
+                ],
+                [
+                    'text' => 'sidebar.opcionais',
+                    'url' => 'opcional',
+                    'icon' => 'fas fa-th-list',
+                ],
             ],
+        ],
         [
             'text' => 'sidebar.configuracao_veiculo',
             'icon' => 'fas fa-wrench ',
@@ -446,40 +469,44 @@ return [
                 ],
             ],
         ],
-        [
-            'header' => 'sidebar.transacao_e_pagamento',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1',
-        ],
-        [
-            'text' => 'sidebar.transacao_e_pagamento.tarifa_reserva',
-            'icon' => 'fas fa-exchange-alt',
-            'icon_color' => 'cyan',
-            'url' => '#',
-        ],
-        [
-            'text' => 'sidebar.transacao_e_pagamento.grupo_tarifa',
-            'icon' => 'fas fa-tag',
-            'icon_color' => 'cyan',
-            'url' => '#',
-        ],
-        [
-            'text' => 'sidebar.transacao_e_pagamento.preco_tarifa',
-            'icon' => 'fas fa-dollar-sign',
-            'icon_color' => 'cyan',
-            'url' => '#',
-        ],
-        [
-            'text' => 'sidebar.transacao_e_pagamento.tipo_transacao',
-            'icon' => 'fas fa-money-check-alt',
-            'icon_color' => 'cyan',
-            'url' => 'tipotransacao',
-        ],
-        [
-            'text' => 'sidebar.transacao_e_pagamento.metodo_pagamento',
-            'icon' => 'fas fa-credit-card',
-            'icon_color' => 'cyan',
-            'url' => '#',
-        ],
+        // [
+        //     'header' => 'sidebar.transacao_e_pagamento',
+        //     'classes' => 'text-bold text-secondary text-uppercase mt-1',
+        // ],
+        // [
+        //     'text' => 'sidebar.transacao_e_pagamento.tarifa_reserva',
+        //     'icon' => 'fas fa-exchange-alt',
+        //     'icon_color' => 'cyan',
+        //     'url' => '#',
+        // ],
+        // [
+        //     'text' => 'sidebar.transacao_e_pagamento.grupo_tarifa',
+        //     'icon' => 'fas fa-tag',
+        //     'icon_color' => 'cyan',
+        //     'url' => '#',
+        // ],
+        // [
+        //     'text' => 'sidebar.transacao_e_pagamento.preco_tarifa',
+        //     'icon' => 'fas fa-dollar-sign',
+        //     'icon_color' => 'cyan',
+        //     'url' => '#',
+        // ],
+        // [
+        //     'text' => 'sidebar.transacao_e_pagamento.tipo_transacao',
+        //     'icon' => 'fas fa-money-check-alt',
+        //     'icon_color' => 'cyan',
+        //     'url' => 'tipotransacao',
+        // ],
+        // [
+        //     'text' => 'sidebar.transacao_e_pagamento.metodo_pagamento',
+        //     'icon' => 'fas fa-credit-card',
+        //     'icon_color' => 'cyan',
+        //     'url' => '#',
+        // ],
+
+// --------------------------------------------------------
+
+
         // ['header' => 'Colors'],
         // [
         //     'text' => 'sidebar.transacao_e_pagamento.tarifa_reserva',

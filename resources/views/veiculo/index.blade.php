@@ -33,6 +33,10 @@
                 <thead>
                     <tr>
                         <th>Nome</th>
+                        <th>Tipo de Frota</th>
+                        <th>Grupo de Frota</th>
+                        <th>Marca</th>
+                        <th>Modelo</th>
                         <th>Status</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
@@ -41,11 +45,11 @@
                     @foreach ($veiculos as $veiculo)
                         <tr>
                             <td>{{ $veiculo->nome }}</td>
-                            <td>
-                                <span class="badge badge-xs bg-{{ $veiculo->ativo == 'S' ? 'success' : 'danger' }}">
-                                    {{ $veiculo->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
-                                </span>
-                            </td>
+                            <td>{{ $veiculo->tipoFrota?->nome }}</td>
+                            <td>{{ $veiculo->grupoFrota?->nome }}</td>
+                            <td>{{ $veiculo->marca?->nome }}</td>
+                            <td>{{ $veiculo->modelo?->nome }}</td>
+                            <td>{{ $veiculo->statusVeiculo?->nome }}</td>
                             <td style="width: 180px;">
                                 <a href="{{ route('veiculo.edit', $veiculo->id) }}"
                                     class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>

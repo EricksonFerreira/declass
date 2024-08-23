@@ -38,4 +38,39 @@ class Veiculo extends Model
         'data_proxima_manutencao',
         'data_proxima_inspecao',
     ];
+
+    public function tipoFrota()
+    {
+        return $this->belongsTo(TipoFrota::class, 'tipo_frota_id');
+    }
+
+    public function grupoFrota()
+    {
+        return $this->belongsTo(GrupoFrota::class, 'grupo_frota_id');
+    }
+
+    public function marca()
+    {
+        return $this->belongsTo(Marca::class, 'marca_id');
+    }
+
+    public function modelo()
+    {
+        return $this->belongsTo(Modelo::class, 'modelo_id');
+    }
+
+    public function segmento()
+    {
+        return $this->belongsTo(Segmento::class, 'segmento_id');
+    }
+
+    public function statusVeiculo()
+    {
+        return $this->belongsTo(StatusVeiculo::class, 'status_veiculo_id');
+    }
+
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class, 'veiculo_id');
+    }
 }

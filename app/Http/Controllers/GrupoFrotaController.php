@@ -6,6 +6,7 @@ use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\GrupoFrota\StoreGrupoFrotaRequest;
 use App\Http\Requests\GrupoFrota\UpdateGrupoFrotaRequest;
+use App\Models\TipoOpcional;
 use App\Services\BreadcrumbService;
 use App\Services\CaracteristicaFrotaService;
 use App\Services\GrupoFrotaService;
@@ -104,7 +105,10 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
         $marcas = $this->modeloService->getAllAtivosConcatenado();
         $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos();
-        return view('grupo_frota.add-edit', compact('caracteristicas','tipoFrotas', 'marcas', 'grupoFrota', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        $tiposOpcionais = TipoOpcional::with('opcionais')->get();
+
+
+        return view('grupo_frota.add-edit', compact('tiposOpcionais','caracteristicas','tipoFrotas', 'marcas', 'grupoFrota', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateGrupoFrotaRequest $request, $id)

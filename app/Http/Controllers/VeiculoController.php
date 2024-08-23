@@ -195,13 +195,28 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function obterFiltrosPrincipais()
     {
+        $tipoFrota = $this->tipoFrotaService->getAllAtivos();
+        $dataTipoFrota = FiltroTrait::formatOptions($tipoFrota, 'Selecione o tipo de Frota');
+
+        $grupoFrota = $this->grupoFrotaService->getAllAtivos();
+        $dataGrupoFrota = FiltroTrait::formatOptions($grupoFrota, 'Selecione o grupo de Frota');
+
+        $marca = $this->marcaService->getAllAtivos();
+        $dataMarca = FiltroTrait::formatOptions($marca, 'Selecione a marca');
+
+        $modelo = $this->modeloService->getAllAtivos();
+        $dataModelo = FiltroTrait::formatOptions($modelo, 'Selecione o modelo');
+
+        $statusVeiculo = $this->statusVeiculoService->getAllAtivos();
+        $dataStatusVeiculo = FiltroTrait::formatOptions($statusVeiculo, 'Selecione o status');
+
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
-                ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
-                ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
-                ['value' => 'N', 'label' => 'Inativo', 'selected' => false]
-            ]]
+            ['name' => 'tipo_frota_id', 'label'=> 'Tipos de Frotas','type'=>'select','typeWhere' => 'where','options'=> $dataTipoFrota],
+            ['name' => 'grupo_frota_id', 'label'=> 'Grupos de Frotas','type'=>'select','typeWhere' => 'where','options'=> $dataGrupoFrota],
+            ['name' => 'marca_id', 'label'=> 'Marcas','type'=>'select','typeWhere' => 'where','options'=> $dataMarca],
+            ['name' => 'modelo_id', 'label'=> 'Modelos','type'=>'select','typeWhere' => 'where','options'=> $dataModelo],
+            ['name' => 'status_veiculo_id', 'label'=> 'Status','type'=>'select','typeWhere' => 'where','options'=> $dataStatusVeiculo],
         ];
     }
 
