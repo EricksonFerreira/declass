@@ -130,9 +130,8 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             'N' => 'Não Permite'
         ];
 
-        $diasUteis = $this->diaUtilService->getAllAtivos('dia', 'asc');
+        $diasUteis = $this->diaUtilService->getAllAtivos('id','nome');
         [$metodo, $rota] = $this->getFormMethodAndRoute($estacao);
-
         $diasUteisEstacao = $estacao->diasUteis->pluck('id')->toArray();
 
         return view(

@@ -197,7 +197,7 @@ return [
     'classes_content_wrapper' => '',
     'classes_content_header' => '',
     'classes_content' => '',
-    'classes_sidebar' => 'sidebar-dark-white',
+    'classes_sidebar' => 'sidebar-light-white',
     'classes_sidebar_nav' => 'nav-child-indent',
     'classes_topnav' => 'navbar-white navbar-light',
     'classes_topnav_nav' => 'navbar-expand',
@@ -216,7 +216,7 @@ return [
     */
 
     'sidebar_mini' => 'lg',
-    'sidebar_collapse' => true,
+    'sidebar_collapse' => false,
     'sidebar_collapse_auto_size' => true,
     'sidebar_collapse_remember' => false,
     'sidebar_collapse_remember_no_transition' => true,
@@ -400,6 +400,11 @@ return [
             'url' => 'veiculo',
             'icon' => 'fas fa-car',
         ],
+        [
+            'text' => 'sidebar.cupom_desconto',
+            'url' => 'cupom_desconto',
+            'icon' => 'fas fa-percentage',
+        ],
 
         [
             'text' => 'sidebar.configuracao_frota',
@@ -424,17 +429,17 @@ return [
         ],
         [
             'text' => 'sidebar.configuracao_opcionais',
-            'icon' => 'fas fa-wrench ',
+            'icon' => 'fas fa-sliders-h ',
             'submenu' => [
                 [
                     'text' => 'sidebar.tipos_opcionais',
                     'url' => 'tipo_opcional',
-                    'icon' => 'fas fa-th-list',
+                    'icon' => 'fas fa-layer-group',
                 ],
                 [
                     'text' => 'sidebar.opcionais',
                     'url' => 'opcional',
-                    'icon' => 'fas fa-th-list',
+                    'icon' => 'fas fa-toolbox',
                 ],
             ],
         ],
@@ -659,7 +664,7 @@ return [
             'fullscreen' => true,
         ],
         'options' => [
-            'loading_screen' => 1000,
+            'loading_screen' => 10,
             'auto_show_new_tab' => true,
             'use_navbar_items' => true,
         ],

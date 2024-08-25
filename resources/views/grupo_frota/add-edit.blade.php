@@ -28,17 +28,22 @@
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="caracteristicas-tab" data-toggle="pill" href="#caracteristicas" role="tab"
-                        aria-controls="caracteristicas" aria-selected="false"><i class="fa fa-clock text-xs"></i>
+                        aria-controls="caracteristicas" aria-selected="false"><i class="fa fa-list-ul text-xs"></i>
                         Caracteristicas</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" id="opcionais-tab" data-toggle="pill" href="#opcionais" role="tab"
-                        aria-controls="opcionais" aria-selected="false"><i class="fa fa-clock text-xs"></i>
+                        aria-controls="opcionais" aria-selected="false"><i class="fa fa-plus-circle text-xs"></i>
                         Opcionais</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="modelos-tab" data-toggle="pill" href="#modelos" role="tab"
+                        aria-controls="modelos" aria-selected="false"><i class="fa fa-tags text-xs"></i>
+                        Modelos</a>
                 </li>
             </ul>
         </div>
-        <div class="card-body">
+        <div class="card-body pt-0">
             <form id="formulario" method="POST" action="{{ $rota }}">
                 @if ($metodo == 'PUT')
                     @method('PUT')
@@ -96,18 +101,6 @@
                                 <label for="imagem" class="custom-file-label">Selecione a imagem</label>
                             </div>
                         </div>
-                        <div class="col-md-12">
-                            <div class="form-group">
-                                <x-form-select name="marca_id" label="Marca | Modelo | Segmento" :options="$marcas"
-                                    placeholder="Selecione um valor" :selected="old(
-                                        'marca_id',
-                                        isset($grupoFrota->marca_id) && $grupoFrota->marca_id
-                                            ? $grupoFrota->marca_id
-                                            : null,
-                                    )" class="form-control form-control-sm"
-                                    required />
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div id="caracteristicas-content" class="content-tab" style="display: none;">
@@ -125,11 +118,11 @@
                                     <tr>
                                         <td>{{ $caracteristica }}</td>
                                         <td>
-                                            <input type="text" name="caracteristicas[{{ $k }}]"
-                                                value="{{ isset($caracteristicasGrupoFrota[$k]) ? $caracteristicasGrupoFrota[$k] : '' }}"
-                                                class="form-control form-control-sm">
-                                        </td>
-                                    </tr>
+                                            <input type="hidden" name="caracteristicas[{{ $k }}]"
+                                                value="{{ $k }}">
+                                            <input type="text" name="caracteristicaValor[{{ $k }}]"
+                                            class="form-control form-control-sm"
+                                            value="{{ isset($grupoFrota) && collect($grupoFrota->caracteristicas)->contains('id', $k) ? collect($grupoFrota->caracteristicas)->firstWhere('id', $k)['valor'] : '' }}"                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -148,6 +141,7 @@
                                         <div class="form-check col-md-4">
                                             <input class="form-check-input" type="checkbox"
                                                 id="opcional_{{ $opcional->id }}" name="opcionais[]"
+                                                {{ isset($grupoFrota) && in_array($opcional->id, $grupoFrota->opcionais) ? 'checked' : '' }}
                                                 value="{{ $opcional->id }}">
                                             <label class="form-check-label" for="opcional_{{ $opcional->id }}">
                                                 {{ $opcional->nome }}
@@ -160,6 +154,31 @@
                     @endforeach
 
                 </div>
+                <div id="modelos-content" class="content-tab" style="display: none;">
+                    <div class="card">
+                        <div class="card-header mb-1">
+                            <h3 class="card-title text-sm text-bold">Lista dos Modelos:</h3>
+                        </div>
+                        <div class="card-body d-flex p-0">
+                            <div class="row mx-0">
+                                @foreach ($modelos as $id_modelo => $modelo)
+                                    <a class="col-md-4 text-dark border rounded">
+                                        <div style="cursor:pointer" class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox"
+                                                id="modelo_{{ $id_modelo }}" name="modelos[]"
+                                                value="{{ $id_modelo }}"
+                                                {{ isset($grupoFrota) && in_array($id_modelo, $grupoFrota->modelos) ? 'checked' : '' }}>
+                                            <label class="form-check-label" for="modelo_{{ $id_modelo }}">
+                                                {{ $modelo }}
+                                            </label>
+                                        </div>
+                                    </a>
+                                @endforeach
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-xs col-12">
                     Salvar
                 </button>

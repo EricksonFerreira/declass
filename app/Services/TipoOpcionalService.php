@@ -27,4 +27,13 @@ class TipoOpcionalService extends AbstractBaseService
     {
         return $this->model;
     }
+
+    public function getTipoOpcionais($orderBy = 'nome', $orderDirection = 'asc')
+    {
+        $tipoOpcionais = $this->model->with(['opcionais' => function ($query) use ($orderBy, $orderDirection) {
+            $query->orderBy($orderBy, $orderDirection);
+        }])->get();
+
+        return $tipoOpcionais;
+    }
 }

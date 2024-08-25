@@ -14,4 +14,10 @@ class CaracteristicaGrupoFrota extends Model
         'nome',
         'ativo',
     ];
+
+    public function gruposFrota()
+    {
+        return $this->belongsToMany(GrupoFrota::class, 'grupo_frota_caracteristica_frota',  'caracteristica_frota_id', 'grupo_frota_id')
+            ->withPivot('valor');
+    }
 }

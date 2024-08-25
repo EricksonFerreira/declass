@@ -31,4 +31,9 @@ class Modelo extends Model
     {
         return $this->belongsTo(Segmento::class, 'segmento_id');
     }
+
+    public function gruposFrota()
+    {
+        return $this->belongsToMany(GrupoFrota::class, 'grupo_frota_modelo', 'modelo_id', 'grupo_frota_id');
+    }
 }

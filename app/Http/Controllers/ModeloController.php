@@ -64,18 +64,19 @@ class ModeloController extends BaseController implements FiltroInterface, Resour
         ))->with('titulo', $this->titulo);
     }
 
-    public function create(){
+    public function create()
+    {
         $status = [
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Modelos','modelo.index','Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Modelos', 'modelo.index', 'Criar');
         $marcas = $this->marcaService->getAllAtivos();
         $segmentos = $this->segmentoService->getAllAtivos();
 
 
-        [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('modelo.add-edit', compact('marcas','segmentos','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        [$metodo, $rota] = $this->getFormMethodAndRoute();
+        return view('modelo.add-edit', compact('marcas', 'segmentos', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreModeloRequest $request)
@@ -92,18 +93,18 @@ class ModeloController extends BaseController implements FiltroInterface, Resour
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Modelos','modelo.index',"Editar: $modelo->nome");
-        [$metodo,$rota] = $this->getFormMethodAndRoute($modelo);
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Modelos', 'modelo.index', "Editar: $modelo->nome");
+        [$metodo, $rota] = $this->getFormMethodAndRoute($modelo);
         $marcas = $this->marcaService->getAllAtivos();
         $segmentos = $this->segmentoService->getAllAtivos();
 
 
-        return view('modelo.add-edit', compact('marcas','segmentos','modelo','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('modelo.add-edit', compact('marcas', 'segmentos', 'modelo', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateModeloRequest $request, $id)
     {
-        $this->modeloService->update($id,$request->all());
+        $this->modeloService->update($id, $request->all());
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -124,6 +125,20 @@ class ModeloController extends BaseController implements FiltroInterface, Resour
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function getMarcaESegmento(Request $request)
+    {
+        $modeloId = $request->input('modelo_id');
+
+        $modelo = $this->modeloService->getById($modeloId);
+
+        return response()->json(
+            [
+                'marca' => $modelo->marcas?->nome,
+                'segmento' => $modelo->segmentos?->nome
+            ]
+        );
     }
 
     public function setPerPage(Request $request)

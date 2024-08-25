@@ -275,14 +275,14 @@
 
                 <x-section-division-header-form>Dias Trabalhados</x-section-division-header-form><br>
                 <div class="d-flex justify-content-center">
-                    @foreach ($diasUteis as $diaUtil)
+                    @foreach ($diasUteis as $idDiaUtil =>$nomeDiaUtil)
                         <div class="btn btn-outline-secondary btn-xs mx-1">
 
-                            <input type="checkbox" name="diasUteis[]" value="{{ $diaUtil->id }}" class="btn-check"
-                                id="btn-check-{{ $diaUtil->id }}-outlined" autocomplete="off"
-                                {{ isset($diasUteisEstacao) && in_array($diaUtil->id, $diasUteisEstacao) ? 'checked' : '' }}>
+                            <input type="checkbox" name="diasUteis[]" value="{{ $idDiaUtil }}" class="btn-check"
+                                id="btn-check-{{ $idDiaUtil }}-outlined" autocomplete="off"
+                                {{ isset($diasUteisEstacao) && in_array($idDiaUtil, $diasUteisEstacao) ? 'checked' : '' }}>
                             <label class="m-0"
-                                for="btn-check-{{ $diaUtil->id }}-outlined">{{ $diaUtil->nome }}</label><br>
+                                for="btn-check-{{ $idDiaUtil }}-outlined">{{ $nomeDiaUtil }}</label><br>
                         </div>
                     @endforeach
 

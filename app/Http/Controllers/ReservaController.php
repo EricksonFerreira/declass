@@ -8,7 +8,9 @@ use App\Http\Requests\Reserva\StoreReservaRequest;
 use App\Http\Requests\Reserva\UpdateReservaRequest;
 use App\Services\BreadcrumbService;
 use App\Services\EstacaoService;
+use App\Services\GrupoFrotaService;
 use App\Services\ReservaService;
+use App\Services\TipoOpcionalService;
 use App\Services\UsuarioService;
 use App\Services\VeiculoService;
 use App\Traits\AtualizaFiltrosTrait;
@@ -24,13 +26,17 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     protected $userService;
     protected $veiculoService;
     protected $estacaoService;
+    protected $grupoFrotaService;
+    protected $tipoOpcionalService;
 
     public function __construct(
         ReservaService $reservaService,
         BreadcrumbService $breadcrumbService,
         UsuarioService $userService,
         VeiculoService $veiculoService,
-        EstacaoService $estacaoService
+        EstacaoService $estacaoService,
+        GrupoFrotaService $grupoFrotaService,
+        TipoOpcionalService $tipoOpcionalService
     ) {
         $this->titulo = "Reservas";
         $this->nomeFiltro = 'reserva';
@@ -39,6 +45,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $this->userService = $userService;
         $this->veiculoService = $veiculoService;
         $this->estacaoService = $estacaoService;
+        $this->grupoFrotaService = $grupoFrotaService;
+        $this->tipoOpcionalService = $tipoOpcionalService;
     }
 
     public function index()
@@ -80,11 +88,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         // Consultando as variáveis necessárias
         $users = $this->userService->getAllForSelect();
-        $veiculos = $this->veiculoService->getAllForSelect();
         $estacoes = $this->estacaoService->getAllForSelect();
+        $gruposVeiculo = $this->grupoFrotaService->getAllForSelect();
+        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome','asc');
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
-        return view('reserva.add-edit', compact('breadcrumb', 'status', 'metodo', 'rota', 'users', 'veiculos', 'estacoes'))
+        return view('reserva.add-edit', compact(
+
+            'breadcrumb', 'status', 'metodo', 'rota', 'users', 'gruposVeiculo', 'estacoes','tiposOpcionais'))
             ->with('titulo', $this->titulo);
     }
 
@@ -105,7 +116,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Reservas', 'reserva.index', "Editar: $reserva->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($reserva);
 
-        return view('reserva.add-edit', compact('reserva', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        $users = $this->userService->getAllForSelect();
+        $estacoes = $this->estacaoService->getAllForSelect();
+        $gruposVeiculo = $this->grupoFrotaService->getAllForSelect();
+        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome','asc');
+
+        return view('reserva.add-edit', compact(
+            'users','estações','gruposVeiculo','tiposOpcionais',
+            'reserva', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateReservaRequest $request, $id)

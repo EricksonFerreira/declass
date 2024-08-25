@@ -27,11 +27,4 @@ class DiaUtilService extends AbstractBaseService
     {
         return $this->model;
     }
-
-    public function getAllAtivos($orderBy = 'nome', $order = 'asc')
-    {
-        return $this->model->where('ativo', 'S')
-                            ->orderBy($orderBy, $order)
-                            ->get();
-    }
 }

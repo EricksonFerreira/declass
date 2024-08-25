@@ -12,6 +12,7 @@ use App\Services\CaracteristicaFrotaService;
 use App\Services\GrupoFrotaService;
 use App\Services\ModeloService;
 use App\Services\TipoFrotaService;
+use App\Services\TipoOpcionalService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
@@ -25,6 +26,7 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
     protected $tipoFrotaService;
     protected $modeloService;
     protected $caracteristicaFrotaService;
+    protected $tipoOpcionalService;
 
     public function __construct(
         GrupoFrotaService $grupoFrotaService,
@@ -32,6 +34,7 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         TipoFrotaService $tipoFrotaService,
         ModeloService $modeloService,
         CaracteristicaFrotaService $caracteristicaFrotaService,
+        TipoOpcionalService $tipoOpcionalService
     ) {
         $this->titulo = "Grupos de Frotas";
         $this->nomeFiltro = 'grupo_frota';
@@ -40,6 +43,7 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $this->tipoFrotaService = $tipoFrotaService;
         $this->modeloService = $modeloService;
         $this->caracteristicaFrotaService = $caracteristicaFrotaService;
+        $this->tipoOpcionalService = $tipoOpcionalService;
     }
 
     public function index()
@@ -81,9 +85,13 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
-        $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
-        $marcas = $this->modeloService->getAllAtivosConcatenado();
-        return view('grupo_frota.add-edit', compact('marcas', 'tipoFrotas', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id','nome','nome');
+        $marcas = $this->modeloService->getAllAtivosConcatenado('id','nome');
+        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id','nome','nome');
+        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome','asc');
+        $modelos = $this->modeloService->getAllAtivos('id','nome','nome');
+
+        return view('grupo_frota.add-edit', compact('modelos','caracteristicas','tiposOpcionais','marcas', 'tipoFrotas', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreGrupoFrotaRequest $request)
@@ -102,13 +110,22 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Grupos de Frotas', 'grupo_frota.index', "Editar: $grupoFrota->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($grupoFrota);
-        $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
-        $marcas = $this->modeloService->getAllAtivosConcatenado();
-        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos();
-        $tiposOpcionais = TipoOpcional::with('opcionais')->get();
+        $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id','nome','nome');
+        $modelos = $this->modeloService->getAllAtivosConcatenado('id','nome');
+        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id','nome','nome');
+        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome','asc');
+        $modelos = $this->modeloService->getAllAtivos('id','nome','nome');
 
+        $grupoFrota->opcionais = $grupoFrota->opcionais->pluck('id')->toArray();
+        $grupoFrota->modelos = $grupoFrota->modelos->pluck('id')->toArray();
+        $grupoFrota->caracteristicas = $grupoFrota->caracteristicas->map(function ($caracteristica) {
+            return [
+                'id' => $caracteristica->id,
+                'valor' => $caracteristica->pivot->valor,
+            ];
+        });
 
-        return view('grupo_frota.add-edit', compact('tiposOpcionais','caracteristicas','tipoFrotas', 'marcas', 'grupoFrota', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view('grupo_frota.add-edit', compact('modelos','tiposOpcionais','caracteristicas','tipoFrotas',  'grupoFrota', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateGrupoFrotaRequest $request, $id)
@@ -135,6 +152,22 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+
+    public function getModelosPorGrupoFrota(Request $request)
+    {
+        $grupoFrotaId = $request->input('grupo_frota_id');
+        $modelos = $this->grupoFrotaService->getModelosPorGrupoFrota($grupoFrotaId);
+        $opcionais = $this->grupoFrotaService->getTiposOpcionaisComOpcionais($grupoFrotaId);
+        $tipoOpcionais = TipoOpcional::all();
+
+
+
+        return response()->json([
+            'modelo'=>$modelos,
+            'tipo_opcional'=>$opcionais
+        ]);
     }
 
     public function setPerPage(Request $request)

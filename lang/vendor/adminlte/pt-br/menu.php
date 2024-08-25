@@ -35,6 +35,7 @@ return [
     'sidebar.horario_funcionamento' => 'Horários de Funcionamento',
     'sidebar.fora_horario' => 'Fora do Horário',
     'sidebar.veiculo' => 'Veículos',
+    'sidebar.cupom_desconto' => 'Cupom Desconto',
     'sidebar.configuracao_opcionais' => 'Configuração Opcionais',
     'sidebar.tipos_opcionais' => 'Tipos de Opcionais',
     'sidebar.opcionais' => 'Opcionais',

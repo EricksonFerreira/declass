@@ -214,3 +214,10 @@ Route::middleware('auth')
         require base_path('routes/grupos/opcional_grupo_veiculo.php');
 
 });
+
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/cupom_desconto.php');
+
+});

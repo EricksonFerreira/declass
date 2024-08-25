@@ -47,6 +47,10 @@ class Opcional extends Model
         return $this->belongsTo(TipoOpcional::class, 'tipo_opcional_id');
     }
 
+    public function gruposFrota()
+    {
+        return $this->belongsToMany(GrupoFrota::class, 'grupo_frota_opcional',  'opcional_id', 'grupo_frota_id');
+    }
 
     // Relacionamento com os grupos de veículos
     public function gruposVeiculos()

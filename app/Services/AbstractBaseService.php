@@ -76,8 +76,14 @@ abstract class AbstractBaseService implements BaseServiceInterface
     }
 
 
-    public function getAllAtivos($id='id', $nome='nome'){
-        $data = $this->model->select($id, $nome)->where('ativo','S')->distinct()->get();
-        return $this->formatArraySelect($data,$id,$nome);
+    public function getAllAtivos($id = 'id', $nome = 'nome', $orderBy = null, $orderDirection = 'asc') {
+        $query = $this->model->select($id, $nome)->where('ativo', 'S')->distinct();
+
+        if ($orderBy) {
+            $query->orderBy($orderBy, $orderDirection);
+        }
+
+        $data = $query->get();
+        return $this->formatArraySelect($data, $id, $nome);
     }
 }

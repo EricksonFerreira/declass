@@ -29,12 +29,16 @@ class ModeloService extends AbstractBaseService
     }
 
 
-    public function getAllAtivosConcatenado($id = 'id')
+    public function getAllAtivosConcatenado($id = 'id', $orderBy = null, $orderDirection = 'asc')
     {
         // Seleciona e concatena as colunas marca, modelo e segmento
-        $data = $this->model->where('ativo', 'S')
-        ->get()
-        ->map(function ($item) {
+        $query = $this->model->where('ativo', 'S');
+
+        if ($orderBy) {
+            $query->orderBy($orderBy, $orderDirection);
+        }
+
+        $data = $query->get()->map(function ($item) {
             return [
                 'id' => $item->id,
                 'nome' => $item->concatenado
