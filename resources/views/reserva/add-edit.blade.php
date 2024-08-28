@@ -52,10 +52,13 @@
                             class="form-control form-control-sm" required />
                     </div>
                 </div>
-                <a class="btn btn-xs btn-info" onclick="exibeModalGrupoVeiculos()">
-                    <i class="fa fa-search"></i>
-                    Pesquisar
-                </a>
+                <div class="col-md-2 d-flex align-items-center">
+
+                    <a class="btn btn-xs btn-info " data-toggle="modal" data-target="#modalPesquisa">
+                        <i class="fa fa-search mr-1"></i>
+                        Pesquisar
+                    </a>
+                </div>
                 <div class="col-md-3 pb-2">
                     @if (isset($reserva))
                         <x-form-select name="modelo" label="Modelo" :options="$modelos->pluck('nome', 'id')" :selected="$reserva->modelo_id" id="modelo"
@@ -64,7 +67,7 @@
                     @else
                         <x-form-select name="modelo" label="Modelo" id="modelo" :options="[]"
                             onchange="getMarcaESegmento(this.value)" placeholder="Selecione primeiro o grupo de frotas"
-                            class="form-control form-control-sm" disabled  required/>
+                            class="form-control form-control-sm" disabled required />
                     @endif
                 </div>
                 <div class="col-md-3">
@@ -76,8 +79,8 @@
                         name="segmento" label="Segmento" value="" />
                 </div>
                 <div class="col-md-2">
-                    <x-form-input maxlength="7" id="cupom_desconto" name="cupom_desconto" label="Cupom de Desconto" value="{{ $reserva->cupom_desconto ?? '' }}"
-                        class="form-control form-control-sm" />
+                    <x-form-input maxlength="7" id="cupom_desconto" name="cupom_desconto" label="Cupom de Desconto"
+                        value="{{ $reserva->cupom_desconto ?? '' }}" class="form-control form-control-sm" />
                 </div>
 
                 <x-section-division-header-form>Opcionais</x-section-division-header-form>
@@ -122,18 +125,17 @@
 
                 <!-- Identificações -->
                 <div class="col-md-5">
-                        <div class="form-group">
-                            <x-form-select name="user_id" label="Usuário" :options="$users" placeholder="Selecione um usuário"
-                                :selected="isset($reserva->user_id) ? $reserva->user_id : null"
-                                class="form-control form-control-sm" required />
-                        </div>
+                    <div class="form-group">
+                        <x-form-select name="user_id" label="Usuário" :options="$users" placeholder="Selecione um usuário"
+                            :selected="isset($reserva->user_id) ? $reserva->user_id : null" class="form-control form-control-sm" required />
                     </div>
-
                 </div>
 
+        </div>
 
-                <!-- Status e Cancelamento -->
-                {{-- <div class="row">
+
+        <!-- Status e Cancelamento -->
+        {{-- <div class="row">
                     <div class="col-md-6">
                         <div class="form-group">
                             <x-form-select name="status" label="Status" :options="$status" placeholder="Selecione um status"
@@ -149,12 +151,14 @@
                     </div>
                 </div> --}}
 
-                <button type="submit" class="btn btn-primary btn-xs col-12">
-                    Salvar
-                </button>
-            </x-form>
-        </div>
+        <button type="submit" class="btn btn-primary btn-xs col-12">
+            Salvar
+        </button>
+        </x-form>
     </div>
+    </div>
+    @component('reserva.components.modal-pesquisa')
+    @endcomponent
 @stop
 
 @section('js')
@@ -195,12 +199,12 @@
                     <hr class="my-1">
                     <div class="">
                         ${grupo.opcionais.map(opcional => `
-                                            <div class="btn btn-outline-dark btn-xs mx-1">
-                                                <input type="checkbox" name="opcionais[]" value="${opcional.id}" class="btn-check"
-                                                       id="btn-check-${opcional.id}-outlined" autocomplete="off">
-                                                <label class="m-0" for="btn-check-${opcional.id}-outlined">${opcional.nome}</label><br>
-                                            </div>
-                                        `).join('')}
+                                                <div class="btn btn-outline-dark btn-xs mx-1">
+                                                    <input type="checkbox" name="opcionais[]" value="${opcional.id}" class="btn-check"
+                                                           id="btn-check-${opcional.id}-outlined" autocomplete="off">
+                                                    <label class="m-0" for="btn-check-${opcional.id}-outlined">${opcional.nome}</label><br>
+                                                </div>
+                                            `).join('')}
                     </div>
                 </div>
             </div>
