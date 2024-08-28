@@ -104,7 +104,9 @@
                 if (tipoCobranca == 'por_dia') {
                     $('#preco_por_dia_div').show();
                     $('#preco_integral_div').hide();
+                    $('#preco_integral').removeAttr('required');
                 } else {
+                    $('#preco_por_dia').removeAttr('required');
                     $('#preco_por_dia_div').hide();
                     $('#preco_integral_div').show();
                 }
