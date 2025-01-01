@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
 class Veiculo extends Model
 {
@@ -23,7 +24,8 @@ class Veiculo extends Model
         'ano_modelo',
         'placa_licenca',
         'chassi',
-        'renavam',
+        'data_disponibilidade',
+        // 'renavam',
         'cor',
         'data_placa_licenca',
         'data_compra',
@@ -37,7 +39,14 @@ class Veiculo extends Model
         'proxima_manutencao_kms',
         'data_proxima_manutencao',
         'data_proxima_inspecao',
+        'local_disponibilidade',
+        'data_hora_disponibilidade',
     ];
+
+    public function Movimentacoes()
+    {
+        return $this->hasMany(Movimentacao::class, 'veiculo_id');
+    }
 
     public function tipoFrota()
     {
@@ -73,4 +82,31 @@ class Veiculo extends Model
     {
         return $this->hasMany(Reserva::class, 'veiculo_id');
     }
+
+    public function localDisponibilidade()
+    {
+        return $this->belongsTo(Estacao::class, 'local_disponibilidade');
+    }
+
+    public function estaDisponivel($dia)
+    {
+        // Verificar se o veículo está disponível no dia especificado
+        $movimentacao = DB::table("movimentacoes")
+            ->where('veiculo_id', $this->id)
+            ->where('data_saida', '<=', $dia)
+            ->where(function ($query) use ($dia) {
+                $query->where('data_chegada_real', '>=', $dia)
+                      ->orWhereNull('data_chegada_real');
+            })
+            ->whereIn('status_movimentacao_id', [1, 2, 5, 6, 7]) // IDs dos status que indicam indisponibilidade
+            ->first();
+
+        return $movimentacao == null;
+    }
+
+    public function getDisponibilidade($dia)
+    {
+        return $this->reservas->where('data_reserva', $dia)->first();
+    }
+
 }

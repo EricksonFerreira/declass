@@ -47,4 +47,9 @@ class ModeloService extends AbstractBaseService
 
         return $this->formatArraySelect($data, $id, 'nome');
     }
+
+    public function getModelosPorGrupoFrota($grupoFrotaId)
+    {
+        return $this->model->where('grupo_frota_id', $grupoFrotaId)->get();
+    }
 }

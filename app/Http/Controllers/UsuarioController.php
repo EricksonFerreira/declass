@@ -2,6 +2,10 @@
 
 namespace App\Http\Controllers;
 
+// Exceptions
+use App\Exceptions\ClienteNaoEncontradoException;
+use App\Exceptions\MultiplosClientesComEmailException;
+
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Usuario\StoreUsuarioRequest;
@@ -16,6 +20,7 @@ use App\Services\UsuarioService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
+use App\Services\ClienteStripeService;
 
 class UsuarioController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -25,12 +30,14 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     protected $breadcrumbService;
     protected $regraService;
     protected $paisService;
+    protected $clienteStripeService;
 
     public function __construct(
         UsuarioService $usuarioService,
         BreadcrumbService $breadcrumbService,
         RegraService $regraService,
-        PaisService $paisService
+        PaisService $paisService,
+        ClienteStripeService $clienteStripeService
     ) {
         $this->titulo = "Usuários";
         $this->nomeFiltro = 'usuario';
@@ -38,6 +45,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $this->breadcrumbService = $breadcrumbService;
         $this->regraService = $regraService;
         $this->paisService = $paisService;
+        $this->clienteStripeService = $clienteStripeService;
     }
 
     public function index()
@@ -48,7 +56,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         // session()->forget("$this->nomeFiltro.filtro");
-        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage,['tipoUsuario']);
+        $usuarios = $this->usuarioService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['tipoUsuario']);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Usuarios');
         $filters = $this->obterFiltrosPrincipais();
@@ -80,14 +88,22 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuarios', 'usuario.index', 'Criar');
 
         $paises = $this->paisService->getAllForSelect();
+
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
         [$metodo, $rota] = $this->getFormMethodAndRoute();
-        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario','paises', 'rota'))->with('titulo', $this->titulo);
+        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'paises', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreUsuarioRequest $request)
     {
+        // Remove o campo de confirmação de senha
         $data = $request->except('confirmacao_senha');
+
+        // Cria o cliente no Stripe
+        $cliente = $this->clienteStripeService->create($data['email'], $data['nome']);
+
+        // Cria o usuário no sistema
+        $data['stripe_id'] = $cliente->id;
         $this->usuarioService->createUser($data);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
@@ -96,6 +112,13 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     public function edit($id)
     {
         $usuario = $this->usuarioService->getById($id);
+
+        $metodosPagamentoResponse = $this->clienteStripeService->getPaymentMethods($usuario->stripe_id);
+        $metodosPagamento = !empty($metodosPagamentoResponse->data) ? $metodosPagamentoResponse->data : [];
+        // $metodosPagamento = $this->clienteStripeService->getPaymentMethods($usuario->stripe_id)->data;
+
+        // Refatoração: Mapeia diretamente os cartões sem a necessidade de uma variável intermediária
+        $metodosPagamento = array_map(fn($item) => $item->card, $metodosPagamento);
         $sexo = [
             'M' => 'Masculino',
             'F' => 'Feminino',
@@ -104,17 +127,84 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
 
+        $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
+
         $paises = $this->paisService->getAllForSelect();
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($usuario);
 
-        return view('usuario.add-edit', compact('usuario', 'breadcrumb', 'tiposUsuario', 'sexo','paises', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view('usuario.add-edit', compact('metodosPagamento', 'usuario', 'breadcrumb', 'tiposUsuario', 'sexo', 'paises', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateUsuarioRequest $request, $id)
     {
+        $usuario = $this->usuarioService->getById($id);
+
+        // if (isset($request->stripeToken)) {
+        //     $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
+
+        //     if ($cliente->data == []) {
+        //         throw new ClienteNaoEncontradoException();
+        //     }
+
+        //     if (count($cliente->data) > 1) {
+        //         throw new MultiplosClientesComEmailException();
+        //     }
+
+        //     $cliente = $cliente->data[0];
+        //     $this->clienteStripeService->createPaymentMethod($cliente->id, $request->stripeToken);
+        // }
+
         $this->usuarioService->update($id, $request->all());
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function metodoPagamento($usuarioId)
+    {
+        $usuario = $this->usuarioService->getById($usuarioId);
+
+        if($usuario->stripe_id == null){
+            return $this->redirecionaRotaRedirect('usuario.index', 'Usuário não possui código Stripe','error');
+        }
+
+        // Verifica se o retorno contém dados antes de acessar a propriedade data
+        $metodosPagamentoResponse = $this->clienteStripeService->getPaymentMethods($usuario->stripe_id);
+        $metodosPagamento = !empty($metodosPagamentoResponse->data) ? $metodosPagamentoResponse->data : [];
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
+        $metodo = 'POST';
+        $rota = route('usuario.adicionarMetodoPagamento', $usuarioId);
+
+        return view(
+            'usuario.metodoPagamento',
+            compact(
+                'metodosPagamento',
+                'breadcrumb',
+                'usuarioId',
+                'metodo',
+                'rota'
+            )
+        )
+            ->with('titulo', 'Métodos de Pagamento');
+    }
+
+    public function adicionarMetodoPagamento(Request $request, $usuarioId)
+    {
+        if (isset($request->stripeToken)) {
+
+            $usuario = $this->usuarioService->getById($usuarioId);
+            // $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
+            $this->clienteStripeService->createPaymentMethod($usuario->stripe_id, $request->stripeToken);
+            return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Método de pagamento adicionado com sucesso!');
+        }
+
+        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Método de pagamento não adicionado!', 'error');
+    }
+
+    public function excluirMetodoPagamento($usuarioId, $metodoId)
+    {
+        $this->clienteStripeService->deletePaymentMethod($metodoId);
+        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Metodo de pagamento excluido com sucesso!');
     }
 
     public function alterarSenha($id)
@@ -173,7 +263,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $dataTiposUsuarios = [];
         $dataTiposUsuarios[] = ['value' => '', 'label' => 'Selecione o status', 'selected' => false];
 
-        foreach($tiposUsuarios as $key => $value) {
+        foreach ($tiposUsuarios as $key => $value) {
             $dataTiposUsuarios[] = ['value' => $key, 'label' => $value, 'selected' => false];
         }
         return [

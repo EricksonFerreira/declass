@@ -85,13 +85,13 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
-        $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id','nome','nome');
-        $marcas = $this->modeloService->getAllAtivosConcatenado('id','nome');
-        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id','nome','nome');
-        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome','asc');
-        $modelos = $this->modeloService->getAllAtivos('id','nome','nome');
+        $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id', 'nome', 'nome');
+        $marcas = $this->modeloService->getAllAtivosConcatenado('id', 'nome');
+        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id', 'nome', 'nome');
+        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
+        $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
 
-        return view('grupo_frota.add-edit', compact('modelos','caracteristicas','tiposOpcionais','marcas', 'tipoFrotas', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view('grupo_frota.add-edit', compact('modelos', 'caracteristicas', 'tiposOpcionais', 'marcas', 'tipoFrotas', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreGrupoFrotaRequest $request)
@@ -110,11 +110,11 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Grupos de Frotas', 'grupo_frota.index', "Editar: $grupoFrota->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($grupoFrota);
-        $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id','nome','nome');
-        $modelos = $this->modeloService->getAllAtivosConcatenado('id','nome');
-        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id','nome','nome');
-        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome','asc');
-        $modelos = $this->modeloService->getAllAtivos('id','nome','nome');
+        $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id', 'nome', 'nome');
+        $modelos = $this->modeloService->getAllAtivosConcatenado('id', 'nome');
+        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id', 'nome', 'nome');
+        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
+        $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
 
         $grupoFrota->opcionais = $grupoFrota->opcionais->pluck('id')->toArray();
         $grupoFrota->modelos = $grupoFrota->modelos->pluck('id')->toArray();
@@ -125,7 +125,7 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
             ];
         });
 
-        return view('grupo_frota.add-edit', compact('modelos','tiposOpcionais','caracteristicas','tipoFrotas',  'grupoFrota', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view('grupo_frota.add-edit', compact('modelos', 'tiposOpcionais', 'caracteristicas', 'tipoFrotas',  'grupoFrota', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateGrupoFrotaRequest $request, $id)
@@ -165,8 +165,8 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
 
 
         return response()->json([
-            'modelo'=>$modelos,
-            'tipo_opcional'=>$opcionais
+            'modelo' => $modelos,
+            'tipo_opcional' => $opcionais
         ]);
     }
 
@@ -203,6 +203,18 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
             // Adicione filtros secundários aqui, se necessário
         ];
     }
+
+    public function getGrupoFrotaDisponiveis(Request $request)
+    {
+        $estacao_retirada_id = $request->estacao_retirada_id;
+        $data_inicio = $request->data_inicio;
+        $estacao_devolucao_id = $request->estacao_devolucao_id;
+        $data_fim = $request->data_fim;
+
+        $this->grupoFrotaService->verificaGruposFrotaDisponiveis($estacao_retirada_id,$data_inicio,$estacao_devolucao_id,$data_fim);
+
+    }
+
 
     /**
      * Função para obter o método e a rota para o formulário.

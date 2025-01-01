@@ -8,6 +8,9 @@ use App\Http\Requests\Movimentacao\StoreMovimentacaoRequest;
 use App\Http\Requests\Movimentacao\UpdateMovimentacaoRequest;
 use App\Services\BreadcrumbService;
 use App\Services\MovimentacaoService;
+use App\Services\StatusMovimentacaoService;
+use App\Services\TipoMovimentacaoService;
+use App\Services\UsuarioService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
@@ -19,12 +22,19 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
     protected $movimentacaoService;
     protected $breadcrumbService;
 
-    public function __construct(MovimentacaoService $movimentacaoService, BreadcrumbService $breadcrumbService)
+    protected $tipoMovimentacaoService;
+    protected $usuarioService;
+    protected $statusMovimentacaoService;
+
+    public function __construct(MovimentacaoService $movimentacaoService, BreadcrumbService $breadcrumbService, TipoMovimentacaoService $tipoMovimentacaoService, UsuarioService $usuarioService, StatusMovimentacaoService $statusMovimentacaoService)
     {
-        $this->titulo = "Movimentacaos";
+        $this->titulo = "Movimentações";
         $this->nomeFiltro = 'movimentacao';
         $this->movimentacaoService = $movimentacaoService;
         $this->breadcrumbService = $breadcrumbService;
+        $this->tipoMovimentacaoService = $tipoMovimentacaoService;
+        $this->usuarioService = $usuarioService;
+        $this->statusMovimentacaoService = $statusMovimentacaoService;
     }
 
     public function index()
@@ -34,9 +44,9 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $movimentacaos = $this->movimentacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $movimentacaos = $this->movimentacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage,['tipoMovimentacao','usuario','statusMovimentacao']);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Movimentacaos');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Movimentações');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -61,7 +71,7 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Movimentacaos','movimentacao.index','Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Movimentações','movimentacao.index','Criar');
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
         return view('movimentacao.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
@@ -81,7 +91,7 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Movimentacaos','movimentacao.index',"Editar: $movimentacao->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Movimentações','movimentacao.index',"Editar: $movimentacao->nome");
         [$metodo,$rota] = $this->getFormMethodAndRoute($movimentacao);
 
         return view('movimentacao.add-edit', compact('movimentacao','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
@@ -129,13 +139,19 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
     public function obterFiltrosPrincipais()
     {
+        $tipoMovimentacao = $this->tipoMovimentacaoService->getAllAtivos('id','nome','nome','asc');
+        $dadosTipoMovimentacao = FiltroTrait::formatOptions($tipoMovimentacao, 'Selecione o tipo de Movimentação');
+
+        $usuario = $this->usuarioService->getAllForSelect('id','nome');
+        $dadosUsuario = FiltroTrait::formatOptions($usuario, 'Selecione o usuário');
+
+        $statusMovimentacao = $this->statusMovimentacaoService->getAllAtivos('id','nome','nome','asc');
+        $dadosStatusMovimentacao = FiltroTrait::formatOptions($statusMovimentacao, 'Selecione o status da Movimentação');
+
         return [
-            ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
-                ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
-                ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
-                ['value' => 'N', 'label' => 'Inativo', 'selected' => false]
-            ]]
+            ['name' => 'tipo_movimentacao_id', 'label'=> 'Tipos de Movimentações','type'=>'select','typeWhere' => 'where','options'=> $dadosTipoMovimentacao],
+            ['name' => 'user_id', 'label'=> 'Usuários','type'=>'select','typeWhere' => 'where','options'=> $dadosUsuario],
+            ['name' => 'status_movimentacao_id', 'label'=> 'Status das Movimentações','type'=>'select','typeWhere' => 'where','options'=> $dadosStatusMovimentacao],
         ];
     }
 

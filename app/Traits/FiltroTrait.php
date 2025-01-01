@@ -54,9 +54,9 @@ trait FiltroTrait
         session()->forget("$sessao.filtro$atributo");
     }
 
-    public function redirecionaRotaRedirect(string $nomeFiltro, string $mensagem = null, string $tipo = 'success')
+    public function redirecionaRotaRedirect(string $nomeFiltro, string $mensagem = 'Não há rota de redirecionamento', string $tipo = 'success')
     {
-
+        // dd(session()->has($nomeFiltro . '.rotaRedirect'),$mensagem);
         if (session()->has($nomeFiltro . '.rotaRedirect')) {
             return redirect()->route(session($nomeFiltro . '.rotaRedirect'));
         }

@@ -8,5 +8,9 @@ Route::prefix('usuario')->name('usuario.')->group(function () {
     Route::get('filtro', [UsuarioController::class, 'filtro'])->name('filtro');
     Route::get('{id}/alterarsenha', [UsuarioController::class, 'alterarSenha'])->name('alterarSenha');
     Route::put('{id}/alterarsenha', [UsuarioController::class, 'salvarNovaSenha'])->name('salvarNovaSenha');
+
+    Route::get('{id}/metodopagamento', [UsuarioController::class, 'metodoPagamento'])->name('metodoPagamento');
+    Route::post('{id}/adicionarMetodoPagamento', [UsuarioController::class, 'adicionarMetodoPagamento'])->name('adicionarMetodoPagamento');
+    Route::delete('{usuarioId}/excluirmetodopagamento/{metodoId}', [UsuarioController::class, 'excluirMetodoPagamento'])->name('excluirMetodoPagamento');
 });
 Route::resource('usuario', UsuarioController::class);

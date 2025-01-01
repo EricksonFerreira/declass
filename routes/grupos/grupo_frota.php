@@ -8,6 +8,9 @@ Route::prefix('grupo_frota')->name('grupo_frota.')->group(function () {
     Route::get('getModelosPorGrupoFrota', [GrupoFrotaController::class, 'getModelosPorGrupoFrota'])
         ->name('getModelosPorGrupoFrota');
 
+        Route::get('getGrupoFrotaDisponiveis', [GrupoFrotaController::class, 'getGrupoFrotaDisponiveis'])
+        ->name('getGrupoFrotaDisponiveis');
+
     Route::post('setperpage', [GrupoFrotaController::class, 'setPerPage'])
         ->name('setPerPage');
 

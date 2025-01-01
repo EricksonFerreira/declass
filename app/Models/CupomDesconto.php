@@ -16,4 +16,9 @@ class CupomDesconto extends Model
         'valor',
         'ativo',
     ];
+
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class, 'cupom_desconto_id');
+    }
 }

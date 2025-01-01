@@ -48,8 +48,8 @@ class EstacaoService extends AbstractBaseService
     {
         $estacao = $this->model->create($data);
 
-        $this->adicionarHorarios($data,$estacao->id);
-        if(isset($data['diasUteis']) && !empty($data['diasUteis'])){
+        $this->adicionarHorarios($data, $estacao->id);
+        if (isset($data['diasUteis']) && !empty($data['diasUteis'])) {
             $this->adicionaDiasUteis($data['diasUteis'], $estacao->id);
         }
         return $estacao;
@@ -68,8 +68,8 @@ class EstacaoService extends AbstractBaseService
         if ($estacao) {
             $estacao->update($data);
         }
-        $this->adicionarHorarios($data,$id);
-        if(isset($data['diasUteis']) && !empty($data['diasUteis'])){
+        $this->adicionarHorarios($data, $id);
+        if (isset($data['diasUteis']) && !empty($data['diasUteis'])) {
             $this->adicionaDiasUteis($data['diasUteis'], $id);
         }
     }
@@ -136,4 +136,12 @@ class EstacaoService extends AbstractBaseService
             throw $e;
         }
     }
+
+    public function  getEstacoesDisponiveis($estacaoOrigem)
+    {
+        $estacoes = $this->model->where('id', '!=', $estacaoOrigem)->get();
+        return $estacoes;
+    }
+
+
 }

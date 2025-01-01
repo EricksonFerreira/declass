@@ -15,7 +15,7 @@ class GrupoFrota extends Model
         'codigo',
         'codigo_sipp',
         'nome',
-        'marca_id',
+        'valor_diario',
         'imagem',
         'ativo',
     ];
@@ -34,5 +34,19 @@ class GrupoFrota extends Model
     public function opcionais()
     {
         return $this->belongsToMany(Opcional::class, 'grupo_frota_opcional', 'grupo_frota_id', 'opcional_id');
+    }
+
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class, 'grupo_frota_id');
+    }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($grupoFrota) {
+            $grupoFrota->caracteristicas()->delete();
+        });
     }
 }

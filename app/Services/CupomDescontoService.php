@@ -27,4 +27,13 @@ class CupomDescontoService extends AbstractBaseService
     {
         return $this->model;
     }
+
+    public function verificarCupom($cupom)
+    {
+        $cupom = $this->model->where('codigo', $cupom)->first();
+        if ($cupom) {
+            return $cupom;
+        }
+        return null;
+    }
 }

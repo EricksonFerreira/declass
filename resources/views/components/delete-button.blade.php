@@ -6,7 +6,9 @@
 </form>
 
 <!-- Inclua o SweetAlert -->
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+<script src="{{ asset('js/sweetAlert.min.js') }}"></script>
+<script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
+{{-- <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> --}}
 <!-- Script para interceptar a submissão do formulário e exibir o SweetAlert -->
 <script>
     $(document).ready(function() {

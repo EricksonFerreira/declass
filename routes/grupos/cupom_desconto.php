@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\CupomDescontoController;
 
 Route::prefix('cupom_desconto')->name('cupom_desconto.')->group(function () {
+    Route::post('verificar-cupom', [CupomDescontoController::class, 'verificarCupom'])->name('verificarCupom');
     Route::post('setperpage', [CupomDescontoController::class, 'setPerPage'])->name('setPerPage');
     Route::get('removerfiltro', [CupomDescontoController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [CupomDescontoController::class, 'filtro'])->name('filtro');

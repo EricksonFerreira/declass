@@ -27,6 +27,7 @@ class StoreGrupoFrotaRequest extends FormRequest
             'nome' => 'required|string|max:255',
             'codigo_sipp'=> 'required|string|max:50',
             'tipo_frota_id' => 'required|integer|exists:tipo_frota,id',
+            'valor_diario' => 'required|string',
             'ativo' => 'required|string|max:1',
             'imagem' => 'nullable|max:2048',
         ];
@@ -46,6 +47,8 @@ class StoreGrupoFrotaRequest extends FormRequest
             'tipo_frota_id.required' => 'O campo tipo de frota é obrigatório',
             'tipo_frota_id.integer' => 'O campo tipo de frota deve ser um inteiro',
             'tipo_frota_id.exists' => 'O tipo de frota informado não existe',
+            'valor_diario.required' => 'O campo valor diário é obrigatório',
+            'valor_diario.numeric' => 'O campo valor diário deve ser um número',
             'ativo.required' => 'O campo ativo é obrigatório',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
             'imagem.max' => 'O arquivo deve ter no máximo 2048 kilobytes.',

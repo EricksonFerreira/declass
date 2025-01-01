@@ -28,7 +28,7 @@ class UpdateVeiculoRequest extends FormRequest
             'ano_modelo' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             'placa_licenca' => 'required|string|max:10',
             'chassi' => 'required|string|max:17',
-            'renavam' => 'required|string|max:11',
+            // 'renavam' => 'required|string|max:11',
             'cor' => 'required|string|max:50',
             'numero_motor' => 'required|string|max:50',
             'data_placa_licenca' => 'required|date',
@@ -41,7 +41,7 @@ class UpdateVeiculoRequest extends FormRequest
             'limite_kms' => 'required|integer|min:0',
             'proxima_revisao_kms' => 'required|integer|min:0',
             'proxima_manutencao_kms' => 'required|integer|min:0',
-            'vendido' => 'required|string|in:N,S',
+            // 'vendido' => 'required|string|in:N,S',
         ];
     }
 

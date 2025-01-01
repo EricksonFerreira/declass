@@ -32,19 +32,87 @@
             <table class="table table-striped table-bordered table-sm">
                 <thead>
                     <tr>
-                        <th>Nome</th>
+                        <th>#</th>
+                        <th>Tipo de Movimentação</th>
+                        <th>Usuário</th>
                         <th>Status</th>
+                        <th>Veículo</th>
+                        <th>Grupo de Veículo</th>
+                        <th>Data de Saída</th>
+                        <th>Data Estimada de Chegada</th>
+                        <th>Data de Chegada</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach ($movimentacaos as $movimentacao)
                         <tr>
-                            <td>{{ $movimentacao->nome }}</td>
+                            <td>{{$movimentacao->id}}</td>
+                            <td>{{ $movimentacao->tipoMovimentacao?->nome }}</td>
+                            <td>{{ $movimentacao->usuario?->nome }}</td>
                             <td>
-                                <span class="badge badge-xs bg-{{ $movimentacao->ativo == 'S' ? 'success' : 'danger' }}">
-                                    {{ $movimentacao->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
+                                <span class="badge badge-pill badge-{{ $movimentacao->statusMovimentacao?->cor ?? 'secondary' }}">
+                                    {{ $movimentacao->statusMovimentacao?->nome }}
                                 </span>
+                            </td>
+                            <td>
+                                @if($movimentacao->veiculo)
+                                    <div class="info-box bg-light">
+                                        <div class="info-box-content">
+                                            <span class="info-box-text"><i class="fas fa-car mr-1"></i> {{ $movimentacao->veiculo->modelo->nome }}</span>
+                                            <span class="info-box-number">{{ $movimentacao->veiculo->placa }}</span>
+                                            <div class="progress">
+                                                <div class="progress-bar bg-primary" style="width: 100%"></div>
+                                            </div>
+                                            <span class="progress-description">
+                                                <small>
+                                                    <span data-toggle="tooltip" title="Ano do veículo">
+                                                        <i class="fas fa-calendar-alt mr-1"></i> {{ $movimentacao->veiculo->ano ?? 'N/A' }}
+                                                    </span> |
+                                                    <span data-toggle="tooltip" title="Cor do veículo">
+                                                        <i class="fas fa-palette mr-1"></i> {{ $movimentacao->veiculo->cor ?? 'N/A' }}
+                                                    </span> |
+                                                    <span data-toggle="tooltip" title="Número do chassi">
+                                                        <i class="fas fa-fingerprint mr-1"></i> {{ $movimentacao->veiculo->chassi ?? 'N/A' }}
+                                                    </span>
+                                                </small>
+                                            </span>
+                                        </div>
+                                    </div>
+                                @else
+                                   <span class="text-muted">Não definido</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($movimentacao->veiculo && $movimentacao->veiculo->grupoFrota)
+                                    {{ $movimentacao->veiculo->grupoFrota->nome }}
+                                @else
+                                    <span class="text-muted">Não definido</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($movimentacao->data_saida)
+                                    <i class="fas fa-car mr-1"></i>
+                                    {{ Carbon\Carbon::parse($movimentacao->data_saida)->format('d/m/Y H:i') }}
+                                @else
+                                    <span class="text-muted">Não definida</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($movimentacao->data_chegada_estimada)
+                                    <i class="fas fa-calendar-alt mr-1"></i>
+                                    {{ Carbon\Carbon::parse($movimentacao->data_chegada_estimada)->format('d/m/Y H:i') }}
+                                @else
+                                    <span class="text-muted">Não definida</span>
+                                @endif
+                            </td>
+                            <td>
+                                @if($movimentacao->data_chegada)
+                                    <i class="fas fa-flag-checkered mr-1"></i>
+                                    {{ Carbon\Carbon::parse($movimentacao->data_chegada)->format('d/m/Y H:i') }}
+                                @else
+                                    <span class="text-muted">Não definida</span>
+                                @endif
                             </td>
                             <td style="width: 180px;">
                                 <a href="{{ route('movimentacao.edit', $movimentacao->id) }}"

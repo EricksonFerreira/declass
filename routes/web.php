@@ -3,14 +3,20 @@
 use App\Http\Controllers\BookingController;
 use App\Http\Controllers\Cards3Controller;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\TipoTransacaoController;
+use App\Http\Controllers\StripeController;
 use Illuminate\Support\Facades\Route;
+
+// Crypto
+use App\Http\Controllers\Crypto\BinanceController;
 
 Route::get('/', function () {
     return redirect()->route('home');
 });
+
 Route::get('home',[HomeController::class,'home'])->middleware(['auth', 'verified'])->name('home');
 
 Route::post('tipotransacao/setperpage',[TipoTransacaoController::class,'setPerPage'])->name('tipotransacao.setPerPage');
@@ -19,6 +25,27 @@ Route::get('tipotransacao/filtro',[TipoTransacaoController::class,'filtro']);
 Route::resource('tipotransacao',TipoTransacaoController::class);
 
 Route::resource('countries',PaisController::class);
+
+# Teste de pagamento
+Route::get('/pagamento/teste2', [PagamentoController::class, 'teste2']);
+Route::any('/pagamento/teste', [PagamentoController::class, 'teste'])->name('pagamento.teste');
+Route::post('/pagamento/cobrar', [PagamentoController::class, 'cobrar']);
+
+
+# Teste Stipe
+Route::post('/stripe/processPayment', [StripeController::class, 'processPayment'])->name('stripe.processPayment');
+Route::get('/stripe/payment', [StripeController::class, 'payment'])->name('stripe.payment');
+Route::get('/stripe/failure', [StripeController::class, 'failure'])->name('stripe.failure');
+Route::get('/stripe/success', [StripeController::class, 'success2'])->name('stripe.success');
+
+Route::get('/checkout', [StripeController::class, 'checkout'])->name('checkout');
+Route::get('/success', [StripeController::class, 'success'])->name('success');
+Route::get('/cancel', [StripeController::class, 'cancel'])->name('cancel');
+Route::get('/subscription-checkout', [StripeController::class, 'subscriptionCheckout'])->name('subscription-checkout');
+
+
+// dashboard para HomeController
+Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 // Route::resource('booking',BookingController::class);
 
 // Route::get('/dashboard', function () {
@@ -36,6 +63,13 @@ Route::resource('countries',PaisController::class);
 // });
 
 require __DIR__.'/auth.php';
+
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/reserva.php');
+
+});
 
 Route::middleware('auth')
     ->group(function() {
@@ -72,6 +106,7 @@ Route::get('/powerbi/report/{reportId}', [App\Http\Controllers\PowerBIController
 //         require base_path('routes/grupos/station.php');
 
 // });
+
 
 Route::middleware('auth')
     ->group(function() {
@@ -184,11 +219,7 @@ Route::middleware('auth')
 });
 
 
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/reserva.php');
 
-});
 
 Route::middleware('auth')
     ->group(function() {
@@ -216,8 +247,82 @@ Route::middleware('auth')
 });
 
 
-Route::middleware('web')
+Route::middleware('auth')
     ->group(function() {
         require base_path('routes/grupos/cupom_desconto.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/tipo_movimentacao.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/status_movimentacao.php');
+
+});
+
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/status_reserva.php');
+
+});
+
+
+// Route::middleware('web')
+//     ->group(function() {
+//         require base_path('routes/grupos/disponibilidade_inicial_veiculo.php');
+
+// });
+
+
+Route::middleware('api')
+    ->group(function() {
+        require base_path('routes/grupos/status_reserva.php');
+
+});
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/jobs.php');
+
+});
+
+
+
+
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/checklist.php');
+
+});
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/item_checklist.php');
+
+});
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/status_item_checklist.php');
+
+});
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/tipo_checklist.php');
+
+});
+
+
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/configuracao_checklist.php');
 
 });

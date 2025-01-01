@@ -51,9 +51,27 @@
                             <td>{{ $usuario->cidade }}</td>
                             <td>{{ $usuario->created_at->format('d/m/Y') }}</td>
                             <td style="width: 180px;">
+                                <div class="btn-group">
+                                    <button type="button" class="btn btn-xs btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <i class="fas fa-cog mr-2"></i> Ações
+                                    </button>
+                                    <div class="dropdown-menu" style="font-size:12px !important; overflow:scroll">
+                                        <a class="dropdown-item bg-success" href="{{ route('usuario.metodoPagamento', $usuario->id) }}">
+                                            <i class="fas fa-credit-card mr-2"></i> Métodos de Pagamento
+                                        </a>
+                                        <a href="{{ route('usuario.edit', $usuario->id) }}" class="dropdown-item bg-warning">
+                                            <i class="fa fa-edit"></i> Editar
+                                        </a>
+                                        <a href="{{ route("usuario.alterarSenha",$usuario->id)}}" class="dropdown-item bg-info">
+                                            <i class="fa fa-key"></i> Alterar Senhar
+                                        </a>
+                                        <x-delete-button :action="route('usuario.destroy', $usuario->id)" />
+                                    </div>
+                                </div>
+                                {{-- <a href="{{ route('usuario.metodoPagamento', $usuario->id) }}" class="btn btn-xs btn-primary"><i class="fa fa-credit-card"></i> Métodos de Pagamento</a>
                                 <a href="{{ route('usuario.edit', $usuario->id) }}" class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>
                                 <a href="{{ route("usuario.alterarSenha",$usuario->id)}}" class="btn btn-xs btn-info"><i class="fa fa-key"></i> Alterar Senhar</a>
-                                <x-delete-button :action="route('usuario.destroy', $usuario->id)" />
+                                <x-delete-button :action="route('usuario.destroy', $usuario->id)" /> --}}
                             </td>
                         </tr>
                     @endforeach

@@ -22,6 +22,11 @@ class Modelo extends Model
         return "{$this->nome} -> {$this->marcas?->nome} -> {$this->segmentos?->nome}";
     }
 
+    public function reservas()
+    {
+        return $this->hasMany(Reserva::class, 'modelo_id');
+    }
+
     public function marcas()
     {
         return $this->belongsTo(Marca::class, 'marca_id');

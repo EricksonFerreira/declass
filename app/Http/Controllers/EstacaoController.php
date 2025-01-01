@@ -242,6 +242,16 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         ];
     }
 
+
+    public function getEstacoesDisponiveis(Request $request)
+    {
+        if(isset($request->estacao_origem_id)){
+            $estacoes = $this->estacaoService->getEstacoesDisponiveis($request->estacao_origem_id);
+            return response()->json($estacoes);
+        }
+        return response()->json([]);
+    }
+
     /**
      * Função para obter o método e a rota para o formulário.
      *

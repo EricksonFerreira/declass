@@ -5,11 +5,12 @@ namespace App\Models;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Cashier\Billable;
 
 class User extends Authenticatable
 {
     use Notifiable;
-
+    use Billable;
     /**
      * The attributes that are mass assignable.
      *
@@ -29,6 +30,7 @@ class User extends Authenticatable
         'endereco',
         'numero_identificacao',
         'tipo_usuario_id',
+        'stripe_id',
         'password'
     ];
 
@@ -57,4 +59,13 @@ class User extends Authenticatable
         return $this->belongsTo(Regra::class, 'tipo_usuario_id');
     }
 
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function defaultPaymentMethod()
+    {
+        return $this->defaultPaymentMethod();
+    }
 }

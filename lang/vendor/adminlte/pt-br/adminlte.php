@@ -25,4 +25,13 @@ return [
     'verify_if_not_recieved' => 'caso não tenha recebido o email',
     'verify_request_another' => 'clique aqui para solicitar um novo',
     'confirm_password_message' => 'Por favor, confirme sua senha para continuar.',
+
+   'auth' => [
+           'failed' => 'As credenciais fornecidas estão incorretas.',
+           // outras traduções...
+       ],
+    'auth.throttle' => 'Muitas tentativas de login. Por favor, tente novamente em :seconds segundos.',
+    'auth.generic_error' => 'Erro de autenticação. Por favor, verifique suas credenciais e tente novamente.',
+    'auth.failed_custom_message' => 'Seu e-mail ou senha estão incorretos. Tente novamente.',
+    'validation.required' => 'O campo :attribute é obrigatório.',
 ];

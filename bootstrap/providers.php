@@ -3,4 +3,5 @@
 return [
     App\Providers\AppServiceProvider::class,
     Spatie\Permission\PermissionServiceProvider::class,
+    LivePixel\MercadoPago\Providers\MercadoPagoServiceProvider::class,
 ];

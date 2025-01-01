@@ -4,12 +4,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Title
+    | Título
     |--------------------------------------------------------------------------
     |
-    | Here you can change the default title of your admin panel.
+    | Aqui você pode alterar o título padrão do seu painel de administração.
     |
-    | For detailed instructions you can look the title section here:
+    | Para instruções detalhadas, você pode consultar a seção de título aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -23,9 +23,9 @@ return [
     | Favicon
     |--------------------------------------------------------------------------
     |
-    | Here you can activate the favicon.
+    | Aqui você pode ativar o favicon.
     |
-    | For detailed instructions you can look the favicon section here:
+    | Para instruções detalhadas, você pode consultar a seção de favicon aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -35,14 +35,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Google Fonts
+    | Fontes do Google
     |--------------------------------------------------------------------------
     |
-    | Here you can allow or not the use of external google fonts. Disabling the
-    | google fonts may be useful if your admin panel internet access is
-    | restricted somehow.
+    | Aqui você pode permitir ou não o uso de fontes externas do Google. Desativar as
+    | fontes do Google pode ser útil se o acesso à internet do seu painel de administração
+    | for restrito de alguma forma.
     |
-    | For detailed instructions you can look the google fonts section here:
+    | Para instruções detalhadas, você pode consultar a seção de fontes do Google aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -53,33 +53,32 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Admin Panel Logo
+    | Logo do Painel de Administração
     |--------------------------------------------------------------------------
     |
-    | Here you can change the logo of your admin panel.
+    | Aqui você pode alterar o logo do seu painel de administração.
     |
-    | For detailed instructions you can look the logo section here:
+    | Para instruções detalhadas, você pode consultar a seção de logo aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
 
     'logo' => '<b>XPAND</b>cars',
     'logo_img' => 'assets/imgs/logo.png',
-    // 'logo_img' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
     'logo_img_class' => 'brand-image img-circle elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
-    'logo_img_alt' => 'Xpand Cars Logo',
+    'logo_img_alt' => 'Logo Xpand Cars',
 
     /*
     |--------------------------------------------------------------------------
-    | Authentication Logo
+    | Logo de Autenticação
     |--------------------------------------------------------------------------
     |
-    | Here you can setup an alternative logo to use on your login and register
-    | screens. When disabled, the admin panel logo will be used instead.
+    | Aqui você pode configurar um logo alternativo para usar nas telas de login e registro.
+    | Quando desativado, o logo do painel de administração será usado.
     |
-    | For detailed instructions you can look the auth logo section here:
+    | Para instruções detalhadas, você pode consultar a seção de logo de autenticação aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -88,7 +87,7 @@ return [
         'enabled' => true,
         'img' => [
             'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'Auth Logo',
+            'alt' => 'Logo de Autenticação',
             'class' => '',
             'width' => 50,
             'height' => 50,
@@ -97,15 +96,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Preloader Animation
+    | Animação de Pré-carregamento
     |--------------------------------------------------------------------------
     |
-    | Here you can change the preloader animation configuration. Currently, two
-    | modes are supported: 'fullscreen' for a fullscreen preloader animation
-    | and 'cwrapper' to attach the preloader animation into the content-wrapper
-    | element and avoid overlapping it with the sidebars and the top navbar.
+    | Aqui você pode alterar a configuração da animação de pré-carregamento. Atualmente, dois
+    | modos são suportados: 'fullscreen' para uma animação de pré-carregamento em tela cheia
+    | e 'cwrapper' para anexar a animação de pré-carregamento ao elemento content-wrapper
+    | e evitar sobreposição com as barras laterais e a barra superior.
     |
-    | For detailed instructions you can look the preloader section here:
+    | Para instruções detalhadas, você pode consultar a seção de pré-carregamento aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -115,7 +114,7 @@ return [
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'AdminLTE Preloader Image',
+            'alt' => 'Imagem de Pré-carregamento AdminLTE',
             'effect' => 'animation__shake',
             'width' => 60,
             'height' => 60,
@@ -124,12 +123,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | User Menu
+    | Menu do Usuário
     |--------------------------------------------------------------------------
     |
-    | Here you can activate and change the user menu.
+    | Aqui você pode ativar e alterar o menu do usuário.
     |
-    | For detailed instructions you can look the user menu section here:
+    | Para instruções detalhadas, você pode consultar a seção de menu do usuário aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -323,20 +322,41 @@ return [
             // 'label' => 4,
             // 'label_color' => 'success',
         ],
-        // [
-        //     'text' => 'sidebar.movimentacoes',
-        //     'url' => 'movimentacao',
-        //     'icon' => 'fas fa-truck-moving',
-        //     // 'label' => 4,
-        //     // 'label_color' => 'success',
-        // ],
-        // [
-        //     'text' => 'sidebar.tempo_estacoes',
-        //     'url' => 'tempo_entre_entacao',
-        //     'icon' => 'fas fa-stopwatch',
-        //     // 'label' => 4,
-        //     // 'label_color' => 'success',
-        // ],
+        [
+            'text' => 'sidebar.status_reserva',
+            'url' => 'status_reserva',
+            'icon' => 'fas fa-check-circle',
+            // 'label' => 4,
+            // 'label_color' => 'success',
+        ],
+        [
+            'text' => 'sidebar.movimentacoes',
+            'url' => 'movimentacao',
+            'icon' => 'fas fa-truck-moving',
+            // 'label' => 4,
+            // 'label_color' => 'success',
+        ],
+        [
+            'text' => 'sidebar.status_movimentacao',
+            'url' => 'status_movimentacao',
+            'icon' => 'fas fa-circle',
+            // 'label' => 4,
+            // 'label_color' => 'success',
+        ],
+        [
+            'text' => 'sidebar.tipo_movimentacao',
+            'url' => 'tipo_movimentacao',
+            'icon' => 'fas fa-truck',
+            // 'label' => 4,
+            // 'label_color' => 'success',
+        ],
+        [
+            'text' => 'sidebar.tempo_estacoes',
+            'url' => 'tempo_entre_entacao',
+            'icon' => 'fas fa-stopwatch',
+            // 'label' => 4,
+            // 'label_color' => 'success',
+        ],
         [
             'header' => 'sidebar.configuracao_usuario',
             'classes' => 'text-bold text-secondary text-uppercase mt-1',
@@ -401,9 +421,41 @@ return [
             'icon' => 'fas fa-car',
         ],
         [
+            'text' => 'sidebar.veiculo_e_opcional.disponibilidade',
+            'url' => 'veiculo/disponibilidade',
+            'icon' => 'fas fa-car',
+        ],
+        [
             'text' => 'sidebar.cupom_desconto',
             'url' => 'cupom_desconto',
             'icon' => 'fas fa-percentage',
+        ],
+        [
+            'text' => 'sidebar.checklist',
+            'url' => 'checklist',
+            'icon' => 'fas fa-list-alt',
+            'submenu' => [
+                [
+                    'text' => 'sidebar.configuracao_checklist',
+                    'url' => 'configuracao-checklist',
+                    'icon' => 'fas fa-clipboard-check',
+                ],
+                [
+                    'text' => 'sidebar.item_checklist',
+                    'url' => 'item_checklist',
+                    'icon' => 'fas fa-tasks',
+                ],
+                [
+                    'text' => 'sidebar.tipo_checklist',
+                    'url' => 'tipo_checklist',
+                    'icon' => 'fas fa-clipboard-list',
+                ],
+                [
+                    'text' => 'sidebar.status_item_checklist',
+                    'url' => 'status_item_checklist',
+                    'icon' => 'fas fa-check-square',
+                ]
+            ],
         ],
 
         [

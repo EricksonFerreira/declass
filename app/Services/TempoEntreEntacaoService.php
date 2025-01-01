@@ -27,4 +27,26 @@ class TempoEntreEntacaoService extends AbstractBaseService
     {
         return $this->model;
     }
+    public function hasDuplicateEstacao($estacaoOrigemId, $estacaoDestinoId, $ignoreId = null)
+    {
+        $query = $this->model->where('estacao_origem_id', $estacaoOrigemId)
+            ->where('estacao_destino_id', $estacaoDestinoId);
+
+        if ($ignoreId) {
+            $query->where('id', '!=', $ignoreId);
+        }
+
+        return $query->exists();
+    }
+
+    public function getEstacaoDestino($id)
+    {
+        try {
+
+            $registro = $this->model->where('id', $id)->first()->estacaoDestino;
+            return [$registro->id => $registro->nome];
+        } catch (\Exception $e) {
+            return [];
+        }
+    }
 }

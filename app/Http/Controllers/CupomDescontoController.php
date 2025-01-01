@@ -146,6 +146,12 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
         ];
     }
 
+    public function verificarCupom(Request $request)
+    {
+        $cupom = $this->cupom_descontoService->verificarCupom($request->input('cupom'));
+        return response()->json($cupom);
+    }
+
     /**
      * Função para obter o método e a rota para o formulário.
      *

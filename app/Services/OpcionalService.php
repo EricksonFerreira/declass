@@ -27,4 +27,9 @@ class OpcionalService extends AbstractBaseService
     {
         return $this->model;
     }
+
+    public function getByGrupoFrota(int $grupoFrotaId)
+    {
+        return $this->model->where('ativo', true)->where('grupo_frota_id', $grupoFrotaId)->get();
+    }
 }

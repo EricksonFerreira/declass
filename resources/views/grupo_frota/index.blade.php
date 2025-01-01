@@ -33,6 +33,7 @@
                 <thead>
                     <tr>
                         <th>Nome</th>
+                        <th>Valor Diário</th>
                         <th>Status</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
@@ -41,6 +42,7 @@
                     @foreach ($grupoFrotas as $grupo_frota)
                         <tr>
                             <td>{{ $grupo_frota->nome }}</td>
+                            <td>{{ $grupo_frota->valor_diario }}</td>
                             <td>
                                 <span class="badge badge-xs bg-{{ $grupo_frota->ativo == 'S' ? 'success' : 'danger' }}">
                                     {{ $grupo_frota->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}

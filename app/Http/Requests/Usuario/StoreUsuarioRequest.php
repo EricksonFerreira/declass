@@ -23,6 +23,7 @@ class StoreUsuarioRequest extends FormRequest
      */
     public function rules(): array
     {
+        // dd($this->all());
         return [
             'nome' => 'required|string|max:255',
             'email' => 'required|string|max:150|unique:users,email',

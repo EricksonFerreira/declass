@@ -28,4 +28,13 @@ class CaracteristicaFrota extends Model
         return $this->belongsToMany(TipoFrota::class, 'caracteristicas_tipo_frota', 'caracteristica_frota_id', 'tipo_frota_id');
     }
 
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($caracteristicaFrota) {
+            $caracteristicaFrota->grupos()->delete();
+        });
+    }
 }

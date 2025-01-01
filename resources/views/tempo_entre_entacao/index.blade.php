@@ -32,7 +32,9 @@
             <table class="table table-striped table-bordered table-sm">
                 <thead>
                     <tr>
-                        <th>Nome</th>
+                        <th>Estação Origem</th>
+                        <th>Estação Destino</th>
+                        <th>Tempo de Deslocamento</th>
                         <th>Status</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
@@ -40,7 +42,9 @@
                 <tbody>
                     @foreach ($tempo_entre_entacaos as $tempo_entre_entacao)
                         <tr>
-                            <td>{{ $tempo_entre_entacao->nome }}</td>
+                            <td>{{ $tempo_entre_entacao->estacaoOrigem->nome }}</td>
+                            <td>{{ $tempo_entre_entacao->estacaoDestino->nome }}</td>
+                            <td>{{ $tempo_entre_entacao->tempo_deslocamento }}</td>
                             <td>
                                 <span class="badge badge-xs bg-{{ $tempo_entre_entacao->ativo == 'S' ? 'success' : 'danger' }}">
                                     {{ $tempo_entre_entacao->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}

@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\EstacaoController;
 
 Route::prefix('estacao')->name('estacao.')->group(function () {
+    Route::get('getestacoesdisponiveis', [EstacaoController::class, 'getEstacoesDisponiveis'])->name('getEstacoesDisponiveis');
     Route::post('setperpage', [EstacaoController::class, 'setPerPage'])->name('setPerPage');
     Route::get('removerfiltro', [EstacaoController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [EstacaoController::class, 'filtro'])->name('filtro');

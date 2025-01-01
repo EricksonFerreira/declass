@@ -2,10 +2,17 @@
 
 namespace App\Http\Requests\TempoEntreEntacao;
 
+use App\Services\TempoEntreEntacaoService;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTempoEntreEntacaoRequest extends FormRequest
 {
+    protected $tempoEntreEstacaoService;
+
+    public function __construct(TempoEntreEntacaoService $tempoEntreEstacaoService)
+    {
+        $this->tempoEntreEstacaoService = $tempoEntreEstacaoService;
+    }
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -14,7 +21,7 @@ class StoreTempoEntreEntacaoRequest extends FormRequest
         return true;
     }
 
-   
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -23,18 +30,40 @@ class StoreTempoEntreEntacaoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'required|string|max:255',
-            'ativo' => 'required|string|max:1',
+            'tempo_deslocamento' => ['required', 'regex:/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/'],
+            'estacao_origem_id' => [
+                'required',
+                'exists:estacoes,id',
+                function ($attribute, $value, $fail) {
+                    if ($this->tempoEntreEstacaoService->hasDuplicateEstacao($value, $this->input('estacao_destino_id'))) {
+                        $fail('Já existe um registro com a mesma estação de origem e destino.');
+                    }
+                },
+            ],
+            'estacao_destino_id' => [
+                'required',
+                'exists:estacoes,id',
+                function ($attribute, $value, $fail) {
+                    if ($this->tempoEntreEstacaoService->hasDuplicateEstacao($this->input('estacao_origem_id'), $value)) {
+                        $fail('Já existe um registro com a mesma estação de origem e destino.');
+                    }
+                },
+            ],
+            'ativo' => ['required', 'max:1'],
         ];
     }
 
     public function messages()
     {
         return [
-            'nome.required' => 'O campo nome é obrigatório',
-            'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
-            'ativo.required' => 'O campo ativo é obrigatório',
-            'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
+            'tempo_deslocamento.required' => 'O campo tempo é obrigatório.',
+            'tempo_deslocamento.regex' => 'O campo tempo deve ser uma hora válida.',
+            'estacao_origem_id.required' => 'O campo estação de origem é obrigatório.',
+            'estacao_origem_id.exists' => 'A estação de origem informada não existe.',
+            'estacao_destino_id.required' => 'O campo estação de destino é obrigatório.',
+            'estacao_destino_id.exists' => 'A estação de destino informada não existe.',
+            'ativo.required' => 'O campo ativo é obrigatório.',
+            'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',
         ];
     }
 }

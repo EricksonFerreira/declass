@@ -10,6 +10,8 @@
             background-color: #e0f7fa;
         }
     </style>
+        {{-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> --}}
+        <script src="https://js.stripe.com/v3/"></script>
 @stop
 
 
@@ -34,13 +36,13 @@
                 <x-section-division-header-form>Informações Pessoais</x-section-division-header-form>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
+                        <x-form-input type="text" class="form-control-sm" id="nome" name="nome"
                             label="Nome" value="{{ $usuario->nome ?? '' }}" required />
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <x-form-input type="email" class="form-control form-control-sm" id="email" name="email"
+                        <x-form-input type="email" class="form-control-sm" id="email" name="email"
                             label="E-mail" value="{{ $usuario->email ?? '' }}" required />
                     </div>
                 </div>
@@ -51,16 +53,16 @@
                             :selected="old('sexo', isset($usuario->sexo) ? $usuario->sexo : null)" class="form-control form-control-sm" required />
                     </div>
                 </div>
-                <div class="col-md-2">
+                <div class="col-md-3">
                     <div class="form-group">
-                        <x-form-input required type="date" class="form-control form-control-sm" id="data_nascimento"
+                        <x-form-input required type="date" class="form-control-sm" id="data_nascimento"
                             name="data_nascimento" label="Data de Nascimento"
                             value="{{ $usuario->data_nascimento ?? '' }}" />
                     </div>
                 </div>
-                <div class="col-md-7">
+                <div class="col-md-6">
                     <div class="form-group">
-                        <x-form-input required type="text" class="form-control form-control-sm" id="local_nascimento"
+                        <x-form-input required type="text" class="form-control-sm" id="local_nascimento"
                             name="local_nascimento" label="Local de Nascimento"
                             value="{{ $usuario->local_nascimento ?? '' }}" />
                     </div>
@@ -70,13 +72,13 @@
                 <x-section-division-header-form>Contato</x-section-division-header-form>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <x-form-input required type="text" class="form-control form-control-sm" id="telefone" name="telefone"
+                        <x-form-input required type="text" class="form-control-sm" id="telefone" name="telefone"
                             label="Telefone" value="{{ $usuario->telefone ?? '' }}" />
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <x-form-input required type="text" class="form-control form-control-sm" id="celular" name="celular"
+                        <x-form-input required type="text" class="form-control-sm" id="celular" name="celular"
                             placeholder="(99) 99999-9999" label="Celular" value="{{ $usuario->celular ?? '' }}" />
                     </div>
                 </div>
@@ -91,19 +93,19 @@
                 </div>
                 <div class="col-md-3">
                     <div class="form-group">
-                        <x-form-input required type="text" class="form-control form-control-sm" id="cep" name="zip_code"
+                        <x-form-input required type="text" class="form-control-sm" id="cep" name="zip_code"
                             label="Zip Code" value="{{ $usuario->zip_code ?? '' }}" />
                     </div>
                 </div>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <x-form-input required type="text" class="form-control form-control-sm" id="cidade" name="cidade"
+                        <x-form-input required type="text" class="form-control-sm" id="cidade" name="cidade"
                             label="Cidade" value="{{ $usuario->cidade ?? '' }}" />
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="form-group">
-                        <x-form-input required type="text" class="form-control form  -control-sm" id="endereco" name="endereco"
+                        <x-form-input required type="text" class="form-control-sm" id="endereco" name="endereco"
                             label="Endereço" value="{{ $usuario->endereco ?? '' }}" />
                     </div>
                 </div>
@@ -112,7 +114,7 @@
                 <x-section-division-header-form>Informações Adicionais</x-section-division-header-form>
                 <div class="col-md-4">
                     <div class="form-group">
-                        <x-form-input required type="text" class="form-control form-control-sm" id="numero_identificacao"
+                        <x-form-input required type="text" class="form-control-sm" id="numero_identificacao"
                             name="numero_identificacao" label="Número de Identificação"
                             value="{{ $usuario->numero_identificacao ?? '' }}" />
                     </div>
@@ -133,13 +135,13 @@
                     <x-section-division-header-form>Informações Privadas</x-section-division-header-form>
                     <div class="col-md-5">
                         <div class="form-group">
-                            <x-form-input required type="password" class="form-control form-control-sm" id="senha"
+                            <x-form-input required type="password" class="form-control-sm" id="senha"
                                 name="password" label="Senha" value="{{ $usuario->senha ?? '' }}" />
                         </div>
                     </div>
                     <div class="col-md-5">
                         <div class="form-group">
-                            <x-form-input required type="password" class="form-control form-control-sm" id="confirmacao_senha"
+                            <x-form-input required type="password" class="form-control-sm" id="confirmacao_senha"
                                 name="confirmacao_senha" label="Confirmação de Senha"
                                 value="{{ $usuario->confirmacao_senha ?? '' }}" />
                         </div>
@@ -165,7 +167,7 @@
                 @endif
                 {{-- <div class="col-md-4">
                     <div class="form-group">
-                        <x-form-input type="date" class="form-control form-control-sm" id="created_at" name="created_at"
+                        <x-form-input type="date" class="form-control-sm" id="created_at" name="created_at"
                             label="Data de Criação" value="{{ $usuario->created_at ?? '' }}" />
                     </div>
                 </div> --}}
@@ -173,7 +175,7 @@
                     <div class="form-group">
                         <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione um valor"
                             :selected="isset($usuario->ativo) && $usuario->ativo ? $usuario->ativo : null"
-                            class="form-control form-control-sm" required />
+                            class="form-control-sm" required />
                     </div>
                 </div> --}}
 
@@ -187,7 +189,7 @@
     </div>
 @stop
 @section('js')
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
     <script>
         $('#celular').mask('(00) 00000-0000');

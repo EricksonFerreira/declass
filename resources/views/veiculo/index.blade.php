@@ -38,6 +38,7 @@
                         <th>Marca</th>
                         <th>Modelo</th>
                         <th>Status</th>
+                        <th>Local Disponível Inicial</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
                 </thead>
@@ -50,9 +51,27 @@
                             <td>{{ $veiculo->marca?->nome }}</td>
                             <td>{{ $veiculo->modelo?->nome }}</td>
                             <td>{{ $veiculo->statusVeiculo?->nome }}</td>
+                            @php
+                                $dataHoraAtual = now();
+                            @endphp
+
+                            <td>
+                                @if ($veiculo->data_hora_disponibilidade)
+                                    @if ($veiculo->data_hora_disponibilidade <= $dataHoraAtual)
+                                        {{ $veiculo->localDisponibilidade?->nome }} - {{\Carbon\Carbon::parse($veiculo->data_hora_disponibilidade)->format('d/m/Y H:i')}} <span
+                                            class="badge badge-xs bg-green">Disponível</span>
+                                    @else
+                                        {{ $veiculo->localDisponibilidade?->nome }} - {{\Carbon\Carbon::parse($veiculo->data_hora_disponibilidade)->format('d/m/Y H:i')}} <span
+                                            class="badge badge-xs bg-red">Indisponível</span>
+                                    @endif
+                                @else
+                                    <span
+                                        class="badge badge-xs bg-red">Indisponível</span>
+                                @endif
+                            </td>
                             <td style="width: 180px;">
-                                <a href="{{ route('veiculo.edit', $veiculo->id) }}"
-                                    class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>
+                                <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn btn-xs btn-warning"><i
+                                        class="fa fa-edit"></i> Editar</a>
                                 <x-delete-button :action="route('veiculo.destroy', $veiculo->id)" />
                             </td>
                         </tr>

@@ -3,9 +3,17 @@
 namespace App\Providers;
 
 use App\Models\Booking;
+use App\Models\Movimentacao;
+use App\Models\Veiculo;
 use App\Services\BookingService;
+use App\Services\DisponibilidadeInicialVeiculoService;
+use App\Services\MovimentacaoService;
+use App\Services\VeiculoService;
 use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use App\Models\User;
+use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -16,10 +24,17 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFour();
 
-        // $this->app->singleton(BookingService::class, function ($app) {
-        //     $bookingService = new BookingService(new Booking());
-        //     return $bookingService;
-        // });
+        // Registre os serviços sem dependências circulares
+        $this->app->singleton(VeiculoService::class, function ($app) {
+            return new VeiculoService(
+                $app->make(Veiculo::class),
+                $app->make(DisponibilidadeInicialVeiculoService::class)
+            );
+        });
+
+        $this->app->singleton(MovimentacaoService::class, function ($app) {
+            return new MovimentacaoService($app->make(Movimentacao::class));
+        });
     }
 
     /**
@@ -27,6 +42,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Configure as dependências após a criação dos serviços
+        $this->app->resolving(VeiculoService::class, function ($veiculoService, $app) {
+            $veiculoService->setMovimentacaoService($app->make(MovimentacaoService::class));
+        });
+
+        $this->app->resolving(MovimentacaoService::class, function ($movimentacaoService, $app) {
+            $movimentacaoService->setVeiculoService($app->make(VeiculoService::class));
+        });
+
+
+        Cashier::useCustomerModel(User::class);
+
+
     }
 }

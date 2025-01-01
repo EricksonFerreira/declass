@@ -188,7 +188,7 @@ class OpcionalController extends BaseController implements FiltroInterface, Reso
         if ($request->tipo_cobranca == 'por_dia') {
             $request->merge(['preco_integral' => null]);
         }
-        if ($request->tipo_cobranca == 'integral') {
+        if ($request->tipo_cobranca == 'valor_integral') {
             $request->merge(['preco_por_dia' => null]);
         }
     }

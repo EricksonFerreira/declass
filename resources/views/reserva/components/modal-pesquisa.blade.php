@@ -13,19 +13,19 @@
                     <!-- Filtros -->
                     <div class="form-group col-md-3">
                         <label for="grupo">Grupo:</label>
-                        <input type="text" class="form-control form-control-sm select2" id="grupo">
+                        <input type="text" class="form-control form-control-sm select2" id="grupo_modal">
                     </div>
                     <div class="form-group col-md-3">
                         <label for="modelo">Modelo:</label>
-                        <input type="text" class="form-control form-control-sm select2" id="modelo">
+                        <input type="text" class="form-control form-control-sm select2" id="modelo_modal">
                     </div>
                     <div class="form-group col-md-3">
                         <label for="marca">Marca:</label>
-                        <input type="text" class="form-control form-control-sm select2" id="marca">
+                        <input type="text" class="form-control form-control-sm select2" id="marca_modal">
                     </div>
                     <div class="form-group col-md-3">
                         <label for="segmento">Segmento:</label>
-                        <input type="text" class="form-control form-control-sm select2" id="segmento">
+                        <input type="text" class="form-control form-control-sm select2" id="segmento_modal">
                     </div>
                 </div>
                 <div class="row mt-1 mb-1">
@@ -60,14 +60,3 @@
 <!-- Select2 -->
 <link rel="stylesheet" href="{{asset('css/select2.min.css')}}">
 <script src="{{asset('js/select2.min.js')}}"></script>
-<script>
-    $(document).ready(function() {
-    $('.select2 ').select2();
-            // Inicializar Select2 quando o modal for aberto
-            $('#modalPesquisa').on('shown.bs.modal', function () {
-            $('.select2').select2({
-                dropdownParent: $('#modalPesquisa')
-            });
-        });
-});
-</script>

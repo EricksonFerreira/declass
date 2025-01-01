@@ -94,13 +94,28 @@
                                     )" class="form-control form-control-sm" required />
                             </div>
                         </div>
-                        <div class="col-md-6 mt-4">
+                        <div class="col-md-3">
+                            <div class="form-group">
+                                <x-form-input type="text" class="form-control form-control-sm" id="valor_diario"
+                                    name="valor_diario" label="Valor Diário"
+                                    value="{{ old('valor_diario', $grupoFrota->valor_diario ?? '') }}" required />
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-4">
+                                <label for="fileInput">Imagem</label>
+                                <x-input-file id="fileInput" name="file" placeholder="Selecione a Imagem..." legend="Click"  />
+                        </div>
+
+
+                            {{-- <label for="">Imagem </label>
+                            <x-input-file id="fileInput" name="file" placeholder="Choose file..." legend="Browse" />
+
                             <div class="form-group">
                                 <input type="file" name="imagem" id="imagem" class="custom-file-input"
                                     accept=".jpeg,.png,.jpg,.gif,.svg" {{ isset($grupoFrota) ? '' : 'required' }}>
                                 <label for="imagem" class="custom-file-label">Selecione a imagem</label>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                 </div>
                 <div id="caracteristicas-content" class="content-tab" style="display: none;">
@@ -121,8 +136,9 @@
                                             <input type="hidden" name="caracteristicas[{{ $k }}]"
                                                 value="{{ $k }}">
                                             <input type="text" name="caracteristicaValor[{{ $k }}]"
-                                            class="form-control form-control-sm"
-                                            value="{{ isset($grupoFrota) && collect($grupoFrota->caracteristicas)->contains('id', $k) ? collect($grupoFrota->caracteristicas)->firstWhere('id', $k)['valor'] : '' }}"                                    </tr>
+                                                class="form-control form-control-sm"
+                                                value="{{ isset($grupoFrota) && collect($grupoFrota->caracteristicas)->contains('id', $k) ? collect($grupoFrota->caracteristicas)->firstWhere('id', $k)['valor'] : '' }}"
+                                                </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -188,6 +204,7 @@
 @stop
 
 @section('js')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script>
         $(document).ready(function() {
             $('.nav-link').on('click', function() {
@@ -196,6 +213,11 @@
 
                 $('.content-tab').hide();
                 $($(this).attr('href') + '-content').show();
+
+            });
+
+            $('#valor_diario').mask('0000000000,00', {
+                reverse: true
             });
         });
     </script>

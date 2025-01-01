@@ -65,6 +65,12 @@ class GrupoFrotaService extends AbstractBaseService
         return DB::transaction(function () use ($id, $data) {
             $item = $this->model->find($id);
             if ($item) {
+
+                //converta valor_diario em numerico
+                if (isset($data['valor_diario'])) {
+                    $data['valor_diario'] = str_replace(',', '.', str_replace('.', '', $data['valor_diario']));
+                }
+
                 // Atualiza as informações gerais
                 $item->update($data);
 
@@ -131,5 +137,28 @@ class GrupoFrotaService extends AbstractBaseService
             return $result;
         }
         return [];
+    }
+
+    /**
+     * Obtém o grupo de frota pelo ID do modelo.
+     *
+     * @param int $modeloId
+     * @return array|null
+     */
+    public function getGrupoFrotaByModelo($modeloId)
+    {
+        $grupoFrota = $this->model->whereHas('modelos', function ($query) use ($modeloId) {
+            $query->where('modelo_id', $modeloId);
+        })->select('nome', 'id')->first();
+
+        if ($grupoFrota) {
+            return [$grupoFrota->id => $grupoFrota->nome];
+        }
+
+        return null;
+    }
+
+    public function verificaGruposFrotaDisponiveis($estacao_retirada_id,$data_inicio,$estacao_devolucao_id,$data_fim){
+
     }
 }

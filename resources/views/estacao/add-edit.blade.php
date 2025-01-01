@@ -285,7 +285,6 @@
                                 for="btn-check-{{ $idDiaUtil }}-outlined">{{ $nomeDiaUtil }}</label><br>
                         </div>
                     @endforeach
-
                 </div>
             </div>
 

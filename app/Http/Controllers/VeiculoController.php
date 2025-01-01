@@ -7,6 +7,7 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Veiculo\StoreVeiculoRequest;
 use App\Http\Requests\Veiculo\UpdateVeiculoRequest;
 use App\Services\BreadcrumbService;
+use App\Services\EstacaoService;
 use App\Services\GrupoFrotaService;
 use App\Services\MarcaService;
 use App\Services\ModeloService;
@@ -30,6 +31,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     protected $modeloService;
     protected $segmentoService;
     protected $statusVeiculoService;
+    protected $estacaoService;
 
 
     public function __construct(
@@ -40,7 +42,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         MarcaService $marcaService,
         ModeloService $modeloService,
         SegmentoService $segmentoService,
-        StatusVeiculoService $statusVeiculoService
+        StatusVeiculoService $statusVeiculoService,
+        EstacaoService $estacaoService
     ) {
         $this->titulo = "Veiculos";
         $this->nomeFiltro = 'veiculo';
@@ -52,6 +55,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->modeloService = $modeloService;
         $this->segmentoService = $segmentoService;
         $this->statusVeiculoService = $statusVeiculoService;
+        $this->estacaoService = $estacaoService;
     }
 
     public function index()
@@ -97,6 +101,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $modelos = $this->modeloService->getAllAtivos();
         $segmentos = $this->segmentoService->getAllAtivos();
         $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
+        $estacoes = $this->estacaoService->getAllAtivos();
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
         return view('veiculo.add-edit', compact(
@@ -104,6 +109,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'grupoFrotas',
             'marcas',
             'modelos',
+            'estacoes',
             'segmentos',
             'statusVeiculos',
             'breadcrumb',
@@ -137,12 +143,14 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $modelos = $this->modeloService->getAllAtivos();
         $segmentos = $this->segmentoService->getAllAtivos();
         $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
+        $estacoes = $this->estacaoService->getAllAtivos();
 
         return view('veiculo.add-edit', compact(
             'veiculo',
             'tipoFrotas',
             'grupoFrotas',
             'marcas',
+            'estacoes',
             'modelos',
             'segmentos',
             'statusVeiculos',
@@ -163,6 +171,25 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $success = $this->veiculoService->delete($id);
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+
+    public function disponibilidade(Request $request)
+    {
+        $totalVeiculos = $this->veiculoService->getTotalVeiculos();
+        $veiculosDisponiveis = $this->veiculoService->getVeiculosDisponiveis();
+        $veiculosReservados = $this->veiculoService->getVeiculosReservados();
+        $veiculosIndisponiveis = $this->veiculoService->getVeiculosIndisponiveis();
+
+        // $diasDoMes = range(1, 31);
+       // pegue os dias do mes dependendo do mês selecionado. se nao tiver mes selecionado pegue o mes atual
+       $mes = $request->mes ?? date('m');
+       $ano = $request->ano ?? date('Y');
+       $diasDoMes = range(1, cal_days_in_month(CAL_GREGORIAN, $mes, $ano));
+        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination([], 1000);
+        // dd($veiculos);
+
+        return view('veiculo.disponibilidade', compact('totalVeiculos', 'veiculosDisponiveis', 'veiculosReservados', 'veiculosIndisponiveis', 'diasDoMes', 'veiculos'));
     }
 
     public function filtro(Request $request)
