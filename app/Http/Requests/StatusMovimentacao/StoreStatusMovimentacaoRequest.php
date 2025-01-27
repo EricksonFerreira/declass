@@ -14,7 +14,7 @@ class StoreStatusMovimentacaoRequest extends FormRequest
         return true;
     }
 
-   
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -25,6 +25,7 @@ class StoreStatusMovimentacaoRequest extends FormRequest
         return [
             'nome' => 'required|string|max:255',
             'ativo' => 'required|string|max:1',
+            'cor' => 'required|string|max:255',
         ];
     }
 
@@ -35,6 +36,9 @@ class StoreStatusMovimentacaoRequest extends FormRequest
             'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
             'ativo.required' => 'O campo ativo é obrigatório',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
+            'cor.required' => 'O campo cor é obrigatório',
+            'cor.string' => 'O campo cor deve ser uma string',
+            'cor.max' => 'O campo cor deve ter no máximo 255 caracteres',
         ];
     }
 }

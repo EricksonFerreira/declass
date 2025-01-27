@@ -72,4 +72,6 @@ return [
     'sidebar.transacao_e_pagamento.preco_tarifa' => 'Preço de Tarifa',
     'sidebar.transacao_e_pagamento.tipo_transacao' => 'Tipo de Transação',
     'sidebar.transacao_e_pagamento.metodo_pagamento' => 'Método de Pagamento',
+    'sidebar.dano' => 'Danos',
+    'sidebar.categoria_dano' => 'Categoria de Danos',
 ];

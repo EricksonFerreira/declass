@@ -51,7 +51,7 @@
                             <td>{{ $movimentacao->tipoMovimentacao?->nome }}</td>
                             <td>{{ $movimentacao->usuario?->nome }}</td>
                             <td>
-                                <span class="badge badge-pill badge-{{ $movimentacao->statusMovimentacao?->cor ?? 'secondary' }}">
+                                <span class="badge badge-pill bg-{{ $movimentacao->statusMovimentacao?->cor ?? 'secondary' }}">
                                     {{ $movimentacao->statusMovimentacao?->nome }}
                                 </span>
                             </td>

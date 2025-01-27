@@ -44,7 +44,7 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $movimentacaos = $this->movimentacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage,['tipoMovimentacao','usuario','statusMovimentacao']);
+        $movimentacaos = $this->movimentacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage,['tipoMovimentacao','usuario','statusMovimentacao'], 'id', 'desc');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Movimentações');
         $filters = $this->obterFiltrosPrincipais();

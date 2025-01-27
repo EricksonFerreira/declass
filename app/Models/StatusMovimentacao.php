@@ -12,6 +12,7 @@ class StatusMovimentacao extends Model
     protected $table = 'status_movimentacao';
     protected $fillable = [
         'nome',
+        'cor',
         'ativo',
     ];
 }

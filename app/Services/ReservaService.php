@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Exceptions\ReservaJobException;
 use App\Models\Reserva;
 use App\Traits\LogTrait;
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
@@ -53,7 +54,11 @@ class ReservaService extends AbstractBaseService
     # override
     public function create($data)
     {
-        $this->validarDados($data);
+        $mensagemErroValidacao = $this->validarDados($data);
+
+        if($mensagemErroValidacao) {
+            return redirect()->back()->with('error', $mensagemErroValidacao);
+        }
 
         try {
 
@@ -64,13 +69,16 @@ class ReservaService extends AbstractBaseService
                 'data_fim' => Carbon::parse($data['data_fim'])->format('Y-m-d H:i:s'),
                 'grupo_frota_id' => $data['grupo_frota_id'],
                 'modelo_id' => $data['modelo_id'],
-                'valor_total' => $data['valor_total'],
+                'valor_total_final' => $data['valor_total_final'],
+                'valor_total_com_desconto' => $data['valor_total_com_desconto'],
+                'valor_total_tarifa_base' => $data['valor_total_tarifa_base'],
+                'valor_opcionais' => $data['valor_opcionais'],
+                'percentual_desconto' => $data['percentual_desconto'],
                 'user_id' => $data['user_id'],
                 'tarifa_base' => $data['tarifa_base'],
                 'quantidade_dias' => $data['quantidade_dias'],
                 'status_reserva_id' => 1, // Pendente
                 'cupom_desconto_id' => $data['cupom_desconto']['id'] ?? null,
-                'valor_desconto' => $data['cupom_desconto']['valor'] ?? null,
                 'observacoes' => $data['observacoes'] ?? null,
                 'created_at' => now(),
                 'updated_at' => null,
@@ -88,18 +96,6 @@ class ReservaService extends AbstractBaseService
             // Atualizar os opcionais
             $this->atualizarOpcionais($reserva, $data);
 
-            // Registra Movimentacao
-            $this->movimentacaoService->registrarMovimentacaoReserva([
-                'estacao_retirada_id' => $data['estacao_retirada_id'],
-                'estacao_devolucao_id' => $data['estacao_devolucao_id'],
-                'data_inicio' => Carbon::parse($data['data_inicio'])->format('Y-m-d H:i:s'),
-                'data_fim' => Carbon::parse($data['data_fim'])->format('Y-m-d H:i:s'),
-                'observacoes' => 'Reserva criada',
-                'grupo_frota_id' => $data['grupo_frota_id'],
-                'modelo_id' => $data['modelo_id'],
-
-            ], $reserva->id);
-
             return $reserva;
         } catch (\Exception $e) {
             throw new \Exception($e->getMessage());
@@ -108,16 +104,18 @@ class ReservaService extends AbstractBaseService
 
     public function update($id, array $data)
     {
-        $this->validarDados($data);
+        $mensagemErroValidacao = $this->validarDados($data);
 
-        // dd($data);
+        if($mensagemErroValidacao) {
+            return redirect()->back()->with('error', $mensagemErroValidacao);
+        }
+
         $reserva = $this->model->find($id);
 
         if (!$reserva) {
             return null;
         }
 
-        $this->movimentacaoService->desativarMovimentacaoReserva($reserva->id);
 
         $dadosReserva = [
             'estacao_retirada_id' => $data['estacao_retirada_id'],
@@ -143,22 +141,16 @@ class ReservaService extends AbstractBaseService
         // Atualizar os opcionais
         $this->atualizarOpcionais($reserva, $data);
 
-        // Registra Movimentacao
-        // $this->movimentacaoService->modificaMovimentacaoReserva($dadosReserva, $reserva->id);
-
-        // Registra Movimentacao
-        $this->movimentacaoService->registrarMovimentacaoReserva([
-            'estacao_retirada_id' => $data['estacao_retirada_id'],
-            'estacao_devolucao_id' => $data['estacao_devolucao_id'],
-            'data_inicio' => Carbon::parse($data['data_inicio'])->format('Y-m-d H:i:s'),
-            'data_fim' => Carbon::parse($data['data_fim'])->format('Y-m-d H:i:s'),
-            'observacoes' => 'Reserva criada',
-            'grupo_frota_id' => $data['grupo_frota_id'],
-            'modelo_id' => $data['modelo_id'],
-
-        ], $reserva->id);
 
         return $reserva;
+    }
+
+
+    public function cancelar($id)
+    {
+        $reserva = $this->model->find($id);
+        $reserva->status_reserva_id = 3; // Cancelada
+        $reserva->save();
     }
 
 
@@ -242,7 +234,7 @@ class ReservaService extends AbstractBaseService
     public function atualizarStatusReservasAtrasadasParaExpiradas()
     {
         $statusReserva = [6]; // Atrasada
-        $statusExpirada = 7;
+        $statusExpirada = 11;
         $horasLimite = 2;
         $this->atualizarStatusReservasPorTipo(
             $statusReserva,
@@ -260,12 +252,16 @@ class ReservaService extends AbstractBaseService
     public function atualizarStatusReservasCriadasParaExpiradas()
     {
         $statusReserva = [1]; // Criada
-        $statusExpirada = 7;
+        $statusExpirada = 11;
+
         $this->atualizarStatusReservasPorTipo(
             $statusReserva,
             $statusExpirada,
             'Reserva expirada pela rotina de expiração',
-            'Erro ao atualizar status das reservas criadas para expiradas'
+            'Erro ao atualizar status das reservas criadas para expiradas',
+            null,
+            13,
+            1
         );
 
         $idJob = 3; // Rotina de expiração de reservas criadas
@@ -334,36 +330,36 @@ class ReservaService extends AbstractBaseService
     {
 
         if($data['data_inicio'] == null || $data['data_fim'] == null) {
-            return redirect()->back()->with('error', 'Data de início ou fim da reserva não informada');
+            return 'Data de início ou fim da reserva não informada';
         }
 
         if($data['estacao_retirada_id'] == null || $data['estacao_devolucao_id'] == null) {
         // if($data['estacao_retirada'] == null || $data['estacao_devolucao'] == null) {
-            return redirect()->back()->with('error', 'Estação de retirada ou devolução não informada');
+            return 'Estação de retirada ou devolução não informada';
         }
 
         if($data['grupo_frota_id'] == null) {
-            return redirect()->back()->with('error', 'Grupo de frota não informado');
+            return 'Grupo de frota não informado';
         }
 
         if($data['modelo_id'] == null) {
-            return redirect()->back()->with('error', 'Modelo não informado');
+            return 'Modelo não informado';
         }
 
         if($data['user_id'] == null) {
-            return redirect()->back()->with('error', 'Usuário não informado');
+            return 'Usuário não informado';
         }
 
         if($data['data_inicio'] >= $data['data_fim']) {
-            return redirect()->back()->with('error', 'Data de início não pode ser maior ou igual a data de fim');
+            return 'Data de início não pode ser maior ou igual a data de fim';
         }
 
         if($data['data_inicio'] < now()) {
-            return redirect()->back()->with('error', 'Data de início não pode ser menor que a data atual');
+            return 'Data de início não pode ser menor que a data atual';
         }
 
         if($data['data_fim'] < now()) {
-            return redirect()->back()->with('error', 'Data de fim não pode ser menor que a data atual');
+            return 'Data de fim não pode ser menor que a data atual';
         }
 
         // Verificar se existe raealmente alguem veiculo disponivel para a reserva
@@ -371,7 +367,7 @@ class ReservaService extends AbstractBaseService
         // dd($veiculoDisponivel);
         if($veiculoDisponivel->isEmpty()) {
             // dd($veiculoDisponivel);
-            return redirect()->back()->with('error', 'Não existe veículo disponível para a reserva');
+            return 'Não existe veículo disponível para a reserva';
         }
 
     }
@@ -387,11 +383,17 @@ class ReservaService extends AbstractBaseService
     public function processarDadosReserva($reservaData)
     {
         $data = $this->converteObjetoReservaParaArray($reservaData);
+        $data['percentual_desconto'] = $data['valor_desconto'] ?? 0;
 
         $data['valor_opcionais'] = $this->calculaValorOpcionais($data['opcionais'], $data['quantidade_dias']);
-        $data['valor_total_por_dias'] = $this->calcularValorTotalPorDias($data['tarifa_base'], $data['quantidade_dias']);
-        $data['valor_total'] = $this->calcularValorTotalReserva($data['valor_total_por_dias'], $data['valor_opcionais'], $data['valor_desconto'] ?? 0);
-
+        $data['valor_total_tarifa_base'] = $this->calcularValorTotalPorDias($data['tarifa_base'], $data['quantidade_dias']);
+        $data['valor_total_com_desconto'] = self::obtemValorTotalDesconto(
+                                                ($data['valor_total_tarifa_base'] + $data['valor_opcionais']),
+                                                $data['percentual_desconto']);
+        $data['valor_total_final'] = self::calcularValorTotalReserva(
+                                                $data['valor_total_tarifa_base'],
+                                                $data['valor_opcionais'],
+                                                $data['percentual_desconto']);
         return $data;
     }
     private function converteObjetoReservaParaArray($objeto){
@@ -420,18 +422,19 @@ class ReservaService extends AbstractBaseService
     private function calcularValorTotalPorDias($tarifaBase, $quantidadeDias){
         return $tarifaBase * $quantidadeDias;
     }
-    private function calcularValorTotalReserva($valorTotalPorDias, $valorOpcionais, $valorDesconto){
+
+    public function obtemValorTotalDesconto($valorTotal, $percentualDesconto){
+        return ($valorTotal * ($percentualDesconto / 100));
+    }
+
+    private function calcularValorTotalReserva($valorTotalPorDias, $valorOpcionais, $percentualDesconto){
         $valorTotal = ($valorTotalPorDias + $valorOpcionais);
 
-        if($valorDesconto > 0){
-            $valorTotalComDesconto = $valorTotal - ($valorTotal * ($valorDesconto / 100));
-        }else{
-            $valorTotalComDesconto = $valorTotal;
-        }
+        $valorTotalComDesconto = $valorTotal - self::obtemValorTotalDesconto($valorTotal, $percentualDesconto);
 
-        return number_format($valorTotalComDesconto, 2, '.', ',');
+        return $valorTotalComDesconto;
     }
-    private function atualizarStatusReservasPorTipo(array $statusReserva, int $novoStatus, string $observacao,string $mensagemErro, int $horasLimite = null)
+    private function atualizarStatusReservasPorTipo(array $statusReserva, int $novoStatus, string $observacao,string $mensagemErro, int $horasLimite = null, int $tipoMovimentacao = 12, int $statusMovimentacao = 7)
     {
         DB::beginTransaction();
         try {
@@ -447,12 +450,18 @@ class ReservaService extends AbstractBaseService
             foreach ($reservas as $reserva) {
                 $reserva->status_reserva_id = $novoStatus;
                 $reserva->save();
-                $this->movimentacaoService->registrarMovimentacaoReserva(
-                    ['observacoes' => $observacao],
-                    $reserva->id,
-                    12,
-                    7
-                );
+
+                $arrayMovimentacao = [
+                    'observacoes' => $observacao,
+                    'veiculo_id' => $reserva->veiculo_id,
+                    'tipo_movimentacao_id' => $tipoMovimentacao,
+                    'reserva_id' => $reserva->id,
+                    'status_movimentacao_id' => $statusMovimentacao
+                ];
+                // $this->movimentacaoService->modificaStatusMovimentacaoReserva(
+                //     $arrayMovimentacao,
+                //     $reserva->id
+                // );
             }
             DB::commit();
         } catch (\Exception $e) {
@@ -460,52 +469,12 @@ class ReservaService extends AbstractBaseService
             throw new ReservaJobException($mensagemErro);
         }
     }
+
+    public function checkInRealizado($reserva_id,$veiculo_id)
+    {
+        $reserva = $this->model->find($reserva_id);
+        $reserva->status_reserva_id = 4; // Em uso
+        $reserva->veiculo_id = $veiculo_id;
+        $reserva->save();
+    }
 }
-// public class ReservaDTO{
-//     {#1678 ▼ // app\Http\Controllers\ReservaController.php:124
-//   +"tarifa_base": "75.00"
-//   +"quantidade_dias": 5
-//   +"estacao_retirada": {#1688 ▼
-//     +"id": "6"
-//     +"nome": "Xpand Cars6"
-//   }
-//   +"data_inicio": "2024-09-26T08:09"
-//   +"estacao_devolucao": {#1687 ▼
-//     +"id": "7"
-//     +"nome": "Xpand Cars7"
-//   }
-//   +"data_fim": "2024-10-01T08:09"
-//   +"grupo_frota": {#1723 ▼
-//     +"id": 1
-//     +"nome": "Wagon/Estate Auto Unspecified Drive Diesel Air"
-//   }
-//   +"modelo": {#1719 ▼value:
-//     +"id": null
-//     +"nome": null
-//   }
-//   +"opcionais": array:3 [▼
-//     0 => {#1720 ▼
-//       +"id": 1
-//       +"nome": "Cadeira de Criança"
-//       +"tipo_cobranca": "por_dia"
-//       +"tipo_opcional_id": 1
-//       +"preco_por_dia": "17.00"
-//       +"preco_integral": null
-//       +"descricao": null
-//       +"ativo": "S"
-//       +"created_at": "2024-08-23T10:50:51.000000Z"
-//       +"updated_at": "2024-08-23T16:18:41.000000Z"
-//       +"pivot": {#1721 ▶}
-//       +"quantidade": 1
-//     }
-//     1 => {#1724 ▶}
-//     2 => {#1728 ▶}
-//   ]
-//   +"user": null
-//   +"status": null
-//   +"cupom_desconto": null
-// }
-
-
-
-///}

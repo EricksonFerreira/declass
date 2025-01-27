@@ -34,6 +34,7 @@
                     <tr>
                         <th>Nome</th>
                         <th>Status</th>
+                        <th>Cor</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
                 </thead>
@@ -44,6 +45,11 @@
                             <td>
                                 <span class="badge badge-xs bg-{{ $status_movimentacao->ativo == 'S' ? 'success' : 'danger' }}">
                                     {{ $status_movimentacao->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="badge badge-xs bg-{{ $status_movimentacao->cor }}">
+                                    {{ $status_movimentacao->nome }}
                                 </span>
                             </td>
                             <td style="width: 180px;">

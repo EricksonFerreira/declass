@@ -431,6 +431,22 @@ return [
             'icon' => 'fas fa-percentage',
         ],
         [
+            'text' => 'sidebar.dano',
+            'icon' => 'fas fa-exclamation-triangle',
+            'submenu' => [
+                [
+                    'text' => 'sidebar.categoria_dano',
+                    'url' => 'categoria-dano',
+                    'icon' => 'fas fa-tags',
+                ],
+                [
+                    'text' => 'sidebar.dano',
+                    'url' => 'dano',
+                    'icon' => 'fas fa-tools',
+                ]
+            ],
+        ],
+        [
             'text' => 'sidebar.checklist',
             'url' => 'checklist',
             'icon' => 'fas fa-list-alt',

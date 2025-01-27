@@ -164,7 +164,13 @@ class VeiculoService extends AbstractBaseService
                 if ($reservaId) {
                     $query->where('reserva_id', '!=', $reservaId);
                 }
-                $query = $query->whereIn('status_movimentacao_id', [2,6]);
+                // Verifica se a reserva está criada, confirmada, em andamento ou atrasada
+                $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
+                ->whereIn('reservas.status_reserva_id', [1,2,4,6]);
+
+                // $query = $query->whereIn('status_movimentacao_id', [2,6]);
+
+                // Verifica se a movimentação está entre as datas informadas e não está com status da movimentação expirada
                 $query->where(function ($query) use ($data_inicio, $data_fim) {
                     $query->whereBetween('data_saida', [$data_inicio, $data_fim])
                           ->orWhereBetween('data_chegada_estimada', [$data_inicio, $data_fim])
@@ -217,10 +223,13 @@ class VeiculoService extends AbstractBaseService
     {
         return $this->model->where('grupo_frota_id', $idGrupoFrota)
         ->where('local_disponibilidade', $idLocal)
-        ->where('status_veiculo_id', 1)
+        ->where('status_veiculo_id', 1) // ativo
         ->where('data_hora_disponibilidade', '<=',$data_inicio)
-        ->where('status_veiculo_id', 1)
         ->whereDoesntHave('movimentacoes', function ($query) use ($data_inicio, $data_fim) {
+            // Verifica se a reserva está criada, confirmada, em andamento ou atrasada
+            $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
+                ->whereIn('reservas.status_reserva_id', [1,2,4,6]);
+            // Verifica se a movimentação está entre as datas informadas e não está com status da movimentação expirada
             $query->where(function ($query) use ($data_inicio, $data_fim) {
                 $query->whereBetween('data_saida', [$data_inicio, $data_fim])
                       ->orWhereBetween('data_chegada_estimada', [$data_inicio, $data_fim])
@@ -230,6 +239,7 @@ class VeiculoService extends AbstractBaseService
                                 ->where('data_chegada_estimada', '>=', $data_fim)
                                 ->where('data_chegada_real', '>=', $data_fim);
                       });
+                    //   ->where('status_movimentacao_id', '!=', 11); // Expirada
             });
         })
         ->with('modelo')
@@ -257,5 +267,13 @@ class VeiculoService extends AbstractBaseService
     {
         return $this->model->where('status_veiculo_id', 3)->count();
     }
+
+    public function getVeiculosDisponiveisParaCheckin($estacao_id){
+        // Falta corrigir essa lógica
+        return $this->model->where('local_disponibilidade', $estacao_id)
+            ->where('disponivel','S')
+            ->get();
+    }
+
 
 }

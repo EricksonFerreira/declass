@@ -45,6 +45,22 @@ class DisponibilidadeInicialVeiculoController extends BaseController implements 
 
         $perPages = [5, 10, 15, 25, 50, 100];
 
+        $anos = range(2024, date('Y'));
+dd($anos);
+        $meses = [
+            1 => 'Janeiro',
+            2 => 'Fevereiro',
+            3 => 'Março',
+            4 => 'Abril',
+            5 => 'Maio',
+            6 => 'Junho',
+            7 => 'Julho',
+            8 => 'Agosto',
+            9 => 'Setembro',
+            10 => 'Outubro',
+            11 => 'Novembro',
+            12 => 'Dezembro',
+        ];
         return view('disponibilidade_inicial_veiculo.index', compact(
             'disponibilidade_inicial_veiculos',
             'breadcrumb',
@@ -52,7 +68,9 @@ class DisponibilidadeInicialVeiculoController extends BaseController implements 
             'itensFiltered',
             'additionalFilters',
             'perPages',
-            'perPage'
+            'perPage',
+            'anos',
+            'meses'
         ))->with('titulo', $this->titulo);
     }
 

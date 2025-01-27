@@ -14,7 +14,7 @@ class UpdateStatusMovimentacaoRequest extends FormRequest
         return true;
     }
 
-   
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -25,19 +25,23 @@ class UpdateStatusMovimentacaoRequest extends FormRequest
         return [
             'nome' => 'required|string|max:255|unique:tipo_transacoes,nome,' . $this->route('tipotransacao'),
             'ativo' => 'required|string|max:1',
+            'cor' => 'required|string|max:255',
         ];
     }
 
     public function messages()
     {
         return [
-    'nome.required' => 'O campo nome é obrigatório.',
-    'nome.string' => 'O campo nome deve ser uma string.',
-    'nome.max' => 'O campo nome deve ter no máximo 255 caracteres.',
-    'nome.unique' => 'O nome informado já está em uso.',
-    'ativo.required' => 'O campo ativo é obrigatório.',
-    'ativo.string' => 'O campo ativo deve ser uma string.',
-    'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',
+            'nome.required' => 'O campo nome é obrigatório.',
+            'nome.string' => 'O campo nome deve ser uma string.',
+            'nome.max' => 'O campo nome deve ter no máximo 255 caracteres.',
+            'nome.unique' => 'O nome informado já está em uso.',
+            'ativo.required' => 'O campo ativo é obrigatório.',
+            'ativo.string' => 'O campo ativo deve ser uma string.',
+            'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',
+            'cor.required' => 'O campo cor é obrigatório.',
+            'cor.string' => 'O campo cor deve ser uma string.',
+            'cor.max' => 'O campo cor deve ter no máximo 255 caracteres.',
         ];
     }
 }

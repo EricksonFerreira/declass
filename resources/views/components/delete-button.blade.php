@@ -8,14 +8,14 @@
 <!-- Inclua o SweetAlert -->
 <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
 <script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
-{{-- <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script> --}}
+<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
 <!-- Script para interceptar a submissão do formulário e exibir o SweetAlert -->
 <script>
     $(document).ready(function() {
         $('.delete-button').on('click', function(event) {
             event.preventDefault();
             const form = $(this).closest('form');
-
+console.log(2);
             swal({
                 title: "Você tem certeza?",
                 text: "Esta ação não pode ser desfeita!",

@@ -22,13 +22,14 @@ class Reserva extends Model
         'pagamento_efetuado',
         'cupom_desconto_id',
         'observacoes',
-        'tarifa_base',
         'quantidade_dias',
         'grupo_frota_id',
-        'valor_desconto',
-        'valor_total',
+        'tarifa_base',
+        'valor_total_tarifa_base',
+        'percentual_desconto',
+        'valor_total_com_desconto',
         'valor_opcionais',
-        'valor_total_por_dias',
+        'valor_total_final',
     ];
 
     // Relacionamento com o modelo de Usuário
@@ -81,5 +82,10 @@ class Reserva extends Model
     public function grupoFrota()
     {
         return $this->belongsTo(GrupoFrota::class, 'grupo_frota_id');
+    }
+
+    public function contratoCheckin()
+    {
+        return $this->hasOne(ContratoCheckin::class, 'reserva_id');
     }
 }

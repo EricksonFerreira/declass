@@ -326,3 +326,16 @@ Route::middleware('web')
         require base_path('routes/grupos/configuracao_checklist.php');
 
 });
+
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/categoria_dano.php');
+
+});
+
+Route::middleware('web')
+    ->group(function() {
+        require base_path('routes/grupos/dano.php');
+
+});

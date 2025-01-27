@@ -10,9 +10,9 @@ abstract class AbstractBaseService implements BaseServiceInterface
 {
     protected Model $model;
 
-    public function getAll()
+    public function getAll($where = [])
     {
-        return $this->model->all();
+        return $this->model->where($where)->get();
     }
 
     public function getAllForSelect($key = 'id', $value = 'nome')

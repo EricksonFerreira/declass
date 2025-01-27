@@ -52,10 +52,17 @@
             <h3 class="card-title">Disponibilidade Mensal</h3>
             <div class="card-tools">
                 <form action="{{ route('veiculo.disponibilidade') }}" method="GET" class="form-inline">
+                    <select name="ano" class="form-control mr-2">
+                        @foreach($anos as $ano)
+                            <option value="{{ $ano }}" {{ request('ano') == $ano ? 'selected' : '' }}>
+                                {{ $ano }}
+                            </option>
+                        @endforeach
+                    </select>
                     <select name="mes" class="form-control mr-2">
-                        @foreach(range(1, 12) as $mes)
+                        @foreach($meses as $mes => $nomeMes)
                             <option value="{{ $mes }}" {{ request('mes') == $mes ? 'selected' : '' }}>
-                                {{ \Carbon\Carbon::create()->month($mes)->format('F') }}
+                                {{ $nomeMes }}
                             </option>
                         @endforeach
                     </select>

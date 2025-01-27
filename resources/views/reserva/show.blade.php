@@ -12,41 +12,7 @@
         </div>
 
         <div class="col d-flex justify-content-end">
-            <div class="btn-group" role="group" aria-label="Ações da Reserva">
-                <a href="{{ route('reserva.index') }}" class="btn btn-sm btn-outline-secondary">
-                    <i class="fas fa-arrow-left mr-1"></i> Voltar
-                </a>
-
-                @if(in_array($reserva->statusReserva->id, [1])) {{--  Criada  --}}
-                    <a href="{{ route('reserva.edit', $reserva->id) }}" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-edit mr-1"></i> Editar Reserva
-                    </a>
-                @endif
-
-                @if(in_array($reserva->statusReserva->id, [1])) {{--  Criada  --}}
-                    <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="btn btn-sm btn-outline-warning">
-                        <i class="fas fa-credit-card mr-1"></i> Efetuar Pagamento
-                    </a>
-                @endif
-
-                @if(in_array($reserva->statusReserva->id, [2])) {{--  Confirmada  --}}
-                    <button type="button" class="btn btn-sm btn-outline-warning" id="btnCheckInReserva">
-                        <i class="fas fa-check mr-1"></i> Check-In
-                    </button>
-                @endif
-
-                @if(in_array($reserva->statusReserva->id, [1,2])) {{--  Criada ou Confirmada  --}}
-                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnCancelarReserva">
-                        <i class="fas fa-times mr-1"></i> Cancelar Reserva
-                    </button>
-                @endif
-
-                @if(in_array($reserva->statusReserva->id, [4])) {{--  Em andamento  --}}
-                    <button type="button" class="btn btn-sm btn-outline-success" id="btnCheckOutReserva">
-                        <i class="fas fa-check-circle mr-1"></i> Check-Out
-                    </button>
-                @endif
-            </div>
+            @include('reserva.components.botoes_acoes_show_reserva')
         </div>
     </div>
 @stop
@@ -89,7 +55,7 @@
                                     </small>
                                     <h5 style="white-space: nowrap;">
                                         <strong>
-                                            {{ Carbon\Carbon::parse($reserva->data_inicio)->diffInDays(Carbon\Carbon::parse($reserva->data_fim)) }} dias
+                                            {{ $reserva->quantidade_dias }} dias
                                         </strong>
                                     </h5>
                                 </div>
@@ -227,20 +193,28 @@
                                     <span class="badge bg-light text-dark">€ {{ number_format($reserva->tarifa_base, 2, ',', '.') }}</span>
                                 </li>
                                 <li class="list-group-item py-1 d-flex justify-content-between align-items-center">
-                                    <span>Valor Total por Dias</span>
-                                    <span class="badge bg-light text-dark">€ {{ number_format($reserva->valor_total, 2, ',', '.') }}</span>
+                                    <span>Valor Total Tarifa Base</span>
+                                    <div class="d-flex">
+                                        <span class="badge bg-dark text-dark">
+                                            {{ $reserva->quantidade_dias }} dias
+                                        </span>
+                                        <span class="ml-1 badge bg-light text-dark">€ {{ number_format($reserva->valor_total_tarifa_base, 2, ',', '.') }}</span>
+                                    </div>
                                 </li>
                                 <li class="list-group-item py-1 d-flex justify-content-between align-items-center">
-                                    <span>Opcionais</span>
-                                    <span class="badge bg-light text-dark">€ {{ number_format($reserva->total_opcional, 2, ',', '.') }}</span>
+                                    <span>Valor Total dos Opcionais</span>
+                                    <span class="badge bg-light text-dark">€ {{ number_format($reserva->valor_opcionais, 2, ',', '.') }}</span>
                                 </li>
                                 <li class="list-group-item py-1 d-flex justify-content-between align-items-center">
-                                    <span>Desconto {{ $reserva->cupom_desconto ? "<span class='badge bg-success'>({$reserva->cupom_desconto->codigo})</span>" : '' }}</span>
-                                    <span class="{{ isset($reserva->valor_desconto) ? 'badge bg-success' : 'badge bg-danger' }}">-€ {{ number_format($reserva->valor_desconto ?? 0, 2, ',', '.') }}</span>
+                                    <span>Desconto {{ $reserva->cupom_desconto ? "<span class='badge bg-pink'>({$reserva->cupom_desconto->codigo})</span>" : '' }}</span>
+                                    <div class="d-flex">
+                                        <span class="badge bg-info">{{ number_format($reserva->percentual_desconto ?? 0, 2, ',', '.') }} %</span>
+                                        <span class="ml-1 {{ isset($reserva->valor_total_com_desconto ) ? 'badge bg-success' : 'badge bg-danger' }}">-€ {{ number_format($reserva->valor_total_com_desconto  ?? 0, 2, ',', '.') }}</span>
+                                    </div>
                                 </li>
                                 <li class="list-group-item py-1 d-flex justify-content-between align-items-center">
                                     <span class="font-weight-bold">Valor Total</span>
-                                    <span class="badge bg-primary">€ {{ number_format(($reserva->valor_total + $reserva->total_opcional) - ($reserva->valor_desconto ?? 0), 2, ',', '.') }}</span>
+                                    <span class="badge bg-primary">€ {{ number_format($reserva->valor_total_final , 2, ',', '.') }}</span>
                                 </li>
                             </ul>
                         </div>
@@ -255,8 +229,26 @@
                             <ul class="list-group list-group-flush">
                                 @forelse($reserva->opcionais as $opcional)
                                     <li class="list-group-item py-1 d-flex justify-content-between align-items-center">
-                                        {{ $opcional->nome }}
-                                        <span class="badge badge-primary badge-pill">€ {{ number_format($opcional->pivot->preco_total, 2, ',', '.') ?? 0}}</span>
+                                        {{-- {{ $opcional->nome }} --}}
+                                        <span>{{ $opcional->nome }} {!! $opcional->tipo_cobranca == 'por_dia' ? "<span class='badge bg-secondary'>Diário</span>" : "<span class='badge bg-purple'>Integral</span>" !!}</span>
+                                            <div class="d-flex">
+                                        @if($opcional->tipo_cobranca == 'por_dia')
+                                        <span class="badge bg-light">
+                                            Valor Diário: € {{ $opcional->preco_por_dia }}
+                                        </span>
+                                        <span class="badge bg-dark text-dark ml-2">
+                                            {{ $reserva->quantidade_dias }} dias
+                                        </span>
+                                        @else
+                                        <span class="badge bg-light">
+                                            Valor Fixo: € {{ $opcional->preco_integral }}
+                                        </span>
+                                        @endif
+                                        <span class="badge bg-light ml-2">
+                                            Quantidade: {{ $opcional->pivot->quantidade }}
+                                        </span>
+                                        <span class="badge badge-primary ml-2">€ {{ number_format($opcional->pivot->quantidade * $opcional->pivot->preco_total, 2, ',', '.') ?? 0}}</span>
+                                    </div>
                                     </li>
                                 @empty
                                     <li class="list-group-item py-1">Nenhum opcional selecionado</li>
@@ -280,29 +272,5 @@
 
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        document.getElementById('btnCancelarReserva').addEventListener('click', function() {
-            Swal.fire({
-                title: 'Tem certeza?',
-                text: "Você não poderá reverter esta ação!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Sim, cancelar reserva!',
-                cancelButtonText: 'Não, manter reserva'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    // Aqui você pode adicionar a lógica para cancelar a reserva
-                    // Por exemplo, fazer uma requisição AJAX para o servidor
-                    // Após o cancelamento bem-sucedido, você pode mostrar uma mensagem de sucesso:
-                    Swal.fire(
-                        'Cancelada!',
-                        'A reserva foi cancelada com sucesso.',
-                        'success'
-                    )
-                }
-            })
-        });
-    </script>
 @stop
+

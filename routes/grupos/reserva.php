@@ -12,7 +12,11 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/horariosdiarios', [ReservaController::class, 'salvar_horarios_diarios'])->name('salvar_horarios_diarios');
     Route::get('{id}/efetuar-pagamento', [ReservaController::class, 'efetuarPagamento'])->name('efetuarPagamento');
     Route::post('{id}/processar-pagamento', [ReservaController::class, 'processarPagamento'])->name('processarPagamento');
-    Route::get('{id}/cancelar', [ReservaController::class, 'cancelar'])->name('cancelar');
-
+    Route::post('{id}/cancelar', [ReservaController::class, 'cancelar'])->name('cancelar');
+    Route::get('{id}/checkin', [ReservaController::class, 'checkin'])->name('checkin');
+    Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');
+    Route::post('{id}/adicionarDanoVeiculo', [ReservaController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');
+    Route::get('{id}/assinarContratoCheckin', [ReservaController::class, 'assinarContratoCheckin'])->name('assinarContratoCheckin');
+    Route::post('{id}/assinarContratoCheckin', [ReservaController::class, 'salvarAssinaturaContratoCheckin'])->name('salvarAssinaturaContratoCheckin');
 });
 Route::resource('reserva', ReservaController::class);

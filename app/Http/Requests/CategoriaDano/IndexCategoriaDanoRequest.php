@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests\Reserva;
+namespace App\Http\Requests\CategoriaDano;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class IndexReservaRequest extends FormRequest
+class IndexCategoriaDanoRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.

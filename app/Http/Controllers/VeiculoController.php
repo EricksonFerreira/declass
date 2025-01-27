@@ -176,6 +176,21 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function disponibilidade(Request $request)
     {
+        $anos = range(2024, date('Y'));
+        $meses = [
+            1 => 'Janeiro',
+            2 => 'Fevereiro',
+            3 => 'Março',
+            4 => 'Abril',
+            5 => 'Maio',
+            6 => 'Junho',
+            7 => 'Julho',
+            8 => 'Agosto',
+            9 => 'Setembro',
+            10 => 'Outubro',
+            11 => 'Novembro',
+            12 => 'Dezembro',
+        ];
         $totalVeiculos = $this->veiculoService->getTotalVeiculos();
         $veiculosDisponiveis = $this->veiculoService->getVeiculosDisponiveis();
         $veiculosReservados = $this->veiculoService->getVeiculosReservados();
@@ -189,7 +204,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $veiculos = $this->veiculoService->getAllWithFiltersAndPagination([], 1000);
         // dd($veiculos);
 
-        return view('veiculo.disponibilidade', compact('totalVeiculos', 'veiculosDisponiveis', 'veiculosReservados', 'veiculosIndisponiveis', 'diasDoMes', 'veiculos'));
+        return view('veiculo.disponibilidade', compact('totalVeiculos', 'veiculosDisponiveis', 'veiculosReservados', 'veiculosIndisponiveis', 'diasDoMes', 'veiculos', 'anos', 'meses'));
     }
 
     public function filtro(Request $request)

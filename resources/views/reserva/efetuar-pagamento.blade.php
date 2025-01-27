@@ -21,11 +21,11 @@
                                 <form id="payment-form" action="{{ route('reserva.processarPagamento', $reserva->id) }}" method="POST">
                                     @csrf
                                     <div class="form-group">
-                                        <label for="payment-method" class="font-weight-bold">Método de Pagamento</label>
+                                        <label for="payment-method" class="font-weight-bold">Método de Pagamento <small class="text-danger">*</small> <small class="text-muted">(Selecione o método de pagamento para continuar)</small></label>
                                         <select id="payment-method" class="form-control" name="payment_method" required>
                                             @if(count($metodosPagamento) == 0)
                                                 <option value="" disabled selected>Nenhum método de pagamento disponível</option>
-                                                <option value="add">Adicionar Método de Pagamento</option>
+                                                {{-- <option value="add">Adicionar Método de Pagamento</option> --}}
                                             @else
                                                 @foreach($metodosPagamento as $metodo)
                                                     <option value="{{ $metodo['id'] }}">
@@ -35,12 +35,19 @@
                                             @endif
                                         </select>
                                         {{-- @if(count($metodosPagamento) == 0) --}}
-                                            <small class="text-muted">Você pode <a href="{{ route('usuario.metodoPagamento', $reserva->user_id) }}" target="_blank">adicionar um método de pagamento aqui</a>.</small>
+                                            <small class="text-muted">Você pode <a href="{{ route('usuario.metodoPagamento', $reserva->user_id) }}" target="_blank">adicionar um novo método de pagamento aqui</a> para facilitar suas futuras reservas.</small>
+                                            <small class="text-muted">(Lembre-se: os métodos de pagamento são vinculados ao usuário que está realizando a reserva.)</small>
                                         {{-- @endif --}}
                                     </div>
 
                                     <div class="mt-4">
-                                        <button type="submit" class="btn btn-sm btn-success btn-block"> <i class="fas fa-lock mr-2"></i> Efetuar Pagamento Seguro</button>
+                                        <button type="submit"  {{ count($metodosPagamento) == 0 ? 'disabled' : '' }}
+                                                @if(count($metodosPagamento) == 0)
+                                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Adicione um método de pagamento para continuar"
+                                                @endif
+                                                class="btn btn-sm btn-success btn-block">
+                                                    <i class="fas fa-lock mr-2"></i> Efetuar Pagamento Seguro
+                                        </button>
                                         <a href="{{ route('reserva.show', $reserva->id) }}" class="btn btn-xs btn-link btn-block mt-2"> <i class="fas fa-arrow-left mr-2"></i> Voltar para Detalhes da Reserva</a>
                                     </div>
                                 </form>
@@ -60,49 +67,81 @@
                     <div class="col-md-4">
                         <div class="card shadow-sm">
                             <div class="card-header bg-secondary text-white">
-                                <h5 class="card-title mb-0"><i class="fas fa-car mr-2"></i>Resumo da Reserva</h5>
+                                <h5 class="card-title mb-0"><i class="fas fa-car mr-2"></i>Resumo da Reserva <strong>Nº {{ $reserva->id }}</strong></h5>
                             </div>
                             <div class="card-body">
                                 <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><strong>ID da Reserva:</strong></span>
-                                        <span class="badge bg-secondary">{{ $reserva->id }}</span>
+                                    <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
+                                        <div class="d-flex flex-column">
+                                            <span><strong>Data de Retirada:</strong></span>
+                                            <small>{{ Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}</small>
+                                            <span><strong>Estação de Retirada:</strong></span>
+                                            <small class="text-truncate">{{ $reserva->estacaoRetirada->nome ?? 'N/A' }}</small>
+                                        </div>
+                                        <div class="d-flex flex-column">
+                                            <span><strong>Data de Devolução:</strong></span>
+                                            <small>{{ Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}</small>
+                                            <span><strong>Estação de Devolução:</strong></span>
+                                            <small class="text-truncate">{{ $reserva->estacaoDevolucao->nome ?? 'N/A' }}</small>
+                                        </div>
                                     </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><strong>Valor Total:</strong></span>
-                                        <span class="badge bg-success">€ {{ number_format($reserva->valor_total, 2, ',', '.') }}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><strong>Data de Retirada:</strong></span>
-                                        <span>{{ Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><strong>Data de Devolução:</strong></span>
-                                        <span>{{ Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><strong>Estação de Retirada:</strong></span>
-                                        <span>{{ $reserva->estacaoRetirada->nome ?? 'N/A' }}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><strong>Estação de Devolução:</strong></span>
-                                        <span>{{ $reserva->estacaoDevolucao->nome ?? 'N/A' }}</span>
-                                    </li>
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
                                         <span><strong>Grupo de Veículo:</strong></span>
-                                        <span>{{ $reserva->grupoFrota->nome ?? 'N/A' }}</span>
+                                        <small class="text-truncate">{{ $reserva->grupoFrota->nome ?? 'N/A' }}</small>
                                     </li>
                                 </ul>
+                                <hr>
+
+                                <ul class="list-group list-group-flush">
+                                    <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="font-weight-bold">Tarifa Base:</span>
+                                        <span class="badge bg-light text-dark">€ {{ number_format($reserva->tarifa_base, 2, ',', '.') }}</span>
+                                    </li>
+                                    <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="font-weight-bold">Valor Total Tarifa Base:</span>
+                                        <div class="d-flex">
+                                            <span class="badge bg-dark text-dark">
+                                                {{ $reserva->quantidade_dias }} dias
+                                            </span>
+                                            <span class="ml-1 badge bg-light text-dark">€ {{ number_format($reserva->valor_total_tarifa_base, 2, ',', '.') }}</span>
+                                        </div>
+                                    </li>
+                                    <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="font-weight-bold">Valor total dos Opcionais:</span>
+                                        <span class="badge bg-light text-dark">€ {{ number_format($reserva->valor_opcionais, 2, ',', '.') }}</span>
+                                    </li>
+                                    <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="font-weight-bold"  >Desconto {{ $reserva->cupom_desconto ? "<span class='badge bg-pink'>({$reserva->cupom_desconto->codigo})</span>" : '' }}</span>
+                                        <div class="d-flex">
+                                            <span class="badge bg-info">{{ number_format($reserva->percentual_desconto ?? 0, 2, ',', '.') }} %</span>
+                                            <span class="ml-1 {{ isset($reserva->valor_total_com_desconto ) ? 'badge bg-success' : 'badge bg-danger' }}">-€ {{ number_format($reserva->valor_total_com_desconto  ?? 0, 2, ',', '.') }}</span>
+                                        </div>
+                                    </li>
+                                    <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
+                                        <span class="font-weight-bold">Valor Total:</span>
+                                        <span class="badge bg-primary">€ {{ number_format($reserva->valor_total_final , 2, ',', '.') }}</span>
+                                    </li>
+                                </ul>
+                                <hr>
 
                                 @if($reserva->opcionais->count() > 0)
-                                    <h6 class="mt-4 mb-2 text-muted">Opcionais Selecionados:</h6>
-                                    <ul class="list-group">
-                                        @foreach($reserva->opcionais as $opcional)
-                                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                                <span>{{ $opcional->nome }}</span>
-                                                <span class="badge bg-info">€ {{ number_format($opcional->pivot->valor ?? 0, 2, ',', '.') }}</span>
+                                    <h6 class="mb-2 font-weight-bold text-sm text-muted">Opcionais Selecionados:</h6>
+                                    <ul class="list-group list-group-flush">
+                                        @forelse($reserva->opcionais as $opcional)
+                                            <li class="p-1 list-group-item d-flex justify-content-between align-items-center">
+                                                {{-- {{ $opcional->nome }} --}}
+                                                <span class="font-weight-bold">{{ $opcional->nome }} {!! $opcional->tipo_cobranca == 'por_dia' ? "<span class='badge bg-secondary'>Diário</span>" : "<span class='badge bg-purple'>Integral</span>" !!}</span>
+                                                    <div class="d-flex">
+
+                                                <span class="badge bg-light ml-2">
+                                                    Quantidade: {{ $opcional->pivot->quantidade }}
+                                                </span>
+                                                <span class="badge badge-primary ml-2">€ {{ number_format($opcional->pivot->quantidade * $opcional->pivot->preco_total, 2, ',', '.') ?? 0}}</span>
+                                            </div>
                                             </li>
-                                        @endforeach
+                                        @empty
+                                            <li class="list-group-item py-1">Nenhum opcional selecionado</li>
+                                        @endforelse
                                     </ul>
                                 @endif
                             </div>
