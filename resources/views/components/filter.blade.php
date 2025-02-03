@@ -116,6 +116,13 @@
 <script src="{{ asset('js/select2.min.js') }}"></script>
 <script>
     $(document).ready(function() {
+        $('.select2').select2({
+            width: '100%',
+            theme: 'bootstrap4',
+            placeholder: 'Selecione uma opção',
+            allowClear: true
+        });
+
         // Inicializa o tooltip
         $('#toggle-filters').tooltip();
 

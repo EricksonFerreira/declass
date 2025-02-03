@@ -17,6 +17,8 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');
     Route::post('{id}/adicionarDanoVeiculo', [ReservaController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');
     Route::get('{id}/assinarContratoCheckin', [ReservaController::class, 'assinarContratoCheckin'])->name('assinarContratoCheckin');
-    Route::post('{id}/assinarContratoCheckin', [ReservaController::class, 'salvarAssinaturaContratoCheckin'])->name('salvarAssinaturaContratoCheckin');
+    // Route::post('{id}/assinarContratoCheckin', [ReservaController::class, 'salvarAssinaturaContratoCheckin'])->name('salvarAssinaturaContratoCheckin');
+    Route::post('{id}/salvar-assinatura-checkin', [ReservaController::class, 'salvarAssinarContratoCheckIn'])->name('salvarAssinarContratoCheckIn');
+    Route::get('{id}/verContratoCheckin', [ReservaController::class, 'verContratoCheckin'])->name('verContratoCheckin');
 });
 Route::resource('reserva', ReservaController::class);

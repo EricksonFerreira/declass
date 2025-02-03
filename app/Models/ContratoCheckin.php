@@ -21,6 +21,9 @@ class ContratoCheckin extends Model
         'observacoes_saida',
         'quilometragem_atual',
         'veiculo_id',
+        'assinatura',
+        'data_assinatura',
+        'assinado'
     ];
     public $timestamps = true;
 

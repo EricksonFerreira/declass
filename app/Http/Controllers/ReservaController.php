@@ -32,6 +32,7 @@ use App\Traits\LogTrait;
 use DB;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class ReservaController extends BaseController implements FiltroInterface, ResourceInterface
@@ -311,6 +312,53 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function obterFiltrosPrincipais()
     {
+        
+        // $locais = $this->estacaoService->getAllAtivos();
+        // $locaisPossiveis = [];
+        // $locaisPossiveis[] = [
+        //     'value' =>'',
+        //     'label' => 'Todos'
+        // ];
+        // foreach ($locais as $id => $local) {
+        //     $locaisPossiveis[] = [
+        //         'value' => $id,
+        //         'label' => $local
+        //     ];
+        // }
+        // //option 
+        // $statusReserva = $this->statusReservaService->getAllForSelect();
+        // $statusPossiveis = [];
+        // $statusPossiveis[] = [
+        //     'value' =>'',
+        //     'label' => 'Todos'
+        // ];
+        // foreach ($statusReserva as $id => $status) {
+        //     $statusPossiveis[] = [
+        //         'value' => $id,
+        //         'label' => $status
+        //     ];
+        // }
+
+        // $usuarios = $this->userService->getAllForSelect();
+        // $usuariosPossiveis = [];
+        // $usuariosPossiveis[] = [
+        //     'value' =>'',
+        //     'label' => 'Todos'
+        // ];
+        // foreach ($usuarios as $id => $usuario) {
+        //     $usuariosPossiveis[] = [
+        //         'value' => $id,
+        //         'label' => $usuario
+        //     ];
+        // }
+        // return [
+        //     ['name' => 'retirada', 'label' => 'Retirada', 'type' => 'select', 'typeWhere' => 'where', 'options' =>$locaisPossiveis],
+        //     ['name' => 'devolucao', 'label' => 'Devolução', 'type' => 'select', 'typeWhere' => 'where', 'options' =>$locaisPossiveis],
+        //     ['name' => 'status', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => $statusPossiveis],
+        //     ['name' => 'usuario', 'label' => 'Usuário', 'type' => 'select', 'typeWhere' => 'where', 'options' => $usuariosPossiveis],
+        //     ['name' => 'data_inicio', 'label' => 'Data Início', 'type' => 'date', 'typeWhere' => 'where'],
+        //     ['name' => 'data_fim', 'label' => 'Data Fim', 'type' => 'date', 'typeWhere' => 'where'],
+        // ];
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
@@ -483,113 +531,170 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         )
             ->with('titulo', 'Check-in da reserva Nº ' . $reserva->id);
     }
+
+    public function verContratoCheckin(Request $request, $reserva_id){
+
+        // Carrega a reserva com todos os relacionamentos necessários
+    $reserva = $this->reservaService->getById($reserva_id, [
+        'usuario', // para dados do cliente
+        // 'condutor', // para dados do condutor
+        'veiculo', // para dados do veículo
+        'grupoFrota', // para dados do grupo
+        'estacaoRetirada', // para local de retirada
+        'estacaoDevolucao', // para local de devolução
+        'opcionais', // para itens de faturação
+        'contratoCheckin', // para dados do contrato
+        'veiculoDano'
+        // 'contratoCheckin.veiculoDanos' // para estado da viatura
+    ]);
+    // dd( $reserva->contratoCheckin->veiculo->modelo->gruposFrota[0]->nome );
+
+    $data = [
+        'documento' => [
+            'codigo_interno' => 'ARCS-' . date('y'), // Você pode gerar isso
+            'atcud' => 'JJNXXNNC-' . date('y'), // Você pode gerar isso
+            'data_emissao' => now()->format('Y-m-d H:i:s'),
+            'empresa' => [
+                'nome' => config('app.empresa.nome'),
+                'endereco' => config('app.empresa.endereco'),
+                'site' => config('app.empresa.site'),
+                'instagram' => config('app.empresa.instagram'),
+            ],
+        ],
+        'contrato' => [
+            'numero' => '#' . str_pad($reserva->id, 5, '0', STR_PAD_LEFT),
+            'titulo' => 'CONTRATO DE ALUGUEL',
+            'subtitulo' => 'CONDIÇÕES PARTICULARES DO CONTRATO DE ALUGUEL',
+        ],
+        'cliente' => [
+            // 'nif' => $reserva->user->nif,
+            'nome' => $reserva->usuario->nome,
+            'endereco' => $reserva->usuario->endereco,
+            'pais' => $reserva->usuario->pais,
+            'apolice' => $reserva->usuario->apolice,
+        
+            'nif' => $reserva->usuario->nif,
+            'nome' => $reserva->usuario->nome,
+            'email' => $reserva->usuario->email,
+            'telefone' => $reserva->usuario->telefone,
+            'passaporte' => $reserva->usuario->passaporte ?? '<br>',
+            'local_emissao' => $reserva->usuario->local_emissao,
+            'data_nascimento' => $reserva->usuario->data_nascimento,
+            'local_nascimento' => $reserva->usuario->local_nascimento,
+            'carta_conducao' => [
+                'pais' => $reserva->usuario->pais_emissao,
+                'numero' => $reserva->usuario->numero_carta_conducao,
+                'data_emissao' => $reserva->usuario->data_emissao_carta_conducao,
+                'validade' => $reserva->usuario->data_validade_carta_conducao,
+            ],
+        ],
+        'veiculo' => [
+            'matricula' => $reserva->contratoCheckin->veiculo->id,
+            'marca' => $reserva->contratoCheckin->marca->nome,
+            'modelo' => $reserva->contratoCheckin->modelo->nome,
+            'grupo' => $reserva->contratoCheckin->veiculo->modelo->gruposFrota[0]->nome,
+            'quilometros' => $reserva->contratoCheckin->quilometragem_atual,
+            'combustivel' => $reserva->contratoCheckin->nivel_combustivel,
+            'taxas' => [
+                // 'combustivel_em_falta' => '€' . number_format($reserva->taxa_combustivel, 2) . ' + IVA / litro',
+                // 'taxa_reabastecimento' => '€' . number_format($reserva->taxa_reabastecimento, 2) . ' + IVA',
+                'combustivel_em_falta' => '€ 0',
+                'taxa_reabastecimento' => '€ 0',
+            ],
+            // 'franquia' => '€' . number_format($reserva->franquia, 2),
+            // 'kms_permitidos' => $reserva->kms_permitidos ?: 'ilimitado',
+            'franquia' => '€ 0',
+            'kms_permitidos' => $reserva->kms_permitidos ?: 'ilimitado',
+        ],
+        'reserva' => [
+            'alugado_em' => [
+                'local' => $reserva->estacaoRetirada->nome,
+                'data' => Carbon::parse($reserva->data_inicio)->format('Y-m-d'),
+                'hora' => Carbon::parse($reserva->data_inicio)->format('H:i'),
+            ],
+            'devolver_em' => [
+                'local' => $reserva->estacaoDevolucao->nome,
+                'data' => Carbon::parse($reserva->data_fim)->format('Y-m-d'),
+                'hora' => Carbon::parse($reserva->data_fim)->format('H:i'),
+            ],
+        ],
+        'faturacao' => [
+            'dias_unidades' => $reserva->quantidade_dias,
+            // 'itens' => $this->obterItensFaturacao($reserva),
+            'iva_total' => '€ 0',
+            'valor_total' => '€ 0',
+            // 'iva_total' => '€' . number_format($reserva->valor_iva, 2),
+            // 'valor_total' => '€' . number_format($reserva->valor_total_final, 2),
+        ],
+        'estado_viatura' => [
+            'itens' => $reserva->veiculoDano->map(function ($dano) {
+                return [
+                    'local'=> ucfirst($dano->local_dano).':',
+                    'localizacao'=>$dano->localizacao_dano,
+                    'tipo_dano'=>$dano->observacoes == null ? '' : '('.$dano->tipo_dano.')',
+                    'observacoes'=>$dano->observacoes
+                ];
+            })->toArray(),
+        ],
+        'funcionario' => [
+            'nome' => Auth::user()->nome,
+        ],
+        'opcionais' => $reserva->opcionais->map(function ($opcional) {
+                return [
+                    'nome' => $opcional->nome,
+                    'valor_total' => "€ " . number_format($opcional->pivot->preco_total, 2),
+                    'preco_unitario' => $opcional->preco_por_dia ? "€ " . number_format($opcional->preco_por_dia , 2) :"€ " . number_format($opcional->preco_integral , 2) ,
+                    'quantidade' => $opcional->pivot->quantidade,
+                ];
+            })->toArray(),
+            'assinatura'=> $reserva->contratoCheckin->assinatura,
+    ];
+
+    // dd($reserva);
+
+    // dd($data);
+    // Percorrer todos os atributos de data e caso não tenha valor, substituir por <br>
+    $this->tratarCamposData($data);
+
+       $this->pdfService->gerarCheckinPdf($data);
+    }
+    
     public function assinarContratoCheckin(Request $request, $reserva_id)
     {
-        $data = [
-            'documento' => [
-                'codigo_interno' => 'ARCS-24',
-                'atcud' => 'JJNXXNNC-24',
-                'data_emissao' => '2025-01-27 04:19:18',
-                'empresa' => [
-                    'nome' => 'Xpand Cars Lda',
-                    'endereco' => 'Rua Dr. Barata Salgueiro, 19 - Samouco - 2890-238',
-                    'site' => 'www.xpandcars.com',
-                    'instagram' => '@xpandcars',
-                ],
-            ],
-            'contrato' => [
-                'numero' => '#00036',
-                'titulo' => 'CONTRATO DE ALUGUER',
-                'subtitulo' => 'A SUA VIAGEM COMEÇA AQUI.',
-            ],
-            'cliente' => [
-                'nif' => '2331313123',
-                'nome' => 'erickson',
-                'endereco' => 'saf 1213-123 sf',
-                'pais' => 'Portugal',
-                'apolice' => '207198624',
-            ],
-            'condutor' => [
-                'nif' => '2331313123',
-                'nome' => 'erickson',
-                'email' => '123@123.com',
-                'telefone' => '1231',
-                'passaporte' => '1323213',
-                'local_emissao' => '2313131',
-                'data_nascimento' => '2025-01-24',
-                'local_nascimento' => 'Portugal',
-                'carta_conducao' => [
-                    'numero' => '3123231',
-                    'data_emissao' => '2025-01-24',
-                    'validade' => '2051-02-17',
-                ],
-            ],
-            'veiculo' => [
-                'matricula' => 'BF-57-VS',
-                'modelo' => 'Peugeot 208 Allure Pack 1.2 Puretech 100CV',
-                'grupo' => '4-5 Door Manual Unspecified Drive Petrol Air',
-                'quilometros' => 2367,
-                'combustivel' => 'Cheio (Gasolina 95)',
-                'taxas' => [
-                    'combustivel_em_falta' => '€1.89 + IVA / litro',
-                    'taxa_reabastecimento' => '€30.00 + IVA',
-                ],
-                'franquia' => '€3,000.00',
-                'kms_permitidos' => 'ilimitado',
-            ],
-            'reserva' => [
-                'alugado_em' => [
-                    'local' => 'Delivery Lisboa-Centro',
-                    'data' => '2025-01-26',
-                    'hora' => '21:00',
-                ],
-                'devolver_em' => [
-                    'local' => 'Delivery Lisboa-Centro',
-                    'data' => '2025-01-28',
-                    'hora' => '21:00',
-                ],
-            ],
-            'faturacao' => [
-                'dias_unidades' => 2,
-                'itens' => [
-                    ['descricao' => 'Tarifa de Aluguer', 'iva' => '23.0%', 'valor' => '€90.00'],
-                    ['descricao' => 'Fora de Hora', 'iva' => '23.0%', 'valor' => '€100.00'],
-                    ['descricao' => 'Básico', 'iva' => '0%', 'valor' => '€0.00'],
-                ],
-                'iva_total' => '€35.53',
-                'valor_total' => '€190.00',
-            ],
-            'estado_viatura' => [
-                'itens' => [
-                    'Pára-choque dianteiro (Ausente)',
-                    'Tampões de plástico (Ausente)',
-                    'Troca de combustível (Ausente)',
-                ],
-            ],
-            'funcionario' => [
-                'nome' => 'Edson Soares',
-            ],
-        ];
-        $this->pdfService->gerarCheckinPdf($data);
-        dd(2);
+       
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadcrumbItem('Home', route('home')),
+            new BreadcrumbItem('Reservas', route('reserva.index')),
+            new BreadcrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
+            new BreadcrumbItem('Assinar Contrato de Check-in')
+        ]);
 
         $reserva = $this->reservaService->getById($reserva_id,['contratoCheckin']);
-        return view('reserva.assinar-contrato-checkin', compact('reserva'));
+        return view('reserva.assinar-contrato-checkin', compact('reserva','breadcrumb'))->with('titulo', 'Assinar contrato de check-in da reserva Nº ' . $reserva->id);
     }
-    public function salvarAssinarContratoCheckIn(AssinarContratoRequest $request,$reserva_id){
+
+    public function salvarAssinarContratoCheckIn(AssinarContratoRequest $request, $reserva_id)
+    {
         $dados = $request->validated();
         $dados['reserva_id'] = $reserva_id;
-
+        
         $contrato = $this->contratoCheckinService->getById($dados['contrato_id']);
-        if($contrato){
-            $reserva = $this->reservaService->getById($reserva_id);
-
-            $this->reservaService->adicionaLog($reserva_id,Auth::id(),json_encode(['acao' => 'Contrato de check-in assinado']));
-            $this->contratoCheckinService->assinarDocumento($dados['contrato_id']);
-            $this->reservaService->checkInRealizado($reserva_id,$contrato->veiculo_id);
-            $this->movimentacaoService->realizarCheckIn($dados['veiculo_id'],$reserva->estacao_retirada_id,$reserva_id);
+        
+        if ($contrato) {
+            try {
+                $reserva = $this->reservaService->getById($reserva_id);
+                $this->contratoCheckinService->assinarDocumento($dados['contrato_id'], $dados['assinatura']);
+                $this->reservaService->checkInRealizado($reserva_id, $contrato->veiculo_id);
+                $this->movimentacaoService->realizarCheckIn($dados['veiculo_id'], $reserva->estacao_retirada_id, $reserva_id);
+                $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode(['acao' => 'Contrato de check-in assinado']));
+                
+                return response()->json(['success' => true, 'message' => 'Contrato assinado com sucesso']);
+            } catch (\Exception $e) {
+                return response()->json(['success' => false, 'message' => 'Erro ao assinar contrato: ' . $e->getMessage()], 500);
+            }
         }
-        throw new \Exception('Contrato de check-in não encontrado');
+        
+        return response()->json(['success' => false, 'message' => 'Contrato de check-in não encontrado'], 404);
     }
 
     public function criarContratoCheckIn(CriarContratoCheckInRequest $request,$reserva_id)
@@ -619,5 +724,24 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $dano = $this->veiculoDanoService->create($dados);
         return response()->json($dano);
+    }
+ 
+      /**
+     * Percorre recursivamente o array e substitui valores nulos em campos de data por <br>
+     * 
+     * @param array &$data Array de dados a ser processado
+     */
+    private function tratarCamposData(&$data) 
+    {
+        foreach ($data as $key => &$value) {
+            if (is_array($value)) {
+                $this->tratarCamposData($value);
+            } else {
+                $value = $this->convertBrCasoValorSejaNulo($value);
+            }
+        }
+    }
+    private function convertBrCasoValorSejaNulo($valor){
+        return !isset($valor) || is_null($valor) ? '<br>' : $valor;
     }
 }

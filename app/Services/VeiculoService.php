@@ -171,16 +171,16 @@ class VeiculoService extends AbstractBaseService
                 // $query = $query->whereIn('status_movimentacao_id', [2,6]);
 
                 // Verifica se a movimentação está entre as datas informadas e não está com status da movimentação expirada
-                $query->where(function ($query) use ($data_inicio, $data_fim) {
-                    $query->whereBetween('data_saida', [$data_inicio, $data_fim])
-                          ->orWhereBetween('data_chegada_estimada', [$data_inicio, $data_fim])
-                          ->orWhereBetween('data_chegada_real', [$data_inicio, $data_fim])
-                          ->orWhere(function ($query) use ($data_inicio, $data_fim) {
-                              $query->where('data_saida', '<=', $data_inicio)
-                                    ->where('data_chegada_estimada', '>=', $data_fim)
-                                    ->where('data_chegada_real', '>=', $data_fim);
-                          });
-                });
+                // $query->where(function ($query) use ($data_inicio, $data_fim) {
+                //     $query->whereBetween('data_saida', [$data_inicio, $data_fim])
+                //           ->orWhereBetween('data_chegada_estimada', [$data_inicio, $data_fim])
+                //           ->orWhereBetween('data_chegada_real', [$data_inicio, $data_fim])
+                //           ->orWhere(function ($query) use ($data_inicio, $data_fim) {
+                //               $query->where('data_saida', '<=', $data_inicio)
+                //                     ->where('data_chegada_estimada', '>=', $data_fim)
+                //                     ->where('data_chegada_real', '>=', $data_fim);
+                //           });
+                // });
             })
             ->get();
     }
@@ -230,17 +230,17 @@ class VeiculoService extends AbstractBaseService
             $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
                 ->whereIn('reservas.status_reserva_id', [1,2,4,6]);
             // Verifica se a movimentação está entre as datas informadas e não está com status da movimentação expirada
-            $query->where(function ($query) use ($data_inicio, $data_fim) {
-                $query->whereBetween('data_saida', [$data_inicio, $data_fim])
-                      ->orWhereBetween('data_chegada_estimada', [$data_inicio, $data_fim])
-                      ->orWhereBetween('data_chegada_real', [$data_inicio, $data_fim])
-                      ->orWhere(function ($query) use ($data_inicio, $data_fim) {
-                          $query->where('data_saida', '<=', $data_inicio)
-                                ->where('data_chegada_estimada', '>=', $data_fim)
-                                ->where('data_chegada_real', '>=', $data_fim);
-                      });
-                    //   ->where('status_movimentacao_id', '!=', 11); // Expirada
-            });
+            // $query->where(function ($query) use ($data_inicio, $data_fim) {
+            //     $query->whereBetween('data_saida', [$data_inicio, $data_fim])
+            //           ->orWhereBetween('data_chegada_estimada', [$data_inicio, $data_fim])
+            //           ->orWhereBetween('data_chegada_real', [$data_inicio, $data_fim])
+            //           ->orWhere(function ($query) use ($data_inicio, $data_fim) {
+            //               $query->where('data_saida', '<=', $data_inicio)
+            //                     ->where('data_chegada_estimada', '>=', $data_fim)
+            //                     ->where('data_chegada_real', '>=', $data_fim);
+            //           });
+            //         //   ->where('status_movimentacao_id', '!=', 11); // Expirada
+            // });
         })
         ->with('modelo')
         ->get()

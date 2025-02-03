@@ -49,6 +49,11 @@ class UpdateUsuarioRequest extends FormRequest
                 'unique:users,numero_identificacao,' .  $this->route('usuario')
             ],
             'tipo_usuario_id' => 'required|string|max:20',
+            'numero_carta_conducao' => 'required|string|max:20',
+            'local_emissao' => 'required|string|max:100',
+            'pais_emissao' => 'required|string|max:2',
+            'data_emissao_carta_conducao' => 'required|date|before:' . Carbon::now()->format('Y-m-d'),
+            'data_validade_carta_conducao' => 'date',
         ];
     }
 
@@ -85,6 +90,16 @@ class UpdateUsuarioRequest extends FormRequest
             'numero_identificacao.unique' => 'O número de identificação informado já está em uso',
             'tipo_usuario_id.required' => 'O campo tipo de usuário é obrigatório',
             'tipo_usuario_id.max' => 'O campo tipo de usuário deve ter no máximo 20 caracteres',
+            'numero_carta_conducao.required' => 'O campo numero de carta de condução é obrigatório',
+            'numero_carta_conducao.max' => 'O campo numero de carta de condução deve ter no máximo 20 caracteres',
+            'local_emissao.required' => 'O campo local de emissão é obrigatório',
+            'local_emissao.max' => 'O campo local de emissão deve ter no máximo 100 caracteres',
+            'pais_emissao.required' => 'O campo pais de emissão é obrigatório',
+            'pais_emissao.max' => 'O campo pais de emissão deve ter no máximo 2 caracteres',
+            'data_emissao_carta_conducao.required' => 'O campo data de emissão da carta de condução é obrigatório',
+            'data_emissao_carta_conducao.date' => 'O campo data de emissão da carta de condução deve ser uma data',
+            'data_emissao_carta_conducao.before' => 'A data de emissão da carta de condução deve ser anterior à data atual',
+            'data_validade_carta_conducao.date' => 'O campo data de validade da carta de condução deve ser uma data',
         ];
     }
 

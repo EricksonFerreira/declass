@@ -339,3 +339,5 @@ Route::middleware('web')
         require base_path('routes/grupos/dano.php');
 
 });
+
+Route::post('/reserva/salvar-assinatura', [ReservaController::class, 'salvarAssinatura'])->name('reserva.salvar.assinatura');

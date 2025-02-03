@@ -50,6 +50,11 @@ class StoreUsuarioRequest extends FormRequest
                 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/'
             ],
             'confirmacao_senha' => 'required|string|max:20|same:password',
+            'numero_carta_conducao' => 'required|string|max:20',
+            'local_emissao' => 'required|string|max:100',
+            'pais_emissao' => 'required|string|max:2',
+            'data_emissao_carta_conducao' => 'required|date|before:' . Carbon::now()->format('Y-m-d'),
+            'data_validade_carta_conducao' => 'date',
         ];
     }
 
@@ -91,6 +96,16 @@ class StoreUsuarioRequest extends FormRequest
             'confirmacao_senha.required' => 'O campo confirmação de senha é obrigatório',
             'confirmacao_senha.max' => 'O campo confirmação de senha deve ter no máximo 20 caracteres',
             'confirmacao_senha.same' => 'A confirmação da senha não corresponde à senha.',
+            'numero_carta_conducao.required' => 'O campo numero de carta de condução é obrigatório',
+            'numero_carta_conducao.max' => 'O campo numero de carta de condução deve ter no máximo 20 caracteres',
+            'local_emissao.required' => 'O campo local de emissão é obrigatório',
+            'local_emissao.max' => 'O campo local de emissão deve ter no máximo 100 caracteres',
+            'pais_emissao.required' => 'O campo pais de emissão é obrigatório',
+            'pais_emissao.max' => 'O campo pais de emissão deve ter no máximo 2 caracteres',
+            'data_emissao_carta_conducao.required' => 'O campo data de emissão da carta de condução é obrigatório',
+            'data_emissao_carta_conducao.date' => 'O campo data de emissão da carta de condução deve ser uma data',
+            'data_emissao_carta_conducao.before' => 'A data de emissão da carta de condução deve ser anterior à data atual',
+            'data_validade_carta_conducao.date' => 'O campo data de validade da carta de condução deve ser uma data',
         ];
     }
 }

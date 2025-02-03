@@ -31,7 +31,12 @@ class User extends Authenticatable
         'numero_identificacao',
         'tipo_usuario_id',
         'stripe_id',
-        'password'
+        'password',
+        'numero_carta_conducao',
+        'local_emissao_carta_conducao',
+        'pais_emissao_carta_conducao',
+        'data_emissao_carta_conducao',
+        'data_validade_carta_conducao'
     ];
 
     /**

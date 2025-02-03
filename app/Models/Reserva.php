@@ -32,43 +32,73 @@ class Reserva extends Model
         'valor_total_final',
     ];
 
-    // Relacionamento com o modelo de Usuário
+    public function podeEditar()
+    {
+        return in_array($this->statusReserva->id, [1]);
+    }
+
+    public function podeEfetuarPagamento()
+    {
+        return in_array($this->statusReserva->id, [1]);
+    }
+
+    public function podeCriarContrato()
+    {
+        return in_array($this->statusReserva->id, [2]) && $this->contratoCheckin()->doesntExist();
+    }
+
+    public function podeAssinarContrato()
+    {
+        return in_array($this->statusReserva->id, [2]) && $this->contratoCheckin()->exists();
+    }
+    
+    public function podeVerContrato()
+    {
+        return  $this->contratoCheckin()->exists();
+    }
+
+    public function podeFazerCancelamento()
+    {
+        return in_array($this->statusReserva->id, [1, 2]);
+    }
+
+    public function podeFazerCheckout()
+    {
+        return in_array($this->statusReserva->id, [4]);
+    }
+    
+
+    // Relacionamentos
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relacionamento com o modelo de Modelo
     public function modelos()
     {
         return $this->belongsTo(Modelo::class, 'modelo_id');
     }
-    // Relacionamento com o modelo de Veículo
     public function veiculo()
     {
         return $this->belongsTo(Veiculo::class, 'veiculo_id');
     }
 
-    // Relacionamento com a estação de retirada
     public function estacaoRetirada()
     {
         return $this->belongsTo(Estacao::class, 'estacao_retirada_id');
     }
 
-    // Relacionamento com a estação de devolução
     public function estacaoDevolucao()
     {
         return $this->belongsTo(Estacao::class, 'estacao_devolucao_id');
     }
 
-    // Relacionamento com os opcionais
     public function opcionais()
     {
         return $this->belongsToMany(Opcional::class, 'reservas_opcionais', 'reserva_id', 'opcional_id')
             ->withPivot('quantidade', 'preco_total');
     }
 
-    // Relacionamento com o status
     public function statusReserva()
     {
         return $this->belongsTo(StatusReserva::class, 'status_reserva_id');
@@ -87,5 +117,9 @@ class Reserva extends Model
     public function contratoCheckin()
     {
         return $this->hasOne(ContratoCheckin::class, 'reserva_id');
+    }
+
+    public function veiculoDano(){
+        return $this->hasMany(VeiculoDanos::class, 'reserva_id');
     }
 }

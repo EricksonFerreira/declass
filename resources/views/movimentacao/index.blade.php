@@ -38,9 +38,7 @@
                         <th>Status</th>
                         <th>Veículo</th>
                         <th>Grupo de Veículo</th>
-                        <th>Data de Saída</th>
-                        <th>Data Estimada de Chegada</th>
-                        <th>Data de Chegada</th>
+                        <th>Data de Registro</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
                 </thead>
@@ -91,25 +89,9 @@
                                 @endif
                             </td>
                             <td>
-                                @if($movimentacao->data_saida)
+                                @if($movimentacao->data_registro)
                                     <i class="fas fa-car mr-1"></i>
-                                    {{ Carbon\Carbon::parse($movimentacao->data_saida)->format('d/m/Y H:i') }}
-                                @else
-                                    <span class="text-muted">Não definida</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($movimentacao->data_chegada_estimada)
-                                    <i class="fas fa-calendar-alt mr-1"></i>
-                                    {{ Carbon\Carbon::parse($movimentacao->data_chegada_estimada)->format('d/m/Y H:i') }}
-                                @else
-                                    <span class="text-muted">Não definida</span>
-                                @endif
-                            </td>
-                            <td>
-                                @if($movimentacao->data_chegada)
-                                    <i class="fas fa-flag-checkered mr-1"></i>
-                                    {{ Carbon\Carbon::parse($movimentacao->data_chegada)->format('d/m/Y H:i') }}
+                                    {{ Carbon\Carbon::parse($movimentacao->data_registro)->format('d/m/Y H:i') }}
                                 @else
                                     <span class="text-muted">Não definida</span>
                                 @endif

@@ -43,7 +43,7 @@ class Veiculo extends Model
         'data_hora_disponibilidade',
     ];
 
-    public function Movimentacoes()
+    public function movimentacoes()
     {
         return $this->hasMany(Movimentacao::class, 'veiculo_id');
     }
@@ -93,7 +93,7 @@ class Veiculo extends Model
         // Verificar se o veículo está disponível no dia especificado
         $movimentacao = DB::table("movimentacoes")
             ->where('veiculo_id', $this->id)
-            ->where('data_saida', '<=', $dia)
+            // ->where('data_saida', '<=', $dia)
             ->where(function ($query) use ($dia) {
                 $query->where('data_chegada_real', '>=', $dia)
                       ->orWhereNull('data_chegada_real');

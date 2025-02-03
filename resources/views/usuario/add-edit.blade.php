@@ -129,6 +129,49 @@
                             required />
                     </div>
                 </div>
+                
+                <!-- Carta de Condução -->
+                <x-section-division-header-form>Carta de Condução</x-section-division-header-form>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <x-form-input required type="text" class="form-control-sm" id="numero_carta_conducao"
+                            name="numero_carta_conducao" label="Nº Carta de Condução"
+                            value="{{ $usuario->numero_carta_conducao ?? '' }}" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <x-form-input required type="text" class="form-control-sm" id="local_emissao_carta_conducao"
+                            name="local_emissao_carta_conducao" label="Local de Emissão"
+                            value="{{ $usuario->local_emissao_carta_conducao ?? '' }}" />
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <x-form-select name="pais_emissao_carta_conducao" label="País de Emissão" :options="$paises"
+                            placeholder="Selecione um valor" :selected="old(
+                                'pais_emissao_carta_conducao',
+                                isset($usuario->pais_emissao_carta_conducao) ? $usuario->pais_emissao_carta_conducao : null,
+                            )" class="form-control form-control-sm"
+                            required />
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <x-form-input required type="date" class="form-control-sm" id="data_emissao_carta_conducao"
+                            name="data_emissao_carta_conducao" label="Data de Emissão"
+                            value="{{ $usuario->data_emissao_carta_conducao ?? '' }}" />
+                    </div>
+                </div>
+               
+                <div class="col-md-4">
+                    <div class="form-group">
+                        <x-form-input type="date" class="form-control-sm" id="data_validade_carta_conducao"
+                            name="data_validade_carta_conducao" label="Data de Validade"
+                            value="{{ $usuario->data_validade_carta_conducao ?? '' }}" />
+                    </div>
+                </div>
 
                 @if (!isset($usuario))
                     <!-- Informações Privadas -->
@@ -190,8 +233,18 @@
 @stop
 @section('js')
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
-
+    <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
+    <script src="{{asset('js/alertConfirmPequena.js')}}"></script>
     <script>
+        document.getElementById("data_emissao_carta_conducao").addEventListener("change", function() {
+            const dataEmissao = new Date(this.value);
+            const hoje = new Date();
+            
+            if (dataEmissao >= hoje) {
+                alertConfirmPequena("Aviso", "A data de emissão deve ser anterior à data atual", "error");
+                this.value = '';
+            }
+        });
         $('#celular').mask('(00) 00000-0000');
 
          // Validar número de celular
