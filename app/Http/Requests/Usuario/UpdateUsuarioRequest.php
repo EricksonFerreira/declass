@@ -68,12 +68,48 @@ class UpdateUsuarioRequest extends FormRequest
     public function messages()
     {
         return [
+            'required' => 'O campo :attribute e obrigatorio.',
+            'string' => 'O campo :attribute deve ser um texto valido.',
+            'max.string' => 'O campo :attribute nao pode ter mais de :max caracteres.',
+            'date' => 'O campo :attribute deve ser uma data valida.',
+            'before' => 'O campo :attribute deve ser uma data anterior a :date.',
+            'integer' => 'O campo :attribute deve ser numerico.',
+            'exists' => 'O valor informado para :attribute nao existe.',
+            'array' => 'O campo :attribute deve ser uma lista.',
+            'boolean' => 'O campo :attribute deve ser verdadeiro ou falso.',
             'email.unique' => 'O email informado ja esta em uso.',
             'numero_identificacao.unique' => 'O numero de identificacao informado ja esta em uso.',
             'celular.regex' => 'O celular deve estar no formato (XX) XXXXX-XXXX.',
             'estacoes.array' => 'As estacoes permitidas devem ser informadas em lista.',
             'estacoes.*.integer' => 'Cada estacao permitida deve ser numerica.',
             'estacoes.*.exists' => 'Uma das estacoes selecionadas nao existe.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'nome' => 'nome',
+            'email' => 'e-mail',
+            'sexo' => 'sexo',
+            'data_nascimento' => 'data de nascimento',
+            'local_nascimento' => 'local de nascimento',
+            'telefone' => 'telefone',
+            'celular' => 'celular',
+            'pais_sigla' => 'pais',
+            'zip_code' => 'zip code',
+            'cidade' => 'cidade',
+            'endereco' => 'endereco',
+            'numero_identificacao' => 'numero de identificacao',
+            'role_id' => 'regra de usuario',
+            'numero_carta_conducao' => 'numero da carta de conducao',
+            'local_emissao_carta_conducao' => 'local de emissao da carta de conducao',
+            'pais_emissao_carta_conducao' => 'pais de emissao da carta de conducao',
+            'data_emissao_carta_conducao' => 'data de emissao da carta de conducao',
+            'data_validade_carta_conducao' => 'data de validade da carta de conducao',
+            'acesso_todas_estacoes' => 'acesso a todas as estacoes',
+            'estacoes' => 'estacoes permitidas',
+            'estacoes.*' => 'estacao permitida',
         ];
     }
 }

@@ -7,12 +7,15 @@ use App\Models\Movimentacao;
 use App\Models\Veiculo;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class VeiculoService extends AbstractBaseService
 {
     protected Model $model;
     public MovimentacaoService $movimentacaoService;
     public DisponibilidadeInicialVeiculoService $disponibilidadeInicialVeiculoService;
+    private ?array $statusVeiculoDisponivelIds = null;
 
     public function __construct(Veiculo $veiculo, DisponibilidadeInicialVeiculoService $disponibilidadeInicialVeiculoService)
     {
@@ -112,10 +115,14 @@ class VeiculoService extends AbstractBaseService
      */
     public function getVeiculosDisponiveisPorModeloEEstacaoEspecifica($modeloId, $estacaoId)
     {
-        return $this->model->where('modelo_id', $modeloId)
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->where('modelo_id', $modeloId)
             ->where('local_disponibilidade', $estacaoId)
-            ->where('status_veiculo_id', 1)
-            ->get();
+            ->whereNotNull('local_disponibilidade');
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return $query->get();
     }
 
     /**
@@ -127,10 +134,14 @@ class VeiculoService extends AbstractBaseService
      */
     public function getVeiculosDisponiveisPorModeloExcetoEstacao($modeloId, $estacaoId)
     {
-        return $this->model->where('modelo_id', $modeloId)
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->where('modelo_id', $modeloId)
             ->where('local_disponibilidade', '!=', $estacaoId)
-            ->where('status_veiculo_id', 1)
-            ->get();
+            ->whereNotNull('local_disponibilidade');
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return $query->get();
     }
 
     public function obterVeiculoDisponivelPorModeloEstacao($modeloId, $estacaoId)
@@ -160,10 +171,9 @@ class VeiculoService extends AbstractBaseService
      */
     public function getVeiculosDisponiveisPorModeloEEstacaoEIntervaloDatas(int $modeloId, int $estacaoId, string $data_inicio, string $data_fim, int $reservaId = null)
     {
-        return $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->where('modelo_id', $modeloId)
             ->where('local_disponibilidade', $estacaoId)
-            ->where('status_veiculo_id', 1)
             ->where(function ($query) use ($data_inicio) {
                 $query->whereNull('data_hora_disponibilidade')
                     ->orWhere('data_hora_disponibilidade', '<=', $data_inicio);
@@ -177,8 +187,11 @@ class VeiculoService extends AbstractBaseService
                     ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
                     ->where('reservas.data_inicio', '<', $data_fim)
                     ->where('reservas.data_fim', '>', $data_inicio);
-            })
-            ->get();
+            });
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return $query->get();
     }
 
     /**
@@ -201,9 +214,13 @@ class VeiculoService extends AbstractBaseService
         })->pluck('veiculo_id');
 
         // Obter veículos ativos que não estão na subquery
-        return $this->model->where('status_veiculo_id', 1)
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->whereNotIn('id', $veiculosComMovimentacoes)
-            ->get();
+            ->whereNotNull('local_disponibilidade');
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return $query->get();
     }
 
     /**
@@ -217,12 +234,11 @@ class VeiculoService extends AbstractBaseService
      */
     public function getModelosComVeiculosDisponiveis(int $idGrupoFrota, int $idLocal, string $data_inicio, string $data_fim)
     {
-        return $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->whereHas('modelo.gruposFrota', function ($query) use ($idGrupoFrota) {
                 $query->where('grupos_frota.id', $idGrupoFrota);
             })
             ->where('local_disponibilidade', $idLocal)
-            ->where('status_veiculo_id', 1)
             ->where(function ($query) use ($data_inicio) {
                 $query->whereNull('data_hora_disponibilidade')
                     ->orWhere('data_hora_disponibilidade', '<=', $data_inicio);
@@ -233,12 +249,88 @@ class VeiculoService extends AbstractBaseService
                     ->where('reservas.data_inicio', '<', $data_fim)
                     ->where('reservas.data_fim', '>', $data_inicio);
             })
-            ->with('modelo')
+            ->with('modelo');
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return $query
             ->get()
             ->pluck('modelo')
             ->filter()
             ->unique('id')
             ->values();
+    }
+
+    /**
+     * Retorna o total de veiculos ativos por estacao.
+     *
+     * @param array<int, int|string> $estacoesIds
+     * @return array<int, int>
+     */
+    public function getQuantidadeVeiculosAtivosPorEstacao(array $estacoesIds = []): array
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->whereNotNull('local_disponibilidade');
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        if (!empty($estacoesIds)) {
+            $query->whereIn('local_disponibilidade', array_map('intval', $estacoesIds));
+        }
+
+        $agrupados = $query
+            ->selectRaw('local_disponibilidade, COUNT(*) as total')
+            ->groupBy('local_disponibilidade')
+            ->pluck('total', 'local_disponibilidade')
+            ->toArray();
+
+        $resultado = [];
+        if (!empty($estacoesIds)) {
+            foreach ($estacoesIds as $estacaoId) {
+                $id = (int) $estacaoId;
+                $resultado[$id] = (int) ($agrupados[$id] ?? 0);
+            }
+
+            return $resultado;
+        }
+
+        foreach ($agrupados as $estacaoId => $total) {
+            $resultado[(int) $estacaoId] = (int) $total;
+        }
+
+        return $resultado;
+    }
+
+    public function getQuantidadeVeiculosDisponiveisPorEstacaoEPeriodo(
+        int $estacaoId,
+        string $dataInicio,
+        string $dataFim,
+        ?int $reservaId = null
+    ): int {
+        if ($estacaoId <= 0 || trim($dataInicio) === '' || trim($dataFim) === '') {
+            return 0;
+        }
+
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->where('local_disponibilidade', $estacaoId)
+            ->where(function ($subQuery) use ($dataInicio) {
+                $subQuery->whereNull('data_hora_disponibilidade')
+                    ->orWhere('data_hora_disponibilidade', '<=', $dataInicio);
+            })
+            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicio, $dataFim, $reservaId) {
+                if ($reservaId) {
+                    $subQuery->where('movimentacoes.reserva_id', '!=', $reservaId);
+                }
+
+                $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
+                    ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                    ->where('reservas.data_inicio', '<', $dataFim)
+                    ->where('reservas.data_fim', '>', $dataInicio);
+            });
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return (int) $query->count();
     }
 
     public function getTotalVeiculos()
@@ -248,7 +340,9 @@ class VeiculoService extends AbstractBaseService
 
     public function getVeiculosDisponiveis()
     {
-        return $this->model->where('status_veiculo_id', 1)->count();
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()));
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+        return (int) $query->count();
     }
 
     public function getVeiculosReservados()
@@ -266,6 +360,68 @@ class VeiculoService extends AbstractBaseService
         return $this->model->where('local_disponibilidade', $estacao_id)
             ->where('disponivel','S')
             ->get();
+    }
+
+    private function scopeStatusVeiculoDisponivel($query)
+    {
+        $idsDisponiveis = $this->getStatusVeiculoDisponivelIds();
+
+        if (empty($idsDisponiveis)) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereIn('status_veiculo_id', $idsDisponiveis);
+    }
+
+    private function getStatusVeiculoDisponivelIds(): array
+    {
+        if ($this->statusVeiculoDisponivelIds !== null) {
+            return $this->statusVeiculoDisponivelIds;
+        }
+
+        $query = DB::table('status_veiculos')->select('id', 'nome');
+
+        if (Schema::hasColumn('status_veiculos', 'ativo')) {
+            $query->where('ativo', 'S');
+        }
+
+        if (Schema::hasColumn('status_veiculos', 'empresa_id')) {
+            $empresaId = $this->currentEmpresaId();
+            if ($empresaId !== null) {
+                $query->where('empresa_id', $empresaId);
+            }
+        }
+
+        $status = $query->get();
+
+        $ids = [];
+        foreach ($status as $item) {
+            $nome = mb_strtolower(trim((string) $item->nome));
+            if (in_array($nome, ['ativo', 'disponivel'], true)) {
+                $ids[] = (int) $item->id;
+            }
+        }
+
+        if (empty($ids)) {
+            $fallback = DB::table('status_veiculos')->select('id');
+
+            if (Schema::hasColumn('status_veiculos', 'empresa_id')) {
+                $empresaId = $this->currentEmpresaId();
+                if ($empresaId !== null) {
+                    $fallback->where('empresa_id', $empresaId);
+                }
+            }
+
+            $ids = $fallback
+                ->where('id', 1)
+                ->pluck('id')
+                ->map(static fn ($id) => (int) $id)
+                ->toArray();
+        }
+
+        $this->statusVeiculoDisponivelIds = array_values(array_unique($ids));
+
+        return $this->statusVeiculoDisponivelIds;
     }
 
 

@@ -44,6 +44,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'data_validade_carta_conducao',
         'empresa_id',
         'acesso_todas_estacoes',
+        'forcar_troca_senha',
         'foto_perfil',
     ];
 
@@ -66,6 +67,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'acesso_todas_estacoes' => 'boolean',
+        'forcar_troca_senha' => 'boolean',
     ];
 
     public function sendEmailVerificationNotification()

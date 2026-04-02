@@ -87,23 +87,41 @@ function setUser(id, nome) {
 }
 
 function addOpcionalReserva(opcional_id, opcional_nome) {
-    var  quantidade = 1;
-    const opcionaisReserva = getOpcionaisReserva();
-    const opcionalExistente = opcionaisReserva.find(op => op.id == opcional_id);
-
-    if (opcionalExistente) {
-        opcionalExistente.quantidade += quantidade;
-    } else {
-        if(getOpcionais().length > 0){
-            var opcional = getOpcionais().find(op => {
-                return op.id == opcional_id;
-            });
-            opcional.quantidade = 1;
-            window.reserva.opcionais.push(opcional);
-        }
+    const idOpcional = Number(opcional_id);
+    if (!Number.isFinite(idOpcional) || idOpcional <= 0) {
+        return;
     }
 
-    atualizarQuantidadeOpcional(opcional_id, quantidade);
+    const quantidadeInformada = Number(opcional_nome);
+    const quantidadeDesejada = Number.isFinite(quantidadeInformada) && quantidadeInformada > 0
+        ? Math.floor(quantidadeInformada)
+        : 1;
+
+    const opcionaisReserva = getOpcionaisReserva();
+    const opcionalIndex = opcionaisReserva.findIndex(op => Number(op.id) === idOpcional);
+
+    if (opcionalIndex !== -1) {
+        opcionaisReserva[opcionalIndex].quantidade = quantidadeDesejada;
+        setOpcionaisReserva(opcionaisReserva);
+        return;
+    }
+
+    if (getOpcionais().length > 0) {
+        const opcionalBase = getOpcionais().find(op => Number(op.id) === idOpcional);
+        if (!opcionalBase) {
+            return;
+        }
+
+        window.reserva.opcionais.push({
+            id: opcionalBase.id,
+            nome: opcionalBase.nome,
+            preco_por_dia: opcionalBase.preco_por_dia,
+            preco_integral: opcionalBase.preco_integral,
+            tipo_cobranca: opcionalBase.tipo_cobranca,
+            preco_total: opcionalBase.preco_total ?? 0,
+            quantidade: quantidadeDesejada,
+        });
+    }
 }
 
 function removeOpcionalReserva(opcional_id){
@@ -128,11 +146,11 @@ function setOpcionaisReserva(opcionais) {
     window.reserva.opcionais = opcionais.map(opcional => ({
         id: opcional.id,
         nome: opcional.nome,
-        preco_por_dia: opcional.preco_por_dia,
-        preco_integral: opcional.preco_integral,
+        preco_por_dia: Number(opcional.preco_por_dia ?? 0),
+        preco_integral: Number(opcional.preco_integral ?? 0),
         tipo_cobranca: opcional.tipo_cobranca,
-        preco_total: opcional.preco_total,
-        quantidade: opcional.quantidade || 0
+        preco_total: Number(opcional.preco_total ?? 0),
+        quantidade: Number(opcional.quantidade || 0)
     }));
 }
 
@@ -262,11 +280,18 @@ function atualizarMinhaReserva() {
 // Função para atualizar a quantidade de um opcional
 function atualizarQuantidadeOpcional(opcionalId, novaQuantidade) {
     const opcionais = getOpcionaisReserva();
-    const opcionalIndex = opcionais.findIndex(op => op.id === opcionalId);
+    const idOpcional = Number(opcionalId);
+    const opcionalIndex = opcionais.findIndex(op => Number(op.id) === idOpcional);
 
     if (opcionalIndex !== -1) {
-        opcionais[opcionalIndex].quantidade = novaQuantidade;
-        setOpcionais(opcionais);
+        const quantidade = Math.max(0, Number(novaQuantidade) || 0);
+        opcionais[opcionalIndex].quantidade = quantidade;
+
+        if (quantidade === 0) {
+            opcionais.splice(opcionalIndex, 1);
+        }
+
+        setOpcionaisReserva(opcionais);
         atualizarMinhaReserva();
     }
 }

@@ -92,6 +92,14 @@ class MovimentacaoService extends AbstractBaseService
         return $this->model->create($valor);
     }
 
+    /**
+     * Alias para compatibilidade de chamadas legadas.
+     */
+    public function registrarMovimentacaoCadastroVeiculo(array $data, int $veiculo_id): Model
+    {
+        return $this->registraMovimentacaoCadastroVeiculo($data, $veiculo_id);
+    }
+
     // /**
     //  * Registra uma movimentação para uma reserva.
     //  *
@@ -263,8 +271,20 @@ class MovimentacaoService extends AbstractBaseService
     }
 
 
-    private function registrarMovimentacao($veiculo_id, $local_id = null, $local_origem_id = null, $local_destino_id = null, $reserva_id = null, $observacao = null, $funcao)
+    private function registrarMovimentacao(
+        $veiculo_id,
+        $local_id = null,
+        $local_origem_id = null,
+        $local_destino_id = null,
+        $reserva_id = null,
+        $observacao = null,
+        ?string $funcao = null
+    )
     {
+        if (!$funcao) {
+            throw new TipoEStatusMovimentacaoException('Funcao de movimentacao nao informada.', 500);
+        }
+
         $movimentacao = $this->obterTipoEStatusDaMovimentacao($funcao);
         $tipoMovimentacao = $movimentacao['tipo'];
         $statusMovimentacao = $movimentacao['status'];

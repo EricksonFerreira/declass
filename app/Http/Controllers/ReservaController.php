@@ -161,10 +161,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $estacoes = $this->estacaoService->getAllAtivos();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
         $modelosAtivos = $this->modeloService->getAllAtivos();
-        $preRequisitosReserva = $this->montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos);
+        $resumoVeiculosEstacoes = $this->montarResumoVeiculosPorEstacao($estacoes);
+        $preRequisitosReserva = $this->montarPreRequisitosReserva(
+            $estacoes,
+            $gruposVeiculo,
+            $modelosAtivos,
+            $resumoVeiculosEstacoes
+        );
         $moedaEmpresa = 'BRL';
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
-        $paises = $this->paisService->getAllForSelect();
+        $paises = $this->paisService->getAllForSelectSigla();
         $empresaAtual = $this->gatewayEmpresaConfigService->empresaAtual();
         if ($empresaAtual) {
             $moedaEmpresa = $this->gatewayEmpresaConfigService->moeda($empresaAtual);
@@ -258,10 +264,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $estacoes = $this->estacaoService->getAllAtivos();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
         $modelosAtivos = $this->modeloService->getAllAtivos();
-        $preRequisitosReserva = $this->montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos);
+        $resumoVeiculosEstacoes = $this->montarResumoVeiculosPorEstacao($estacoes);
+        $preRequisitosReserva = $this->montarPreRequisitosReserva(
+            $estacoes,
+            $gruposVeiculo,
+            $modelosAtivos,
+            $resumoVeiculosEstacoes
+        );
         $moedaEmpresa = 'BRL';
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
-        $paises = $this->paisService->getAllForSelect();
+        $paises = $this->paisService->getAllForSelectSigla();
         $empresaAtual = $this->gatewayEmpresaConfigService->empresaAtual();
         if ($empresaAtual) {
             $moedaEmpresa = $this->gatewayEmpresaConfigService->moeda($empresaAtual);
@@ -300,11 +312,19 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ))->with('titulo', $tituloFormulario);
     }
 
-    private function montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos): array
+    private function montarPreRequisitosReserva(
+        $estacoes,
+        $gruposVeiculo,
+        $modelosAtivos,
+        array $resumoVeiculosEstacoes = []
+    ): array
     {
         $qtdEstacoes = $this->contarItens($estacoes);
         $qtdGrupos = $this->contarItens($gruposVeiculo);
         $qtdModelos = $this->contarItens($modelosAtivos);
+        $qtdVeiculosTotal = (int) ($resumoVeiculosEstacoes['total'] ?? 0);
+        $qtdEstacoesComVeiculo = (int) ($resumoVeiculosEstacoes['estacoes_com_veiculo'] ?? 0);
+        $detalhesVeiculosPorEstacao = $resumoVeiculosEstacoes['detalhes'] ?? [];
 
         $faltas = [];
         $user = Auth::user();
@@ -324,10 +344,17 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $faltas[] = 'Cadastre pelo menos um modelo ativo para os grupos de veiculos.';
         }
 
+        if ($qtdEstacoes > 0 && $qtdGrupos > 0 && $qtdModelos > 0 && $qtdVeiculosTotal <= 0) {
+            $faltas[] = 'Nao ha veiculos ativos nas estacoes permitidas. Cadastre ou libere pelo menos um veiculo para reservar.';
+        }
+
         return [
             'qtd_estacoes' => $qtdEstacoes,
             'qtd_grupos' => $qtdGrupos,
             'qtd_modelos' => $qtdModelos,
+            'qtd_veiculos_total' => $qtdVeiculosTotal,
+            'qtd_estacoes_com_veiculo' => $qtdEstacoesComVeiculo,
+            'detalhes_veiculos_estacao' => $detalhesVeiculosPorEstacao,
             'faltas' => $faltas,
             'pode_reservar' => empty($faltas),
         ];
@@ -357,6 +384,43 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         return empty($itens) ? 0 : 1;
+    }
+
+    private function montarResumoVeiculosPorEstacao($estacoes): array
+    {
+        $estacoesArray = [];
+        if (is_array($estacoes)) {
+            $estacoesArray = $estacoes;
+        } elseif (is_object($estacoes) && method_exists($estacoes, 'toArray')) {
+            $estacoesArray = (array) $estacoes->toArray();
+        } elseif ($estacoes instanceof \Traversable) {
+            $estacoesArray = iterator_to_array($estacoes);
+        }
+
+        $estacaoIds = array_map('intval', array_keys($estacoesArray));
+        $quantidadesPorEstacao = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao($estacaoIds);
+
+        $detalhes = [];
+        foreach ($estacoesArray as $estacaoId => $nomeEstacao) {
+            $id = (int) $estacaoId;
+            $detalhes[] = [
+                'label' => (string) $nomeEstacao,
+                'value' => (int) ($quantidadesPorEstacao[$id] ?? 0),
+            ];
+        }
+
+        $total = array_sum(array_map('intval', $quantidadesPorEstacao));
+        $estacoesComVeiculo = count(array_filter(
+            $quantidadesPorEstacao,
+            static fn ($quantidade): bool => (int) $quantidade > 0
+        ));
+
+        return [
+            'quantidades' => $quantidadesPorEstacao,
+            'detalhes' => $detalhes,
+            'total' => (int) $total,
+            'estacoes_com_veiculo' => (int) $estacoesComVeiculo,
+        ];
     }
 
     public function update(UpdateReservaRequest $request, $id)
@@ -518,8 +582,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $estacoes = $this->estacaoService->getAllAtivos();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
         $modelosAtivos = $this->modeloService->getAllAtivos();
-
-        $preRequisitosReserva = $this->montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos);
+        $resumoVeiculosEstacoes = $this->montarResumoVeiculosPorEstacao($estacoes);
+        $preRequisitosReserva = $this->montarPreRequisitosReserva(
+            $estacoes,
+            $gruposVeiculo,
+            $modelosAtivos,
+            $resumoVeiculosEstacoes
+        );
         if ($preRequisitosReserva['pode_reservar']) {
             return null;
         }
@@ -575,6 +644,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     public function veiculosDisponiveis(Request $request)
     {
         $grupoFrota = $this->grupoFrotaService->getById($request->grupo_frota_id);
+        $qtdVeiculosEstacao = $this->veiculoService->getQuantidadeVeiculosDisponiveisPorEstacaoEPeriodo(
+            (int) $request->estacao_retirada_id,
+            (string) $request->data_inicio,
+            (string) $request->data_fim
+        );
 
         $modelos = $this->veiculoService->getModelosComVeiculosDisponiveis(
             $request->grupo_frota_id,
@@ -598,6 +672,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'modelo' => $modelos,
             'tipo_opcional' => $opcionais,
             'aviso_modelos' => $avisoModelos,
+            'qtd_veiculos_estacao' => $qtdVeiculosEstacao,
         ]);
     }
     public function efetuarPagamento($id)

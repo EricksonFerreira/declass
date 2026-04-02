@@ -64,6 +64,11 @@ class UsuarioService extends AbstractBaseService
             throw new \RuntimeException('Usuario nao encontrado para a empresa atual.');
         }
         $this->model->password = Hash::make($data['password']);
+
+        if (array_key_exists('forcar_troca_senha', $data) && Schema::hasColumn($this->model->getTable(), 'forcar_troca_senha')) {
+            $this->model->forcar_troca_senha = (bool) $data['forcar_troca_senha'];
+        }
+
         $this->model->save();
     }
 

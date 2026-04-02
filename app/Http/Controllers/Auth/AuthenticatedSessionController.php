@@ -28,6 +28,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        if ((bool) ($request->user()?->forcar_troca_senha ?? false)) {
+            return redirect()->route('profile.force-password.edit');
+        }
+
         return redirect()->intended(route('home', absolute: false));
     }
 

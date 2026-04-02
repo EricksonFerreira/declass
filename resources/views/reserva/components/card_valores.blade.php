@@ -28,10 +28,10 @@
         <ul style="font-size:12px;list-style-type: none;padding-left: 0px;" id="minhaReserva_opcionals_ul"></ul>
     </div>
     <div class="d-flex px-2" style="justify-content:space-between;align-items:center">
-        <h4
+        <h5
             style="color: #555;margin: 10px 0;padding-left: 10px;font-family: 'Arial', sans-serif;border-left: 3px solid #d9d9d9;font-weight:600">
             TOTAL
-        </h4>
+        </h5>
         <span style="margin-left:2em;font-weight:300;font-size:19px">
             <span id="valor_total_reserva">0</span> <span style="color:9d9d9d" id="quantidade_dias">/
                 0 dias</span></span>

@@ -94,7 +94,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuarios', 'usuario.index', 'Criar');
 
-        $paises = $this->paisService->getAllForSelect();
+        $paises = $this->paisService->getAllForSelectSigla();
         $estacoes = $this->estacaoService->getAllAtivos();
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
@@ -110,6 +110,32 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         try {
             // Remove o campo de confirmacao de senha
             $data = $request->except('confirmacao_senha');
+            $isCadastroReserva = $request->boolean('cadastro_reserva');
+
+            if ($isCadastroReserva) {
+                $roleClienteId = $this->regraService->getClienteRoleId();
+                if (!$roleClienteId) {
+                    $errors = [
+                        'role_id' => ['Cadastre uma regra "Cliente" para permitir cadastro rapido na reserva.'],
+                    ];
+
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'message' => 'Nao foi encontrada uma regra Cliente para sua empresa.',
+                            'errors' => $errors,
+                        ], 422);
+                    }
+
+                    return redirect()
+                        ->back()
+                        ->withInput()
+                        ->withErrors($errors);
+                }
+
+                $data['role_id'] = $roleClienteId;
+                $data['acesso_todas_estacoes'] = true;
+                $data['password'] = 'Tmp@' . random_int(100000, 999999);
+            }
 
             // Cria o cliente no Stripe
             $cliente = $this->clienteStripeService->criarCliente($data['email'], $data['nome']);
@@ -180,7 +206,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
 
-        $paises = $this->paisService->getAllForSelect();
+        $paises = $this->paisService->getAllForSelectSigla();
         $estacoes = $this->estacaoService->getAllAtivos();
         $acessoTodasEstacoes = $usuario->hasAcessoTodasEstacoes();
         $estacoesSelecionadas = $usuario->estacoesPermitidas()->pluck('estacoes.id')->map(fn ($id) => (int) $id)->all();
@@ -283,8 +309,22 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function salvarNovaSenha(UpdatePasswordUsuarioRequest $request, $id)
     {
-        $this->usuarioService->updatePassword($id, $request->all());
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        $resetarParaAcesso = $request->boolean('resetar_para_acesso');
+
+        $this->usuarioService->updatePassword($id, [
+            'password' => $request->input('password'),
+            'forcar_troca_senha' => $resetarParaAcesso,
+        ]);
+
+        $mensagem = $resetarParaAcesso
+            ? 'Senha resetada para car@12345. No primeiro login o usuario sera obrigado a definir uma nova senha.'
+            : 'Senha alterada com sucesso.';
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => $mensagem]);
+        }
+
+        return $this->redirecionaRotaRedirect($this->nomeFiltro, $mensagem);
     }
 
     public function destroy($id)
@@ -370,4 +410,3 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         ];
     }
 }
-

@@ -67,6 +67,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::get('/profile/senha', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
     Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+    Route::get('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordEdit'])->name('profile.force-password.edit');
+    Route::put('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordUpdate'])->name('profile.force-password.update');
 });
 
 require __DIR__.'/auth.php';

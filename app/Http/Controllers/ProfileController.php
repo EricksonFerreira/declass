@@ -47,4 +47,54 @@ class ProfileController extends Controller
 
         return redirect()->route('profile.edit')->with('success', 'Senha alterada com sucesso.');
     }
+
+    public function forcePasswordEdit(Request $request)
+    {
+        if (!(bool) ($request->user()?->forcar_troca_senha ?? false)) {
+            return redirect()->route('home');
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
+            'Meu Perfil',
+            'home',
+            'Definir Nova Senha'
+        );
+
+        return view('perfil.forcar-nova-senha', [
+            'titulo' => 'Definir Nova Senha',
+            'breadcrumb' => $breadcrumb,
+        ]);
+    }
+
+    public function forcePasswordUpdate(Request $request): RedirectResponse
+    {
+        if (!(bool) ($request->user()?->forcar_troca_senha ?? false)) {
+            return redirect()->route('home');
+        }
+
+        $data = $request->validate(
+            [
+                'password' => [
+                    'required',
+                    'string',
+                    'max:20',
+                    'confirmed',
+                    'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/',
+                ],
+            ],
+            [
+                'password.required' => 'A nova senha e obrigatoria.',
+                'password.max' => 'A nova senha deve ter no maximo 20 caracteres.',
+                'password.confirmed' => 'A confirmacao da nova senha nao corresponde.',
+                'password.regex' => 'A senha deve conter letra maiuscula, minuscula, numero e simbolo.',
+            ]
+        );
+
+        $user = $request->user();
+        $user->password = Hash::make($data['password']);
+        $user->forcar_troca_senha = false;
+        $user->save();
+
+        return redirect()->route('home')->with('success', 'Senha atualizada com sucesso.');
+    }
 }

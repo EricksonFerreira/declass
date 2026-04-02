@@ -35,4 +35,11 @@ class RegraService extends AbstractBaseService
             ->get();
         return $this->formatArraySelect($data);
     }
+
+    public function getClienteRoleId(): ?int
+    {
+        return $this->applyEmpresaScope($this->model->newQuery())
+            ->whereRaw('LOWER(name) = ?', ['cliente'])
+            ->value('id');
+    }
 }

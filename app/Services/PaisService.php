@@ -33,4 +33,21 @@ class PaisService extends AbstractBaseService
         return $this->formatArraySelect($data,'id','nome');
     }
 
+    public function getAllForSelectSigla(): array
+    {
+        $query = $this->applyEmpresaScope($this->model->newQuery())
+            ->select('sigla', 'nome')
+            ->distinct();
+
+        if (method_exists($this->model, 'getTable') && \Illuminate\Support\Facades\Schema::hasColumn($this->model->getTable(), 'ativo')) {
+            $query->where('ativo', 'S');
+        }
+
+        $data = $query
+            ->orderBy('nome', 'asc')
+            ->get();
+
+        return $this->formatArraySelect($data, 'sigla', 'nome');
+    }
+
 }

@@ -16,6 +16,9 @@
             'qtd_estacoes' => 0,
             'qtd_grupos' => 0,
             'qtd_modelos' => 0,
+            'qtd_veiculos_total' => 0,
+            'qtd_estacoes_com_veiculo' => 0,
+            'detalhes_veiculos_estacao' => [],
             'faltas' => [],
             'pode_reservar' => true,
         ];
@@ -24,9 +27,13 @@
         $qtdEstacoes = (int) ($preRequisitosReserva['qtd_estacoes'] ?? 0);
         $qtdGrupos = (int) ($preRequisitosReserva['qtd_grupos'] ?? 0);
         $qtdModelos = (int) ($preRequisitosReserva['qtd_modelos'] ?? 0);
+        $qtdVeiculosTotal = (int) ($preRequisitosReserva['qtd_veiculos_total'] ?? 0);
+        $qtdEstacoesComVeiculo = (int) ($preRequisitosReserva['qtd_estacoes_com_veiculo'] ?? 0);
+        $detalhesVeiculosEstacao = $preRequisitosReserva['detalhes_veiculos_estacao'] ?? [];
         $linkCadastroEstacao = \Illuminate\Support\Facades\Route::has('estacao.create') ? route('estacao.create') : null;
         $linkCadastroGrupo = \Illuminate\Support\Facades\Route::has('grupo_frota.create') ? route('grupo_frota.create') : null;
         $linkCadastroModelo = \Illuminate\Support\Facades\Route::has('modelo.create') ? route('modelo.create') : null;
+        $linkCadastroVeiculo = \Illuminate\Support\Facades\Route::has('veiculo.create') ? route('veiculo.create') : null;
     @endphp
     @if ($errors->any())
         <div class="alert alert-danger alert-dismissible">
@@ -42,6 +49,7 @@
             <span class="reserva-chip">Estacoes: {{ $preRequisitosReserva['qtd_estacoes'] }}</span>
             <span class="reserva-chip">Grupos: {{ $preRequisitosReserva['qtd_grupos'] }}</span>
             <span class="reserva-chip">Modelos: {{ $preRequisitosReserva['qtd_modelos'] }}</span>
+            <span class="reserva-chip">Veiculos: {{ $qtdVeiculosTotal }}</span>
             <span class="reserva-chip reserva-chip--info">Moeda: {{ $moedaEmpresa }}</span>
         </div>
         @if (!$preRequisitosReserva['pode_reservar'])
@@ -63,10 +71,25 @@
                     @if ($qtdModelos === 0 && $linkCadastroModelo)
                         <a href="{{ $linkCadastroModelo }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar modelo</a>
                     @endif
+                    @if ($qtdVeiculosTotal === 0 && $linkCadastroVeiculo)
+                        <a href="{{ $linkCadastroVeiculo }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar veiculo</a>
+                    @endif
                 </div>
             </div>
         @endif
     </div>
+
+    <x-pre-requisitos-alerta
+        title="Disponibilidade de veiculos por estacao"
+        :chips="[
+            ['label' => 'Veiculos nas estacoes', 'value' => $qtdVeiculosTotal],
+            ['label' => 'Estacoes com veiculos', 'value' => $qtdEstacoesComVeiculo],
+        ]"
+        :details="$detalhesVeiculosEstacao"
+        :missing-items="[]"
+        :action-links="[]"
+    />
+
     <div class="reserva-page">
     <div class="d-flex justify-content-between flex-wrap reserva-layout">
         <div class="col-xl-9 col-lg-9 col-md-9 col-sm-12 col-xs-12 card p-2 reserva-main-card">
@@ -87,6 +110,9 @@
                             @if ($qtdEstacoes === 0)
                                 <small class="text-danger d-block mt-1">Nenhuma estacao disponivel para seu acesso.</small>
                             @endif
+                            <small id="estacao_veiculos_feedback" class="d-block mt-1 text-muted">
+                                Veiculos disponiveis na estacao selecionada: --
+                            </small>
                         </div>
                     </div>
                     <div class="col-md-3">
@@ -256,7 +282,17 @@
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btnAtualizarUsuarios">
                                     <i class="fas fa-sync-alt mr-1"></i>Atualizar lista
                                 </button>
+                                @if (auth()->user()?->isAdministrador() || auth()->user()?->hasPermissao('usuario.salvarNovaSenha'))
+                                    <button type="button" class="btn btn-outline-warning btn-sm" id="btnResetarSenhaUsuario" disabled>
+                                        <i class="fas fa-key mr-1"></i>Resetar senha de acesso
+                                    </button>
+                                @endif
                             </div>
+                            @if (auth()->user()?->isAdministrador() || auth()->user()?->hasPermissao('usuario.salvarNovaSenha'))
+                                <small class="text-muted d-block mt-2">
+                                    O reset define a senha temporaria <strong>car@12345</strong> e obriga troca no primeiro login.
+                                </small>
+                            @endif
 
                             @if (empty($users))
                                 <small class="text-danger d-block mt-1">
@@ -317,9 +353,13 @@
                 </div>
                 <div class="modal-body pt-2">
                     <div id="modalNovoUsuarioAlert" class="alert alert-danger d-none" role="alert"></div>
+                    <div class="alert alert-info py-2 mb-3">
+                        Perfil de acesso definido automaticamente como <strong>Cliente</strong>.
+                    </div>
 
                     <form id="formNovoUsuarioReserva">
                         @csrf
+                        <input type="hidden" name="cadastro_reserva" value="1">
                         <ul class="nav nav-pills reserva-user-modal__tabs" id="novoUsuarioReservaTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link active" id="tab-dados-pessoais-tab" data-toggle="pill" href="#tab-dados-pessoais" role="tab" aria-controls="tab-dados-pessoais" aria-selected="true">
@@ -332,18 +372,8 @@
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-perfil-acesso-tab" data-toggle="pill" href="#tab-perfil-acesso" role="tab" aria-controls="tab-perfil-acesso" aria-selected="false">
-                                    <i class="fas fa-shield-alt mr-1"></i> Perfil e Acesso
-                                </a>
-                            </li>
-                            <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="tab-carta-conducao-tab" data-toggle="pill" href="#tab-carta-conducao" role="tab" aria-controls="tab-carta-conducao" aria-selected="false">
                                     <i class="fas fa-id-card mr-1"></i> Carta de Conducao
-                                </a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-seguranca-tab" data-toggle="pill" href="#tab-seguranca" role="tab" aria-controls="tab-seguranca" aria-selected="false">
-                                    <i class="fas fa-lock mr-1"></i> Seguranca
                                 </a>
                             </li>
                         </ul>
@@ -353,15 +383,15 @@
                                 <div class="reserva-user-modal__section-title">Informacoes Pessoais</div>
                                 <div class="form-row">
                                     <div class="col-md-6">
-                                        <label for="novo_usuario_nome">Nome</label>
+                                        <label for="novo_usuario_nome">Nome <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_nome" name="nome" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="novo_usuario_email">E-mail</label>
+                                        <label for="novo_usuario_email">E-mail <span class="text-danger">*</span></label>
                                         <input type="email" class="form-control form-control-sm" id="novo_usuario_email" name="email" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="novo_usuario_sexo">Sexo</label>
+                                        <label for="novo_usuario_sexo">Sexo <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_sexo" name="sexo" data-size="6" required>
                                             <option value="">Selecione...</option>
                                             <option value="M">Masculino</option>
@@ -370,12 +400,16 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="novo_usuario_data_nascimento">Data de Nascimento</label>
+                                        <label for="novo_usuario_data_nascimento">Data de Nascimento <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control form-control-sm" id="novo_usuario_data_nascimento" name="data_nascimento" required>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="novo_usuario_local_nascimento">Local de Nascimento</label>
+                                        <label for="novo_usuario_local_nascimento">Local de Nascimento <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_local_nascimento" name="local_nascimento" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label for="novo_usuario_numero_identificacao">Numero de Identificacao <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_identificacao" name="numero_identificacao" required>
                                     </div>
                                 </div>
                             </div>
@@ -384,15 +418,15 @@
                                 <div class="reserva-user-modal__section-title">Contato e Endereco</div>
                                 <div class="form-row">
                                     <div class="col-md-3">
-                                        <label for="novo_usuario_telefone">Telefone</label>
+                                        <label for="novo_usuario_telefone">Telefone <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_telefone" name="telefone" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="novo_usuario_celular">Celular</label>
+                                        <label for="novo_usuario_celular">Celular <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_celular" name="celular" placeholder="(99) 99999-9999" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="novo_usuario_pais_sigla">Pais</label>
+                                        <label for="novo_usuario_pais_sigla">Pais <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_sigla" name="pais_sigla" data-live-search="true" data-size="8" required>
                                             <option value="">Selecione...</option>
                                             @foreach (($paises ?? []) as $siglaPais => $nomePais)
@@ -401,66 +435,16 @@
                                         </select>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="novo_usuario_zip_code">Zip Code</label>
+                                        <label for="novo_usuario_zip_code">Zip Code <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_zip_code" name="zip_code" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_cidade">Cidade</label>
+                                        <label for="novo_usuario_cidade">Cidade <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_cidade" name="cidade" required>
                                     </div>
                                     <div class="col-md-8">
-                                        <label for="novo_usuario_endereco">Endereco</label>
+                                        <label for="novo_usuario_endereco">Endereco <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_endereco" name="endereco" required>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tab-pane fade" id="tab-perfil-acesso" role="tabpanel" aria-labelledby="tab-perfil-acesso-tab">
-                                <div class="reserva-user-modal__section-title">Perfil e Acesso</div>
-                                <div class="form-row">
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_numero_identificacao">Numero de Identificacao</label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_identificacao" name="numero_identificacao" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_role_id">Regra de Usuario</label>
-                                        <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_role_id" name="role_id" data-live-search="true" data-size="8" required>
-                                            <option value="">Selecione...</option>
-                                            @foreach (($tiposUsuario ?? []) as $idTipoUsuario => $nomeTipoUsuario)
-                                                <option value="{{ $idTipoUsuario }}">{{ $nomeTipoUsuario }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="d-block mb-1">Acesso por Estacao</label>
-                                        <input type="hidden" name="acesso_todas_estacoes" value="0">
-                                        <div class="custom-control custom-switch mt-1">
-                                            <input type="checkbox" class="custom-control-input" id="novo_usuario_acesso_todas_estacoes" name="acesso_todas_estacoes" value="1" checked>
-                                            <label class="custom-control-label" for="novo_usuario_acesso_todas_estacoes">
-                                                Todas as estacoes
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-12 d-none" id="novo_usuario_estacoes_wrap">
-                                        <label>Estacoes permitidas</label>
-                                        <div class="reserva-user-modal__estacoes-wrap">
-                                            @forelse (($estacoes ?? []) as $idEstacao => $nomeEstacao)
-                                                <label class="reserva-user-modal__estacao-check">
-                                                    <input
-                                                        type="checkbox"
-                                                        name="estacoes[]"
-                                                        value="{{ $idEstacao }}"
-                                                        class="novo-usuario-estacao-checkbox"
-                                                    >
-                                                    <span>{{ $nomeEstacao }}</span>
-                                                </label>
-                                            @empty
-                                                <div class="text-muted small">Nenhuma estacao disponivel.</div>
-                                            @endforelse
-                                        </div>
-                                        <small class="text-muted d-block mt-1">
-                                            Quando desmarcado, o usuario so acessa dados das estacoes selecionadas.
-                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -469,15 +453,15 @@
                                 <div class="reserva-user-modal__section-title">Carta de Conducao</div>
                                 <div class="form-row">
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_numero_carta_conducao">Numero Carta de Conducao</label>
+                                        <label for="novo_usuario_numero_carta_conducao">Numero Carta de Conducao <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_carta_conducao" name="numero_carta_conducao" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_local_emissao_carta_conducao">Local de Emissao</label>
+                                        <label for="novo_usuario_local_emissao_carta_conducao">Local de Emissao <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_local_emissao_carta_conducao" name="local_emissao_carta_conducao" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_pais_emissao_carta_conducao">Pais de Emissao</label>
+                                        <label for="novo_usuario_pais_emissao_carta_conducao">Pais de Emissao <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_emissao_carta_conducao" name="pais_emissao_carta_conducao" data-live-search="true" data-size="8" required>
                                             <option value="">Selecione...</option>
                                             @foreach (($paises ?? []) as $siglaPais => $nomePais)
@@ -486,26 +470,12 @@
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_data_emissao_carta_conducao">Data de Emissao</label>
+                                        <label for="novo_usuario_data_emissao_carta_conducao">Data de Emissao <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control form-control-sm" id="novo_usuario_data_emissao_carta_conducao" name="data_emissao_carta_conducao" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="novo_usuario_data_validade_carta_conducao">Data de Validade</label>
                                         <input type="date" class="form-control form-control-sm" id="novo_usuario_data_validade_carta_conducao" name="data_validade_carta_conducao">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="tab-pane fade" id="tab-seguranca" role="tabpanel" aria-labelledby="tab-seguranca-tab">
-                                <div class="reserva-user-modal__section-title">Seguranca</div>
-                                <div class="form-row">
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_password">Senha</label>
-                                        <input type="password" class="form-control form-control-sm" id="novo_usuario_password" name="password" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_confirmacao_senha">Confirmacao de Senha</label>
-                                        <input type="password" class="form-control form-control-sm" id="novo_usuario_confirmacao_senha" name="confirmacao_senha" required>
                                     </div>
                                 </div>
                             </div>
@@ -972,29 +942,27 @@
         );
         const rotaCriarUsuario = @json(route('usuario.store'));
         const rotaUsuariosSelect = @json(route('usuario.selectOptions'));
+        const rotaResetarSenhaUsuarioTemplate = @json(route('usuario.salvarNovaSenha', ['id' => '__USUARIO_ID__']));
+        const senhaPadraoAcessoUsuario = 'car@12345';
         const mapaCamposAbaNovoUsuario = {
             nome: '#tab-dados-pessoais-tab',
             email: '#tab-dados-pessoais-tab',
             sexo: '#tab-dados-pessoais-tab',
             data_nascimento: '#tab-dados-pessoais-tab',
             local_nascimento: '#tab-dados-pessoais-tab',
+            numero_identificacao: '#tab-dados-pessoais-tab',
+            role_id: '#tab-dados-pessoais-tab',
             telefone: '#tab-contato-endereco-tab',
             celular: '#tab-contato-endereco-tab',
             pais_sigla: '#tab-contato-endereco-tab',
             zip_code: '#tab-contato-endereco-tab',
             cidade: '#tab-contato-endereco-tab',
             endereco: '#tab-contato-endereco-tab',
-            numero_identificacao: '#tab-perfil-acesso-tab',
-            role_id: '#tab-perfil-acesso-tab',
-            acesso_todas_estacoes: '#tab-perfil-acesso-tab',
-            estacoes: '#tab-perfil-acesso-tab',
             numero_carta_conducao: '#tab-carta-conducao-tab',
             local_emissao_carta_conducao: '#tab-carta-conducao-tab',
             pais_emissao_carta_conducao: '#tab-carta-conducao-tab',
             data_emissao_carta_conducao: '#tab-carta-conducao-tab',
             data_validade_carta_conducao: '#tab-carta-conducao-tab',
-            password: '#tab-seguranca-tab',
-            confirmacao_senha: '#tab-seguranca-tab',
         };
 
         function abrirPrimeiraAbaNovoUsuario() {
@@ -1042,25 +1010,22 @@
             const form = $('#formNovoUsuarioReserva');
             form[0].reset();
 
-            $('#novo_usuario_acesso_todas_estacoes').prop('checked', true);
-            $('#novo_usuario_estacoes_wrap').addClass('d-none');
             $('#modalNovoUsuarioAlert').addClass('d-none').html('');
 
             form.find('.js-selectpicker').each(function() {
                 $(this).val('');
             });
             initSelectPickers($('#modalNovoUsuarioReserva'));
-            $('#novo_usuario_acesso_todas_estacoes').prop('checked', true);
-            $('#novo_usuario_estacoes_wrap input[name="estacoes[]"]').prop('checked', false);
             abrirPrimeiraAbaNovoUsuario();
         }
 
-        function toggleEstacoesNovoUsuario() {
-            if ($('#novo_usuario_acesso_todas_estacoes').is(':checked')) {
-                $('#novo_usuario_estacoes_wrap').addClass('d-none');
-            } else {
-                $('#novo_usuario_estacoes_wrap').removeClass('d-none');
-            }
+        function rotaResetarSenhaUsuario(usuarioId) {
+            return rotaResetarSenhaUsuarioTemplate.replace('__USUARIO_ID__', encodeURIComponent(String(usuarioId)));
+        }
+
+        function atualizarEstadoBotaoResetSenha() {
+            const usuarioId = $('#user_id').val();
+            $('#btnResetarSenhaUsuario').prop('disabled', !usuarioId);
         }
 
         function adicionarUsuarioSelectReserva(usuario) {
@@ -1087,6 +1052,7 @@
 
             setUser(usuarioId, label);
             atualizarMinhaReserva();
+            atualizarEstadoBotaoResetSenha();
         }
 
         function atualizarUsuariosSelectReserva(selecionarId = null) {
@@ -1117,6 +1083,8 @@
                 if (select.hasClass('js-selectpicker')) {
                     select.selectpicker('refresh');
                 }
+
+                atualizarEstadoBotaoResetSenha();
             }).fail(function() {
                 alert('Nao foi possivel atualizar a lista de usuarios.');
             });
@@ -1236,13 +1204,10 @@
 
             $('#btnNovoUsuarioModal').on('click', function() {
                 limparFormularioNovoUsuario();
-                toggleEstacoesNovoUsuario();
                 initSelectPickers($('#modalNovoUsuarioReserva'));
                 abrirPrimeiraAbaNovoUsuario();
                 $('#modalNovoUsuarioReserva').modal('show');
             });
-
-            $('#novo_usuario_acesso_todas_estacoes').on('change', toggleEstacoesNovoUsuario);
 
             $('#btnAtualizarUsuarios').on('click', function() {
                 const botao = $(this);
@@ -1255,6 +1220,55 @@
                     });
             });
 
+            $('#btnResetarSenhaUsuario').on('click', function() {
+                const usuarioId = $('#user_id').val();
+                if (!usuarioId) {
+                    alert('Selecione um usuario antes de resetar a senha.');
+                    return;
+                }
+
+                const nomeUsuario = $('#user_id option:selected').text().trim();
+                const confirmar = confirm(`Deseja resetar a senha de acesso de ${nomeUsuario} para ${senhaPadraoAcessoUsuario}?`);
+                if (!confirmar) {
+                    return;
+                }
+
+                const botao = $(this);
+                const textoOriginal = botao.html();
+                botao.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Resetando');
+
+                $.ajax({
+                    url: rotaResetarSenhaUsuario(usuarioId),
+                    method: 'POST',
+                    headers: {
+                        Accept: 'application/json'
+                    },
+                    data: {
+                        _token: $('meta[name="csrf-token"]').attr('content'),
+                        _method: 'PUT',
+                        resetar_para_acesso: 1,
+                        password: senhaPadraoAcessoUsuario,
+                        confirmacao_senha: senhaPadraoAcessoUsuario
+                    }
+                }).done(function(response) {
+                    alert(response?.message || 'Senha resetada com sucesso.');
+                }).fail(function(xhr) {
+                    let mensagemErro = 'Nao foi possivel resetar a senha agora.';
+                    if (xhr.status === 422 && xhr.responseJSON?.errors) {
+                        const primeiroErro = Object.values(xhr.responseJSON.errors)[0];
+                        if (Array.isArray(primeiroErro) && primeiroErro.length > 0) {
+                            mensagemErro = primeiroErro[0];
+                        }
+                    } else if (xhr.responseJSON?.message) {
+                        mensagemErro = xhr.responseJSON.message;
+                    }
+                    alert(mensagemErro);
+                }).always(function() {
+                    botao.prop('disabled', false).html(textoOriginal);
+                    atualizarEstadoBotaoResetSenha();
+                });
+            });
+
             $('#btnSalvarNovoUsuarioReserva').on('click', function() {
                 $('#formNovoUsuarioReserva').trigger('submit');
             });
@@ -1263,10 +1277,20 @@
                 event.preventDefault();
 
                 const form = $(this);
+                const formElement = form.get(0);
                 const botaoSalvar = $('#btnSalvarNovoUsuarioReserva');
                 const textoOriginal = botaoSalvar.html();
 
                 $('#modalNovoUsuarioAlert').addClass('d-none').html('');
+
+                if (formElement && !formElement.checkValidity()) {
+                    formElement.reportValidity();
+                    abrirAbaComPrimeiroErroNovoUsuario({
+                        nome: ['Preencha os campos obrigatorios para continuar.']
+                    });
+                    return;
+                }
+
                 botaoSalvar.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Salvando');
 
                 $.ajax({
@@ -1296,6 +1320,8 @@
             $('#modalNovoUsuarioReserva').on('hidden.bs.modal', function() {
                 limparFormularioNovoUsuario();
             });
+
+            atualizarEstadoBotaoResetSenha();
 
             // Inicializar Select2 quando o modal for aberto
             $('.select2').select2();
@@ -1359,6 +1385,7 @@
         $('#user_id').on('change', function() {
             setUser($(this).val(),  $(this).find('option:selected').text().trim());
             atualizarMinhaReserva();
+            atualizarEstadoBotaoResetSenha();
         });
 
         function validarDatas() {
@@ -1496,6 +1523,10 @@
             const id = $(selectElement).val();
             const nome = $(selectElement).find('option:selected').text();
             $('#modelo_disponibilidade_feedback').text('').addClass('d-none');
+            $('#estacao_veiculos_feedback')
+                .text('Veiculos disponiveis na estacao selecionada: --')
+                .removeClass('text-danger text-success')
+                .addClass('text-muted');
 
             if (faltaPreencherEstacoesEDatas()) {
                 alert('Por favor, preencha as estacoes e as datas.');
@@ -1575,10 +1606,28 @@
             populeModelosSelect(data.modelo, 'modelo');
             const avisoModelos = (data?.aviso_modelos || '').trim();
             const feedbackModelos = $('#modelo_disponibilidade_feedback');
+            const feedbackEstacao = $('#estacao_veiculos_feedback');
+            const qtdVeiculosEstacao = Number(data?.qtd_veiculos_estacao ?? 0);
             if (avisoModelos) {
                 feedbackModelos.text(avisoModelos).removeClass('d-none');
             } else {
                 feedbackModelos.text('').addClass('d-none');
+            }
+
+            if (Number.isFinite(qtdVeiculosEstacao)) {
+                const texto = qtdVeiculosEstacao === 1
+                    ? 'Veiculos disponiveis na estacao selecionada: 1'
+                    : `Veiculos disponiveis na estacao selecionada: ${qtdVeiculosEstacao}`;
+
+                feedbackEstacao
+                    .text(texto)
+                    .removeClass('text-muted text-danger text-success')
+                    .addClass(qtdVeiculosEstacao > 0 ? 'text-success' : 'text-danger');
+            } else {
+                feedbackEstacao
+                    .text('Veiculos disponiveis na estacao selecionada: --')
+                    .removeClass('text-danger text-success')
+                    .addClass('text-muted');
             }
 
 

@@ -1,6 +1,7 @@
 @props([
     'title' => 'Pre-requisitos pendentes',
     'chips' => [],
+    'details' => [],
     'missingItems' => [],
     'actionLinks' => [],
     'showWhenComplete' => true,
@@ -22,6 +23,23 @@
                     @endphp
                     @if ($label !== '')
                         <span class="pre-requisitos-alerta__chip">{{ $label }}: {{ $value }}</span>
+                    @endif
+                @endforeach
+            </div>
+        @endif
+
+        @if (!empty($details))
+            <div class="pre-requisitos-alerta__details">
+                @foreach ($details as $detail)
+                    @php
+                        $label = is_array($detail) ? (string) ($detail['label'] ?? '') : '';
+                        $value = is_array($detail) ? (string) ($detail['value'] ?? '') : '';
+                    @endphp
+                    @if ($label !== '')
+                        <div class="pre-requisitos-alerta__detail-item">
+                            <span class="pre-requisitos-alerta__detail-label">{{ $label }}</span>
+                            <span class="pre-requisitos-alerta__detail-value">{{ $value }}</span>
+                        </div>
                     @endif
                 @endforeach
             </div>
@@ -90,6 +108,41 @@
             font-weight: 700;
             color: #334155;
             background: #fff;
+        }
+
+        .pre-requisitos-alerta__details {
+            margin-bottom: 6px;
+            border: 1px solid #dbe6f3;
+            border-radius: 8px;
+            background: #fff;
+            max-height: 180px;
+            overflow-y: auto;
+        }
+
+        .pre-requisitos-alerta__detail-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 6px 10px;
+            border-bottom: 1px solid #eef3f9;
+            font-size: 12px;
+        }
+
+        .pre-requisitos-alerta__detail-item:last-child {
+            border-bottom: 0;
+        }
+
+        .pre-requisitos-alerta__detail-label {
+            color: #1e293b;
+            font-weight: 600;
+        }
+
+        .pre-requisitos-alerta__detail-value {
+            color: #0f172a;
+            font-weight: 700;
+            min-width: 20px;
+            text-align: right;
         }
 
         .pre-requisitos-alerta__title {
