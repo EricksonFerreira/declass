@@ -2,14 +2,14 @@
 
 namespace App\Services;
 
-use App\Helpers\BreadCrumbHelper;
-use App\DTO\BreadcrumbItem;
+use App\Helpers\BreadcrumbHelper;
+use App\DTO\BreadCrumbItem;
 
 class BreadcrumbService
 {
     public function prepararBreadcrumb(array $items)
     {
-        return BreadCrumbHelper::generate($items);
+        return BreadcrumbHelper::generate($items);
     }
 
     public function prepararBreadcrumbUnico(string $indexName)
