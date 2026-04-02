@@ -77,6 +77,9 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
     public function edit($id)
     {
         $termo_consentimento = $this->termo_consentimentoService->getById($id);
+        if (!$termo_consentimento) {
+            abort(403, 'Sem acesso a este termo de consentimento.');
+        }
         $status = [
             'S' => 'Ativo',
             'N' => 'Inativo'
@@ -90,12 +93,18 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
     public function update(UpdateTermoConsentimentoRequest $request, $id)
     {
         $success = $this->termo_consentimentoService->update($id,$request->all());
+        if (!$success) {
+            abort(403, 'Sem acesso para editar este termo de consentimento.');
+        }
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function destroy($id)
     {
         $success = $this->termo_consentimentoService->delete($id);
+        if (!$success) {
+            abort(403, 'Sem acesso para excluir este termo de consentimento.');
+        }
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 

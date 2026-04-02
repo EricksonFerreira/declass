@@ -14,6 +14,7 @@ use App\Http\Requests\Usuario\UpdateUsuarioRequest;
 use App\Models\Pais;
 use App\Models\User;
 use App\Services\BreadcrumbService;
+use App\Services\EstacaoService;
 use App\Services\PaisService;
 use App\Services\RegraService;
 use App\Services\UsuarioService;
@@ -30,6 +31,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     protected $breadcrumbService;
     protected $regraService;
     protected $paisService;
+    protected $estacaoService;
     protected $clienteStripeService;
 
     public function __construct(
@@ -37,6 +39,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         BreadcrumbService $breadcrumbService,
         RegraService $regraService,
         PaisService $paisService,
+        EstacaoService $estacaoService,
         ClienteStripeService $clienteStripeService
     ) {
         $this->titulo = "Usuários";
@@ -45,6 +48,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $this->breadcrumbService = $breadcrumbService;
         $this->regraService = $regraService;
         $this->paisService = $paisService;
+        $this->estacaoService = $estacaoService;
         $this->clienteStripeService = $clienteStripeService;
     }
 
@@ -67,6 +71,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         $perPages = [5, 10, 15, 25, 50, 100];
 
+        $nomeFiltro = $this->nomeFiltro;
+
         return view('usuario.index', compact(
             'usuarios',
             'breadcrumb',
@@ -74,7 +80,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             'itensFiltered',
             'additionalFilters',
             'perPages',
-            'perPage'
+            'perPage',
+            'nomeFiltro'
         ))->with('titulo', $this->titulo);
     }
 
@@ -88,37 +95,83 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuarios', 'usuario.index', 'Criar');
 
         $paises = $this->paisService->getAllForSelect();
+        $estacoes = $this->estacaoService->getAllAtivos();
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
         [$metodo, $rota] = $this->getFormMethodAndRoute();
-        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'paises', 'rota'))->with('titulo', $this->titulo);
+        $acessoTodasEstacoes = true;
+        $estacoesSelecionadas = [];
+
+        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'paises', 'estacoes', 'acessoTodasEstacoes', 'estacoesSelecionadas', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreUsuarioRequest $request)
     {
-        // Remove o campo de confirmação de senha
-        $data = $request->except('confirmacao_senha');
+        try {
+            // Remove o campo de confirmacao de senha
+            $data = $request->except('confirmacao_senha');
 
-        // Cria o cliente no Stripe
-        $cliente = $this->clienteStripeService->create($data['email'], $data['nome']);
+            // Cria o cliente no Stripe
+            $cliente = $this->clienteStripeService->criarCliente($data['email'], $data['nome']);
 
-        // Cria o usuário no sistema
-        $data['stripe_id'] = $cliente->id;
-        $this->usuarioService->createUser($data);
+            // Cria o usuario no sistema
+            $data['stripe_id'] = $cliente->id;
+            $usuario = $this->usuarioService->createUser($data);
 
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Usuario cadastrado com sucesso.',
+                    'usuario' => [
+                        'id' => (int) $usuario->id,
+                        'nome' => (string) $usuario->nome,
+                        'email' => (string) $usuario->email,
+                    ],
+                ], 201);
+            }
+
+            return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        } catch (\Throwable $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Nao foi possivel cadastrar o usuario no momento.',
+                    'error' => config('app.debug') ? $e->getMessage() : null,
+                ], 422);
+            }
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['usuario' => 'Nao foi possivel cadastrar o usuario no momento.']);
+        }
+    }
+
+    public function selectOptions(Request $request)
+    {
+        $usuarios = collect($this->usuarioService->getAllForSelect())
+            ->map(fn ($nome, $id) => ['id' => (int) $id, 'nome' => (string) $nome])
+            ->sortBy('nome', SORT_NATURAL | SORT_FLAG_CASE)
+            ->values();
+
+        return response()->json([
+            'usuarios' => $usuarios,
+        ]);
     }
 
     public function edit($id)
     {
         $usuario = $this->usuarioService->getById($id);
+        if (!$usuario) {
+            abort(403, 'Sem acesso a este usuario.');
+        }
 
-        $metodosPagamentoResponse = $this->clienteStripeService->getPaymentMethods($usuario->stripe_id);
-        $metodosPagamento = !empty($metodosPagamentoResponse->data) ? $metodosPagamentoResponse->data : [];
-        // $metodosPagamento = $this->clienteStripeService->getPaymentMethods($usuario->stripe_id)->data;
+        try {
+            $metodosPagamento = $usuario->stripe_id
+                ? $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id)
+                : [];
+        } catch (\Stripe\Exception\InvalidRequestException $e) {
+            $metodosPagamento = [];
+        }
 
-        // Refatoração: Mapeia diretamente os cartões sem a necessidade de uma variável intermediária
-        $metodosPagamento = array_map(fn($item) => $item->card, $metodosPagamento);
         $sexo = [
             'M' => 'Masculino',
             'F' => 'Feminino',
@@ -127,18 +180,22 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
 
-        $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
-
         $paises = $this->paisService->getAllForSelect();
+        $estacoes = $this->estacaoService->getAllAtivos();
+        $acessoTodasEstacoes = $usuario->hasAcessoTodasEstacoes();
+        $estacoesSelecionadas = $usuario->estacoesPermitidas()->pluck('estacoes.id')->map(fn ($id) => (int) $id)->all();
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($usuario);
 
-        return view('usuario.add-edit', compact('metodosPagamento', 'usuario', 'breadcrumb', 'tiposUsuario', 'sexo', 'paises', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view('usuario.add-edit', compact('metodosPagamento', 'usuario', 'breadcrumb', 'tiposUsuario', 'sexo', 'paises', 'estacoes', 'acessoTodasEstacoes', 'estacoesSelecionadas', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateUsuarioRequest $request, $id)
     {
         $usuario = $this->usuarioService->getById($id);
+        if (!$usuario) {
+            abort(403, 'Sem acesso para editar este usuario.');
+        }
 
         // if (isset($request->stripeToken)) {
         //     $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
@@ -155,21 +212,22 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         //     $this->clienteStripeService->createPaymentMethod($cliente->id, $request->stripeToken);
         // }
 
-        $this->usuarioService->update($id, $request->all());
+        $this->usuarioService->updateUser($id, $request->all());
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function metodoPagamento($usuarioId)
     {
         $usuario = $this->usuarioService->getById($usuarioId);
-
-        if($usuario->stripe_id == null){
-            return $this->redirecionaRotaRedirect('usuario.index', 'Usuário não possui código Stripe','error');
+        if (!$usuario) {
+            abort(403, 'Sem acesso a este usuario.');
         }
 
-        // Verifica se o retorno contém dados antes de acessar a propriedade data
-        $metodosPagamentoResponse = $this->clienteStripeService->getPaymentMethods($usuario->stripe_id);
-        $metodosPagamento = !empty($metodosPagamentoResponse->data) ? $metodosPagamentoResponse->data : [];
+        if($usuario->stripe_id == null){
+            return $this->redirecionaRotaRedirect('usuario.index', 'UsuÃ¡rio nÃ£o possui cÃ³digo Stripe','error');
+        }
+
+        $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
         $metodo = 'POST';
@@ -185,7 +243,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 'rota'
             )
         )
-            ->with('titulo', 'Métodos de Pagamento');
+            ->with('titulo', 'MÃ©todos de Pagamento');
     }
 
     public function adicionarMetodoPagamento(Request $request, $usuarioId)
@@ -193,23 +251,29 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         if (isset($request->stripeToken)) {
 
             $usuario = $this->usuarioService->getById($usuarioId);
+            if (!$usuario) {
+                abort(403, 'Sem acesso a este usuario.');
+            }
             // $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
-            $this->clienteStripeService->createPaymentMethod($usuario->stripe_id, $request->stripeToken);
-            return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Método de pagamento adicionado com sucesso!');
+            $this->clienteStripeService->criarMetodoPagamento($usuario->stripe_id, $request->stripeToken);
+            return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento adicionado com sucesso!');
         }
 
-        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Método de pagamento não adicionado!', 'error');
+        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento nÃ£o adicionado!', 'error');
     }
 
     public function excluirMetodoPagamento($usuarioId, $metodoId)
     {
-        $this->clienteStripeService->deletePaymentMethod($metodoId);
+        $this->clienteStripeService->deletarMetodoPagamento($metodoId);
         return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Metodo de pagamento excluido com sucesso!');
     }
 
     public function alterarSenha($id)
     {
         $usuario = $this->usuarioService->getById($id);
+        if (!$usuario) {
+            abort(403, 'Sem acesso a este usuario.');
+        }
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Alterar Senha: $usuario->nome");
         $metodo = 'PUT';
         $rota = route('usuario.salvarNovaSenha', $usuario->id);
@@ -226,6 +290,9 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     public function destroy($id)
     {
         $success = $this->usuarioService->delete($id);
+        if (!$success) {
+            abort(403, 'Sem acesso para excluir este usuario.');
+        }
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -244,10 +311,10 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function setPerPage(Request $request)
     {
-        // Salva o valor de paginação na sessão
+        // Salva o valor de paginaÃ§Ã£o na sessÃ£o
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
-        // Redireciona de volta para a página de listagem
+        // Redireciona de volta para a pÃ¡gina de listagem
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -271,19 +338,19 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             ['name' => 'email', 'label' => 'E-mail', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'celular', 'label' => 'Celular', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'cidade', 'label' => 'Cidade', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'tipo_usuario_id', 'label' => 'Regra de Usuário', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataTiposUsuarios],
+            ['name' => 'role_id', 'label' => 'Regra de UsuÃ¡rio', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataTiposUsuarios],
         ];
     }
 
     public function obterFiltrosSecundarios()
     {
         return [
-            // Adicione filtros secundários aqui, se necessário
+            // Adicione filtros secundÃ¡rios aqui, se necessÃ¡rio
         ];
     }
 
     /**
-     * Função para obter o método e a rota para o formulário.
+     * FunÃ§Ã£o para obter o mÃ©todo e a rota para o formulÃ¡rio.
      *
      * @param  User|null  $usuario
      * @return array
@@ -303,3 +370,4 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         ];
     }
 }
+

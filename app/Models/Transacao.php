@@ -10,14 +10,23 @@ class Transacao extends Model
     use HasFactory;
 
     protected $table = 'transacoes';
+
     protected $fillable = [
         'user_id',
+        'pago_por_user_id',
         'reserva_id',
         'valor',
+        'moeda',
         'metodo_pagamento',
-        'metodo_pagamento_id', // traduzir para o nome do metodo de pagamento
+        'gateway_transaction_id',
+        'metodo_pagamento_id',
         'tipo_pagamento_id',
         'status',
+        'info_pagamento',
+    ];
+
+    protected $casts = [
+        'info_pagamento' => 'array',
     ];
 
     public function reserva()
@@ -28,5 +37,10 @@ class Transacao extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function pagoPor()
+    {
+        return $this->belongsTo(User::class, 'pago_por_user_id');
     }
 }

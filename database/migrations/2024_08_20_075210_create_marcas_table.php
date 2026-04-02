@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('marcas', function (Blueprint $table) {
-            $table->id();
-            $table->string('nome')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('marcas')) {
+            Schema::create('marcas', function (Blueprint $table) {
+                $table->id();
+                $table->string('nome')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

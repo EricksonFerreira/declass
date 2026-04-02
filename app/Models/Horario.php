@@ -12,8 +12,8 @@ class Horario extends Model
         'horario_diario_id',
         'hora_abertura',
         'hora_fechamento',
-        'hora_inicio_almoço',
-        'hora_fim_almoço',
+        'hora_inicio_almoco',
+        'hora_fim_almoco',
         'hora_inicio_fora_expediente',
         'hora_fim_fora_expediente',
     ];

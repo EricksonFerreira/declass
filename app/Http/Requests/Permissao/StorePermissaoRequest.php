@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Permissao;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePermissaoRequest extends FormRequest
 {
@@ -23,8 +24,16 @@ class StorePermissaoRequest extends FormRequest
 
     public function rules(): array
     {
+        $empresaId = auth()->user()?->empresa_id;
+
         return [
-            'name' => 'required|string|max:255|unique:permissions,name,' . $this->route('permissao'),
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('permissions', 'name')
+                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
             'guard_name' => 'required|string|max:255',
         ];
     }

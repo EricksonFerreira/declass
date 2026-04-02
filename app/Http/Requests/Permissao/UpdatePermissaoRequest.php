@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Permissao;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdatePermissaoRequest extends FormRequest
 {
@@ -22,8 +23,17 @@ class UpdatePermissaoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = auth()->user()?->empresa_id;
+
         return [
-            'name' => 'required|string|max:255|unique:permissions,name,' . $this->route('permissao'),
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('permissions', 'name')
+                    ->ignore($this->route('permissao'))
+                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
             'guard_name' => 'required|string|max:255',
         ];
     }

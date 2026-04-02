@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('dias_uteis', function (Blueprint $table) {
-            $table->id();
-            $table->integer('dia')->nullable();
-            $table->string('nome')->nullable();
-            $table->string('ativo',2)->default('S');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('dias_uteis')) {
+            Schema::create('dias_uteis', function (Blueprint $table) {
+                $table->id();
+                $table->integer('dia')->nullable();
+                $table->string('nome')->nullable();
+                $table->string('ativo',2)->default('S');
+                $table->timestamps();
+            });
+        }
     }
 
     /**
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('dia_utils');
+        Schema::dropIfExists('dias_uteis');
     }
 };

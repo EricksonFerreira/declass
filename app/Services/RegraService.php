@@ -29,7 +29,10 @@ class RegraService extends AbstractBaseService
     }
 
     public function getAllTiposUsuarios(){
-        $data = $this->model->select('id', 'name')->distinct()->get();
+        $data = $this->applyEmpresaScope($this->model->newQuery())
+            ->select('id', 'name')
+            ->distinct()
+            ->get();
         return $this->formatArraySelect($data);
     }
 }

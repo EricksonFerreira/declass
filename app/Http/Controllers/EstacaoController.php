@@ -51,7 +51,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $estacaos = $this->estacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $estacaos = $this->estacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['pais']);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Estações');
         $filters = $this->obterFiltrosPrincipais();
@@ -92,7 +92,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             'S' => 'Permite',
             'N' => 'Não Permite'
         ];
-        $diasUteis = $this->diaUtilService->getAllAtivos('dia', 'asc');
+        $diasUteis = $this->diaUtilService->getAllAtivos('id', 'dia', 'dia', 'asc');
 
         $horariosDiarios = $this->horarioDiarioService->getAllAtivos();
 
@@ -130,7 +130,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             'N' => 'Não Permite'
         ];
 
-        $diasUteis = $this->diaUtilService->getAllAtivos('id','nome');
+        $diasUteis = $this->diaUtilService->getAllAtivos('id', 'dia', 'dia', 'asc');
         [$metodo, $rota] = $this->getFormMethodAndRoute($estacao);
         $diasUteisEstacao = $estacao->diasUteis->pluck('id')->toArray();
 

@@ -15,7 +15,7 @@ class VeiculoDanosImagem extends Model
         'caminho_imagem',
         'nome_imagem',
     ];
-    protected $timestamps = true;
+    public $timestamps = true;
 
     public function dano()
     {

@@ -6,7 +6,6 @@ use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\GrupoFrota\StoreGrupoFrotaRequest;
 use App\Http\Requests\GrupoFrota\UpdateGrupoFrotaRequest;
-use App\Models\TipoOpcional;
 use App\Services\BreadcrumbService;
 use App\Services\CaracteristicaFrotaService;
 use App\Services\GrupoFrotaService;
@@ -54,6 +53,13 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         $grupoFrotas = $this->grupoFrotaService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $grupoFrotas->getCollection()->loadCount(['opcionais', 'caracteristicas', 'modelos']);
+        $grupoFrotas->getCollection()->load([
+            'caracteristicas:id,nome',
+            'opcionais:id,nome,tipo_opcional_id',
+            'opcionais.tipoOpcional:id,nome',
+            'modelos:id,nome',
+        ]);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Grupos de Frotas');
         $filters = $this->obterFiltrosPrincipais();
@@ -90,8 +96,23 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id', 'nome', 'nome');
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
         $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
+        $preRequisitosGrupoFrota = $this->montarPreRequisitosGrupoFrota($tipoFrotas, $modelos, $caracteristicas, $tiposOpcionais);
 
-        return view('grupo_frota.add-edit', compact('modelos', 'caracteristicas', 'tiposOpcionais', 'marcas', 'tipoFrotas', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view(
+            'grupo_frota.add-edit',
+            compact(
+                'modelos',
+                'caracteristicas',
+                'tiposOpcionais',
+                'marcas',
+                'tipoFrotas',
+                'breadcrumb',
+                'status',
+                'metodo',
+                'rota',
+                'preRequisitosGrupoFrota'
+            )
+        )->with('titulo', $this->titulo);
     }
 
     public function store(StoreGrupoFrotaRequest $request)
@@ -115,6 +136,7 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id', 'nome', 'nome');
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
         $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
+        $preRequisitosGrupoFrota = $this->montarPreRequisitosGrupoFrota($tipoFrotas, $modelos, $caracteristicas, $tiposOpcionais);
 
         $grupoFrota->opcionais = $grupoFrota->opcionais->pluck('id')->toArray();
         $grupoFrota->modelos = $grupoFrota->modelos->pluck('id')->toArray();
@@ -125,7 +147,21 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
             ];
         });
 
-        return view('grupo_frota.add-edit', compact('modelos', 'tiposOpcionais', 'caracteristicas', 'tipoFrotas',  'grupoFrota', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view(
+            'grupo_frota.add-edit',
+            compact(
+                'modelos',
+                'tiposOpcionais',
+                'caracteristicas',
+                'tipoFrotas',
+                'grupoFrota',
+                'breadcrumb',
+                'status',
+                'metodo',
+                'rota',
+                'preRequisitosGrupoFrota'
+            )
+        )->with('titulo', $this->titulo);
     }
 
     public function update(UpdateGrupoFrotaRequest $request, $id)
@@ -160,9 +196,6 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $grupoFrotaId = $request->input('grupo_frota_id');
         $modelos = $this->grupoFrotaService->getModelosPorGrupoFrota($grupoFrotaId);
         $opcionais = $this->grupoFrotaService->getTiposOpcionaisComOpcionais($grupoFrotaId);
-        $tipoOpcionais = TipoOpcional::all();
-
-
 
         return response()->json([
             'modelo' => $modelos,
@@ -214,14 +247,71 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $this->grupoFrotaService->verificaGruposFrotaDisponiveis($estacao_retirada_id,$data_inicio,$estacao_devolucao_id,$data_fim);
 
     }
-
-
     /**
-     * Função para obter o método e a rota para o formulário.
-     *
-     * @param  GrupoFrota|null  $grupoFrota
-     * @return array
+     * Monta indicadores de pre-requisitos para criacao/edicao de grupo de frota.
      */
+    private function montarPreRequisitosGrupoFrota(
+        array $tipoFrotas,
+        array $modelos,
+        array $caracteristicas,
+        $tiposOpcionais
+    ): array {
+        $qtdTiposFrota = count($tipoFrotas);
+        $qtdModelos = count($modelos);
+        $qtdCaracteristicas = count($caracteristicas);
+        $qtdTiposOpcionais = $this->contarItens($tiposOpcionais);
+        $qtdOpcionais = $this->contarOpcionais($tiposOpcionais);
+
+        $faltas = [];
+
+        if ($qtdTiposFrota === 0) {
+            $faltas[] = 'Cadastre pelo menos um tipo de frota ativo para criar grupo de frota.';
+        }
+
+        if ($qtdModelos === 0) {
+            $faltas[] = 'Cadastre pelo menos um modelo ativo para vincular no grupo de frota.';
+        }
+
+        if ($qtdCaracteristicas === 0) {
+            $faltas[] = 'Cadastre pelo menos uma caracteristica de frota para preencher os atributos do grupo.';
+        }
+
+        return [
+            'qtd_tipos_frota' => $qtdTiposFrota,
+            'qtd_modelos' => $qtdModelos,
+            'qtd_caracteristicas' => $qtdCaracteristicas,
+            'qtd_tipos_opcionais' => $qtdTiposOpcionais,
+            'qtd_opcionais' => $qtdOpcionais,
+            'faltas' => $faltas,
+            'pode_criar_grupo_frota' => empty($faltas),
+        ];
+    }
+
+    private function contarItens($itens): int
+    {
+        return is_countable($itens) ? count($itens) : 0;
+    }
+
+    private function contarOpcionais($tiposOpcionais): int
+    {
+        if (!is_iterable($tiposOpcionais)) {
+            return 0;
+        }
+
+        $total = 0;
+        foreach ($tiposOpcionais as $tipoOpcional) {
+            $opcionais = is_array($tipoOpcional)
+                ? ($tipoOpcional['opcionais'] ?? [])
+                : ($tipoOpcional->opcionais ?? []);
+
+            if (is_countable($opcionais)) {
+                $total += count($opcionais);
+            }
+        }
+
+        return $total;
+    }
+
     private function getFormMethodAndRoute($grupoFrota = null)
     {
         if ($grupoFrota) {
@@ -237,3 +327,4 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         ];
     }
 }
+

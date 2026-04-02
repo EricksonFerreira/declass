@@ -6,11 +6,19 @@ use App\Models\Permissao;
 use App\Models\Regra;
 use App\Models\TipoTransacao;
 use App\Models\User;
+use App\Support\EmpresaContext;
 use App\Services\BreadcrumbService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class HomeController extends Controller
 {
+    private const STATUS_APROVADOS = ['completa', 'aprovado', 'approved', 'succeeded', 'success'];
+    private const STATUS_PENDENTES = ['pendente', 'pending', 'aguardando', 'processando', 'processing'];
+
     protected $titulo;
     protected $breadcrumbService;
     public function __construct(BreadcrumbService $breadcrumbService)
@@ -19,12 +27,300 @@ class HomeController extends Controller
         $this->breadcrumbService = $breadcrumbService;
     }
 
-    public function home()
-    {
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbUnico('Home');
-        $items = $this->getSystemCards();        
+public function home()
+{
+    $breadcrumb    = $this->breadcrumbService->prepararBreadcrumbUnico('Home');
+    $items         = $this->getSystemCards();
+    $veiculosQuery = \App\Models\Veiculo::query();
+    $veiculosQuery = $this->applyEmpresaScope($veiculosQuery, 'veiculos');
+    $totalVeiculos = (int) $veiculosQuery->count();
 
-        return view('home', compact('breadcrumb','items'))->with('titulo', $this->titulo);
+    return view('home', compact('breadcrumb', 'items', 'totalVeiculos'))
+        ->with('titulo', $this->titulo);
+}
+
+public function chartData(Request $request)
+{
+    $mesesPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    $dataInicio = $request->filled('data_inicio')
+        ? Carbon::parse($request->data_inicio)->startOfMonth()
+        : Carbon::now()->subMonths(11)->startOfMonth();
+
+    $dataFim = $request->filled('data_fim')
+        ? Carbon::parse($request->data_fim)->endOfMonth()
+        : Carbon::now()->endOfMonth();
+
+    $labels = [];
+    $meses = [];
+    $cursor = $dataInicio->copy();
+    while ($cursor->lte($dataFim)) {
+        $labels[] = $mesesPt[$cursor->month - 1] . '/' . $cursor->format('y');
+        $meses[] = $cursor->copy();
+        $cursor->addMonth();
+    }
+
+    $reservasNoPeriodo = \App\Models\Reserva::query()
+        ->whereBetween('created_at', [$dataInicio, $dataFim]);
+    $reservasNoPeriodo = $this->applyEmpresaScope($reservasNoPeriodo, 'reservas');
+
+    $resConfirmadas = (clone $reservasNoPeriodo)
+        ->whereNull('data_cancelamento')
+        ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
+        ->groupBy('ano', 'mes')
+        ->get()
+        ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
+
+    $resCanceladas = (clone $reservasNoPeriodo)
+        ->whereNotNull('data_cancelamento')
+        ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
+        ->groupBy('ano', 'mes')
+        ->get()
+        ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
+
+    $confirmadas = [];
+    $cancelamentos = [];
+    $tendencia = [];
+    foreach ($meses as $m) {
+        $key = $m->year . '-' . $m->month;
+        $conf = (int) ($resConfirmadas[$key]->total ?? 0);
+        $canc = (int) ($resCanceladas[$key]->total ?? 0);
+        $confirmadas[] = $conf;
+        $cancelamentos[] = $canc;
+        $tendencia[] = $conf + $canc;
+    }
+
+    $movStatusBase = DB::table('movimentacoes')
+        ->join('status_movimentacao', 'movimentacoes.status_movimentacao_id', '=', 'status_movimentacao.id')
+        ->selectRaw('status_movimentacao.nome as label, COUNT(*) as total')
+        ->whereBetween('movimentacoes.created_at', [$dataInicio, $dataFim]);
+    $movStatusBase = $this->applyEmpresaScope($movStatusBase, 'movimentacoes');
+    $movStatus = $movStatusBase
+        ->groupBy('status_movimentacao.id', 'status_movimentacao.nome')
+        ->get();
+
+    $gruposVeiculosBase = DB::table('veiculos')
+        ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
+        ->selectRaw('grupos_frota.nome as label, COUNT(*) as total');
+    $gruposVeiculosBase = $this->applyEmpresaScope($gruposVeiculosBase, 'veiculos');
+    $gruposVeiculos = $gruposVeiculosBase
+        ->groupBy('grupos_frota.id', 'grupos_frota.nome')
+        ->get();
+
+    $cores = ['#0891b2', '#059669', '#d97706', '#7c3aed', '#e11d48', '#0ea5e9'];
+
+    $totalPorGrupoBase = DB::table('veiculos')
+        ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
+        ->selectRaw('grupos_frota.id, grupos_frota.nome, COUNT(*) as total');
+    $totalPorGrupoBase = $this->applyEmpresaScope($totalPorGrupoBase, 'veiculos');
+    $totalPorGrupo = $totalPorGrupoBase
+        ->groupBy('grupos_frota.id', 'grupos_frota.nome')
+        ->get();
+
+    $ativasPorGrupoBase = DB::table('reservas')
+        ->whereNull('data_cancelamento')
+        ->where('data_inicio', '<=', $dataFim)
+        ->where('data_fim', '>=', $dataInicio)
+        ->selectRaw('grupo_frota_id, COUNT(*) as total');
+    $ativasPorGrupoBase = $this->applyEmpresaScope($ativasPorGrupoBase, 'reservas');
+    $ativasPorGrupo = $ativasPorGrupoBase
+        ->groupBy('grupo_frota_id')
+        ->get()
+        ->keyBy('grupo_frota_id');
+
+    $ocupacaoFrota = [];
+    foreach ($totalPorGrupo as $i => $grupo) {
+        $ativas = (int) ($ativasPorGrupo[$grupo->id]->total ?? 0);
+        $pct = $grupo->total > 0 ? round($ativas / $grupo->total * 100) : 0;
+        $ocupacaoFrota[] = [
+            'label' => $grupo->nome,
+            'pct' => $pct,
+            'color' => $cores[$i % count($cores)],
+        ];
+    }
+
+    $totalVeiculosGeral = (int) $totalPorGrupo->sum('total');
+    $totalAtivas = (int) $ativasPorGrupo->sum('total');
+    $ocupacaoGeral = $totalVeiculosGeral > 0 ? round($totalAtivas / $totalVeiculosGeral * 100) : 0;
+
+    $totalReservas = (int) (clone $reservasNoPeriodo)->count();
+
+    $movimentacoesNoPeriodo = \App\Models\Movimentacao::query()
+        ->whereBetween('created_at', [$dataInicio, $dataFim]);
+    $movimentacoesNoPeriodo = $this->applyEmpresaScope($movimentacoesNoPeriodo, 'movimentacoes');
+    $totalMovimentacoes = (int) (clone $movimentacoesNoPeriodo)->count();
+
+    $financeiroValores = array_fill(0, count($labels), 0.0);
+    $financeiroQuantidades = array_fill(0, count($labels), 0);
+    $financeiroStatus = [0.0, 0.0, 0.0];
+    $financeiroGatewayLabels = [];
+    $financeiroGatewayData = [];
+    $totalFinanceiro = 0.0;
+    $ticketMedioFinanceiro = 0.0;
+    $qtdTransacoesFinanceiro = 0;
+    $taxaAprovacaoFinanceiro = 0.0;
+
+    if (Schema::hasTable('transacoes')) {
+        $baseFinanceiro = DB::table('transacoes')
+            ->whereBetween('transacoes.created_at', [$dataInicio, $dataFim]);
+        $baseFinanceiro = $this->applyEmpresaScope($baseFinanceiro, 'transacoes');
+
+        $financeiroMensal = (clone $baseFinanceiro)
+            ->selectRaw('YEAR(transacoes.created_at) as ano, MONTH(transacoes.created_at) as mes')
+            ->selectRaw('SUM(transacoes.valor) as total')
+            ->selectRaw('COUNT(transacoes.id) as quantidade')
+            ->groupBy('ano', 'mes')
+            ->get()
+            ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
+
+        foreach ($meses as $index => $m) {
+            $key = $m->year . '-' . $m->month;
+            $financeiroValores[$index] = round((float) ($financeiroMensal[$key]->total ?? 0.0), 2);
+            $financeiroQuantidades[$index] = (int) ($financeiroMensal[$key]->quantidade ?? 0);
+        }
+
+        $totalFinanceiro = (float) (clone $baseFinanceiro)->sum('transacoes.valor');
+        $qtdTransacoesFinanceiro = (int) (clone $baseFinanceiro)->count('transacoes.id');
+        $ticketMedioFinanceiro = $qtdTransacoesFinanceiro > 0 ? $totalFinanceiro / $qtdTransacoesFinanceiro : 0.0;
+
+        $totalAprovado = $this->sumByStatus((clone $baseFinanceiro), self::STATUS_APROVADOS);
+        $totalPendente = $this->sumByStatus((clone $baseFinanceiro), self::STATUS_PENDENTES);
+        $totalFalha = max(0.0, $totalFinanceiro - $totalAprovado - $totalPendente);
+        $financeiroStatus = [
+            round($totalAprovado, 2),
+            round($totalPendente, 2),
+            round($totalFalha, 2),
+        ];
+
+        $qtdAprovadas = $this->countByStatus((clone $baseFinanceiro), self::STATUS_APROVADOS);
+        $taxaAprovacaoFinanceiro = $qtdTransacoesFinanceiro > 0
+            ? round(($qtdAprovadas / $qtdTransacoesFinanceiro) * 100, 1)
+            : 0.0;
+
+        $gatewayRows = (clone $baseFinanceiro)
+            ->selectRaw('COALESCE(transacoes.metodo_pagamento, "nao_definido") as gateway')
+            ->selectRaw('SUM(transacoes.valor) as total')
+            ->groupBy('gateway')
+            ->orderByDesc('total')
+            ->limit(6)
+            ->get();
+
+        $financeiroGatewayLabels = $gatewayRows->pluck('gateway')->toArray();
+        $financeiroGatewayData = $gatewayRows
+            ->pluck('total')
+            ->map(fn($v) => round((float) $v, 2))
+            ->toArray();
+    }
+
+    return response()->json([
+        'dadosReservas' => compact('labels', 'confirmadas', 'cancelamentos', 'tendencia'),
+        'movPorStatus' => [
+            'labels' => $movStatus->pluck('label')->toArray(),
+            'data' => $movStatus->pluck('total')->map(fn($v) => (int) $v)->toArray(),
+        ],
+        'veiculosPorGrupo' => [
+            'labels' => $gruposVeiculos->pluck('label')->toArray(),
+            'data' => $gruposVeiculos->pluck('total')->map(fn($v) => (int) $v)->toArray(),
+        ],
+        'ocupacaoFrota' => $ocupacaoFrota,
+        'ocupacaoGeral' => $ocupacaoGeral,
+        'totalReservas' => $totalReservas,
+        'totalMovimentacoes' => $totalMovimentacoes,
+        'financeiroEvolucao' => [
+            'labels' => $labels,
+            'valores' => $financeiroValores,
+            'quantidades' => $financeiroQuantidades,
+        ],
+        'financeiroStatus' => [
+            'labels' => ['Aprovado', 'Pendente', 'Falha'],
+            'data' => $financeiroStatus,
+        ],
+        'financeiroGateway' => [
+            'labels' => $financeiroGatewayLabels,
+            'data' => $financeiroGatewayData,
+        ],
+        'financeiroResumo' => [
+            'total' => round($totalFinanceiro, 2),
+            'ticket_medio' => round($ticketMedioFinanceiro, 2),
+            'qtd_transacoes' => $qtdTransacoesFinanceiro,
+            'taxa_aprovacao' => $taxaAprovacaoFinanceiro,
+        ],
+        'simboloMoeda' => $this->simboloMoedaEmpresa(),
+    ]);
+}
+public function dashboard()
+{
+    return redirect()->route('home');
+}
+
+    private function sumByStatus($query, array $statuses): float
+    {
+        return (float) $query
+            ->whereIn(DB::raw('LOWER(COALESCE(transacoes.status, ""))'), $statuses)
+            ->sum('transacoes.valor');
+    }
+
+    private function countByStatus($query, array $statuses): int
+    {
+        return (int) $query
+            ->whereIn(DB::raw('LOWER(COALESCE(transacoes.status, ""))'), $statuses)
+            ->count('transacoes.id');
+    }
+
+    private function applyEmpresaScope($query, string $table)
+    {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'empresa_id')) {
+            return $query;
+        }
+
+        $empresaId = $this->empresaIdParaConsulta();
+        if ($empresaId === null) {
+            return $query;
+        }
+
+        return $query->where($table . '.empresa_id', $empresaId);
+    }
+
+    private function empresaIdParaConsulta(): ?int
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return null;
+        }
+
+        if (!$user->isAdministrador()) {
+            return $user->empresa_id ? (int) $user->empresa_id : null;
+        }
+
+        $empresaContexto = app(EmpresaContext::class)->empresaId();
+
+        return $empresaContexto !== null ? (int) $empresaContexto : null;
+    }
+
+    private function moedaEmpresaParaConsulta(): string
+    {
+        $empresaId = $this->empresaIdParaConsulta();
+
+        if ($empresaId === null || !Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'moeda_pagamento')) {
+            return 'BRL';
+        }
+
+        $moeda = DB::table('empresas')
+            ->where('id', $empresaId)
+            ->value('moeda_pagamento');
+
+        $moeda = strtoupper((string) $moeda);
+
+        return in_array($moeda, ['BRL', 'USD', 'EUR'], true) ? $moeda : 'BRL';
+    }
+
+    private function simboloMoedaEmpresa(): string
+    {
+        return match ($this->moedaEmpresaParaConsulta()) {
+            'USD' => '$',
+            'EUR' => 'EUR',
+            default => 'R$',
+        };
     }
 
     private function getSystemCards()
@@ -233,3 +529,4 @@ class HomeController extends Controller
         ];
     }
 }
+

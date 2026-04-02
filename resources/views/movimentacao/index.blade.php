@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" :createUrl="route('movimentacao.create')" />
+    <x-page-title :title="$titulo"  />
 @stop
 
 @section('content')

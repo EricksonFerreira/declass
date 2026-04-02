@@ -26,7 +26,7 @@ class OpcionalController extends BaseController implements FiltroInterface, Reso
         BreadcrumbService $breadcrumbService,
         TipoOpcionalService $tipoOpcionalService
     ) {
-        $this->titulo = "Opcionals";
+        $this->titulo = "Opcionais";
         $this->nomeFiltro = 'opcional';
         $this->opcionalService = $opcionalService;
         $this->breadcrumbService = $breadcrumbService;
@@ -42,7 +42,7 @@ class OpcionalController extends BaseController implements FiltroInterface, Reso
 
         $opcionals = $this->opcionalService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Opcionals');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Opcionais');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -68,7 +68,7 @@ class OpcionalController extends BaseController implements FiltroInterface, Reso
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Opcionals', 'opcional.index', 'Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Opcionais', 'opcional.index', 'Criar');
         $tipoOpcional = $this->tipoOpcionalService->getAllForSelect();
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
@@ -91,7 +91,7 @@ class OpcionalController extends BaseController implements FiltroInterface, Reso
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Opcionals', 'opcional.index', "Editar: $opcional->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Opcionais', 'opcional.index', "Editar: $opcional->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($opcional);
         $tipoOpcional = $this->tipoOpcionalService->getAllForSelect();
 

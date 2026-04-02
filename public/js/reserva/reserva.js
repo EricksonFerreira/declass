@@ -333,12 +333,20 @@ function adicionarOpcionalNoHtmlDaMinhaReserva(nome, quantidade, valor) {
 
 // Função para formatar valores monetários
 function formatarMoeda(valor) {
-    return valor;
-    // return new Intl.NumberFormat(  'pt-BR', {
-    return new Intl.NumberFormat('pt-PT', { // Exibir em formato de euro
+    const numero = Number(valor ?? 0);
+    const moeda = (window.reservaCurrency || 'BRL').toUpperCase();
+
+    if (!Number.isFinite(numero)) {
+        return new Intl.NumberFormat('pt-BR', {
+            style: 'currency',
+            currency: moeda
+        }).format(0);
+    }
+
+    return new Intl.NumberFormat('pt-BR', {
         style: 'currency',
-        currency: 'EUR'
-    }).format(valor);
+        currency: moeda
+    }).format(numero);
 }
 
 // Função para atualizar a quantidade de um opcional na interface

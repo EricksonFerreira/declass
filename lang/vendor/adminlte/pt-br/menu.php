@@ -19,6 +19,13 @@ return [
     'Information' => 'Informação',
 
     // Sidebar
+    'sidebar.home'                  => 'Dashboard',
+    'sidebar.operacional'           => 'Operacional',
+    'sidebar.frota'                 => 'Frota',
+    'sidebar.cadastros'             => 'Cadastros',
+    'sidebar.movimentacoes_lista'   => 'Listagem',
+    'sidebar.veiculo_lista'         => 'Listagem',
+    'sidebar.dano_lista'            => 'Listagem',
     'sidebar.reserva' => 'Reservas',
     'sidebar.status_reserva' => 'Status da Reserva',
     'sidebar.movimentacoes' => 'Movimentações',
@@ -26,8 +33,13 @@ return [
     'sidebar.status_movimentacao' => 'Status de Movimentações',
     'sidebar.tempo_estacoes' => 'Tempo entre Entações',
     'sidebar.configuracao_usuario' => 'Configuração do Usuário',
+    'sidebar.meu_perfil' => 'Meu Perfil',
     'sidebar.usuario' => 'Usuários',
+    'sidebar.trocar_empresa' => 'Trocar Empresa',
+    'sidebar.empresa' => 'Empresas',
+    'sidebar.replicacao_base' => 'Replicacao de Base',
     'sidebar.regra' => 'Regras',
+    'sidebar.tipo_usuario' => 'Tipos de Usuario',
     'sidebar.permissao' => 'Permissões',
     'sidebar.termo_consentimento' => 'Termos de Consentimento',
     'sidebar.configuracao_reserva' => 'Configurações das Reservas',
@@ -39,6 +51,9 @@ return [
     'sidebar.fora_horario' => 'Fora do Horário',
     'sidebar.veiculo' => 'Veículos',
     'sidebar.cupom_desconto' => 'Cupom Desconto',
+    'sidebar.financeiro' => 'Financeiro',
+    'sidebar.financeiro_transferencias' => 'Transferencias',
+    'sidebar.financeiro_reservas' => 'Faturamento por Reserva',
     'sidebar.configuracao_opcionais' => 'Configuração Opcionais',
     'sidebar.tipos_opcionais' => 'Tipos de Opcionais',
     'sidebar.opcionais' => 'Opcionais',
@@ -75,3 +90,4 @@ return [
     'sidebar.dano' => 'Danos',
     'sidebar.categoria_dano' => 'Categoria de Danos',
 ];
+

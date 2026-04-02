@@ -11,6 +11,7 @@ use App\Http\Requests\Reserva\AssinarContratoRequest;
 use App\Http\Requests\Reserva\CriarContratoCheckInRequest;
 use App\Http\Requests\Reserva\StoreReservaRequest;
 use App\Http\Requests\Reserva\UpdateReservaRequest;
+use App\Models\Transacao;
 use App\Services\BreadcrumbService;
 use App\Services\CategoriaDanoService;
 use App\Services\ClienteStripeService;
@@ -21,8 +22,12 @@ use App\Services\MarcaService;
 use App\Services\ModeloService;
 use App\Services\MovimentacaoService;
 use App\Services\OpcionalService;
+use App\Services\Pagamentos\GatewayEmpresaConfigService;
+use App\Services\Pagamentos\GerenciadorDePagamentos;
 use App\Services\PdfService;
+use App\Services\PaisService;
 use App\Services\ReservaService;
+use App\Services\RegraService;
 use App\Services\TipoOpcionalService;
 use App\Services\UsuarioService;
 use App\Services\VeiculoDanoService;
@@ -56,6 +61,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     protected $contratoCheckinService;
     protected $movimentacaoService;
     protected $pdfService;
+    protected $gerenciadorDePagamentos;
+    protected $gatewayEmpresaConfigService;
+    protected $regraService;
+    protected $paisService;
 
     public function __construct(
         ReservaService $reservaService,
@@ -73,7 +82,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         VeiculoDanoService $veiculoDanoService,
         ContratoCheckinService $contratoCheckinService,
         MovimentacaoService $movimentacaoService,
-        PdfService $pdfService
+        PdfService $pdfService,
+        GerenciadorDePagamentos $gerenciadorDePagamentos,
+        GatewayEmpresaConfigService $gatewayEmpresaConfigService,
+        RegraService $regraService,
+        PaisService $paisService
     ) {
         $this->titulo = "Reservas";
         $this->nomeFiltro = 'reserva';
@@ -93,6 +106,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $this->contratoCheckinService = $contratoCheckinService;
         $this->movimentacaoService = $movimentacaoService;
         $this->pdfService = $pdfService;
+        $this->gerenciadorDePagamentos = $gerenciadorDePagamentos;
+        $this->gatewayEmpresaConfigService = $gatewayEmpresaConfigService;
+        $this->regraService = $regraService;
+        $this->paisService = $paisService;
     }
 
     public function index()
@@ -132,6 +149,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function create()
     {
+        $tituloFormulario = 'Cadastro de Reservas';
         $status = [
             'S' => 'Ativo',
             'N' => 'Inativo'
@@ -142,6 +160,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $users = $this->userService->getAllForSelect();
         $estacoes = $this->estacaoService->getAllAtivos();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
+        $modelosAtivos = $this->modeloService->getAllAtivos();
+        $preRequisitosReserva = $this->montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos);
+        $moedaEmpresa = 'BRL';
+        $tiposUsuario = $this->regraService->getAllTiposUsuarios();
+        $paises = $this->paisService->getAllForSelect();
+        $empresaAtual = $this->gatewayEmpresaConfigService->empresaAtual();
+        if ($empresaAtual) {
+            $moedaEmpresa = $this->gatewayEmpresaConfigService->moeda($empresaAtual);
+        }
+        $simboloMoedaEmpresa = $this->simboloMoeda($moedaEmpresa);
 
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
 
@@ -155,13 +183,22 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'users',
             'gruposVeiculo',
             'estacoes',
-            'tiposOpcionais'
+            'preRequisitosReserva',
+            'moedaEmpresa',
+            'simboloMoedaEmpresa',
+            'tiposOpcionais',
+            'tiposUsuario',
+            'paises'
         ))
-            ->with('titulo', $this->titulo);
+            ->with('titulo', $tituloFormulario);
     }
 
     public function store(StoreReservaRequest $request)
     {
+        if ($redirect = $this->validarPreRequisitosReservaOuRedirecionar('create')) {
+            return $redirect;
+        }
+
         // Recebe os dados da reserva em formato JSON
         $reservaData = json_decode($request->reservaHidden);
 
@@ -198,6 +235,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function edit($id)
     {
+        $tituloFormulario = 'Cadastro de Reservas';
         $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto']);
         $reserva->opcionais = $reserva->opcionais->map(function ($opcional) {
             return [
@@ -219,6 +257,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $users = $this->userService->getAllForSelect();
         $estacoes = $this->estacaoService->getAllAtivos();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
+        $modelosAtivos = $this->modeloService->getAllAtivos();
+        $preRequisitosReserva = $this->montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos);
+        $moedaEmpresa = 'BRL';
+        $tiposUsuario = $this->regraService->getAllTiposUsuarios();
+        $paises = $this->paisService->getAllForSelect();
+        $empresaAtual = $this->gatewayEmpresaConfigService->empresaAtual();
+        if ($empresaAtual) {
+            $moedaEmpresa = $this->gatewayEmpresaConfigService->moeda($empresaAtual);
+        }
+        $simboloMoedaEmpresa = $this->simboloMoeda($moedaEmpresa);
 
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
 
@@ -235,7 +283,12 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'users',
             'estacoes',
             'gruposVeiculo',
+            'preRequisitosReserva',
+            'moedaEmpresa',
+            'simboloMoedaEmpresa',
             'tiposOpcionais',
+            'tiposUsuario',
+            'paises',
             'modelos',
             'marcas',
             'segmentos',
@@ -244,11 +297,74 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'status',
             'metodo',
             'rota'
-        ))->with('titulo', $this->titulo);
+        ))->with('titulo', $tituloFormulario);
+    }
+
+    private function montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos): array
+    {
+        $qtdEstacoes = $this->contarItens($estacoes);
+        $qtdGrupos = $this->contarItens($gruposVeiculo);
+        $qtdModelos = $this->contarItens($modelosAtivos);
+
+        $faltas = [];
+        $user = Auth::user();
+        $semPermissaoDeEstacao = $user && !$user->hasAcessoTodasEstacoes() && empty($user->estacoesPermitidasIds());
+
+        if ($semPermissaoDeEstacao) {
+            $faltas[] = 'Seu usuario nao possui estacoes permitidas. Solicite ao administrador acesso a pelo menos uma estacao.';
+        } elseif ($qtdEstacoes <= 0) {
+            $faltas[] = 'Cadastre pelo menos uma estacao ativa para iniciar reservas.';
+        }
+
+        if ($qtdEstacoes > 0 && $qtdGrupos <= 0) {
+            $faltas[] = 'Cadastre pelo menos um grupo de veiculos ativo.';
+        }
+
+        if ($qtdEstacoes > 0 && $qtdGrupos > 0 && $qtdModelos <= 0) {
+            $faltas[] = 'Cadastre pelo menos um modelo ativo para os grupos de veiculos.';
+        }
+
+        return [
+            'qtd_estacoes' => $qtdEstacoes,
+            'qtd_grupos' => $qtdGrupos,
+            'qtd_modelos' => $qtdModelos,
+            'faltas' => $faltas,
+            'pode_reservar' => empty($faltas),
+        ];
+    }
+
+    private function simboloMoeda(string $moeda): string
+    {
+        return match (strtoupper($moeda)) {
+            'USD' => '$',
+            'EUR' => '€',
+            default => 'R$',
+        };
+    }
+
+    private function contarItens($itens): int
+    {
+        if (is_array($itens)) {
+            return count($itens);
+        }
+
+        if (is_object($itens) && method_exists($itens, 'count')) {
+            return (int) $itens->count();
+        }
+
+        if ($itens instanceof \Countable) {
+            return count($itens);
+        }
+
+        return empty($itens) ? 0 : 1;
     }
 
     public function update(UpdateReservaRequest $request, $id)
     {
+        if ($redirect = $this->validarPreRequisitosReservaOuRedirecionar('edit', (int) $id)) {
+            return $redirect;
+        }
+
         // Recebe os dados da reserva em formato JSON
         $reservaData = json_decode($request->reservaHidden);
 
@@ -397,6 +513,31 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ];
     }
 
+    private function validarPreRequisitosReservaOuRedirecionar(string $contexto, ?int $reservaId = null)
+    {
+        $estacoes = $this->estacaoService->getAllAtivos();
+        $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
+        $modelosAtivos = $this->modeloService->getAllAtivos();
+
+        $preRequisitosReserva = $this->montarPreRequisitosReserva($estacoes, $gruposVeiculo, $modelosAtivos);
+        if ($preRequisitosReserva['pode_reservar']) {
+            return null;
+        }
+
+        $faltas = implode(' ', $preRequisitosReserva['faltas']);
+        if ($contexto === 'edit' && $reservaId) {
+            return redirect()
+                ->route('reserva.edit', $reservaId)
+                ->withInput()
+                ->withErrors(['reserva' => trim('Nao foi possivel salvar a reserva. ' . $faltas)]);
+        }
+
+        return redirect()
+            ->route('reserva.create')
+            ->withInput()
+            ->withErrors(['reserva' => trim('Nao foi possivel criar a reserva. ' . $faltas)]);
+    }
+
 
     public function atualizaStatusReservas()
     {
@@ -435,20 +576,28 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     {
         $grupoFrota = $this->grupoFrotaService->getById($request->grupo_frota_id);
 
-
         $modelos = $this->veiculoService->getModelosComVeiculosDisponiveis(
             $request->grupo_frota_id,
             $request->estacao_retirada_id,
             $request->data_inicio,
             $request->data_fim
         );
+        $modelosVinculados = collect($this->grupoFrotaService->getModelosPorGrupoFrota($request->grupo_frota_id));
         $opcionais = $this->grupoFrotaService->getTiposOpcionaisComOpcionais($request->grupo_frota_id);
+        $avisoModelos = null;
+
+        if ($modelos->isEmpty()) {
+            $avisoModelos = $modelosVinculados->isNotEmpty()
+                ? 'Este grupo possui modelos vinculados, mas nao ha veiculos disponiveis para a estacao/data selecionadas.'
+                : 'Este grupo de veiculos ainda nao possui modelos vinculados.';
+        }
 
 
         return response()->json([
             'grupo_frota' => $grupoFrota,
             'modelo' => $modelos,
             'tipo_opcional' => $opcionais,
+            'aviso_modelos' => $avisoModelos,
         ]);
     }
     public function efetuarPagamento($id)
@@ -459,6 +608,19 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return redirect()->route('reserva.show', $id)->with('error', 'Reserva não pode ser paga');
         }
 
+        $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $reserva->empresa_id);
+        if (!$empresa) {
+            return redirect()->route('reserva.show', $id)->with('error', 'Empresa da reserva não encontrada para configuração de pagamento.');
+        }
+
+        $gatewayPadrao = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $moedaPadrao = $this->gatewayEmpresaConfigService->moeda($empresa);
+        $gatewayNome = [
+            'stripe' => 'Stripe',
+            'mercado_livre' => 'Mercado Livre',
+            'paypal' => 'PayPal',
+        ][$gatewayPadrao] ?? strtoupper($gatewayPadrao);
+
         $titulo = "Efetuar Pagamento da Reserva";
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
@@ -468,39 +630,85 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ]);
 
         $user = $this->userService->getById($reserva->user_id);
-        $metodosPagamento = $this->clienteStripeService->getPaymentMethods($user->stripe_id);
+        $metodosPagamento = [];
+        if ($gatewayPadrao === 'stripe' && !empty($user->stripe_id)) {
+            $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
+            if ($stripeSecret !== '') {
+                $metodosPagamento = $this->clienteStripeService->getPaymentMethods($user->stripe_id, $stripeSecret);
+            }
+        }
 
         return view(
             'reserva.efetuar-pagamento',
-            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento')
+            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento', 'gatewayPadrao', 'gatewayNome', 'moedaPadrao')
         );
     }
 
     public function processarPagamento(Request $request, $id)
     {
-        $paymentMethodId = $request->payment_method;
         $reserva = $this->reservaService->getById($id);
-        $valorTotal = $reserva->valor_total_final;
+        $valorTotal = (float) $reserva->valor_total_final;
 
-        $user = $this->userService->getById($reserva->user_id);
-        $charge = $this->clienteStripeService->createCharge($paymentMethodId, $valorTotal, $user->stripe_id);
-
-        if ($charge->status == 'succeeded') {
-            DB::table('reservas')->where('id', $id)->update(['status_reserva_id' => 2, 'pagamento_efetuado' => 'S']);
-            $json = json_encode([
-                'acao' => 'Pagamento efetuado',
-                'valor_total' => $valorTotal,
-                'customer_id' => $charge->customer,
-                'currency' => $charge->currency,
-                'id_pagamento' => $charge->id,
-                'status' => $charge->status,
-                'data_pagamento' => date('Y-m-d H:i:s'),
-            ]);
-            $this->reservaService->adicionaLog($id, $user->id, $json);
-            return redirect()->route('reserva.show', $id)->with('success', 'Pagamento efetuado com sucesso');
-        } else {
-            return redirect()->route('reserva.show', $id)->with('error', 'Pagamento não efetuado');
+        $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $reserva->empresa_id);
+        if (!$empresa) {
+            return redirect()->route('reserva.show', $id)->with('error', 'Empresa da reserva não encontrada para configuração de pagamento.');
         }
+
+        $userReserva = $this->userService->getById($reserva->user_id);
+        $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
+        $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
+
+        if ($gateway === 'stripe' && empty($request->payment_method)) {
+            return redirect()->back()->with('error', 'Selecione um método de pagamento para Stripe.');
+        }
+
+        $payload = array_merge([
+            'reserva_id' => $reserva->id,
+            'valor' => $valorTotal,
+            'currency' => $currency,
+            'payment_method' => (string) $request->input('payment_method', ''),
+            'customer_id' => (string) ($userReserva->stripe_id ?? ''),
+            'descricao' => 'Pagamento da reserva #' . $reserva->id,
+            'payer_email' => (string) ($userReserva->email ?? ''),
+        ], $credenciais);
+
+        $resultado = $this->gerenciadorDePagamentos
+            ->resolver($gateway)
+            ->cobrarPagamento($payload);
+
+        if (($resultado['status'] ?? 'error') !== 'success') {
+            return redirect()->route('reserva.show', $id)->with('error', $resultado['message'] ?? 'Pagamento não efetuado');
+        }
+
+        DB::table('reservas')->where('id', $id)->update(['status_reserva_id' => 2, 'pagamento_efetuado' => 'S']);
+
+        Transacao::create([
+            'user_id' => $reserva->user_id,
+            'pago_por_user_id' => Auth::id(),
+            'reserva_id' => $reserva->id,
+            'valor' => $valorTotal,
+            'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency)),
+            'metodo_pagamento' => $gateway,
+            'gateway_transaction_id' => $resultado['transaction_id'] ?? null,
+            'status' => $resultado['raw_status'] ?? 'success',
+            'info_pagamento' => $resultado,
+        ]);
+
+        $json = json_encode([
+            'acao' => 'Pagamento efetuado',
+            'valor_total' => $valorTotal,
+            'gateway' => $gateway,
+            'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency)),
+            'usuario_pagador_id' => Auth::id(),
+            'customer_id' => $resultado['customer_id'] ?? null,
+            'id_pagamento' => $resultado['transaction_id'] ?? null,
+            'status' => $resultado['raw_status'] ?? 'success',
+            'data_pagamento' => date('Y-m-d H:i:s'),
+        ]);
+        $this->reservaService->adicionaLog($id, (int) Auth::id(), $json);
+
+        return redirect()->route('reserva.show', $id)->with('success', 'Pagamento efetuado com sucesso');
     }
     public function checkin(Request $request, $reserva_id)
     {
@@ -745,3 +953,4 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         return !isset($valor) || is_null($valor) ? '<br>' : $valor;
     }
 }
+

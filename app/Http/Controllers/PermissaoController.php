@@ -77,6 +77,9 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
     public function edit($id)
     {
         $permissao = $this->permissaoService->getById($id);
+        if (!$permissao) {
+            abort(403, 'Sem acesso a esta permissao.');
+        }
         $status = [
             'S' => 'Ativo',
             'N' => 'Inativo'
@@ -90,12 +93,18 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
     public function update(UpdatePermissaoRequest $request, $id)
     {
         $success = $this->permissaoService->update($id,$request->all());
+        if (!$success) {
+            abort(403, 'Sem acesso para editar esta permissao.');
+        }
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function destroy($id)
     {
         $success = $this->permissaoService->delete($id);
+        if (!$success) {
+            abort(403, 'Sem acesso para excluir esta permissao.');
+        }
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -130,12 +139,8 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
     public function obterFiltrosPrincipais()
     {
         return [
-            ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
-                ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
-                ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
-                ['value' => 'N', 'label' => 'Inativo', 'selected' => false]
-            ]]
+            ['name' => 'name', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'guard_name', 'label' => 'Guard', 'type' => 'text', 'typeWhere' => 'like'],
         ];
     }
 

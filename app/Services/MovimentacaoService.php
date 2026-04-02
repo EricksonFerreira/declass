@@ -61,6 +61,37 @@ class MovimentacaoService extends AbstractBaseService
         return $this->model;
     }
 
+    /**
+     * Registra movimentacao inicial ao cadastrar veiculo.
+     *
+     * Mantido para compatibilidade com chamadas existentes em VeiculoService.
+     */
+    public function registraMovimentacaoCadastroVeiculo(array $data, int $veiculo_id): Model
+    {
+        $dataHoraDisponibilidade = $data['data_hora_disponibilidade'] ?? null;
+        $statusMovimentacao = 1; // concluido
+
+        if (!empty($dataHoraDisponibilidade)) {
+            try {
+                $statusMovimentacao = Carbon::parse($dataHoraDisponibilidade)->gt(Carbon::now()) ? 6 : 1;
+            } catch (\Throwable $e) {
+                $statusMovimentacao = 1;
+            }
+        }
+
+        $valor = [
+            'veiculo_id' => $veiculo_id,
+            'tipo_movimentacao_id' => 1, // adicao de veiculo
+            'status_movimentacao_id' => $statusMovimentacao,
+            'local_destino_id' => $data['local_disponibilidade'] ?? null,
+            'data_registro' => Carbon::now(),
+            'observacoes' => $data['observacoes'] ?? 'Cadastro inicial do veiculo',
+            'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
+        ];
+
+        return $this->model->create($valor);
+    }
+
     // /**
     //  * Registra uma movimentação para uma reserva.
     //  *

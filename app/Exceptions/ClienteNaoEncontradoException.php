@@ -6,15 +6,8 @@ use Exception;
 
 class ClienteNaoEncontradoException extends Exception
 {
-    // Definindo o código HTTP adequado
-    protected $code = 400;
-
-    // Mensagem de erro mais detalhada e explicativa
-    protected $message = 'Não foi possível encontrar um cliente com o e-mail fornecido.';
-
-    public function __construct()
+    public function __construct(string $message = 'Cliente não encontrado.', int $code = 404, ?\Throwable $previous = null)
     {
-        parent::__construct($this->message, $this->code);
+        parent::__construct($message, $code, $previous);
     }
 }
-

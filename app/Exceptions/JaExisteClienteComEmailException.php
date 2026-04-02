@@ -6,14 +6,8 @@ use Exception;
 
 class JaExisteClienteComEmailException extends Exception
 {
-    // Definindo o código HTTP adequado
-    protected $code = 400;
-
-    // Mensagem de erro mais detalhada e explicativa
-    protected $message = 'O e-mail fornecido já está associado a um cliente. Por favor, verifique os dados cadastrados.';
-
-    public function __construct()
+    public function __construct(string $message = 'Já existe um cliente cadastrado com este e-mail.', int $code = 409, ?\Throwable $previous = null)
     {
-        parent::__construct($this->message, $this->code);
+        parent::__construct($message, $code, $previous);
     }
 }

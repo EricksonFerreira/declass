@@ -16,6 +16,32 @@
 
     {{-- Navbar right links --}}
     <ul class="navbar-nav ml-auto">
+        @if(Auth::check() && Auth::user()->isAdministrador() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
+            @php
+                $empresaSelecionada = (int) session('empresa_context_id', 0);
+                $empresasMenu = \App\Models\Empresa::query()->orderBy('nome')->pluck('nome', 'id')->toArray();
+            @endphp
+            <li class="nav-item d-flex align-items-center mr-2">
+                <form method="POST" action="{{ route('empresa_context.update') }}" class="mb-0">
+                    @csrf
+                    <select
+                        name="empresa_id"
+                        class="form-control form-control-sm"
+                        style="min-width: 220px;"
+                        onchange="this.form.submit()"
+                        title="Empresa em visualização"
+                    >
+                        <option value="0" {{ $empresaSelecionada === 0 ? 'selected' : '' }}>Todas as empresas</option>
+                        @foreach($empresasMenu as $empresaId => $empresaNome)
+                            <option value="{{ $empresaId }}" {{ $empresaSelecionada === (int) $empresaId ? 'selected' : '' }}>
+                                {{ $empresaNome }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            </li>
+        @endif
+
         {{-- Custom right links --}}
         @yield('content_top_nav_right')
 

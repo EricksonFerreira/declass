@@ -24,16 +24,23 @@ class UpdateRegraRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = auth()->user()?->empresa_id;
+
         return [
             'name' => [
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('roles', 'name')->ignore($this->route('regra')),
+                Rule::unique('roles', 'name')
+                    ->ignore($this->route('regra'))
+                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'guard_name' => 'required|string|max:255',
             'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => [
+                Rule::exists('permissions', 'id')
+                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
 
         ];
     }

@@ -4,88 +4,227 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" />
 @stop
 
 @section('content')
+    @php
+        $origemSelecionada = old('estacao_origem_id', $tempo_entre_entacao->estacao_origem_id ?? null);
+        $destinoSelecionado = old('estacao_destino_id', $tempo_entre_entacao->estacao_destino_id ?? null);
+        $statusSelecionado = old('ativo', $tempo_entre_entacao->ativo ?? null);
+        $tempoSelecionado = old('tempo_deslocamento', $tempo_entre_entacao->tempo_deslocamento ?? '');
+        $opcoesDestino = isset($estacaoDestino) ? $estacaoDestino : [];
+    @endphp
+
     @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button>
-            <h5><i class="icon fas fa-ban"></i> Atenção!</h5>
-            <ul>
-                @foreach ($errors->all() as $error)
+        <div class="alert alert-danger col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12">
+            <ul class="mb-0 pl-3">
+                @foreach (array_unique($errors->all()) as $error)
                     <li>{{ $error }}</li>
                 @endforeach
             </ul>
         </div>
     @endif
-    <div class="col-xl-6 col-lg-8 col-md-8 col-sm-10 col-xs-12 card p-2">
-        <div class="card-body">
-            <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
-                <div class="col-6">
-                    <div class="form-group">
-                        <x-form-select name="estacao_origem_id" label="Estação de Origem" :options="$estacoesOrigem"
-                            placeholder="Selecione uma estação" :selected="isset($tempo_entre_entacao->estacao_origem_id)
-                                ? $tempo_entre_entacao->estacao_origem_id
-                                : null" class="form-control form-control-sm"
-                            required />
-                    </div>
+
+    <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
+        <div class="card card-tempo-estacao shadow-sm border-0">
+            <div class="card-header card-header-tempo-estacao border-0">
+                <div>
+                    <h4 class="mb-1">{{ $titulo }}</h4>
+                    <p class="mb-0 text-muted">Configure o tempo de deslocamento entre estacoes de origem e destino.</p>
                 </div>
-                <div class="col-6">
-                    <div class="form-group">
-                        <x-form-select name="estacao_destino_id" label="Estação de Destino" :options="isset($estacaoDestino) ? $estacaoDestino : []"
-                            placeholder="{{ isset($estacaoDestino) ?  'Seleciona uma estação' :  'Selecione primeiro a estação de destino'  }}"
-                            :selected="isset($tempo_entre_entacao->estacao_destino_id)
-                                ? $tempo_entre_entacao->estacao_destino_id
-                                : null" class="form-control form-control-sm" required />
+            </div>
+
+            <div class="card-body p-4">
+                <form id="formulario-tempo-estacao" method="POST" action="{{ $rota }}">
+                    @if (strtoupper($metodo ?? '') === 'PUT')
+                        @method('PUT')
+                    @endif
+                    @csrf
+
+                    <div class="tempo-estacao-section-title">Informacoes Basicas</div>
+                    <div class="form-row">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group form-group-tempo-estacao">
+                                <x-form-select name="estacao_origem_id" label="Estacao de Origem" :options="$estacoesOrigem"
+                                    placeholder="Selecione uma estacao" :selected="$origemSelecionada"
+                                    class="form-control form-control-sm" required />
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group form-group-tempo-estacao">
+                                <x-form-select name="estacao_destino_id" label="Estacao de Destino" :options="$opcoesDestino"
+                                    placeholder="Selecione uma estacao" :selected="$destinoSelecionado"
+                                    class="form-control form-control-sm" required />
+                            </div>
+                        </div>
+
+                        <div class="col-lg-2 col-md-6">
+                            <div class="form-group form-group-tempo-estacao">
+                                <x-form-input type="time" class="form-control form-control-sm" id="tempo_deslocamento"
+                                    name="tempo_deslocamento" label="Tempo" value="{{ $tempoSelecionado }}" required />
+                            </div>
+                        </div>
+
+                        <div class="col-lg-2 col-md-6">
+                            <div class="form-group form-group-tempo-estacao">
+                                <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione"
+                                    :selected="$statusSelecionado" class="form-control form-control-sm" required />
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="col-4">
-                    <div class="form-group">
-                        <x-form-input type="time" class="form-control form-control-sm" id="tempo_deslocamento"
-                        name="tempo_deslocamento" label="Tempo Deslocamento" value="{{ $tempo_entre_entacao->tempo_deslocamento ?? '' }}" required />
-                    </div>
-                </div>
-                <div class="col-3">
-                    <div class="form-group">
-                        <x-form-select name="ativo" label="Status" :options="$status" placeholder="..."
-                            :selected="isset($tempo_entre_entacao->ativo) && $tempo_entre_entacao->ativo
-                                ? $tempo_entre_entacao->ativo
-                                : null" class="form-control form-control-sm" required />
-                    </div>
-                </div>
-                <button type="submit" class="btn btn-primary btn-xs col-12">
-                    Salvar
-                </button>
-            </x-form>
+
+                    <button type="submit" class="btn btn-primary btn-save-tempo-estacao col-12 mt-2">
+                        Salvar
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 @stop
 
+@section('css')
+<style>
+    .card-tempo-estacao {
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .card-header-tempo-estacao {
+        background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
+        padding: 1.1rem 1.5rem;
+    }
+
+    .card-header-tempo-estacao h4 {
+        color: #0f2740;
+        font-weight: 700;
+    }
+
+    .tempo-estacao-section-title {
+        font-size: .96rem;
+        font-weight: 700;
+        color: #21364f;
+        letter-spacing: .02em;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5eaf2;
+        margin-bottom: 10px;
+    }
+
+    .form-group-tempo-estacao {
+        margin-bottom: 1rem;
+    }
+
+    .card-tempo-estacao .form-control,
+    .card-tempo-estacao .form-select {
+        border-radius: 10px;
+        border-color: #d8e1ec;
+        min-height: 38px;
+    }
+
+    .card-tempo-estacao .form-control:focus,
+    .card-tempo-estacao .form-select:focus {
+        border-color: #4b80ff;
+        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
+    }
+
+    .btn-save-tempo-estacao {
+        border-radius: 10px;
+        font-weight: 600;
+        padding-top: .58rem;
+        padding-bottom: .58rem;
+    }
+
+    @media (max-width: 991.98px) {
+        .card-header-tempo-estacao {
+            padding: .95rem 1rem;
+        }
+
+        .card-body {
+            padding: 1rem !important;
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .col-xl-10.col-lg-11.col-md-12.col-sm-12.col-xs-12.px-0 {
+            padding-left: .5rem !important;
+            padding-right: .5rem !important;
+        }
+
+        .card-header-tempo-estacao h4 {
+            font-size: 1.1rem;
+            line-height: 1.35;
+        }
+
+        .card-header-tempo-estacao p {
+            font-size: .85rem;
+        }
+
+        .tempo-estacao-section-title {
+            font-size: .9rem;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .card-header-tempo-estacao {
+            padding: .85rem .85rem;
+        }
+
+        .card-body {
+            padding: .85rem !important;
+        }
+
+        .form-group-tempo-estacao {
+            margin-bottom: .8rem;
+        }
+
+        .card-tempo-estacao .form-control,
+        .card-tempo-estacao .form-select {
+            min-height: 36px;
+            font-size: 13px;
+        }
+    }
+</style>
+@stop
+
 @section('js')
     <script>
-        // ao selecionar eswtacao de origem, carrega as estações de destino
-        $('select[name="estacao_origem_id"]').on('change', function() {
-            var estacao_origem = $(this).val();
-            if (estacao_origem) {
+        $(function () {
+            const $origem = $('select[name="estacao_origem_id"]');
+            const $destino = $('select[name="estacao_destino_id"]');
+            const destinoInicial = @json($destinoSelecionado);
+
+            function carregarDestinos(estacaoOrigemId, destinoParaSelecionar = null) {
+                if (!estacaoOrigemId) {
+                    $destino.empty().append('<option value="">Selecione uma estacao</option>');
+                    return;
+                }
+
                 $.ajax({
                     url: "{{ route('estacao.getEstacoesDisponiveis') }}",
-                    type: "GET",
-                    data: {
-                        estacao_origem_id: estacao_origem
-                    },
-                    success: function(data) {
-                        $('select[name="estacao_destino_id"]').empty();
-                        $('select[name="estacao_destino_id"]').append('<option value="">Selecione uma estação</option>');
-                        $.each(data, function(key, value) {
-                            $('select[name="estacao_destino_id"]').append('<option value="' + value.id + '">' + value.nome + '</option>');
+                    type: 'GET',
+                    data: { estacao_origem_id: estacaoOrigemId },
+                    success: function (data) {
+                        $destino.empty();
+                        $destino.append('<option value="">Selecione uma estacao</option>');
+
+                        $.each(data, function (_, value) {
+                            $destino.append('<option value="' + value.id + '">' + value.nome + '</option>');
                         });
+
+                        if (destinoParaSelecionar) {
+                            $destino.val(String(destinoParaSelecionar));
+                        }
                     }
                 });
-            } else {
-                $('select[name="estacaoDestino"]').empty();
+            }
+
+            $origem.on('change', function () {
+                carregarDestinos($(this).val(), null);
+            });
+
+            if ($origem.val() && ($destino.find('option').length <= 1 || destinoInicial)) {
+                carregarDestinos($origem.val(), destinoInicial);
             }
         });
-
     </script>
 @stop

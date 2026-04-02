@@ -12,10 +12,10 @@ class PagamentoController extends Controller
 {
     protected $gerenciadorDePagamentos;
 
-    // public function __construct(GerenciadorDePagamentos $gerenciadorDePagamentos)
-    // {
-    //     $this->gerenciadorDePagamentos = $gerenciadorDePagamentos;
-    // }
+    public function __construct(GerenciadorDePagamentos $gerenciadorDePagamentos)
+    {
+        $this->gerenciadorDePagamentos = $gerenciadorDePagamentos;
+    }
 
     public function teste2()
     {
@@ -30,9 +30,11 @@ class PagamentoController extends Controller
 
     public function cobrar(CobrarPagamentoRequest $cobrarPagamentoRequest)
     {
+        $gateway = $cobrarPagamentoRequest->gateway ?: $this->gerenciadorDePagamentos->resolverGatewayPadraoDaEmpresa();
+        $gateway = $this->gerenciadorDePagamentos->normalizarGateway($gateway);
 
         $resultado = $this->gerenciadorDePagamentos
-            ->resolver($cobrarPagamentoRequest->gateway)
+            ->resolver($gateway)
             ->cobrarPagamento($cobrarPagamentoRequest->all());
 
 
@@ -40,7 +42,7 @@ class PagamentoController extends Controller
             Transacao::create([
                 'reserva_id' => $cobrarPagamentoRequest->reserva_id,
                 'valor' => $cobrarPagamentoRequest->valor,
-                'metodo_pagamento' => $cobrarPagamentoRequest->gateway,
+                'metodo_pagamento' => $gateway,
                 'status' => 'Completa',
             ]);
 

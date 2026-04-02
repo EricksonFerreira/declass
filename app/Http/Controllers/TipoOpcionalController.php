@@ -21,7 +21,7 @@ class TipoOpcionalController extends BaseController implements FiltroInterface, 
 
     public function __construct(TipoOpcionalService $tipo_opcionalService, BreadcrumbService $breadcrumbService)
     {
-        $this->titulo = "TipoOpcionals";
+        $this->titulo = "Tipos de Opcionais";
         $this->nomeFiltro = 'tipo_opcional';
         $this->tipo_opcionalService = $tipo_opcionalService;
         $this->breadcrumbService = $breadcrumbService;
@@ -36,7 +36,7 @@ class TipoOpcionalController extends BaseController implements FiltroInterface, 
 
         $tipo_opcionals = $this->tipo_opcionalService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('TipoOpcionals');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Tipos de Opcionais');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -61,7 +61,7 @@ class TipoOpcionalController extends BaseController implements FiltroInterface, 
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('TipoOpcionals','tipo_opcional.index','Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Tipos de Opcionais','tipo_opcional.index','Criar');
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
         return view('tipo_opcional.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
@@ -81,7 +81,7 @@ class TipoOpcionalController extends BaseController implements FiltroInterface, 
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('TipoOpcionals','tipo_opcional.index',"Editar: $tipo_opcional->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Tipos de Opcionais','tipo_opcional.index',"Editar: $tipo_opcional->nome");
         [$metodo,$rota] = $this->getFormMethodAndRoute($tipo_opcional);
 
         return view('tipo_opcional.add-edit', compact('tipo_opcional','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);

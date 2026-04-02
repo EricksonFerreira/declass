@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\EmpresaContextController;
 use App\Http\Controllers\TipoTransacaoController;
 use App\Http\Controllers\StripeController;
 use Illuminate\Support\Facades\Route;
@@ -13,11 +14,17 @@ use Illuminate\Support\Facades\Route;
 // Crypto
 use App\Http\Controllers\Crypto\BinanceController;
 
+
+Route::get('/cadastro/sucesso', function () {
+    return view('auth.register-success');
+})->name('register.success');
+
 Route::get('/', function () {
     return redirect()->route('home');
 });
 
 Route::get('home',[HomeController::class,'home'])->middleware(['auth', 'verified'])->name('home');
+Route::get('home/chart-data',[HomeController::class,'chartData'])->middleware(['auth', 'verified'])->name('home.chart-data');
 
 Route::post('tipotransacao/setperpage',[TipoTransacaoController::class,'setPerPage'])->name('tipotransacao.setPerPage');
 Route::get('tipotransacao/removerfiltro',[TipoTransacaoController::class,'removerFiltro']);
@@ -56,11 +63,11 @@ Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware(['aut
 //     return view('dashboard');
 // })->middleware(['auth', 'verified'])->name('home');
 
-// Route::middleware('auth')->group(function () {
-//     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-//     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-//     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-// });
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::get('/profile/senha', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
+    Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+});
 
 require __DIR__.'/auth.php';
 
@@ -79,6 +86,12 @@ Route::middleware('auth')
 
 Route::middleware('auth')
     ->group(function() {
+        require base_path('routes/grupos/tipo_usuario.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
         require base_path('routes/grupos/permissao.php');
 
 });
@@ -88,6 +101,29 @@ Route::middleware('auth')
     ->group(function() {
         require base_path('routes/grupos/usuario.php');
 
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/empresa.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/replicacao_base.php');
+
+});
+
+Route::middleware('auth')
+    ->group(function() {
+        require base_path('routes/grupos/financeiro.php');
+
+});
+
+Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function () {
+    Route::get('empresa-contexto', [EmpresaContextController::class, 'edit'])->name('empresa_context.edit');
+    Route::post('empresa-contexto', [EmpresaContextController::class, 'update'])->name('empresa_context.update');
 });
 
 Route::middleware('auth')

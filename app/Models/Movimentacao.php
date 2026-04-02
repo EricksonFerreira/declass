@@ -20,6 +20,9 @@ class Movimentacao extends Model
         'status_movimentacao_id',
         'reserva_id',
         'data_registro',
+        'data_saida',
+        'data_chegada_prevista',
+        'data_chegada_real',
         'observacoes',
         'user_id',
     ];

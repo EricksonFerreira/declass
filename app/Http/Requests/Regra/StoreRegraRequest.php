@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Regra;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreRegraRequest extends FormRequest
 {
@@ -22,12 +23,22 @@ class StoreRegraRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = auth()->user()?->empresa_id;
 
         return [
-            'name' => 'required|string|max:255|unique:roles,name,' . $this->route('role'),
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('roles', 'name')
+                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
             'guard_name' => 'required|string|max:255',
             'permissions' => 'array',
-            'permissions.*' => 'exists:permissions,id',
+            'permissions.*' => [
+                Rule::exists('permissions', 'id')
+                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
         ];
     }
 

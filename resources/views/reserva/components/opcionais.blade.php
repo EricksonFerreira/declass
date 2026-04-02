@@ -1,308 +1,460 @@
+@php
+    $selecionadosPorId = [];
+
+    if (!empty($opcionaisSelecionados) && is_iterable($opcionaisSelecionados)) {
+        foreach ($opcionaisSelecionados as $itemSelecionado) {
+            $idSelecionado = (int) data_get($itemSelecionado, 'id', 0);
+            if ($idSelecionado <= 0) {
+                continue;
+            }
+
+            $quantidadeSelecionada = (int) data_get(
+                $itemSelecionado,
+                'quantidade',
+                data_get($itemSelecionado, 'pivot.quantidade', 1)
+            );
+
+            $selecionadosPorId[$idSelecionado] = max(0, $quantidadeSelecionada);
+        }
+    }
+@endphp
+
 <style>
-    .disabled {
-        pointer-events: none;
-        opacity: 0.5;
+    .opcionais-modern {
+        width: 100%;
+        margin-top: 2px;
     }
 
-    .btn-xs {
-        font-size: 10px;
+    .opcional-grupo {
+        border: 1px solid color-mix(in srgb, var(--empresa-cor-terciaria, #64748b) 28%, #d9e3ef 72%);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        background: #fff;
+        box-shadow: 0 4px 18px rgba(15, 23, 42, .05);
     }
 
-    .activated {
-        background-color: #34495e;
-        color: #ffffff;
+    .opcional-grupo__header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 12px;
+        background: linear-gradient(
+            120deg,
+            color-mix(in srgb, var(--empresa-cor-primaria, #0f172a) 86%, #000 14%) 0%,
+            color-mix(in srgb, var(--empresa-cor-terciaria, #1e293b) 86%, #000 14%) 100%
+        );
+        color: #fff;
     }
 
-    .activated>.row>.col>.detalhes {
-        color: #f39c12 !important;
+    .opcional-grupo__title {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: .94rem;
+        font-weight: 700;
     }
 
-    .activated>.row>.botoes>.btn {
-        background: #fff !important;
+    .opcional-grupo__count {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid rgba(255, 255, 255, .35);
+        border-radius: 999px;
+        padding: 2px 9px;
+        font-size: .72rem;
+        font-weight: 700;
+        background: rgba(255, 255, 255, .08);
     }
 
-    .activated>.row>.botoes>.btn:hover {
-        background: #9d9d9d !important;
+    .opcional-grupo__body {
+        padding: 8px;
     }
 
-    .texto_detalhe {
-        font-weight: bold;
-        font-size: 11px;
-        color: #7f8c8d;
+    .opcional-item {
+        border: 1px solid #dce5f1;
+        border-radius: 10px;
+        padding: 8px 10px;
+        background: #fff;
+        transition: all .16s ease;
+    }
+
+    .opcional-item + .opcional-item {
+        margin-top: 8px;
+    }
+
+    .opcional-item.activated {
+        border-color: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 45%, #88a7d0 55%);
+        background: color-mix(in srgb, var(--empresa-cor-primaria, #eff6ff) 7%, #ffffff 93%);
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 18%, transparent 82%);
+    }
+
+    .opcional-item__main {
+        display: grid;
+        grid-template-columns: minmax(180px, 1.5fr) minmax(120px, .9fr) auto;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .opcional-item__name {
+        font-size: .88rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+        word-break: break-word;
+    }
+
+    .opcional-item__details {
+        margin-top: 3px;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        border: 0;
+        background: transparent;
+        color: #64748b;
+        font-size: .74rem;
+        font-weight: 700;
+        padding: 0;
         cursor: pointer;
     }
 
-    .titulo_opcional {
-        font-weight: bold;
-        font-size: 13px
+    .opcional-item__details:hover {
+        color: var(--empresa-cor-primaria, #2563eb);
+    }
+
+    .opcional-price {
+        display: inline-flex;
+        align-items: center;
+        border: 1px solid #d6e3f3;
+        border-radius: 999px;
+        padding: 5px 10px;
+        color: #1e293b;
+        background: #f8fbff;
+        white-space: nowrap;
+    }
+
+    .opcional-price__value {
+        font-size: .78rem;
+        font-weight: 800;
+    }
+
+    .opcional-price__type {
+        margin-left: 4px;
+        font-size: .68rem;
+        font-weight: 700;
+        color: #64748b;
+        text-transform: lowercase;
+    }
+
+    .opcional-item__actions {
+        display: inline-flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 6px;
+        min-width: 150px;
+    }
+
+    .opcional-action-btn {
+        min-width: 102px;
+        border-radius: 8px;
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .03em;
+        padding: 6px 9px;
+    }
+
+    .opcional-stepper {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: 1px solid #d7e2ef;
+        border-radius: 10px;
+        padding: 3px;
+        background: #f8fbff;
+    }
+
+    .opcional-stepper .btn {
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        padding: 0;
+        line-height: 1;
+        font-size: .95rem;
+        font-weight: 700;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .opcional-stepper__value {
+        min-width: 20px;
+        text-align: center;
+        font-size: .84rem;
+        font-weight: 800;
+        color: #1e293b;
+    }
+
+    .opcional-item__description {
+        display: none;
+        margin-top: 8px;
+        padding-top: 8px;
+        border-top: 1px dashed #d8e3ef;
+        font-size: .76rem;
+        color: #475569;
+    }
+
+    .opcional-item__description i {
+        margin-right: 6px;
+        color: #64748b;
+    }
+
+    .opcional-empty {
+        width: 100%;
+        border: 1px dashed #bdd0e7;
+        border-radius: 12px;
+        background: #f8fbff;
+        color: #4b5563;
+        font-size: .84rem;
+        font-weight: 600;
+        padding: 14px 12px;
+        text-align: center;
+    }
+
+    .disabled {
+        pointer-events: none;
+        opacity: .45;
+    }
+
+    @media (max-width: 991px) {
+        .opcional-item__main {
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+
+        .opcional-item__actions {
+            justify-content: flex-start;
+            min-width: 0;
+        }
+
+        .opcional-price {
+            width: fit-content;
+        }
     }
 </style>
-<div class="col-md-12">
-    <div class="">
-        @foreach ($tiposOpcionais as $tipoOpcional)
-            @if (count($tipoOpcional['opcionais']) > 0)
-                <h3 class="col-md-12 mt-1" style="font-size:18px;font-weight:600">{{ $tipoOpcional['tipo']->nome }}</h3>
-                <ul class="list-group option-animate col-md-12">
-                    @if (isset($tipoOpcional['opcionais']) && count($tipoOpcional['opcionais']) > 0)
-                        @foreach ($tipoOpcional['opcionais'] as $opcional)
-                            <li class="list-group-item py-1 d-flex flex-column @if(in_array($opcional->id,  array_column($opcionaisSelecionados, 'id'))) activated @endif" id="list_opcional{{ $opcional->id }}">
-                                <div class="row">
 
-                                    <div class="col-md-3 Titulo">
-                                        <span class="titulo_opcional"
-                                            id="{{ $opcional->id }}_nome">{{ $opcional->nome }}</span>
-                                    </div>
-                                    <div class="d-flex justify-content-around col">
-                                        <div class="valor_diario" style="font-size: 12px">
-                                          @if($opcional->tipo_cobranca == "por_dia")
-                                            € {{ $opcional->preco_por_dia }} <span style="font-size: 10px">/por dia</span>
-                                          @else
-                                            € {{ $opcional->preco_integral }} <span style="font-size: 10px">/integral</span>
-                                          @endif
+<div class="opcionais-modern">
+    @php $exibiuAlgumGrupo = false; @endphp
 
-                                            {{-- € 10 <span style="font-size: 10px">/por dia</span> --}}
-                                        </div>
-                                        <div class="valor_total" class="titulo_opcional">
-                                            {{-- € 40 --}}
-                                        </div>
-                                        <div class="detalhes d-flex align-items-center texto_detalhe">
-                                            <a onclick="toggleDescCard('opcional{{ $opcional->id }}')">
-                                                Detalhes <i class="	fa fa-arrow-circle-down"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <input type="hidden" id="opcional{{ $opcional->id }}_input"
-                                        name="opcional[{{ $opcional->id }}]">
-                                    @if ($opcional->tipo_cobranca == 'valor_integral')
-                                        @if(in_array($opcional->id, array_column($opcionaisSelecionados, 'id')))
-                                        <div class="botoes col-md-2" style="text-align:center">
-                                            <a class="btn btn-xs btn-outline-dark"
-                                                id="modificaEstadoopcional{{ $opcional->id }}" style="width: 70%"
-                                                onclick="modificaEstado('opcional{{ $opcional->id }}')">REMOVER</a>
+    @foreach ($tiposOpcionais as $tipoOpcional)
+        @php
+            $opcionaisDoTipo = $tipoOpcional['opcionais'] ?? [];
+            $totalOpcionaisTipo = is_countable($opcionaisDoTipo) ? count($opcionaisDoTipo) : 0;
+        @endphp
 
-                                        </div>
-                                        @else
-                                        <div class="botoes col-md-2" style="text-align:center">
-                                            <a class="btn btn-xs btn-dark"
-                                                id="modificaEstadoopcional{{ $opcional->id }}" style="width: 70%"
-                                                onclick="modificaEstado('opcional{{ $opcional->id }}')">ADICIONAR</a>
+        @if ($totalOpcionaisTipo > 0)
+            @php $exibiuAlgumGrupo = true; @endphp
+            <section class="opcional-grupo">
+                <div class="opcional-grupo__header">
+                    <div class="opcional-grupo__title">
+                        <i class="fas fa-tags"></i>
+                        <span>{{ $tipoOpcional['tipo']->nome }}</span>
+                    </div>
+                    <span class="opcional-grupo__count">{{ $totalOpcionaisTipo }} itens</span>
+                </div>
 
-                                        </div>
-                                        @endif
+                <div class="opcional-grupo__body">
+                    @foreach ($opcionaisDoTipo as $opcional)
+                        @php
+                            $idOpcional = (int) $opcional->id;
+                            $quantidadeSelecionada = (int) ($selecionadosPorId[$idOpcional] ?? 0);
+                            $estaAtivo = $quantidadeSelecionada > 0;
+                            $cobrancaPorDia = $opcional->tipo_cobranca === 'por_dia';
+                            $valorExibicao = $cobrancaPorDia ? (float) $opcional->preco_por_dia : (float) $opcional->preco_integral;
+                            $sufixoCobranca = $cobrancaPorDia ? '/por dia' : '/integral';
+                        @endphp
+
+                        <article id="list_opcional{{ $idOpcional }}" class="opcional-item {{ $estaAtivo ? 'activated' : '' }}">
+                            <div class="opcional-item__main">
+                                <div>
+                                    <div class="opcional-item__name" id="{{ $idOpcional }}_nome">{{ $opcional->nome }}</div>
+                                    <button type="button" class="opcional-item__details" onclick="toggleDescCard('opcional{{ $idOpcional }}')">
+                                        <span>Detalhes</span>
+                                        <i class="fas fa-chevron-down"></i>
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <span class="opcional-price">
+                                        <span class="opcional-price__value" data-valor="{{ $valorExibicao }}">
+                                            {{ number_format($valorExibicao, 2, ',', '.') }}
+                                        </span>
+                                        <span class="opcional-price__type">{{ $sufixoCobranca }}</span>
+                                    </span>
+                                </div>
+
+                                <div class="opcional-item__actions">
+                                    <input type="hidden" id="opcional{{ $idOpcional }}_input" name="opcional[{{ $idOpcional }}]" value="{{ $quantidadeSelecionada }}">
+
+                                    @if (!$cobrancaPorDia)
+                                        <button
+                                            type="button"
+                                            class="btn opcional-action-btn {{ $estaAtivo ? 'btn-outline-dark' : 'btn-dark' }}"
+                                            id="modificaEstadoopcional{{ $idOpcional }}"
+                                            onclick="modificaEstado('opcional{{ $idOpcional }}')"
+                                        >
+                                            {{ $estaAtivo ? 'REMOVER' : 'ADICIONAR' }}
+                                        </button>
                                     @else
-                                        <div class="botoes col-md-2" style="text-align:center">
-                                            <div>
-                                                <a onclick="decrement('opcional{{ $opcional->id }}')"
-                                                    class="btn btn-sm btn-dark"
-                                                    id="decrementopcional{{ $opcional->id }}">-</a>
+                                        <div class="opcional-stepper">
+                                            <button
+                                                type="button"
+                                                class="btn btn-dark {{ $quantidadeSelecionada <= 0 ? 'disabled' : '' }}"
+                                                id="decrementopcional{{ $idOpcional }}"
+                                                onclick="decrement('opcional{{ $idOpcional }}')"
+                                            >
+                                                -
+                                            </button>
 
-                                                <span id="valueopcional{{ $opcional->id }}">
-                                                {{ in_array($opcional->id,  array_column($opcionaisSelecionados, 'id')) ? $opcionaisSelecionados[array_search($opcional->id, array_column($opcionaisSelecionados, 'id'))]['quantidade'] : 0 }}
-                                                </span>
-                                                <a onclick="increment('opcional{{ $opcional->id }}')"
-                                                    class="btn btn-sm btn-dark"
-                                                    id="incrementopcional{{ $opcional->id }}">+</a>
-                                                <input type="hidden" id="max_accepted_qtyopcional{{ $opcional->id }}"
-                                                    name="max_accepted_qtyopcional{{ $opcional->id }}" value="2">
-                                            </div>
+                                            <span class="opcional-stepper__value" id="valueopcional{{ $idOpcional }}">{{ $quantidadeSelecionada }}</span>
+
+                                            <button
+                                                type="button"
+                                                class="btn btn-dark"
+                                                id="incrementopcional{{ $idOpcional }}"
+                                                onclick="increment('opcional{{ $idOpcional }}')"
+                                            >
+                                                +
+                                            </button>
+
+                                            <input type="hidden" id="max_accepted_qtyopcional{{ $idOpcional }}" name="max_accepted_qtyopcional{{ $idOpcional }}" value="2">
                                         </div>
                                     @endif
                                 </div>
-                                <div id="desc_card_opcional{{ $opcional->id }}" class="desc_card"
-                                    style="font-size: 10px;display:none">
-                                    <hr style="opacity: 0.1; margin: 4px 0px 0px 0px;">
-                                    <b>Descrição: <br></b>
-                                    {{$opcional->descricao}}
+                            </div>
 
-                                </div>
-                            </li>
-                        @endforeach
-                    @endif
-                </ul>
-            @endif
-        @endforeach
-    </div>
+                            <div id="desc_card_opcional{{ $idOpcional }}" class="opcional-item__description desc_card">
+                                <i class="far fa-file-alt"></i>
+                                {{ $opcional->descricao ?: 'Sem descricao informada para este opcional.' }}
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+            </section>
+        @endif
+    @endforeach
+
+    @if (!$exibiuAlgumGrupo)
+        <div class="opcional-empty">
+            Nenhum opcional disponivel para o grupo selecionado.
+        </div>
+    @endif
 </div>
 
-{{-- Opcionais --}}
 <script>
     $(document).ready(function() {
         const tiposOpcionais = {!! isset($tiposOpcionais) ? json_encode($tiposOpcionais) : '[]' !!};
-        // console.log("tiposOpcionais", tiposOpcionais)
-        if(tiposOpcionais.length > 0){
-             tiposOpcionais.forEach(tipoOpcional => {
-          //      console.log("tipoOpcional", tipoOpcional)
-                if(tipoOpcional.opcionais.length > 0){
-                    tipoOpcional.opcionais.forEach(opcional => {
-            //            console.log(opcional)
-                    addOpcional(opcional)
-                    });
-                }
-             });
 
-         }
-//         console.log(getOpcionais())
+        if (typeof removeAllOpcional === 'function') {
+            removeAllOpcional();
+        }
+
+        if (Array.isArray(tiposOpcionais) && tiposOpcionais.length > 0) {
+            tiposOpcionais.forEach(function(tipoOpcional) {
+                if (!tipoOpcional || !Array.isArray(tipoOpcional.opcionais)) {
+                    return;
+                }
+
+                tipoOpcional.opcionais.forEach(function(opcional) {
+                    addOpcional(opcional);
+                });
+            });
+        }
+
+        formatarPrecosOpcionais();
     });
 
+    function formatarPrecosOpcionais() {
+        if (typeof formatarMoeda !== 'function') {
+            return;
+        }
+
+        $('.opcional-price__value').each(function() {
+            const valor = Number($(this).data('valor'));
+            $(this).text(formatarMoeda(Number.isFinite(valor) ? valor : 0));
+        });
+    }
+
     function toggleDescCard(code) {
-        $('#desc_card_' + code).toggle();
+        $('#desc_card_' + code).stop(true, true).slideToggle(120);
     }
 
     function modificaEstado(id) {
-        var botaoElemento = $("#modificaEstado" + id);
-        var valor;
-        const id_opcional = id.replace('opcional', '')
+        const botaoElemento = $('#modificaEstado' + id);
+        const idOpcional = id.replace('opcional', '');
+        const opcionalCard = $('#list_' + id);
 
-        if (botaoElemento.text() == 'ADICIONAR') {
-            botaoElemento.text("REMOVER");
-            botaoElemento.addClass("btn-outline-dark");
-            botaoElemento.removeClass("btn-dark");
-            $('#list_' + id).addClass('activated');
-            valor = 'REMOVER';
-
-            addOpcionalReserva(id_opcional, true)
+        if (botaoElemento.text().trim() === 'ADICIONAR') {
+            botaoElemento.text('REMOVER');
+            botaoElemento.addClass('btn-outline-dark').removeClass('btn-dark');
+            opcionalCard.addClass('activated');
+            addOpcionalReserva(idOpcional, true);
         } else {
-            botaoElemento.text("ADICIONAR");
-            botaoElemento.removeClass("btn-outline-dark");
-            botaoElemento.addClass("btn-dark");
-            $('#list_' + id).removeClass('activated');
-            valor = 'ADICIONAR';
-
-            removeOpcionalReserva(id_opcional)
-        }
-        val = valor == 'ADICIONAR' ? false : true;
-
-
-        //  modificaOptional(id, val, false)
-atualizarMinhaReserva()
-
-
-    }
-
-    function getItemListaOpcionalReserva(opcional, valor) {
-        const quantidade = opcional.tipo_cobranca == "por_dia" ? valor : 1;
-        const valorOpcional = opcional.tipo_cobranca == "por_dia" ? quantidade * opcional.preco_por_dia : opcional
-            .preco_integral;
-
-        return `
-                    <li id="li_card_reserva_opcional${opcional.id}" class="d-flex px-3" style="border-bottom: 1px solid #9d9c9c4d;">
-                <div class="col d-flex align-items-center" style="justify-content:left">
-                    <strong>${opcional.nome}</strong> <span class="badge badge-secondary"
-                        style="padding:3px;font-size:8px;background:#7f8c8d">${quantidade}x</span>
-                </div>
-                <div class="col-md-6 d-flex align-items-center" style="justify-content:right">
-                    € ${valorOpcional}</div>
-
-            </li>
-`;
-    }
-
-    function modificaOptional(code, valor, isQuantidade = true) {
-        // Incrementa ou adiciona no input hide
-        $('#' + code + '_input').val(valor)
-
-        // Adiciona o item e o valor no card lateral
-        // $('#minhaReserva_opcionals_ul').html('')
-
-        const id = code.replace('opcional', '')
-        const opcional = window.opcionaisGlobais.filter(opcional => opcional.id == parseInt(id))[0];
-
-        adicionarOpcionalNaLista(opcional, valor)
-        atualizaValorTotalReserva()
-        // console.log(window.opcionaisSelecionados)
-atualizarMinhaReserva()
-
-    }
-    function atualizaValorTotalReserva(){
-        let valorTotal = 0;
-        window.opcionaisSelecionados.forEach(opcional => {
-            const opcionalSelecionado = window.opcionaisGlobais.filter(opcionalG => opcionalG.id == opcional.opcional_id)[0];
-            const valorOpcional = opcionalSelecionado.tipo_cobranca == "por_dia" ? opcional.quantidade * opcionalSelecionado.preco_por_dia : opcionalSelecionado.preco_integral;
-            valorTotal += valorOpcional;
-        });
-
-        $('#valor_total_reserva').text(valorTotal);
-    }
-
-    function adicionarOpcionalNaLista(opcional, valor) {
-        // Verificar se existe algum elemento com o ID específico
-        let existeElemento = $(`#li_card_reserva_opcional${opcional.id}`).length > 0;
-
-        // Caso o elemento exista, remova-o
-        if (existeElemento) {
-            window.opcionaisSelecionados = window.opcionaisSelecionados.filter(opcionalSelecionado => opcionalSelecionado.opcional_id != opcional.id);
-            $(`#li_card_reserva_opcional${opcional.id}`).remove();
+            botaoElemento.text('ADICIONAR');
+            botaoElemento.removeClass('btn-outline-dark').addClass('btn-dark');
+            opcionalCard.removeClass('activated');
+            removeOpcionalReserva(idOpcional);
         }
 
-        if(valor == 0 || valor == false) {
-            console.log("Removendo opcional", opcional.id)
-            $(`#li_card_reserva_opcional${opcional.id}`).remove();
-            window.opcionaisSelecionados = window.opcionaisSelecionados.filter(opcionalSelecionado => opcionalSelecionado.opcional_id != opcional.id);
-            return;
-        }
-        console.log("Adicionando opcional", opcional)
-        addOpcionalReserva(opcional.id, opcional.nome, valor);
-
-        // Adicionar o novo elemento à lista
-        $('#minhaReserva_opcionals_ul').append(getItemListaOpcionalReserva(opcional, valor));
+        atualizarMinhaReserva();
     }
 
     function increment(id) {
-        var valueElement = $('#value' + id);
-        var incrementButton = $('#increment' + id);
-        var decrementButton = $('#decrement' + id);
-        var countMaxIncrement = $('#max_accepted_qty' + id);
-        var value = parseInt(valueElement.text(), 10);
-        novoValor = value + 1;
-//        console.log("increment -> countMaxIncrement.val()" ,countMaxIncrement.val())
+        const valueElement = $('#value' + id);
+        const incrementButton = $('#increment' + id);
+        const decrementButton = $('#decrement' + id);
+        const countMaxIncrement = $('#max_accepted_qty' + id);
+        const value = parseInt(valueElement.text(), 10) || 0;
+        const novoValor = value + 1;
 
         incrementButton.removeClass('disabled');
         decrementButton.removeClass('disabled');
 
-        if (countMaxIncrement.val() >= novoValor) {
+        if (parseInt(countMaxIncrement.val(), 10) >= novoValor) {
             valueElement.text(novoValor);
             $('#list_' + id).addClass('activated');
-            if (countMaxIncrement.val() == novoValor) {
-                $('#list_' + id).addClass('activated');
+
+            if (parseInt(countMaxIncrement.val(), 10) === novoValor) {
                 incrementButton.addClass('disabled');
-            }
-            if (novoValor === 0) {
-                $('#list_' + id).removeClass('activated');
-                decrementButton.removeClass('disabled');
             }
         }
 
-        id_opcional = id.replace('opcional', '')
-        addOpcionalReserva(id_opcional, novoValor)
-        atualizarMinhaReserva()
-      //  console.log(id, novoValor)
-        // addOpcional(id, novoValor)
-
-        // modificaOptional(id, novoValor)
+        const idOpcional = id.replace('opcional', '');
+        addOpcionalReserva(idOpcional, novoValor);
+        atualizarMinhaReserva();
     }
 
     function decrement(id) {
-        var valueElement = $('#value' + id);
-        var incrementButton = $('#increment' + id);
-        var decrementButton = $('#decrement' + id);
-        var value = parseInt(valueElement.text(), 10);
+        const valueElement = $('#value' + id);
+        const incrementButton = $('#increment' + id);
+        const decrementButton = $('#decrement' + id);
+        const value = parseInt(valueElement.text(), 10) || 0;
 
         incrementButton.removeClass('disabled');
         decrementButton.removeClass('disabled');
-        novoValor = 0;
+
+        let novoValor = 0;
         if (value > 0) {
             novoValor = value - 1;
             valueElement.text(novoValor);
-            incrementButton.removeClass('disabled');
+
             if (novoValor === 0) {
                 $('#list_' + id).removeClass('activated');
                 decrementButton.addClass('disabled');
             }
         }
 
-        id_opcional = id.replace('opcional', '')
-        removeOpcionalReserva(id_opcional)
-        atualizarMinhaReserva()
-        // modificaOptional(id, novoValor)
+        const idOpcional = id.replace('opcional', '');
+        removeOpcionalReserva(idOpcional);
+        atualizarMinhaReserva();
     }
 </script>

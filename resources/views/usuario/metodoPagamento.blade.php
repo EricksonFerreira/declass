@@ -5,125 +5,110 @@
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
     <x-page-title :title="$titulo" />
-    <style>
-        .auto-filled {
-            background-color: #e0f7fa;
-        }
-    </style>
-        {{-- <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"> --}}
-        <script src="https://js.stripe.com/v3/"></script>
+    <script src="https://js.stripe.com/v3/"></script>
 @stop
 
-
 @section('content')
-   {{-- <!-- Exibir erros de validação -->
-   @if ($errors->any())
-   <div class="alert alert-danger">
-       <ul>
-           @foreach ($errors->all() as $error)
-               <li>{{ $error }}</li>
-           @endforeach
-       </ul>
-   </div>
-@endif --}}
+<div class="row">
 
-
-<div class="col-xl-6 col-lg-8 col-md-10 col-sm-10 col-xs-10 card p-4">
-
-        <div class="">
-            <!-- Cartão de Crédito -->
-            <x-form method="{{ $metodo }}" action="{{ $rota }}" id="form" rowClass="row">
-                <x-section-division-header-form>Adicionar Método de Pagamento</x-section-division-header-form>
-                    <div class="col-md-12 mt-2 mb-2">
-                        <label class="text-xs">
-                            Nome do Titular do Cartão
-                            <span style="color: red;">*</span>
-                        </label>
-                        <div class="form-group">
-                            <div id="card-element" class="form-control"></div>
-                            <div id="card-errors" role="alert"></div>
-                        </div>
+    {{-- Adicionar cartão --}}
+    <div class="col-xl-4 col-lg-5 col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-header py-2">
+                <h3 class="card-title text-sm font-weight-bold">
+                    <i class="fas fa-plus-circle mr-1 text-success"></i> Adicionar Cartão
+                </h3>
+            </div>
+            <div class="card-body">
+                <x-form method="POST" action="{{ $rota }}" id="formStripe" rowClass="row">
+                    <div class="col-12 mb-3">
+                        <label class="text-xs font-weight-bold">Dados do Cartão</label>
+                        <div id="card-element" class="form-control" style="padding-top:10px;"></div>
+                        <div id="card-errors" class="text-danger text-xs mt-1" role="alert"></div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-xs col-12">
-                        Salvar
-                    </button>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-success btn-sm btn-block">
+                            <i class="fas fa-save mr-1"></i> Salvar Cartão
+                        </button>
+                    </div>
                 </x-form>
             </div>
         </div>
-        <div class="col-xl-6 col-lg-8 col-md-10 col-sm-10 col-xs-10 card p-4">
-            <div class="">
-                <x-section-division-header-form>Métodos de Pagamento</x-section-division-header-form>
+    </div>
 
-                <!-- Cartão de Crédito -->
-                {{-- <x-section-division-header-form>Cartão de Crédito</x-section-division-header-form> --}}
-                <div class="col-md-12 mt-2 ">
-                   <table class="table table-sm table-bordered">
-                    <thead>
+    {{-- Cartões salvos --}}
+    <div class="col-xl-8 col-lg-7 col-md-6 col-sm-12">
+        <div class="card">
+            <div class="card-header py-2">
+                <h3 class="card-title text-sm font-weight-bold">
+                    <i class="fas fa-credit-card mr-1 text-primary"></i> Cartões Salvos
+                </h3>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover table-sm mb-0" style="font-size:13px;">
+                    <thead class="thead-light">
                         <tr>
-                            <th>Bandeira</th>
-                            <th>Ultimos 4 dígitos</th>
+                            <th class="pl-3">Bandeira</th>
+                            <th>Últimos 4 dígitos</th>
                             <th>Tipo</th>
                             <th>Validade</th>
-                            <th>Ações</th>
+                            <th class="text-center">Ação</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach ($metodosPagamento as $metodo)
+                        @forelse ($metodosPagamento as $metodo)
                             <tr>
-                                <td>{{ $metodo['card']->brand }}</td>
-                                <td>{{ $metodo['card']->last4 }}</td>
-                                <td>{{ $metodo['card']->funding }}</td>
-                                <td>{{ $metodo['card']->exp_month }}/{{ $metodo['card']->exp_year }}</td>
-                                <td>
-                                    <x-delete-button :action="route('usuario.excluirMetodoPagamento', ['usuarioId' => $usuarioId, 'metodoId' => $metodo['id']])" />
+                                <td class="pl-3 align-middle text-capitalize">{{ $metodo['card']->brand }}</td>
+                                <td class="align-middle">•••• {{ $metodo['card']->last4 }}</td>
+                                <td class="align-middle text-capitalize">{{ $metodo['card']->funding }}</td>
+                                <td class="align-middle">
+                                    {{ str_pad($metodo['card']->exp_month, 2, '0', STR_PAD_LEFT) }}/{{ $metodo['card']->exp_year }}
+                                </td>
+                                <td class="text-center align-middle">
+                                    <x-delete-button
+                                        :action="route('usuario.excluirMetodoPagamento', ['usuarioId' => $usuarioId, 'metodoId' => $metodo['id']])" />
                                 </td>
                             </tr>
-                        @endforeach
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-3">
+                                    <i class="fas fa-credit-card fa-2x mb-2 d-block"></i>
+                                    Nenhum cartão cadastrado.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
-                   </table>
-                </div>
-
+                </table>
+            </div>
         </div>
     </div>
-@stop
-@section('js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 
- <!-- Integração com Stripe -->
+</div>
+@stop
+
+@section('js')
 <script>
-    const stripePublicKey = "{{ env('STRIPE_KEY') }}";
-    var stripe = Stripe(stripePublicKey); // Substitua pela sua chave pública do Stripe
-    var elements = stripe.elements();
-    var cardElement = elements.create('card');
+    const stripe     = Stripe("{{ env('STRIPE_KEY') }}");
+    const elements   = stripe.elements();
+    const cardElement = elements.create('card');
     cardElement.mount('#card-element');
 
-    var form = document.getElementById('form');
-    form.addEventListener('submit', function(event) {
+    const form = document.getElementById('formStripe');
+    form.addEventListener('submit', function (event) {
         event.preventDefault();
 
-        // Remover qualquer referência ao código postal (CEP)
-        stripe.createToken(cardElement).then(function(result) {
+        stripe.createToken(cardElement).then(function (result) {
             if (result.error) {
-                console.log(result.error);
-                // Exibe erro no formulário
-                var errorElement = document.getElementById('card-errors');
-                errorElement.textContent = result.error.message;
+                document.getElementById('card-errors').textContent = result.error.message;
             } else {
-                // Adiciona o token ao formulário
-                var hiddenInput = document.createElement('input');
-                hiddenInput.setAttribute('type', 'hidden');
-                hiddenInput.setAttribute('name', 'stripeToken');
-                hiddenInput.setAttribute('value', result.token.id);
-                form.appendChild(hiddenInput);
-
-                // Envia o formulário
-                form.submit(); // Alterado para usar form.submit() diretamente
+                const input = document.createElement('input');
+                input.type  = 'hidden';
+                input.name  = 'stripeToken';
+                input.value = result.token.id;
+                form.appendChild(input);
+                form.submit();
             }
         });
     });
 </script>
-
-
-
 @stop

@@ -34,5 +34,12 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+    'stripe' => [
+        'secret'     => env('STRIPE_SECRET'),
+        'return_url' => env('RETURN_URL_PAGAMENTO'),
+    ],
 
+    'payment' => [
+        'default_gateway' => env('PAYMENT_DEFAULT_GATEWAY', 'stripe'),
+    ],
 ];

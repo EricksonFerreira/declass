@@ -4,140 +4,243 @@ namespace App\Services;
 
 use App\Exceptions\ClienteNaoEncontradoException;
 use App\Exceptions\JaExisteClienteComEmailException;
-use App\Exceptions\MultiplosClientesComEmailException;
+use App\Exceptions\StripeConexaoException;
+use Stripe\Customer;
+use Stripe\PaymentIntent;
+use Stripe\PaymentMethod;
+use Stripe\StripeClient;
+use Stripe\Token;
 
 class ClienteStripeService
 {
-    protected $stripe;
-    protected $stripeSecret;
+    private function client(?string $secretOverride = null): StripeClient
+    {
+        $secret = $secretOverride ?: config('services.stripe.secret');
 
+        if (!$secret) {
+            throw new StripeConexaoException('Chave Stripe nao configurada para a empresa.');
+        }
+
+        try {
+            return new StripeClient($secret);
+        } catch (\Exception $e) {
+            throw new StripeConexaoException('Erro ao conectar com a API do Stripe.', $e);
+        }
+    }
+
+    /**
+     * @throws StripeConexaoException
+     */
     public function __construct()
     {
-        $this->stripeSecret = env('STRIPE_SECRET');
-        $this->stripe = new \Stripe\StripeClient($this->stripeSecret);
+        // Mantido para compatibilidade por DI.
     }
 
-    public function getClienteByEmail($email){
-        $cliente = $this->stripe->customers->search([
-            'query' => 'email:\''.$email.'\'',
+    // -------------------------------------------------------------------------
+    // Clientes
+    // -------------------------------------------------------------------------
+
+    /**
+     * Busca um cliente no Stripe pelo e-mail.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function buscarClientePorEmail(string $email, ?string $stripeSecret = null): \Stripe\SearchResult
+    {
+        return $this->client($stripeSecret)->customers->search([
+            'query' => "email:'{$email}'",
         ]);
-
-        return $cliente;
     }
 
-    public function create($email, $name){
-        $cliente = $this->getClienteByEmail($email);
+    /**
+     * Cria um novo cliente no Stripe.
+     *
+     * @throws JaExisteClienteComEmailException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function criarCliente(string $email, string $nome, ?string $stripeSecret = null): Customer
+    {
+        $resultado = $this->buscarClientePorEmail($email, $stripeSecret);
 
-        if($cliente->data != []){
+        if (!empty($resultado->data)) {
             throw new JaExisteClienteComEmailException();
         }
 
-        $cliente = $this->stripe->customers->create([
-            'email' => $email,
-            'name' => $name,
+        return $this->client($stripeSecret)->customers->create([
+            'email'       => $email,
+            'name'        => $nome,
             'description' => 'Cliente do sistema de reservas',
         ]);
-
-        return $cliente;
     }
 
-    public function update($id, $email, $name){
-        $cliente = $this->stripe->customers->update($id, [
+    /**
+     * Atualiza os dados de um cliente no Stripe.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function atualizarCliente(string $id, string $email, string $nome, ?string $stripeSecret = null): Customer
+    {
+        return $this->client($stripeSecret)->customers->update($id, [
             'email' => $email,
-            'name' => $name,
+            'name'  => $nome,
         ]);
-        return $cliente;
     }
 
-    public function delete($id){
-        $cliente = $this->stripe->customers->delete($id);
-        return $cliente;
+    /**
+     * Remove um cliente do Stripe.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function deletarCliente(string $id, ?string $stripeSecret = null): \Stripe\Customer
+    {
+        return $this->client($stripeSecret)->customers->delete($id);
     }
 
+    // -------------------------------------------------------------------------
+    // Métodos de pagamento
+    // -------------------------------------------------------------------------
 
-    // Pagamentos
-    public function getPaymentMethods($customerId){
-        if($customerId == null){
-            throw new ClienteNaoEncontradoException();
-        }
-
-        $paymentMethods = $this->stripe->paymentMethods->all([
+    /**
+     * Retorna os métodos de pagamento de um cliente.
+     *
+     * @return array<int, array{id: string, card: \Stripe\StripeObject}>
+     *
+     * @throws ClienteNaoEncontradoException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function listarMetodosPagamento(string $customerId, ?string $stripeSecret = null): array
+    {
+        $resultado = $this->client($stripeSecret)->paymentMethods->all([
             'customer' => $customerId,
         ]);
 
-        $metodosPagamento = array_map(fn($item) => [
-            'id' => $item->id, // Adiciona o ID do método de pagamento
-            'card' => $item->card
-        ], $paymentMethods->data);
-
-        return $metodosPagamento;
+        return array_map(
+            fn (PaymentMethod $item) => [
+                'id'   => $item->id,
+                'card' => $item->card,
+            ],
+            $resultado->data
+        );
     }
 
-    public function createPaymentMethod($customerId, $token){
-        // Verifica se o método de pagamento já existe
-        $paymentMethods = $this->getPaymentMethods($customerId);
-
-        foreach ($paymentMethods->data as $method) {
-            if ($method->card->id === $token) {
-                // Retorna o método de pagamento existente se já foi criado
-                return $method;
-            }
-        }
-
-        $data = [
+    /**
+     * Cria e vincula um método de pagamento ao cliente a partir de um token.
+     *
+     * @throws ClienteNaoEncontradoException
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function criarMetodoPagamento(string $customerId, string $token, ?string $stripeSecret = null): PaymentMethod
+    {
+        $paymentMethod = $this->client($stripeSecret)->paymentMethods->create([
             'type' => 'card',
-            'card' => [
-                'token' => $token, // Use o token em vez de enviar os dados do cartão diretamente
-            ],
-        ];
+            'card' => ['token' => $token],
+        ]);
 
-        $paymentMethod = $this->stripe->paymentMethods->create($data);
+        $this->vincularMetodoPagamentoAoCliente($paymentMethod->id, $customerId, $stripeSecret);
 
-        $this->vinculaPaymentMethodComCliente($paymentMethod->id, $customerId);
-        return $paymentMethod; // Retorna o método de pagamento criado
+        return $paymentMethod;
     }
-    public function deletePaymentMethod($paymentMethodId){
-        $this->stripe->paymentMethods->detach($paymentMethodId);
+
+    /**
+     * Desvincula (remove) um método de pagamento.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function deletarMetodoPagamento(string $paymentMethodId, ?string $stripeSecret = null): void
+    {
+        $this->client($stripeSecret)->paymentMethods->detach($paymentMethodId);
     }
-    public function createCharge($paymentMethodId, $valorTotal, $customerId){
-        $valorTotalCentavos = intval($valorTotal * 100); // Converte o valor para centavos
-        $paymentIntent = $this->stripe->paymentIntents->create([
-            'amount' => $valorTotalCentavos,
-            'currency' => 'brl',
+
+    // -------------------------------------------------------------------------
+    // Cobranças
+    // -------------------------------------------------------------------------
+
+    /**
+     * Cria uma cobrança imediata via PaymentIntent.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function criarCobranca(string $paymentMethodId, float $valorTotal, string $customerId, ?string $stripeSecret = null, string $currency = 'brl'): PaymentIntent
+    {
+        $valorEmCentavos = intval($valorTotal * 100);
+
+        return $this->client($stripeSecret)->paymentIntents->create([
+            'amount'         => $valorEmCentavos,
+            'currency'       => strtolower($currency),
             'payment_method' => $paymentMethodId,
-            'customer' => $customerId,
-            'confirm' => true, // Confirma o pagamento imediatamente
-            'return_url' => env('RETURN_URL_PAGAMENTO'), // Adicione sua URL de retorno com esquema
+            'customer'       => $customerId,
+            'confirm'        => true,
+            'return_url'     => config('services.stripe.return_url'),
             'automatic_payment_methods' => [
-                'enabled' => true,
-                'allow_redirects' => 'never', // Não permite redirecionamentos
+                'enabled'         => true,
+                'allow_redirects' => 'never',
             ],
         ]);
-        return $paymentIntent; // Retorna o Payment Intent criado
     }
 
-
-    public function getCharge($id){
-        $charge = $this->stripe->paymentIntents->retrieve($id, []);
-        return $charge;
+    /**
+     * Recupera um PaymentIntent pelo ID.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function buscarCobranca(string $id, ?string $stripeSecret = null): PaymentIntent
+    {
+        return $this->client($stripeSecret)->paymentIntents->retrieve($id);
     }
 
-    private function vinculaPaymentMethodComCliente($paymentMethodId, $customerId){
-        $this->stripe->paymentMethods->attach(
+    /**
+     * Alias para compatibilidade legada.
+     *
+     * @return array<int, array{id: string, card: \Stripe\StripeObject}>
+     */
+    public function getPaymentMethods(string $customerId, ?string $stripeSecret = null): array
+    {
+        return $this->listarMetodosPagamento($customerId, $stripeSecret);
+    }
+
+    /**
+     * Alias para compatibilidade legada.
+     */
+    public function createCharge(string $paymentMethodId, float $valorTotal, string $customerId, ?string $stripeSecret = null, string $currency = 'brl'): PaymentIntent
+    {
+        return $this->criarCobranca($paymentMethodId, $valorTotal, $customerId, $stripeSecret, $currency);
+    }
+
+    // -------------------------------------------------------------------------
+    // Tokens
+    // -------------------------------------------------------------------------
+
+    /**
+     * Gera um token de cartão no Stripe (útil em testes/ambientes server-side).
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function criarTokenCartao(string $numeroCartao, string $mes, string $ano, string $cvv, ?string $stripeSecret = null): Token
+    {
+        return $this->client($stripeSecret)->tokens->create([
+            'card' => [
+                'number'    => $numeroCartao,
+                'exp_month' => $mes,
+                'exp_year'  => $ano,
+                'cvc'       => $cvv,
+            ],
+        ]);
+    }
+
+    // -------------------------------------------------------------------------
+    // Métodos privados
+    // -------------------------------------------------------------------------
+
+    /**
+     * Vincula um método de pagamento a um cliente existente no Stripe.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    private function vincularMetodoPagamentoAoCliente(string $paymentMethodId, string $customerId, ?string $stripeSecret = null): void
+    {
+        $this->client($stripeSecret)->paymentMethods->attach(
             $paymentMethodId,
             ['customer' => $customerId]
-          );
+        );
     }
-
-    public function creteTokenPaymentMethod($numeroCartao, $mes, $ano, $cvv){
-        return  $this->stripe->tokens->create([
-            'card' => [
-                'number' => $numeroCartao,
-                'exp_month' => $mes,
-                'exp_year' => $ano,
-                'cvc' => $cvv,
-            ],
-        ]);
-    }
-
 }

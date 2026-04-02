@@ -6,82 +6,125 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class StoreEstacaoRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
             'nome' => 'required|string|max:255',
             'email' => 'required|email|max:255',
-            'telefone' => 'required|string|max:255',
+            'telefone' => ['nullable', 'string', 'max:20', 'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/'],
             'celular' => [
                 'required',
                 'string',
                 'max:20',
                 'regex:/^\(\d{2}\) \d{5}-\d{4}$/'
             ],
+            'pais_id' => 'required|integer|exists:paises,id',
             'cidade' => 'required|string|max:255',
+            'endereco' => 'required|string|max:255',
             'numero' => 'required|string',
             'zip_code' => 'required|string|max:255',
             'latitude' => 'required|string|max:255',
             'longitude' => 'required|string|max:255',
-            'ativo' => 'required|string|max:1',
-            'checkin' => 'required|string|max:1',
-            'checkout' => 'required|string|max:1',
+            'ativo' => 'required|string|max:1|in:S,N',
+            'checkin' => 'required|string|max:1|in:S,N',
+            'checkout' => 'required|string|max:1|in:S,N',
+            'hora_abertura' => 'required|array',
+            'hora_abertura.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_fechamento' => 'required|array',
+            'hora_fechamento.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_inicio_almoco' => 'required|array',
+            'hora_inicio_almoco.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_fim_almoco' => 'required|array',
+            'hora_fim_almoco.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_inicio_fora_expediente' => 'required|array',
+            'hora_inicio_fora_expediente.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_fim_fora_expediente' => 'required|array',
+            'hora_fim_fora_expediente.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'cobrar_na_coleta' => 'required|string|max:1|in:S,N',
+            'cobrar_na_entrega' => 'required|string|max:1|in:S,N',
+            'valido_no_intervalo' => 'required|string|max:1|in:S,N',
+            'diasUteis' => 'array|min:1',
+            'diasUteis.*' => 'integer|exists:dias_uteis,id',
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
-            'nome.required' => 'O campo nome é obrigatório.',
-            'nome.string' => 'O campo nome deve ser uma string.',
-            'nome.max' => 'O campo nome deve ter no máximo 255 caracteres.',
-            'email.required' => 'O campo email é obrigatório.',
-            'email.email' => 'O campo email deve ser um email válido.',
-            'email.max' => 'O campo email deve ter no máximo 255 caracteres.',
-            'telefone.required' => 'O campo telefone é obrigatório.',
-            'telefone.string' => 'O campo telefone deve ser uma string.',
-            'telefone.max' => 'O campo telefone deve ter no máximo 255 caracteres.',
-            'celular.required' => 'O campo celular é obrigatório.',
-            'celular.string' => 'O campo celular deve ser uma string.',
-            'celular.max' => 'O campo celular deve ter no máximo 20 caracteres.',
-            'celular.regex' => 'O campo celular deve ser um número de telefone válido.',
-            'cidade.required' => 'O campo cidade é obrigatório.',
-            'cidade.string' => 'O campo cidade deve ser uma string.',
-            'cidade.max' => 'O campo cidade deve ter no máximo 255 caracteres.',
-            'numero.required' => 'O campo número é obrigatório.',
-            'numero.string' => 'O campo número deve ser uma string.',
-            'zip_code.required' => 'O campo zipcode é obrigatório.',
-            'zip_code.string' => 'O campo zipcode deve ser uma string.',
-            'zip_code.max' => 'O campo zipcode deve ter no máximo 255 caracteres.',
-            'latitude.required' => 'O campo latitude é obrigatório.',
-            'latitude.string' => 'O campo latitude deve ser uma string.',
-            'latitude.max' => 'O campo latitude deve ter no máximo 255 caracteres.',
-            'longitude.required' => 'O campo longitude é obrigatório.',
-            'longitude.string' => 'O campo longitude deve ser uma string.',
-            'longitude.max' => 'O campo longitude deve ter no máximo 255 caracteres.',
-            'ativo.required' => 'O campo ativo é obrigatório.',
-            'ativo.string' => 'O campo ativo deve ser uma string.',
-            'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',
-            'checkin.required' => 'O campo checkin é obrigatório.',
-            'checkin.string' => 'O campo checkin deve ser uma string.',
-            'checkin.max' => 'O campo checkin deve ter no máximo 1 caractere.',
-            'checkout.required' => 'O campo checkout é obrigatório.',
-            'checkout.string' => 'O campo checkout deve ser uma string.',
-            'checkout.max' => 'O campo checkout deve ter no máximo 1 caractere.',
+            'telefone.regex' => 'Telefone invalido. Use o formato (00) 00000-0000.',
+            'hora_abertura.*.required' => 'Preencha todos os campos de Horario Diario na aba Horarios.',
+            'hora_fechamento.*.required' => 'Preencha todos os campos de Horario Diario na aba Horarios.',
+            'hora_inicio_almoco.*.required' => 'Preencha todos os campos de Horario Diario na aba Horarios.',
+            'hora_fim_almoco.*.required' => 'Preencha todos os campos de Horario Diario na aba Horarios.',
+            'hora_inicio_fora_expediente.*.required' => 'Preencha todos os campos de Horario Diario na aba Horarios.',
+            'hora_fim_fora_expediente.*.required' => 'Preencha todos os campos de Horario Diario na aba Horarios.',
+            'hora_abertura.*.regex' => 'Informe horarios diarios validos no formato 24h.',
+            'hora_fechamento.*.regex' => 'Informe horarios diarios validos no formato 24h.',
+            'hora_inicio_almoco.*.regex' => 'Informe horarios diarios validos no formato 24h.',
+            'hora_fim_almoco.*.regex' => 'Informe horarios diarios validos no formato 24h.',
+            'hora_inicio_fora_expediente.*.regex' => 'Informe horarios diarios validos no formato 24h.',
+            'hora_fim_fora_expediente.*.regex' => 'Informe horarios diarios validos no formato 24h.',
+            'hora_abertura.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
+            'hora_fechamento.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
+            'hora_inicio_almoco.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
+            'hora_fim_almoco.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
+            'hora_inicio_fora_expediente.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
+            'hora_fim_fora_expediente.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
+            'diasUteis.min' => 'Selecione ao menos um dia trabalhado.',
+            'diasUteis.*.exists' => 'Um dos dias trabalhados selecionados e invalido.',
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $aberturas = $this->input('hora_abertura', []);
+            $fechamentos = $this->input('hora_fechamento', []);
+            $inicioAlmocos = $this->input('hora_inicio_almoco', []);
+            $fimAlmocos = $this->input('hora_fim_almoco', []);
+
+            $toMinutes = function ($value): ?int {
+                if (!is_string($value) || trim($value) === '' || $value === '00:00') {
+                    return null;
+                }
+
+                [$h, $m] = array_pad(explode(':', $value), 2, null);
+                if ($h === null || $m === null || !is_numeric($h) || !is_numeric($m)) {
+                    return null;
+                }
+
+                return ((int) $h * 60) + (int) $m;
+            };
+
+            $total = max(count($aberturas), count($fechamentos), count($inicioAlmocos), count($fimAlmocos));
+
+            for ($i = 0; $i < $total; $i++) {
+                $abertura = $toMinutes($aberturas[$i] ?? null);
+                $fechamento = $toMinutes($fechamentos[$i] ?? null);
+                $inicioAlmoco = $toMinutes($inicioAlmocos[$i] ?? null);
+                $fimAlmoco = $toMinutes($fimAlmocos[$i] ?? null);
+
+                if ($abertura === null || $fechamento === null) {
+                    continue;
+                }
+
+                if ($inicioAlmoco !== null && ($inicioAlmoco < $abertura || $inicioAlmoco > $fechamento)) {
+                    $validator->errors()->add("hora_inicio_almoco.$i", 'Horario de almoco deve estar dentro do horario de abertura e fechamento.');
+                }
+
+                if ($fimAlmoco !== null && ($fimAlmoco < $abertura || $fimAlmoco > $fechamento)) {
+                    $validator->errors()->add("hora_fim_almoco.$i", 'Horario de almoco deve estar dentro do horario de abertura e fechamento.');
+                }
+
+                if ($inicioAlmoco !== null && $fimAlmoco !== null && $inicioAlmoco >= $fimAlmoco) {
+                    $validator->errors()->add("hora_fim_almoco.$i", 'Fim do almoco deve ser maior que o inicio do almoco.');
+                }
+            }
+        });
     }
 }

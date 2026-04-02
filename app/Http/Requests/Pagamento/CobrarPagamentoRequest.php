@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Pagamento;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class CobrarPagamentoRequest extends FormRequest
 {
@@ -24,20 +25,20 @@ class CobrarPagamentoRequest extends FormRequest
         return [
             'reserva_id' => 'required|exists:reservas,id',
             'valor' => 'required|numeric|min:0.01',
-            'gateway' => 'required|string',
+            'gateway' => ['nullable', 'string', Rule::in(['stripe', 'paypal', 'mercado_livre', 'mercadolivre'])],
         ];
     }
 
     public function messages(): array
     {
         return [
-            'reserva_id.required' => 'O campo reserva é obrigatório',
-            'reserva_id.exists' => 'A reserva informada não existe',
-            'valor.required' => 'O campo valor é obrigatório',
-            'valor.numeric' => 'O campo valor deve ser um número',
+            'reserva_id.required' => 'O campo reserva e obrigatorio',
+            'reserva_id.exists' => 'A reserva informada nao existe',
+            'valor.required' => 'O campo valor e obrigatorio',
+            'valor.numeric' => 'O campo valor deve ser um numero',
             'valor.min' => 'O campo valor deve ser maior que 0',
-            'gateway.required' => 'O campo gateway é obrigatório',
             'gateway.string' => 'O campo gateway deve ser uma string',
+            'gateway.in' => 'Gateway de pagamento invalido.',
         ];
     }
 }

@@ -3,9 +3,12 @@
 namespace App\Services;
 
 use App\Models\User;
+use App\Models\Estacao;
+use App\Support\EmpresaContext;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema;
 
 class UsuarioService extends AbstractBaseService
 {
@@ -29,17 +32,102 @@ class UsuarioService extends AbstractBaseService
         return $this->model;
     }
 
-    public function createUser($data){
+    public function createUser($data)
+    {
+        $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data);
+
         if (isset($data['password'])) {
             $data['password'] = Hash::make($data['password']);
         }
 
-        $this->model->create($data);
+        if (Schema::hasColumn($this->model->getTable(), 'empresa_id')) {
+            $empresaId = app(EmpresaContext::class)->empresaId();
+            if ($empresaId) {
+                $data['empresa_id'] = $empresaId;
+            }
+        }
+
+        if (Schema::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
+            $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
+        }
+
+        /** @var User $user */
+        $user = $this->model->create($data);
+        $this->syncEstacoesPermitidas($user, $data, $acessoTodasEstacoes);
+
+        return $user;
     }
 
     public function updatePassword($id, $data){
-        $this->model = $this->model->find($id);
+        $this->model = $this->applyEmpresaScope($this->model->newQuery())->find($id);
+        if (!$this->model) {
+            throw new \RuntimeException('Usuario nao encontrado para a empresa atual.');
+        }
         $this->model->password = Hash::make($data['password']);
         $this->model->save();
+    }
+
+    public function updateUser($id, array $data): ?User
+    {
+        $user = $this->applyEmpresaScope($this->model->newQuery())->find($id);
+        if (!$user) {
+            return null;
+        }
+
+        $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data, $user);
+
+        if (Schema::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
+            $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
+        }
+
+        $user->update($data);
+        $this->syncEstacoesPermitidas($user, $data, $acessoTodasEstacoes);
+
+        return $user;
+    }
+
+    private function syncEstacoesPermitidas(User $user, array $data, bool $acessoTodasEstacoes): void
+    {
+        if (!Schema::hasTable('estacao_user')) {
+            return;
+        }
+
+        if ($acessoTodasEstacoes) {
+            $user->estacoesPermitidas()->detach();
+            return;
+        }
+
+        $estacoes = collect($data['estacoes'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->filter(fn ($id) => $id > 0)
+            ->unique()
+            ->values();
+
+        if ($estacoes->isEmpty()) {
+            $user->estacoesPermitidas()->sync([]);
+            return;
+        }
+
+        $query = Estacao::query()->whereIn('id', $estacoes->all());
+        if (Schema::hasColumn('estacoes', 'empresa_id') && !empty($user->empresa_id)) {
+            $query->where('empresa_id', $user->empresa_id);
+        }
+
+        $validIds = $query->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        $user->estacoesPermitidas()->sync($validIds);
+    }
+
+    private function resolveAcessoTodasEstacoes(array $data, ?User $user = null): bool
+    {
+        if (array_key_exists('acesso_todas_estacoes', $data)) {
+            return (bool) $data['acesso_todas_estacoes'];
+        }
+
+        if ($user !== null) {
+            return $user->hasAcessoTodasEstacoes();
+        }
+
+        return true;
     }
 }

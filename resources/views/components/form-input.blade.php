@@ -1,8 +1,12 @@
 @if(isset($type) && $type === 'hidden') <div class="d-none"> @endif
     @if(isset($floating) && $floating) <div class="form-floating"> @endif
 
+        @php
+            $resolvedId = $attributes->get('id') ?: ($name ?? null);
+        @endphp
+
         @if(!isset($floating) || !$floating)
-            <x-form-label :label="$label" :for="$attributes->get('id') ?: $id()" :required="$attributes->has('required')" />
+            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" />
         @endif
 
         <input
@@ -18,8 +22,8 @@
 
             name="{{ $name }}"
 
-            @if(isset($label) && $label && !$attributes->get('id'))
-                id="{{ $id() }}"
+            @if(isset($label) && $label && $resolvedId)
+                id="{{ $resolvedId }}"
             @endif
 
             {{--  Placeholder is required as of writing  --}}
@@ -29,7 +33,7 @@
         />
 
         @if(isset($floating) && $floating)
-            <x-form-label :label="$label" :for="$attributes->get('id') ?: $id()" :required="$attributes->has('required')" />
+            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" />
         @endif
 
     @if(isset($floating) && $floating) </div> @endif

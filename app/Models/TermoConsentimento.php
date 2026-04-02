@@ -13,6 +13,7 @@ class TermoConsentimento extends Model
     protected $fillable = [
         'nome',
         'ativo',
-        'texto'
+        'texto',
+        'empresa_id',
     ];
 }

@@ -87,6 +87,9 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
     public function edit($id)
     {
         $regra = $this->regraService->getById($id);
+        if (!$regra) {
+            abort(403, 'Sem acesso a esta regra.');
+        }
         $permissoes = $this->permissaoService->getAllWithChecked($regra->permissoes);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Regras', 'regra.index', "Editar: $regra->name");
@@ -98,6 +101,9 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
     public function update(UpdateRegraRequest $request, $id)
     {
         $regra = $this->regraService->update($id, $request->all());
+        if (!$regra) {
+            abort(403, 'Sem acesso para editar esta regra.');
+        }
         $this->regraPermissaoService->atribuirPermissoesARole($regra->id, $request->input('permissions', []));
         return $this->redirecionaRotaRedirect($this->nomeFiltro,'Adicionado com sucesso');
     }
@@ -105,6 +111,9 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
     public function destroy($id)
     {
         $success = $this->regraService->delete($id);
+        if (!$success) {
+            abort(403, 'Sem acesso para excluir esta regra.');
+        }
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
