@@ -9,7 +9,7 @@ class BreadcrumbService
 {
     public function prepararBreadcrumb(array $items)
     {
-        return BreadcrumbHelper::generate($items);
+        return BreadCrumbHelper::generate($items);
     }
 
     public function prepararBreadcrumbUnico(string $indexName)
