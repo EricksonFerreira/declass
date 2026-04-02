@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Helpers\BreadcrumbHelper;
+use App\Helpers\BreadCrumbHelper;
 use App\DTO\BreadcrumbItem;
 
 class BreadcrumbService
