@@ -14,6 +14,10 @@ class AutoPermissionFilter implements FilterInterface
             return $item;
         }
 
+        if (!empty($item['url']) && is_string($item['url'])) {
+            $item['url'] = $this->normalizeAdminUrl($item['url']);
+        }
+
         // Se a permissao foi definida manualmente no menu, respeita.
         if (!empty($item['can'])) {
             return $item;
@@ -53,7 +57,7 @@ class AutoPermissionFilter implements FilterInterface
         }
 
         // Fallback para padrao comum: modulo.index
-        $firstSegment = explode('/', $url)[0] ?? '';
+        $firstSegment = explode('/', $this->stripAdminPrefix($url))[0] ?? '';
         $firstSegment = str_replace('-', '_', $firstSegment);
         if ($firstSegment === '') {
             return null;
@@ -72,5 +76,49 @@ class AutoPermissionFilter implements FilterInterface
             return null;
         }
     }
-}
 
+    private function normalizeAdminUrl(string $url): string
+    {
+        $value = trim($url);
+        if ($value === '' || str_starts_with($value, '#') || Str::startsWith($value, ['http://', 'https://'])) {
+            return $value;
+        }
+
+        $adminPrefix = $this->adminPrefix();
+        if ($adminPrefix === '') {
+            return ltrim($value, '/');
+        }
+
+        $normalized = ltrim($value, '/');
+        if ($normalized === $adminPrefix || str_starts_with($normalized, $adminPrefix . '/')) {
+            return $normalized;
+        }
+
+        return $adminPrefix . '/' . $normalized;
+    }
+
+    private function stripAdminPrefix(string $path): string
+    {
+        $adminPrefix = $this->adminPrefix();
+        $normalized = trim($path, '/');
+
+        if ($adminPrefix === '' || $normalized === '') {
+            return $normalized;
+        }
+
+        if ($normalized === $adminPrefix) {
+            return '';
+        }
+
+        if (str_starts_with($normalized, $adminPrefix . '/')) {
+            return substr($normalized, strlen($adminPrefix) + 1);
+        }
+
+        return $normalized;
+    }
+
+    private function adminPrefix(): string
+    {
+        return trim((string) config('app.admin_prefix', 'admin'), '/');
+    }
+}

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Empresa;
 
+use App\Support\DomainNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -18,6 +19,7 @@ class StoreEmpresaRequest extends FormRequest
         $this->merge([
             'cnpj' => $this->onlyDigits($this->input('cnpj')),
             'telefone' => $this->onlyDigits($this->input('telefone')),
+            'dominio' => DomainNormalizer::normalize($this->input('dominio')),
             'moeda_pagamento' => strtoupper((string) $this->input('moeda_pagamento', 'BRL')),
             'cor_primaria' => $this->normalizeColor($this->input('cor_primaria')),
             'cor_secundaria' => $this->normalizeColor($this->input('cor_secundaria')),
@@ -28,9 +30,11 @@ class StoreEmpresaRequest extends FormRequest
     public function rules(): array
     {
         $slugRules = ['required', 'string', 'max:255'];
+        $dominioRules = ['nullable', 'string', 'max:255'];
 
         if (Schema::hasTable('empresas')) {
             $slugRules[] = Rule::unique('empresas', 'slug');
+            $dominioRules[] = Rule::unique('empresas', 'dominio');
         }
 
         return [
@@ -40,7 +44,7 @@ class StoreEmpresaRequest extends FormRequest
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],
-            'dominio' => ['nullable', 'string', 'max:255'],
+            'dominio' => $dominioRules,
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'cor_primaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
             'cor_secundaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],

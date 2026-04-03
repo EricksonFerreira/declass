@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Empresa;
 
+use App\Support\DomainNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -18,6 +19,7 @@ class UpdateEmpresaRequest extends FormRequest
         $this->merge([
             'cnpj' => $this->onlyDigits($this->input('cnpj')),
             'telefone' => $this->onlyDigits($this->input('telefone')),
+            'dominio' => DomainNormalizer::normalize($this->input('dominio')),
             'moeda_pagamento' => strtoupper((string) $this->input('moeda_pagamento', 'BRL')),
             'cor_primaria' => $this->normalizeColor($this->input('cor_primaria')),
             'cor_secundaria' => $this->normalizeColor($this->input('cor_secundaria')),
@@ -29,9 +31,11 @@ class UpdateEmpresaRequest extends FormRequest
     {
         $empresaId = $this->route('empresa');
         $slugRules = ['required', 'string', 'max:255'];
+        $dominioRules = ['nullable', 'string', 'max:255'];
 
         if (Schema::hasTable('empresas')) {
             $slugRules[] = Rule::unique('empresas', 'slug')->ignore($empresaId);
+            $dominioRules[] = Rule::unique('empresas', 'dominio')->ignore($empresaId);
         }
 
         return [
@@ -41,7 +45,7 @@ class UpdateEmpresaRequest extends FormRequest
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],
-            'dominio' => ['nullable', 'string', 'max:255'],
+            'dominio' => $dominioRules,
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'cor_primaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
             'cor_secundaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
@@ -67,6 +71,7 @@ class UpdateEmpresaRequest extends FormRequest
             'cnpj.digits' => 'O CNPJ deve conter 14 digitos.',
             'email.email' => 'Informe um e-mail valido.',
             'telefone.digits_between' => 'O telefone deve conter 10 ou 11 digitos.',
+            'dominio.unique' => 'Este dominio ja esta em uso por outra empresa.',
             'logo.image' => 'O logo deve ser uma imagem valida.',
             'logo.mimes' => 'O logo deve estar em um formato valido: jpg, jpeg, png, webp ou svg.',
             'logo.max' => 'O logo deve ter no maximo 2MB.',

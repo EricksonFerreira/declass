@@ -257,13 +257,13 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => 'home',
-    'logout_url' => 'logout',
-    'login_url' => 'login',
-    'register_url' => 'register',
-    'password_reset_url' => 'password/reset',
-    'password_email_url' => 'password/email',
-    'profile_url' => 'profile',
+    'dashboard_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/home',
+    'logout_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/logout',
+    'login_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/login',
+    'register_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/register',
+    'password_reset_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/forgot-password',
+    'password_email_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/forgot-password',
+    'profile_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/profile',
 
     /*
     |--------------------------------------------------------------------------

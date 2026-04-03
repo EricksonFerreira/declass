@@ -1,381 +1,139 @@
 <?php
 
-use App\Http\Controllers\BookingController;
-use App\Http\Controllers\Cards3Controller;
+use App\Http\Controllers\EmpresaContextController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\PaisController;
+use App\Http\Controllers\PowerBIController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\EmpresaContextController;
-use App\Http\Controllers\TipoTransacaoController;
+use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\SiteApresentacaoController;
+use App\Http\Controllers\SiteReservaController;
 use App\Http\Controllers\StripeController;
+use App\Http\Controllers\TipoTransacaoController;
 use Illuminate\Support\Facades\Route;
 
-// Crypto
-use App\Http\Controllers\Crypto\BinanceController;
-
-
-Route::get('/cadastro/sucesso', function () {
-    return view('auth.register-success');
-})->name('register.success');
-
-Route::get('/', function () {
-    return redirect()->route('home');
-});
-
-Route::get('home',[HomeController::class,'home'])->middleware(['auth', 'verified'])->name('home');
-Route::get('home/chart-data',[HomeController::class,'chartData'])->middleware(['auth', 'verified'])->name('home.chart-data');
-
-Route::post('tipotransacao/setperpage',[TipoTransacaoController::class,'setPerPage'])->name('tipotransacao.setPerPage');
-Route::get('tipotransacao/removerfiltro',[TipoTransacaoController::class,'removerFiltro']);
-Route::get('tipotransacao/filtro',[TipoTransacaoController::class,'filtro']);
-Route::resource('tipotransacao',TipoTransacaoController::class);
-
-Route::resource('countries',PaisController::class);
-
-# Teste de pagamento
-Route::get('/pagamento/teste2', [PagamentoController::class, 'teste2']);
-Route::any('/pagamento/teste', [PagamentoController::class, 'teste'])->name('pagamento.teste');
-Route::post('/pagamento/cobrar', [PagamentoController::class, 'cobrar']);
-
-
-# Teste Stipe
-Route::post('/stripe/processPayment', [StripeController::class, 'processPayment'])->name('stripe.processPayment');
-Route::get('/stripe/payment', [StripeController::class, 'payment'])->name('stripe.payment');
-Route::get('/stripe/failure', [StripeController::class, 'failure'])->name('stripe.failure');
-Route::get('/stripe/success', [StripeController::class, 'success2'])->name('stripe.success');
-
-Route::get('/checkout', [StripeController::class, 'checkout'])->name('checkout');
-Route::get('/success', [StripeController::class, 'success'])->name('success');
-Route::get('/cancel', [StripeController::class, 'cancel'])->name('cancel');
-Route::get('/subscription-checkout', [StripeController::class, 'subscriptionCheckout'])->name('subscription-checkout');
-
-
-// dashboard para HomeController
-Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
-// Route::resource('booking',BookingController::class);
-
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('dashboard');
-
-// Route::get('/dashboard', function () {
-//     return view('dashboard');
-// })->middleware(['auth', 'verified'])->name('home');
-
-Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::get('/profile/senha', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
-    Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
-    Route::get('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordEdit'])->name('profile.force-password.edit');
-    Route::put('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordUpdate'])->name('profile.force-password.update');
-});
-
-require __DIR__.'/auth.php';
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/reserva.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/regra.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/tipo_usuario.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/permissao.php');
-
-});
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/usuario.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/empresa.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/replicacao_base.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/financeiro.php');
-
-});
-
-Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function () {
-    Route::get('empresa-contexto', [EmpresaContextController::class, 'edit'])->name('empresa_context.edit');
-    Route::post('empresa-contexto', [EmpresaContextController::class, 'update'])->name('empresa_context.update');
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/pais.php');
-
-});
-
-
-Route::get('/powerbi/reports', [App\Http\Controllers\PowerBIController::class, 'listReports']);
-Route::get('/powerbi/report/{reportId}', [App\Http\Controllers\PowerBIController::class, 'showReport'])->name('powerbi.report');
-
-
-// Route::middleware('auth')
-//     ->group(function() {
-//         require base_path('routes/grupos/station.php');
-
-// });
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/estacao.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/dia_util.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/horario_diario.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/frota.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/caracteristica_frota.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/frota_caracteristica.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/grupo_frota.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/caracteristica_grupo_frota.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/caracteristica_grupo.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/tipo_frota.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/tipovalorcaracteristicafrota.php');
-
-});
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/segmento.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/marca.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/modelo.php');
-
-});
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/termo_consentimento.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/veiculo.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/status_veiculo.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/movimentacao.php');
-
-});
-
-
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/tempo_entre_entacao.php');
-
-});
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/opcional.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/tipo_opcional.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/opcional_grupo_veiculo.php');
-
-});
-
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/cupom_desconto.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/tipo_movimentacao.php');
-
-});
-
-Route::middleware('auth')
-    ->group(function() {
-        require base_path('routes/grupos/status_movimentacao.php');
-
-});
-
-
-Route::middleware('auth')
-    ->group(function() {
+Route::get('/', [SiteApresentacaoController::class, 'index'])->name('site.apresentacao');
+Route::get('/site/estacoes', [SiteApresentacaoController::class, 'estacoesOptions'])->name('site.apresentacao.estacoes');
+Route::get('/administrativa', [SiteReservaController::class, 'adminEntry'])->name('site.admin.entry');
+Route::get('/reserva', [SiteReservaController::class, 'index'])->name('site.reserva.index');
+Route::get('/reserva/novo', [SiteReservaController::class, 'index'])->name('site.reserva.create');
+Route::get('/reserva/login', [SiteReservaController::class, 'loginRedirect'])->name('site.reserva.login');
+Route::post('/reserva', [SiteReservaController::class, 'store'])->name('site.reserva.store');
+Route::get('/reserva/disponibilidade', [SiteReservaController::class, 'disponibilidade'])->name('site.reserva.disponibilidade');
+Route::post('/reserva/verificar-cupom', [SiteReservaController::class, 'verificarCupom'])->name('site.reserva.verificarCupom');
+Route::get('/reserva/{reserva}/sucesso', [SiteReservaController::class, 'success'])->name('site.reserva.success');
+
+Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
+    Route::get('/cadastro/sucesso', function () {
+        return view('auth.register-success');
+    })->name('register.success');
+
+    Route::get('home', [HomeController::class, 'home'])->middleware(['auth', 'verified'])->name('home');
+    Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth', 'verified'])->name('home.chart-data');
+    Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
+
+    Route::post('tipotransacao/setperpage', [TipoTransacaoController::class, 'setPerPage'])->name('tipotransacao.setPerPage');
+    Route::get('tipotransacao/removerfiltro', [TipoTransacaoController::class, 'removerFiltro']);
+    Route::get('tipotransacao/filtro', [TipoTransacaoController::class, 'filtro']);
+    Route::resource('tipotransacao', TipoTransacaoController::class);
+    Route::resource('countries', PaisController::class);
+
+    Route::get('/pagamento/teste2', [PagamentoController::class, 'teste2']);
+    Route::any('/pagamento/teste', [PagamentoController::class, 'teste'])->name('pagamento.teste');
+    Route::post('/pagamento/cobrar', [PagamentoController::class, 'cobrar']);
+
+    Route::post('/stripe/processPayment', [StripeController::class, 'processPayment'])->name('stripe.processPayment');
+    Route::get('/stripe/payment', [StripeController::class, 'payment'])->name('stripe.payment');
+    Route::get('/stripe/failure', [StripeController::class, 'failure'])->name('stripe.failure');
+    Route::get('/stripe/success', [StripeController::class, 'success2'])->name('stripe.success');
+    Route::get('/checkout', [StripeController::class, 'checkout'])->name('checkout');
+    Route::get('/success', [StripeController::class, 'success'])->name('success');
+    Route::get('/cancel', [StripeController::class, 'cancel'])->name('cancel');
+    Route::get('/subscription-checkout', [StripeController::class, 'subscriptionCheckout'])->name('subscription-checkout');
+
+    Route::middleware('auth')->group(function (): void {
+        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::get('/profile/senha', [ProfileController::class, 'editPassword'])->name('profile.password.edit');
+        Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
+        Route::get('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordEdit'])->name('profile.force-password.edit');
+        Route::put('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordUpdate'])->name('profile.force-password.update');
+    });
+
+    require __DIR__ . '/auth.php';
+
+    $authGroupFiles = [
+        'reserva',
+        'regra',
+        'tipo_usuario',
+        'permissao',
+        'usuario',
+        'empresa',
+        'replicacao_base',
+        'financeiro',
+        'pais',
+        'estacao',
+        'dia_util',
+        'horario_diario',
+        'frota',
+        'caracteristica_frota',
+        'frota_caracteristica',
+        'grupo_frota',
+        'caracteristica_grupo_frota',
+        'caracteristica_grupo',
+        'tipo_frota',
+        'tipovalorcaracteristicafrota',
+        'segmento',
+        'marca',
+        'modelo',
+        'termo_consentimento',
+        'veiculo',
+        'status_veiculo',
+        'movimentacao',
+        'tempo_entre_entacao',
+        'opcional',
+        'tipo_opcional',
+        'opcional_grupo_veiculo',
+        'cupom_desconto',
+        'tipo_movimentacao',
+        'status_movimentacao',
+        'status_reserva',
+    ];
+
+    foreach ($authGroupFiles as $groupFile) {
+        Route::middleware('auth')->group(function () use ($groupFile): void {
+            require base_path('routes/grupos/' . $groupFile . '.php');
+        });
+    }
+
+    Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function (): void {
+        Route::get('empresa-contexto', [EmpresaContextController::class, 'edit'])->name('empresa_context.edit');
+        Route::post('empresa-contexto', [EmpresaContextController::class, 'update'])->name('empresa_context.update');
+    });
+
+    Route::get('/powerbi/reports', [PowerBIController::class, 'listReports']);
+    Route::get('/powerbi/report/{reportId}', [PowerBIController::class, 'showReport'])->name('powerbi.report');
+
+    Route::middleware('api')->group(function (): void {
         require base_path('routes/grupos/status_reserva.php');
+    });
 
+    $webGroupFiles = [
+        'jobs',
+        'checklist',
+        'item_checklist',
+        'status_item_checklist',
+        'tipo_checklist',
+        'configuracao_checklist',
+        'categoria_dano',
+        'dano',
+    ];
+
+    foreach ($webGroupFiles as $groupFile) {
+        Route::middleware('web')->group(function () use ($groupFile): void {
+            require base_path('routes/grupos/' . $groupFile . '.php');
+        });
+    }
+
+    Route::post('/reserva/salvar-assinatura', [ReservaController::class, 'salvarAssinatura'])->name('reserva.salvar.assinatura');
 });
-
-
-// Route::middleware('web')
-//     ->group(function() {
-//         require base_path('routes/grupos/disponibilidade_inicial_veiculo.php');
-
-// });
-
-
-Route::middleware('api')
-    ->group(function() {
-        require base_path('routes/grupos/status_reserva.php');
-
-});
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/jobs.php');
-
-});
-
-
-
-
-
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/checklist.php');
-
-});
-
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/item_checklist.php');
-
-});
-
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/status_item_checklist.php');
-
-});
-
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/tipo_checklist.php');
-
-});
-
-
-
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/configuracao_checklist.php');
-
-});
-
-
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/categoria_dano.php');
-
-});
-
-Route::middleware('web')
-    ->group(function() {
-        require base_path('routes/grupos/dano.php');
-
-});
-
-Route::post('/reserva/salvar-assinatura', [ReservaController::class, 'salvarAssinatura'])->name('reserva.salvar.assinatura');

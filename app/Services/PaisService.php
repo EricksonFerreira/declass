@@ -50,4 +50,15 @@ class PaisService extends AbstractBaseService
         return $this->formatArraySelect($data, 'sigla', 'nome');
     }
 
+    public function getPaisBrasilId(): ?int
+    {
+        return $this->model->newQuery()
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(sigla) = ?', ['br'])
+                    ->orWhereRaw('LOWER(nome) like ?', ['%brasil%'])
+                    ->orWhereRaw('LOWER(nome) like ?', ['%brazil%']);
+            })
+            ->value('id');
+    }
+
 }

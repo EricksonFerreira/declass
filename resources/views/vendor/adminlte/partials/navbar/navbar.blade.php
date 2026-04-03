@@ -157,10 +157,15 @@
     {{-- Navbar right links --}}
     <ul class="navbar-nav ml-auto">
         @if($empresaTemaAtual)
+            @php
+                $empresaLogoPath = is_string($empresaTemaAtual->logo_path ?? null)
+                    ? trim($empresaTemaAtual->logo_path)
+                    : '';
+            @endphp
             <li class="nav-item d-flex align-items-center mr-2">
                 <span class="empresa-context-chip" title="Empresa ativa">
-                    @if(!empty($empresaTemaAtual->logo_path) && \Illuminate\Support\Facades\Storage::disk('public')->exists($empresaTemaAtual->logo_path))
-                        <img src="{{ \Illuminate\Support\Facades\Storage::url($empresaTemaAtual->logo_path) }}" alt="Logo empresa">
+                    @if($empresaLogoPath !== '' && \Illuminate\Support\Facades\Storage::disk('public')->exists($empresaLogoPath))
+                        <img src="{{ \Illuminate\Support\Facades\Storage::url($empresaLogoPath) }}" alt="Logo empresa">
                     @else
                         <span class="empresa-chip-inicial">{{ strtoupper(mb_substr($empresaTemaAtual->nome ?? 'E', 0, 1)) }}</span>
                     @endif

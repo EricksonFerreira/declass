@@ -672,6 +672,7 @@
         $(function () {
             $('#celular').mask('(00) 00000-0000');
             $('#telefone').mask('(00) 00000-0000');
+            $('#zip_code').mask('00000-000');
 
             const regexTelefone = /^\(\d{2}\) \d{4,5}-\d{4}$/;
 
@@ -698,6 +699,7 @@
             const $cidade = $('#cidade');
             const $endereco = $('#endereco');
             const $zipFeedback = $('#zip-feedback');
+            const paisBrasilId = @json($paisBrasilId ?? null);
 
             function setZipFeedback(message, type = 'info') {
                 if (!message) {
@@ -713,6 +715,11 @@
 
             function selecionarPaisBrasil() {
                 if (!$pais.length) {
+                    return;
+                }
+
+                if (paisBrasilId) {
+                    $pais.val(String(paisBrasilId)).trigger('change');
                     return;
                 }
 
@@ -741,15 +748,11 @@
                         return;
                     }
 
-                    const enderecoCompleto = [data.logradouro, data.bairro].filter(Boolean).join(' - ');
+                    const cidade = (data.localidade || '').trim();
+                    const enderecoCompleto = [data.logradouro, data.bairro].filter(Boolean).join(' - ').trim();
 
-                    if (data.localidade) {
-                        $cidade.val(data.localidade);
-                    }
-
-                    if (enderecoCompleto) {
-                        $endereco.val(enderecoCompleto);
-                    }
+                    $cidade.val(cidade);
+                    $endereco.val(enderecoCompleto);
 
                     selecionarPaisBrasil();
                     setZipFeedback('Endereco preenchido automaticamente. Confira numero/complemento.', 'success');
@@ -772,6 +775,13 @@
                 }
 
                 setZipFeedback('Preenchimento automatico disponivel para CEP brasileiro (8 digitos).', 'info');
+            });
+
+            $zipCode.on('input', function () {
+                const cepNumerico = (($(this).val() || '').trim()).replace(/\D/g, '');
+                if (cepNumerico.length === 8) {
+                    preencherEnderecoPorCep(cepNumerico);
+                }
             });
 
             function parseTimeToMinutes(time) {

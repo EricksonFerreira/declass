@@ -43,7 +43,7 @@
                         <th>Gateway / Moeda</th>
                         <th>Cores</th>
                         <th>Status</th>
-                        <th class="text-center" style="width:120px;">Acoes</th>
+                        <th class="text-center" style="width:220px;">Acoes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -141,6 +141,9 @@
                                 </span>
                             </td>
                             <td class="text-center align-middle">
+                                <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="btn btn-xs btn-info mb-1">
+                                    <i class="fa fa-globe"></i> Site
+                                </a>
                                 <a href="{{ route('empresa.edit', $empresa->id) }}" class="btn btn-xs btn-warning">
                                     <i class="fa fa-edit"></i> Editar
                                 </a>

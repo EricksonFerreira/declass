@@ -6,13 +6,11 @@ use Illuminate\Http\Request;
 
 trait FiltroTrait
 {
-
     /**
-     * Cria filtros de sessão de forma dinâmica.
+     * Cria filtros de sessao de forma dinamica.
      *
      * @param \Illuminate\Http\Request $request
      * @param string $nomeFiltro
-     * @param string $urlPadrao
      * @return void
      */
     private function criarFiltros(Request $request, string $nomeFiltro)
@@ -22,16 +20,11 @@ trait FiltroTrait
         $filtros = $request->all();
         foreach ($filtros as $chave => $valor) {
             if ($valor !== null && !in_array($chave, ['nomeFiltro', 'urlPadrao', 'routeRedirect'])) {
-
-                // Formata o nome para exibição
                 $nomeExibir = $this->formatarNomeExibir($chave);
-
-                // Determina o tipo de filtro e o nome do campo sem sufixo
                 [$chave, $typeWhere] = $this->determinarTipoFiltro($chave);
 
-
                 session(["$nomeFiltro.filtro.$chave" => [
-                    'url' => session()->get($nomeFiltro . '.urlPadrao') . '/removerfiltro?' . $chave . '=1',
+                    'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro . '.urlPadrao')) . '/removerfiltro?' . $chave . '=1',
                     'name' => $chave,
                     'nomeExibir' => $nomeExibir,
                     'valor' => $valor,
@@ -42,7 +35,7 @@ trait FiltroTrait
     }
 
     /**
-     * Remove filtros de sessão.
+     * Remove filtros de sessao.
      *
      * @param string $sessao
      * @param string|null $atributo
@@ -54,9 +47,8 @@ trait FiltroTrait
         session()->forget("$sessao.filtro$atributo");
     }
 
-    public function redirecionaRotaRedirect(string $nomeFiltro, string $mensagem = 'Não há rota de redirecionamento', string $tipo = 'success')
+    public function redirecionaRotaRedirect(string $nomeFiltro, string $mensagem = 'Nao ha rota de redirecionamento', string $tipo = 'success')
     {
-        // dd(session()->has($nomeFiltro . '.rotaRedirect'),$mensagem);
         if (session()->has($nomeFiltro . '.rotaRedirect')) {
             return redirect()->route(session($nomeFiltro . '.rotaRedirect'));
         }
@@ -77,23 +69,41 @@ trait FiltroTrait
         } elseif (str_ends_with($chave, '_where')) {
             $chave = str_replace('_where', '', $chave);
         }
+
         return [$chave, $typeWhere];
     }
 
-    private function formatarNomeExibir($chave) {
-        // Caso seja Snake_Case, CamelCase ou PascalCase separe por espaço
+    private function formatarNomeExibir($chave)
+    {
         $nomeExibir = preg_replace('/(?<!^)([A-Z])/', ' $1', ucfirst($chave));
-        // Altera o _ por ' ' e remove '_where' e '_like'
         $nomeExibir = str_replace(['_where', '_like', '_'], ' ', $nomeExibir);
-        // Remove todas as variações de "id" se estiver isolada
         $nomeExibir = preg_replace('/\b(id|Id|iD|ID)\b/i', '', $nomeExibir);
-        // Capitaliza a primeira letra de cada palavra
         $nomeExibir = ucwords($nomeExibir);
 
         return $nomeExibir;
     }
 
-      public static function formatOptions($items, $defaultLabel = 'Selecione uma opção')
+    private function normalizeAdminPath(string $path): string
+    {
+        $normalizedPath = trim($path, '/');
+        $adminPrefix = trim((string) config('app.admin_prefix', 'admin'), '/');
+
+        if ($normalizedPath === '') {
+            return $adminPrefix === '' ? '' : $adminPrefix;
+        }
+
+        if ($adminPrefix === '') {
+            return $normalizedPath;
+        }
+
+        if ($normalizedPath === $adminPrefix || str_starts_with($normalizedPath, $adminPrefix . '/')) {
+            return $normalizedPath;
+        }
+
+        return $adminPrefix . '/' . $normalizedPath;
+    }
+
+    public static function formatOptions($items, $defaultLabel = 'Selecione uma opcao')
     {
         $options = [];
         $options[] = ['value' => '', 'label' => $defaultLabel, 'selected' => false];

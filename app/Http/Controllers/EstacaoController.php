@@ -95,9 +95,10 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         $diasUteis = $this->diaUtilService->getAllAtivos('id', 'dia', 'dia', 'asc');
 
         $horariosDiarios = $this->horarioDiarioService->getAllAtivos();
+        $paisBrasilId = $this->paisService->getPaisBrasilId();
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
-        return view('estacao.add-edit', compact('breadcrumb', 'paises', 'status', 'diasUteis', 'metodo', 'rota', 'checkin', 'checkout', 'horariosDiarios'))->with('titulo', $this->titulo);
+        return view('estacao.add-edit', compact('breadcrumb', 'paises', 'status', 'diasUteis', 'metodo', 'rota', 'checkin', 'checkout', 'horariosDiarios', 'paisBrasilId'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreEstacaoRequest $request)
@@ -133,6 +134,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         $diasUteis = $this->diaUtilService->getAllAtivos('id', 'dia', 'dia', 'asc');
         [$metodo, $rota] = $this->getFormMethodAndRoute($estacao);
         $diasUteisEstacao = $estacao->diasUteis->pluck('id')->toArray();
+        $paisBrasilId = $this->paisService->getPaisBrasilId();
 
         return view(
             'estacao.add-edit',
@@ -150,7 +152,8 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
                 'cobrarColeta',
                 'cobrarEntrega',
                 'validoIntervalo',
-                'diasUteisEstacao'
+                'diasUteisEstacao',
+                'paisBrasilId'
             )
         )
             ->with('titulo', $this->titulo);

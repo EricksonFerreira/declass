@@ -25,6 +25,17 @@ class Empresa extends Model
         'email',
         'telefone',
         'dominio',
+        'site_apresentacao_ativo',
+        'site_apresentacao_modelo',
+        'site_apresentacao_titulo',
+        'site_apresentacao_subtitulo',
+        'site_apresentacao_descricao',
+        'site_apresentacao_botao_texto',
+        'site_apresentacao_botao_url',
+        'site_apresentacao_textos',
+        'site_apresentacao_imagens',
+        'site_apresentacao_cores',
+        'site_apresentacao_imagens_config',
         'logo_path',
         'cor_primaria',
         'cor_secundaria',
@@ -41,6 +52,13 @@ class Empresa extends Model
         'empresa_id',
     ];
 
+    protected $casts = [
+        'site_apresentacao_textos' => 'array',
+        'site_apresentacao_imagens' => 'array',
+        'site_apresentacao_cores' => 'array',
+        'site_apresentacao_imagens_config' => 'array',
+    ];
+
     public function users()
     {
         return $this->hasMany(User::class, 'empresa_id');
@@ -48,15 +66,17 @@ class Empresa extends Model
 
     public function getLogoUrlAttribute(): ?string
     {
-        if (empty($this->logo_path)) {
+        $path = is_string($this->logo_path) ? trim($this->logo_path) : '';
+
+        if ($path === '') {
             return null;
         }
 
-        if (!Storage::disk('public')->exists($this->logo_path)) {
+        if (!Storage::disk('public')->exists($path)) {
             return null;
         }
 
-        return Storage::url($this->logo_path);
+        return Storage::url($path);
     }
 
     protected function stripeSecret(): Attribute

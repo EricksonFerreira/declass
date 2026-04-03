@@ -25,6 +25,11 @@
                     <h4 class="mb-1">{{ $titulo }}</h4>
                     <p class="mb-0 text-muted">Configure os dados da empresa e as informacoes de pagamento.</p>
                 </div>
+                @if(isset($empresa))
+                    <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="btn btn-outline-primary btn-sm mt-2 mt-md-0">
+                        Configurar site de apresentacao
+                    </a>
+                @endif
             </div>
 
             <div class="card-body p-4">
@@ -277,6 +282,11 @@
     .card-header-empresa {
         background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
         padding: 1.1rem 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
     }
 
     .card-header-empresa h4 {
