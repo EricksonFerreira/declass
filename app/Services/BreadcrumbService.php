@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Helpers\BreadcrumbHelper;
-use App\DTO\BreadcrumbItem;
+use App\DTO\BreadCrumbItem;
 
 class BreadcrumbService
 {
