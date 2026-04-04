@@ -42,4 +42,9 @@ return [
     'payment' => [
         'default_gateway' => env('PAYMENT_DEFAULT_GATEWAY', 'stripe'),
     ],
+    'nuvemfiscal' => [
+        'auth_url' => env('NUVEMFISCAL_AUTH_URL', 'https://auth.nuvemfiscal.com.br/oauth/token'),
+        'base_url' => env('NUVEMFISCAL_BASE_URL', 'https://api.nuvemfiscal.com.br'),
+        'sandbox_url' => env('NUVEMFISCAL_SANDBOX_URL', 'https://api.sandbox.nuvemfiscal.com.br'),
+    ],
 ];

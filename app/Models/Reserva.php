@@ -122,4 +122,9 @@ class Reserva extends Model
     public function veiculoDano(){
         return $this->hasMany(VeiculoDanos::class, 'reserva_id');
     }
+
+    public function nfse()
+    {
+        return $this->hasOne(Nfse::class, 'reserva_id');
+    }
 }

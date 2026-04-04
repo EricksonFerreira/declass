@@ -274,6 +274,127 @@
                     </div>
                 </div>
 
+                <div class="col-12 mt-2">
+                    <div class="empresa-section-title">Fiscal - NFS-e (Nuvem Fiscal)</div>
+                </div>
+
+                <div class="col-lg-3">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_ativo">Emitir NFS-e</label>
+                        @php $nfseAtivo = old('nfse_ativo', $empresa->nfse_ativo ?? 'N'); @endphp
+                        <select id="nfse_ativo" name="nfse_ativo" class="form-control form-control-sm">
+                            <option value="N" {{ $nfseAtivo === 'N' ? 'selected' : '' }}>Nao</option>
+                            <option value="S" {{ $nfseAtivo === 'S' ? 'selected' : '' }}>Sim</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_ambiente">Ambiente</label>
+                        @php $nfseAmbiente = old('nfse_ambiente', $empresa->nfse_ambiente ?? 'homologacao'); @endphp
+                        <select id="nfse_ambiente" name="nfse_ambiente" class="form-control form-control-sm">
+                            <option value="homologacao" {{ $nfseAmbiente === 'homologacao' ? 'selected' : '' }}>Homologacao</option>
+                            <option value="producao" {{ $nfseAmbiente === 'producao' ? 'selected' : '' }}>Producao</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_provedor">Provedor</label>
+                        @php $nfseProvedor = old('nfse_provedor', $empresa->nfse_provedor ?? 'nuvemfiscal'); @endphp
+                        <select id="nfse_provedor" name="nfse_provedor" class="form-control form-control-sm">
+                            <option value="nuvemfiscal" {{ $nfseProvedor === 'nuvemfiscal' ? 'selected' : '' }}>Nuvem Fiscal (teste)</option>
+                            <option value="nfephp" {{ $nfseProvedor === 'nfephp' ? 'selected' : '' }}>NFePHP (final)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-lg-3">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_inscricao_municipal">Inscricao municipal</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_inscricao_municipal" name="nfse_inscricao_municipal"
+                               value="{{ old('nfse_inscricao_municipal', $empresa->nfse_inscricao_municipal ?? '') }}">
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_client_id">Nuvem Fiscal Client ID</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_client_id" name="nfse_client_id"
+                               value="{{ old('nfse_client_id', $empresa->nfse_client_id ?? '') }}">
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_client_secret">Nuvem Fiscal Client Secret</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_client_secret" name="nfse_client_secret" value="">
+                        <small class="text-muted d-block mt-1">Deixe em branco para manter o secret atual.</small>
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_municipio_codigo">Codigo do municipio (IBGE)</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_municipio_codigo" name="nfse_municipio_codigo"
+                               value="{{ old('nfse_municipio_codigo', $empresa->nfse_municipio_codigo ?? '') }}">
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_codigo_servico">Codigo do servico</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_codigo_servico" name="nfse_codigo_servico"
+                               value="{{ old('nfse_codigo_servico', $empresa->nfse_codigo_servico ?? '') }}">
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_cnae">CNAE (opcional)</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_cnae" name="nfse_cnae"
+                               value="{{ old('nfse_cnae', $empresa->nfse_cnae ?? '') }}">
+                    </div>
+                </div>
+
+                <div class="col-lg-8">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_descricao_servico">Descricao do servico</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_descricao_servico" name="nfse_descricao_servico"
+                               value="{{ old('nfse_descricao_servico', $empresa->nfse_descricao_servico ?? '') }}">
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_aliquota">Aliquota ISS (%)</label>
+                        <input type="number" step="0.01" class="form-control form-control-sm" id="nfse_aliquota" name="nfse_aliquota"
+                               value="{{ old('nfse_aliquota', $empresa->nfse_aliquota ?? '') }}">
+                    </div>
+                </div>
+
+                <div class="col-lg-4">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_tributacao_issqn">Tributacao ISSQN</label>
+                        @php $trib = (string) old('nfse_tributacao_issqn', $empresa->nfse_tributacao_issqn ?? '1'); @endphp
+                        <select id="nfse_tributacao_issqn" name="nfse_tributacao_issqn" class="form-control form-control-sm">
+                            <option value="1" {{ $trib === '1' ? 'selected' : '' }}>1 - Tributacao no municipio</option>
+                            <option value="2" {{ $trib === '2' ? 'selected' : '' }}>2 - Tributacao fora do municipio</option>
+                            <option value="3" {{ $trib === '3' ? 'selected' : '' }}>3 - Isento</option>
+                            <option value="4" {{ $trib === '4' ? 'selected' : '' }}>4 - Imune</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_tomador_numero_padrao">Numero tomador (padrao)</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_tomador_numero_padrao" name="nfse_tomador_numero_padrao"
+                               value="{{ old('nfse_tomador_numero_padrao', $empresa->nfse_tomador_numero_padrao ?? '') }}">
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="form-group form-group-empresa">
+                        <label for="nfse_tomador_bairro_padrao">Bairro tomador (padrao)</label>
+                        <input type="text" class="form-control form-control-sm" id="nfse_tomador_bairro_padrao" name="nfse_tomador_bairro_padrao"
+                               value="{{ old('nfse_tomador_bairro_padrao', $empresa->nfse_tomador_bairro_padrao ?? '') }}">
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-primary btn-save-empresa col-12 mt-2">
                     Salvar
                 </button>

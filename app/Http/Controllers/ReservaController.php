@@ -21,6 +21,7 @@ use App\Services\GrupoFrotaService;
 use App\Services\MarcaService;
 use App\Services\ModeloService;
 use App\Services\MovimentacaoService;
+use App\Services\NfseService;
 use App\Services\OpcionalService;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use App\Services\Pagamentos\GerenciadorDePagamentos;
@@ -34,11 +35,13 @@ use App\Services\VeiculoDanoService;
 use App\Services\VeiculoService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\LogTrait;
+use App\Models\Reserva;
 use DB;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class ReservaController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -65,6 +68,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     protected $gatewayEmpresaConfigService;
     protected $regraService;
     protected $paisService;
+    protected $nfseService;
 
     public function __construct(
         ReservaService $reservaService,
@@ -86,7 +90,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         GerenciadorDePagamentos $gerenciadorDePagamentos,
         GatewayEmpresaConfigService $gatewayEmpresaConfigService,
         RegraService $regraService,
-        PaisService $paisService
+        PaisService $paisService,
+        NfseService $nfseService
     ) {
         $this->titulo = "Reservas";
         $this->nomeFiltro = 'reserva';
@@ -110,11 +115,31 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $this->gatewayEmpresaConfigService = $gatewayEmpresaConfigService;
         $this->regraService = $regraService;
         $this->paisService = $paisService;
+        $this->nfseService = $nfseService;
     }
 
     public function index()
     {
         $this->configurarSessao();
+
+        $user = Auth::user();
+        if ($user && !$user->isAdministrador() && $this->isCliente($user)) {
+            $query = Reserva::query()
+                ->with(['estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos', 'statusReserva'])
+                ->where('user_id', $user->id)
+                ->orderBy('id', 'desc');
+
+            if (Schema::hasColumn('reservas', 'empresa_id') && $user->empresa_id) {
+                $query->where('empresa_id', $user->empresa_id);
+            }
+
+            $reservas = $query->paginate(10);
+
+            return view('reserva.index-cliente', [
+                'reservas' => $reservas,
+                'titulo' => 'Minhas reservas',
+            ]);
+        }
 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
@@ -145,6 +170,12 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'perPages',
             'perPage'
         ))->with('titulo', $this->titulo);
+    }
+
+    private function isCliente($user): bool
+    {
+        $roleName = strtolower(trim((string) ($user?->tipoUsuario?->name ?? '')));
+        return $roleName === 'cliente';
     }
 
     public function create()
@@ -459,6 +490,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     public function cancelar($id)
     {
         $this->reservaService->cancelar($id);
+        $reserva = $this->reservaService->getById($id);
+        if ($reserva) {
+            $this->nfseService->cancelarPorReserva($reserva);
+        }
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -782,6 +817,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'data_pagamento' => date('Y-m-d H:i:s'),
         ]);
         $this->reservaService->adicionaLog($id, (int) Auth::id(), $json);
+
+        $this->nfseService->emitirParaReserva($reserva);
 
         return redirect()->route('reserva.show', $id)->with('success', 'Pagamento efetuado com sucesso');
     }

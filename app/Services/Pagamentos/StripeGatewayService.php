@@ -14,7 +14,7 @@ class StripeGatewayService implements IPagamento
         $stripeSecret = (string) ($dados['stripe_secret'] ?? '');
         $currency = strtolower((string) ($dados['currency'] ?? 'brl'));
 
-        if ($paymentMethodId === '' || $customerId === '' || $valor <= 0 || $stripeSecret === '') {
+        if ($paymentMethodId === '' || $valor <= 0 || $stripeSecret === '') {
             return [
                 'status' => 'error',
                 'message' => 'Dados invalidos para cobranca no Stripe.',
@@ -22,17 +22,21 @@ class StripeGatewayService implements IPagamento
         }
 
         $stripe = new StripeClient($stripeSecret);
-        $intent = $stripe->paymentIntents->create([
+        $payload = [
             'amount' => (int) round($valor * 100),
             'currency' => $currency,
             'payment_method' => $paymentMethodId,
-            'customer' => $customerId,
             'confirm' => true,
             'automatic_payment_methods' => [
                 'enabled' => true,
                 'allow_redirects' => 'never',
             ],
-        ]);
+        ];
+        if ($customerId !== '') {
+            $payload['customer'] = $customerId;
+        }
+
+        $intent = $stripe->paymentIntents->create($payload);
 
         if ($intent->status !== 'succeeded') {
             return [

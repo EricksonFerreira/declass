@@ -237,7 +237,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             abort(403, 'Sem acesso para editar esta empresa.');
         }
 
-        foreach (['stripe_secret', 'mercado_livre_access_token', 'paypal_client_secret'] as $secretField) {
+        foreach (['stripe_secret', 'mercado_livre_access_token', 'paypal_client_secret', 'nfse_client_secret'] as $secretField) {
             if (!array_key_exists($secretField, $data) || $data[$secretField] === null || $data[$secretField] === '') {
                 unset($data[$secretField]);
             }

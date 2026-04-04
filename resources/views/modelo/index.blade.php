@@ -32,6 +32,7 @@
             <table class="table table-striped table-bordered table-sm">
                 <thead>
                     <tr>
+                        <th style="width: 90px;">Imagem</th>
                         <th>Nome</th>
                         <th>Marca</th>
                         <th>Segmento</th>
@@ -42,6 +43,13 @@
                 <tbody>
                     @foreach ($modelos as $modelo)
                         <tr>
+                            <td class="text-center">
+                                @if(!empty($modelo->imagem_url))
+                                    <img src="{{ $modelo->imagem_url }}" alt="{{ $modelo->nome }}" style="width:64px;height:44px;object-fit:cover;border-radius:8px;border:1px solid #e2e8f0;">
+                                @else
+                                    <span class="text-muted" style="font-size:11px;">Sem imagem</span>
+                                @endif
+                            </td>
                             <td>{{ $modelo->nome }}</td>
                             <td>{{ $modelo->marcas?->nome }}</td>
                             <td>{{ $modelo->segmentos?->nome }}</td>

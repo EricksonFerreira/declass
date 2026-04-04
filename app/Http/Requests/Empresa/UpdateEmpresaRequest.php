@@ -22,6 +22,7 @@ class UpdateEmpresaRequest extends FormRequest
             'cor_primaria' => $this->normalizeColor($this->input('cor_primaria')),
             'cor_secundaria' => $this->normalizeColor($this->input('cor_secundaria')),
             'cor_terciaria' => $this->normalizeColor($this->input('cor_terciaria')),
+            'nfse_municipio_codigo' => $this->onlyDigits($this->input('nfse_municipio_codigo')),
         ]);
     }
 
@@ -55,6 +56,20 @@ class UpdateEmpresaRequest extends FormRequest
             'paypal_client_id' => ['nullable', 'string', 'max:255'],
             'paypal_client_secret' => ['nullable', 'string'],
             'paypal_mode' => ['nullable', Rule::in(['sandbox', 'live'])],
+            'nfse_ativo' => ['nullable', Rule::in(['S', 'N'])],
+            'nfse_ambiente' => ['nullable', Rule::in(['homologacao', 'producao'])],
+            'nfse_provedor' => ['nullable', 'string', 'max:50'],
+            'nfse_client_id' => ['nullable', 'string', 'max:150'],
+            'nfse_client_secret' => ['nullable', 'string'],
+            'nfse_inscricao_municipal' => ['nullable', 'string', 'max:30'],
+            'nfse_municipio_codigo' => ['nullable', 'digits_between:6,7'],
+            'nfse_codigo_servico' => ['nullable', 'string', 'max:20'],
+            'nfse_cnae' => ['nullable', 'string', 'max:20'],
+            'nfse_descricao_servico' => ['nullable', 'string'],
+            'nfse_aliquota' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'nfse_tributacao_issqn' => ['nullable', 'integer', 'min:1', 'max:4'],
+            'nfse_tomador_numero_padrao' => ['nullable', 'string', 'max:20'],
+            'nfse_tomador_bairro_padrao' => ['nullable', 'string', 'max:80'],
         ];
     }
     public function messages(): array
@@ -84,6 +99,9 @@ class UpdateEmpresaRequest extends FormRequest
             'mercado_livre_public_key.max' => 'A chave pública do Mercado Livre deve ter no máximo 255 caracteres.',
             'paypal_client_id.max' => 'O Client ID do PayPal deve ter no máximo 255 caracteres.',
             'paypal_mode.in' => 'O modo do PayPal deve ser sandbox ou live.',
+            'nfse_ativo.in' => 'O campo NFS-e ativo deve ser S ou N.',
+            'nfse_ambiente.in' => 'O ambiente NFS-e deve ser homologacao ou producao.',
+            'nfse_municipio_codigo.digits_between' => 'O codigo do municipio deve ter 6 ou 7 digitos.',
         ];
     }
 

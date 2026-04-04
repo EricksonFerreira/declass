@@ -83,9 +83,14 @@
             border: 1px solid rgba(255, 255, 255, .38);
             color: #fff;
         }
+        .toast-wrap { position: fixed; top: 16px; right: 16px; display: grid; gap: 8px; z-index: 60; }
+        .toast { min-width: 260px; max-width: 360px; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700; box-shadow: 0 18px 30px rgba(0, 0, 0, .25); border: 1px solid rgba(255,255,255,.3); background: rgba(15, 23, 42, .8); color: #fff; }
+        .toast.ok { background: rgba(22, 101, 52, .92); }
+        .toast.err { background: rgba(153, 27, 27, .92); }
     </style>
 </head>
 <body>
+    <div class="toast-wrap" id="toastWrap"></div>
     <section class="card">
         <div class="header">
             @if(!empty($empresa->logo_url))
@@ -118,5 +123,30 @@
             <a href="{{ $urlAdmin }}" class="btn btn-secondary">Area administrativa</a>
         </div>
     </section>
+    <script>
+        (function () {
+            const toastWrap = document.getElementById('toastWrap');
+            const successMessage = @json(session('success'));
+            const errorMessages = @json($errors->all());
+
+            const showToast = (message, type) => {
+                if (!toastWrap || !message) return;
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                toastWrap.appendChild(toast);
+                setTimeout(() => {
+                    toast.remove();
+                }, 5000);
+            };
+
+            if (successMessage) {
+                showToast(successMessage, 'ok');
+            }
+            if (Array.isArray(errorMessages)) {
+                errorMessages.forEach((msg) => showToast(msg, 'err'));
+            }
+        })();
+    </script>
 </body>
 </html>

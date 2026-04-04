@@ -6,7 +6,7 @@ trait AtualizaFiltrosTrait
     {
         foreach ($itensFiltrados as $key => &$item) {
             foreach ($filtros as &$filtro) {
-                if ($filtro['name'] === $item['name']) {
+                if (isset($item['name']) && $filtro['name'] === $item['name']) {
                     if ($filtro['type'] === 'text') {
                         $filtro['valor'] = $item['valor'];
                     } elseif ($filtro['type'] === 'select') {

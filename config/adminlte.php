@@ -483,6 +483,11 @@ return [
                     'route'  => 'financeiro.reservas',
                     'icon' => 'fas fa-receipt',
                 ],
+                [
+                    'text' => 'Notas Fiscais',
+                    'route'  => 'nfse.index',
+                    'icon' => 'fas fa-file-invoice',
+                ],
             ],
         ],
 

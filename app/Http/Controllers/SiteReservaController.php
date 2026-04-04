@@ -18,6 +18,7 @@ use App\Services\GrupoFrotaService;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use App\Services\Pagamentos\GerenciadorDePagamentos;
 use App\Services\PaisService;
+use App\Services\NfseService;
 use App\Services\RegraService;
 use App\Services\ReservaService;
 use App\Services\UsuarioService;
@@ -49,6 +50,7 @@ class SiteReservaController extends Controller
         private readonly RegraService $regraService,
         private readonly ClienteStripeService $clienteStripeService,
         private readonly PaisService $paisService,
+        private readonly NfseService $nfseService,
         private readonly GatewayEmpresaConfigService $gatewayEmpresaConfigService,
         private readonly GerenciadorDePagamentos $gerenciadorDePagamentos
     ) {
@@ -242,10 +244,12 @@ class SiteReservaController extends Controller
         $this->activateEmpresaContext($empresa);
 
         $requireModelo = ($empresa->reserva_selecionar_modelo ?? 'N') === 'S';
-        $validated = Validator::make($request->all(), $this->storeRules($requireModelo))->validate();
+        $usarUsuarioLogado = strtoupper((string) $request->input('usar_usuario_logado', 'S'));
+        $requireCliente = !auth()->check() || $usarUsuarioLogado === 'N';
+        $validated = Validator::make($request->all(), $this->storeRules($requireModelo, $requireCliente))->validate();
 
         $userCriado = false;
-        if (auth()->check()) {
+        if (auth()->check() && $usarUsuarioLogado !== 'N') {
             $user = auth()->user();
         } else {
             $user = $this->resolveReservaUser($validated, $empresa, $userCriado);
@@ -438,7 +442,15 @@ class SiteReservaController extends Controller
 
         $this->activateEmpresaContext($empresa);
 
-        $query = Reserva::query()->with(['estacaoRetirada', 'estacaoDevolucao', 'modelos', 'grupoFrota']);
+        $query = Reserva::query()->with([
+            'estacaoRetirada',
+            'estacaoDevolucao',
+            'modelos',
+            'grupoFrota',
+            'usuario',
+            'opcionais',
+            'cupomDesconto',
+        ]);
         if (Schema::hasColumn('reservas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
@@ -481,10 +493,14 @@ class SiteReservaController extends Controller
         ][$gatewayPadrao] ?? strtoupper((string) $gatewayPadrao);
 
         $metodosPagamento = [];
-        if ($gatewayPadrao === 'stripe' && !empty(auth()->user()?->stripe_id)) {
-            $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
-            if ($stripeSecret !== '') {
-                $metodosPagamento = $this->clienteStripeService->getPaymentMethods(auth()->user()->stripe_id, $stripeSecret);
+        $stripePublicKey = null;
+        if ($gatewayPadrao === 'stripe') {
+            $stripePublicKey = (string) ($empresa->stripe_public_key ?? config('services.stripe.key') ?? env('STRIPE_KEY'));
+            if (!empty(auth()->user()?->stripe_id)) {
+                $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
+                if ($stripeSecret !== '') {
+                    $metodosPagamento = $this->clienteStripeService->getPaymentMethods(auth()->user()->stripe_id, $stripeSecret);
+                }
             }
         }
 
@@ -495,10 +511,91 @@ class SiteReservaController extends Controller
             'gatewayNome' => $gatewayNome,
             'moedaPadrao' => $moedaPadrao,
             'metodosPagamento' => $metodosPagamento,
+            'stripePublicKey' => $stripePublicKey,
             'urlVoltar' => route('site.reserva.index'),
             'urlProcessar' => route('site.reserva.processarPagamento', ['reserva' => $reservaItem->id]),
+            'urlAdicionarMetodo' => route('site.reserva.pagamento.metodo', ['reserva' => $reservaItem->id]),
             'urlLogin' => Route::has('login') ? route('login') : $this->adminLoginFallbackUrl(),
         ]);
+    }
+
+    public function adicionarMetodoPagamento(Request $request, int $reserva): RedirectResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $reservaItem = Reserva::query()->find($reserva);
+        if (!$reservaItem) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['reserva' => 'Reserva nao encontrada.']);
+        }
+
+        if (!auth()->check() || (int) auth()->id() !== (int) $reservaItem->user_id) {
+            session()->put('url.intended', route('site.reserva.pagamento', ['reserva' => $reservaItem->id]));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
+        $stripeToken = (string) $request->input('stripeToken', '');
+        if ($stripeToken === '') {
+            return redirect()
+                ->back()
+                ->withErrors(['stripeToken' => 'Token do cartao nao informado.']);
+        }
+
+        $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
+        if ($stripeSecret === '') {
+            return redirect()
+                ->back()
+                ->withErrors(['stripe' => 'Chave Stripe nao configurada para esta empresa.']);
+        }
+
+        $user = auth()->user();
+        if (!$user) {
+            return redirect()->back();
+        }
+
+        $stripeId = $user->stripe_id;
+        if (!$stripeId) {
+            try {
+                $clienteStripe = $this->clienteStripeService->criarCliente($user->email, $user->nome ?? 'Cliente', $stripeSecret);
+                $stripeId = (string) ($clienteStripe->id ?? '');
+                if ($stripeId !== '') {
+                    $this->usuarioService->updateUser($user->id, ['stripe_id' => $stripeId]);
+                }
+            } catch (\Throwable $e) {
+                return redirect()
+                    ->back()
+                    ->withErrors(['stripe' => 'Nao foi possivel criar o cliente no Stripe.']);
+            }
+        }
+
+        if ($stripeId === '') {
+            return redirect()
+                ->back()
+                ->withErrors(['stripe' => 'Cliente Stripe nao encontrado.']);
+        }
+
+        try {
+            $this->clienteStripeService->criarMetodoPagamento($stripeId, $stripeToken, $stripeSecret);
+        } catch (\Throwable $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['stripe' => 'Nao foi possivel adicionar o metodo de pagamento.']);
+        }
+
+        return redirect()
+            ->route('site.reserva.pagamento', ['reserva' => $reservaItem->id])
+            ->with('success', 'Metodo de pagamento adicionado com sucesso.');
     }
 
     public function processarPagamento(Request $request, int $reserva): RedirectResponse
@@ -541,6 +638,12 @@ class SiteReservaController extends Controller
         $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
         $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
         $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
+        $paymentType = (string) $request->input('payment_type', '');
+        $paymentMethodId = (string) $request->input('payment_method_id', '');
+
+        if ($gateway === 'mercado_livre' && $paymentType === 'pix' && $paymentMethodId === '') {
+            $paymentMethodId = 'pix';
+        }
 
         if ($gateway === 'stripe' && empty($request->payment_method)) {
             return redirect()
@@ -549,19 +652,39 @@ class SiteReservaController extends Controller
         }
 
         $valorTotal = (float) ($reservaItem->valor_total_final ?? 0);
+        $salvarMetodo = (string) $request->input('salvar_metodo', 'S');
+        $customerId = (string) (auth()->user()?->stripe_id ?? '');
+        if ($gateway === 'stripe' && strtoupper($salvarMetodo) === 'N') {
+            $customerId = '';
+        }
+
         $payload = array_merge([
             'reserva_id' => $reservaItem->id,
             'valor' => $valorTotal,
             'currency' => $currency,
             'payment_method' => (string) $request->input('payment_method', ''),
-            'customer_id' => (string) (auth()->user()?->stripe_id ?? ''),
+            'customer_id' => $customerId,
             'descricao' => 'Pagamento da reserva #' . $reservaItem->id,
             'payer_email' => (string) (auth()->user()?->email ?? ''),
+            'payment_method_id' => $paymentMethodId,
+            'token' => (string) $request->input('token', ''),
+            'installments' => (int) $request->input('installments', 1),
         ], $credenciais);
 
         $resultado = $this->gerenciadorDePagamentos
             ->resolver($gateway)
             ->cobrarPagamento($payload);
+
+        if (
+            $gateway === 'mercado_livre'
+            && ($resultado['status'] ?? '') === 'pending'
+            && ($resultado['payment_method_id'] ?? '') === 'pix'
+        ) {
+            return redirect()
+                ->route('site.reserva.pagamento', ['reserva' => $reservaItem->id])
+                ->with('success', 'Pix gerado. Escaneie o QR Code para concluir o pagamento.')
+                ->with('pix', $resultado);
+        }
 
         if (($resultado['status'] ?? 'error') !== 'success') {
             return redirect()
@@ -596,6 +719,21 @@ class SiteReservaController extends Controller
             'data_pagamento' => date('Y-m-d H:i:s'),
         ]);
         $this->reservaService->adicionaLog((int) $reservaItem->id, (int) Auth::id(), $json);
+
+        $this->nfseService->emitirParaReserva($reservaItem);
+
+        session()->put('reserva.filtro', [
+            'user_id' => [
+                'valor' => (int) Auth::id(),
+                'typeWhere' => 'where',
+            ],
+        ]);
+
+        if (auth()->user()?->hasPermissao('reserva.index')) {
+            return redirect()
+                ->route('reserva.index')
+                ->with('success', 'Pagamento efetuado com sucesso. Veja suas reservas abaixo.');
+        }
 
         return redirect()
             ->route('site.reserva.success', ['reserva' => $reservaItem->id])
@@ -973,10 +1111,10 @@ class SiteReservaController extends Controller
         Validator::make($dados, $storeRules)->validate();
     }
 
-    private function storeRules(bool $requireModelo = true): array
+    private function storeRules(bool $requireModelo = true, ?bool $requireCliente = null): array
     {
-        $isAuth = auth()->check();
-        $required = fn (array $rules) => $isAuth ? array_merge(['nullable'], $rules) : array_merge(['required'], $rules);
+        $requireCliente = $requireCliente ?? !auth()->check();
+        $required = fn (array $rules) => $requireCliente ? array_merge(['required'], $rules) : array_merge(['nullable'], $rules);
 
         return [
             'estacao_retirada_id' => ['required', 'integer', 'exists:estacoes,id'],

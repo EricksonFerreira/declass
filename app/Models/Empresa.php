@@ -49,6 +49,20 @@ class Empresa extends Model
         'paypal_client_id',
         'paypal_client_secret',
         'paypal_mode',
+        'nfse_ativo',
+        'nfse_ambiente',
+        'nfse_provedor',
+        'nfse_client_id',
+        'nfse_client_secret',
+        'nfse_inscricao_municipal',
+        'nfse_municipio_codigo',
+        'nfse_codigo_servico',
+        'nfse_cnae',
+        'nfse_descricao_servico',
+        'nfse_aliquota',
+        'nfse_tributacao_issqn',
+        'nfse_tomador_numero_padrao',
+        'nfse_tomador_bairro_padrao',
         'reserva_escolher_empresa',
         'reserva_selecionar_modelo',
         'empresa_id',
@@ -94,6 +108,11 @@ class Empresa extends Model
     protected function paypalClientSecret(): Attribute
     {
         return $this->encryptedStringAttribute('paypal_client_secret');
+    }
+
+    protected function nfseClientSecret(): Attribute
+    {
+        return $this->encryptedStringAttribute('nfse_client_secret');
     }
 
     private function encryptedStringAttribute(string $column): Attribute

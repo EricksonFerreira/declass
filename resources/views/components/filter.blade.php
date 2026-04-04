@@ -89,10 +89,10 @@
                 @foreach ($itensFiltered as $filter)
                     @if ($filter['valor'])
                         <form action="{{ $removerTudoUrl }}" method="GET" class="d-inline">
-                            <input type="hidden" name="atributo" value="{{ $filter['name'] }}">
+                            <input type="hidden" name="atributo" value="{{ isset($filter['name']) ? $filter['name'] : '' }}">
                             <button type="submit" class="badge badge-secondary border-0 font-weight-normal"
                                 style="cursor:pointer;">
-                                <i class="fa fa-times mr-1"></i>{{ $filter['nomeExibir'] }}:
+                                <i class="fa fa-times mr-1"></i>{{  isset($filter['nomeExibir']) ? $filter['nomeExibir'] : '' }}:
                                 <b>{{ $filter['valor'] }}</b>
                             </button>
                         </form>

@@ -40,11 +40,12 @@
         .prefill { margin: 12px 18px 0; border: 1px solid var(--line); border-radius: 12px; background: #f8fbff; padding: 10px 12px; font-size: 13px; color: #334155; display: none; }
         .prefill strong { display: block; font-size: 11px; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
         .prefill-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .steps { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; padding: 12px 18px 0; }
+        .steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; padding: 12px 18px 0; }
         .step-pill { border: 1px solid var(--line); background: #f8fbff; border-radius: 10px; min-height: 46px; display: flex; align-items: center; gap: 8px; padding: 8px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; }
         .step-pill .num { width: 22px; height: 22px; border-radius: 7px; display: inline-flex; align-items: center; justify-content: center; background: #dbeafe; color: #1d4ed8; }
         .step-pill.active { border-color: var(--p); background: #fff; }
         .step-pill.active .num { background: var(--p); color: #fff; }
+        .step-pill.disabled { opacity: .5; cursor: not-allowed; }
         .body { padding: 14px 18px 18px; }
         .panel { display: none; }
         .panel.active { display: block; }
@@ -80,7 +81,7 @@
         .grupos-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
         .grupo-card { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 10px; display: grid; gap: 8px; cursor: pointer; transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease; }
         .grupo-card:hover { transform: translateY(-1px); box-shadow: 0 10px 18px rgba(15, 23, 42, .08); }
-        .grupo-card.active { border-color: var(--p); box-shadow: 0 12px 24px rgba(15, 23, 42, .12); }
+        .grupo-card.active { border-color: var(--p); box-shadow: 0 12px 24px rgba(15, 23, 42, .12); background: #f4f9ff; }
         .grupo-thumb { width: 100%; height: 150px; border-radius: 12px; border: 1px solid var(--line); background: #f8fbff; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .grupo-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .grupo-thumb span { font-size: 12px; color: #94a3b8; }
@@ -108,7 +109,7 @@
         .modelo-card { position: relative; border: 1px solid #e2e8f0; border-radius: 16px; background: #fff; padding: 10px; display: grid; gap: 8px; cursor: pointer; transition: transform .18s ease, box-shadow .2s ease, border-color .2s ease; }
         .modelo-card:hover { transform: translateY(-2px); box-shadow: 0 12px 24px rgba(15, 23, 42, .12); }
         .modelo-card.disabled { opacity: .55; cursor: not-allowed; filter: grayscale(.15); }
-        .modelo-card.active { border-color: var(--p); box-shadow: 0 16px 28px rgba(15, 23, 42, .16); }
+        .modelo-card.active { border-color: var(--p); box-shadow: 0 16px 28px rgba(15, 23, 42, .16); background: #f4f9ff; }
         .modelo-thumb { width: 100%; height: 120px; border-radius: 12px; border: 1px solid var(--line); background: #f8fbff; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .modelo-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .modelo-thumb span { font-size: 12px; color: #94a3b8; }
@@ -181,12 +182,14 @@
                 <div class="step-pill" data-step="2"><span class="num">2</span><span>Veiculo</span></div>
                 <div class="step-pill" data-step="3"><span class="num">3</span><span>Opcionais</span></div>
                 <div class="step-pill" data-step="4"><span class="num">4</span><span>Cliente</span></div>
+                <div class="step-pill disabled" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
             </div>
 
             <form id="reservaForm" class="body" method="POST" action="{{ route('site.reserva.store') }}" novalidate>
                 @csrf
                 <input type="hidden" id="opcionais_payload" name="opcionais_payload" value="{{ old('opcionais_payload', '') }}">
                 <input type="hidden" id="modo_cliente" name="modo_cliente" value="cadastro">
+                <input type="hidden" id="usar_usuario_logado" name="usar_usuario_logado" value="{{ !empty($isAuth) && $isAuth ? 'S' : 'N' }}">
                 <input type="hidden" id="step_input" name="step" value="{{ old('step', $initialStepServer) }}">
 
                 <section class="panel active" data-panel="1">
@@ -321,22 +324,28 @@
 
                 <section class="panel" data-panel="4">
                     <h2 class="title">Dados do cliente</h2>
-                    @if(!empty($isAuth) && $isAuth)
-                        <p class="subtitle">Voce ja esta logado. Revise os dados e siga para o pagamento.</p>
-                    @else
-                        <p class="subtitle">Faca login ou cadastre-se para seguir ao pagamento.</p>
-                    @endif
+                    <p class="subtitle">
+                        @if(!empty($isAuth) && $isAuth)
+                            Voce ja esta logado. Deseja pagar com este usuario ou cadastrar outro?
+                        @else
+                            Faca login ou cadastre-se para seguir ao pagamento.
+                        @endif
+                    </p>
 
-                    @if(empty($isAuth))
-                        <div class="client-tabs">
+                    <div class="client-tabs">
+                        @if(!empty($isAuth) && $isAuth)
+                            <button type="button" class="client-tab active" data-client-tab="login">Usar usuario logado</button>
+                            <button type="button" class="client-tab" data-client-tab="cadastro">Cadastrar outro usuario</button>
+                        @else
                             <button type="button" class="client-tab active" data-client-tab="cadastro">Cadastrar</button>
                             <button type="button" class="client-tab" data-client-tab="login">Ja tenho conta</button>
-                        </div>
-                    @endif
+                        @endif
+                    </div>
 
                     <div id="clientLoginPanel" class="client-panel hidden">
                         @if(!empty($isAuth) && $isAuth)
-                            <p class="client-note">Voce ja esta logado como {{ $authUserName ?: 'usuario' }}.</p>
+                            <p class="client-note">Voce esta logado como {{ $authUserName ?: 'usuario' }}.</p>
+                            <p class="client-note">Se quiser usar outro cliente, escolha a opcao "Cadastrar outro usuario".</p>
                         @else
                             <p class="client-note">Para continuar com o pagamento, faca login na sua conta.</p>
                             @if(!empty($loginRedirectUrl))
@@ -370,7 +379,7 @@
                         </div>
                     </div>
                     <div class="feedback" id="clientFeedback">
-                        {{ !empty($isAuth) && $isAuth ? 'Voce ja esta logado. Clique em Ir para pagamento.' : 'Escolha uma opcao para continuar.' }}
+                        {{ !empty($isAuth) && $isAuth ? 'Escolha usar o usuario logado ou cadastrar outro.' : 'Escolha uma opcao para continuar.' }}
                     </div>
                     <div class="feedback" style="margin-top: 10px;">Ao finalizar, voce sera direcionado para o pagamento.</div>
                 </section>
@@ -442,6 +451,7 @@
             const clientCadastroFields = document.querySelectorAll('#clientCadastroFields input, #clientCadastroFields select, #clientCadastroFields textarea');
             const clientFeedback = document.getElementById('clientFeedback');
             const modoInput = document.getElementById('modo_cliente');
+            const usarUsuarioLogadoInput = document.getElementById('usar_usuario_logado');
             let clientMode = isAuth ? 'login' : 'cadastro';
             let modelosDisponiveis = {};
 
@@ -514,10 +524,25 @@
                     card.classList.toggle('active', card.getAttribute('data-modelo-id') === selectedId);
                 });
             }
+            function scrollToModelos() {
+                if (!modelosSection) {
+                    return;
+                }
+                modelosSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                modelosSection.setAttribute('tabindex', '-1');
+                modelosSection.focus({ preventScroll: true });
+            }
             function setClientMode(mode) {
                 clientMode = mode;
                 if (modoInput) {
                     modoInput.value = mode;
+                }
+                if (usarUsuarioLogadoInput) {
+                    if (isAuth) {
+                        usarUsuarioLogadoInput.value = mode === 'login' ? 'S' : 'N';
+                    } else {
+                        usarUsuarioLogadoInput.value = 'N';
+                    }
                 }
 
                 if (clientTabs.length) {
@@ -569,6 +594,27 @@
                 if (modelosAutoNote && reservaSelecionarModelo) {
                     modelosAutoNote.classList.add('hidden');
                 }
+                if (state.step === 2) {
+                    highlightGrupo();
+                    highlightModelo();
+                    if (reservaSelecionarModelo && modelo.value) {
+                        scrollToModelos();
+                    }
+                }
+            }
+            function enforceStep1Gate(showFeedback) {
+                const ok = validStep1(showFeedback);
+                pills.forEach((pill) => {
+                    const step = Number(pill.dataset.step || 1);
+                    if (step > 1) {
+                        pill.classList.toggle('disabled', !ok);
+                    }
+                });
+                if (!ok && state.step > 1) {
+                    state.step = 1;
+                    renderStep();
+                }
+                return ok;
             }
             function validStep1(show) {
                 if (!document.getElementById('estacao_retirada_id').value || !document.getElementById('estacao_devolucao_id').value || !dataInicio.value || !dataFim.value) {
@@ -606,7 +652,7 @@
                 return true;
             }
             function validCliente() {
-                if (isAuth) {
+                if (isAuth && clientMode === 'login') {
                     return true;
                 }
 
@@ -710,6 +756,9 @@
                 }
 
                 highlightModelo();
+                if (reservaSelecionarModelo && window.matchMedia('(max-width: 740px)').matches) {
+                    scrollToModelos();
+                }
             }
             function normalizeOpc(tipo) {
                 const all = [];
@@ -807,6 +856,12 @@
             pills.forEach(function (pill) {
                 pill.addEventListener('click', function () {
                     let to = Number(pill.dataset.step || 1);
+                    if (to === 5) {
+                        return;
+                    }
+                    if (to > 1 && !enforceStep1Gate(true)) {
+                        return;
+                    }
                     if (to > state.step) { if (state.step === 1 && !validStep1(true)) return; if (state.step === 2 && !validStep2(true)) return; if (state.step === 3 && !validStep3()) return; }
                     state.step = to; renderStep(); refresh();
                 });
@@ -817,7 +872,7 @@
                 refresh();
             });
             document.getElementById('btnNext').addEventListener('click', function () {
-                if (state.step === 1 && !validStep1(true)) return;
+                if (state.step === 1 && !enforceStep1Gate(true)) return;
                 if (state.step === 2 && !validStep2(true)) return;
                 if (state.step === 3 && !validStep3()) return;
                 state.step = Math.min(4, state.step + 1);
@@ -831,12 +886,13 @@
                     dataFim.setAttribute('min', new Date(i.getTime() + 86400000).toISOString().slice(0, 16));
                 }
                 refresh();
+                enforceStep1Gate(false);
                 updatePrefill();
                 if (grupo.value) loadDisponibilidade();
             });
-            dataFim.addEventListener('change', function () { refresh(); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
-            document.getElementById('estacao_retirada_id').addEventListener('change', function () { refresh(); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
-            document.getElementById('estacao_devolucao_id').addEventListener('change', function () { refresh(); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
+            dataFim.addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
+            document.getElementById('estacao_retirada_id').addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
+            document.getElementById('estacao_devolucao_id').addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
             grupo.addEventListener('change', function () {
                 const card = selectedGrupoCard();
                 state.tarifa = Number(card?.getAttribute('data-tarifa') || 0);
@@ -897,10 +953,9 @@
                 });
             });
             if (isAuth) {
-                clientTabs.forEach((btn) => { btn.disabled = true; });
                 setClientMode('login');
                 if (clientFeedback) {
-                    feedback('clientFeedback', 'Voce ja esta logado. Clique em Ir para pagamento.', 'ok');
+                    feedback('clientFeedback', 'Escolha usar o usuario logado ou cadastrar outro.', 'ok');
                 }
             } else {
                 setClientMode('cadastro');
@@ -930,6 +985,7 @@
                 }
             }
             renderStep();
+            enforceStep1Gate(false);
             if (!reservaSelecionarModelo) {
                 updateModeloAutoNote('Selecione um grupo para escolher o modelo automaticamente.', null);
             }

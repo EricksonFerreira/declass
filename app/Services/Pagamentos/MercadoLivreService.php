@@ -42,13 +42,27 @@ class MercadoLivreService implements IPagamento
             $requestOptions->setCustomHeaders(['X-Idempotency-Key: ' . Uuid::uuid4()->toString()]);
 
             $payment = $client->create($request, $requestOptions);
-            $status = isset($payment->status) && $payment->status === 'approved' ? 'success' : 'error';
+            $rawStatus = $payment->status ?? null;
+            $paymentMethodId = (string) ($dados['payment_method_id'] ?? '');
+            $status = $rawStatus === 'approved' ? 'success' : 'error';
+            if ($rawStatus === 'pending' && $paymentMethodId === 'pix') {
+                $status = 'pending';
+            }
+
+            $transactionData = $payment->point_of_interaction->transaction_data ?? null;
+            $qrCode = $transactionData->qr_code ?? null;
+            $qrCodeBase64 = $transactionData->qr_code_base64 ?? null;
+            $ticketUrl = $transactionData->ticket_url ?? null;
 
             return [
                 'status' => $status,
                 'transaction_id' => $payment->id ?? null,
-                'raw_status' => $payment->status ?? null,
+                'raw_status' => $rawStatus,
                 'currency' => $dados['currency'] ?? 'BRL',
+                'payment_method_id' => $paymentMethodId,
+                'qr_code' => $qrCode,
+                'qr_code_base64' => $qrCodeBase64,
+                'ticket_url' => $ticketUrl,
             ];
         } catch (MPApiException $e) {
             return [

@@ -25,6 +25,7 @@ Route::post('/reserva/verificar-cupom', [SiteReservaController::class, 'verifica
 Route::get('/reserva/{reserva}/sucesso', [SiteReservaController::class, 'success'])->name('site.reserva.success');
 Route::get('/reserva/{reserva}/pagamento', [SiteReservaController::class, 'pagamento'])->name('site.reserva.pagamento');
 Route::post('/reserva/{reserva}/pagamento', [SiteReservaController::class, 'processarPagamento'])->name('site.reserva.processarPagamento');
+Route::post('/reserva/{reserva}/pagamento/metodo', [SiteReservaController::class, 'adicionarMetodoPagamento'])->name('site.reserva.pagamento.metodo');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::get('/cadastro/sucesso', function () {
@@ -72,6 +73,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'usuario',
         'empresa',
         'replicacao_base',
+        'nfse',
         'financeiro',
         'pais',
         'estacao',
