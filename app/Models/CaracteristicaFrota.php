@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class CaracteristicaFrota extends Model
 {
@@ -15,8 +16,23 @@ class CaracteristicaFrota extends Model
         'nome',
         'tipo_valor_caracteristica_frota_id',
         'descricao',
+        'imagem',
         'ativo',
     ];
+
+    public function getImagemUrlAttribute(): ?string
+    {
+        $path = is_string($this->imagem ?? null) ? trim($this->imagem) : '';
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return Storage::url($path);
+    }
 
     public function tipoValorDescricao()
     {
@@ -28,13 +44,18 @@ class CaracteristicaFrota extends Model
         return $this->belongsToMany(TipoFrota::class, 'caracteristicas_tipo_frota', 'caracteristica_frota_id', 'tipo_frota_id');
     }
 
+    public function grupos()
+    {
+        return $this->belongsToMany(GrupoFrota::class, 'grupo_frota_caracteristica_frota', 'caracteristica_frota_id', 'grupo_frota_id')
+            ->withPivot('valor');
+    }
 
     protected static function boot()
     {
         parent::boot();
 
         static::deleting(function ($caracteristicaFrota) {
-            $caracteristicaFrota->grupos()->delete();
+            $caracteristicaFrota->grupos()->detach();
         });
     }
 }

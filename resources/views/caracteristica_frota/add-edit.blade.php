@@ -27,26 +27,26 @@
             </div>
 
             <div class="card-body p-4">
-                <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
+                <div class="caracteristica-frota-intro">
+                    <div>
+                        <h5>Cadastro visual de caracteristicas</h5>
+                        <p>Defina o nome, tipo de valor e uma imagem para destacar no site.</p>
+                    </div>
+                    <div class="caracteristica-frota-intro__badge">Frota</div>
+                </div>
+                <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" enctype="multipart/form-data">
                     <div class="col-12">
                         <div class="caracteristica-frota-section-title">Informacoes Basicas</div>
                     </div>
 
-                    <div class="col-lg-2 col-md-3">
-                        <div class="form-group form-group-caracteristica-frota">
-                            <x-form-input type="text" class="form-control form-control-sm" id="codigo" name="codigo"
-                                label="Codigo" value="{{ old('codigo', $caracteristicaFrota->codigo ?? '') }}" required />
-                        </div>
-                    </div>
-
-                    <div class="col-lg-4 col-md-5">
+                    <div class="col-lg-4 col-md-6">
                         <div class="form-group form-group-caracteristica-frota">
                             <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
                                 label="Nome" value="{{ old('nome', $caracteristicaFrota->nome ?? '') }}" required />
                         </div>
                     </div>
 
-                    <div class="col-lg-3 col-md-4">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group form-group-caracteristica-frota">
                             <x-form-select name="tipo_valor_caracteristica_frota_id" label="Tipo do valor" :options="$valorCaracteristicaTipoFrota" placeholder="Selecione..."
                                 :selected="old('tipo_valor_caracteristica_frota_id', isset($caracteristicaFrota->tipo_valor_caracteristica_frota_id) && $caracteristicaFrota->tipo_valor_caracteristica_frota_id ? $caracteristicaFrota->tipo_valor_caracteristica_frota_id : null)"
@@ -54,11 +54,32 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-3 col-md-4">
+                    <div class="col-lg-2 col-md-4">
                         <div class="form-group form-group-caracteristica-frota">
                             <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione..."
                                 :selected="old('ativo', isset($caracteristicaFrota->ativo) && $caracteristicaFrota->ativo ? $caracteristicaFrota->ativo : null)"
                                 class="form-control form-control-sm" required />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-8">
+                        <div class="form-group form-group-caracteristica-frota">
+                            <label for="imagem">Imagem</label>
+                            <x-input-file id="imagem" name="imagem" placeholder="Selecione a imagem..." legend="Buscar" />
+                            <small class="text-muted d-block mt-2">Use imagens quadradas para melhor visual.</small>
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        @php
+                            $imagemAtual = optional($caracteristicaFrota ?? null)->imagem_url;
+                        @endphp
+                        <div class="caracteristica-frota-image-preview">
+                            @if(!empty($imagemAtual))
+                                <img src="{{ $imagemAtual }}" alt="Imagem da caracteristica {{ $caracteristicaFrota->nome ?? '' }}">
+                            @else
+                                <span>Sem imagem cadastrada</span>
+                            @endif
                         </div>
                     </div>
 
@@ -97,6 +118,42 @@
         font-weight: 700;
     }
 
+    .caracteristica-frota-intro {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 14px 16px;
+        background: #f8fbff;
+        border: 1px solid #e4ecf7;
+        border-radius: 12px;
+        margin-bottom: 16px;
+    }
+
+    .caracteristica-frota-intro h5 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #0f2740;
+    }
+
+    .caracteristica-frota-intro p {
+        margin: 0;
+        font-size: .85rem;
+        color: #5b6b82;
+    }
+
+    .caracteristica-frota-intro__badge {
+        background: #1e4fd8;
+        color: #fff;
+        font-weight: 700;
+        font-size: .75rem;
+        padding: 6px 12px;
+        border-radius: 999px;
+        box-shadow: 0 6px 14px rgba(30, 79, 216, .2);
+        white-space: nowrap;
+    }
+
     .caracteristica-frota-section-title {
         font-size: .96rem;
         font-weight: 700;
@@ -131,6 +188,30 @@
         padding-bottom: .58rem;
     }
 
+    .caracteristica-frota-image-preview {
+        border: 1px dashed #d7e1ee;
+        border-radius: 12px;
+        padding: 12px;
+        min-height: 140px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #f8fbff 0%, #f2f7ff 100%);
+        margin-bottom: 1rem;
+    }
+
+    .caracteristica-frota-image-preview img {
+        max-height: 160px;
+        max-width: 100%;
+        border-radius: 10px;
+        object-fit: contain;
+    }
+
+    .caracteristica-frota-image-preview span {
+        color: #7b8798;
+        font-size: .85rem;
+    }
+
     @media (max-width: 991.98px) {
         .card-header-caracteristica-frota {
             padding: .95rem 1rem;
@@ -138,6 +219,11 @@
 
         .card-body {
             padding: 1rem !important;
+        }
+
+        .caracteristica-frota-intro {
+            flex-direction: column;
+            align-items: flex-start;
         }
     }
 

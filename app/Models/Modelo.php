@@ -12,10 +12,25 @@ class Modelo extends Model
     protected $table = 'modelos';
     protected $fillable = [
         'nome',
+        'imagem',
         'ativo',
         'marca_id',
         'segmento_id',
     ];
+
+    public function getImagemUrlAttribute(): ?string
+    {
+        $path = is_string($this->imagem ?? null) ? trim($this->imagem) : '';
+        if ($path === '') {
+            return null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return \Illuminate\Support\Facades\Storage::url($path);
+    }
 
     public function getConcatenadoAttribute()
     {

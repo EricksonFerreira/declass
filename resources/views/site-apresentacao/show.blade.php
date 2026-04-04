@@ -77,7 +77,7 @@
             width: 62px;
             height: 62px;
             border-radius: 14px;
-            background: rgba(255, 255, 255, .12);
+            background: var(--c1);
             border: 1px solid rgba(255, 255, 255, .34);
             object-fit: contain;
             padding: 6px;

@@ -4,7 +4,10 @@ namespace App\Services;
 
 use App\Models\GrupoFrota;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class GrupoFrotaService extends AbstractBaseService
 {
@@ -35,20 +38,19 @@ class GrupoFrotaService extends AbstractBaseService
     {
         return DB::transaction(function () use ($data) {
             $data = $this->normalizarCamposMonetarios($data);
+            $data = $this->processarImagens($data);
+            $data = $this->processarImagem($data);
 
-            $grupoFrota = $this->model->create($data);
+            $dadosGrupoFrota = collect($data)->except([
+                'caracteristicas',
+                'caracteristicaValor',
+                'opcionais',
+                'modelos',
+            ])->toArray();
 
-            if (isset($data['caracteristicas'])) {
-                $grupoFrota->caracteristicas()->sync($data['caracteristicas']);
-            }
+            $grupoFrota = $this->model->create($dadosGrupoFrota);
 
-            if (isset($data['opcionais'])) {
-                $grupoFrota->opcionais()->sync($data['opcionais']);
-            }
-
-            if (isset($data['modelos'])) {
-                $grupoFrota->modelos()->sync($data['modelos']);
-            }
+            $this->sincronizarRelacionamentos($grupoFrota, $data);
 
             return $grupoFrota;
         });
@@ -57,32 +59,158 @@ class GrupoFrotaService extends AbstractBaseService
     public function update($id, array $data)
     {
         return DB::transaction(function () use ($id, $data) {
+            /** @var \App\Models\GrupoFrota|null $item */
             $item = $this->model->find($id);
+
             if (!$item) {
                 return null;
             }
 
             $data = $this->normalizarCamposMonetarios($data);
-            $item->update($data);
+            $data = $this->processarImagens($data, $item);
+            $data = $this->processarImagem($data, $item);
 
-            if (isset($data['caracteristicas']) && isset($data['caracteristicaValor'])) {
-                $caracteristicas = [];
-                foreach ($data['caracteristicas'] as $k => $caracteristicaId) {
-                    $caracteristicas[$caracteristicaId] = ['valor' => $data['caracteristicaValor'][$k]];
-                }
-                $item->caracteristicas()->sync($caracteristicas);
-            }
+            $dadosGrupoFrota = collect($data)->except([
+                'caracteristicas',
+                'caracteristicaValor',
+                'opcionais',
+                'modelos',
+            ])->toArray();
 
-            if (isset($data['opcionais'])) {
-                $item->opcionais()->sync($data['opcionais']);
-            }
+            $item->update($dadosGrupoFrota);
 
-            if (isset($data['modelos'])) {
-                $item->modelos()->sync($data['modelos']);
-            }
+            $this->sincronizarRelacionamentos($item, $data);
 
             return $item;
         });
+    }
+
+    private function sincronizarRelacionamentos(GrupoFrota $grupoFrota, array $data): void
+    {
+        $caracteristicasSelecionadas = $data['caracteristicas'] ?? [];
+        $valoresCaracteristicas = $data['caracteristicaValor'] ?? [];
+        $caracteristicasSync = [];
+
+        foreach ($caracteristicasSelecionadas as $caracteristicaId) {
+            $caracteristicaId = (int) $caracteristicaId;
+
+            $valor = $valoresCaracteristicas[$caracteristicaId] ?? null;
+
+            if (is_string($valor)) {
+                $valor = trim($valor);
+            }
+
+            $caracteristicasSync[$caracteristicaId] = [
+                'valor' => $valor !== '' ? $valor : null,
+            ];
+        }
+
+        $grupoFrota->caracteristicas()->sync($caracteristicasSync);
+        $grupoFrota->opcionais()->sync($data['opcionais'] ?? []);
+        $grupoFrota->modelos()->sync($data['modelos'] ?? []);
+    }
+
+    private function processarImagem(array $data, ?GrupoFrota $grupoFrota = null): array
+    {
+        $arquivo = $data['imagem'] ?? null;
+
+        if (!$arquivo instanceof UploadedFile) {
+            unset($data['imagem']);
+            return $data;
+        }
+
+        if (!$arquivo->isValid()) {
+            throw new \RuntimeException('Upload da imagem invalido.');
+        }
+
+        $path = $this->storeImagemArquivo($arquivo);
+        $data['imagem'] = $path;
+
+        $imagensAtuais = $data['imagens'] ?? (is_array($grupoFrota?->imagens) ? $grupoFrota->imagens : []);
+        $imagensAtuais = $this->normalizeImagensArray($imagensAtuais);
+        if (!in_array($path, $imagensAtuais, true)) {
+            array_unshift($imagensAtuais, $path);
+            $data['imagens'] = $imagensAtuais;
+        }
+
+        $imagemAntiga = is_string($grupoFrota?->imagem) ? trim($grupoFrota->imagem) : '';
+        if ($imagemAntiga !== '' && $imagemAntiga !== $path) {
+            $mantidas = $data['imagens'] ?? [];
+            if (!in_array($imagemAntiga, $mantidas, true) && Storage::disk('public')->exists($imagemAntiga)) {
+                Storage::disk('public')->delete($imagemAntiga);
+            }
+        }
+
+        return $data;
+    }
+
+    private function processarImagens(array $data, ?GrupoFrota $grupoFrota = null): array
+    {
+        $arquivos = $data['imagens'] ?? null;
+        if (!is_array($arquivos)) {
+            unset($data['imagens']);
+            return $data;
+        }
+
+        $novas = [];
+        foreach ($arquivos as $arquivo) {
+            if (!$arquivo instanceof UploadedFile) {
+                continue;
+            }
+            if (!$arquivo->isValid()) {
+                throw new \RuntimeException('Upload de uma das imagens invalido.');
+            }
+            $novas[] = $this->storeImagemArquivo($arquivo);
+        }
+
+        if (empty($novas)) {
+            unset($data['imagens']);
+            return $data;
+        }
+
+        $existentes = $this->normalizeImagensArray($grupoFrota?->imagens ?? []);
+        $final = array_values(array_unique(array_merge($existentes, $novas)));
+        $data['imagens'] = $final;
+
+        return $data;
+    }
+
+    private function storeImagemArquivo(UploadedFile $arquivo): string
+    {
+        $extensao = trim((string) $arquivo->getClientOriginalExtension());
+        $nomeArquivo = Str::uuid()->toString() . ($extensao !== '' ? '.' . $extensao : '');
+
+        $disk = Storage::disk('public');
+        $diretorio = 'grupos-frota';
+
+        if (!$disk->exists($diretorio)) {
+            $disk->makeDirectory($diretorio);
+        }
+
+        $conteudo = file_get_contents($arquivo->getPathname());
+        if ($conteudo === false) {
+            throw new \RuntimeException('Nao foi possivel ler o arquivo da imagem.');
+        }
+
+        $salvou = $disk->put($diretorio . '/' . $nomeArquivo, $conteudo);
+        if (!$salvou) {
+            throw new \RuntimeException('Nao foi possivel salvar a imagem do grupo de frota.');
+        }
+
+        return $diretorio . '/' . $nomeArquivo;
+    }
+
+    private function normalizeImagensArray(array $imagens): array
+    {
+        $result = [];
+        foreach ($imagens as $imagem) {
+            $path = is_string($imagem) ? trim($imagem) : '';
+            if ($path !== '') {
+                $result[] = $path;
+            }
+        }
+
+        return array_values(array_unique($result));
     }
 
     public function getModelosPorGrupoFrota($grupoFrotaId)
@@ -137,9 +265,7 @@ class GrupoFrotaService extends AbstractBaseService
         return null;
     }
 
-    public function verificaGruposFrotaDisponiveis($estacao_retirada_id, $data_inicio, $estacao_devolucao_id, $data_fim)
-    {
-    }
+    public function verificaGruposFrotaDisponiveis($estacao_retirada_id, $data_inicio, $estacao_devolucao_id, $data_fim) {}
 
     private function normalizarCamposMonetarios(array $data): array
     {
@@ -199,4 +325,3 @@ class GrupoFrotaService extends AbstractBaseService
         return $texto;
     }
 }
-

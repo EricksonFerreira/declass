@@ -17,6 +17,7 @@ return [
     'Important' => 'Importante',
     'Warning' => 'Aviso',
     'Information' => 'Informação',
+    'auth.failed' => 'Falha na Autenticação',
 
     // Sidebar
     'sidebar.home'                  => 'Dashboard',

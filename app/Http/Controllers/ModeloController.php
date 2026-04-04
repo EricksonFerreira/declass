@@ -12,6 +12,9 @@ use App\Services\ModeloService;
 use App\Services\SegmentoService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Traits\FiltroTrait;
 
 class ModeloController extends BaseController implements FiltroInterface, ResourceInterface
@@ -81,7 +84,14 @@ class ModeloController extends BaseController implements FiltroInterface, Resour
 
     public function store(StoreModeloRequest $request)
     {
-        $this->modeloService->create($request->all());
+        $data = $request->validated();
+
+        $imagem = $this->storeImagem($request->file('imagem'));
+        if ($imagem) {
+            $data['imagem'] = $imagem;
+        }
+
+        $this->modeloService->create($data);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -104,7 +114,15 @@ class ModeloController extends BaseController implements FiltroInterface, Resour
 
     public function update(UpdateModeloRequest $request, $id)
     {
-        $this->modeloService->update($id, $request->all());
+        $data = $request->validated();
+        $modelo = $this->modeloService->getById($id);
+
+        $imagem = $this->storeImagem($request->file('imagem'), $modelo?->imagem);
+        if ($imagem) {
+            $data['imagem'] = $imagem;
+        }
+
+        $this->modeloService->update($id, $data);
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -194,5 +212,27 @@ class ModeloController extends BaseController implements FiltroInterface, Resour
             'POST',
             route('modelo.store'),
         ];
+    }
+
+    private function storeImagem(?UploadedFile $file, ?string $oldPath = null): ?string
+    {
+        if (!$file instanceof UploadedFile || !$file->isValid()) {
+            return null;
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
+        $fileName = Str::uuid()->toString() . '.' . $extension;
+        $path = 'modelos/imagens/' . $fileName;
+
+        $stored = Storage::disk('public')->put($path, $file->getContent());
+        if (!$stored) {
+            return null;
+        }
+
+        if (is_string($oldPath) && trim($oldPath) !== '' && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return $path;
     }
 }

@@ -26,7 +26,8 @@
         $mensagensPendenciaGrupoFrota = $preRequisitosGrupoFrota['faltas'] ?? [];
 
         if ($qtdTiposOpcionais === 0) {
-            $mensagensPendenciaGrupoFrota[] = 'Cadastre pelo menos um tipo de opcional para organizar os opcionais do grupo.';
+            $mensagensPendenciaGrupoFrota[] =
+                'Cadastre pelo menos um tipo de opcional para organizar os opcionais do grupo.';
         }
         if ($qtdOpcionais === 0) {
             $mensagensPendenciaGrupoFrota[] = 'Cadastre pelo menos um opcional para vincular no grupo de frota.';
@@ -34,22 +35,32 @@
 
         $acoesPreRequisitosGrupoFrota = [];
         if ($qtdTiposFrota === 0 && \Illuminate\Support\Facades\Route::has('tipo_frota.create')) {
-            $acoesPreRequisitosGrupoFrota[] = ['label' => 'Cadastrar tipo de frota', 'url' => route('tipo_frota.create')];
+            $acoesPreRequisitosGrupoFrota[] = [
+                'label' => 'Cadastrar tipo de frota',
+                'url' => route('tipo_frota.create'),
+            ];
         }
         if ($qtdModelos === 0 && \Illuminate\Support\Facades\Route::has('modelo.create')) {
             $acoesPreRequisitosGrupoFrota[] = ['label' => 'Cadastrar modelo', 'url' => route('modelo.create')];
         }
         if ($qtdCaracteristicas === 0 && \Illuminate\Support\Facades\Route::has('caracteristica_frota.create')) {
-            $acoesPreRequisitosGrupoFrota[] = ['label' => 'Cadastrar caracteristica de frota', 'url' => route('caracteristica_frota.create')];
+            $acoesPreRequisitosGrupoFrota[] = [
+                'label' => 'Cadastrar caracteristica de frota',
+                'url' => route('caracteristica_frota.create'),
+            ];
         }
         if ($qtdTiposOpcionais === 0 && \Illuminate\Support\Facades\Route::has('tipo_opcional.create')) {
-            $acoesPreRequisitosGrupoFrota[] = ['label' => 'Cadastrar tipo de opcional', 'url' => route('tipo_opcional.create')];
+            $acoesPreRequisitosGrupoFrota[] = [
+                'label' => 'Cadastrar tipo de opcional',
+                'url' => route('tipo_opcional.create'),
+            ];
         }
         if ($qtdOpcionais === 0 && \Illuminate\Support\Facades\Route::has('opcional.create')) {
             $acoesPreRequisitosGrupoFrota[] = ['label' => 'Cadastrar opcional', 'url' => route('opcional.create')];
         }
 
-        $bloquearSalvarGrupoFrota = $metodo === 'POST' && !((bool) ($preRequisitosGrupoFrota['pode_criar_grupo_frota'] ?? true));
+        $bloquearSalvarGrupoFrota =
+            $metodo === 'POST' && !((bool) ($preRequisitosGrupoFrota['pode_criar_grupo_frota'] ?? true));
     @endphp
 
     @if ($errors->any())
@@ -63,18 +74,14 @@
     @endif
 
     <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
-        <x-pre-requisitos-alerta
-            title="Pre-requisitos pendentes para criar grupo de frota"
-            :chips="[
-                ['label' => 'Tipos de Frota', 'value' => $qtdTiposFrota],
-                ['label' => 'Modelos', 'value' => $qtdModelos],
-                ['label' => 'Caracteristicas', 'value' => $qtdCaracteristicas],
-                ['label' => 'Tipos de Opcionais', 'value' => $qtdTiposOpcionais],
-                ['label' => 'Opcionais', 'value' => $qtdOpcionais],
-            ]"
-            :missing-items="$mensagensPendenciaGrupoFrota"
-            :action-links="$acoesPreRequisitosGrupoFrota"
-        />
+        <x-pre-requisitos-alerta title="Pre-requisitos pendentes para criar grupo de frota" :chips="[
+            ['label' => 'Tipos de Frota', 'value' => $qtdTiposFrota],
+            ['label' => 'Caracteristicas', 'value' => $qtdCaracteristicas],
+            ['label' => 'Tipos de Opcionais', 'value' => $qtdTiposOpcionais],
+            ['label' => 'Opcionais', 'value' => $qtdOpcionais],
+            ['label' => 'Modelos', 'value' => $qtdModelos],
+        ]"
+            :missing-items="$mensagensPendenciaGrupoFrota" :action-links="$acoesPreRequisitosGrupoFrota" />
 
         <div class="card card-grupo-frota shadow-sm border-0">
             <div class="card-header card-header-grupo-frota border-0">
@@ -85,7 +92,7 @@
             </div>
 
             <div class="card-body p-4">
-                <form id="formulario" method="POST" action="{{ $rota }}">
+                <form id="formulario" method="POST" action="{{ $rota }}" enctype="multipart/form-data">
                     @if ($metodo == 'PUT')
                         @method('PUT')
                     @endif
@@ -93,53 +100,67 @@
 
                     <ul class="nav nav-pills nav-grupo-frota mb-3" id="grupo-frota-tab" role="tablist">
                         <li class="nav-item">
-                            <a class="nav-link active" id="geral-tab" data-toggle="pill" href="#geral-content" role="tab" aria-controls="geral-content" aria-selected="true">
+                            <a class="nav-link active" id="geral-tab" data-toggle="pill" href="#geral-content"
+                                role="tab" aria-controls="geral-content" aria-selected="true">
                                 <i class="fa fa-info-circle mr-1"></i> Geral
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="caracteristicas-tab" data-toggle="pill" href="#caracteristicas-content" role="tab" aria-controls="caracteristicas-content" aria-selected="false">
+                            <a class="nav-link" id="caracteristicas-tab" data-toggle="pill" href="#caracteristicas-content"
+                                role="tab" aria-controls="caracteristicas-content" aria-selected="false">
                                 <i class="fa fa-list-ul mr-1"></i> Caracteristicas
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="opcionais-tab" data-toggle="pill" href="#opcionais-content" role="tab" aria-controls="opcionais-content" aria-selected="false">
+                            <a class="nav-link" id="opcionais-tab" data-toggle="pill" href="#opcionais-content"
+                                role="tab" aria-controls="opcionais-content" aria-selected="false">
                                 <i class="fa fa-plus-circle mr-1"></i> Opcionais
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="modelos-tab" data-toggle="pill" href="#modelos-content" role="tab" aria-controls="modelos-content" aria-selected="false">
+                            <a class="nav-link" id="modelos-tab" data-toggle="pill" href="#modelos-content" role="tab"
+                                aria-controls="modelos-content" aria-selected="false">
                                 <i class="fa fa-tags mr-1"></i> Modelos
                             </a>
                         </li>
                     </ul>
 
                     <div class="tab-content" id="grupo-frota-tab-content">
-                        <div id="geral-content" class="tab-pane fade show active" role="tabpanel" aria-labelledby="geral-tab">
+                        <div id="geral-content" class="tab-pane fade show active" role="tabpanel"
+                            aria-labelledby="geral-tab">
                             <div class="grupo-frota-section-title">Informacoes Basicas</div>
                             <div class="form-row">
                                 <div class="col-lg-6">
                                     <div class="form-group form-group-grupo-frota">
-                                        <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome" label="Nome"
-                                            value="{{ old('nome', $grupoFrota->nome ?? '') }}" required />
+                                        <x-form-input type="text" class="form-control form-control-sm" id="nome"
+                                            name="nome" label="Nome" value="{{ old('nome', $grupoFrota->nome ?? '') }}"
+                                            required />
                                     </div>
                                 </div>
                                 <div class="col-lg-2">
                                     <div class="form-group form-group-grupo-frota">
-                                        <x-form-input type="text" class="form-control form-control-sm" id="codigo" name="codigo" label="Codigo"
+                                        <x-form-input type="text" class="form-control form-control-sm" id="codigo"
+                                            name="codigo" label="Codigo"
                                             value="{{ old('codigo', $grupoFrota->codigo ?? '') }}" required />
                                     </div>
                                 </div>
                                 <div class="col-lg-2">
                                     <div class="form-group form-group-grupo-frota">
-                                        <x-form-input type="text" class="form-control form-control-sm" id="codigo_sipp" name="codigo_sipp" label="Codigo SIPP"
+                                        <x-form-input type="text" class="form-control form-control-sm" id="codigo_sipp"
+                                            name="codigo_sipp" label="Codigo SIPP"
                                             value="{{ old('codigo_sipp', $grupoFrota->codigo_sipp ?? '') }}" required />
                                     </div>
                                 </div>
                                 <div class="col-lg-2">
                                     <div class="form-group form-group-grupo-frota">
-                                        <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione..."
-                                            :selected="old('ativo', isset($grupoFrota->ativo) && $grupoFrota->ativo ? $grupoFrota->ativo : null)" class="form-control form-control-sm" required />
+                                        <x-form-select name="ativo" label="Status" :options="$status"
+                                            placeholder="Selecione..." :selected="old(
+                                                'ativo',
+                                                isset($grupoFrota->ativo) && $grupoFrota->ativo
+                                                    ? $grupoFrota->ativo
+                                                    : null,
+                                            )"
+                                            class="form-control form-control-sm" required />
                                     </div>
                                 </div>
                             </div>
@@ -147,46 +168,135 @@
                             <div class="form-row">
                                 <div class="col-lg-3">
                                     <div class="form-group form-group-grupo-frota">
-                                        <x-form-select name="tipo_frota_id" label="Tipo de Frota" :options="$tipoFrotas" placeholder="Selecione..."
-                                            :selected="old('tipo_frota_id', isset($grupoFrota->tipo_frota_id) && $grupoFrota->tipo_frota_id ? $grupoFrota->tipo_frota_id : null)" class="form-control form-control-sm" required />
+                                        <x-form-select name="tipo_frota_id" label="Tipo de Frota" :options="$tipoFrotas"
+                                            placeholder="Selecione..." :selected="old(
+                                                'tipo_frota_id',
+                                                isset($grupoFrota->tipo_frota_id) && $grupoFrota->tipo_frota_id
+                                                    ? $grupoFrota->tipo_frota_id
+                                                    : null,
+                                            )"
+                                            class="form-control form-control-sm" required />
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
                                     <div class="form-group form-group-grupo-frota">
-                                        <x-form-input type="text" class="form-control form-control-sm" id="valor_diario" name="valor_diario" label="Valor Diario"
+                                        <x-form-input type="text" class="form-control form-control-sm" id="valor_diario"
+                                            name="valor_diario" label="Valor Diario"
                                             value="{{ old('valor_diario', $grupoFrota->valor_diario ?? '') }}" required />
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group form-group-grupo-frota">
-                                        <label for="fileInput">Imagem</label>
-                                        <x-input-file id="fileInput" name="file" placeholder="Selecione a imagem..." legend="Click" />
+                                        <label for="fileInput">Imagem de destaque</label>
+                                        <x-input-file id="fileInput" name="imagem" placeholder="Selecione a imagem..."
+                                            legend="Click" />
+                                        @if(!empty($grupoFrota?->imagem_url))
+                                            <div class="grupo-frota-preview mt-2">
+                                                <img src="{{ $grupoFrota->imagem_url }}" alt="Imagem atual">
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="form-group form-group-grupo-frota">
+                                        <label for="imagens">Imagens do grupo (multiplas)</label>
+                                        <input type="file" id="imagens" name="imagens[]" class="form-control form-control-sm" multiple accept=".jpg,.jpeg,.png,.webp,.svg">
+                                        <small class="text-muted d-block mt-1">Voce pode selecionar varias imagens para o grupo.</small>
+                                        @if(!empty($grupoFrota?->imagens_urls))
+                                            <div class="grupo-frota-gallery mt-2">
+                                                @foreach($grupoFrota->imagens_urls as $img)
+                                                    <div class="grupo-frota-thumb">
+                                                        <img src="{{ $img }}" alt="Imagem do grupo">
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <div id="caracteristicas-content" class="tab-pane fade" role="tabpanel" aria-labelledby="caracteristicas-tab">
+                        <div id="caracteristicas-content" class="tab-pane fade" role="tabpanel"
+                            aria-labelledby="caracteristicas-tab">
                             <div class="grupo-frota-section-title d-flex align-items-center justify-content-between">
                                 <span>Caracteristicas do Grupo</span>
-                                <small class="text-muted">Defina o valor de cada caracteristica</small>
+                                <small class="text-muted">Selecione apenas as caracteristicas que deseja usar neste
+                                    grupo</small>
                             </div>
+
                             <div class="table-responsive card-interno">
                                 <table class="table table-sm table-bordered table-hover mb-0 table-grupo-frota">
                                     <thead>
                                         <tr>
+                                            <th style="width: 80px;">Usar</th>
                                             <th>Caracteristica</th>
                                             <th>Valor</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        @foreach ($caracteristicas as $k => $caracteristica)
+                                        @foreach ($caracteristicas as $caracteristica)
+                                            @php
+                                                $tipoValor = \Illuminate\Support\Str::of(
+                                                    (string) ($caracteristica->tipoValorDescricao->nome ??
+                                                        ($caracteristica->tipoValorDescricao->configuracao ?? '')),
+                                                )
+                                                    ->ascii()
+                                                    ->lower()
+                                                    ->toString();
+                                                $ehQuantidade =
+                                                    str_contains($tipoValor, 'inteiro') ||
+                                                    str_contains($tipoValor, 'numero') ||
+                                                    str_contains($tipoValor, 'quantidade') ||
+                                                    str_contains($tipoValor, 'qtd');
+
+                                                $caracteristicaId = (int) ($caracteristica->id ?? 0);
+
+                                                $caracteristicaSelecionada =
+                                                    isset($grupoFrota) &&
+                                                    collect($grupoFrota->caracteristicas)->contains(
+                                                        'id',
+                                                        $caracteristicaId,
+                                                    );
+
+                                                $valorAtual = $caracteristicaSelecionada
+                                                    ? collect($grupoFrota->caracteristicas)->firstWhere(
+                                                        'id',
+                                                        $caracteristicaId,
+                                                    )['valor']
+                                                    : '';
+                                            @endphp
+
                                             <tr>
-                                                <td>{{ $caracteristica }}</td>
+                                                <td class="text-center align-middle">
+                                                    <input type="checkbox" class="caracteristica-check"
+                                                        id="caracteristica_{{ $caracteristicaId }}"
+                                                        name="caracteristicas[]" value="{{ $caracteristicaId }}"
+                                                        {{ $caracteristicaSelecionada ? 'checked' : '' }}>
+                                                </td>
+
+                                                <td class="align-middle">
+                                                    <label for="caracteristica_{{ $caracteristicaId }}" class="mb-0"
+                                                        style="cursor:pointer;">
+                                                        {{ $caracteristica->nome }}
+                                                    </label>
+
+                                                    @if (!empty($caracteristica->tipoValorDescricao?->nome))
+                                                        <small class="text-muted d-block">
+                                                            {{ $caracteristica->tipoValorDescricao->nome }}
+                                                        </small>
+                                                    @endif
+                                                </td>
+
                                                 <td>
-                                                    <input type="hidden" name="caracteristicas[{{ $k }}]" value="{{ $k }}">
-                                                    <input type="text" name="caracteristicaValor[{{ $k }}]" class="form-control form-control-sm"
-                                                        value="{{ isset($grupoFrota) && collect($grupoFrota->caracteristicas)->contains('id', $k) ? collect($grupoFrota->caracteristicas)->firstWhere('id', $k)['valor'] : '' }}">
+                                                    <input type="{{ $ehQuantidade ? 'number' : 'text' }}"
+                                                        name="caracteristicaValor[{{ $caracteristicaId }}]"
+                                                        class="form-control form-control-sm caracteristica-valor"
+                                                        value="{{ $valorAtual }}" data-id="{{ $caracteristicaId }}"
+                                                        {{ $caracteristicaSelecionada ? '' : 'disabled' }}
+                                                        @if ($ehQuantidade) min="0"
+        step="1"
+        inputmode="numeric"
+        pattern="[0-9]*" @endif>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -195,7 +305,9 @@
                             </div>
                         </div>
 
-                        <div id="opcionais-content" class="tab-pane fade" role="tabpanel" aria-labelledby="opcionais-tab">
+
+                        <div id="opcionais-content" class="tab-pane fade" role="tabpanel"
+                            aria-labelledby="opcionais-tab">
                             <div class="grupo-frota-section-title">Opcionais por Tipo</div>
                             @foreach ($tiposOpcionais as $tipoOpcional)
                                 @if (count($tipoOpcional->opcionais) > 0)
@@ -208,8 +320,8 @@
                                                 @foreach ($tipoOpcional->opcionais as $opcional)
                                                     <div class="col-lg-4 col-md-6 mb-1">
                                                         <label class="opcional-check mb-0">
-                                                            <input type="checkbox" id="opcional_{{ $opcional->id }}" name="opcionais[]"
-                                                                value="{{ $opcional->id }}"
+                                                            <input type="checkbox" id="opcional_{{ $opcional->id }}"
+                                                                name="opcionais[]" value="{{ $opcional->id }}"
                                                                 {{ isset($grupoFrota) && in_array($opcional->id, $grupoFrota->opcionais) ? 'checked' : '' }}>
                                                             <span>{{ $opcional->nome }}</span>
                                                         </label>
@@ -230,7 +342,8 @@
                                         @foreach ($modelos as $id_modelo => $modelo)
                                             <div class="col-lg-4 col-md-6 mb-1">
                                                 <label class="opcional-check mb-0">
-                                                    <input type="checkbox" id="modelo_{{ $id_modelo }}" name="modelos[]" value="{{ $id_modelo }}"
+                                                    <input type="checkbox" id="modelo_{{ $id_modelo }}"
+                                                        name="modelos[]" value="{{ $id_modelo }}"
                                                         {{ isset($grupoFrota) && in_array($id_modelo, $grupoFrota->modelos) ? 'checked' : '' }}>
                                                     <span>{{ $modelo }}</span>
                                                 </label>
@@ -242,7 +355,8 @@
                         </div>
                     </div>
 
-                    <button type="submit" class="btn btn-primary col-12 mt-3 btn-save-grupo-frota" {{ $bloquearSalvarGrupoFrota ? 'disabled' : '' }}>
+                    <button type="submit" class="btn btn-primary col-12 mt-3 btn-save-grupo-frota"
+                        {{ $bloquearSalvarGrupoFrota ? 'disabled' : '' }}>
                         Salvar
                     </button>
                     @if ($bloquearSalvarGrupoFrota)
@@ -257,168 +371,204 @@
 @stop
 
 @section('css')
-<style>
-    .card-grupo-frota {
-        border-radius: 14px;
-        overflow: hidden;
-    }
+    <style>
+        .campo-desabilitado {
+    background: #f1f5f9 !important;
+    cursor: not-allowed;
+    opacity: .75;
+}
+        .card-grupo-frota {
+            border-radius: 14px;
+            overflow: hidden;
+        }
 
-    .card-header-grupo-frota {
-        background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
-        padding: 1.1rem 1.5rem;
-    }
-
-    .card-header-grupo-frota h4 {
-        color: #0f2740;
-        font-weight: 700;
-    }
-
-    .nav-grupo-frota .nav-link {
-        border-radius: 8px;
-        font-weight: 600;
-        color: #334155;
-        border: 1px solid #dbe3ef;
-        margin-right: .45rem;
-        background: #fff;
-    }
-
-    .nav-grupo-frota .nav-link.active {
-        color: #fff;
-        background: #2563eb;
-        border-color: #2563eb;
-    }
-
-    .grupo-frota-section-title {
-        font-size: .96rem;
-        font-weight: 700;
-        color: #21364f;
-        letter-spacing: .02em;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e5eaf2;
-        margin-bottom: 10px;
-    }
-
-    .form-group-grupo-frota {
-        margin-bottom: 1rem;
-    }
-
-    .card-grupo-frota .form-control,
-    .card-grupo-frota .form-select {
-        border-radius: 10px;
-        border-color: #d8e1ec;
-        min-height: 38px;
-    }
-
-    .card-grupo-frota .form-control:focus,
-    .card-grupo-frota .form-select:focus {
-        border-color: #4b80ff;
-        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
-    }
-
-    .card-interno,
-    .card-opcional-grupo,
-    .card-modelos-grupo {
-        border: 1px solid #dbe6f3;
-        border-radius: 12px;
-        overflow: hidden;
-        background: #fff;
-    }
-
-    .table-grupo-frota thead th {
-        background: linear-gradient(180deg, #f8fafc 0%, #eef4fb 100%);
-        color: #334155;
-        font-weight: 700;
-        font-size: .78rem;
-        text-transform: uppercase;
-        white-space: nowrap;
-        border-bottom: 1px solid #d5e0ee;
-    }
-
-    .table-grupo-frota tbody tr:nth-child(even) td {
-        background: #fbfdff;
-    }
-
-    .table-grupo-frota tbody tr:hover td {
-        background: #f2f8ff;
-    }
-
-    .opcional-check {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        border: 1px solid #d8e1ec;
-        border-radius: 10px;
-        padding: 8px 10px;
-        cursor: pointer;
-        background: #fff;
-        min-height: 40px;
-    }
-
-    .opcional-check input {
-        margin: 0;
-    }
-
-    .opcional-check span {
-        font-size: 12px;
-        font-weight: 600;
-        color: #334155;
-    }
-
-    .btn-save-grupo-frota {
-        border-radius: 10px;
-        font-weight: 600;
-        padding-top: .58rem;
-        padding-bottom: .58rem;
-    }
-
-    @media (max-width: 991.98px) {
         .card-header-grupo-frota {
-            padding: .95rem 1rem;
-        }
-
-        .card-body {
-            padding: 1rem !important;
-        }
-
-        .nav-grupo-frota {
-            display: flex;
-            flex-wrap: nowrap;
-            overflow-x: auto;
-            overflow-y: hidden;
-            padding-bottom: 4px;
-            -webkit-overflow-scrolling: touch;
-            scrollbar-width: thin;
-        }
-
-        .nav-grupo-frota .nav-item {
-            flex: 0 0 auto;
-        }
-
-        .nav-grupo-frota .nav-link {
-            white-space: nowrap;
-        }
-
-        .table-grupo-frota {
-            min-width: 640px;
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .col-xl-10.col-lg-11.col-md-12.col-sm-12.col-xs-12.px-0 {
-            padding-left: .5rem !important;
-            padding-right: .5rem !important;
+            background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
+            padding: 1.1rem 1.5rem;
         }
 
         .card-header-grupo-frota h4 {
-            font-size: 1.1rem;
-            line-height: 1.35;
+            color: #0f2740;
+            font-weight: 700;
         }
 
-        .card-header-grupo-frota p {
-            font-size: .85rem;
+        .nav-grupo-frota .nav-link {
+            border-radius: 8px;
+            font-weight: 600;
+            color: #334155;
+            border: 1px solid #dbe3ef;
+            margin-right: .45rem;
+            background: #fff;
         }
-    }
-</style>
+
+        .nav-grupo-frota .nav-link.active {
+            color: #fff;
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .grupo-frota-section-title {
+            font-size: .96rem;
+            font-weight: 700;
+            color: #21364f;
+            letter-spacing: .02em;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e5eaf2;
+            margin-bottom: 10px;
+        }
+
+        .form-group-grupo-frota {
+            margin-bottom: 1rem;
+        }
+
+        .card-grupo-frota .form-control,
+        .card-grupo-frota .form-select {
+            border-radius: 10px;
+            border-color: #d8e1ec;
+            min-height: 38px;
+        }
+
+        .card-grupo-frota .form-control:focus,
+        .card-grupo-frota .form-select:focus {
+            border-color: #4b80ff;
+            box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
+        }
+
+        .card-interno,
+        .card-opcional-grupo,
+        .card-modelos-grupo {
+            border: 1px solid #dbe6f3;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+        }
+
+        .table-grupo-frota thead th {
+            background: linear-gradient(180deg, #f8fafc 0%, #eef4fb 100%);
+            color: #334155;
+            font-weight: 700;
+            font-size: .78rem;
+            text-transform: uppercase;
+            white-space: nowrap;
+            border-bottom: 1px solid #d5e0ee;
+        }
+
+        .table-grupo-frota tbody tr:nth-child(even) td {
+            background: #fbfdff;
+        }
+
+        .table-grupo-frota tbody tr:hover td {
+            background: #f2f8ff;
+        }
+
+        .opcional-check {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid #d8e1ec;
+            border-radius: 10px;
+            padding: 8px 10px;
+            cursor: pointer;
+            background: #fff;
+            min-height: 40px;
+        }
+
+        .opcional-check input {
+            margin: 0;
+        }
+
+        .opcional-check span {
+            font-size: 12px;
+            font-weight: 600;
+            color: #334155;
+        }
+
+        .btn-save-grupo-frota {
+            border-radius: 10px;
+            font-weight: 600;
+            padding-top: .58rem;
+            padding-bottom: .58rem;
+        }
+
+        .grupo-frota-preview img {
+            width: 100%;
+            max-height: 160px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid #dbe3ef;
+        }
+
+        .grupo-frota-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            gap: 8px;
+        }
+
+        .grupo-frota-thumb {
+            border: 1px solid #dbe3ef;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f8fafc;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .grupo-frota-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        @media (max-width: 991.98px) {
+            .card-header-grupo-frota {
+                padding: .95rem 1rem;
+            }
+
+            .card-body {
+                padding: 1rem !important;
+            }
+
+            .nav-grupo-frota {
+                display: flex;
+                flex-wrap: nowrap;
+                overflow-x: auto;
+                overflow-y: hidden;
+                padding-bottom: 4px;
+                -webkit-overflow-scrolling: touch;
+                scrollbar-width: thin;
+            }
+
+            .nav-grupo-frota .nav-item {
+                flex: 0 0 auto;
+            }
+
+            .nav-grupo-frota .nav-link {
+                white-space: nowrap;
+            }
+
+            .table-grupo-frota {
+                min-width: 640px;
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .col-xl-10.col-lg-11.col-md-12.col-sm-12.col-xs-12.px-0 {
+                padding-left: .5rem !important;
+                padding-right: .5rem !important;
+            }
+
+            .card-header-grupo-frota h4 {
+                font-size: 1.1rem;
+                line-height: 1.35;
+            }
+
+            .card-header-grupo-frota p {
+                font-size: .85rem;
+            }
+        }
+    </style>
 @stop
 
 @section('js')
@@ -427,6 +577,32 @@
         $(function () {
             $('#valor_diario').mask('0000000000,00', {
                 reverse: true
+            });
+
+            function toggleCampoCaracteristica($checkbox) {
+                var id = $checkbox.val();
+                var $input = $('.caracteristica-valor[data-id="' + id + '"]');
+
+                if (!$input.length) {
+                    return;
+                }
+
+                if ($checkbox.is(':checked')) {
+                    $input.prop('disabled', false);
+                    $input.removeClass('campo-desabilitado');
+                } else {
+                    $input.prop('disabled', true);
+                    $input.val('');
+                    $input.addClass('campo-desabilitado');
+                }
+            }
+
+            $(document).on('change', '.caracteristica-check', function () {
+                toggleCampoCaracteristica($(this));
+            });
+
+            $('.caracteristica-check').each(function () {
+                toggleCampoCaracteristica($(this));
             });
         });
     </script>

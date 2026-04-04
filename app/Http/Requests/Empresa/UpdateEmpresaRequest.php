@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Empresa;
 
-use App\Support\DomainNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rule;
@@ -19,7 +18,6 @@ class UpdateEmpresaRequest extends FormRequest
         $this->merge([
             'cnpj' => $this->onlyDigits($this->input('cnpj')),
             'telefone' => $this->onlyDigits($this->input('telefone')),
-            'dominio' => DomainNormalizer::normalize($this->input('dominio')),
             'moeda_pagamento' => strtoupper((string) $this->input('moeda_pagamento', 'BRL')),
             'cor_primaria' => $this->normalizeColor($this->input('cor_primaria')),
             'cor_secundaria' => $this->normalizeColor($this->input('cor_secundaria')),
@@ -31,11 +29,9 @@ class UpdateEmpresaRequest extends FormRequest
     {
         $empresaId = $this->route('empresa');
         $slugRules = ['required', 'string', 'max:255'];
-        $dominioRules = ['nullable', 'string', 'max:255'];
 
         if (Schema::hasTable('empresas')) {
             $slugRules[] = Rule::unique('empresas', 'slug')->ignore($empresaId);
-            $dominioRules[] = Rule::unique('empresas', 'dominio')->ignore($empresaId);
         }
 
         return [
@@ -45,7 +41,7 @@ class UpdateEmpresaRequest extends FormRequest
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],
-            'dominio' => $dominioRules,
+            'dominio' => ['nullable', 'string', 'max:255'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'cor_primaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
             'cor_secundaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
@@ -61,52 +57,33 @@ class UpdateEmpresaRequest extends FormRequest
             'paypal_mode' => ['nullable', Rule::in(['sandbox', 'live'])],
         ];
     }
-
     public function messages(): array
     {
         return [
-            'nome.required' => 'O nome da empresa e obrigatorio.',
-            'slug.required' => 'O slug da empresa e obrigatorio.',
-            'slug.unique' => 'Este slug ja esta em uso por outra empresa.',
-            'cnpj.digits' => 'O CNPJ deve conter 14 digitos.',
-            'email.email' => 'Informe um e-mail valido.',
-            'telefone.digits_between' => 'O telefone deve conter 10 ou 11 digitos.',
-            'dominio.unique' => 'Este dominio ja esta em uso por outra empresa.',
-            'logo.image' => 'O logo deve ser uma imagem valida.',
-            'logo.mimes' => 'O logo deve estar em um formato valido: jpg, jpeg, png, webp ou svg.',
-            'logo.max' => 'O logo deve ter no maximo 2MB.',
-            'cor_primaria.regex' => 'A cor primaria deve estar no formato hexadecimal. Ex: #1F2937.',
-            'cor_secundaria.regex' => 'A cor secundaria deve estar no formato hexadecimal. Ex: #334155.',
-            'cor_terciaria.regex' => 'A cor terciaria deve estar no formato hexadecimal. Ex: #64748B.',
-            'gateway_pagamento.in' => 'Gateway de pagamento invalido.',
-            'moeda_pagamento.in' => 'A moeda de pagamento deve ser BRL, USD ou EUR.',
+            'nome.required' => 'O campo nome é obrigatório.',
+            'nome.max' => 'O nome deve ter no máximo 255 caracteres.',
+            'slug.required' => 'O campo slug é obrigatório.',
+            'slug.string' => 'O slug deve ser uma string.',
+            'slug.max' => 'O slug deve ter no máximo 255 caracteres.',
+            'slug.unique' => 'Este slug já está em uso.',
+            'ativo.in' => 'O campo ativo deve ser S ou N.',
+            'cnpj.digits' => 'O CNPJ deve conter 14 dígitos.',
+            'email.email' => 'O e-mail deve ser um endereço de e-mail válido.',
+            'email.max' => 'O e-mail deve ter no máximo 255 caracteres.',
+            'telefone.digits_between' => 'O telefone deve ter entre 10 e 11 dígitos.',
+            'dominio.max' => 'O domínio deve ter no máximo 255 caracteres.',
+            'logo.image' => 'O arquivo da logo deve ser uma imagem.',
+            'logo.mimes' => 'A logo deve ser um arquivo do tipo: jpg, jpeg, png, webp ou svg.',
+            'logo.max' => 'A logo não pode ser maior que 2MB.',
+            'cor_primaria.regex' => 'A cor primária deve estar no formato hexadecimal (ex: #A1B2C3).',
+            'cor_secundaria.regex' => 'A cor secundária deve estar no formato hexadecimal (ex: #A1B2C3).',
+            'cor_terciaria.regex' => 'A cor terciária deve estar no formato hexadecimal (ex: #A1B2C3).',
+            'gateway_pagamento.in' => 'Gateway de pagamento inválido.',
+            'moeda_pagamento.in' => 'Moeda de pagamento inválida.',
+            'stripe_public_key.max' => 'A chave pública do Stripe deve ter no máximo 255 caracteres.',
+            'mercado_livre_public_key.max' => 'A chave pública do Mercado Livre deve ter no máximo 255 caracteres.',
+            'paypal_client_id.max' => 'O Client ID do PayPal deve ter no máximo 255 caracteres.',
             'paypal_mode.in' => 'O modo do PayPal deve ser sandbox ou live.',
-        ];
-    }
-
-    public function attributes(): array
-    {
-        return [
-            'nome' => 'nome',
-            'slug' => 'slug',
-            'ativo' => 'status',
-            'cnpj' => 'CNPJ',
-            'email' => 'e-mail',
-            'telefone' => 'telefone',
-            'dominio' => 'dominio',
-            'logo' => 'logo',
-            'cor_primaria' => 'cor primaria',
-            'cor_secundaria' => 'cor secundaria',
-            'cor_terciaria' => 'cor terciaria',
-            'gateway_pagamento' => 'gateway de pagamento',
-            'moeda_pagamento' => 'moeda de pagamento',
-            'stripe_public_key' => 'Stripe Public Key',
-            'stripe_secret' => 'Stripe Secret',
-            'mercado_livre_public_key' => 'Mercado Livre Public Key',
-            'mercado_livre_access_token' => 'Mercado Livre Access Token',
-            'paypal_client_id' => 'PayPal Client ID',
-            'paypal_client_secret' => 'PayPal Client Secret',
-            'paypal_mode' => 'modo do PayPal',
         ];
     }
 

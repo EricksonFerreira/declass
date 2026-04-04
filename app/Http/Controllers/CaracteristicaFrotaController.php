@@ -11,6 +11,9 @@ use App\Services\CaracteristicaFrotaService;
 use App\Services\TipoValorCaracteristicaFrotaService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use App\Traits\FiltroTrait;
 
 class CaracteristicaFrotaController extends BaseController implements FiltroInterface, ResourceInterface
@@ -74,7 +77,15 @@ class CaracteristicaFrotaController extends BaseController implements FiltroInte
 
     public function store(StoreCaracteristicaFrotaRequest $request)
     {
-        $this->caracteristicaFrotaService->create($request->all());
+        $data = $request->validated();
+        $data = $this->normalizeCodigo($data);
+
+        $imagem = $this->storeImagem($request->file('imagem'));
+        if ($imagem) {
+            $data['imagem'] = $imagem;
+        }
+
+        $this->caracteristicaFrotaService->create($data);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -95,7 +106,20 @@ class CaracteristicaFrotaController extends BaseController implements FiltroInte
 
     public function update(UpdateCaracteristicaFrotaRequest $request, $id)
     {
-        $this->caracteristicaFrotaService->update($id,$request->all());
+        $caracteristicaFrota = $this->caracteristicaFrotaService->getById($id);
+        if (!$caracteristicaFrota) {
+            return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        }
+
+        $data = $request->validated();
+        $data = $this->normalizeCodigo($data, $caracteristicaFrota->codigo ?? null);
+
+        $imagem = $this->storeImagem($request->file('imagem'), $caracteristicaFrota->imagem ?? null);
+        if ($imagem) {
+            $data['imagem'] = $imagem;
+        }
+
+        $this->caracteristicaFrotaService->update($id, $data);
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -171,5 +195,48 @@ class CaracteristicaFrotaController extends BaseController implements FiltroInte
             'POST',
             route('caracteristica_frota.store'),
         ];
+    }
+
+    private function normalizeCodigo(array $data, ?string $fallback = null): array
+    {
+        $codigo = isset($data['codigo']) ? trim((string) $data['codigo']) : '';
+        if ($codigo !== '') {
+            return $data;
+        }
+
+        if ($fallback) {
+            $data['codigo'] = $fallback;
+            return $data;
+        }
+
+        $nome = isset($data['nome']) ? trim((string) $data['nome']) : '';
+        if ($nome !== '') {
+            $data['codigo'] = Str::upper(Str::slug($nome, '_'));
+            return $data;
+        }
+
+        return $data;
+    }
+
+    private function storeImagem(?UploadedFile $file, ?string $oldPath = null): ?string
+    {
+        if (!$file instanceof UploadedFile || !$file->isValid()) {
+            return null;
+        }
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
+        $fileName = Str::uuid()->toString() . '.' . $extension;
+        $path = 'caracteristicas_frota/imagens/' . $fileName;
+
+        $stored = Storage::disk('public')->put($path, $file->getContent());
+        if (!$stored) {
+            return null;
+        }
+
+        if (is_string($oldPath) && trim($oldPath) !== '' && Storage::disk('public')->exists($oldPath)) {
+            Storage::disk('public')->delete($oldPath);
+        }
+
+        return $path;
     }
 }

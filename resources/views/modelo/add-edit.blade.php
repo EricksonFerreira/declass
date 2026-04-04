@@ -61,7 +61,7 @@
             </div>
 
             <div class="card-body p-4">
-                <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
+                <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" enctype="multipart/form-data">
                     <div class="col-12">
                         <div class="modelo-section-title">Informacoes Basicas</div>
                     </div>
@@ -94,6 +94,23 @@
                             <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione..."
                                 :selected="old('ativo', isset($modelo->ativo) && $modelo->ativo ? $modelo->ativo : null)"
                                 class="form-control form-control-sm" required />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 col-md-12">
+                        <div class="form-group form-group-modelo">
+                            <label for="imagem">Imagem do modelo</label>
+                            <input type="file" class="form-control form-control-sm" id="imagem" name="imagem" accept=".jpg,.jpeg,.png,.webp,.svg">
+                            <small class="text-muted d-block mt-1">Formatos: JPG, PNG, WEBP ou SVG. Tamanho maximo: 2MB.</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-md-12">
+                        <div class="modelo-preview">
+                            @if(!empty($modelo?->imagem_url))
+                                <img src="{{ $modelo->imagem_url }}" alt="Imagem do modelo">
+                            @else
+                                <div class="modelo-preview-empty">Sem imagem cadastrada</div>
+                            @endif
                         </div>
                     </div>
 
@@ -162,6 +179,28 @@
         font-weight: 600;
         padding-top: .58rem;
         padding-bottom: .58rem;
+    }
+
+    .modelo-preview {
+        min-height: 120px;
+        border: 1px dashed #d8e1ec;
+        border-radius: 12px;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: .75rem;
+    }
+
+    .modelo-preview img {
+        max-height: 150px;
+        max-width: 100%;
+        object-fit: contain;
+    }
+
+    .modelo-preview-empty {
+        color: #64748b;
+        font-size: .88rem;
     }
 
     @media (max-width: 991.98px) {

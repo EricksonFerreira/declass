@@ -21,6 +21,7 @@ class ReplicacaoBaseService
             'tipo_valor_caracteristica_frota' => ['label' => 'Tipos de Valor da Caracteristica de Frota', 'area' => 'Frota', 'tables' => ['tipo_valor_caracteristica_frota']],
             'caracteristicas_frotas' => ['label' => 'Caracteristicas de Frota', 'area' => 'Frota', 'tables' => ['caracteristicas_frotas']],
             'tipo_frota' => ['label' => 'Tipos de Frota', 'area' => 'Frota', 'tables' => ['tipo_frota']],
+            'grupos_frota' => ['label' => 'Grupos de Frota', 'area' => 'Frota', 'tables' => ['grupos_frota']],
             'tipo_opcional' => ['label' => 'Tipos de Opcional', 'area' => 'Frota', 'tables' => ['tipo_opcional', 'tipo_opcionals']],
             'opcionais' => ['label' => 'Itens de Opcional', 'area' => 'Frota', 'tables' => ['opcionais', 'opcionals']],
             'opcional_grupo_veiculo' => ['label' => 'Vinculos de Opcionais por Grupo', 'area' => 'Frota', 'tables' => ['opcional_grupo_veiculo', 'opcional_grupo_veiculos']],
@@ -296,6 +297,11 @@ class ReplicacaoBaseService
         if (in_array('tipo_frota', $result, true)) {
             $result[] = 'tipo_valor_caracteristica_frota';
             $result[] = 'caracteristicas_frotas';
+        }
+
+        // Grupo de frota depende de tipo de frota (e consequentemente das caracteristicas).
+        if (in_array('grupos_frota', $result, true)) {
+            $result[] = 'tipo_frota';
         }
 
         // Caracteristicas dependem dos tipos de valor.

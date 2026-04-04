@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\CaracteristicaFrota;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCaracteristicaFrotaRequest extends FormRequest
 {
@@ -22,13 +24,18 @@ class StoreCaracteristicaFrotaRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $empresaId = app(EmpresaContext::class)->empresaId();
+        $uniqueNome = Rule::unique('caracteristicas_frotas', 'nome');
+        if ($empresaId !== null) {
+            $uniqueNome = $uniqueNome->where(fn ($q) => $q->where('empresa_id', $empresaId));
+        }
 
-            'codigo' => 'required|string|max:255',
-            'nome' => 'required|string|max:255',
+        return [
+            'nome' => ['required', 'string', 'max:255', $uniqueNome],
             'tipo_valor_caracteristica_frota_id' => 'required|integer|exists:tipo_valor_caracteristica_frota,id',
             'descricao' => 'nullable|string|max:1500',
             'ativo' => 'required|string|max:1',
+            'imagem' => 'nullable|image|max:2048',
         ];
     }
 
@@ -37,14 +44,15 @@ class StoreCaracteristicaFrotaRequest extends FormRequest
         return [
             'nome.required' => 'O campo nome é obrigatório',
             'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
-            'codigo.required' => 'O campo código é obrigatório',
-            'codigo.max' => 'O campo código deve ter no máximo 255 caracteres',
+            'nome.unique' => 'O nome informado já está em uso.',
             'tipo_valor_caracteristica_frota_id.required' => 'O campo tipo de valor é obrigatório',
             'tipo_valor_caracteristica_frota_id.integer' => 'O campo tipo de valor deve ser um inteiro',
             'tipo_valor_caracteristica_frota_id.exists' => 'O tipo de valor informado não existe',
             'descricao.max' => 'O campo descrição deve ter no máximo 1500 caracteres',
             'ativo.required' => 'O campo ativo é obrigatório',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
+            'imagem.image' => 'A imagem enviada deve ser um arquivo de imagem v\u00e1lido.',
+            'imagem.max' => 'A imagem deve ter no m\u00e1ximo 2048 kilobytes.',
         ];
     }
 }

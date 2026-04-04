@@ -23,6 +23,8 @@ Route::post('/reserva', [SiteReservaController::class, 'store'])->name('site.res
 Route::get('/reserva/disponibilidade', [SiteReservaController::class, 'disponibilidade'])->name('site.reserva.disponibilidade');
 Route::post('/reserva/verificar-cupom', [SiteReservaController::class, 'verificarCupom'])->name('site.reserva.verificarCupom');
 Route::get('/reserva/{reserva}/sucesso', [SiteReservaController::class, 'success'])->name('site.reserva.success');
+Route::get('/reserva/{reserva}/pagamento', [SiteReservaController::class, 'pagamento'])->name('site.reserva.pagamento');
+Route::post('/reserva/{reserva}/pagamento', [SiteReservaController::class, 'processarPagamento'])->name('site.reserva.processarPagamento');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::get('/cadastro/sucesso', function () {

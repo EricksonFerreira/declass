@@ -91,6 +91,17 @@
                         <x-form-input type="text" class="form-control form-control-sm" id="dominio" name="dominio"
                             label="Dominio" value="{{ $empresa->dominio ?? '' }}" />
                     </div>
+                    <div class="form-group form-group-empresa">
+                        <label for="reserva_selecionar_modelo">Selecionar modelo na reserva</label>
+                        @php
+                            $selecionarModeloReserva = old('reserva_selecionar_modelo', $empresa->reserva_selecionar_modelo ?? 'N');
+                        @endphp
+                        <select class="form-control form-control-sm" id="reserva_selecionar_modelo" name="reserva_selecionar_modelo">
+                            <option value="N" {{ $selecionarModeloReserva === 'N' ? 'selected' : '' }}>Nao</option>
+                            <option value="S" {{ $selecionarModeloReserva === 'S' ? 'selected' : '' }}>Sim</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">Se "Nao", o modelo sera escolhido automaticamente apos selecionar o grupo.</small>
+                    </div>
                 </div>
 
                 <div class="col-12 mt-2">

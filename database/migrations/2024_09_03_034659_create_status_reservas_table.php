@@ -11,12 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('status_reservas', function (Blueprint $table) {
-            $table->id();
-            $table->string('nome')->nullable();
-            $table->string('nome')->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('status_reservas')) {
+            Schema::create('status_reservas', function (Blueprint $table) {
+                $table->id();
+                $table->string('nome')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

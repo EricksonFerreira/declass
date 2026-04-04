@@ -103,7 +103,7 @@
             height: 46px;
             border-radius: 12px;
             border: 1px solid rgba(15, 23, 42, 0.12);
-            background: var(--white);
+            background: var(--brand-primary);
             object-fit: contain;
             padding: 4px;
             flex-shrink: 0;
@@ -117,6 +117,7 @@
             color: var(--ink-900);
             font-size: 1rem;
             text-transform: uppercase;
+            background: var(--brand-primary);
         }
 
         .brand-title {
@@ -818,7 +819,7 @@
                         <div class="booking-grid">
                             <div class="field booking-full">
                                 <label for="retirada">{{ $heroFormLabelRetirada }}</label>
-                                <select id="retirada" name="retirada">
+                                <select id="retirada" name="retirada" required>
                                     <option value="">Selecione uma estacao</option>
                                     @foreach($estacoesSelect as $estacao)
                                         <option value="{{ $estacao['id'] }}">
@@ -829,11 +830,11 @@
                             </div>
                             <div class="field">
                                 <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
-                                <input id="data_retirada" name="data_retirada" type="date">
+                                <input id="data_retirada" name="data_retirada" type="date" required>
                             </div>
                             <div class="field">
                                 <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
-                                <input id="hora_retirada" name="hora_retirada" type="time">
+                                <input id="hora_retirada" name="hora_retirada" type="time" required>
                             </div>
                             <div class="field booking-full">
                                 <div class="toggle-row">
@@ -843,7 +844,7 @@
                             </div>
                             <div class="field booking-full" id="devolucaoField">
                                 <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolucao' }}</label>
-                                <select id="devolucao" name="devolucao">
+                                <select id="devolucao" name="devolucao" required>
                                     <option value="">Selecione uma estacao</option>
                                     @foreach($estacoesSelect as $estacao)
                                         <option value="{{ $estacao['id'] }}">
@@ -854,11 +855,11 @@
                             </div>
                             <div class="field">
                                 <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
-                                <input id="data_devolucao" name="data_devolucao" type="date">
+                                <input id="data_devolucao" name="data_devolucao" type="date" required>
                             </div>
                             <div class="field">
                                 <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
-                                <input id="hora_devolucao" name="hora_devolucao" type="time">
+                                <input id="hora_devolucao" name="hora_devolucao" type="time" required>
                             </div>
                             <div class="field booking-full">
                                 <button class="btn btn-submit" type="submit">{{ $heroFormTextoBotao }}</button>
@@ -1091,6 +1092,7 @@
                 const hide = mesmoLocal.checked;
                 devolucaoField.style.display = hide ? 'none' : 'block';
                 devolucaoSelect.disabled = hide;
+                devolucaoSelect.required = !hide;
 
                 if (hide && retiradaSelect && retiradaSelect.value) {
                     devolucaoSelect.value = retiradaSelect.value;
@@ -1151,6 +1153,11 @@
                     normalizeMinTime();
                     normalizeMinDates();
                     syncDevolucaoVisibility();
+                    if (!form.checkValidity()) {
+                        form.reportValidity();
+                        event.preventDefault();
+                        return;
+                    }
                     if (!validateDates()) {
                         event.preventDefault();
                     }

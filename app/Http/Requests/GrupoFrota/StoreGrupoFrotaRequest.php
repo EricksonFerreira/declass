@@ -23,13 +23,15 @@ class StoreGrupoFrotaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'codigo'=> 'required|string|max:50',
+            'codigo' => 'required|string|max:50',
             'nome' => 'required|string|max:255',
-            'codigo_sipp'=> 'required|string|max:50',
+            'codigo_sipp' => 'required|string|max:50',
             'tipo_frota_id' => 'required|integer|exists:tipo_frota,id',
             'valor_diario' => 'required|string',
             'ativo' => 'required|string|max:1',
-            'imagem' => 'nullable|max:2048',
+            'imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
+            'imagens' => 'nullable|array',
+            'imagens.*' => 'image|mimes:jpg,jpeg,png,webp,svg|max:2048',
         ];
     }
 
@@ -51,7 +53,13 @@ class StoreGrupoFrotaRequest extends FormRequest
             'valor_diario.numeric' => 'O campo valor diário deve ser um número',
             'ativo.required' => 'O campo ativo é obrigatório',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
+            'imagem.image' => 'O arquivo enviado deve ser uma imagem.',
+            'imagem.mimes' => 'A imagem deve ser do tipo: jpg, jpeg, svg, png ou webp.',
             'imagem.max' => 'O arquivo deve ter no máximo 2048 kilobytes.',
+            'imagens.array' => 'As imagens devem ser enviadas em formato de lista.',
+            'imagens.*.image' => 'Cada arquivo deve ser uma imagem valida.',
+            'imagens.*.mimes' => 'As imagens devem ser do tipo: jpg, jpeg, svg, png ou webp.',
+            'imagens.*.max' => 'Cada imagem deve ter no maximo 2048 kilobytes.',
         ];
     }
 }

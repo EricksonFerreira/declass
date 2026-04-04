@@ -58,6 +58,8 @@ class StoreEmpresaRequest extends FormRequest
             'paypal_client_id' => ['nullable', 'string', 'max:255'],
             'paypal_client_secret' => ['nullable', 'string'],
             'paypal_mode' => ['nullable', Rule::in(['sandbox', 'live'])],
+            'reserva_escolher_empresa' => ['nullable', Rule::in(['S', 'N'])],
+            'reserva_selecionar_modelo' => ['nullable', Rule::in(['S', 'N'])],
         ];
     }
 

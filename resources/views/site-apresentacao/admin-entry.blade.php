@@ -42,7 +42,7 @@
             object-fit: contain;
             border-radius: 16px;
             border: 1px solid rgba(15, 23, 42, .18);
-            background: #fff;
+            background: var(--admin-bg);
             padding: 6px;
             margin: 0 auto 12px;
             display: block;

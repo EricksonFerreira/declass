@@ -27,6 +27,7 @@ class StoreModeloRequest extends FormRequest
             'marca_id' => 'required|integer|exists:marcas,id',
             'segmento_id' => 'required|integer|exists:segmentos,id',
             'ativo' => 'required|string|max:1',
+            'imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
         ];
     }
 
@@ -43,6 +44,9 @@ class StoreModeloRequest extends FormRequest
             'segmento_id.exists' => 'O segmento informado não existe',
             'ativo.required' => 'O campo ativo é obrigatório',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
+            'imagem.image' => 'O arquivo enviado deve ser uma imagem.',
+            'imagem.mimes' => 'A imagem deve ser do tipo: jpg, jpeg, png, svg ou webp.',
+            'imagem.max' => 'O arquivo deve ter no maximo 2048 kilobytes.',
         ];
     }
 }

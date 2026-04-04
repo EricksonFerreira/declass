@@ -27,7 +27,7 @@ class StoreReservaRequest extends FormRequest
             'data_inicio' => 'required|date|after_or_equal:today',
             'estacao_devolucao_id' => 'required|integer|exists:estacoes,id',
             'data_fim' => 'required|date|after:data_inicio',
-            'veiculo_id' => 'integer|exists:veiculos,id',
+            'veiculo_id' => 'nullable|integer|exists:veiculos,id',
             'modelo_id' => 'required|integer|exists:modelos,id',
             'cupom_desconto' => 'nullable|string|max:255',
             'opcionais' => 'nullable|array',

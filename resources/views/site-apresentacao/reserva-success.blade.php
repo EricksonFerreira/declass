@@ -37,7 +37,7 @@
             height: 48px;
             border-radius: 12px;
             object-fit: contain;
-            background: #fff;
+            background: {{ $empresa->cor_primaria ?: '#2F6F3F' }};
             padding: 4px;
         }
 
@@ -95,7 +95,7 @@
         </div>
 
         <h1>Reserva recebida com sucesso</h1>
-        <p>Seu atendimento foi registrado. Para seguir com o pagamento, faca login na area administrativa.</p>
+        <p>Seu atendimento foi registrado. Para seguir com o pagamento, clique no botao abaixo.</p>
 
         <div class="details">
             <div class="row"><strong>Protocolo:</strong> #{{ $reserva->id }}</div>

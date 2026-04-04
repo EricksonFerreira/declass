@@ -27,4 +27,14 @@ class CaracteristicaFrotaService extends AbstractBaseService
     {
         return $this->model;
     }
+
+    public function getAllAtivosWithTipoValor()
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->with('tipoValorDescricao:id,nome,configuracao')
+            ->where('ativo', 'S')
+            ->orderBy('nome');
+
+        return $query->get(['id', 'nome', 'tipo_valor_caracteristica_frota_id']);
+    }
 }

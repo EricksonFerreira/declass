@@ -15,7 +15,7 @@ class PowerBIController extends Controller
         $this->powerBI = $powerBI;
     }
 
-    public function listReports()
+    public function index()
     {
         // $grupos = $this->powerBI->listGroups();
         // // dd($grupos);

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use Illuminate\Support\Collection;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\GrupoFrota\StoreGrupoFrotaRequest;
@@ -93,7 +94,7 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
 
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id', 'nome', 'nome');
         $marcas = $this->modeloService->getAllAtivosConcatenado('id', 'nome');
-        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id', 'nome', 'nome');
+        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivosWithTipoValor();
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
         $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
         $preRequisitosGrupoFrota = $this->montarPreRequisitosGrupoFrota($tipoFrotas, $modelos, $caracteristicas, $tiposOpcionais);
@@ -133,7 +134,7 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         [$metodo, $rota] = $this->getFormMethodAndRoute($grupoFrota);
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id', 'nome', 'nome');
         $modelos = $this->modeloService->getAllAtivosConcatenado('id', 'nome');
-        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivos('id', 'nome', 'nome');
+        $caracteristicas = $this->caracteristicaFrotaService->getAllAtivosWithTipoValor();
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
         $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
         $preRequisitosGrupoFrota = $this->montarPreRequisitosGrupoFrota($tipoFrotas, $modelos, $caracteristicas, $tiposOpcionais);
@@ -166,8 +167,10 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
 
     public function update(UpdateGrupoFrotaRequest $request, $id)
     {
-        // dd($request->all());
-        $this->grupoFrotaService->update($id, $request->all());
+        $data = $request->validated();
+
+        $this->grupoFrotaService->update($id, $data);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -244,16 +247,15 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $estacao_devolucao_id = $request->estacao_devolucao_id;
         $data_fim = $request->data_fim;
 
-        $this->grupoFrotaService->verificaGruposFrotaDisponiveis($estacao_retirada_id,$data_inicio,$estacao_devolucao_id,$data_fim);
-
+        $this->grupoFrotaService->verificaGruposFrotaDisponiveis($estacao_retirada_id, $data_inicio, $estacao_devolucao_id, $data_fim);
     }
     /**
      * Monta indicadores de pre-requisitos para criacao/edicao de grupo de frota.
      */
     private function montarPreRequisitosGrupoFrota(
-        array $tipoFrotas,
-        array $modelos,
-        array $caracteristicas,
+        Collection|array $tipoFrotas,
+        Collection|array $modelos,
+        Collection|array $caracteristicas,
         $tiposOpcionais
     ): array {
         $qtdTiposFrota = count($tipoFrotas);
@@ -327,4 +329,3 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         ];
     }
 }
-

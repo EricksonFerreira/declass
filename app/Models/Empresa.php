@@ -49,6 +49,8 @@ class Empresa extends Model
         'paypal_client_id',
         'paypal_client_secret',
         'paypal_mode',
+        'reserva_escolher_empresa',
+        'reserva_selecionar_modelo',
         'empresa_id',
     ];
 

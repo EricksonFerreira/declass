@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\CaracteristicaFrota;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateCaracteristicaFrotaRequest extends FormRequest
 {
@@ -22,21 +24,25 @@ class UpdateCaracteristicaFrotaRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = app(EmpresaContext::class)->empresaId();
+        $caracteristicaId = $this->route('caracteristica_frotum');
+        $uniqueNome = Rule::unique('caracteristicas_frotas', 'nome')->ignore($caracteristicaId);
+        if ($empresaId !== null) {
+            $uniqueNome = $uniqueNome->where(fn ($q) => $q->where('empresa_id', $empresaId));
+        }
+
         return [
-            'codigo' => 'required|string|max:255',
-            'nome' => 'required|string|max:255|unique:caracteristicas_frotas,nome,' . $this->route('caracteristica_frotum'),
+            'nome' => ['required', 'string', 'max:255', $uniqueNome],
             'tipo_valor_caracteristica_frota_id' => 'required|integer|exists:tipo_valor_caracteristica_frota,id',
             'descricao' => 'nullable|string|max:1500',
             'ativo' => 'required|string|max:1',
+            'imagem' => 'nullable|image|max:2048',
         ];
     }
 
     public function messages()
     {
         return [
-            'codigo.required' => 'O campo código é obrigatório.',
-            'codigo.string' => 'O campo código deve ser uma string.',
-            'codigo.max' => 'O campo código deve ter no máximo 255 caracteres.',
             'nome.required' => 'O campo nome é obrigatório.',
             'nome.string' => 'O campo nome deve ser uma string.',
             'nome.max' => 'O campo nome deve ter no máximo 255 caracteres.',
@@ -49,6 +55,8 @@ class UpdateCaracteristicaFrotaRequest extends FormRequest
             'ativo.required' => 'O campo ativo é obrigatório.',
             'ativo.string' => 'O campo ativo deve ser uma string.',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',
+            'imagem.image' => 'A imagem enviada deve ser um arquivo de imagem v\u00e1lido.',
+            'imagem.max' => 'A imagem deve ter no m\u00e1ximo 2048 kilobytes.',
         ];
     }
 }

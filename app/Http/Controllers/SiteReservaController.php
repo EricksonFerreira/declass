@@ -10,11 +10,13 @@ use App\Models\GrupoFrota;
 use App\Models\Modelo;
 use App\Models\Opcional;
 use App\Models\Reserva;
+use App\Models\Transacao;
 use App\Models\User;
 use App\Services\ClienteStripeService;
 use App\Services\CupomDescontoService;
 use App\Services\GrupoFrotaService;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
+use App\Services\Pagamentos\GerenciadorDePagamentos;
 use App\Services\PaisService;
 use App\Services\RegraService;
 use App\Services\ReservaService;
@@ -23,12 +25,14 @@ use App\Services\VeiculoService;
 use App\Support\DomainNormalizer;
 use App\Support\EmpresaContext;
 use Carbon\Carbon;
+use DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -45,7 +49,8 @@ class SiteReservaController extends Controller
         private readonly RegraService $regraService,
         private readonly ClienteStripeService $clienteStripeService,
         private readonly PaisService $paisService,
-        private readonly GatewayEmpresaConfigService $gatewayEmpresaConfigService
+        private readonly GatewayEmpresaConfigService $gatewayEmpresaConfigService,
+        private readonly GerenciadorDePagamentos $gerenciadorDePagamentos
     ) {
     }
 
@@ -62,6 +67,7 @@ class SiteReservaController extends Controller
         $gruposFrota = $this->gruposFrotaAtivos();
         $paises = $this->paisService->getAllForSelectSigla();
         $moedaEmpresa = strtoupper($this->gatewayEmpresaConfigService->moeda($empresa));
+        $reservaSelecionarModelo = ($empresa->reserva_selecionar_modelo ?? 'N') === 'S';
 
         return view('site-apresentacao.reserva', [
             'empresa' => $empresa,
@@ -74,6 +80,7 @@ class SiteReservaController extends Controller
             'authUserName' => auth()->user()?->nome,
             'authUserEmail' => auth()->user()?->email,
             'loginRedirectUrl' => Route::has('site.reserva.login') ? route('site.reserva.login', ['step' => 4]) : null,
+            'reservaSelecionarModelo' => $reservaSelecionarModelo,
             'prefill' => [
                 'estacao_retirada_id' => old('estacao_retirada_id', $this->normalizeInt($request->query('retirada'))),
                 'estacao_devolucao_id' => old(
@@ -174,6 +181,16 @@ class SiteReservaController extends Controller
                 return [
                     'id' => (int) $modelo->id,
                     'nome' => (string) $modelo->nome,
+                    'imagem_url' => $modelo->imagem_url ?? $modelo->imagem ?? null,
+                    'disponivel' => true,
+                ];
+            })->values()->all(),
+            'modelos_vinculados' => $modelosVinculados->map(function ($modelo): array {
+                return [
+                    'id' => (int) ($modelo->id ?? 0),
+                    'nome' => (string) ($modelo->nome ?? ''),
+                    'imagem_url' => $modelo->imagem_url ?? $modelo->imagem ?? null,
+                    'disponivel' => false,
                 ];
             })->values()->all(),
             'tipo_opcional' => $tipoOpcionais,
@@ -224,7 +241,8 @@ class SiteReservaController extends Controller
 
         $this->activateEmpresaContext($empresa);
 
-        $validated = Validator::make($request->all(), $this->storeRules())->validate();
+        $requireModelo = ($empresa->reserva_selecionar_modelo ?? 'N') === 'S';
+        $validated = Validator::make($request->all(), $this->storeRules($requireModelo))->validate();
 
         $userCriado = false;
         if (auth()->check()) {
@@ -236,6 +254,25 @@ class SiteReservaController extends Controller
             }
         }
         $grupo = GrupoFrota::query()->where('ativo', 'S')->find((int) $validated['grupo_frota_id']);
+
+        if (!$requireModelo && empty($validated['modelo_id'])) {
+            $modelosDisponiveis = $this->veiculoService->getModelosComVeiculosDisponiveis(
+                (int) $validated['grupo_frota_id'],
+                (int) $validated['estacao_retirada_id'],
+                (string) $validated['data_inicio'],
+                (string) $validated['data_fim']
+            );
+
+            $modeloAuto = $modelosDisponiveis->first();
+            if (!$modeloAuto) {
+                throw ValidationException::withMessages([
+                    'modelo_id' => 'Nao ha modelos disponiveis para o grupo selecionado.',
+                ]);
+            }
+
+            $validated['modelo_id'] = (int) $modeloAuto->id;
+        }
+
         $modelo = Modelo::query()->find((int) $validated['modelo_id']);
         $estacaoRetirada = Estacao::query()->where('ativo', 'S')->find((int) $validated['estacao_retirada_id']);
         $estacaoDevolucao = Estacao::query()->where('ativo', 'S')->find((int) $validated['estacao_devolucao_id']);
@@ -319,8 +356,8 @@ class SiteReservaController extends Controller
             ])
         );
 
-        $pagamentoUrl = Route::has('reserva.efetuarPagamento')
-            ? route('reserva.efetuarPagamento', ['id' => $reserva->id])
+        $pagamentoUrl = Route::has('site.reserva.pagamento')
+            ? route('site.reserva.pagamento', ['reserva' => $reserva->id])
             : null;
 
         if ($pagamentoUrl) {
@@ -368,8 +405,8 @@ class SiteReservaController extends Controller
             'reserva' => $reservaItem,
             'urlNovaReserva' => route('site.reserva.index'),
             'urlAdmin' => route('site.admin.entry'),
-            'urlPagamento' => Route::has('reserva.efetuarPagamento')
-                ? route('reserva.efetuarPagamento', ['id' => $reservaItem->id])
+            'urlPagamento' => Route::has('site.reserva.pagamento')
+                ? route('site.reserva.pagamento', ['reserva' => $reservaItem->id])
                 : null,
             'loginUrl' => Route::has('login') ? route('login') : $this->adminLoginFallbackUrl(),
             'isAuth' => auth()->check(),
@@ -390,6 +427,179 @@ class SiteReservaController extends Controller
         }
 
         return redirect($this->adminLoginFallbackUrl());
+    }
+
+    public function pagamento(Request $request, int $reserva): View|RedirectResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $query = Reserva::query()->with(['estacaoRetirada', 'estacaoDevolucao', 'modelos', 'grupoFrota']);
+        if (Schema::hasColumn('reservas', 'empresa_id')) {
+            $query->where('empresa_id', (int) $empresa->id);
+        }
+
+        $reservaItem = $query->find($reserva);
+        if (!$reservaItem) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['reserva' => 'Reserva nao encontrada para este dominio.']);
+        }
+
+        if (!auth()->check()) {
+            session()->put('url.intended', route('site.reserva.pagamento', ['reserva' => $reservaItem->id]));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
+        if ((int) auth()->id() !== (int) $reservaItem->user_id) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['reserva' => 'Esta reserva nao pertence ao usuario autenticado.']);
+        }
+
+        if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== 1) {
+            return redirect()
+                ->route('site.reserva.success', ['reserva' => $reservaItem->id])
+                ->withErrors(['reserva' => 'Reserva nao pode ser paga no status atual.']);
+        }
+
+        $gatewayPadrao = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $moedaPadrao = $this->gatewayEmpresaConfigService->moeda($empresa);
+        $gatewayNome = [
+            'stripe' => 'Stripe',
+            'mercado_livre' => 'Mercado Livre',
+            'paypal' => 'PayPal',
+        ][$gatewayPadrao] ?? strtoupper((string) $gatewayPadrao);
+
+        $metodosPagamento = [];
+        if ($gatewayPadrao === 'stripe' && !empty(auth()->user()?->stripe_id)) {
+            $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
+            if ($stripeSecret !== '') {
+                $metodosPagamento = $this->clienteStripeService->getPaymentMethods(auth()->user()->stripe_id, $stripeSecret);
+            }
+        }
+
+        return view('site-apresentacao.pagamento', [
+            'empresa' => $empresa,
+            'reserva' => $reservaItem,
+            'gatewayPadrao' => $gatewayPadrao,
+            'gatewayNome' => $gatewayNome,
+            'moedaPadrao' => $moedaPadrao,
+            'metodosPagamento' => $metodosPagamento,
+            'urlVoltar' => route('site.reserva.index'),
+            'urlProcessar' => route('site.reserva.processarPagamento', ['reserva' => $reservaItem->id]),
+            'urlLogin' => Route::has('login') ? route('login') : $this->adminLoginFallbackUrl(),
+        ]);
+    }
+
+    public function processarPagamento(Request $request, int $reserva): RedirectResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $query = Reserva::query();
+        if (Schema::hasColumn('reservas', 'empresa_id')) {
+            $query->where('empresa_id', (int) $empresa->id);
+        }
+
+        $reservaItem = $query->find($reserva);
+        if (!$reservaItem) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['reserva' => 'Reserva nao encontrada.']);
+        }
+
+        if (!auth()->check() || (int) auth()->id() !== (int) $reservaItem->user_id) {
+            session()->put('url.intended', route('site.reserva.pagamento', ['reserva' => $reservaItem->id]));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
+        if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== 1) {
+            return redirect()
+                ->route('site.reserva.success', ['reserva' => $reservaItem->id])
+                ->withErrors(['reserva' => 'Reserva nao pode ser paga no status atual.']);
+        }
+
+        $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
+        $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
+
+        if ($gateway === 'stripe' && empty($request->payment_method)) {
+            return redirect()
+                ->back()
+                ->withErrors(['payment_method' => 'Selecione um metodo de pagamento para Stripe.']);
+        }
+
+        $valorTotal = (float) ($reservaItem->valor_total_final ?? 0);
+        $payload = array_merge([
+            'reserva_id' => $reservaItem->id,
+            'valor' => $valorTotal,
+            'currency' => $currency,
+            'payment_method' => (string) $request->input('payment_method', ''),
+            'customer_id' => (string) (auth()->user()?->stripe_id ?? ''),
+            'descricao' => 'Pagamento da reserva #' . $reservaItem->id,
+            'payer_email' => (string) (auth()->user()?->email ?? ''),
+        ], $credenciais);
+
+        $resultado = $this->gerenciadorDePagamentos
+            ->resolver($gateway)
+            ->cobrarPagamento($payload);
+
+        if (($resultado['status'] ?? 'error') !== 'success') {
+            return redirect()
+                ->back()
+                ->withErrors(['pagamento' => $resultado['message'] ?? 'Pagamento nao efetuado.']);
+        }
+
+        DB::table('reservas')->where('id', $reservaItem->id)
+            ->update(['status_reserva_id' => 2, 'pagamento_efetuado' => 'S']);
+
+        Transacao::create([
+            'user_id' => $reservaItem->user_id,
+            'pago_por_user_id' => Auth::id(),
+            'reserva_id' => $reservaItem->id,
+            'valor' => $valorTotal,
+            'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency)),
+            'metodo_pagamento' => $gateway,
+            'gateway_transaction_id' => $resultado['transaction_id'] ?? null,
+            'status' => $resultado['raw_status'] ?? 'success',
+            'info_pagamento' => $resultado,
+        ]);
+
+        $json = json_encode([
+            'acao' => 'Pagamento efetuado',
+            'valor_total' => $valorTotal,
+            'gateway' => $gateway,
+            'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency)),
+            'usuario_pagador_id' => Auth::id(),
+            'customer_id' => $resultado['customer_id'] ?? null,
+            'id_pagamento' => $resultado['transaction_id'] ?? null,
+            'status' => $resultado['raw_status'] ?? 'success',
+            'data_pagamento' => date('Y-m-d H:i:s'),
+        ]);
+        $this->reservaService->adicionaLog((int) $reservaItem->id, (int) Auth::id(), $json);
+
+        return redirect()
+            ->route('site.reserva.success', ['reserva' => $reservaItem->id])
+            ->with('success', 'Pagamento efetuado com sucesso.');
     }
 
     public function adminEntry(Request $request): View|RedirectResponse
@@ -458,16 +668,86 @@ class SiteReservaController extends Controller
         return GrupoFrota::query()
             ->where('ativo', 'S')
             ->orderBy('nome')
-            ->get(['id', 'nome', 'valor_diario'])
+            ->with(['caracteristicas', 'modelos'])
+            ->get(['id', 'nome', 'valor_diario', 'imagem', 'imagens'])
             ->map(function (GrupoFrota $grupo): array {
                 return [
                     'id' => (int) $grupo->id,
                     'nome' => (string) $grupo->nome,
                     'valor_diario' => (float) $grupo->valor_diario,
+                    'imagem_url' => $this->grupoImagemUrl($grupo),
+                    'imagens_urls' => $this->grupoImagensUrls($grupo),
+                    'caracteristicas' => $grupo->caracteristicas
+                        ? $grupo->caracteristicas->map(function ($caracteristica): array {
+                            return [
+                                'id' => (int) ($caracteristica->id ?? 0),
+                                'nome' => (string) ($caracteristica->nome ?? ''),
+                                'valor' => (string) ($caracteristica->pivot->valor ?? ''),
+                                'imagem_url' => $caracteristica->imagem_url ?? null,
+                            ];
+                        })->values()->all()
+                        : [],
+                    'modelos' => $grupo->modelos
+                        ? $grupo->modelos->map(function ($modelo): array {
+                            return [
+                                'id' => (int) ($modelo->id ?? 0),
+                                'nome' => (string) ($modelo->nome ?? ''),
+                                'imagem_url' => $modelo->imagem_url ?? $modelo->imagem ?? null,
+                            ];
+                        })->values()->all()
+                        : [],
                 ];
             })
             ->values()
             ->all();
+    }
+
+    private function grupoImagemUrl(GrupoFrota $grupo): ?string
+    {
+        $path = is_string($grupo->imagem) ? trim($grupo->imagem) : '';
+        if ($path === '') {
+            $imagens = $this->grupoImagensUrls($grupo);
+            return $imagens[0] ?? null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+            return $path;
+        }
+
+        if (str_starts_with($path, '/')) {
+            return url($path);
+        }
+
+        if (Storage::disk('public')->exists($path)) {
+            return Storage::url($path);
+        }
+
+        return null;
+    }
+
+    private function grupoImagensUrls(GrupoFrota $grupo): array
+    {
+        $imagens = is_array($grupo->imagens ?? null) ? $grupo->imagens : [];
+        $urls = [];
+        foreach ($imagens as $imagem) {
+            $path = is_string($imagem) ? trim($imagem) : '';
+            if ($path === '') {
+                continue;
+            }
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                $urls[] = $path;
+                continue;
+            }
+            if (str_starts_with($path, '/')) {
+                $urls[] = url($path);
+                continue;
+            }
+            if (Storage::disk('public')->exists($path)) {
+                $urls[] = Storage::url($path);
+            }
+        }
+
+        return $urls;
     }
 
     private function normalizeTipoOpcionais(array $tipoOpcionais): array
@@ -693,7 +973,7 @@ class SiteReservaController extends Controller
         Validator::make($dados, $storeRules)->validate();
     }
 
-    private function storeRules(): array
+    private function storeRules(bool $requireModelo = true): array
     {
         $isAuth = auth()->check();
         $required = fn (array $rules) => $isAuth ? array_merge(['nullable'], $rules) : array_merge(['required'], $rules);
@@ -722,7 +1002,7 @@ class SiteReservaController extends Controller
                 },
             ],
             'grupo_frota_id' => ['required', 'integer', 'exists:grupos_frota,id'],
-            'modelo_id' => ['required', 'integer', 'exists:modelos,id'],
+            'modelo_id' => array_merge([$requireModelo ? 'required' : 'nullable'], ['integer', 'exists:modelos,id']),
             'cupom_codigo' => ['nullable', 'string', 'max:255'],
             'opcionais_payload' => ['nullable', 'string'],
             'nome' => $required(['string', 'max:255']),
@@ -780,25 +1060,43 @@ class SiteReservaController extends Controller
 
     private function dataInicioValida(string $dataInicio): bool
     {
-        try {
-            $inicio = Carbon::parse($dataInicio);
-        } catch (\Throwable) {
+        $inicio = $this->parseLocalDateTime($dataInicio);
+        if (!$inicio) {
             return false;
         }
 
-        return $inicio->greaterThanOrEqualTo(Carbon::now());
+        $agora = Carbon::now($this->resolveTimezone())->startOfMinute();
+        return $inicio->greaterThanOrEqualTo($agora);
     }
 
     private function dataFimMinimaValida(string $dataInicio, string $dataFim): bool
     {
-        try {
-            $inicio = Carbon::parse($dataInicio);
-            $fim = Carbon::parse($dataFim);
-        } catch (\Throwable) {
+        $inicio = $this->parseLocalDateTime($dataInicio);
+        $fim = $this->parseLocalDateTime($dataFim);
+        if (!$inicio || !$fim) {
             return false;
         }
 
         return $fim->greaterThanOrEqualTo($inicio->copy()->addDay());
+    }
+
+    private function parseLocalDateTime(string $value): ?Carbon
+    {
+        $tz = $this->resolveTimezone();
+        try {
+            return Carbon::createFromFormat('Y-m-d\TH:i', $value, $tz);
+        } catch (\Throwable) {
+            try {
+                return Carbon::parse($value, $tz);
+            } catch (\Throwable) {
+                return null;
+            }
+        }
+    }
+
+    private function resolveTimezone(): string
+    {
+        return 'America/Sao_Paulo';
     }
 
     private function colorValue(array $cores, string $key, string $default): string

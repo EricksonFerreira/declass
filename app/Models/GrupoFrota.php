@@ -17,8 +17,46 @@ class GrupoFrota extends Model
         'nome',
         'valor_diario',
         'imagem',
+        'imagens',
         'ativo',
     ];
+
+    protected $casts = [
+        'imagens' => 'array',
+    ];
+
+    public function getImagemUrlAttribute(): ?string
+    {
+        $path = is_string($this->imagem ?? null) ? trim($this->imagem) : '';
+        if ($path === '') {
+            return $this->getImagensUrlsAttribute()[0] ?? null;
+        }
+
+        if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+            return $path;
+        }
+
+        return \Illuminate\Support\Facades\Storage::url($path);
+    }
+
+    public function getImagensUrlsAttribute(): array
+    {
+        $imagens = is_array($this->imagens ?? null) ? $this->imagens : [];
+        $urls = [];
+        foreach ($imagens as $imagem) {
+            $path = is_string($imagem) ? trim($imagem) : '';
+            if ($path === '') {
+                continue;
+            }
+            if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://') || str_starts_with($path, '/')) {
+                $urls[] = $path;
+                continue;
+            }
+            $urls[] = \Illuminate\Support\Facades\Storage::url($path);
+        }
+
+        return $urls;
+    }
 
     public function modelos()
     {
@@ -46,7 +84,9 @@ class GrupoFrota extends Model
         parent::boot();
 
         static::deleting(function ($grupoFrota) {
-            $grupoFrota->caracteristicas()->delete();
+            $grupoFrota->caracteristicas()->detach();
+            $grupoFrota->opcionais()->detach();
+            $grupoFrota->modelos()->detach();
         });
     }
 }
