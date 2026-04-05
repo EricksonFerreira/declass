@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/components -type f -name x-*.php)",
-      "Bash(php artisan:*)"
+      "Bash(php artisan:*)",
+      "Bash(php c:/Users/Erickson/Dev/laragon/www/xpandCars/artisan route:list --path=reserva --method=POST)"
     ]
   }
 }

@@ -100,14 +100,16 @@
             background-attachment: fixed;
         }
 
-        body:not(.login-page) .main-header.navbar {
+        body:not(.logipn-page) .main-header.navbar {
             background: var(--empresa-cor-primaria) !important;
             border-bottom: 2px solid color-mix(in srgb, var(--empresa-cor-terciaria) 60%, #0f172a 40%);
         }
 
         body:not(.login-page) .main-header.navbar .nav-link,
         body:not(.login-page) .main-header.navbar .navbar-nav .nav-link i {
+            background: var(--empresa-cor-primaria) !important;
             color: var(--empresa-cor-secundaria) !important;
+            align-items: center;
         }
 
         body:not(.login-page) .main-sidebar {

@@ -85,10 +85,10 @@
                                     @php
                                         $tipos = [
                                             ['value' => 'ausente',          'label' => 'Ausente',          'icon' => 'fas fa-check',         'color' => 'green'],
-                                            ['value' => 'amolgadela leve',  'label' => 'Amolgadela Leve',  'icon' => 'fas fa-dot-circle',    'color' => 'amber'],
-                                            ['value' => 'amolgadela grave', 'label' => 'Amolgadela Grave', 'icon' => 'fas fa-circle',        'color' => 'red'],
-                                            ['value' => 'risco leve',       'label' => 'Risco Leve',       'icon' => 'fas fa-slash',         'color' => 'amber'],
-                                            ['value' => 'risco grave',      'label' => 'Risco Grave',      'icon' => 'fas fa-times',         'color' => 'red'],
+                                            ['value' => 'amolgadela_leve',  'label' => 'Amolgadela Leve',  'icon' => 'fas fa-dot-circle',    'color' => 'amber'],
+                                            ['value' => 'amolgadela_grave', 'label' => 'Amolgadela Grave', 'icon' => 'fas fa-circle',        'color' => 'red'],
+                                            ['value' => 'risco_leve',       'label' => 'Risco Leve',       'icon' => 'fas fa-slash',         'color' => 'amber'],
+                                            ['value' => 'risco_grave',      'label' => 'Risco Grave',      'icon' => 'fas fa-times',         'color' => 'red'],
                                         ];
                                     @endphp
                                     @foreach($tipos as $tipo)
@@ -105,7 +105,7 @@
                                     <label for="custo_estimado">Custo Estimado <span class="req">*</span></label>
                                     <div class="dano-input-prefix">
                                         <span>R$</span>
-                                        <input type="text" required class="form-control form-control-sm" id="custo_estimado" name="custo_estimado" placeholder="0,00">
+                                        <input type="text" required class="form-control form-control-sm" id="custo_estimado" name="custo_estimado" placeholder="0.00">
                                     </div>
                                 </div>
                                 <div>
@@ -616,13 +616,16 @@
     });
 
     function adicionarDanoVeiculo() {
+        const custoRaw = document.getElementById('custo_estimado')?.value || '';
+        const custoNumerico = custoRaw.replace(',', '.');
+
         const dano = {
             categoria:           document.getElementById('categoria_problema')?.value || null,
             local_dano:          document.getElementById('informacao_dano')?.innerHTML.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || null,
             localizacao_problema: document.getElementById('localizacao_problema')?.value || null,
             dano:                document.getElementById('danos')?.value || null,
             tipo:                document.querySelector('input[name="tipo"]:checked')?.value || null,
-            custo_estimado:      document.getElementById('custo_estimado')?.value || null,
+            custo_estimado:      custoNumerico,
             quilometragem:       document.getElementById('quilometragem_dano')?.value || null,
             observacoes:         document.getElementById('observacoes_dano')?.value || null,
             fotos:               document.getElementById('fotos-dano')?.files || [],
@@ -630,7 +633,7 @@
         };
 
         const reservaId = document.getElementById('reserva_id').value;
-        const url = "{{ url('reserva') }}/" + reservaId + "/adicionarDanoVeiculo";
+        const url = "{{ route('reserva.adicionarDanoVeiculo', ':id') }}".replace(':id', reservaId);
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
         const formData = new FormData();
@@ -680,15 +683,27 @@
                 window.obterDanosExistentes?.();
             },
             error: function (response) {
-                const errors = response.responseJSON?.errors || {};
-                let html = `<div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <strong>Corrija os erros abaixo:</strong>
-                    <ul class="mb-0 mt-1">`;
-                for (const key in errors) {
-                    errors[key].forEach(err => { html += `<li>${err}</li>`; });
+                const json   = response.responseJSON || {};
+                const errors = json.errors || {};
+                const keys   = Object.keys(errors);
+
+                let html = `<div class="alert alert-danger alert-dismissible fade show" role="alert">`;
+
+                if (keys.length > 0) {
+                    html += `<strong>Corrija os erros abaixo:</strong><ul class="mb-0 mt-1">`;
+                    keys.forEach(key => {
+                        errors[key].forEach(err => { html += `<li>${err}</li>`; });
+                    });
+                    html += `</ul>`;
+                } else if (json.message) {
+                    html += `<strong>Erro:</strong> ${json.message}`;
+                } else {
+                    html += `<strong>Erro ao salvar o dano.</strong> Verifique os campos e tente novamente. (HTTP ${response.status})`;
                 }
-                html += `</ul><button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>`;
+
+                html += `<button type="button" class="close" data-dismiss="alert"><span>&times;</span></button></div>`;
                 document.getElementById('mensagem_erro').innerHTML = html;
+                document.getElementById('mensagem_erro').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
     }

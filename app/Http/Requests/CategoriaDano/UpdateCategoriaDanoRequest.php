@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\CategoriaDano;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateCategoriaDanoRequest extends FormRequest
 {
@@ -14,7 +17,7 @@ class UpdateCategoriaDanoRequest extends FormRequest
         return true;
     }
 
-   
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,8 +25,15 @@ class UpdateCategoriaDanoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+
         return [
-            'nome' => 'required|string|max:255|unique:tipo_transacoes,nome,' . $this->route('tipotransacao'),
+            'nome' => [
+                'required', 'string', 'max:255',
+                Rule::unique('categoria_danos', 'nome')
+                    ->ignore($this->route('categoria_dano'))
+                    ->where('empresa_id', $empresaId),
+            ],
             'ativo' => 'required|string|max:1',
         ];
     }

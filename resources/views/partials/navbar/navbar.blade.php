@@ -72,13 +72,18 @@
 
         toggle.addEventListener('click', function (event) {
             event.preventDefault();
-            if (typeof $ !== 'undefined' && typeof $.fn.PushMenu !== 'undefined') {
-                $(this).PushMenu('toggle');
-                return;
+            event.stopImmediatePropagation();
+
+            const body = document.body;
+
+            if (window.innerWidth < 992) {
+                body.classList.toggle('sidebar-open');
+            } else {
+                body.classList.toggle('sidebar-collapse');
             }
 
-            document.body.classList.toggle('sidebar-open');
-            document.body.classList.toggle('sidebar-collapse');
+            // Garante que sidebar-mini nunca seja adicionado
+            body.classList.remove('sidebar-mini', 'sidebar-mini-lg', 'sidebar-mini-md');
         });
     });
 </script>

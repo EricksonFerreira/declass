@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\CategoriaDano;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class StoreCategoriaDanoRequest extends FormRequest
 {
@@ -14,7 +17,7 @@ class StoreCategoriaDanoRequest extends FormRequest
         return true;
     }
 
-   
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,8 +25,13 @@ class StoreCategoriaDanoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+
         return [
-            'nome' => 'required|string|max:255',
+            'nome' => [
+                'required', 'string', 'max:255',
+                Rule::unique('categoria_danos', 'nome')->where('empresa_id', $empresaId),
+            ],
             'ativo' => 'required|string|max:1',
         ];
     }
@@ -32,6 +40,7 @@ class StoreCategoriaDanoRequest extends FormRequest
     {
         return [
             'nome.required' => 'O campo nome é obrigatório',
+            'nome.unique' => 'Já existe uma categoria de dano com este nome nesta empresa.',
             'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
             'ativo.required' => 'O campo ativo é obrigatório',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',

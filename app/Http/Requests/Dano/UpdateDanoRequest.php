@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Dano;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateDanoRequest extends FormRequest
 {
@@ -22,8 +25,15 @@ class UpdateDanoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+
         return [
-            'nome' => 'required|string|max:255|unique:danos,nome,' . $this->route('danos'),
+            'nome' => [
+                'required', 'string', 'max:255',
+                Rule::unique('danos', 'nome')
+                    ->ignore($this->route('danos'))
+                    ->where('empresa_id', $empresaId),
+            ],
             'ativo' => 'required|string|max:1',
             'categoria_id' => 'required|integer|exists:categoria_danos,id',
             'localizacao' => 'required|string|in:interior,exterior',
