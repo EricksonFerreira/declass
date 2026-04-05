@@ -129,6 +129,12 @@
         .cupom-box { margin-top: 12px; display: grid; gap: 8px; }
         .cupom-box label { font-size: 12px; color: #334155; font-weight: 700; }
         .cupom-box .feedback { margin-top: 0; }
+        .submit-loading { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; }
+        .submit-loading.hidden { display: none; }
+        .submit-loading .box { background: #0f172a; color: #f8fafc; padding: 18px 22px; border-radius: 16px; text-align: center; min-width: 240px; box-shadow: 0 18px 45px rgba(0,0,0,0.35); }
+        .submit-loading .spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid rgba(248,250,252,0.35); border-top-color: #22c55e; margin: 0 auto 10px auto; animation: spin 0.9s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .form-submitting { pointer-events: none; }
         .sum-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
         .sum-list li { border: 1px solid var(--line); border-radius: 8px; background: #f8fbff; padding: 6px 8px; font-size: 12px; color: #334155; }
         @media (max-width: 1020px) { .layout { grid-template-columns: 1fr; } .summary { position: static; } }
@@ -413,6 +419,14 @@
         </aside>
     </main>
 
+    <div id="submitLoading" class="submit-loading hidden">
+        <div class="box">
+            <div class="spinner"></div>
+            <strong>Redirecionando para o pagamento</strong>
+            <div style="font-size:12px;opacity:.8;margin-top:6px;">Aguarde um instante...</div>
+        </div>
+    </div>
+
     <script>
         (function () {
             const moeda = @json($moedaEmpresa);
@@ -467,7 +481,13 @@
             }
             function opcUnit(op) { return op.tipo_cobranca === 'por_dia' ? Number(op.preco_por_dia || 0) : Number(op.preco_integral || 0); }
             function opcTotal() { let t = 0; Object.values(state.opcionais).forEach(function (op) { const q = Number(op.quantidade || 0); if (q <= 0) return; const u = opcUnit(op); t += op.tipo_cobranca === 'por_dia' ? u * q * state.dias : u * q; }); return t; }
-            function total() { const base = state.tarifa * state.dias; const subtotal = base + opcTotal(); return subtotal - (subtotal * (Number(state.cupom?.valor || 0) / 100)); }
+            function total() {
+                const base = state.tarifa * state.dias;
+                const subtotal = base + opcTotal();
+                const descontoPercent = Number(state.cupom?.valor || 0);
+                const desconto = subtotal * (descontoPercent / 100);
+                return Math.max(0, subtotal - desconto);
+            }
             function feedback(id, msg, tone) { const el = document.getElementById(id); el.textContent = msg; el.classList.remove('ok', 'warn'); if (tone) el.classList.add(tone); }
             function refresh() {
                 state.dias = dias();
@@ -879,7 +899,33 @@
                 renderStep();
                 refresh();
             });
-            form.addEventListener('submit', function (e) { if (!validStep1(true) || !validStep2(true) || !validCliente()) { e.preventDefault(); return; } preparePayload(); });
+            form.addEventListener('submit', function (e) {
+                const submitButton = document.getElementById('btnSubmit');
+                const loading = document.getElementById('submitLoading');
+
+                if (!validStep1(true) || !validStep2(true) || !validCliente()) {
+                    e.preventDefault();
+                    return;
+                }
+
+                if (form.dataset.submitting === '1') {
+                    e.preventDefault();
+                    return;
+                }
+
+                form.dataset.submitting = '1';
+                preparePayload();
+
+                if (submitButton) {
+                    submitButton.disabled = true;
+                    submitButton.textContent = 'Redirecionando...';
+                }
+
+                if (loading) {
+                    loading.classList.remove('hidden');
+                }
+                form.classList.add('form-submitting');
+            });
             dataInicio.addEventListener('change', function () {
                 const i = new Date(dataInicio.value);
                 if (!Number.isNaN(i.getTime())) {

@@ -23,7 +23,7 @@ class PayPalService implements IPagamento
         ];
     }
 
-    public function cancelarPagamento(string $id): array
+    public function cancelarPagamento(string $id, array $dados = []): array
     {
         return [
             'status' => 'error',
@@ -32,7 +32,7 @@ class PayPalService implements IPagamento
         ];
     }
 
-    public function reembolsarPagamento(string $id): array
+    public function reembolsarPagamento(string $id, array $dados = []): array
     {
         return [
             'status' => 'error',

@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('status_reservas')) {
+            return;
+        }
+
         Schema::create('status_reservas', function (Blueprint $table) {
             $table->id();
             $table->timestamps();

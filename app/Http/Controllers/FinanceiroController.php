@@ -13,6 +13,7 @@ class FinanceiroController extends Controller
 {
     private const STATUS_APROVADOS = ['completa', 'aprovado', 'approved', 'succeeded', 'success'];
     private const STATUS_PENDENTES = ['pendente', 'pending', 'aguardando', 'processando', 'processing'];
+    private const STATUS_CANCELADOS = ['cancelado', 'cancelada', 'cancelled', 'canceled', 'refunded', 'reembolsado', 'reembolsada'];
 
     public function __construct(private readonly BreadcrumbService $breadcrumbService)
     {
@@ -65,17 +66,21 @@ class FinanceiroController extends Controller
 
         $baseAgg = $this->forAggregation($base);
 
-        $totalFaturado = (float) (clone $baseAgg)->sum('transacoes.valor');
+        $totalGeral = (float) (clone $baseAgg)->sum('transacoes.valor');
+        $totalFaturado = $totalGeral;
         $qtdTransacoes = (int) (clone $baseAgg)->count('transacoes.id');
         $qtdReservas = (int) (clone $baseAgg)->distinct()->count('transacoes.reserva_id');
         $ticketMedio = $qtdTransacoes > 0 ? $totalFaturado / $qtdTransacoes : 0.0;
 
         $totalAprovado = $this->sumByStatus((clone $baseAgg), self::STATUS_APROVADOS);
         $totalPendente = $this->sumByStatus((clone $baseAgg), self::STATUS_PENDENTES);
-        $totalFalha = max(0.0, $totalFaturado - $totalAprovado - $totalPendente);
+        $totalCancelado = $this->sumByStatus((clone $baseAgg), self::STATUS_CANCELADOS);
+        $totalFalha = max(0.0, $totalGeral - $totalAprovado - $totalPendente - $totalCancelado);
 
         $qtdAprovadas = $this->countByStatus((clone $baseAgg), self::STATUS_APROVADOS);
-        $taxaAprovacao = $qtdTransacoes > 0 ? ($qtdAprovadas / $qtdTransacoes) * 100 : 0.0;
+        $qtdCanceladas = $this->countByStatus((clone $baseAgg), self::STATUS_CANCELADOS);
+        $taxaBase = max(0, $qtdTransacoes - $qtdCanceladas);
+        $taxaAprovacao = $taxaBase > 0 ? ($qtdAprovadas / $taxaBase) * 100 : 0.0;
 
         $statusDisponiveis = DB::table('transacoes')
             ->when($this->empresaIdParaConsulta() !== null, function ($query) {
@@ -138,16 +143,45 @@ class FinanceiroController extends Controller
             ->get();
 
         $transferenciasCount = 0;
+        $transferenciasCanceladasCount = 0;
         if (Schema::hasTable('movimentacoes')) {
             $movimentacoes = DB::table('movimentacoes');
             $movimentacoes = $this->applyEmpresaScope($movimentacoes, 'movimentacoes');
             $transferenciasCount = (int) $movimentacoes
                 ->where('tipo_movimentacao_id', 10)
                 ->count();
+
+            $movimentacoesCanceladas = DB::table('movimentacoes');
+            $movimentacoesCanceladas = $this->applyEmpresaScope($movimentacoesCanceladas, 'movimentacoes');
+            $statusTable = null;
+            $statusColumn = null;
+
+            if (Schema::hasTable('status_movimentacao')) {
+                $statusTable = 'status_movimentacao';
+                $statusColumn = 'status_movimentacao.nome';
+            } elseif (Schema::hasTable('status_movimentacaos')) {
+                $statusTable = 'status_movimentacaos';
+                $statusColumn = 'status_movimentacaos.nome';
+            }
+
+            if ($statusTable) {
+                $movimentacoesCanceladas->join($statusTable, 'movimentacoes.status_movimentacao_id', '=', $statusTable . '.id');
+            }
+
+            $movimentacoesCanceladas->where('movimentacoes.tipo_movimentacao_id', 10);
+
+            if ($statusColumn) {
+                $movimentacoesCanceladas->whereIn(DB::raw("LOWER(COALESCE($statusColumn, ''))"), self::STATUS_CANCELADOS);
+            }
+
+            $transferenciasCanceladasCount = (int) $movimentacoesCanceladas->count();
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Financeiro - Transferencias');
         $titulo = 'Transferencias e Transacoes';
+        $statusAprovados = self::STATUS_APROVADOS;
+        $statusPendentes = self::STATUS_PENDENTES;
+        $statusCancelados = self::STATUS_CANCELADOS;
 
         return view('financeiro.index', compact(
             'transacoes',
@@ -160,18 +194,24 @@ class FinanceiroController extends Controller
             'ticketMedio',
             'totalAprovado',
             'totalPendente',
+            'totalCancelado',
             'totalFalha',
             'qtdAprovadas',
+            'qtdCanceladas',
             'taxaAprovacao',
             'statusBreakdown',
             'gatewayBreakdown',
             'topClientes',
             'evolucaoDiaria',
             'transferenciasCount',
+            'transferenciasCanceladasCount',
             'moedaEmpresa',
             'breadcrumb',
             'titulo',
-            'perPage'
+            'perPage',
+            'statusAprovados',
+            'statusPendentes',
+            'statusCancelados'
         ));
     }
 
@@ -190,7 +230,12 @@ class FinanceiroController extends Controller
         $perPage = (int) $request->integer('per_page', 15);
         $perPage = in_array($perPage, [10, 15, 25, 50, 100], true) ? $perPage : 15;
 
-        $faturamentoPorReserva = (clone $base)
+        $baseAgg = $this->forAggregation($base);
+        $baseCanceladas = $this->applyReservasCanceladasScope((clone $base));
+        $baseFaturamento = $this->applyReservasNaoCanceladasScope((clone $base));
+        $totalCancelado = (float) (clone $baseCanceladas)->sum('transacoes.valor');
+
+        $faturamentoPorReserva = (clone $baseFaturamento)
             ->select([
                 'transacoes.reserva_id',
                 'users.nome as cliente_nome',
@@ -203,8 +248,8 @@ class FinanceiroController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $totalFaturado = (float) (clone $base)->sum('transacoes.valor');
-        $qtdReservasFaturadas = (int) (clone $base)->distinct()->count('transacoes.reserva_id');
+        $totalFaturado = (float) (clone $baseFaturamento)->sum('transacoes.valor');
+        $qtdReservasFaturadas = (int) (clone $baseFaturamento)->distinct()->count('transacoes.reserva_id');
         $ticketMedioPorReserva = $qtdReservasFaturadas > 0 ? $totalFaturado / $qtdReservasFaturadas : 0.0;
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Financeiro - Faturamento por Reserva');
@@ -216,6 +261,7 @@ class FinanceiroController extends Controller
             'totalFaturado',
             'qtdReservasFaturadas',
             'ticketMedioPorReserva',
+            'totalCancelado',
             'moedaEmpresa',
             'breadcrumb',
             'titulo',
@@ -271,6 +317,37 @@ class FinanceiroController extends Controller
         return (int) $query
             ->whereIn(DB::raw('LOWER(COALESCE(transacoes.status, ""))'), $statuses)
             ->count('transacoes.id');
+    }
+
+    private function applyCanceladosExclusion($query)
+    {
+        return $query->whereNotIn(DB::raw('LOWER(COALESCE(transacoes.status, ""))'), self::STATUS_CANCELADOS);
+    }
+
+    private function applyReservasNaoCanceladasScope($query)
+    {
+        if (Schema::hasColumn('reservas', 'data_cancelamento')) {
+            return $query->whereNull('reservas.data_cancelamento');
+        }
+
+        if (Schema::hasColumn('reservas', 'status_reserva_id')) {
+            return $query->where('reservas.status_reserva_id', '!=', 3);
+        }
+
+        return $query;
+    }
+
+    private function applyReservasCanceladasScope($query)
+    {
+        if (Schema::hasColumn('reservas', 'data_cancelamento')) {
+            return $query->whereNotNull('reservas.data_cancelamento');
+        }
+
+        if (Schema::hasColumn('reservas', 'status_reserva_id')) {
+            return $query->where('reservas.status_reserva_id', 3);
+        }
+
+        return $query;
     }
 
     private function applyEmpresaScope($query, string $table)

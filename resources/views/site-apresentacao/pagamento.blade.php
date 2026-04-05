@@ -87,7 +87,11 @@
                 @endif
                 <span>{{ $empresa->nome }}</span>
             </a>
-            <a class="back" href="{{ $urlVoltar }}">Voltar</a>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                <a class="back" href="{{ $urlVoltarCliente }}">Voltar para cliente</a>
+                <a class="back" href="{{ $urlVoltarOpcionais }}">Voltar para opcionais</a>
+                <a class="back" href="{{ $urlVoltarVeiculo }}">Voltar para veiculo</a>
+            </div>
         </div>
     </header>
 
@@ -110,6 +114,11 @@
                 @if(session('success'))
                     <div class="alert ok">{{ session('success') }}</div>
                 @endif
+                @if(session('warning'))
+                    <div class="alert" style="border:1px solid #fde68a;background:#fffbeb;color:#92400e;">
+                        {{ session('warning') }}
+                    </div>
+                @endif
                 @if($errors->any())
                     <div class="alert err">
                         @foreach($errors->all() as $error)
@@ -128,7 +137,7 @@
                     <input type="hidden" name="payment_type" id="payment_type" value="">
                     <div class="detail">
                         <strong>Valor total</strong>
-                        <div style="font-size:18px;font-weight:800;">{{ $simbolo }} {{ number_format((float) ($reserva->valor_total_final ?? 0), 2, ',', '.') }}</div>
+                        <div style="font-size:18px;font-weight:800;">{{ $simbolo }} {{ number_format((float) ($valorTotalCalculado ?? 0), 2, ',', '.') }}</div>
                         <div style="font-size:12px;color:var(--muted);">Moeda: {{ $moeda }}</div>
                     </div>
 
@@ -249,10 +258,10 @@
             @endif
 
             <div class="sum"><span>Diarias</span><strong>{{ (int) ($reserva->quantidade_dias ?? 0) }} dias</strong></div>
-            <div class="sum"><span>Tarifa base</span><strong>{{ $simbolo }} {{ number_format((float) ($reserva->valor_total_tarifa_base ?? 0), 2, ',', '.') }}</strong></div>
-            <div class="sum"><span>Opcionais</span><strong>{{ $simbolo }} {{ number_format((float) ($reserva->valor_opcionais ?? 0), 2, ',', '.') }}</strong></div>
+            <div class="sum"><span>Tarifa base</span><strong>{{ $simbolo }} {{ number_format((float) ($valorTarifaBase ?? 0), 2, ',', '.') }}</strong></div>
+            <div class="sum"><span>Opcionais</span><strong>{{ $simbolo }} {{ number_format((float) ($valorOpcionais ?? 0), 2, ',', '.') }}</strong></div>
             <div class="sum"><span>Desconto</span><strong>{{ number_format((float) ($reserva->percentual_desconto ?? 0), 0) }}%</strong></div>
-            <div class="sum total"><span>Total</span><strong>{{ $simbolo }} {{ number_format((float) ($reserva->valor_total_final ?? 0), 2, ',', '.') }}</strong></div>
+            <div class="sum total"><span>Total</span><strong>{{ $simbolo }} {{ number_format((float) ($valorTotalCalculado ?? 0), 2, ',', '.') }}</strong></div>
         </aside>
     </main>
 
@@ -435,6 +444,11 @@
             }
 
             form.addEventListener('submit', (event) => {
+                if (form.dataset.submitting === '1') {
+                    event.preventDefault();
+                    return;
+                }
+
                 if (gateway === 'stripe' && (!paymentValue || paymentValue.value === '')) {
                     event.preventDefault();
                     if (errorBox) {
@@ -452,6 +466,13 @@
                         paymentMethodId.value = 'pix';
                         paymentType.value = 'pix';
                     }
+                }
+
+                form.dataset.submitting = '1';
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Processando...';
                 }
             });
         })();

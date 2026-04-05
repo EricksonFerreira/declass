@@ -44,6 +44,48 @@
         color: #000 !important;
         font-weight: 700 !important;
     }
+
+    .user-menu .dropdown-menu {
+        border: 1px solid #e2e8f0;
+        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+        border-radius: 14px;
+        padding: 0.35rem 0.4rem;
+    }
+
+    .user-menu .dropdown-menu .user-footer {
+        border-top: 1px solid #e2e8f0;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 0 0 12px 12px;
+    }
+
+    .user-menu .dropdown-menu .user-footer .btn {
+        border-radius: 999px;
+        font-weight: 600;
+    }
+
+    .user-menu .user-footer .empresa-context-select {
+        margin-top: 10px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 10px;
+    }
+
+    .user-menu .empresa-context-select label {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        color: #64748b;
+        margin-bottom: 6px;
+        display: block;
+        font-weight: 700;
+    }
+
+    .user-menu .empresa-context-select select {
+        border-radius: 10px;
+        font-size: 13px;
+    }
 </style>
 
 @if($empresaTemaAtual)
@@ -174,31 +216,6 @@
             </li>
         @endif
 
-        @if(Auth::check() && Auth::user()->isAdministrador() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
-            @php
-                $empresasMenu = \App\Models\Empresa::query()->orderBy('nome')->pluck('nome', 'id')->toArray();
-            @endphp
-            <li class="nav-item d-flex align-items-center mr-2">
-                <form method="POST" action="{{ route('empresa_context.update') }}" class="mb-0">
-                    @csrf
-                    <select
-                        name="empresa_id"
-                        class="form-control form-control-sm"
-                        style="min-width: 220px;"
-                        onchange="this.form.submit()"
-                        title="Empresa em visualização"
-                    >
-                        <option value="0" {{ $empresaSelecionada === 0 ? 'selected' : '' }}>Todas as empresas</option>
-                        @foreach($empresasMenu as $empresaId => $empresaNome)
-                            <option value="{{ $empresaId }}" {{ $empresaSelecionada === (int) $empresaId ? 'selected' : '' }}>
-                                {{ $empresaNome }}
-                            </option>
-                        @endforeach
-                    </select>
-                </form>
-            </li>
-        @endif
-
         {{-- Custom right links --}}
         @yield('content_top_nav_right')
 
@@ -221,3 +238,22 @@
     </ul>
 
 </nav>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggle = document.querySelector('[data-widget="pushmenu"]');
+        if (!toggle) return;
+
+        toggle.addEventListener('click', function (event) {
+            event.preventDefault();
+            if (typeof $ !== 'undefined' && typeof $.fn.PushMenu !== 'undefined') {
+                $(this).PushMenu('toggle');
+                return;
+            }
+
+            document.body.classList.toggle('sidebar-open');
+            document.body.classList.toggle('sidebar-collapse');
+        });
+    });
+</script>
+

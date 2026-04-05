@@ -504,6 +504,19 @@ class SiteReservaController extends Controller
             }
         }
 
+        $quantidadeDias = (int) ($reservaItem->quantidade_dias ?? 0);
+        $tarifaBase = (float) ($reservaItem->tarifa_base ?? 0);
+        $valorTarifaBase = $tarifaBase * $quantidadeDias;
+        $valorOpcionais = (float) ($reservaItem->valor_opcionais ?? 0);
+        if ($valorOpcionais <= 0 && $reservaItem->relationLoaded('opcionais')) {
+            $valorOpcionais = (float) $reservaItem->opcionais->sum(function ($opcional) {
+                return (float) ($opcional->pivot->preco_total ?? 0);
+            });
+        }
+        $percentualDesconto = (float) ($reservaItem->percentual_desconto ?? 0);
+        $valorDesconto = ($valorTarifaBase + $valorOpcionais) * ($percentualDesconto / 100);
+        $valorTotalCalculado = max(0, ($valorTarifaBase + $valorOpcionais) - $valorDesconto);
+
         return view('site-apresentacao.pagamento', [
             'empresa' => $empresa,
             'reserva' => $reservaItem,
@@ -512,10 +525,15 @@ class SiteReservaController extends Controller
             'moedaPadrao' => $moedaPadrao,
             'metodosPagamento' => $metodosPagamento,
             'stripePublicKey' => $stripePublicKey,
-            'urlVoltar' => route('site.reserva.index'),
+            'urlVoltarCliente' => route('site.reserva.index', ['step' => 4]),
+            'urlVoltarOpcionais' => route('site.reserva.index', ['step' => 3]),
+            'urlVoltarVeiculo' => route('site.reserva.index', ['step' => 2]),
             'urlProcessar' => route('site.reserva.processarPagamento', ['reserva' => $reservaItem->id]),
             'urlAdicionarMetodo' => route('site.reserva.pagamento.metodo', ['reserva' => $reservaItem->id]),
             'urlLogin' => Route::has('login') ? route('login') : $this->adminLoginFallbackUrl(),
+            'valorTarifaBase' => $valorTarifaBase,
+            'valorOpcionais' => $valorOpcionais,
+            'valorTotalCalculado' => $valorTotalCalculado,
         ]);
     }
 
@@ -651,7 +669,19 @@ class SiteReservaController extends Controller
                 ->withErrors(['payment_method' => 'Selecione um metodo de pagamento para Stripe.']);
         }
 
-        $valorTotal = (float) ($reservaItem->valor_total_final ?? 0);
+        $reservaItem->load('opcionais');
+        $quantidadeDias = (int) ($reservaItem->quantidade_dias ?? 0);
+        $tarifaBase = (float) ($reservaItem->tarifa_base ?? 0);
+        $valorTarifaBase = $tarifaBase * $quantidadeDias;
+        $valorOpcionais = (float) ($reservaItem->valor_opcionais ?? 0);
+        if ($valorOpcionais <= 0 && $reservaItem->opcionais->isNotEmpty()) {
+            $valorOpcionais = (float) $reservaItem->opcionais->sum(function ($opcional) {
+                return (float) ($opcional->pivot->preco_total ?? 0);
+            });
+        }
+        $percentualDesconto = (float) ($reservaItem->percentual_desconto ?? 0);
+        $valorDesconto = ($valorTarifaBase + $valorOpcionais) * ($percentualDesconto / 100);
+        $valorTotal = max(0, ($valorTarifaBase + $valorOpcionais) - $valorDesconto);
         $salvarMetodo = (string) $request->input('salvar_metodo', 'S');
         $customerId = (string) (auth()->user()?->stripe_id ?? '');
         if ($gateway === 'stripe' && strtoupper($salvarMetodo) === 'N') {
@@ -671,9 +701,15 @@ class SiteReservaController extends Controller
             'installments' => (int) $request->input('installments', 1),
         ], $credenciais);
 
-        $resultado = $this->gerenciadorDePagamentos
-            ->resolver($gateway)
-            ->cobrarPagamento($payload);
+        try {
+            $resultado = $this->gerenciadorDePagamentos
+                ->resolver($gateway)
+                ->cobrarPagamento($payload);
+        } catch (\Throwable $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['pagamento' => 'Falha ao processar o pagamento. Tente novamente.']);
+        }
 
         if (
             $gateway === 'mercado_livre'
@@ -693,7 +729,15 @@ class SiteReservaController extends Controller
         }
 
         DB::table('reservas')->where('id', $reservaItem->id)
-            ->update(['status_reserva_id' => 2, 'pagamento_efetuado' => 'S']);
+            ->update([
+                'status_reserva_id' => 2,
+                'pagamento_efetuado' => 'S',
+                'valor_total_tarifa_base' => $valorTarifaBase,
+                'valor_opcionais' => $valorOpcionais,
+                'valor_total_com_desconto' => $valorDesconto,
+                'percentual_desconto' => $percentualDesconto,
+                'valor_total_final' => $valorTotal,
+            ]);
 
         Transacao::create([
             'user_id' => $reservaItem->user_id,
@@ -720,7 +764,13 @@ class SiteReservaController extends Controller
         ]);
         $this->reservaService->adicionaLog((int) $reservaItem->id, (int) Auth::id(), $json);
 
-        $this->nfseService->emitirParaReserva($reservaItem);
+        $nfse = $this->nfseService->emitirParaReserva($reservaItem);
+        $nfseWarning = null;
+        if ($nfse === null) {
+            $nfseWarning = 'Emissao de NFS-e nao configurada para esta empresa.';
+        } elseif (($nfse->status ?? '') === 'erro') {
+            $nfseWarning = $this->nfseService->mensagemErro($nfse) ?? 'Falha ao emitir NFS-e.';
+        }
 
         session()->put('reserva.filtro', [
             'user_id' => [
@@ -732,12 +782,14 @@ class SiteReservaController extends Controller
         if (auth()->user()?->hasPermissao('reserva.index')) {
             return redirect()
                 ->route('reserva.index')
-                ->with('success', 'Pagamento efetuado com sucesso. Veja suas reservas abaixo.');
+                ->with('success', 'Pagamento efetuado com sucesso. Veja suas reservas abaixo.')
+                ->with('warning', $nfseWarning);
         }
 
         return redirect()
             ->route('site.reserva.success', ['reserva' => $reservaItem->id])
-            ->with('success', 'Pagamento efetuado com sucesso.');
+            ->with('success', 'Pagamento efetuado com sucesso.')
+            ->with('warning', $nfseWarning);
     }
 
     public function adminEntry(Request $request): View|RedirectResponse

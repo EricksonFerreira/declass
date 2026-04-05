@@ -12,6 +12,7 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/horariosdiarios', [ReservaController::class, 'salvar_horarios_diarios'])->name('salvar_horarios_diarios');
     Route::get('{id}/efetuar-pagamento', [ReservaController::class, 'efetuarPagamento'])->name('efetuarPagamento');
     Route::post('{id}/processar-pagamento', [ReservaController::class, 'processarPagamento'])->name('processarPagamento');
+    Route::post('{id}/emitir-nfse', [ReservaController::class, 'emitirNfse'])->name('emitirNfse');
     Route::post('{id}/cancelar', [ReservaController::class, 'cancelar'])->name('cancelar');
     Route::get('{id}/checkin', [ReservaController::class, 'checkin'])->name('checkin');
     Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');

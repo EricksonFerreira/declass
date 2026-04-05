@@ -25,6 +25,7 @@ class Nfse extends Model
         'response',
         'cancelamento_response',
         'cancelada_em',
+        'ultima_consulta_em',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class Nfse extends Model
         'response' => 'array',
         'cancelamento_response' => 'array',
         'cancelada_em' => 'datetime',
+        'ultima_consulta_em' => 'datetime',
     ];
 
     public function reserva()

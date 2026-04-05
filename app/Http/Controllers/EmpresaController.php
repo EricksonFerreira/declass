@@ -499,7 +499,17 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             }
 
             $value = trim((string) $request->input($inputName, ''));
-            $cores[$colorKey] = $value === '' ? null : strtoupper($value);
+            if ($value === '') {
+                $cores[$colorKey] = null;
+                continue;
+            }
+
+            $value = strtoupper($value);
+            if (!str_starts_with($value, '#')) {
+                $value = '#' . $value;
+            }
+
+            $cores[$colorKey] = $value;
         }
 
         $data['site_apresentacao_cores'] = $cores;

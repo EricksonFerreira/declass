@@ -28,6 +28,9 @@
             <strong>Minhas reservas</strong>
         </div>
         <div class="card-body">
+            @if(session('warning'))
+                <div class="alert alert-warning">{{ session('warning') }}</div>
+            @endif
             @forelse ($reservas as $reserva)
                 <div class="border rounded p-3 mb-3">
                     <div class="d-flex flex-wrap justify-content-between align-items-center">
@@ -61,6 +64,14 @@
                         <div class="col-md-6 mb-2">
                             <div class="text-muted text-sm">Total</div>
                             <div class="font-weight-bold">R$ {{ number_format((float) ($reserva->valor_total_final ?? 0), 2, ',', '.') }}</div>
+                        </div>
+                        <div class="col-md-12 mt-2">
+                            @php($nfse = $reserva->nfseAtual)
+                            @if($nfse && !empty($nfse->nfse_id) && (auth()->user()?->hasPermissao('nfse.download') || auth()->user()?->isAdministrador()))
+                                <a class="btn btn-sm btn-outline-primary mr-2" href="{{ route('nfse.download', ['id' => $nfse->id, 'tipo' => 'xml']) }}">
+                                    <i class="fas fa-file-invoice mr-1"></i> Baixar NFS-e
+                                </a>
+                            @endif
                         </div>
                     </div>
                 </div>

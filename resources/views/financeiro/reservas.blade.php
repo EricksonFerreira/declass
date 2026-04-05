@@ -43,16 +43,16 @@
     </div>
 
     <div class="row mb-3">
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="small-box bg-success">
                 <div class="inner">
                     <h3>{{ $moedaEmpresa }} {{ number_format($totalFaturado, 2, ',', '.') }}</h3>
-                    <p>Total faturado no filtro</p>
+                    <p>Total faturado (sem canceladas)</p>
                 </div>
                 <div class="icon"><i class="fas fa-euro-sign"></i></div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="small-box bg-info">
                 <div class="inner">
                     <h3>{{ $qtdReservasFaturadas }}</h3>
@@ -61,13 +61,22 @@
                 <div class="icon"><i class="fas fa-receipt"></i></div>
             </div>
         </div>
-        <div class="col-md-4">
+        <div class="col-md-3">
             <div class="small-box bg-primary">
                 <div class="inner">
                     <h3>{{ $moedaEmpresa }} {{ number_format($ticketMedioPorReserva, 2, ',', '.') }}</h3>
                     <p>Media por reserva</p>
                 </div>
                 <div class="icon"><i class="fas fa-chart-line"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3>{{ $moedaEmpresa }} {{ number_format($totalCancelado, 2, ',', '.') }}</h3>
+                    <p>Total cancelado no filtro</p>
+                </div>
+                <div class="icon"><i class="fas fa-ban"></i></div>
             </div>
         </div>
     </div>

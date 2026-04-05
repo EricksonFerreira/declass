@@ -36,7 +36,37 @@ class StripeGatewayService implements IPagamento
             $payload['customer'] = $customerId;
         }
 
-        $intent = $stripe->paymentIntents->create($payload);
+        try {
+            $intent = $stripe->paymentIntents->create($payload);
+        } catch (\Stripe\Exception\CardException $e) {
+            return [
+                'status' => 'error',
+                'message' => $this->mapStripeCardError($e),
+                'raw_status' => 'card_error',
+            ];
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Falha ao processar o pagamento. Tente novamente.',
+                'raw_status' => 'api_error',
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => 'Falha ao processar o pagamento. Tente novamente.',
+                'raw_status' => 'error',
+            ];
+        }
+
+        if (in_array($intent->status, ['requires_action', 'requires_source_action'], true)) {
+            return [
+                'status' => 'action_required',
+                'message' => 'O cartao exige autenticacao. Use outro metodo de pagamento.',
+                'transaction_id' => $intent->id,
+                'raw_status' => $intent->status,
+                'client_secret' => $intent->client_secret ?? null,
+            ];
+        }
 
         if ($intent->status !== 'succeeded') {
             return [
@@ -56,21 +86,101 @@ class StripeGatewayService implements IPagamento
         ];
     }
 
-    public function cancelarPagamento(string $id): array
+    private function mapStripeCardError(\Stripe\Exception\CardException $e): string
     {
-        return [
-            'status' => 'error',
-            'message' => 'Cancelamento nao implementado para Stripe neste fluxo.',
-            'transaction_id' => $id,
+        $error = $e->getError();
+        $code = $error?->code ?? null;
+        $decline = $error?->decline_code ?? null;
+
+        $map = [
+            'insufficient_funds' => 'Cartao sem saldo suficiente.',
+            'card_declined' => 'Pagamento recusado pelo emissor do cartao.',
+            'expired_card' => 'Cartao expirado.',
+            'incorrect_cvc' => 'CVC invalido.',
+            'invalid_cvc' => 'CVC invalido.',
+            'invalid_number' => 'Numero do cartao invalido.',
+            'invalid_expiry_month' => 'Validade do cartao invalida.',
+            'invalid_expiry_year' => 'Validade do cartao invalida.',
+            'processing_error' => 'Erro ao processar o cartao. Tente novamente.',
         ];
+
+        if (is_string($code) && isset($map[$code])) {
+            return $map[$code];
+        }
+        if (is_string($decline) && isset($map[$decline])) {
+            return $map[$decline];
+        }
+
+        return 'Pagamento nao autorizado. Verifique os dados do cartao.';
     }
 
-    public function reembolsarPagamento(string $id): array
+    public function cancelarPagamento(string $id, array $dados = []): array
     {
-        return [
-            'status' => 'error',
-            'message' => 'Reembolso nao implementado para Stripe neste fluxo.',
-            'transaction_id' => $id,
-        ];
+        $stripeSecret = (string) ($dados['stripe_secret'] ?? '');
+        if ($stripeSecret === '') {
+            return [
+                'status' => 'error',
+                'message' => 'Chave secreta do Stripe nao informada para cancelamento.',
+                'transaction_id' => $id,
+            ];
+        }
+
+        $stripe = new StripeClient($stripeSecret);
+        try {
+            $intent = $stripe->paymentIntents->retrieve($id, []);
+            $status = $intent->status ?? null;
+
+            if ($status === 'succeeded') {
+                $refund = $stripe->refunds->create(['payment_intent' => $id]);
+                return [
+                    'status' => 'success',
+                    'action' => 'refund',
+                    'transaction_id' => $refund->id ?? $id,
+                    'raw_status' => $refund->status ?? null,
+                ];
+            }
+
+            $cancelled = $stripe->paymentIntents->cancel($id, []);
+            return [
+                'status' => 'success',
+                'action' => 'cancel',
+                'transaction_id' => $cancelled->id ?? $id,
+                'raw_status' => $cancelled->status ?? null,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'transaction_id' => $id,
+            ];
+        }
+    }
+
+    public function reembolsarPagamento(string $id, array $dados = []): array
+    {
+        $stripeSecret = (string) ($dados['stripe_secret'] ?? '');
+        if ($stripeSecret === '') {
+            return [
+                'status' => 'error',
+                'message' => 'Chave secreta do Stripe nao informada para reembolso.',
+                'transaction_id' => $id,
+            ];
+        }
+
+        $stripe = new StripeClient($stripeSecret);
+        try {
+            $refund = $stripe->refunds->create(['payment_intent' => $id]);
+            return [
+                'status' => 'success',
+                'transaction_id' => $refund->id ?? $id,
+                'raw_status' => $refund->status ?? null,
+            ];
+        } catch (\Throwable $e) {
+            return [
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'transaction_id' => $id,
+            ];
+        }
     }
 }

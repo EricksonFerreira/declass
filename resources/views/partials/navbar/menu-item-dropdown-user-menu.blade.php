@@ -1,5 +1,6 @@
-@php( $logout_url = View::getSection('logout_url') ?? config('adminlte.logout_url', 'logout') )
-@php( $profile_url = View::getSection('profile_url') ?? config('adminlte.profile_url', 'logout') )
+    @php( $logout_url = View::getSection('logout_url') ?? config('adminlte.logout_url', 'logout') )
+    @php( $profile_url = View::getSection('profile_url') ?? config('adminlte.profile_url', 'logout') )
+    @php( $empresaSelecionada = (int) session('empresa_context_id', 0) )
 
 @if (config('adminlte.usermenu_profile_url', false))
     @php( $profile_url = Auth::user()->adminlte_profile_url() )
@@ -80,6 +81,31 @@
                 @endif
                 {{ csrf_field() }}
             </form>
+
+            @if(Auth::check() && Auth::user()->isAdministrador() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
+                @php
+                    $empresasMenu = \App\Models\Empresa::query()->orderBy('nome')->pluck('nome', 'id')->toArray();
+                @endphp
+                <div class="empresa-context-select">
+                    <label>Empresa em visualizacao</label>
+                    <form method="POST" action="{{ route('empresa_context.update') }}" class="mb-0">
+                        @csrf
+                        <select
+                            name="empresa_id"
+                            class="form-control form-control-sm"
+                            onchange="this.form.submit()"
+                            title="Empresa em visualizacao"
+                        >
+                            <option value="0" {{ $empresaSelecionada === 0 ? 'selected' : '' }}>Todas as empresas</option>
+                            @foreach($empresasMenu as $empresaId => $empresaNome)
+                                <option value="{{ $empresaId }}" {{ $empresaSelecionada === (int) $empresaId ? 'selected' : '' }}>
+                                    {{ $empresaNome }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                </div>
+            @endif
         </li>
 
     </ul>

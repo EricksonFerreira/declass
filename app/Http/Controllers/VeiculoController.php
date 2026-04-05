@@ -15,9 +15,17 @@ use App\Services\SegmentoService;
 use App\Services\StatusVeiculoService;
 use App\Services\TipoFrotaService;
 use App\Services\VeiculoService;
+use App\Support\EmpresaContext;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
+use App\Models\TipoFrota;
+use App\Models\GrupoFrota;
+use App\Models\Marca;
+use App\Models\Modelo;
+use App\Models\StatusVeiculo;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class VeiculoController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -251,20 +259,13 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function obterFiltrosPrincipais()
     {
-        $tipoFrota = $this->tipoFrotaService->getAllAtivos();
-        $dataTipoFrota = FiltroTrait::formatOptions($tipoFrota, 'Selecione o tipo de Frota');
+        $empresaId = $this->empresaIdParaFiltro();
 
-        $grupoFrota = $this->grupoFrotaService->getAllAtivos();
-        $dataGrupoFrota = FiltroTrait::formatOptions($grupoFrota, 'Selecione o grupo de Frota');
-
-        $marca = $this->marcaService->getAllAtivos();
-        $dataMarca = FiltroTrait::formatOptions($marca, 'Selecione a marca');
-
-        $modelo = $this->modeloService->getAllAtivos();
-        $dataModelo = FiltroTrait::formatOptions($modelo, 'Selecione o modelo');
-
-        $statusVeiculo = $this->statusVeiculoService->getAllAtivos();
-        $dataStatusVeiculo = FiltroTrait::formatOptions($statusVeiculo, 'Selecione o status');
+        $dataTipoFrota = $this->buildOptionsByEmpresa(TipoFrota::query(), $empresaId, 'Selecione o tipo de Frota');
+        $dataGrupoFrota = $this->buildOptionsByEmpresa(GrupoFrota::query(), $empresaId, 'Selecione o grupo de Frota');
+        $dataMarca = $this->buildOptionsByEmpresa(Marca::query(), $empresaId, 'Selecione a marca');
+        $dataModelo = $this->buildOptionsByEmpresa(Modelo::query(), $empresaId, 'Selecione o modelo');
+        $dataStatusVeiculo = $this->buildOptionsByEmpresa(StatusVeiculo::query(), $empresaId, 'Selecione o status');
 
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
@@ -281,6 +282,36 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         return [
             // Adicione filtros secundários aqui, se necessário
         ];
+    }
+
+    private function empresaIdParaFiltro(): ?int
+    {
+        /** @var EmpresaContext $empresaContext */
+        $empresaContext = app(EmpresaContext::class);
+        $empresaId = $empresaContext->empresaId();
+
+        if ($empresaId !== null) {
+            return (int) $empresaId;
+        }
+
+        $userEmpresaId = Auth::user()?->empresa_id;
+        return $userEmpresaId ? (int) $userEmpresaId : null;
+    }
+
+    private function buildOptionsByEmpresa($query, ?int $empresaId, string $label): array
+    {
+        $model = $query->getModel();
+        if ($empresaId !== null && Schema::hasColumn($model->getTable(), 'empresa_id')) {
+            $query->where($model->getTable() . '.empresa_id', $empresaId);
+        }
+
+        if (Schema::hasColumn($model->getTable(), 'ativo')) {
+            $query->where($model->getTable() . '.ativo', 'S');
+        }
+
+        $items = $query->orderBy('nome')->pluck('nome', 'id')->toArray();
+
+        return FiltroTrait::formatOptions($items, $label);
     }
 
     /**

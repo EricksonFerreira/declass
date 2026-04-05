@@ -63,6 +63,7 @@ class Empresa extends Model
         'nfse_tributacao_issqn',
         'nfse_tomador_numero_padrao',
         'nfse_tomador_bairro_padrao',
+        'nfse_ultima_importacao_em',
         'reserva_escolher_empresa',
         'reserva_selecionar_modelo',
         'empresa_id',
@@ -73,6 +74,7 @@ class Empresa extends Model
         'site_apresentacao_imagens' => 'array',
         'site_apresentacao_cores' => 'array',
         'site_apresentacao_imagens_config' => 'array',
+        'nfse_ultima_importacao_em' => 'datetime',
     ];
 
     public function users()

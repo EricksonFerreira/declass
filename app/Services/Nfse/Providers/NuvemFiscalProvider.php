@@ -78,7 +78,13 @@ class NuvemFiscalProvider implements NfseProviderInterface
         }
 
         $baseUrl = $this->baseUrl($empresa);
-        $response = Http::withToken($token)->get($baseUrl . '/nfse/' . $nfseId);
+        $endpoint = '/nfse/' . $nfseId;
+        if (str_starts_with($nfseId, 'dps:')) {
+            $dpsId = substr($nfseId, 4);
+            $endpoint = '/nfse/dps/' . $dpsId;
+        }
+
+        $response = Http::withToken($token)->get($baseUrl . $endpoint);
         $data = $response->json();
 
         if (!$response->successful()) {

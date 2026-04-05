@@ -57,7 +57,7 @@
             <div class="small-box bg-success">
                 <div class="inner">
                     <h3>{{ $moedaEmpresa }} {{ number_format($totalFaturado, 2, ',', '.') }}</h3>
-                    <p>Total faturado</p>
+                    <p>Total geral</p>
                 </div>
                 <div class="icon"><i class="fas fa-euro-sign"></i></div>
             </div>
@@ -83,20 +83,31 @@
         <div class="col-md-3">
             <div class="small-box bg-danger">
                 <div class="inner">
-                    <h3>{{ $moedaEmpresa }} {{ number_format($totalFalha, 2, ',', '.') }}</h3>
-                    <p>Falhas / nao concluido</p>
+                    <h3>{{ $moedaEmpresa }} {{ number_format($totalCancelado, 2, ',', '.') }}</h3>
+                    <p>Receita cancelada</p>
+                    <small class="d-block text-light">Transacoes canceladas: {{ $qtdCanceladas }}</small>
                 </div>
-                <div class="icon"><i class="fas fa-times-circle"></i></div>
+                <div class="icon"><i class="fas fa-ban"></i></div>
             </div>
         </div>
     </div>
 
     <div class="row mb-3">
         <div class="col-md-3">
+            <div class="small-box bg-secondary">
+                <div class="inner">
+                    <h3>{{ $moedaEmpresa }} {{ number_format($totalFalha, 2, ',', '.') }}</h3>
+                    <p>Falhas / nao concluido</p>
+                </div>
+                <div class="icon"><i class="fas fa-times-circle"></i></div>
+            </div>
+        </div>
+        <div class="col-md-3">
             <div class="small-box bg-info">
                 <div class="inner">
                     <h3>{{ $qtdTransacoes }}</h3>
                     <p>Transacoes</p>
+                    <small class="d-block text-light">Taxa aprovacao: {{ number_format($taxaAprovacao, 1, ',', '.') }}%</small>
                 </div>
                 <div class="icon"><i class="fas fa-exchange-alt"></i></div>
             </div>
@@ -111,19 +122,11 @@
             </div>
         </div>
         <div class="col-md-3">
-            <div class="small-box bg-secondary">
-                <div class="inner">
-                    <h3>{{ number_format($taxaAprovacao, 1, ',', '.') }}%</h3>
-                    <p>Taxa de aprovacao</p>
-                </div>
-                <div class="icon"><i class="fas fa-percentage"></i></div>
-            </div>
-        </div>
-        <div class="col-md-3">
             <div class="small-box bg-dark">
                 <div class="inner">
                     <h3>{{ $transferenciasCount }}</h3>
                     <p>Transferencias de frota</p>
+                    <small class="d-block text-light">Canceladas: {{ $transferenciasCanceladasCount }}</small>
                 </div>
                 <div class="icon"><i class="fas fa-truck-moving"></i></div>
             </div>
@@ -239,6 +242,7 @@
                         <th>Usuario Pagador</th>
                         <th>Gateway</th>
                         <th>Status</th>
+                        <th>Tipo</th>
                         <th>Moeda</th>
                         <th class="text-right">Valor</th>
                         <th>Data</th>
@@ -252,7 +256,20 @@
                             <td>{{ $item->usuario_nome ?? '-' }}</td>
                             <td>{{ $item->usuario_pagador_nome ?? '-' }}</td>
                             <td>{{ $item->metodo_pagamento ?? '-' }}</td>
-                            <td>{{ $item->status ?? '-' }}</td>
+                            @php
+                                $statusLower = strtolower($item->status ?? '');
+                                $isCancelado = in_array($statusLower, $statusCancelados, true);
+                                $isAprovado = in_array($statusLower, $statusAprovados, true);
+                                $isPendente = in_array($statusLower, $statusPendentes, true);
+                                $badgeClass = $isCancelado ? 'badge-danger' : ($isAprovado ? 'badge-success' : ($isPendente ? 'badge-warning' : 'badge-secondary'));
+                            @endphp
+                            <td><span class="badge {{ $badgeClass }}">{{ $item->status ?? 'sem_status' }}</span></td>
+                            @php
+                                $valor = (float) $item->valor;
+                                $tipoLabel = $valor < 0 ? 'Estorno' : ($isCancelado ? 'Cancelamento' : 'Pagamento');
+                                $tipoClass = $valor < 0 ? 'badge-danger' : ($isCancelado ? 'badge-warning' : 'badge-success');
+                            @endphp
+                            <td><span class="badge {{ $tipoClass }}">{{ $tipoLabel }}</span></td>
                             <td>{{ strtoupper($item->moeda ?? 'BRL') }}</td>
                             <td class="text-right">{{ strtoupper($item->moeda ?? 'BRL') }} {{ number_format((float) $item->valor, 2, ',', '.') }}</td>
                             <td>{{ \Illuminate\Support\Carbon::parse($item->created_at)->format('d/m/Y H:i') }}</td>

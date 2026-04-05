@@ -1,112 +1,306 @@
 @extends('adminlte::page')
 
-@section('title', 'Detalhes da Reserva')
+@section('title', 'Pagamento da Reserva')
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" />
+    <div class="d-flex flex-wrap align-items-center justify-content-between">
+        <h3 class="mb-0 font-weight-bold">{{ $titulo }}</h3>
+        <a href="{{ route('reserva.show', $reserva->id) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i> Voltar
+        </a>
+    </div>
 @stop
 
 @section('content')
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <strong>Pagamento da Reserva #{{ $reserva->id }}</strong>
-                </div>
-                <div class="card-body">
-                    <form id="payment-form" action="{{ route('reserva.processarPagamento', $reserva->id) }}" method="POST">
-                        @csrf
+@php
+    $moeda = strtoupper((string) ($moedaPadrao ?? 'BRL'));
+    $simbolo = $moeda === 'USD' ? '$' : ($moeda === 'EUR' ? 'EUR' : 'R$');
+    $dias = (int) ($reserva->quantidade_dias ?? 0);
+    $tarifaBase = (float) ($reserva->tarifa_base ?? 0);
+    $valorTarifaBase = $tarifaBase * $dias;
+    $valorOpcionais = (float) ($reserva->valor_opcionais ?? 0);
+    if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
+        $valorOpcionais = (float) $reserva->opcionais->sum(function ($opcional) {
+            return (float) ($opcional->pivot->preco_total ?? 0);
+        });
+    }
+    $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
+    $valorDesconto = ($valorTarifaBase + $valorOpcionais) * ($percentualDesconto / 100);
+    $valorTotal = max(0, ($valorTarifaBase + $valorOpcionais) - $valorDesconto);
+@endphp
+<div class="row">
+    <div class="col-lg-7 mb-4">
+        <div class="card card-outline card-primary shadow-sm h-100">
+            <div class="card-header d-flex align-items-center justify-content-between">
+                <h3 class="card-title font-weight-bold mb-0">
+                    <i class="fas fa-credit-card mr-2"></i> Pagamento
+                </h3>
+                <span class="badge badge-light">Reserva #{{ $reserva->id }}</span>
+            </div>
+            <div class="card-body">
+                @if(session('success'))
+                    <div class="alert alert-success">{{ session('success') }}</div>
+                @endif
+                @if(session('warning'))
+                    <div class="alert alert-warning">{{ session('warning') }}</div>
+                @endif
+                @if(session('error'))
+                    <div class="alert alert-danger">{{ session('error') }}</div>
+                @endif
+                @if($errors->any())
+                    <div class="alert alert-danger">
+                        @foreach($errors->all() as $error)
+                            <div>{{ $error }}</div>
+                        @endforeach
+                    </div>
+                @endif
 
-                        <div class="form-group">
-                            <label class="font-weight-bold">Gateway configurado na empresa</label>
-                            <input type="text" class="form-control" value="{{ $gatewayNome ?? strtoupper($gatewayPadrao ?? 'stripe') }}" readonly>
-                            <input type="hidden" name="gateway" value="{{ $gatewayPadrao ?? 'stripe' }}">
-                            <small class="text-muted">Moeda configurada: {{ strtoupper($moedaPadrao ?? 'BRL') }}</small>
-                        </div>
+                <form id="payment-form" action="{{ route('reserva.processarPagamento', $reserva->id) }}" method="POST">
+                    @csrf
+                    <div class="form-group">
+                        <label class="font-weight-bold">Gateway configurado</label>
+                        <input type="text" class="form-control" value="{{ $gatewayNome ?? strtoupper($gatewayPadrao ?? 'STRIPE') }}" readonly>
+                        <small class="text-muted">Moeda: {{ $moeda }}</small>
+                    </div>
 
+                    @if(($gatewayPadrao ?? 'stripe') === 'stripe')
                         <div id="stripe-payment-method-wrapper" class="form-group">
-                            <label for="payment-method" class="font-weight-bold">Metodo de Pagamento (Stripe) <small class="text-danger">*</small></label>
-                            <select id="payment-method" class="form-control" name="payment_method">
-                                @if(count($metodosPagamento) == 0)
-                                    <option value="" disabled selected>Nenhum metodo de pagamento disponivel</option>
-                                @else
-                                    @foreach($metodosPagamento as $metodo)
-                                        <option value="{{ $metodo['id'] }}">
-                                            {{ strtoupper($metodo['card']->brand) }} - **** **** **** {{ substr($metodo['card']->last4, -4) }}
-                                            (Validade: {{ $metodo['card']->exp_month }}/{{ $metodo['card']->exp_year }})
-                                        </option>
-                                    @endforeach
-                                @endif
-                            </select>
-
-                            <small class="text-muted d-block mt-1">
-                                Voce pode <a href="{{ route('usuario.metodoPagamento', $reserva->user_id) }}" target="_blank">adicionar um novo metodo de pagamento aqui</a>.
-                            </small>
+                            <label for="payment-method" class="font-weight-bold">Metodo de pagamento</label>
+                            <div class="d-flex flex-column flex-md-row" style="gap:10px;">
+                                <select id="payment-method" class="form-control" name="payment_method">
+                                    @if(count($metodosPagamento) == 0)
+                                        <option value="" disabled selected>Nenhum metodo cadastrado</option>
+                                    @else
+                                        @foreach($metodosPagamento as $metodo)
+                                            <option value="{{ $metodo['id'] }}">
+                                                {{ strtoupper($metodo['card']->brand) }} - **** {{ substr($metodo['card']->last4, -4) }}
+                                                ({{ $metodo['card']->exp_month }}/{{ $metodo['card']->exp_year }})
+                                            </option>
+                                        @endforeach
+                                    @endif
+                                </select>
+                                <button type="button" class="btn btn-outline-primary" id="openMetodoModal" {{ empty($stripePublicKey) ? 'disabled' : '' }}>
+                                    <i class="fas fa-plus mr-1"></i> Novo metodo
+                                </button>
+                            </div>
+                            @if(empty($stripePublicKey))
+                                <small class="text-muted d-block mt-2">Chave publica do Stripe nao configurada para esta empresa.</small>
+                            @endif
                         </div>
+                    @endif
 
-                        <button type="submit" id="btn-submit-pagamento" class="btn btn-success btn-sm btn-block">
-                            Efetuar Pagamento
-                        </button>
-
-                        <a href="{{ route('reserva.show', $reserva->id) }}" class="btn btn-link btn-xs btn-block mt-2">
-                            Voltar para detalhes da reserva
-                        </a>
-                    </form>
-                </div>
+                    <button type="submit" id="btn-submit-pagamento" class="btn btn-success btn-block">
+                        Efetuar Pagamento
+                    </button>
+                </form>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-4">
-            <div class="card shadow-sm">
-                <div class="card-header">
-                    <strong>Resumo</strong>
+    <div class="col-lg-5 mb-4">
+        <div class="card card-outline card-secondary shadow-sm h-100">
+            <div class="card-header">
+                <h3 class="card-title font-weight-bold mb-0"><i class="fas fa-receipt mr-2"></i>Resumo completo</h3>
+            </div>
+            <div class="card-body">
+                <div class="border rounded p-3 mb-3 bg-light">
+                    <div class="small text-muted">Cliente</div>
+                    <div class="font-weight-bold">{{ $reserva->usuario->nome ?? '-' }}</div>
+                    <div class="text-muted">{{ $reserva->usuario->email ?? '-' }}</div>
+                    @if(!empty($reserva->usuario?->telefone))
+                        <div class="text-muted">{{ $reserva->usuario->telefone }}</div>
+                    @endif
                 </div>
-                <div class="card-body">
-                    <div><strong>Retirada:</strong> {{ Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}</div>
-                    <div><strong>Devolucao:</strong> {{ Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}</div>
-                    <div><strong>Grupo:</strong> {{ $reserva->grupoFrota->nome ?? 'N/A' }}</div>
-                    <hr>
-                    <div><strong>Total:</strong> {{ strtoupper($moedaPadrao ?? 'BRL') }} {{ number_format($reserva->valor_total_final, 2, ',', '.') }}</div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Retirada</span>
+                        <strong>{{ \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}</strong>
+                    </div>
+                    <div class="text-muted">{{ $reserva->estacaoRetirada->nome ?? 'Local nao informado' }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted">Devolucao</span>
+                        <strong>{{ \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}</strong>
+                    </div>
+                    <div class="text-muted">{{ $reserva->estacaoDevolucao->nome ?? 'Local nao informado' }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-muted">Veiculo</div>
+                    <div class="font-weight-bold">{{ $reserva->grupoFrota->nome ?? 'Grupo nao informado' }}</div>
+                    <div class="text-muted">Modelo: {{ $reserva->modelos->nome ?? 'Nao informado' }}</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="text-muted">Opcionais</div>
+                    <ul class="pl-3 mb-0">
+                        @forelse($reserva->opcionais ?? [] as $opcional)
+                            <li>{{ $opcional->nome }} ({{ $opcional->pivot->quantidade ?? 1 }}x)</li>
+                        @empty
+                            <li>Sem opcionais.</li>
+                        @endforelse
+                    </ul>
+                </div>
+
+                <hr>
+
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Diarias</span>
+                    <strong>{{ $dias }} dias</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Tarifa base</span>
+                    <strong>{{ $simbolo }} {{ number_format($valorTarifaBase, 2, ',', '.') }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Opcionais</span>
+                    <strong>{{ $simbolo }} {{ number_format($valorOpcionais, 2, ',', '.') }}</strong>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Desconto</span>
+                    <strong>{{ number_format($percentualDesconto, 0) }}%</strong>
+                </div>
+                <div class="d-flex justify-content-between font-weight-bold" style="font-size:16px;">
+                    <span>Total</span>
+                    <span>{{ $simbolo }} {{ number_format($valorTotal, 2, ',', '.') }}</span>
                 </div>
             </div>
         </div>
     </div>
+</div>
+
+@if(($gatewayPadrao ?? 'stripe') === 'stripe')
+<div class="modal fade" id="modalMetodoPagamento" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Adicionar metodo de pagamento</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="font-weight-bold">Dados do cartao</label>
+                    <div id="card-element" class="form-control" style="padding-top:10px;"></div>
+                    <div id="card-errors" class="text-danger small mt-2" role="alert"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-primary" id="btnSalvarMetodo">Salvar cartao</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endif
 @stop
 
 @section('js')
+@if(($gatewayPadrao ?? 'stripe') === 'stripe' && !empty($stripePublicKey))
+<script src="https://js.stripe.com/v3/"></script>
+@endif
 <script>
     (function () {
         const gateway = "{{ $gatewayPadrao ?? 'stripe' }}";
-        const stripeWrapper = document.getElementById('stripe-payment-method-wrapper');
-        const paymentMethodSelect = document.getElementById('payment-method');
+        const stripeKey = @json($stripePublicKey ?? null);
+        const form = document.getElementById('payment-form');
         const submitButton = document.getElementById('btn-submit-pagamento');
+        const paymentSelect = document.getElementById('payment-method');
+        const openModalBtn = document.getElementById('openMetodoModal');
+        const saveButton = document.getElementById('btnSalvarMetodo');
+        const cardErrors = document.getElementById('card-errors');
+        const csrfToken = @json(csrf_token());
 
-        function hasStripeMethods() {
-            if (!paymentMethodSelect) {
-                return false;
-            }
-
-            return paymentMethodSelect.options.length > 0 && paymentMethodSelect.value !== '';
+        function hasPaymentMethod() {
+            return paymentSelect && paymentSelect.value && paymentSelect.value !== '';
         }
 
-        function syncGatewayUI() {
-            const isStripe = gateway === 'stripe';
-
-            if (stripeWrapper) {
-                stripeWrapper.style.display = isStripe ? 'block' : 'none';
-            }
-
-            if (paymentMethodSelect) {
-                paymentMethodSelect.required = !!isStripe;
-            }
-
-            if (submitButton) {
-                submitButton.disabled = !!isStripe && !hasStripeMethods();
-            }
+        if (form && submitButton) {
+            form.addEventListener('submit', () => {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Processando...';
+            });
         }
 
-        syncGatewayUI();
+        if (gateway !== 'stripe') {
+            return;
+        }
+
+        if (openModalBtn) {
+            openModalBtn.addEventListener('click', () => {
+                $('#modalMetodoPagamento').modal('show');
+            });
+        }
+
+        if (!stripeKey) {
+            return;
+        }
+
+        const stripe = Stripe(stripeKey);
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+
+        if (saveButton) {
+            saveButton.addEventListener('click', async () => {
+                saveButton.disabled = true;
+                if (cardErrors) {
+                    cardErrors.textContent = '';
+                }
+
+                const result = await stripe.createToken(cardElement);
+                if (result.error) {
+                    if (cardErrors) {
+                        cardErrors.textContent = result.error.message || 'Nao foi possivel validar o cartao.';
+                    }
+                    saveButton.disabled = false;
+                    return;
+                }
+
+                try {
+                    const response = await fetch("{{ route('usuario.adicionarMetodoPagamento', $reserva->user_id) }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ stripeToken: result.token.id })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Nao foi possivel adicionar o metodo de pagamento.');
+                    }
+
+                    if (paymentSelect && Array.isArray(data.metodos)) {
+                        paymentSelect.innerHTML = '';
+                        data.metodos.forEach((metodo) => {
+                            const option = document.createElement('option');
+                            option.value = metodo.id;
+                            option.textContent = `${(metodo.brand || '').toUpperCase()} - **** ${metodo.last4} (${metodo.exp_month}/${metodo.exp_year})`;
+                            paymentSelect.appendChild(option);
+                        });
+                        if (paymentSelect.options.length > 0) {
+                            paymentSelect.value = paymentSelect.options[paymentSelect.options.length - 1].value;
+                        }
+                    }
+
+                    $('#modalMetodoPagamento').modal('hide');
+                } catch (error) {
+                    if (cardErrors) {
+                        cardErrors.textContent = error.message;
+                    }
+                } finally {
+                    saveButton.disabled = false;
+                }
+            });
+        }
     })();
 </script>
 @stop

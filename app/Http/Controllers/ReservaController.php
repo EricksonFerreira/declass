@@ -29,6 +29,7 @@ use App\Services\PdfService;
 use App\Services\PaisService;
 use App\Services\ReservaService;
 use App\Services\RegraService;
+use App\Services\StatusReservaService;
 use App\Services\TipoOpcionalService;
 use App\Services\UsuarioService;
 use App\Services\VeiculoDanoService;
@@ -69,6 +70,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     protected $regraService;
     protected $paisService;
     protected $nfseService;
+    protected $statusReservaService;
 
     public function __construct(
         ReservaService $reservaService,
@@ -91,7 +93,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         GatewayEmpresaConfigService $gatewayEmpresaConfigService,
         RegraService $regraService,
         PaisService $paisService,
-        NfseService $nfseService
+        NfseService $nfseService,
+        StatusReservaService $statusReservaService
     ) {
         $this->titulo = "Reservas";
         $this->nomeFiltro = 'reserva';
@@ -116,6 +119,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $this->regraService = $regraService;
         $this->paisService = $paisService;
         $this->nfseService = $nfseService;
+        $this->statusReservaService = $statusReservaService;
     }
 
     public function index()
@@ -125,7 +129,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $user = Auth::user();
         if ($user && !$user->isAdministrador() && $this->isCliente($user)) {
             $query = Reserva::query()
-                ->with(['estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos', 'statusReserva'])
+                ->with(['estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos', 'statusReserva', 'nfseAtual'])
                 ->where('user_id', $user->id)
                 ->orderBy('id', 'desc');
 
@@ -266,8 +270,49 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             new BreadcrumbItem('Detalhes da Reserva Nº' . $id)
         ]);
         $reserva = $this->reservaService->getById($id,'contratoCheckin');
+        $reserva->load('nfseAtual');
 
         return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo'));
+    }
+
+    public function emitirNfse($id)
+    {
+        $reserva = $this->reservaService->getById($id);
+        if (!$reserva) {
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Reserva nao encontrada.',
+                ], 404);
+            }
+
+            return redirect()->route('reserva.index')->with('error', 'Reserva nao encontrada.');
+        }
+
+        $nfse = $this->nfseService->emitirParaReserva($reserva);
+        $nfseWarning = null;
+        if ($nfse === null) {
+            $nfseWarning = 'Emissao de NFS-e nao configurada para esta empresa.';
+        } elseif (($nfse->status ?? '') === 'erro') {
+            $nfseWarning = $this->nfseService->mensagemErro($nfse) ?? 'Falha ao emitir NFS-e.';
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'status' => $nfseWarning ? 'warning' : 'success',
+                'message' => $nfseWarning ? $nfseWarning : 'NFS-e emitida com sucesso.',
+                'nfse' => [
+                    'status' => $nfse->status ?? null,
+                    'numero' => $nfse->numero ?? null,
+                    'ambiente' => $nfse->ambiente ?? null,
+                ],
+            ]);
+        }
+
+        return redirect()
+            ->route('reserva.show', $id)
+            ->with('success', $nfseWarning ? 'Tentativa de emissao finalizada.' : 'NFS-e emitida com sucesso.')
+            ->with('warning', $nfseWarning);
     }
 
     public function edit($id)
@@ -493,8 +538,257 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $reserva = $this->reservaService->getById($id);
         if ($reserva) {
             $this->nfseService->cancelarPorReserva($reserva);
+            $this->cancelarTransferenciasReserva($reserva);
         }
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        $cancelamentoMensagem = null;
+        if ($reserva) {
+            $cancelamentoMensagem = $this->cancelarTransacaoGateway($reserva);
+            $this->registrarCancelamentoTransacao($reserva);
+        }
+
+        $redirect = redirect()->route('reserva.index');
+        if ($cancelamentoMensagem) {
+            $redirect->with('warning', $cancelamentoMensagem);
+        }
+
+        return $redirect;
+    }
+
+    private function registrarCancelamentoTransacao(Reserva $reserva): void
+    {
+        if (!Schema::hasTable('transacoes')) {
+            return;
+        }
+
+        $existeCancelamento = DB::table('transacoes')
+            ->where('reserva_id', $reserva->id)
+            ->where('valor', '<', 0)
+            ->whereIn(DB::raw("LOWER(COALESCE(status, ''))"), ['cancelado', 'cancelada', 'cancelled', 'canceled', 'refunded', 'estorno'])
+            ->exists();
+
+        if ($existeCancelamento) {
+            return;
+        }
+
+        $transacaoBase = Transacao::query()
+            ->where('reserva_id', $reserva->id)
+            ->orderByDesc('id')
+            ->first();
+
+        $valorBase = (float) ($transacaoBase?->valor ?? $reserva->valor_total_final ?? 0);
+        if ($valorBase <= 0) {
+            return;
+        }
+
+        $gatewayTransactionId = (string) ($transacaoBase?->gateway_transaction_id ?? '');
+        if ($gatewayTransactionId !== '') {
+            $gatewayTransactionId .= ':cancel';
+        }
+
+        $payload = [
+            'user_id' => $transacaoBase?->user_id ?? $reserva->user_id,
+            'pago_por_user_id' => $transacaoBase?->pago_por_user_id ?? auth()->id(),
+            'reserva_id' => $reserva->id,
+            'valor' => -1 * abs($valorBase),
+            'moeda' => $transacaoBase?->moeda ?? 'BRL',
+            'metodo_pagamento' => $transacaoBase?->metodo_pagamento ?? null,
+            'gateway_transaction_id' => $gatewayTransactionId,
+            'status' => 'cancelado',
+            'info_pagamento' => json_encode([
+                'cancelamento' => true,
+                'origem_transacao_id' => $transacaoBase?->id,
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        if (Schema::hasColumn('transacoes', 'metodo_pagamento_id')) {
+            $metodoId = $transacaoBase?->metodo_pagamento_id;
+            if (!$metodoId && Schema::hasTable('metodo_pagamentos')) {
+                $metodoId = DB::table('metodo_pagamentos')->value('id');
+            }
+            if (!$metodoId && Schema::hasTable('metodos_pagamento')) {
+                $metodoId = DB::table('metodos_pagamento')->value('id');
+            }
+            $payload['metodo_pagamento_id'] = $metodoId ?: null;
+        }
+
+        if (Schema::hasColumn('transacoes', 'tipo_pagamento_id')) {
+            $tipoId = $transacaoBase?->tipo_pagamento_id;
+            if (!$tipoId && Schema::hasTable('tipo_pagamentos')) {
+                $tipoId = DB::table('tipo_pagamentos')->value('id');
+            }
+            if (!$tipoId && Schema::hasTable('tipos_pagamento')) {
+                $tipoId = DB::table('tipos_pagamento')->value('id');
+            }
+            $payload['tipo_pagamento_id'] = $tipoId ?: null;
+        }
+
+        if (Schema::hasColumn('transacoes', 'empresa_id')) {
+            $payload['empresa_id'] = $reserva->empresa_id ?? null;
+        }
+
+        DB::table('transacoes')->insert($payload);
+    }
+
+    private function cancelarTransferenciasReserva(Reserva $reserva): void
+    {
+        if (!Schema::hasTable('movimentacoes') || !Schema::hasColumn('movimentacoes', 'reserva_id')) {
+            return;
+        }
+
+        $cancelStatusId = 3;
+        if (Schema::hasTable('status_movimentacao')) {
+            $cancelStatusId = (int) (DB::table('status_movimentacao')
+                ->whereIn(DB::raw('LOWER(COALESCE(nome, ""))'), ['cancelado', 'cancelada', 'cancelamento', 'cancelled', 'canceled'])
+                ->value('id') ?? 3);
+        }
+
+        $query = DB::table('movimentacoes')->where('reserva_id', $reserva->id);
+
+        if (Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+            $query->where('tipo_movimentacao_id', 10);
+        }
+
+        if (Schema::hasColumn('movimentacoes', 'status_movimentacao_id')) {
+            $query->update([
+                'status_movimentacao_id' => $cancelStatusId,
+                'updated_at' => now(),
+            ]);
+            return;
+        }
+
+        if (Schema::hasColumn('movimentacoes', 'updated_at')) {
+            $query->update(['updated_at' => now()]);
+        }
+    }
+
+    private function cancelarTransacaoGateway(Reserva $reserva): ?string
+    {
+        $transacao = Transacao::query()
+            ->where('reserva_id', $reserva->id)
+            ->orderByDesc('id')
+            ->first();
+
+        if (!$transacao) {
+            return null;
+        }
+
+        $statusAtual = strtolower((string) ($transacao->status ?? ''));
+        if (in_array($statusAtual, ['refunded', 'refund', 'estorno', 'cancelled', 'canceled'], true)) {
+            $this->criarTransacaoEstorno($transacao, [
+                'status' => 'success',
+                'action' => $transacao->status ?? 'refunded',
+                'message' => 'Estorno registrado a partir do status atual.',
+            ], $reserva);
+            return null;
+        }
+
+        $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $reserva->empresa_id);
+        if (!$empresa) {
+            return 'Pagamento nao foi cancelado: empresa nao encontrada para o gateway.';
+        }
+
+        $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
+
+        $provider = $this->gerenciadorDePagamentos->resolver($gateway);
+        if (empty($transacao->gateway_transaction_id)) {
+            $transacao->status = $transacao->status ?: 'cancelled';
+            $info = is_array($transacao->info_pagamento ?? null) ? $transacao->info_pagamento : [];
+            $info['cancelamento'] = [
+                'status' => 'error',
+                'message' => 'Transacao sem identificador do gateway.',
+            ];
+            $transacao->info_pagamento = $info;
+            $transacao->save();
+            return 'Pagamento nao foi cancelado: transacao sem identificador no gateway.';
+        }
+
+        $resultado = $provider->cancelarPagamento((string) $transacao->gateway_transaction_id, $credenciais);
+
+        $info = is_array($transacao->info_pagamento ?? null) ? $transacao->info_pagamento : [];
+        $info['cancelamento'] = $resultado;
+
+        if (($resultado['status'] ?? 'error') === 'success') {
+            $transacao->status = (string) ($resultado['raw_status'] ?? $resultado['action'] ?? 'cancelled');
+            $transacao->info_pagamento = $info;
+            $transacao->save();
+            $this->criarTransacaoEstorno($transacao, $resultado, $reserva);
+            return null;
+        }
+
+        $resultadoReembolso = $provider->reembolsarPagamento((string) $transacao->gateway_transaction_id, $credenciais);
+        $info['reembolso'] = $resultadoReembolso;
+
+        if (($resultadoReembolso['status'] ?? 'error') === 'success') {
+            $transacao->status = (string) ($resultadoReembolso['raw_status'] ?? $resultadoReembolso['action'] ?? 'refunded');
+            $transacao->info_pagamento = $info;
+            $transacao->save();
+            $this->criarTransacaoEstorno($transacao, $resultadoReembolso, $reserva);
+            return null;
+        }
+
+        $transacao->status = $transacao->status ?: 'cancel_failed';
+        $transacao->info_pagamento = $info;
+        $transacao->save();
+
+        return $resultado['message'] ?? $resultadoReembolso['message'] ?? 'Pagamento nao foi cancelado no gateway.';
+    }
+
+    private function criarTransacaoEstorno(Transacao $transacao, array $resultado, Reserva $reserva): void
+    {
+        if (!Schema::hasTable('transacoes')) {
+            return;
+        }
+
+        $existeEstorno = DB::table('transacoes')
+            ->where('reserva_id', $reserva->id)
+            ->whereIn(DB::raw("LOWER(COALESCE(status, ''))"), ['refunded', 'refund', 'estorno', 'cancelled', 'canceled'])
+            ->where('valor', '<', 0)
+            ->exists();
+
+        if ($existeEstorno) {
+            return;
+        }
+
+        $valor = -1 * abs((float) ($transacao->valor ?? 0));
+        $gatewayTransactionId = (string) ($resultado['transaction_id'] ?? $resultado['id'] ?? '');
+        if ($gatewayTransactionId === '' && !empty($transacao->gateway_transaction_id)) {
+            $gatewayTransactionId = $transacao->gateway_transaction_id . ':refund';
+        }
+
+        $payload = [
+            'user_id' => $transacao->user_id,
+            'pago_por_user_id' => $transacao->pago_por_user_id ?? auth()->id(),
+            'reserva_id' => $reserva->id,
+            'valor' => $valor,
+            'moeda' => $transacao->moeda ?? 'BRL',
+            'metodo_pagamento' => $transacao->metodo_pagamento ?? null,
+            'gateway_transaction_id' => $gatewayTransactionId,
+            'status' => (string) ($resultado['raw_status'] ?? $resultado['action'] ?? 'refunded'),
+            'info_pagamento' => json_encode([
+                'estorno' => true,
+                'origem_transacao_id' => $transacao->id,
+                'resultado' => $resultado,
+            ]),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        if (Schema::hasColumn('transacoes', 'metodo_pagamento_id')) {
+            $payload['metodo_pagamento_id'] = $transacao->metodo_pagamento_id ?? 1;
+        }
+
+        if (Schema::hasColumn('transacoes', 'tipo_pagamento_id')) {
+            $payload['tipo_pagamento_id'] = $transacao->tipo_pagamento_id ?? 1;
+        }
+
+        if (Schema::hasColumn('transacoes', 'empresa_id')) {
+            $payload['empresa_id'] = $reserva->empresa_id ?? null;
+        }
+
+        DB::table('transacoes')->insert($payload);
     }
 
     public function filtro(Request $request)
@@ -527,67 +821,44 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function obterFiltrosPrincipais()
     {
-        
-        // $locais = $this->estacaoService->getAllAtivos();
-        // $locaisPossiveis = [];
-        // $locaisPossiveis[] = [
-        //     'value' =>'',
-        //     'label' => 'Todos'
-        // ];
-        // foreach ($locais as $id => $local) {
-        //     $locaisPossiveis[] = [
-        //         'value' => $id,
-        //         'label' => $local
-        //     ];
-        // }
-        // //option 
-        // $statusReserva = $this->statusReservaService->getAllForSelect();
-        // $statusPossiveis = [];
-        // $statusPossiveis[] = [
-        //     'value' =>'',
-        //     'label' => 'Todos'
-        // ];
-        // foreach ($statusReserva as $id => $status) {
-        //     $statusPossiveis[] = [
-        //         'value' => $id,
-        //         'label' => $status
-        //     ];
-        // }
+        $statusReserva = $this->statusReservaService->getAllForSelect('id', 'nome');
+        $dadosStatusReserva = FiltroTrait::formatOptions($statusReserva, 'Selecione o status');
 
-        // $usuarios = $this->userService->getAllForSelect();
-        // $usuariosPossiveis = [];
-        // $usuariosPossiveis[] = [
-        //     'value' =>'',
-        //     'label' => 'Todos'
-        // ];
-        // foreach ($usuarios as $id => $usuario) {
-        //     $usuariosPossiveis[] = [
-        //         'value' => $id,
-        //         'label' => $usuario
-        //     ];
-        // }
-        // return [
-        //     ['name' => 'retirada', 'label' => 'Retirada', 'type' => 'select', 'typeWhere' => 'where', 'options' =>$locaisPossiveis],
-        //     ['name' => 'devolucao', 'label' => 'Devolução', 'type' => 'select', 'typeWhere' => 'where', 'options' =>$locaisPossiveis],
-        //     ['name' => 'status', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => $statusPossiveis],
-        //     ['name' => 'usuario', 'label' => 'Usuário', 'type' => 'select', 'typeWhere' => 'where', 'options' => $usuariosPossiveis],
-        //     ['name' => 'data_inicio', 'label' => 'Data Início', 'type' => 'date', 'typeWhere' => 'where'],
-        //     ['name' => 'data_fim', 'label' => 'Data Fim', 'type' => 'date', 'typeWhere' => 'where'],
-        // ];
+        $usuarios = $this->userService->getAllForSelect('id', 'nome');
+        $dadosUsuarios = FiltroTrait::formatOptions($usuarios, 'Selecione o cliente');
+
+        $dadosPagamento = [
+            ['value' => '', 'label' => 'Pagamento', 'selected' => false],
+            ['value' => 'S', 'label' => 'Pago', 'selected' => false],
+            ['value' => 'N', 'label' => 'Pendente', 'selected' => false],
+        ];
+
         return [
-            ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
-                ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
-                ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
-                ['value' => 'N', 'label' => 'Inativo', 'selected' => false]
-            ]]
+            ['name' => 'id', 'label' => 'Reserva', 'type' => 'number', 'typeWhere' => 'where'],
+            ['name' => 'user_id', 'label' => 'Cliente', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dadosUsuarios],
+            ['name' => 'status_reserva_id', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dadosStatusReserva],
+            ['name' => 'pagamento_efetuado', 'label' => 'Pagamento', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dadosPagamento],
+            ['name' => 'data_inicio', 'label' => 'Data retirada', 'type' => 'date', 'typeWhere' => 'like'],
         ];
     }
 
     public function obterFiltrosSecundarios()
     {
+        $estacoes = $this->estacaoService->getAllAtivos();
+        $dadosEstacoes = FiltroTrait::formatOptions($estacoes, 'Selecione a estacao');
+
+        $gruposFrota = $this->grupoFrotaService->getAllForSelect('id', 'nome');
+        $dadosGrupos = FiltroTrait::formatOptions($gruposFrota, 'Selecione o grupo');
+
+        $modelos = $this->modeloService->getAllForSelect('id', 'nome');
+        $dadosModelos = FiltroTrait::formatOptions($modelos, 'Selecione o modelo');
+
         return [
-            // Adicione filtros secundários aqui, se necessário
+            ['name' => 'data_fim', 'label' => 'Data devolucao', 'type' => 'date', 'typeWhere' => 'like'],
+            ['name' => 'estacao_retirada_id', 'label' => 'Estacao retirada', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dadosEstacoes],
+            ['name' => 'estacao_devolucao_id', 'label' => 'Estacao devolucao', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dadosEstacoes],
+            ['name' => 'grupo_frota_id', 'label' => 'Grupo de frota', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dadosGrupos],
+            ['name' => 'modelo_id', 'label' => 'Modelo', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dadosModelos],
         ];
     }
 
@@ -741,7 +1012,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $user = $this->userService->getById($reserva->user_id);
         $metodosPagamento = [];
+        $stripePublicKey = null;
         if ($gatewayPadrao === 'stripe' && !empty($user->stripe_id)) {
+            $stripePublicKey = (string) ($empresa->stripe_public_key ?? config('services.stripe.key'));
             $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
             if ($stripeSecret !== '') {
                 $metodosPagamento = $this->clienteStripeService->getPaymentMethods($user->stripe_id, $stripeSecret);
@@ -750,7 +1023,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         return view(
             'reserva.efetuar-pagamento',
-            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento', 'gatewayPadrao', 'gatewayNome', 'moedaPadrao')
+            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento', 'gatewayPadrao', 'gatewayNome', 'moedaPadrao', 'stripePublicKey')
         );
     }
 
@@ -783,9 +1056,15 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'payer_email' => (string) ($userReserva->email ?? ''),
         ], $credenciais);
 
-        $resultado = $this->gerenciadorDePagamentos
-            ->resolver($gateway)
-            ->cobrarPagamento($payload);
+        try {
+            $resultado = $this->gerenciadorDePagamentos
+                ->resolver($gateway)
+                ->cobrarPagamento($payload);
+        } catch (\Throwable $e) {
+            return redirect()
+                ->route('reserva.show', $id)
+                ->with('error', 'Falha ao processar o pagamento. Tente novamente.');
+        }
 
         if (($resultado['status'] ?? 'error') !== 'success') {
             return redirect()->route('reserva.show', $id)->with('error', $resultado['message'] ?? 'Pagamento não efetuado');
@@ -818,9 +1097,18 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ]);
         $this->reservaService->adicionaLog($id, (int) Auth::id(), $json);
 
-        $this->nfseService->emitirParaReserva($reserva);
+        $nfse = $this->nfseService->emitirParaReserva($reserva);
+        $nfseWarning = null;
+        if ($nfse === null) {
+            $nfseWarning = 'Emissao de NFS-e nao configurada para esta empresa.';
+        } elseif (($nfse->status ?? '') === 'erro') {
+            $nfseWarning = $this->nfseService->mensagemErro($nfse) ?? 'Falha ao emitir NFS-e.';
+        }
 
-        return redirect()->route('reserva.show', $id)->with('success', 'Pagamento efetuado com sucesso');
+        return redirect()
+            ->route('reserva.show', $id)
+            ->with('success', 'Pagamento efetuado com sucesso')
+            ->with('warning', $nfseWarning);
     }
     public function checkin(Request $request, $reserva_id)
     {
@@ -1045,8 +1333,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $dano = $this->veiculoDanoService->create($dados);
         return response()->json($dano);
     }
- 
-      /**
+
+    /**
      * Percorre recursivamente o array e substitui valores nulos em campos de data por <br>
      * 
      * @param array &$data Array de dados a ser processado

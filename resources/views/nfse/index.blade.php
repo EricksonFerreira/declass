@@ -5,6 +5,28 @@
 @section('content_header')
     <div class="d-flex justify-content-between align-items-center">
         <h1 class="m-0">{{ $titulo }}</h1>
+        @if(auth()->user()?->hasPermissao('nfse.importarPendentes') || auth()->user()?->isAdministrador())
+            <div class="d-flex flex-column align-items-end">
+                <form action="{{ route('nfse.importarPendentes') }}" method="POST" class="d-flex align-items-center">
+                @csrf
+                <button class="btn btn-sm btn-outline-primary" type="submit" {{ $podeImportar ? '' : 'disabled' }}>
+                    <i class="fas fa-sync-alt mr-1"></i> Importar pendentes
+                </button>
+                </form>
+                <small class="text-muted mt-1">
+                    @if(!$podeImportar && !$ultimaImportacao && !$proximaImportacao)
+                        Selecione uma empresa para importar notas fiscais.
+                    @elseif($ultimaImportacao)
+                        Ultima importacao: {{ $ultimaImportacao->format('d/m/Y H:i') }}
+                        @if(!$podeImportar && $proximaImportacao)
+                            · Proxima liberada: {{ $proximaImportacao->format('d/m/Y H:i') }}
+                        @endif
+                    @else
+                        Nenhuma importacao registrada.
+                    @endif
+                </small>
+            </div>
+        @endif
     </div>
 @stop
 
@@ -15,6 +37,9 @@
                 <div>{{ $error }}</div>
             @endforeach
         </div>
+    @endif
+    @if(session('success'))
+        <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
     <div class="card">

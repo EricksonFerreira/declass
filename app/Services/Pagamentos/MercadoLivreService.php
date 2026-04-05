@@ -7,6 +7,7 @@ use MercadoPago\Client\Payment\PaymentClient;
 use MercadoPago\Exceptions\MPApiException;
 use MercadoPago\MercadoPagoConfig;
 use Ramsey\Uuid\Uuid;
+use Illuminate\Support\Facades\Http;
 
 class MercadoLivreService implements IPagamento
 {
@@ -78,16 +79,37 @@ class MercadoLivreService implements IPagamento
         }
     }
 
-    public function cancelarPagamento(string $id): array
+    public function cancelarPagamento(string $id, array $dados = []): array
     {
+        $accessToken = (string) ($dados['mercado_livre_access_token'] ?? env('MERCADOPAGO_ACCESS_TOKEN'));
+        if ($accessToken === '') {
+            return [
+                'status' => 'error',
+                'message' => 'Access token do Mercado Livre nao informado para cancelamento.',
+                'transaction_id' => $id,
+            ];
+        }
+
+        $response = Http::withToken($accessToken)
+            ->put('https://api.mercadopago.com/v1/payments/' . $id, ['status' => 'cancelled']);
+
+        if (!$response->successful()) {
+            return [
+                'status' => 'error',
+                'message' => 'Falha ao cancelar pagamento no Mercado Livre.',
+                'transaction_id' => $id,
+                'details' => $response->json(),
+            ];
+        }
+
         return [
-            'status' => 'error',
-            'message' => 'Cancelamento nao implementado para Mercado Livre neste fluxo.',
+            'status' => 'success',
             'transaction_id' => $id,
+            'raw_status' => $response->json()['status'] ?? null,
         ];
     }
 
-    public function reembolsarPagamento(string $id): array
+    public function reembolsarPagamento(string $id, array $dados = []): array
     {
         return [
             'status' => 'error',

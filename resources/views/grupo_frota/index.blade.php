@@ -259,6 +259,25 @@
                                     {{ (int) ($grupo_frota->modelos_count ?? 0) }}
                                 </span>
                             </div>
+                            @php
+                                $imagensExtras = $grupo_frota->imagens_urls ?? [];
+                                $imagemPrincipal = $grupo_frota->imagem_url ?? null;
+                                if ($imagemPrincipal) {
+                                    $imagensExtras = array_values(array_filter($imagensExtras, fn ($img) => $img !== $imagemPrincipal));
+                                }
+                            @endphp
+                            @if(count($imagensExtras) > 0)
+                                <div class="detalhes-subtitulo">Imagens adicionais</div>
+                                <div class="grupo-frota-imagens-extra">
+                                    @foreach($imagensExtras as $extra)
+                                        <button type="button" class="btn btn-link p-0 js-expandir-imagem"
+                                                data-src="{{ $extra }}" data-title="{{ $grupo_frota->nome }}">
+                                            <img src="{{ $extra }}" alt="Imagem {{ $grupo_frota->nome }}"
+                                                 class="grupo-frota-thumb grupo-frota-thumb--mini">
+                                        </button>
+                                    @endforeach
+                                </div>
+                            @endif
                             @if (($grupo_frota->modelos_count ?? 0) > 0)
                                 <ul class="detalhes-lista">
                                     @foreach ($grupo_frota->modelos->sortBy('nome') as $modelo)
@@ -382,6 +401,22 @@
 
         .detalhes-lista--compacta {
             margin-bottom: 6px;
+        }
+
+        .grupo-frota-imagens-extra {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .grupo-frota-thumb--mini {
+            width: 68px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #dbe6f3;
+            box-shadow: 0 6px 14px rgba(15, 23, 42, .08);
         }
 
         @media (max-width: 991.98px) {

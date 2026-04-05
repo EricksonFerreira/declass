@@ -13,6 +13,46 @@ use App\Services\Nfse\Providers\NuvemFiscalProvider;
 
 class NfseService
 {
+    public function mensagemErro(?Nfse $nfse): ?string
+    {
+        if (!$nfse) {
+            return null;
+        }
+
+        $response = $nfse->response ?? null;
+        if (is_string($response)) {
+            return trim($response) !== '' ? $response : null;
+        }
+
+        if (!is_array($response)) {
+            return null;
+        }
+
+        $message = $response['message'] ?? $response['erro'] ?? $response['error'] ?? null;
+        if (is_string($message) && trim($message) !== '') {
+            return $message;
+        }
+
+        $errors = $response['errors'] ?? null;
+        if (is_array($errors) && !empty($errors)) {
+            $flat = array_filter(array_map(static function ($item) {
+                if (is_string($item)) {
+                    return $item;
+                }
+                if (is_array($item)) {
+                    return implode(' ', array_map('strval', $item));
+                }
+                return null;
+            }, $errors));
+
+            if (!empty($flat)) {
+                return implode(' ', $flat);
+            }
+        }
+
+        return null;
+    }
+
     public function emitirParaReserva(Reserva $reserva): ?Nfse
     {
         $empresa = $this->resolveEmpresa($reserva);
@@ -68,11 +108,18 @@ class NfseService
             return $nfse;
         }
 
-        $nfse->status = 'emitida';
-        $nfse->nfse_id = $data['id'] ?? $data['nfse_id'] ?? null;
-        $nfse->dps_id = $data['dps_id'] ?? null;
-        $nfse->numero = $data['numero'] ?? null;
-        $nfse->serie = $data['serie'] ?? null;
+        $nfse->nfse_id = $data['id'] ?? $data['nfse_id'] ?? ($data['nfse']['id'] ?? null);
+        $nfse->dps_id = $data['dps_id'] ?? ($data['dps']['id'] ?? null) ?? $nfse->dps_id;
+        $nfse->numero = $data['numero'] ?? ($data['nfse']['numero'] ?? null) ?? $nfse->numero;
+        $nfse->serie = $data['serie'] ?? ($data['nfse']['serie'] ?? null) ?? $nfse->serie;
+        $normalized = $this->normalizarStatus($data);
+        if ($normalized) {
+            $nfse->status = $normalized;
+        } elseif (empty($nfse->nfse_id) && !empty($nfse->dps_id)) {
+            $nfse->status = 'processando';
+        } else {
+            $nfse->status = 'emitida';
+        }
         $nfse->response = $data;
         $nfse->save();
 
@@ -137,6 +184,108 @@ class NfseService
                 'status' => 'error',
                 'message' => $result['message'] ?? 'Falha ao baixar XML da NFS-e.',
             ];
+        }
+
+        return $result;
+    }
+
+    /**
+     * @return array{total:int,atualizadas:int,ignoradas:int,erros:int}
+     */
+    public function sincronizarPendentes(?int $empresaId = null, ?int $limit = null): array
+    {
+        $query = Nfse::query()
+            ->orderBy('id')
+            ->where(function ($q): void {
+                $q->whereNull('status')
+                    ->orWhereIn('status', ['pendente', 'processando', 'erro']);
+            })
+            ->where(function ($q): void {
+                $q->whereNull('nfse_id')
+                    ->orWhereIn('status', ['pendente', 'processando', 'erro']);
+            });
+
+        if ($empresaId) {
+            $query->where('empresa_id', $empresaId);
+        }
+
+        if ($limit !== null && $limit > 0) {
+            $query->limit($limit);
+        }
+
+        $items = $query->get();
+        $result = [
+            'total' => $items->count(),
+            'atualizadas' => 0,
+            'ignoradas' => 0,
+            'erros' => 0,
+        ];
+
+        $minimoAtualizacao = now()->subHour();
+
+        foreach ($items as $nfse) {
+            if ($nfse->ultima_consulta_em && $nfse->ultima_consulta_em->greaterThan($minimoAtualizacao)) {
+                $result['ignoradas']++;
+                continue;
+            }
+
+            $empresa = $nfse->empresa ?: ($nfse->empresa_id ? Empresa::query()->find($nfse->empresa_id) : null);
+            if (!$empresa) {
+                $result['erros']++;
+                continue;
+            }
+
+            $nfseId = $nfse->nfse_id ?: null;
+            if (!$nfseId && $nfse->dps_id) {
+                $nfseId = 'dps:' . $nfse->dps_id;
+            }
+
+            if (!$nfseId) {
+                $nfse->status = 'erro';
+                $nfse->response = ['message' => 'NFS-e sem identificador para consulta.'];
+                $nfse->ultima_consulta_em = now();
+                $nfse->save();
+                $result['erros']++;
+                continue;
+            }
+
+            $provider = $this->resolveProvider($empresa);
+            $consulta = $provider->consultar($empresa, (string) $nfseId);
+            $data = $consulta['response'] ?? null;
+
+            if (($consulta['status'] ?? 'error') !== 'success') {
+                $nfse->status = 'erro';
+                $nfse->response = $data ?: ['message' => 'Falha ao consultar NFS-e.'];
+                $nfse->ultima_consulta_em = now();
+                $nfse->save();
+                $result['erros']++;
+                continue;
+            }
+
+            $normalized = $this->normalizarStatus(is_array($data) ? $data : []);
+            if ($normalized) {
+                $nfse->status = $normalized;
+            }
+
+            if (!$nfse->nfse_id) {
+                $nfse->nfse_id = $data['id'] ?? $data['nfse_id'] ?? ($data['nfse']['id'] ?? null) ?? $nfse->nfse_id;
+            }
+
+            if (!$nfse->dps_id) {
+                $nfse->dps_id = $data['dps_id'] ?? ($data['dps']['id'] ?? null) ?? $nfse->dps_id;
+            }
+
+            $nfse->numero = $data['numero'] ?? ($data['nfse']['numero'] ?? null) ?? $nfse->numero;
+            $nfse->serie = $data['serie'] ?? ($data['nfse']['serie'] ?? null) ?? $nfse->serie;
+            $nfse->response = $data;
+            $nfse->ultima_consulta_em = now();
+
+            if ($nfse->status === 'cancelada' && !$nfse->cancelada_em) {
+                $nfse->cancelada_em = now();
+            }
+
+            $nfse->save();
+            $result['atualizadas']++;
         }
 
         return $result;
@@ -316,5 +465,54 @@ class NfseService
         }
 
         return '';
+    }
+
+    private function normalizarStatus(array $data): ?string
+    {
+        $candidatos = [
+            $data['status'] ?? null,
+            $data['situacao'] ?? null,
+            $data['estado'] ?? null,
+            $data['nfse']['status'] ?? null,
+            $data['nfse']['situacao'] ?? null,
+            $data['dps']['status'] ?? null,
+        ];
+
+        foreach ($candidatos as $raw) {
+            if ($raw === null) {
+                continue;
+            }
+
+            $status = strtolower(trim((string) $raw));
+            if ($status === '') {
+                continue;
+            }
+
+            if (str_contains($status, 'cancel')) {
+                return 'cancelada';
+            }
+
+            if (str_contains($status, 'pend') || str_contains($status, 'process')) {
+                return 'processando';
+            }
+
+            if (
+                in_array($status, ['emitida', 'autorizada', 'autorizado', 'concluida', 'concluido', 'success', 'sucesso', 'approved'], true)
+                || str_contains($status, 'autoriz')
+                || str_contains($status, 'emit')
+            ) {
+                return 'emitida';
+            }
+
+            if (
+                str_contains($status, 'erro')
+                || str_contains($status, 'reje')
+                || str_contains($status, 'deneg')
+            ) {
+                return 'erro';
+            }
+        }
+
+        return null;
     }
 }

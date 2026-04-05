@@ -43,11 +43,16 @@
                     @foreach ($caracteristicaFrotas as $caracteristica_frota)
                         <tr>
                             <td>
-                                @if(!empty($caracteristica_frota->imagem_url))
-                                    <img src="{{ $caracteristica_frota->imagem_url }}" alt="Imagem {{ $caracteristica_frota->nome }}" class="caracteristica-thumb">
-                                @else
-                                    <span class="text-muted">Sem imagem</span>
-                                @endif
+                                <div class="caracteristica-thumb-wrap">
+                                    @if(!empty($caracteristica_frota->imagem_url))
+                                        <img src="{{ $caracteristica_frota->imagem_url }}" alt="Imagem {{ $caracteristica_frota->nome }}" class="caracteristica-thumb-img">
+                                    @else
+                                        <div class="caracteristica-thumb-empty">
+                                            <i class="fa fa-image"></i>
+                                            <span>Sem imagem</span>
+                                        </div>
+                                    @endif
+                                </div>
                             </td>
                             <td>{{ $caracteristica_frota->nome }}</td>
                             <td>
@@ -90,6 +95,10 @@
 
 @section('css')
 <style>
+    .table.table-striped tbody tr td {
+        vertical-align: middle;
+    }
+
     .btn-desc-toggle {
         border-radius: 8px;
         font-weight: 600;
@@ -108,13 +117,45 @@
         font-size: .9rem;
     }
 
-    .caracteristica-thumb {
-        width: 72px;
-        height: 48px;
-        object-fit: cover;
-        border-radius: 8px;
+    .caracteristica-thumb-wrap {
+        width: 96px;
+        height: 72px;
+        border-radius: 12px;
         border: 1px solid #e2e8f0;
+        background: linear-gradient(135deg, #f8fbff 0%, #eef3fb 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px;
+        box-shadow: 0 10px 18px rgba(15, 23, 42, .08);
+    }
+
+    .caracteristica-thumb-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 10px;
+        background: #fff;
+        padding: 6px;
+    }
+
+    .caracteristica-thumb-empty {
+        width: 100%;
+        height: 100%;
+        border-radius: 10px;
+        border: 1px dashed #d5dde8;
+        color: #94a3b8;
+        font-size: .75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 4px;
         background: #f8fafc;
+    }
+
+    .caracteristica-thumb-empty i {
+        font-size: 1.1rem;
     }
 
     .table.table-striped tbody tr:hover td {

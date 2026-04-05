@@ -27,6 +27,16 @@ class NfephpProvider implements NfseProviderInterface
         ];
     }
 
+    public function consultar(Empresa $empresa, string $nfseId): array
+    {
+        return [
+            'status' => 'error',
+            'response' => [
+                'message' => 'Consulta indisponivel para NFePHP ate a configuracao do provedor.',
+            ],
+        ];
+    }
+
     public function baixarXml(Empresa $empresa, string $nfseId, string $tipo = 'xml'): array
     {
         return [

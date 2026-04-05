@@ -27,7 +27,8 @@
                                 @endforeach
                             </select>
                         @else
-                            <input type="text"
+                            @php($inputType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text')
+                            <input type="{{ $inputType }}"
                                 class="form-control form-control-sm"
                                 id="{{ $filter['name'] }}"
                                 name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}"
@@ -69,7 +70,8 @@
                                     @endforeach
                                 </select>
                             @else
-                                <input type="text"
+                                @php($inputType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text')
+                                <input type="{{ $inputType }}"
                                     class="form-control form-control-sm"
                                     id="{{ $filter['name'] }}"
                                     name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}"

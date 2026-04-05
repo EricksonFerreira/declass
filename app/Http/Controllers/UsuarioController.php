@@ -282,7 +282,32 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             }
             // $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
             $this->clienteStripeService->criarMetodoPagamento($usuario->stripe_id, $request->stripeToken);
+
+            if ($request->expectsJson()) {
+                $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
+                $metodos = collect($metodosPagamento)->map(function ($metodo) {
+                    return [
+                        'id' => (string) $metodo['id'],
+                        'brand' => (string) ($metodo['card']->brand ?? ''),
+                        'last4' => (string) ($metodo['card']->last4 ?? ''),
+                        'exp_month' => (string) ($metodo['card']->exp_month ?? ''),
+                        'exp_year' => (string) ($metodo['card']->exp_year ?? ''),
+                    ];
+                })->values()->all();
+
+                return response()->json([
+                    'message' => 'Metodo de pagamento adicionado com sucesso.',
+                    'metodos' => $metodos,
+                ]);
+            }
+
             return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento adicionado com sucesso!');
+        }
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'message' => 'Metodo de pagamento nÃ£o adicionado.',
+            ], 422);
         }
 
         return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento nÃ£o adicionado!', 'error');
