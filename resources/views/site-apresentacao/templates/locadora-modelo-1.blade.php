@@ -176,6 +176,222 @@
         }
 
         /* ══════════════════════════════════════════
+           HAMBURGER BUTTON
+        ══════════════════════════════════════════ */
+        .nav-toggle {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            background: rgba(255,255,255,0.10);
+            border: 1px solid rgba(255,255,255,0.16);
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: background .18s;
+            padding: 0;
+        }
+
+        .nav-toggle:hover {
+            background: rgba(255,255,255,0.18);
+        }
+
+        .nav-toggle-bar {
+            display: block;
+            width: 20px;
+            height: 2px;
+            background: var(--topbar-text);
+            border-radius: 2px;
+            transition: transform .25s ease, opacity .2s ease, width .2s ease;
+            transform-origin: center;
+        }
+
+        /* X state */
+        .nav-toggle.is-open .nav-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .nav-toggle.is-open .nav-toggle-bar:nth-child(2) { opacity: 0; width: 0; }
+        .nav-toggle.is-open .nav-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* ══════════════════════════════════════════
+           SIDE DRAWER
+        ══════════════════════════════════════════ */
+        .drawer-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(11,18,32,0.52);
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .28s ease;
+            backdrop-filter: blur(3px);
+        }
+
+        .drawer-overlay.is-open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .drawer {
+            position: fixed;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 300px;
+            background: var(--topbar-bg);
+            z-index: 201;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform .3s cubic-bezier(.22,.68,0,1.2);
+            box-shadow: -20px 0 60px rgba(11,18,32,.28);
+            overflow-y: auto;
+        }
+
+        .drawer.is-open {
+            transform: translateX(0);
+        }
+
+        .drawer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 22px 16px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+
+        .drawer-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drawer-brand-logo {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            object-fit: contain;
+            padding: 3px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.16);
+        }
+
+        .drawer-brand-logo-fallback {
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.14);
+            border: 1px solid rgba(255,255,255,0.16);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .9rem;
+            font-weight: 800;
+            color: var(--topbar-text);
+        }
+
+        .drawer-brand-name {
+            font-size: .88rem;
+            font-weight: 700;
+            color: var(--topbar-text);
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .drawer-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.12);
+            color: var(--topbar-text);
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background .18s;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+
+        .drawer-close:hover { background: rgba(239,68,68,0.25); }
+
+        .drawer-nav {
+            display: flex;
+            flex-direction: column;
+            padding: 16px 14px;
+            gap: 4px;
+            flex: 1;
+        }
+
+        .drawer-nav a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: .9rem;
+            font-weight: 600;
+            color: var(--topbar-text);
+            opacity: .8;
+            transition: background .16s, opacity .16s;
+        }
+
+        .drawer-nav a:hover {
+            background: rgba(255,255,255,0.08);
+            opacity: 1;
+        }
+
+        .drawer-nav .drawer-nav-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .8rem;
+            flex-shrink: 0;
+            color: var(--topbar-hover);
+        }
+
+        .drawer-nav-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.07);
+            margin: 8px 0;
+        }
+
+        .drawer-cta {
+            padding: 16px 14px 20px;
+            flex-shrink: 0;
+        }
+
+        .drawer-cta a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            padding: 13px;
+            border-radius: 12px;
+            background: var(--btn-p-bg);
+            color: var(--btn-p-text);
+            font-size: .9rem;
+            font-weight: 800;
+            box-shadow: 0 6px 20px rgba(0,0,0,.2);
+            transition: transform .16s, box-shadow .16s;
+        }
+
+        .drawer-cta a:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 26px rgba(0,0,0,.26);
+        }
+
+        /* ══════════════════════════════════════════
            HERO — full bleed
         ══════════════════════════════════════════ */
         .hero {
@@ -1063,6 +1279,7 @@
             .nav { display: none; }
 
             .fleet-grid { grid-template-columns: 1fr 1fr; }
+
             .steps-track { grid-template-columns: 1fr; }
             .steps-track::before { display: none; }
             .step-card { margin: 0; }
@@ -1098,6 +1315,52 @@
 </head>
 <body>
 
+    <!-- ══ DRAWER OVERLAY ══ -->
+    <div class="drawer-overlay" id="drawerOverlay"></div>
+
+    <!-- ══ DRAWER ══ -->
+    <aside class="drawer" id="siteDrawer" aria-label="Menu lateral">
+        <div class="drawer-header">
+            <div class="drawer-brand">
+                @if(!empty($empresa->logo_url))
+                    <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}" class="drawer-brand-logo">
+                @else
+                    <div class="drawer-brand-logo-fallback">{{ mb_strtoupper(mb_substr($empresa->nome, 0, 1)) }}</div>
+                @endif
+                <span class="drawer-brand-name">{{ $empresa->nome }}</span>
+            </div>
+            <button class="drawer-close" id="drawerClose" aria-label="Fechar menu">&times;</button>
+        </div>
+
+        <nav class="drawer-nav">
+            <a href="#frota" class="drawer-link">
+                <span class="drawer-nav-icon">&#9632;</span>
+                {{ $menuItemFrota }}
+            </a>
+            <a href="#vantagens" class="drawer-link">
+                <span class="drawer-nav-icon">&#9650;</span>
+                {{ $menuItemVantagens }}
+            </a>
+            <a href="#como-funciona" class="drawer-link">
+                <span class="drawer-nav-icon">&#9679;</span>
+                {{ $menuItemEtapas }}
+            </a>
+            <a href="#contato" class="drawer-link">
+                <span class="drawer-nav-icon">&#9993;</span>
+                {{ $menuItemContato }}
+            </a>
+            <div class="drawer-nav-divider"></div>
+            <a href="{{ $botaoLoginUrl }}" class="drawer-link">
+                <span class="drawer-nav-icon">&#128274;</span>
+                {{ $botaoAdminTexto }}
+            </a>
+        </nav>
+
+        <div class="drawer-cta">
+            <a href="{{ $botaoUrl }}">{{ $botaoTexto }}</a>
+        </div>
+    </aside>
+
     <!-- ══ TOPBAR ══ -->
     <header class="topbar">
         <div class="wrap topbar-inner">
@@ -1117,6 +1380,12 @@
                 <a href="#contato">{{ $menuItemContato }}</a>
                 <a class="nav-cta" href="{{ $botaoUrl }}">{{ $botaoTexto }}</a>
             </nav>
+
+            <button class="nav-toggle" id="navToggle" aria-label="Abrir menu" aria-expanded="false">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
         </div>
     </header>
 
@@ -1410,6 +1679,47 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script>
+        /* ── DRAWER ── */
+        (function () {
+            const toggle  = document.getElementById('navToggle');
+            const drawer  = document.getElementById('siteDrawer');
+            const overlay = document.getElementById('drawerOverlay');
+            const close   = document.getElementById('drawerClose');
+            const links   = drawer.querySelectorAll('.drawer-link');
+
+            function openDrawer() {
+                drawer.classList.add('is-open');
+                overlay.classList.add('is-open');
+                toggle.classList.add('is-open');
+                toggle.setAttribute('aria-expanded', 'true');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeDrawer() {
+                drawer.classList.remove('is-open');
+                overlay.classList.remove('is-open');
+                toggle.classList.remove('is-open');
+                toggle.setAttribute('aria-expanded', 'false');
+                document.body.style.overflow = '';
+            }
+
+            toggle.addEventListener('click', () => {
+                drawer.classList.contains('is-open') ? closeDrawer() : openDrawer();
+            });
+
+            close.addEventListener('click', closeDrawer);
+            overlay.addEventListener('click', closeDrawer);
+
+            links.forEach(link => {
+                link.addEventListener('click', closeDrawer);
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closeDrawer();
+            });
+        })();
+    </script>
     <script>
         (function () {
             const retiradaSelect  = document.getElementById('retirada');

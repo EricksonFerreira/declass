@@ -40,63 +40,97 @@
                 @foreach ($reservas as $reserva)
                     @php
                         $totalCalculado = $reserva->valor_total_final;
-                        if ($totalCalculado === null) {
-                            $totalCalculado = $reserva->valor_total_com_desconto;
-                        }
-                        if ($totalCalculado === null) {
-                            $totalCalculado = $reserva->valor_total_tarifa_base;
-                        }
+                        if ($totalCalculado === null) { $totalCalculado = $reserva->valor_total_com_desconto; }
+                        if ($totalCalculado === null) { $totalCalculado = $reserva->valor_total_tarifa_base; }
                         if ($totalCalculado === null && $reserva->tarifa_base && $reserva->quantidade_dias) {
                             $totalCalculado = $reserva->tarifa_base * $reserva->quantidade_dias;
                         }
-                        $totalCalculado = (float) ($totalCalculado ?? 0);
+                        $totalCalculado    = (float) ($totalCalculado ?? 0);
                         $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
+                        $diasReserva       = (int) ($reserva->quantidade_dias ?? 0);
+                        $statusNome        = strtolower((string) ($reserva->statusReserva?->nome ?? ''));
+                        $statusClass       = match ($statusNome) {
+                            'confirmada'         => 'rc-status--green',
+                            'cancelada'          => 'rc-status--red',
+                            'criada', 'pendente' => 'rc-status--amber',
+                            default              => 'rc-status--slate',
+                        };
+                        $nomeCliente  = $reserva->usuario?->nome ?? 'Sem cliente';
+                        $partesNome   = preg_split('/\s+/', trim($nomeCliente)) ?: [];
+                        $iniciais     = collect($partesNome)->filter()->take(2)
+                                            ->map(fn($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('');
+                        $iniciais     = $iniciais ?: 'CL';
+                        $dataInicio   = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y') : '-';
+                        $horaInicio   = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('H:i') : '';
+                        $dataFim      = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y')    : '-';
+                        $horaFim      = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('H:i')      : '';
                     @endphp
-                    <article class="reserva-card" onclick="window.location='{{ route('reserva.show', $reserva->id) }}';">
-                        <div class="reserva-card__header">
-                            <div>
-                                <span class="reserva-card__id">Reserva #{{ $reserva->id }}</span>
-                                <div class="reserva-card__cliente">{{ $reserva->usuario?->nome ?? 'Sem cliente' }}</div>
+
+                    <article class="rc {{ $statusClass }}" onclick="window.location='{{ route('reserva.show', $reserva->id) }}';">
+
+                        {{-- Accent top bar --}}
+                        <div class="rc__accent"></div>
+
+                        {{-- Header: avatar + nome + badges --}}
+                        <div class="rc__head">
+                            <div class="rc__avatar">{{ $iniciais }}</div>
+                            <div class="rc__head-info">
+                                <div class="rc__id">Reserva #{{ $reserva->id }}</div>
+                                <div class="rc__cliente">{{ $nomeCliente }}</div>
+                                @if(!empty($reserva->usuario?->email))
+                                    <div class="rc__email">{{ $reserva->usuario->email }}</div>
+                                @endif
                             </div>
-                            <div class="reserva-card__badges">
-                                <span class="badge badge-xs {{ $pagamentoEfetuado ? 'badge-success' : 'badge-warning' }}">
+                            <div class="rc__badges">
+                                <span class="rc__badge {{ $pagamentoEfetuado ? 'rc__badge--green' : 'rc__badge--amber' }}">
                                     {{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}
                                 </span>
-                                <span class="badge badge-xs bg-{{ $reserva->statusReserva?->cor }}" title="{{ $reserva->statusReserva?->descricao }}">
-                                    {{ $reserva->statusReserva?->nome }}
+                                <span class="rc__badge rc__badge--status rc__badge--{{ strtolower(str_replace(' ', '-', $statusNome)) }}" title="{{ $reserva->statusReserva?->descricao }}">
+                                    {{ $reserva->statusReserva?->nome ?? 'Status' }}
                                 </span>
                             </div>
                         </div>
-                        <div class="reserva-card__body">
-                            <div class="reserva-card__row">
-                                <span class="reserva-card__label">Veiculo</span>
-                                <span class="reserva-card__value">
-                                    {{ $reserva->grupoFrota?->nome ?? '-' }} · {{ $reserva->modelos?->nome ?? 'Modelo nao definido' }}
-                                </span>
+
+                        {{-- Rota compacta --}}
+                        <div class="rc__route">
+                            <div class="rc__stop">
+                                <div class="rc__stop-dot rc__stop-dot--a"></div>
+                                <div>
+                                    <div class="rc__stop-label">Retirada</div>
+                                    <div class="rc__stop-place">{{ $reserva->estacaoRetirada?->nome ?? '-' }}</div>
+                                    <div class="rc__stop-date">{{ $dataInicio }}@if($horaInicio) <span>{{ $horaInicio }}</span>@endif</div>
+                                </div>
                             </div>
-                            <div class="reserva-card__row">
-                                <span class="reserva-card__label">Retirada</span>
-                                <span class="reserva-card__value">
-                                    {{ $reserva->estacaoRetirada?->nome ?? '-' }} · {{ Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}
-                                </span>
+                            <div class="rc__route-mid">
+                                <div class="rc__route-line"></div>
+                                <div class="rc__route-pill">{{ $diasReserva }}d</div>
+                                <div class="rc__route-line"></div>
                             </div>
-                            <div class="reserva-card__row">
-                                <span class="reserva-card__label">Devolucao</span>
-                                <span class="reserva-card__value">
-                                    {{ $reserva->estacaoDevolucao?->nome ?? '-' }} · {{ Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}
-                                </span>
-                            </div>
-                            <div class="reserva-card__row">
-                                <span class="reserva-card__label">Total</span>
-                                <span class="reserva-card__value">
-                                    BRL {{ number_format($totalCalculado, 2, ',', '.') }}
-                                    <small class="text-muted">({{ (int) ($reserva->quantidade_dias ?? 0) }} dias)</small>
-                                </span>
+                            <div class="rc__stop rc__stop--right">
+                                <div class="rc__stop-dot rc__stop-dot--b"></div>
+                                <div>
+                                    <div class="rc__stop-label">Devolucao</div>
+                                    <div class="rc__stop-place">{{ $reserva->estacaoDevolucao?->nome ?? '-' }}</div>
+                                    <div class="rc__stop-date">{{ $dataFim }}@if($horaFim) <span>{{ $horaFim }}</span>@endif</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="reserva-card__footer">
-                            <a class="btn btn-sm btn-outline-primary" href="{{ route('reserva.show', $reserva->id) }}">Ver detalhes</a>
+
+                        {{-- Footer: veiculo + valor --}}
+                        <div class="rc__foot">
+                            <div class="rc__vehicle">
+                                <i class="fas fa-car"></i>
+                                <span>{{ $reserva->modelos?->nome ?? 'Modelo nao definido' }}</span>
+                                @if(!empty($reserva->grupoFrota?->nome))
+                                    <span class="rc__group">{{ $reserva->grupoFrota->nome }}</span>
+                                @endif
+                            </div>
+                            <div class="rc__total">
+                                <span>R$</span>
+                                <strong>{{ number_format($totalCalculado, 2, ',', '.') }}</strong>
+                            </div>
                         </div>
+
                     </article>
                 @endforeach
             </div>
@@ -222,123 +256,306 @@
 
 @section('css')
 <style>
+    /* ── toggle view ── */
     .reserva-view-toggle {
         display: flex;
-        gap: 6px;
+        gap: 5px;
         margin-left: 12px;
     }
 
     .reserva-view-toggle .btn.active {
-        background: #1f2937;
+        background: #0f172a;
         color: #fff;
-        border-color: #1f2937;
+        border-color: #0f172a;
     }
 
-    .reserva-index-body[data-view="table"] .reserva-cards {
-        display: none;
-    }
+    .reserva-index-body[data-view="table"] .reserva-cards { display: none; }
+    .reserva-index-body[data-view="cards"] .reserva-table { display: none; }
 
-    .reserva-index-body[data-view="cards"] .reserva-table {
-        display: none;
-    }
-
+    /* ── grid ── */
     .reserva-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
         gap: 16px;
-        padding: 6px 6px 12px;
+        padding: 10px 8px 16px;
     }
 
-    .reserva-card {
-        background: #ffffff;
-        border: 1px solid rgba(148, 163, 184, 0.35);
-        border-radius: 16px;
-        padding: 14px 16px;
-        box-shadow: 0 16px 30px rgba(15, 23, 42, 0.08);
+    /* ══════════════════════════════════════
+       CARD BASE
+    ══════════════════════════════════════ */
+    .rc {
+        position: relative;
+        background: #fff;
+        border: 1px solid #e2e9f4;
+        border-radius: 18px;
+        overflow: hidden;
         cursor: pointer;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-
-    .reserva-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 18px 32px rgba(15, 23, 42, 0.12);
-    }
-
-    .reserva-card__header {
         display: flex;
-        justify-content: space-between;
-        gap: 12px;
+        flex-direction: column;
+        gap: 0;
+        box-shadow: 0 2px 10px rgba(11,18,32,.06);
+        transition: transform .2s ease, box-shadow .2s ease;
+    }
+
+    .rc:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(11,18,32,.13);
+    }
+
+    /* ── accent top bar ── */
+    .rc__accent {
+        height: 3px;
+        background: #e2e9f4;
+    }
+
+    .rc-status--green  .rc__accent { background: linear-gradient(90deg, #10b981, #34d399); }
+    .rc-status--red    .rc__accent { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .rc-status--amber  .rc__accent { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+    .rc-status--slate  .rc__accent { background: linear-gradient(90deg, #64748b, #94a3b8); }
+
+    /* ── head ── */
+    .rc__head {
+        display: flex;
         align-items: flex-start;
-        margin-bottom: 10px;
+        gap: 11px;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid #f1f5f9;
     }
 
-    .reserva-card__id {
-        font-size: 0.78rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #64748b;
+    .rc__avatar {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+        color: #fff;
+        font-size: .82rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: .04em;
+    }
+
+    .rc__head-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .rc__id {
+        font-size: .68rem;
         font-weight: 700;
-        display: block;
-    }
-
-    .reserva-card__cliente {
-        font-size: 1rem;
-        font-weight: 700;
-        color: #0f172a;
-    }
-
-    .reserva-card__badges {
-        display: flex;
-        gap: 6px;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-    }
-
-    .reserva-card__body {
-        display: flex;
-        flex-direction: column;
-        gap: 8px;
-        font-size: 0.88rem;
-    }
-
-    .reserva-card__row {
-        display: flex;
-        flex-direction: column;
-        gap: 2px;
-    }
-
-    .reserva-card__label {
-        font-size: 0.7rem;
+        letter-spacing: .1em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
         color: #94a3b8;
+        margin-bottom: 2px;
+    }
+
+    .rc__cliente {
+        font-size: .92rem;
         font-weight: 700;
-    }
-
-    .reserva-card__value {
         color: #0f172a;
-        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-    .reserva-card__footer {
-        margin-top: 12px;
+    .rc__email {
+        font-size: .74rem;
+        color: #94a3b8;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-top: 1px;
+    }
+
+    .rc__badges {
         display: flex;
-        justify-content: flex-end;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        flex-shrink: 0;
     }
 
+    .rc__badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 9px;
+        border-radius: 999px;
+        font-size: .66rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        white-space: nowrap;
+        text-transform: uppercase;
+    }
+
+    .rc__badge--green  { background: rgba(16,185,129,.12);  color: #047857; border: 1px solid rgba(16,185,129,.22); }
+    .rc__badge--amber  { background: rgba(245,158,11,.14);  color: #b45309; border: 1px solid rgba(245,158,11,.28); }
+    .rc__badge--red    { background: rgba(239,68,68,.12);   color: #b91c1c; border: 1px solid rgba(239,68,68,.22); }
+    .rc__badge--slate  { background: rgba(100,116,139,.12); color: #475569; border: 1px solid rgba(100,116,139,.2); }
+
+    /* status badge color by name */
+    .rc__badge--confirmada  { background: rgba(16,185,129,.12);  color: #047857; border: 1px solid rgba(16,185,129,.22); }
+    .rc__badge--cancelada   { background: rgba(239,68,68,.12);   color: #b91c1c; border: 1px solid rgba(239,68,68,.22); }
+    .rc__badge--criada,
+    .rc__badge--pendente    { background: rgba(245,158,11,.14);  color: #b45309; border: 1px solid rgba(245,158,11,.28); }
+    .rc__badge--status      { background: rgba(100,116,139,.12); color: #475569; border: 1px solid rgba(100,116,139,.2); }
+
+    /* ── route ── */
+    .rc__route {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        gap: 8px;
+        align-items: center;
+        padding: 14px 16px;
+        background: linear-gradient(135deg, #f8faff, #f0f4ff);
+        border-bottom: 1px solid #eef1fa;
+    }
+
+    .rc__stop {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .rc__stop--right {
+        flex-direction: row-reverse;
+        text-align: right;
+    }
+
+    .rc__stop-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 4px;
+    }
+
+    .rc__stop-dot--a { background: #10b981; box-shadow: 0 0 0 3px rgba(16,185,129,.2); }
+    .rc__stop-dot--b { background: #ef4444; box-shadow: 0 0 0 3px rgba(239,68,68,.18); }
+
+    .rc__stop-label {
+        font-size: .64rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #94a3b8;
+        margin-bottom: 2px;
+    }
+
+    .rc__stop-place {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.25;
+    }
+
+    .rc__stop-date {
+        font-size: .76rem;
+        font-weight: 600;
+        color: #1e40af;
+        margin-top: 2px;
+    }
+
+    .rc__stop-date span {
+        font-weight: 400;
+        color: #64748b;
+        margin-left: 4px;
+    }
+
+    .rc__route-mid {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+
+    .rc__route-line {
+        width: 1px;
+        height: 14px;
+        background: linear-gradient(180deg, #c7d7f4, #93c5fd);
+    }
+
+    .rc__route-pill {
+        background: #1e40af;
+        color: #fff;
+        font-size: .64rem;
+        font-weight: 800;
+        padding: 3px 7px;
+        border-radius: 999px;
+        white-space: nowrap;
+    }
+
+    /* ── footer ── */
+    .rc__foot {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 11px 16px;
+    }
+
+    .rc__vehicle {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: .8rem;
+        color: #475569;
+        font-weight: 600;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .rc__vehicle i {
+        color: #94a3b8;
+        font-size: .78rem;
+        flex-shrink: 0;
+    }
+
+    .rc__vehicle span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .rc__group {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 7px;
+        border-radius: 999px;
+        background: #f1f5f9;
+        color: #64748b;
+        font-size: .66rem;
+        font-weight: 700;
+        flex-shrink: 0;
+    }
+
+    .rc__total {
+        display: flex;
+        align-items: baseline;
+        gap: 3px;
+        flex-shrink: 0;
+    }
+
+    .rc__total span {
+        font-size: .72rem;
+        font-weight: 700;
+        color: #64748b;
+    }
+
+    .rc__total strong {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -.01em;
+    }
+
+    /* ── responsive ── */
     @media (max-width: 768px) {
-        .reserva-view-toggle {
-            display: none;
-        }
-        .reserva-index-body {
-            padding: 0 4px 8px;
-        }
-        .reserva-index-body[data-view="table"] .reserva-cards {
-            display: grid;
-        }
-        .reserva-index-body[data-view="table"] .reserva-table {
-            display: none;
-        }
+        .reserva-view-toggle { display: none; }
+        .reserva-cards { grid-template-columns: 1fr; padding: 6px 4px 12px; }
+        .reserva-index-body[data-view="table"] .reserva-cards  { display: grid; }
+        .reserva-index-body[data-view="table"] .reserva-table  { display: none; }
     }
 </style>
 @stop
