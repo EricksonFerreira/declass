@@ -11,6 +11,8 @@ class Movimentacao extends Model
     protected $table = 'movimentacoes';
 
     protected $fillable = [
+        'nome',
+        'ativo',
         'veiculo_id',
         'modelo_id',
         'tipo_movimentacao_id',
@@ -81,4 +83,3 @@ class Movimentacao extends Model
         return $this->belongsTo(StatusMovimentacao::class, 'status_movimentacao_id');
     }
 }
-

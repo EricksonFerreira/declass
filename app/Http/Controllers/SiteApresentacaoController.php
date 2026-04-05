@@ -27,12 +27,12 @@ class SiteApresentacaoController extends Controller
         }
 
         $modelo = $this->resolveModelo((string) ($empresa->site_apresentacao_modelo ?? self::MODELO_1));
-        $corPrimaria = $empresa->cor_primaria ?: '#2F6F3F';
-        $corSecundaria = $empresa->cor_secundaria ?: '#193C68';
-        $corTerciaria = $empresa->cor_terciaria ?: '#E7B93A';
         $textos = is_array($empresa->site_apresentacao_textos) ? $empresa->site_apresentacao_textos : [];
         $imagens = is_array($empresa->site_apresentacao_imagens) ? $empresa->site_apresentacao_imagens : [];
         $cores = is_array($empresa->site_apresentacao_cores) ? $empresa->site_apresentacao_cores : [];
+        $corPrimaria = $this->colorValue($cores, 'brand_primaria', $empresa->cor_primaria ?: '#2F6F3F');
+        $corSecundaria = $this->colorValue($cores, 'brand_secundaria', $empresa->cor_secundaria ?: '#193C68');
+        $corTerciaria = $this->colorValue($cores, 'brand_terciaria', $empresa->cor_terciaria ?: '#E7B93A');
         $imagensConfig = is_array($empresa->site_apresentacao_imagens_config) ? $empresa->site_apresentacao_imagens_config : [];
         $estacoesSelect = $this->estacoesForEmpresa($empresa);
         $frotaDestaques = $this->frotaDestaques($textos, $imagens, $imagensConfig);
@@ -98,6 +98,7 @@ class SiteApresentacaoController extends Controller
             'heroFormTitulo' => $this->textValue($textos, 'hero_form_titulo', 'Simule sua reserva'),
             'heroFormDescricao' => $this->textValue($textos, 'hero_form_descricao', 'Preencha os dados da viagem e siga para a reserva completa em passos.'),
             'heroFormLabelRetirada' => $this->textValue($textos, 'hero_form_label_retirada', 'Local de retirada'),
+            'heroFormLabelDevolucao' => $this->textValue($textos, 'hero_form_label_devolucao', 'Local de devolucao'),
             'heroFormLabelDataRetirada' => $this->textValue($textos, 'hero_form_label_data_retirada', 'Data de retirada'),
             'heroFormLabelHoraRetirada' => $this->textValue($textos, 'hero_form_label_hora_retirada', 'Hora de retirada'),
             'heroFormLabelDataDevolucao' => $this->textValue($textos, 'hero_form_label_data_devolucao', 'Data de devolucao'),

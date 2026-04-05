@@ -103,7 +103,7 @@
             height: 46px;
             border-radius: 12px;
             border: 1px solid rgba(15, 23, 42, 0.12);
-            background: var(--brand-primary);
+            background: var(--white);
             object-fit: contain;
             padding: 4px;
             flex-shrink: 0;
@@ -117,7 +117,6 @@
             color: var(--ink-900);
             font-size: 1rem;
             text-transform: uppercase;
-            background: var(--brand-primary);
         }
 
         .brand-title {
@@ -177,10 +176,7 @@
             border-radius: var(--radius-lg);
             padding: 34px;
             color: var(--hero-text);
-            background:
-                radial-gradient(circle at 84% 12%, rgba(255, 255, 255, 0.24), transparent 34%),
-                radial-gradient(circle at 10% 88%, rgba(255, 255, 255, 0.16), transparent 33%),
-                linear-gradient(126deg, var(--hero-bg) 0%, var(--brand-secondary) 62%, #0f2a4a 100%);
+            background:var(--brand-secondary) ;
             box-shadow: var(--shadow-soft);
             position: relative;
             overflow: hidden;
@@ -680,6 +676,41 @@
             font-size: 0.78rem;
         }
 
+        .footer-top {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-bottom: 18px;
+        }
+
+        .footer-block {
+            background: rgba(15, 23, 42, 0.06);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            padding: 14px 16px;
+            border-radius: 14px;
+        }
+
+        .footer-title {
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: inherit;
+        }
+
+        .footer-item {
+            font-size: 0.84rem;
+            font-weight: 600;
+            line-height: 1.5;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+
+        .footer-item:last-child {
+            margin-bottom: 0;
+        }
+
         .footer-inner {
             display: flex;
             justify-content: space-between;
@@ -819,7 +850,7 @@
                         <div class="booking-grid">
                             <div class="field booking-full">
                                 <label for="retirada">{{ $heroFormLabelRetirada }}</label>
-                                <select id="retirada" name="retirada" required>
+                                <select id="retirada" name="retirada">
                                     <option value="">Selecione uma estacao</option>
                                     @foreach($estacoesSelect as $estacao)
                                         <option value="{{ $estacao['id'] }}">
@@ -830,11 +861,11 @@
                             </div>
                             <div class="field">
                                 <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
-                                <input id="data_retirada" name="data_retirada" type="date" required>
+                                <input id="data_retirada" name="data_retirada" type="date">
                             </div>
                             <div class="field">
                                 <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
-                                <input id="hora_retirada" name="hora_retirada" type="time" required>
+                                <input id="hora_retirada" name="hora_retirada" type="time">
                             </div>
                             <div class="field booking-full">
                                 <div class="toggle-row">
@@ -844,7 +875,7 @@
                             </div>
                             <div class="field booking-full" id="devolucaoField">
                                 <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolucao' }}</label>
-                                <select id="devolucao" name="devolucao" required>
+                                <select id="devolucao" name="devolucao">
                                     <option value="">Selecione uma estacao</option>
                                     @foreach($estacoesSelect as $estacao)
                                         <option value="{{ $estacao['id'] }}">
@@ -855,11 +886,11 @@
                             </div>
                             <div class="field">
                                 <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
-                                <input id="data_devolucao" name="data_devolucao" type="date" required>
+                                <input id="data_devolucao" name="data_devolucao" type="date">
                             </div>
                             <div class="field">
                                 <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
-                                <input id="hora_devolucao" name="hora_devolucao" type="time" required>
+                                <input id="hora_devolucao" name="hora_devolucao" type="time">
                             </div>
                             <div class="field booking-full">
                                 <button class="btn btn-submit" type="submit">{{ $heroFormTextoBotao }}</button>
@@ -936,48 +967,29 @@
             </div>
         </section>
 
-        <section id="contato" class="section">
-            <div class="container">
-                <div class="section-head reveal delay-1">
-                    <span class="eyebrow">{{ $contatoLabelSuperior }}</span>
-                    <h2 class="section-title">{{ $contatoTitulo }}</h2>
+    </main>
+
+    <footer id="contato" class="footer">
+        <div class="container">
+            <div class="footer-top">
+                <div class="footer-block">
+                    <div class="footer-title">Contato direto</div>
+                    <div class="footer-item">{{ $contatoTelefone ?: 'Telefone nao informado' }}</div>
+                    <div class="footer-item">{{ $contatoEmail ?: 'E-mail nao informado' }}</div>
                 </div>
-
-                <div class="contact-panel">
-                    <div class="contact-item reveal delay-2">
-                        <div class="contact-label">Empresa</div>
-                        <div class="contact-value">{{ $empresa->nome }}</div>
-                    </div>
-
-                    <div class="contact-item reveal delay-2">
-                        <div class="contact-label">Telefone</div>
-                        <div class="contact-value">{{ $contatoTelefone ?: 'Nao informado' }}</div>
-                    </div>
-
-                    <div class="contact-item reveal delay-3">
-                        <div class="contact-label">E-mail</div>
-                        <div class="contact-value">{{ $contatoEmail }}</div>
-                    </div>
-
-                    <div class="contact-item reveal delay-3">
-                        <div class="contact-label">CNPJ</div>
-                        <div class="contact-value">{{ $contatoCnpj ?: 'Nao informado' }}</div>
-                    </div>
-
-                    @if(!empty($imagemContato))
-                        <div class="contact-item reveal delay-3">
-                            <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}" class="contact-image">
-                        </div>
+                <div class="footer-block">
+                    <div class="footer-title">Informacoes da locadora</div>
+                    <div class="footer-item">{{ $empresa->nome }}</div>
+                    @if(!empty($empresa->dominio))
+                        <div class="footer-item">{{ $empresa->dominio }}</div>
                     @endif
                 </div>
             </div>
-        </section>
-    </main>
 
-    <footer class="footer">
-        <div class="container footer-inner">
+            <div class="footer-inner">
             <span>&copy; {{ $anoAtual }} {{ $empresa->nome }}. {{ $footerTexto }}</span>
             <a href="{{ $botaoLoginUrl }}">{{ $botaoAdminTexto }}</a>
+        </div>
         </div>
     </footer>
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
@@ -1092,7 +1104,6 @@
                 const hide = mesmoLocal.checked;
                 devolucaoField.style.display = hide ? 'none' : 'block';
                 devolucaoSelect.disabled = hide;
-                devolucaoSelect.required = !hide;
 
                 if (hide && retiradaSelect && retiradaSelect.value) {
                     devolucaoSelect.value = retiradaSelect.value;
@@ -1153,11 +1164,6 @@
                     normalizeMinTime();
                     normalizeMinDates();
                     syncDevolucaoVisibility();
-                    if (!form.checkValidity()) {
-                        form.reportValidity();
-                        event.preventDefault();
-                        return;
-                    }
                     if (!validateDates()) {
                         event.preventDefault();
                     }

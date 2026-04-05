@@ -132,4 +132,9 @@ class Reserva extends Model
     {
         return $this->hasOne(Nfse::class, 'reserva_id')->latestOfMany();
     }
+
+    public function transacoes()
+    {
+        return $this->hasMany(Transacao::class, 'reserva_id');
+    }
 }

@@ -47,6 +47,28 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
             'site_apresentacao_botao_url' => $this->normalizeButtonUrl($this->input('site_apresentacao_botao_url')),
         ];
 
+        $imageFields = [
+            'logo',
+            'imagem_hero',
+            'imagem_frota_1',
+            'imagem_frota_2',
+            'imagem_frota_3',
+            'imagem_vantagens',
+            'imagem_contato',
+        ];
+
+        foreach ($imageFields as $field) {
+            $file = $this->file($field);
+
+            if ($file === null) {
+                continue;
+            }
+
+            if (!$file->isValid() || ($file->getPathname() === '') || $file->getSize() === 0) {
+                $this->files->remove($field);
+            }
+        }
+
         foreach (self::COLOR_FIELDS as $field) {
             $payload[$field] = $this->normalizeColor($this->input($field));
         }
@@ -72,7 +94,7 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
             'site_apresentacao_descricao' => ['nullable', 'string', 'max:2000'],
             'site_apresentacao_botao_texto' => ['nullable', 'string', 'max:60'],
             'site_apresentacao_botao_url' => ['nullable', 'string', 'max:255'],
-            'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
+            'logo' => ['sometimes', 'nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'hero_tag' => ['nullable', 'string', 'max:120'],
             'hero_titulo' => ['nullable', 'string', 'max:180'],
             'hero_subtitulo' => ['nullable', 'string', 'max:220'],
@@ -106,6 +128,7 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
             'hero_form_titulo' => ['nullable', 'string', 'max:120'],
             'hero_form_descricao' => ['nullable', 'string', 'max:500'],
             'hero_form_label_retirada' => ['nullable', 'string', 'max:80'],
+            'hero_form_label_devolucao' => ['nullable', 'string', 'max:80'],
             'hero_form_label_data_retirada' => ['nullable', 'string', 'max:80'],
             'hero_form_label_hora_retirada' => ['nullable', 'string', 'max:80'],
             'hero_form_label_data_devolucao' => ['nullable', 'string', 'max:80'],
@@ -125,46 +148,46 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
             'usar_imagem_vantagens' => ['nullable', 'boolean'],
             'usar_imagem_contato' => ['nullable', 'boolean'],
             'imagem_hero' => [
+                'sometimes',
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:4096',
-                'dimensions:min_width=1600,min_height=900',
             ],
             'imagem_frota_1' => [
+                'sometimes',
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:4096',
-                'dimensions:min_width=900,min_height=600',
             ],
             'imagem_frota_2' => [
+                'sometimes',
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:4096',
-                'dimensions:min_width=900,min_height=600',
             ],
             'imagem_frota_3' => [
+                'sometimes',
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:4096',
-                'dimensions:min_width=900,min_height=600',
             ],
             'imagem_vantagens' => [
+                'sometimes',
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:4096',
-                'dimensions:min_width=1200,min_height=700',
             ],
             'imagem_contato' => [
+                'sometimes',
                 'nullable',
                 'image',
                 'mimes:jpg,jpeg,png,webp',
                 'max:4096',
-                'dimensions:min_width=900,min_height=500',
             ],
             'cor_primaria' => ['nullable', 'regex:/^#([A-F0-9]{6}|[A-F0-9]{3})$/i'],
             'cor_secundaria' => ['nullable', 'regex:/^#([A-F0-9]{6}|[A-F0-9]{3})$/i'],
@@ -203,12 +226,6 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
             'imagem_hero.image' => 'A imagem do hero deve ser uma imagem valida.',
             'imagem_hero.mimes' => 'A imagem do hero deve ser JPG, JPEG, PNG ou WEBP.',
             'imagem_hero.max' => 'A imagem do hero deve ter no maximo 4MB.',
-            'imagem_hero.dimensions' => 'A imagem do hero deve ter no minimo 1600x900 pixels.',
-            'imagem_frota_1.dimensions' => 'A imagem de Frota 1 deve ter no minimo 900x600 pixels.',
-            'imagem_frota_2.dimensions' => 'A imagem de Frota 2 deve ter no minimo 900x600 pixels.',
-            'imagem_frota_3.dimensions' => 'A imagem de Frota 3 deve ter no minimo 900x600 pixels.',
-            'imagem_vantagens.dimensions' => 'A imagem de Vantagens deve ter no minimo 1200x700 pixels.',
-            'imagem_contato.dimensions' => 'A imagem de Contato deve ter no minimo 900x500 pixels.',
             'cor_primaria.regex' => 'A cor primaria deve estar no formato hexadecimal. Ex: #1F2937.',
             'cor_secundaria.regex' => 'A cor secundaria deve estar no formato hexadecimal. Ex: #334155.',
             'cor_terciaria.regex' => 'A cor terciaria deve estar no formato hexadecimal. Ex: #64748B.',

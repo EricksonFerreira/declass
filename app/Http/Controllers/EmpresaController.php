@@ -36,6 +36,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         'hero_form_titulo',
         'hero_form_descricao',
         'hero_form_label_retirada',
+        'hero_form_label_devolucao',
         'hero_form_label_data_retirada',
         'hero_form_label_hora_retirada',
         'hero_form_label_data_devolucao',
@@ -91,6 +92,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     ];
 
     private const SITE_COR_FIELDS = [
+        'cor_primaria' => 'brand_primaria',
+        'cor_secundaria' => 'brand_secundaria',
+        'cor_terciaria' => 'brand_terciaria',
         'cor_topbar_fundo' => 'topbar_fundo',
         'cor_topbar_texto' => 'topbar_texto',
         'cor_topbar_link_hover' => 'topbar_link_hover',
@@ -482,9 +486,18 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $data['site_apresentacao_textos'] = $textos;
-        $data['site_apresentacao_titulo'] = $textos['hero_titulo'] ?? $data['site_apresentacao_titulo'] ?? $empresaAtual->site_apresentacao_titulo;
-        $data['site_apresentacao_subtitulo'] = $textos['hero_subtitulo'] ?? $data['site_apresentacao_subtitulo'] ?? $empresaAtual->site_apresentacao_subtitulo;
-        $data['site_apresentacao_descricao'] = $textos['hero_descricao'] ?? $data['site_apresentacao_descricao'] ?? $empresaAtual->site_apresentacao_descricao;
+
+        if (!empty($textos['hero_titulo'])) {
+            $data['site_apresentacao_titulo'] = $textos['hero_titulo'];
+        }
+
+        if (!empty($textos['hero_subtitulo'])) {
+            $data['site_apresentacao_subtitulo'] = $textos['hero_subtitulo'];
+        }
+
+        if (!empty($textos['hero_descricao'])) {
+            $data['site_apresentacao_descricao'] = $textos['hero_descricao'];
+        }
 
         return $data;
     }

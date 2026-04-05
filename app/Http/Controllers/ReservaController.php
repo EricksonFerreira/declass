@@ -269,8 +269,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             new BreadcrumbItem('Reservas', route('reserva.index')),
             new BreadcrumbItem('Detalhes da Reserva Nº' . $id)
         ]);
-        $reserva = $this->reservaService->getById($id,'contratoCheckin');
-        $reserva->load('nfseAtual');
+        $reserva = $this->reservaService->getById($id, 'contratoCheckin');
+        $reserva->load([
+            'nfseAtual',
+            'transacoes' => function ($query) {
+                $query->with(['user', 'pagoPor'])->orderByDesc('id');
+            },
+        ]);
 
         return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo'));
     }

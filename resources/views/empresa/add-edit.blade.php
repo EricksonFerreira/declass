@@ -38,10 +38,19 @@
                     Ao salvar, a nova empresa sera criada usando a <strong>empresa-padrao</strong> como modelo de informacoes.
                 </div>
             @endif
+            <div class="empresa-nav">
+                <a class="empresa-nav-item" href="#sec-dados">Dados</a>
+                <a class="empresa-nav-item" href="#sec-contato">Contato</a>
+                <a class="empresa-nav-item" href="#sec-dominio">Dominio e reserva</a>
+                <a class="empresa-nav-item" href="#sec-identidade">Identidade</a>
+                <a class="empresa-nav-item" href="#sec-faturamento">Faturamento</a>
+                <a class="empresa-nav-item" href="#sec-credenciais">Credenciais</a>
+                <a class="empresa-nav-item" href="#sec-fiscal">Fiscal</a>
+            </div>
 
             <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" enctype="multipart/form-data">
                 <div class="col-12">
-                    <div class="empresa-section-title">Dados da Empresa</div>
+                    <div class="empresa-section-title" id="sec-dados">Dados da Empresa</div>
                 </div>
 
                 <div class="col-lg-8">
@@ -73,6 +82,10 @@
                     </div>
                 </div>
 
+                <div class="col-12 mt-2">
+                    <div class="empresa-section-title" id="sec-contato">Contato</div>
+                </div>
+
                 <div class="col-lg-6">
                     <div class="form-group form-group-empresa">
                         <x-form-input type="email" class="form-control form-control-sm" id="email" name="email"
@@ -84,6 +97,10 @@
                         <x-form-input type="text" class="form-control form-control-sm" id="telefone" name="telefone"
                             label="Telefone" value="{{ $empresa->telefone ?? '' }}" />
                     </div>
+                </div>
+
+                <div class="col-12 mt-2">
+                    <div class="empresa-section-title" id="sec-dominio">Dominio e Reserva</div>
                 </div>
 
                 <div class="col-12">
@@ -105,7 +122,7 @@
                 </div>
 
                 <div class="col-12 mt-2">
-                    <div class="empresa-section-title">Identidade Visual da Empresa</div>
+                    <div class="empresa-section-title" id="sec-identidade">Identidade Visual da Empresa</div>
                 </div>
 
                 <div class="col-lg-5">
@@ -171,7 +188,7 @@
                 </div>
 
                 <div class="col-12 mt-2">
-                    <div class="empresa-section-title">Faturamento e Gateway</div>
+                    <div class="empresa-section-title" id="sec-faturamento">Faturamento e Gateway</div>
                 </div>
 
                 <div class="col-lg-8">
@@ -204,7 +221,7 @@
                 </div>
 
                 <div class="col-12 mt-2">
-                    <div class="empresa-section-title">Credenciais do Provedor</div>
+                    <div class="empresa-section-title" id="sec-credenciais">Credenciais do Provedor</div>
                 </div>
 
                 <div class="col-12 gateway-fields gateway-stripe">
@@ -275,7 +292,7 @@
                 </div>
 
                 <div class="col-12 mt-2">
-                    <div class="empresa-section-title">Fiscal - NFS-e (Nuvem Fiscal)</div>
+                    <div class="empresa-section-title" id="sec-fiscal">Fiscal - NFS-e (Nuvem Fiscal)</div>
                 </div>
 
                 <div class="col-lg-3">
@@ -426,14 +443,41 @@
         font-weight: 700;
     }
 
+    .empresa-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .empresa-nav-item {
+        padding: 6px 12px;
+        border-radius: 999px;
+        border: 1px solid #dbe3ee;
+        background: #f8fbff;
+        color: #1f334d;
+        font-size: 0.82rem;
+        font-weight: 600;
+        text-decoration: none;
+    }
+
+    .empresa-nav-item:hover {
+        background: #eef4ff;
+        border-color: #c6d6ef;
+        color: #1d4ed8;
+    }
+
     .empresa-section-title {
-        font-size: 0.96rem;
+        font-size: 0.95rem;
         font-weight: 700;
-        color: #21364f;
+        color: #1f334d;
         letter-spacing: .02em;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e5eaf2;
-        margin-bottom: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        background: #f6f9ff;
+        border: 1px solid #e5eaf2;
+        margin-bottom: 12px;
+        scroll-margin-top: 90px;
     }
 
     .gateway-title {

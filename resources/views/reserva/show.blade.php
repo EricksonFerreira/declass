@@ -8,10 +8,10 @@
 
 @section('content')
 @php
-    $diasReserva = (int) ($reserva->quantidade_dias ?? 0);
-    $tarifaBase = (float) ($reserva->tarifa_base ?? 0);
+    $diasReserva    = (int) ($reserva->quantidade_dias ?? 0);
+    $tarifaBase     = (float) ($reserva->tarifa_base ?? 0);
     $valorTarifaBase = $tarifaBase * $diasReserva;
-    $valorOpcionais = (float) ($reserva->valor_opcionais ?? 0);
+    $valorOpcionais  = (float) ($reserva->valor_opcionais ?? 0);
 
     if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
         $valorOpcionais = (float) $reserva->opcionais->sum(function ($opcional) {
@@ -20,24 +20,35 @@
     }
 
     $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
-    $valorDesconto = ($valorTarifaBase + $valorOpcionais) * ($percentualDesconto / 100);
-    $valorTotal = max(0, ($valorTarifaBase + $valorOpcionais) - $valorDesconto);
+    $valorDesconto      = ($valorTarifaBase + $valorOpcionais) * ($percentualDesconto / 100);
+    $valorTotal         = max(0, ($valorTarifaBase + $valorOpcionais) - $valorDesconto);
 
-    $createdAt = $reserva->created_at ? \Carbon\Carbon::parse($reserva->created_at)->format('d/m/Y H:i') : '-';
-    $inicioFormatado = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') : '-';
-    $fimFormatado = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') : '-';
+    $createdAt        = $reserva->created_at ? \Carbon\Carbon::parse($reserva->created_at)->format('d/m/Y H:i') : '-';
+    $inicioFormatado  = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') : '-';
+    $fimFormatado     = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i')    : '-';
 
-    $statusReservaNome = $reserva->statusReserva->nome ?? 'Status';
-    $statusReservaSlug = strtolower((string) $statusReservaNome);
+    $inicioData = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y') : '-';
+    $inicioHora = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('H:i')   : '';
+    $fimData    = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y')    : '-';
+    $fimHora    = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('H:i')      : '';
+
+    $statusReservaNome  = $reserva->statusReserva->nome ?? 'Status';
+    $statusReservaSlug  = strtolower((string) $statusReservaNome);
     $statusReservaClass = match ($statusReservaSlug) {
-        'confirmada' => 'is-success',
-        'cancelada' => 'is-danger',
+        'confirmada'         => 'is-success',
+        'cancelada'          => 'is-danger',
         'criada', 'pendente' => 'is-warning',
-        default => 'is-neutral',
+        default              => 'is-neutral',
+    };
+    $statusIcon = match ($statusReservaSlug) {
+        'confirmada'         => 'fas fa-check-circle',
+        'cancelada'          => 'fas fa-times-circle',
+        'criada', 'pendente' => 'fas fa-clock',
+        default              => 'fas fa-info-circle',
     };
 
-    $clienteNome = $reserva->usuario->nome ?? 'Nao informado';
-    $clientePartes = preg_split('/\s+/', trim((string) $clienteNome)) ?: [];
+    $clienteNome    = $reserva->usuario->nome ?? 'Nao informado';
+    $clientePartes  = preg_split('/\s+/', trim((string) $clienteNome)) ?: [];
     $clienteIniciais = collect($clientePartes)
         ->filter()
         ->take(2)
@@ -45,642 +56,1558 @@
         ->implode('');
     $clienteIniciais = $clienteIniciais ?: 'CL';
 
-    $nfseAtual = $reserva->nfseAtual ?? null;
-    $nfseStatusRaw = strtolower((string) ($nfseAtual->status ?? ''));
+    $nfseAtual       = $reserva->nfseAtual ?? null;
+    $nfseStatusRaw   = strtolower((string) ($nfseAtual->status ?? ''));
     $nfseStatusLabel = $nfseAtual ? ucfirst($nfseAtual->status ?? 'pendente') : 'Nao emitida';
-    $nfseBadgeClass = match ($nfseStatusRaw) {
-        'emitida' => 'is-success',
-        'erro' => 'is-danger',
+    $nfseBadgeClass  = match ($nfseStatusRaw) {
+        'emitida'   => 'is-success',
+        'erro'      => 'is-danger',
         'cancelada' => 'is-neutral',
-        default => 'is-warning',
+        default     => 'is-warning',
     };
-    $nfseMotivo = $nfseAtual ? (app(\App\Services\NfseService::class)->mensagemErro($nfseAtual) ?? null) : null;
+    $nfseMotivo        = $nfseAtual ? (app(\App\Services\NfseService::class)->mensagemErro($nfseAtual) ?? null) : null;
     $reservaConfirmada = isset($reserva->status_reserva_id) && (int) $reserva->status_reserva_id === 2;
-    $nfseNaoEmitida = !$nfseAtual || ($nfseAtual->status ?? '') !== 'emitida';
+    $nfseNaoEmitida    = !$nfseAtual || ($nfseAtual->status ?? '') !== 'emitida';
     $nfseErroDetalhado = null;
+    $transacoesReserva = $reserva->transacoes ?? collect();
+    $statusPagamentoAprovado  = ['succeeded', 'approved', 'paid', 'completed', 'complete'];
+    $statusPagamentoPendente  = ['pending', 'processing', 'requires_action', 'requires_payment_method'];
+    $statusPagamentoEstornado = ['refunded', 'refund', 'estorno', 'cancelled', 'canceled', 'cancelado', 'cancelada', 'reembolsado', 'reembolsada'];
+    $transacoesPagamento = $transacoesReserva->filter(fn ($item) => (float) ($item->valor ?? 0) >= 0);
+    $transacoesEstorno   = $transacoesReserva->filter(fn ($item) =>
+        (float) ($item->valor ?? 0) < 0
+        || in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoEstornado, true));
+    $transacoesPendentes = $transacoesReserva->filter(fn ($item) =>
+        in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoPendente, true));
+    $totalPagamentos = (float) $transacoesPagamento->sum('valor');
+    $totalEstornos   = abs((float) $transacoesEstorno->sum('valor'));
 
     if ($nfseAtual && ($nfseAtual->status ?? '') === 'erro' && is_array($nfseAtual->response ?? null)) {
         $nfseErroDetalhado = $nfseAtual->response['message'] ?? $nfseAtual->response['error'] ?? $nfseAtual->response['erro'] ?? null;
-
         if (!$nfseErroDetalhado && !empty($nfseAtual->response['errors'])) {
             $nfseErroDetalhado = implode(' ', (array) $nfseAtual->response['errors']);
         }
     }
 @endphp
 
-<section class="reservation-minimal">
-    <div class="reservation-minimal__hero">
-        <div>
-            <div class="reservation-minimal__eyebrow">Reserva #{{ $reserva->id }}</div>
-            <div class="reservation-minimal__title-row">
-                <h1 class="reservation-minimal__title">{{ $titulo }}</h1>
-                <span class="reservation-badge {{ $statusReservaClass }}">{{ strtoupper($statusReservaNome) }}</span>
-            </div>
-            <div class="reservation-minimal__meta">
-                <span>{{ $reserva->empresa->nome ?? 'Empresa' }}</span>
-                <span>{{ $createdAt }}</span>
-            </div>
-        </div>
+<div class="rs-page">
 
-        <div class="reservation-minimal__hero-stats">
-            <div class="mini-stat">
-                <span>Total</span>
-                <strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong>
+    {{-- ══════════════════════════════════════════
+         HERO
+    ══════════════════════════════════════════ --}}
+    <div class="rs-hero rs-hero--{{ $statusReservaSlug }}">
+        <div class="rs-hero__accent"></div>
+        <div class="rs-hero__body">
+            <div class="rs-hero__left">
+                <div class="rs-hero__eyebrow">
+                    <i class="fas fa-ticket-alt"></i>
+                    Reserva #{{ $reserva->id }}
+                </div>
+                <h1 class="rs-hero__title">{{ $titulo }}</h1>
+                <div class="rs-hero__meta">
+                    <span><i class="fas fa-building"></i>{{ $reserva->empresa->nome ?? 'Empresa' }}</span>
+                    <span><i class="fas fa-calendar-plus"></i>Criada em {{ $createdAt }}</span>
+                </div>
             </div>
-            <div class="mini-stat">
-                <span>Duracao</span>
-                <strong>{{ $diasReserva }} dias</strong>
+            <div class="rs-hero__right">
+                <span class="rs-status-badge {{ $statusReservaClass }}">
+                    <i class="{{ $statusIcon }}"></i>
+                    {{ strtoupper($statusReservaNome) }}
+                </span>
+                <div class="rs-hero__kpis">
+                    <div class="rs-kpi">
+                        <span>Valor total</span>
+                        <strong>R$&nbsp;{{ number_format($valorTotal, 2, ',', '.') }}</strong>
+                    </div>
+                    <div class="rs-kpi-divider"></div>
+                    <div class="rs-kpi">
+                        <span>Duracao</span>
+                        <strong>{{ $diasReserva }}&nbsp;{{ $diasReserva === 1 ? 'dia' : 'dias' }}</strong>
+                    </div>
+                    @if($percentualDesconto > 0)
+                        <div class="rs-kpi-divider"></div>
+                        <div class="rs-kpi rs-kpi--accent">
+                            <span>Desconto</span>
+                            <strong>{{ number_format($percentualDesconto, 0) }}%</strong>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
 
+    {{-- ══════════════════════════════════════════
+         PAINEL DE ACOES
+    ══════════════════════════════════════════ --}}
     @include('reserva.components.botoes_acoes_show_reserva')
 
+    {{-- ══════════════════════════════════════════
+         ALERTA NFS-e PENDENTE
+    ══════════════════════════════════════════ --}}
     @if($reservaConfirmada && $nfseNaoEmitida)
-        <div class="reservation-inline-alert">
-            <div>
-                <strong>NFS-e pendente</strong>
+        <div class="rs-alert rs-alert--warning">
+            <div class="rs-alert__icon"><i class="fas fa-file-invoice"></i></div>
+            <div class="rs-alert__content">
+                <strong>NFS-e pendente de emissao</strong>
                 <p>{{ $nfseMotivo ?? $nfseErroDetalhado ?? 'A nota fiscal ainda nao foi emitida para esta reserva.' }}</p>
             </div>
             <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form">
                 @csrf
-                <button type="submit" class="js-nfse-btn inline-action-btn">
+                <button type="submit" class="rs-btn rs-btn--warning js-nfse-btn">
                     <i class="fas fa-redo"></i>
-                    <span>Tentar emitir</span>
+                    Tentar emitir
                 </button>
             </form>
         </div>
     @endif
 
-    <div class="reservation-minimal__grid">
-        <div class="reservation-minimal__main">
-            <article class="minimal-card minimal-card--trip">
-                <div class="minimal-card__header">
-                    <h2>Viagem</h2>
-                </div>
-                <div class="trip-compact">
-                    <div class="trip-compact__item">
-                        <span class="trip-compact__label">Retirada</span>
-                        <strong>{{ $reserva->estacaoRetirada->nome ?? 'Nao informado' }}</strong>
-                        <small>{{ $inicioFormatado }}</small>
-                    </div>
-                    <div class="trip-compact__divider"></div>
-                    <div class="trip-compact__item">
-                        <span class="trip-compact__label">Devolucao</span>
-                        <strong>{{ $reserva->estacaoDevolucao->nome ?? 'Nao informado' }}</strong>
-                        <small>{{ $fimFormatado }}</small>
-                    </div>
-                </div>
-            </article>
+    {{-- ══════════════════════════════════════════
+         GRID PRINCIPAL
+    ══════════════════════════════════════════ --}}
+    <div class="rs-grid">
 
-            <article class="minimal-card minimal-card--vehicle">
-                <div class="minimal-card__header">
-                    <h2>Veiculo</h2>
+        {{-- COLUNA PRINCIPAL --}}
+        <div class="rs-main">
+
+            {{-- Card: Rota da viagem --}}
+            <div class="rs-card">
+                <div class="rs-card__header">
+                    <i class="fas fa-route rs-card__icon"></i>
+                    <h2>Rota da viagem</h2>
                 </div>
-                <div class="vehicle-compact">
-                    <div class="vehicle-compact__media">
-                        <img src="{{ $reserva->modelos->imagem_url ?? asset('img/no-image.jpg') }}" alt="{{ $reserva->modelos->nome ?? 'Veiculo reservado' }}">
+                <div class="rs-route">
+                    <div class="rs-route__stop rs-route__stop--origin">
+                        <div class="rs-route__dot rs-route__dot--origin">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="rs-route__info">
+                            <span class="rs-route__label">Retirada</span>
+                            <strong class="rs-route__place">{{ $reserva->estacaoRetirada->nome ?? 'Nao informado' }}</strong>
+                            <div class="rs-route__datetime">
+                                <span class="rs-route__date">{{ $inicioData }}</span>
+                                @if($inicioHora)
+                                    <span class="rs-route__time">{{ $inicioHora }}</span>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    <div class="vehicle-compact__content">
-                        <h3>{{ $reserva->modelos->nome ?? 'Nao informado' }}</h3>
-                        <p>{{ $reserva->modelos->marca->nome ?? 'Marca nao informada' }}</p>
-                        <div class="vehicle-compact__chips">
-                            <span>{{ $reserva->grupoFrota->nome ?? 'Grupo nao informado' }}</span>
+
+                    <div class="rs-route__middle">
+                        <div class="rs-route__line"></div>
+                        <div class="rs-route__duration">
+                            <i class="fas fa-moon"></i>
+                            {{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }}
+                        </div>
+                        <div class="rs-route__line"></div>
+                    </div>
+
+                    <div class="rs-route__stop rs-route__stop--dest">
+                        <div class="rs-route__dot rs-route__dot--dest">
+                            <i class="fas fa-flag-checkered"></i>
+                        </div>
+                        <div class="rs-route__info">
+                            <span class="rs-route__label">Devolucao</span>
+                            <strong class="rs-route__place">{{ $reserva->estacaoDevolucao->nome ?? 'Nao informado' }}</strong>
+                            <div class="rs-route__datetime">
+                                <span class="rs-route__date">{{ $fimData }}</span>
+                                @if($fimHora)
+                                    <span class="rs-route__time">{{ $fimHora }}</span>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Card: Veiculo --}}
+            <div class="rs-card rs-card--vehicle">
+                <div class="rs-card__header">
+                    <i class="fas fa-car rs-card__icon"></i>
+                    <h2>Veiculo reservado</h2>
+                </div>
+                <div class="rs-vehicle">
+                    <div class="rs-vehicle__media">
+                        <img src="{{ $reserva->modelos->imagem_url ?? asset('img/no-image.jpg') }}"
+                             alt="{{ $reserva->modelos->nome ?? 'Veiculo reservado' }}">
+                    </div>
+                    <div class="rs-vehicle__info">
+                        <div class="rs-vehicle__brand">{{ $reserva->modelos->marca->nome ?? 'Marca nao informada' }}</div>
+                        <h3 class="rs-vehicle__name">{{ $reserva->modelos->nome ?? 'Nao informado' }}</h3>
+
+                        <div class="rs-vehicle__chips">
+                            @if(!empty($reserva->grupoFrota->nome))
+                                <span class="rs-chip rs-chip--blue">
+                                    <i class="fas fa-layer-group"></i>
+                                    {{ $reserva->grupoFrota->nome }}
+                                </span>
+                            @endif
                             @if(!empty($reserva->modelos->transmissao))
-                                <span>{{ $reserva->modelos->transmissao }}</span>
+                                <span class="rs-chip rs-chip--slate">
+                                    <i class="fas fa-cogs"></i>
+                                    {{ $reserva->modelos->transmissao }}
+                                </span>
                             @endif
                             @if(!empty($reserva->modelos->combustivel))
-                                <span>{{ $reserva->modelos->combustivel }}</span>
+                                <span class="rs-chip rs-chip--green">
+                                    <i class="fas fa-gas-pump"></i>
+                                    {{ $reserva->modelos->combustivel }}
+                                </span>
                             @endif
                         </div>
-                        <div class="vehicle-compact__specs">
-                            <div><span>Ano</span><strong>{{ $reserva->modelos->ano ?? '-' }}</strong></div>
-                            <div><span>Capacidade</span><strong>{{ $reserva->modelos->capacidade ? $reserva->modelos->capacidade . ' pessoas' : '-' }}</strong></div>
+
+                        <div class="rs-vehicle__specs">
+                            <div class="rs-spec">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>Ano</span>
+                                <strong>{{ $reserva->modelos->ano ?? '-' }}</strong>
+                            </div>
+                            <div class="rs-spec">
+                                <i class="fas fa-users"></i>
+                                <span>Capacidade</span>
+                                <strong>{{ $reserva->modelos->capacidade ? $reserva->modelos->capacidade . ' pessoas' : '-' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="rs-vehicle__pricing">
+                            <div>
+                                <span>Tarifa diaria</span>
+                                <strong>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</strong>
+                            </div>
+                            <div>
+                                <span>{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }}</span>
+                                <strong>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</strong>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </article>
+            </div>
 
+            {{-- Card: Opcionais --}}
             @if($reserva->opcionais->isNotEmpty())
-                <article class="minimal-card">
-                    <div class="minimal-card__header">
-                        <h2>Opcionais</h2>
+                <div class="rs-card">
+                    <div class="rs-card__header">
+                        <i class="fas fa-plus-circle rs-card__icon"></i>
+                        <h2>Opcionais contratados</h2>
+                        <span class="rs-card__badge">{{ $reserva->opcionais->count() }} item(s)</span>
                     </div>
-                    <div class="optional-list-minimal">
+                    <div class="rs-optionals">
                         @foreach($reserva->opcionais as $opcional)
                             @php
-                                $quantidadeOpcional = (int) ($opcional->pivot->quantidade ?? 0);
-                                $precoOpcional = (float) ($opcional->pivot->preco_total ?? 0);
-                                $totalOpcional = $quantidadeOpcional * $precoOpcional;
+                                $qtd   = (int) ($opcional->pivot->quantidade ?? 0);
+                                $preco = (float) ($opcional->pivot->preco_total ?? 0);
+                                $total = $qtd * $preco;
                             @endphp
-                            <div class="optional-row-minimal">
-                                <div>
+                            <div class="rs-optional-row">
+                                <div class="rs-optional-row__info">
                                     <strong>{{ $opcional->nome }}</strong>
-                                    <small>{{ $opcional->tipo_cobranca == 'por_dia' ? 'Diario' : 'Integral' }} � {{ $quantidadeOpcional }}x</small>
+                                    <span>
+                                        {{ $opcional->tipo_cobranca == 'por_dia' ? 'Cobrado por dia' : 'Valor integral' }}
+                                        &middot; {{ $qtd }}x
+                                    </span>
                                 </div>
-                                <span>R$ {{ number_format($totalOpcional, 2, ',', '.') }}</span>
+                                <div class="rs-optional-row__price">
+                                    R$ {{ number_format($total, 2, ',', '.') }}
+                                </div>
                             </div>
                         @endforeach
                     </div>
-                </article>
+                </div>
             @endif
         </div>
 
-        <aside class="reservation-minimal__sidebar">
-            <article class="minimal-card">
-                <div class="minimal-card__header">
+        {{-- SIDEBAR --}}
+        <aside class="rs-sidebar">
+
+            {{-- Card: Cliente --}}
+            <div class="rs-card">
+                <div class="rs-card__header">
+                    <i class="fas fa-user rs-card__icon"></i>
                     <h2>Cliente</h2>
                 </div>
-                <div class="customer-minimal">
-                    <div class="customer-minimal__avatar">{{ $clienteIniciais }}</div>
-                    <div>
+                <div class="rs-client">
+                    <div class="rs-client__avatar">{{ $clienteIniciais }}</div>
+                    <div class="rs-client__main">
                         <strong>{{ $clienteNome }}</strong>
-                        <p>{{ $reserva->usuario->email ?? 'E-mail nao informado' }}</p>
+                        <span>{{ $reserva->usuario->email ?? 'E-mail nao informado' }}</span>
                     </div>
                 </div>
-                <div class="mini-info-list">
-                    <div><span>Telefone</span><strong>{{ $reserva->usuario->telefone ?? '-' }}</strong></div>
-                    <div><span>Documento</span><strong>{{ $reserva->usuario->numero_identificacao ?? '-' }}</strong></div>
-                    <div><span>Nascimento</span><strong>{{ $reserva->usuario->data_nascimento ? \Carbon\Carbon::parse($reserva->usuario->data_nascimento)->format('d/m/Y') : '-' }}</strong></div>
+                <div class="rs-info-rows">
+                    <div class="rs-info-row">
+                        <span><i class="fas fa-phone-alt"></i>Telefone</span>
+                        <strong>{{ $reserva->usuario->telefone ?? '-' }}</strong>
+                    </div>
+                    <div class="rs-info-row">
+                        <span><i class="fas fa-id-card"></i>Documento</span>
+                        <strong>{{ $reserva->usuario->numero_identificacao ?? '-' }}</strong>
+                    </div>
+                    <div class="rs-info-row">
+                        <span><i class="fas fa-birthday-cake"></i>Nascimento</span>
+                        <strong>{{ $reserva->usuario->data_nascimento ? \Carbon\Carbon::parse($reserva->usuario->data_nascimento)->format('d/m/Y') : '-' }}</strong>
+                    </div>
                 </div>
-            </article>
+            </div>
 
-            <article class="minimal-card">
-                <div class="minimal-card__header">
-                    <h2>Resumo</h2>
+            {{-- Card: Resumo financeiro --}}
+            <div class="rs-card">
+                <div class="rs-card__header">
+                    <i class="fas fa-file-invoice-dollar rs-card__icon"></i>
+                    <h2>Resumo financeiro</h2>
                 </div>
-                <div class="mini-info-list mini-info-list--spaced">
-                    <div><span>Tarifa diaria</span><strong>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</strong></div>
-                    <div><span>Tarifa base</span><strong>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</strong></div>
-                    <div><span>Opcionais</span><strong>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</strong></div>
-                    <div><span>Desconto</span><strong>{{ number_format($percentualDesconto, 0) }}%</strong></div>
-                    <div class="mini-total"><span>Total</span><strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong></div>
+                <div class="rs-summary">
+                    <div class="rs-summary__row">
+                        <span>Tarifa diaria</span>
+                        <span>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</span>
+                    </div>
+                    <div class="rs-summary__row">
+                        <span>{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }} &times; tarifa</span>
+                        <span>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</span>
+                    </div>
+                    @if($valorOpcionais > 0)
+                        <div class="rs-summary__row">
+                            <span>Opcionais</span>
+                            <span>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</span>
+                        </div>
+                    @endif
+                    @if($percentualDesconto > 0)
+                        <div class="rs-summary__divider"></div>
+                        <div class="rs-summary__row rs-summary__row--discount">
+                            <span><i class="fas fa-tag"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)</span>
+                            <span>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</span>
+                        </div>
+                    @endif
+                    <div class="rs-summary__total">
+                        <span>Total</span>
+                        <strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong>
+                    </div>
                 </div>
-            </article>
+            </div>
 
-            <article class="minimal-card">
-                <div class="minimal-card__header minimal-card__header--between">
-                    <h2>NFS-e</h2>
-                    <span class="reservation-badge {{ $nfseBadgeClass }}">{{ $nfseStatusLabel }}</span>
+            {{-- Card: Transferencias financeiras --}}
+            <div class="rs-card">
+                <div class="rs-card__header">
+                    <i class="fas fa-exchange-alt rs-card__icon"></i>
+                    <h2>Transferencias</h2>
+                </div>
+
+                <div class="rs-finance-kpis">
+                    <div class="rs-fkpi rs-fkpi--green">
+                        <i class="fas fa-arrow-down"></i>
+                        <div>
+                            <strong>R$ {{ number_format($totalPagamentos, 2, ',', '.') }}</strong>
+                            <span>{{ $transacoesPagamento->count() }} pagamento(s)</span>
+                        </div>
+                    </div>
+                    <div class="rs-fkpi rs-fkpi--red">
+                        <i class="fas fa-arrow-up"></i>
+                        <div>
+                            <strong>R$ {{ number_format($totalEstornos, 2, ',', '.') }}</strong>
+                            <span>{{ $transacoesEstorno->count() }} estorno(s)</span>
+                        </div>
+                    </div>
+                    @if($transacoesPendentes->count() > 0)
+                        <div class="rs-fkpi rs-fkpi--amber">
+                            <i class="fas fa-clock"></i>
+                            <div>
+                                <strong>{{ $transacoesPendentes->count() }}</strong>
+                                <span>Pendente(s)</span>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+
+                @if($transacoesReserva->isNotEmpty())
+                    <div class="rs-transactions">
+                        @foreach($transacoesReserva->take(5) as $transacao)
+                            @php
+                                $valorTx  = (float) ($transacao->valor ?? 0);
+                                $statusTx = strtolower((string) ($transacao->status ?? ''));
+                                $isEstorno = $valorTx < 0 || in_array($statusTx, $statusPagamentoEstornado, true);
+                            @endphp
+                            <div class="rs-tx">
+                                <div class="rs-tx__icon {{ $isEstorno ? 'rs-tx__icon--red' : 'rs-tx__icon--green' }}">
+                                    <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                                </div>
+                                <div class="rs-tx__info">
+                                    <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
+                                    <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
+                                </div>
+                                <div class="rs-tx__amount {{ $isEstorno ? 'rs-tx__amount--red' : 'rs-tx__amount--green' }}">
+                                    <strong>R$ {{ number_format($valorTx, 2, ',', '.') }}</strong>
+                                    <span>{{ $transacao->status ?? '-' }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="rs-empty">
+                        <i class="fas fa-inbox"></i>
+                        <span>Nenhuma transferencia vinculada.</span>
+                    </div>
+                @endif
+            </div>
+
+            {{-- Card: NFS-e --}}
+            <div class="rs-card">
+                <div class="rs-card__header rs-card__header--between">
+                    <div class="rs-card__header-left">
+                        <i class="fas fa-file-alt rs-card__icon"></i>
+                        <h2>Nota Fiscal (NFS-e)</h2>
+                    </div>
+                    <span class="rs-status-badge rs-status-badge--sm {{ $nfseBadgeClass }}">{{ $nfseStatusLabel }}</span>
                 </div>
 
                 @if($nfseAtual)
-                    <div class="mini-info-list mini-info-list--spaced">
-                        <div><span>Numero</span><strong>{{ $nfseAtual->numero ?? '-' }}</strong></div>
-                        <div><span>Ambiente</span><strong>{{ $nfseAtual->ambiente ?? '-' }}</strong></div>
+                    <div class="rs-info-rows">
+                        <div class="rs-info-row">
+                            <span><i class="fas fa-hashtag"></i>Numero</span>
+                            <strong>{{ $nfseAtual->numero ?? '-' }}</strong>
+                        </div>
+                        <div class="rs-info-row">
+                            <span><i class="fas fa-server"></i>Ambiente</span>
+                            <strong>{{ $nfseAtual->ambiente ?? '-' }}</strong>
+                        </div>
                     </div>
 
                     @if($nfseErroDetalhado || $nfseMotivo)
-                        <div class="nfse-feedback-minimal">
-                            {{ $nfseErroDetalhado ?? $nfseMotivo }}
+                        <div class="rs-nfse-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <p>{{ $nfseErroDetalhado ?? $nfseMotivo }}</p>
                         </div>
                     @endif
 
                     @if(!empty($nfseAtual->nfse_id) && (auth()->user()?->hasPermissao('nfse.download') || auth()->user()?->isAdministrador()))
-                        <div class="nfse-download-actions">
-                            <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'xml']) }}" class="inline-secondary-btn">XML</a>
-                            <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'dps']) }}" class="inline-secondary-btn">DPS</a>
+                        <div class="rs-nfse-downloads">
+                            <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'xml']) }}" class="rs-btn rs-btn--outline">
+                                <i class="fas fa-download"></i>Baixar XML
+                            </a>
+                            <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'dps']) }}" class="rs-btn rs-btn--outline">
+                                <i class="fas fa-file-alt"></i>Baixar DPS
+                            </a>
                         </div>
                     @endif
 
                     @if(($nfseAtual->status ?? '') !== 'emitida')
                         <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form mt-3">
                             @csrf
-                            <button type="submit" class="js-nfse-btn inline-action-btn inline-action-btn--ghost">
-                                <i class="fas fa-redo"></i>
-                                <span>Tentar emitir</span>
+                            <button type="submit" class="rs-btn rs-btn--ghost rs-btn--full js-nfse-btn">
+                                <i class="fas fa-redo"></i>Tentar emitir novamente
                             </button>
                         </form>
                     @endif
                 @else
-                    <p class="nfse-empty-minimal">Nenhuma nota vinculada ainda.</p>
+                    <div class="rs-empty">
+                        <i class="fas fa-file-times"></i>
+                        <span>Nenhuma nota vinculada ainda.</span>
+                    </div>
                     <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form mt-3">
                         @csrf
-                        <button type="submit" class="js-nfse-btn inline-action-btn inline-action-btn--ghost">
-                            <i class="fas fa-redo"></i>
-                            <span>Tentar emitir</span>
+                        <button type="submit" class="rs-btn rs-btn--ghost rs-btn--full js-nfse-btn">
+                            <i class="fas fa-redo"></i>Emitir nota fiscal
                         </button>
                     </form>
                 @endif
-            </article>
+            </div>
+
         </aside>
     </div>
-</section>
+</div>
 @stop
 
 @section('css')
 <style>
     .content-wrapper {
-        background: linear-gradient(180deg, #f6f8fb 0%, #eef3f8 100%);
+        background: #f0f4f9;
     }
-    .reservation-minimal {
+
+    /* ═══════════════════════════
+       PAGE
+    ═══════════════════════════ */
+    .rs-page {
         display: grid;
-        gap: 18px;
-        padding-bottom: 24px;
+        gap: 20px;
+        padding-bottom: 32px;
     }
-    .reservation-minimal__hero,
-    .minimal-card {
-        background: rgba(255, 255, 255, 0.94);
-        border: 1px solid #dde5ef;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
-        backdrop-filter: blur(10px);
+
+    /* ═══════════════════════════
+       HERO
+    ═══════════════════════════ */
+    .rs-hero {
+        position: relative;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(15, 23, 42, 0.20);
     }
-    .reservation-minimal__hero {
+
+    .rs-hero__accent {
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    }
+
+    .rs-hero--confirmada .rs-hero__accent {
+        background: linear-gradient(90deg, #10b981, #34d399);
+    }
+
+    .rs-hero--cancelada .rs-hero__accent {
+        background: linear-gradient(90deg, #ef4444, #f87171);
+    }
+
+    .rs-hero--criada .rs-hero__accent,
+    .rs-hero--pendente .rs-hero__accent {
+        background: linear-gradient(90deg, #f59e0b, #fbbf24);
+    }
+
+    .rs-hero__body {
         display: flex;
         align-items: flex-start;
         justify-content: space-between;
-        gap: 18px;
-        padding: 22px 24px;
-        border-radius: 28px;
+        gap: 24px;
+        padding: 28px 30px;
+        flex-wrap: wrap;
     }
-    .reservation-minimal__eyebrow {
-        display: block;
-        font-size: 11px;
+
+    .rs-hero__left {
+        display: grid;
+        gap: 8px;
+    }
+
+    .rs-hero__eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.72rem;
         font-weight: 700;
-        letter-spacing: .16em;
+        letter-spacing: 0.15em;
         text-transform: uppercase;
-        color: #64748b;
-        margin-bottom: 6px;
+        color: rgba(148, 163, 184, 0.9);
     }
-    .reservation-minimal__title-row {
+
+    .rs-hero__title {
+        margin: 0;
+        font-size: 1.9rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        color: #fff;
+        line-height: 1.15;
+    }
+
+    .rs-hero__meta {
         display: flex;
         flex-wrap: wrap;
+        gap: 8px 18px;
+        color: rgba(148, 163, 184, 0.85);
+        font-size: 0.84rem;
+    }
+
+    .rs-hero__meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .rs-hero__right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 16px;
+    }
+
+    .rs-hero__kpis {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        background: rgba(255, 255, 255, 0.07);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        overflow: hidden;
+    }
+
+    .rs-kpi {
+        padding: 14px 20px;
+        text-align: center;
+    }
+
+    .rs-kpi span {
+        display: block;
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        color: rgba(148, 163, 184, 0.8);
+        margin-bottom: 4px;
+    }
+
+    .rs-kpi strong {
+        display: block;
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    .rs-kpi--accent strong {
+        color: #fbbf24;
+    }
+
+    .rs-kpi-divider {
+        width: 1px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* ═══════════════════════════
+       STATUS BADGE
+    ═══════════════════════════ */
+    .rs-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 14px;
+        border-radius: 999px;
+        font-size: 0.72rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        white-space: nowrap;
+    }
+
+    .rs-status-badge--sm {
+        padding: 5px 10px;
+        font-size: 0.68rem;
+    }
+
+    .rs-status-badge.is-success {
+        background: rgba(16, 185, 129, 0.15);
+        color: #059669;
+        border: 1px solid rgba(16, 185, 129, 0.25);
+    }
+
+    .rs-status-badge.is-danger {
+        background: rgba(239, 68, 68, 0.15);
+        color: #dc2626;
+        border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+
+    .rs-status-badge.is-warning {
+        background: rgba(245, 158, 11, 0.18);
+        color: #d97706;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .rs-status-badge.is-neutral {
+        background: rgba(100, 116, 139, 0.14);
+        color: #475569;
+        border: 1px solid rgba(100, 116, 139, 0.2);
+    }
+
+    /* ═══════════════════════════
+       ALERT
+    ═══════════════════════════ */
+    .rs-alert {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px 20px;
+        border-radius: 16px;
+        flex-wrap: wrap;
+    }
+
+    .rs-alert--warning {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+    }
+
+    .rs-alert__icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: #fef3c7;
+        color: #d97706;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+
+    .rs-alert__content {
+        flex: 1;
+    }
+
+    .rs-alert__content strong {
+        display: block;
+        color: #92400e;
+        font-size: 0.88rem;
+        margin-bottom: 2px;
+    }
+
+    .rs-alert__content p {
+        margin: 0;
+        color: #b45309;
+        font-size: 0.82rem;
+    }
+
+    /* ═══════════════════════════
+       GRID
+    ═══════════════════════════ */
+    .rs-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.45fr) minmax(290px, 0.75fr);
+        gap: 20px;
+        align-items: start;
+    }
+
+    .rs-main,
+    .rs-sidebar {
+        display: grid;
+        gap: 16px;
+    }
+
+    /* ═══════════════════════════
+       CARDS
+    ═══════════════════════════ */
+    .rs-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 20px 22px;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    .rs-card__header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rs-card__header--between {
+        justify-content: space-between;
+    }
+
+    .rs-card__header-left {
+        display: flex;
         align-items: center;
         gap: 10px;
     }
-    .reservation-minimal__title {
-        margin: 0;
-        font-size: 2rem;
-        font-weight: 800;
-        letter-spacing: -.04em;
-        color: #0f172a;
-    }
-    .reservation-minimal__meta {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px 16px;
-        margin-top: 10px;
-        color: #64748b;
-        font-size: .92rem;
-    }
-    .reservation-minimal__hero-stats {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(120px, 1fr));
-        gap: 12px;
-        width: min(100%, 320px);
-    }
-    .mini-stat {
-        padding: 16px;
-        border-radius: 20px;
-        background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
-        color: #fff;
-    }
-    .mini-stat span {
-        display: block;
-        font-size: 11px;
-        text-transform: uppercase;
-        letter-spacing: .14em;
-        color: rgba(226, 232, 240, 0.72);
-        margin-bottom: 6px;
-    }
-    .mini-stat strong {
-        display: block;
-        font-size: 1.15rem;
-        font-weight: 800;
-    }
-    .reservation-badge {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 7px 12px;
-        border-radius: 999px;
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: .08em;
-        text-transform: uppercase;
-    }
-    .reservation-badge.is-success {
-        background: rgba(5, 150, 105, 0.12);
-        color: #047857;
-    }
-    .reservation-badge.is-danger {
-        background: rgba(220, 38, 38, 0.12);
-        color: #b91c1c;
-    }
-    .reservation-badge.is-warning {
-        background: rgba(245, 158, 11, 0.15);
-        color: #b45309;
-    }
-    .reservation-badge.is-neutral {
-        background: rgba(100, 116, 139, 0.14);
-        color: #475569;
-    }
-    .reservation-inline-alert {
+
+    .rs-card__icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 9px;
+        background: #eff6ff;
+        color: #2563eb;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-        padding: 16px 18px;
-        border-radius: 22px;
-        background: #fff7ed;
-        border: 1px solid #fed7aa;
-    }
-    .reservation-inline-alert strong {
-        display: block;
-        color: #9a3412;
-        margin-bottom: 4px;
-    }
-    .reservation-inline-alert p {
-        margin: 0;
-        color: #9a3412;
-    }
-    .inline-action-btn,
-    .inline-secondary-btn {
-        display: inline-flex;
-        align-items: center;
         justify-content: center;
-        gap: 8px;
-        padding: 11px 14px;
-        border-radius: 14px;
-        border: 0;
-        text-decoration: none;
+        font-size: 0.82rem;
+        flex-shrink: 0;
+    }
+
+    .rs-card__header h2 {
+        margin: 0;
+        font-size: 0.92rem;
         font-weight: 700;
-    }
-    .inline-action-btn {
-        background: #0f172a;
-        color: #fff;
-    }
-    .inline-action-btn--ghost {
-        width: 100%;
-        background: #f8fafc;
-        color: #0f172a;
-        border: 1px solid #d4dde8;
-    }
-    .inline-secondary-btn {
-        background: #f8fafc;
-        color: #0f172a;
-        border: 1px solid #d4dde8;
-    }
-    .inline-action-btn:hover,
-    .inline-action-btn:focus,
-    .inline-secondary-btn:hover,
-    .inline-secondary-btn:focus {
-        text-decoration: none;
-        color: inherit;
-    }
-    .reservation-minimal__grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(300px, .8fr);
-        gap: 18px;
-        align-items: start;
-    }
-    .reservation-minimal__main,
-    .reservation-minimal__sidebar {
-        display: grid;
-        gap: 18px;
-    }
-    .minimal-card {
-        padding: 22px;
-        border-radius: 26px;
-    }
-    .minimal-card__header {
-        margin-bottom: 16px;
-    }
-    .minimal-card__header--between {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-    }
-    .minimal-card__header h2 {
-        margin: 0;
-        font-size: 1.1rem;
-        font-weight: 800;
         color: #0f172a;
     }
-    .trip-compact {
+
+    .rs-card__badge {
+        margin-left: auto;
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.72rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 999px;
+    }
+
+    /* ═══════════════════════════
+       ROTA
+    ═══════════════════════════ */
+    .rs-route {
         display: grid;
         grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-        gap: 18px;
+        gap: 16px;
         align-items: center;
+        background: linear-gradient(135deg, #f8faff 0%, #f0f4ff 100%);
+        border: 1px solid #e2eaff;
+        border-radius: 14px;
+        padding: 20px;
     }
-    .trip-compact__item {
+
+    .rs-route__stop {
         display: grid;
-        gap: 6px;
+        gap: 10px;
     }
-    .trip-compact__label {
-        font-size: 11px;
+
+    .rs-route__stop--dest {
+        text-align: right;
+    }
+
+    .rs-route__stop--dest .rs-route__dot {
+        margin-left: auto;
+    }
+
+    .rs-route__dot {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+    }
+
+    .rs-route__dot--origin {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .rs-route__dot--dest {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .rs-route__label {
+        display: block;
+        font-size: 0.68rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .16em;
+        letter-spacing: 0.12em;
         color: #64748b;
     }
-    .trip-compact__item strong {
+
+    .rs-route__place {
+        display: block;
+        font-size: 0.96rem;
+        font-weight: 700;
         color: #0f172a;
+        line-height: 1.3;
     }
-    .trip-compact__item small {
+
+    .rs-route__datetime {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .rs-route__stop--dest .rs-route__datetime {
+        align-items: flex-end;
+    }
+
+    .rs-route__date {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #1e40af;
+    }
+
+    .rs-route__time {
+        font-size: 0.78rem;
         color: #64748b;
     }
-    .trip-compact__divider {
-        width: 44px;
-        height: 1px;
-        background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 100%);
+
+    .rs-route__middle {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 0 8px;
     }
-    .vehicle-compact {
+
+    .rs-route__line {
+        flex: 1;
+        width: 1px;
+        min-height: 16px;
+        background: linear-gradient(180deg, #c7d7f4, #93c5fd);
+    }
+
+    .rs-route__duration {
+        background: #1e40af;
+        color: #fff;
+        font-size: 0.72rem;
+        font-weight: 800;
+        padding: 6px 12px;
+        border-radius: 999px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+    /* ═══════════════════════════
+       VEICULO
+    ═══════════════════════════ */
+    .rs-vehicle {
         display: grid;
         grid-template-columns: 220px minmax(0, 1fr);
-        gap: 18px;
-        align-items: center;
+        gap: 20px;
+        align-items: start;
     }
-    .vehicle-compact__media {
+
+    .rs-vehicle__media {
+        background: linear-gradient(145deg, #f8fafc, #eef2ff);
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
         padding: 18px;
-        border-radius: 22px;
-        background: linear-gradient(145deg, #f8fafc 0%, #eef2ff 100%);
-        border: 1px solid #dbe4f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 160px;
     }
-    .vehicle-compact__media img {
+
+    .rs-vehicle__media img {
         width: 100%;
-        max-height: 180px;
+        max-height: 170px;
         object-fit: contain;
-        filter: drop-shadow(0 18px 26px rgba(15, 23, 42, 0.14));
+        filter: drop-shadow(0 12px 20px rgba(15, 23, 42, 0.15));
     }
-    .vehicle-compact__content h3 {
-        margin: 0;
-        font-size: 1.35rem;
-        color: #0f172a;
-    }
-    .vehicle-compact__content p {
-        margin: 6px 0 0;
+
+    .rs-vehicle__brand {
+        font-size: 0.78rem;
+        font-weight: 600;
         color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
     }
-    .vehicle-compact__chips {
+
+    .rs-vehicle__name {
+        margin: 4px 0 12px;
+        font-size: 1.35rem;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+    }
+
+    .rs-vehicle__chips {
         display: flex;
         flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 14px;
+        gap: 6px;
+        margin-bottom: 16px;
     }
-    .vehicle-compact__chips span {
-        padding: 7px 11px;
+
+    .rs-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        padding: 5px 10px;
         border-radius: 999px;
-        background: #eff6ff;
-        color: #1d4ed8;
-        font-size: .82rem;
+        font-size: 0.75rem;
         font-weight: 700;
     }
-    .vehicle-compact__specs {
+
+    .rs-chip--blue  { background: #eff6ff; color: #1d4ed8; }
+    .rs-chip--slate { background: #f1f5f9; color: #475569; }
+    .rs-chip--green { background: #f0fdf4; color: #15803d; }
+
+    .rs-vehicle__specs {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        margin-top: 16px;
+        gap: 10px;
+        margin-bottom: 16px;
     }
-    .vehicle-compact__specs div,
-    .mini-info-list div,
-    .optional-row-minimal {
+
+    .rs-spec {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        padding: 10px 12px;
         display: flex;
-        justify-content: space-between;
-        gap: 14px;
-        align-items: center;
+        flex-direction: column;
+        gap: 4px;
     }
-    .vehicle-compact__specs span,
-    .mini-info-list span {
+
+    .rs-spec i {
+        color: #64748b;
+        font-size: 0.8rem;
+    }
+
+    .rs-spec span {
+        font-size: 0.72rem;
         color: #64748b;
     }
-    .vehicle-compact__specs strong,
-    .mini-info-list strong,
-    .optional-row-minimal strong,
-    .optional-row-minimal span {
+
+    .rs-spec strong {
+        font-size: 0.9rem;
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .rs-vehicle__pricing {
+        display: flex;
+        gap: 16px;
+        padding: 12px 14px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+    }
+
+    .rs-vehicle__pricing div {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+
+    .rs-vehicle__pricing span {
+        font-size: 0.72rem;
+        color: #64748b;
+    }
+
+    .rs-vehicle__pricing strong {
+        font-size: 0.92rem;
+        font-weight: 700;
         color: #0f172a;
     }
-    .optional-list-minimal,
-    .mini-info-list {
+
+    /* ═══════════════════════════
+       OPCIONAIS
+    ═══════════════════════════ */
+    .rs-optionals {
         display: grid;
+        gap: 0;
+    }
+
+    .rs-optional-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f5f9;
     }
-    .optional-row-minimal,
-    .mini-info-list div {
-        padding-bottom: 12px;
-        border-bottom: 1px solid #ecf1f6;
-    }
-    .optional-row-minimal:last-child,
-    .mini-info-list div:last-child {
+
+    .rs-optional-row:last-child {
         border-bottom: 0;
         padding-bottom: 0;
     }
-    .optional-row-minimal small {
+
+    .rs-optional-row__info strong {
         display: block;
+        font-size: 0.86rem;
+        color: #0f172a;
+        font-weight: 700;
+    }
+
+    .rs-optional-row__info span {
+        font-size: 0.75rem;
         color: #64748b;
-        margin-top: 3px;
     }
-    .customer-minimal {
-        display: grid;
-        grid-template-columns: auto 1fr;
-        gap: 14px;
-        align-items: center;
-        margin-bottom: 16px;
+
+    .rs-optional-row__price {
+        font-size: 0.9rem;
+        font-weight: 700;
+        color: #0f172a;
+        white-space: nowrap;
     }
-    .customer-minimal__avatar {
-        width: 58px;
-        height: 58px;
-        border-radius: 20px;
+
+    /* ═══════════════════════════
+       CLIENTE
+    ═══════════════════════════ */
+    .rs-client {
         display: flex;
         align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
+        gap: 14px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rs-client__avatar {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
         color: #fff;
         font-size: 1rem;
         font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        letter-spacing: 0.04em;
     }
-    .customer-minimal strong {
+
+    .rs-client__main {
+        min-width: 0;
+    }
+
+    .rs-client__main strong {
         display: block;
+        font-size: 0.92rem;
+        font-weight: 700;
         color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    .customer-minimal p,
-    .nfse-empty-minimal {
-        margin: 4px 0 0;
+
+    .rs-client__main span {
+        display: block;
+        font-size: 0.78rem;
+        color: #64748b;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* ═══════════════════════════
+       INFO ROWS
+    ═══════════════════════════ */
+    .rs-info-rows {
+        display: grid;
+        gap: 0;
+    }
+
+    .rs-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: 9px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rs-info-row:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .rs-info-row span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.78rem;
         color: #64748b;
     }
-    .mini-info-list--spaced {
-        gap: 14px;
+
+    .rs-info-row span i {
+        width: 14px;
+        text-align: center;
+        color: #94a3b8;
     }
-    .mini-total {
-        margin-top: 4px;
-        padding-top: 12px;
-        border-top: 1px solid #e2e8f0;
-    }
-    .mini-total span {
+
+    .rs-info-row strong {
+        font-size: 0.82rem;
         font-weight: 600;
+        color: #0f172a;
+        text-align: right;
     }
-    .mini-total strong {
-        font-size: 1.08rem;
-        font-weight: 800;
+
+    /* ═══════════════════════════
+       RESUMO FINANCEIRO
+    ═══════════════════════════ */
+    .rs-summary {
+        display: grid;
+        gap: 0;
     }
-    .nfse-feedback-minimal {
-        margin-top: 14px;
+
+    .rs-summary__row {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 8px 0;
+        font-size: 0.84rem;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rs-summary__row:last-of-type {
+        border-bottom: 0;
+    }
+
+    .rs-summary__row--discount span,
+    .rs-summary__row--discount {
+        color: #16a34a;
+    }
+
+    .rs-summary__row--discount i {
+        margin-right: 4px;
+    }
+
+    .rs-summary__divider {
+        height: 1px;
+        background: #e2e8f0;
+        margin: 4px 0;
+    }
+
+    .rs-summary__total {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         padding: 12px 14px;
-        border-radius: 16px;
-        background: rgba(255, 237, 213, 0.70);
-        color: #9a3412;
-        line-height: 1.5;
+        margin-top: 10px;
+        background: #0f172a;
+        border-radius: 10px;
+        color: #fff;
     }
-    .nfse-download-actions {
+
+    .rs-summary__total span {
+        font-size: 0.78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        color: rgba(148, 163, 184, 0.9);
+    }
+
+    .rs-summary__total strong {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #fff;
+    }
+
+    /* ═══════════════════════════
+       FINANCEIRO KPIs
+    ═══════════════════════════ */
+    .rs-finance-kpis {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+
+    .rs-fkpi {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 12px;
+    }
+
+    .rs-fkpi > i {
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .rs-fkpi--green {
+        background: #f0fdf4;
+        border: 1px solid #bbf7d0;
+    }
+
+    .rs-fkpi--green > i {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .rs-fkpi--red {
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+    }
+
+    .rs-fkpi--red > i {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .rs-fkpi--amber {
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+    }
+
+    .rs-fkpi--amber > i {
+        background: #fef3c7;
+        color: #d97706;
+    }
+
+    .rs-fkpi div {
+        min-width: 0;
+    }
+
+    .rs-fkpi strong {
+        display: block;
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #0f172a;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .rs-fkpi span {
+        display: block;
+        font-size: 0.68rem;
+        color: #64748b;
+    }
+
+    /* ═══════════════════════════
+       TRANSACOES
+    ═══════════════════════════ */
+    .rs-transactions {
+        display: grid;
+        gap: 0;
+    }
+
+    .rs-tx {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 11px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .rs-tx:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
+    }
+
+    .rs-tx__icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        flex-shrink: 0;
+    }
+
+    .rs-tx__icon--green {
+        background: #dcfce7;
+        color: #16a34a;
+    }
+
+    .rs-tx__icon--red {
+        background: #fee2e2;
+        color: #dc2626;
+    }
+
+    .rs-tx__info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .rs-tx__info strong {
+        display: block;
+        font-size: 0.78rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .rs-tx__info span {
+        display: block;
+        font-size: 0.72rem;
+        color: #64748b;
+    }
+
+    .rs-tx__amount {
+        text-align: right;
+    }
+
+    .rs-tx__amount strong {
+        display: block;
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    .rs-tx__amount--green strong { color: #16a34a; }
+    .rs-tx__amount--red   strong { color: #dc2626; }
+
+    .rs-tx__amount span {
+        display: block;
+        font-size: 0.68rem;
+        color: #94a3b8;
+    }
+
+    /* ═══════════════════════════
+       NFS-e
+    ═══════════════════════════ */
+    .rs-nfse-error {
         display: flex;
         gap: 10px;
+        align-items: flex-start;
+        background: #fff7ed;
+        border: 1px solid #fed7aa;
+        border-radius: 10px;
+        padding: 12px;
+        margin-top: 12px;
+        font-size: 0.8rem;
+        color: #9a3412;
+    }
+
+    .rs-nfse-error i {
+        margin-top: 1px;
+        flex-shrink: 0;
+    }
+
+    .rs-nfse-error p {
+        margin: 0;
+        line-height: 1.5;
+    }
+
+    .rs-nfse-downloads {
+        display: flex;
         flex-wrap: wrap;
+        gap: 8px;
         margin-top: 14px;
     }
+
+    /* ═══════════════════════════
+       BUTTONS
+    ═══════════════════════════ */
+    .rs-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        padding: 9px 16px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        transition: all 0.18s;
+    }
+
+    .rs-btn--warning {
+        background: #d97706;
+        color: #fff;
+    }
+
+    .rs-btn--warning:hover {
+        background: #b45309;
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .rs-btn--outline {
+        background: #f8fafc;
+        color: #334155;
+        border: 1px solid #d4dde8;
+    }
+
+    .rs-btn--outline:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        text-decoration: none;
+    }
+
+    .rs-btn--ghost {
+        background: #f8fafc;
+        color: #334155;
+        border: 1px solid #d4dde8;
+    }
+
+    .rs-btn--ghost:hover {
+        background: #f1f5f9;
+        color: #0f172a;
+        text-decoration: none;
+    }
+
+    .rs-btn--full {
+        width: 100%;
+        justify-content: center;
+    }
+
+    /* ═══════════════════════════
+       EMPTY STATE
+    ═══════════════════════════ */
+    .rs-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 20px;
+        color: #94a3b8;
+        text-align: center;
+    }
+
+    .rs-empty i {
+        font-size: 1.8rem;
+    }
+
+    .rs-empty span {
+        font-size: 0.8rem;
+    }
+
+    /* ═══════════════════════════
+       RESPONSIVE
+    ═══════════════════════════ */
     @media (max-width: 1199px) {
-        .reservation-minimal__grid {
+        .rs-grid {
             grid-template-columns: 1fr;
         }
-        .reservation-minimal__hero {
+
+        .rs-hero__body {
             flex-direction: column;
         }
-        .reservation-minimal__hero-stats {
-            width: 100%;
-            max-width: none;
+
+        .rs-hero__right {
+            align-items: flex-start;
         }
     }
-    @media (max-width: 767px) {
-        .reservation-minimal__hero,
-        .minimal-card {
-            padding: 18px;
-            border-radius: 22px;
+
+    @media (max-width: 768px) {
+        .rs-hero__body {
+            padding: 20px;
         }
-        .reservation-minimal__title {
-            font-size: 1.55rem;
+
+        .rs-hero__title {
+            font-size: 1.5rem;
         }
-        .reservation-inline-alert,
-        .trip-compact,
-        .vehicle-compact {
-            grid-template-columns: 1fr;
-            display: grid;
-        }
-        .reservation-inline-alert {
-            align-items: flex-start;
-        }
-        .trip-compact__divider {
+
+        .rs-hero__kpis {
             width: 100%;
         }
-        .vehicle-compact__specs {
+
+        .rs-kpi {
+            flex: 1;
+        }
+
+        .rs-vehicle {
             grid-template-columns: 1fr;
         }
-        .mini-stat {
-            padding: 14px;
-        }
-        .vehicle-compact__media {
+
+        .rs-vehicle__media {
             max-width: 100%;
         }
-        .vehicle-compact__specs div,
-        .mini-info-list div,
-        .optional-row-minimal {
+
+        .rs-vehicle__specs {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .rs-route {
+            grid-template-columns: 1fr;
+        }
+
+        .rs-route__middle {
+            flex-direction: row;
+            padding: 0;
+        }
+
+        .rs-route__line {
+            height: 1px;
+            width: auto;
+            flex: 1;
+            min-height: auto;
+            background: linear-gradient(90deg, #c7d7f4, #93c5fd);
+        }
+
+        .rs-route__stop--dest {
+            text-align: left;
+        }
+
+        .rs-route__stop--dest .rs-route__dot {
+            margin-left: 0;
+        }
+
+        .rs-route__stop--dest .rs-route__datetime {
+            align-items: flex-start;
+        }
+
+        .rs-alert {
             flex-direction: column;
             align-items: flex-start;
         }
-        .inline-action-btn,
-        .inline-secondary-btn {
+
+        .rs-btn--full {
             width: 100%;
-        }
-        .nfse-download-actions {
-            display: grid;
         }
     }
 </style>
@@ -692,38 +1619,24 @@
         (function () {
             const forms = document.querySelectorAll('.js-nfse-form');
 
-            if (!forms.length) {
-                return;
-            }
+            if (!forms.length) return;
 
             const showToast = (title, text, icon) => {
                 if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        title,
-                        text,
-                        icon,
-                        timer: 4200,
-                        showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
-                    });
+                    Swal.fire({ title, text, icon, timer: 4200, showConfirmButton: false, toast: true, position: 'top-end' });
                     return;
                 }
-
                 alert(text || title);
             };
 
             forms.forEach((form) => {
                 form.addEventListener('submit', async (event) => {
                     event.preventDefault();
-
                     const btn = form.querySelector('.js-nfse-btn');
-
                     if (btn) {
                         btn.disabled = true;
-                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Emitindo...</span>';
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Emitindo...';
                     }
-
                     try {
                         const response = await fetch(form.action, {
                             method: 'POST',
@@ -733,27 +1646,17 @@
                                 'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value
                             }
                         });
-
                         const data = await response.json();
-
-                        if (!response.ok) {
-                            throw new Error(data.message || 'Falha ao emitir a NFS-e.');
-                        }
-
+                        if (!response.ok) throw new Error(data.message || 'Falha ao emitir a NFS-e.');
                         const icon = data.status === 'success' ? 'success' : 'warning';
                         showToast('NFS-e', data.message || 'Processo concluido.', icon);
-
-                        if (data.status === 'success') {
-                            setTimeout(() => {
-                                window.location.reload();
-                            }, 1300);
-                        }
+                        if (data.status === 'success') setTimeout(() => window.location.reload(), 1300);
                     } catch (error) {
                         showToast('NFS-e', error.message || 'Falha ao emitir a NFS-e.', 'error');
                     } finally {
                         if (btn) {
                             btn.disabled = false;
-                            btn.innerHTML = '<i class="fas fa-redo"></i><span>Tentar emitir</span>';
+                            btn.innerHTML = '<i class="fas fa-redo"></i> Tentar emitir';
                         }
                     }
                 });

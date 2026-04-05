@@ -11,102 +11,253 @@
     @if (isset($filters) && is_array($filters) && count($filters) > 0)
         <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
     @endif
-    <div class="card p-2">
-        <div class="card-header px-0 pt-0 pb-1">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="card-title text-sm text-bold">REGISTROS <span
-                        class="badge badge-success">{{ $movimentacaos->total() }}</span></h3>
-                <div class="align-bottom d-flex flex-row justify-between">
-                    <form action="{{ route('movimentacao.setPerPage') }}" method="POST">
-                        @csrf
-                        <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
-                    </form>
-                    <div class="d-flex align-items-end">
-                        {{ $movimentacaos->links() }}
-                    </div>
+
+    <div class="mov-summary">
+        <div class="mov-summary-card">
+            <div class="mov-summary-label">Total de movimentacoes</div>
+            <div class="mov-summary-value">{{ $movimentacaos->total() }}</div>
+        </div>
+        <div class="mov-summary-card">
+            <div class="mov-summary-label">Pagina atual</div>
+            <div class="mov-summary-value">{{ $movimentacaos->currentPage() }} / {{ $movimentacaos->lastPage() }}</div>
+        </div>
+        <div class="mov-summary-actions">
+            <form action="{{ route('movimentacao.setPerPage') }}" method="POST">
+                @csrf
+                <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+            </form>
+            <div class="mov-pagination">
+                {{ $movimentacaos->links() }}
+            </div>
+        </div>
+    </div>
+
+    <div class="card movimentacao-card">
+        <div class="card-header">
+            <div class="mov-header">
+                <div>
+                    <div class="mov-title">Registros de movimentacao</div>
+                    <div class="mov-sub">Visualize, edite ou remova entradas de frota.</div>
                 </div>
             </div>
         </div>
-        <div class="card-body px-0 pt-0 pb-1 table-responsive">
-
-            <table class="table table-striped table-bordered table-sm">
+        <div class="card-body table-responsive">
+            <table class="table table-sm table-hover mov-table">
                 <thead>
                     <tr>
                         <th>#</th>
-                        <th>Tipo de Movimentação</th>
-                        <th>Usuário</th>
-                        <th>Status</th>
-                        <th>Veículo</th>
-                        <th>Grupo de Veículo</th>
-                        <th>Data de Registro</th>
-                        <th style="width: 180px;">Ações</th>
+                        <th>Tipo / Status</th>
+                        <th>Usuario</th>
+                        <th>Veiculo</th>
+                        <th>Grupo</th>
+                        <th>Datas</th>
+                        <th class="text-center" style="width: 160px;">Acoes</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($movimentacaos as $movimentacao)
+                    @forelse ($movimentacaos as $movimentacao)
                         <tr>
-                            <td>{{$movimentacao->id}}</td>
-                            <td>{{ $movimentacao->tipoMovimentacao?->nome }}</td>
-                            <td>{{ $movimentacao->usuario?->nome }}</td>
+                            <td>{{ $movimentacao->id }}</td>
                             <td>
+                                <div class="mov-type">{{ $movimentacao->tipoMovimentacao?->nome ?? '-' }}</div>
                                 <span class="badge badge-pill bg-{{ $movimentacao->statusMovimentacao?->cor ?? 'secondary' }}">
-                                    {{ $movimentacao->statusMovimentacao?->nome }}
+                                    {{ $movimentacao->statusMovimentacao?->nome ?? '-' }}
                                 </span>
                             </td>
+                            <td>{{ $movimentacao->usuario?->nome ?? '-' }}</td>
                             <td>
                                 @if($movimentacao->veiculo)
-                                    <div class="info-box bg-light">
-                                        <div class="info-box-content">
-                                            <span class="info-box-text"><i class="fas fa-car mr-1"></i> {{ $movimentacao->veiculo->modelo->nome }}</span>
-                                            <span class="info-box-number">{{ $movimentacao->veiculo->placa }}</span>
-                                            <div class="progress">
-                                                <div class="progress-bar bg-primary" style="width: 100%"></div>
-                                            </div>
-                                            <span class="progress-description">
-                                                <small>
-                                                    <span data-toggle="tooltip" title="Ano do veículo">
-                                                        <i class="fas fa-calendar-alt mr-1"></i> {{ $movimentacao->veiculo->ano ?? 'N/A' }}
-                                                    </span> |
-                                                    <span data-toggle="tooltip" title="Cor do veículo">
-                                                        <i class="fas fa-palette mr-1"></i> {{ $movimentacao->veiculo->cor ?? 'N/A' }}
-                                                    </span> |
-                                                    <span data-toggle="tooltip" title="Número do chassi">
-                                                        <i class="fas fa-fingerprint mr-1"></i> {{ $movimentacao->veiculo->chassi ?? 'N/A' }}
-                                                    </span>
-                                                </small>
-                                            </span>
+                                    <div class="mov-vehicle">
+                                        <div class="mov-vehicle__main">
+                                            <i class="fas fa-car"></i>
+                                            <span>{{ $movimentacao->veiculo->modelo->nome ?? 'Modelo' }}</span>
+                                        </div>
+                                        <div class="mov-vehicle__meta">
+                                            <span>Placa: {{ $movimentacao->veiculo->placa ?? '-' }}</span>
+                                            <span>Ano: {{ $movimentacao->veiculo->ano ?? 'N/A' }}</span>
+                                            <span>Cor: {{ $movimentacao->veiculo->cor ?? 'N/A' }}</span>
                                         </div>
                                     </div>
                                 @else
-                                   <span class="text-muted">Não definido</span>
+                                    <span class="text-muted">Nao definido</span>
                                 @endif
                             </td>
                             <td>
                                 @if($movimentacao->veiculo && $movimentacao->veiculo->grupoFrota)
                                     {{ $movimentacao->veiculo->grupoFrota->nome }}
                                 @else
-                                    <span class="text-muted">Não definido</span>
+                                    <span class="text-muted">Nao definido</span>
                                 @endif
                             </td>
                             <td>
-                                @if($movimentacao->data_registro)
-                                    <i class="fas fa-car mr-1"></i>
-                                    {{ Carbon\Carbon::parse($movimentacao->data_registro)->format('d/m/Y H:i') }}
-                                @else
-                                    <span class="text-muted">Não definida</span>
-                                @endif
+                                <div class="mov-date">
+                                    <span>Registro</span>
+                                    <strong>
+                                        @if($movimentacao->data_registro)
+                                            {{ Carbon\Carbon::parse($movimentacao->data_registro)->format('d/m/Y H:i') }}
+                                        @else
+                                            --
+                                        @endif
+                                    </strong>
+                                </div>
+                                <div class="mov-date">
+                                    <span>Saida</span>
+                                    <strong>
+                                        @if($movimentacao->data_saida)
+                                            {{ Carbon\Carbon::parse($movimentacao->data_saida)->format('d/m/Y H:i') }}
+                                        @else
+                                            --
+                                        @endif
+                                    </strong>
+                                </div>
                             </td>
-                            <td style="width: 180px;">
-                                <a href="{{ route('movimentacao.edit', $movimentacao->id) }}"
-                                    class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>
+                            <td class="text-center">
+                                <a href="{{ route('movimentacao.edit', $movimentacao->id) }}" class="btn btn-xs btn-outline-primary">
+                                    <i class="fa fa-edit"></i> Editar
+                                </a>
                                 <x-delete-button :action="route('movimentacao.destroy', $movimentacao->id)" />
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">Nenhuma movimentacao encontrada.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>
     </div>
+@stop
+
+@section('css')
+<style>
+    .mov-summary {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        margin-bottom: 16px;
+    }
+    .mov-summary-card {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 12px 16px;
+        min-width: 180px;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+    }
+    .mov-summary-label {
+        font-size: .8rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        margin-bottom: 6px;
+    }
+    .mov-summary-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .mov-summary-actions {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .movimentacao-card {
+        border-radius: 14px;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
+    }
+    .mov-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+    .mov-title {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0f172a;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+    .mov-sub {
+        color: #64748b;
+        font-size: .9rem;
+        margin-top: 4px;
+    }
+    .mov-actions {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .mov-pagination {
+        display: flex;
+        align-items: center;
+    }
+    .mov-table thead th {
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: .8rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #475569;
+    }
+    .mov-table tbody td {
+        vertical-align: middle;
+    }
+    .mov-type {
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 6px;
+    }
+    .mov-vehicle {
+        display: grid;
+        gap: 6px;
+    }
+    .mov-vehicle__main {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #0f172a;
+    }
+    .mov-vehicle__meta {
+        display: grid;
+        gap: 4px;
+        font-size: .85rem;
+        color: #64748b;
+    }
+    .mov-date {
+        display: grid;
+        gap: 2px;
+        font-size: .82rem;
+        color: #64748b;
+        margin-bottom: 6px;
+    }
+    .mov-date strong {
+        font-size: .86rem;
+        color: #0f172a;
+        font-weight: 600;
+    }
+    @media (max-width: 991px) {
+        .mov-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .mov-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+        .mov-summary-actions {
+            width: 100%;
+            justify-content: space-between;
+        }
+    }
+</style>
 @stop
 
 @section('js')

@@ -19,16 +19,59 @@ class NfseController extends Controller
     public function index(Request $request)
     {
         $query = Nfse::query()->with(['reserva', 'empresa']);
+        $filters = [
+            'reserva_id' => $request->input('reserva_id'),
+            'status' => $request->input('status'),
+            'numero' => $request->input('numero'),
+            'ambiente' => $request->input('ambiente'),
+            'data_inicio' => $request->input('data_inicio'),
+            'data_fim' => $request->input('data_fim'),
+            'empresa_id' => $request->input('empresa_id'),
+        ];
 
         if (!Auth::user()?->isAdministrador()) {
             $empresaId = Auth::user()?->empresa_id;
             if ($empresaId && Schema::hasColumn('nfse', 'empresa_id')) {
                 $query->where('empresa_id', $empresaId);
             }
+        } elseif (!empty($filters['empresa_id']) && Schema::hasColumn('nfse', 'empresa_id')) {
+            $query->where('empresa_id', (int) $filters['empresa_id']);
+        }
+
+        if (!empty($filters['reserva_id'])) {
+            $query->where('reserva_id', (int) $filters['reserva_id']);
+        }
+
+        if (!empty($filters['status'])) {
+            $query->where('status', $filters['status']);
+        }
+
+        if (!empty($filters['numero'])) {
+            $query->where('numero', 'like', '%' . $filters['numero'] . '%');
+        }
+
+        if (!empty($filters['ambiente'])) {
+            $query->where('ambiente', $filters['ambiente']);
+        }
+
+        if (!empty($filters['data_inicio'])) {
+            $query->whereDate('created_at', '>=', $filters['data_inicio']);
+        }
+
+        if (!empty($filters['data_fim'])) {
+            $query->whereDate('created_at', '<=', $filters['data_fim']);
         }
 
         $nfseList = $query->orderByDesc('id')->paginate(15);
+        $nfseList->appends($filters);
         [$podeImportar, $ultimaImportacao, $proximaImportacao] = $this->statusImportacao();
+        $statusDisponiveis = Nfse::query()->select('status')->distinct()->orderBy('status')->pluck('status')->filter()->values();
+        $ambientesDisponiveis = Nfse::query()->select('ambiente')->distinct()->orderBy('ambiente')->pluck('ambiente')->filter()->values();
+        $empresasDisponiveis = collect();
+
+        if (Auth::user()?->isAdministrador() && Schema::hasColumn('nfse', 'empresa_id')) {
+            $empresasDisponiveis = Empresa::query()->orderBy('nome')->get(['id', 'nome']);
+        }
 
         return view('nfse.index', [
             'nfseList' => $nfseList,
@@ -36,6 +79,10 @@ class NfseController extends Controller
             'podeImportar' => $podeImportar,
             'ultimaImportacao' => $ultimaImportacao,
             'proximaImportacao' => $proximaImportacao,
+            'filters' => $filters,
+            'statusDisponiveis' => $statusDisponiveis,
+            'ambientesDisponiveis' => $ambientesDisponiveis,
+            'empresasDisponiveis' => $empresasDisponiveis,
         ]);
     }
 
