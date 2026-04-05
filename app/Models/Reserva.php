@@ -74,6 +74,11 @@ class Reserva extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function empresa()
+    {
+        return $this->belongsTo(Empresa::class, 'empresa_id');
+    }
+
     public function modelos()
     {
         return $this->belongsTo(Modelo::class, 'modelo_id');

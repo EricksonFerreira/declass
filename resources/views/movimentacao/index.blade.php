@@ -12,37 +12,32 @@
         <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
     @endif
 
-    <div class="mov-summary">
-        <div class="mov-summary-card">
-            <div class="mov-summary-label">Total de movimentacoes</div>
-            <div class="mov-summary-value">{{ $movimentacaos->total() }}</div>
-        </div>
-        <div class="mov-summary-card">
-            <div class="mov-summary-label">Pagina atual</div>
-            <div class="mov-summary-value">{{ $movimentacaos->currentPage() }} / {{ $movimentacaos->lastPage() }}</div>
-        </div>
-        <div class="mov-summary-actions">
-            <form action="{{ route('movimentacao.setPerPage') }}" method="POST">
-                @csrf
-                <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
-            </form>
-            <div class="mov-pagination">
-                {{ $movimentacaos->links() }}
-            </div>
-        </div>
-    </div>
-
-    <div class="card movimentacao-card">
-        <div class="card-header">
-            <div class="mov-header">
+    <div class="card p-2 movimentacao-card">
+        <div class="card-header px-0 pt-0 pb-1">
+            <div class="d-flex justify-content-between align-items-center flex-wrap">
                 <div>
-                    <div class="mov-title">Registros de movimentacao</div>
-                    <div class="mov-sub">Visualize, edite ou remova entradas de frota.</div>
+                    <h3 class="card-title text-sm text-bold">
+                        REGISTROS <span class="badge badge-success">{{ $movimentacaos->total() }}</span>
+                    </h3>
+                    <div class="mov-sub">Movimentacoes registradas na frota.</div>
+                </div>
+                <div class="mov-summary-actions">
+                    <div class="mov-summary-card">
+                        <div class="mov-summary-label">Pagina</div>
+                        <div class="mov-summary-value">{{ $movimentacaos->currentPage() }} / {{ $movimentacaos->lastPage() }}</div>
+                    </div>
+                    <form action="{{ route('movimentacao.setPerPage') }}" method="POST">
+                        @csrf
+                        <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                    </form>
+                    <div class="mov-pagination">
+                        {{ $movimentacaos->links() }}
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="card-body table-responsive">
-            <table class="table table-sm table-hover mov-table">
+        <div class="card-body px-0 pt-0 pb-1 table-responsive">
+            <table class="table table-hover table-bordered table-sm mov-table">
                 <thead>
                     <tr>
                         <th>#</th>
@@ -131,13 +126,6 @@
 
 @section('css')
 <style>
-    .mov-summary {
-        display: flex;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-        margin-bottom: 16px;
-    }
     .mov-summary-card {
         background: #ffffff;
         border: 1px solid #e2e8f0;
@@ -159,7 +147,6 @@
         color: #0f172a;
     }
     .mov-summary-actions {
-        margin-left: auto;
         display: flex;
         align-items: center;
         gap: 12px;
@@ -169,30 +156,10 @@
         border-radius: 14px;
         box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
     }
-    .mov-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        gap: 16px;
-        flex-wrap: wrap;
-    }
-    .mov-title {
-        font-size: 1.05rem;
-        font-weight: 700;
-        color: #0f172a;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-    }
     .mov-sub {
         color: #64748b;
         font-size: .9rem;
         margin-top: 4px;
-    }
-    .mov-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
     }
     .mov-pagination {
         display: flex;

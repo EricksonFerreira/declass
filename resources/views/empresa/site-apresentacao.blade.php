@@ -449,9 +449,24 @@
                                     'icon'     => 'fas fa-paint-brush',
                                     'descricao' => 'As 3 cores base da empresa. Sao usadas em toda a pagina.',
                                     'items'    => [
-                                        ['name' => 'cor_primaria',   'label' => 'Cor primaria',   'default' => $siteCores['brand_primaria']   ?? ($empresa->cor_primaria   ?: '#1F2937')],
-                                        ['name' => 'cor_secundaria', 'label' => 'Cor secundaria', 'default' => $siteCores['brand_secundaria'] ?? ($empresa->cor_secundaria ?: '#334155')],
-                                        ['name' => 'cor_terciaria',  'label' => 'Cor terciaria',  'default' => $siteCores['brand_terciaria']  ?? ($empresa->cor_terciaria  ?: '#64748B')],
+                                        [
+                                            'name' => 'cor_primaria',
+                                            'label' => 'Cor primaria',
+                                            'default' => $siteCores['brand_primaria'] ?? ($empresa->cor_primaria ?: '#1F2937'),
+                                            'hint' => 'Principal da marca: usada nos botoes e destaques.',
+                                        ],
+                                        [
+                                            'name' => 'cor_secundaria',
+                                            'label' => 'Cor secundaria',
+                                            'default' => $siteCores['brand_secundaria'] ?? ($empresa->cor_secundaria ?: '#334155'),
+                                            'hint' => 'Complementa a primaria em cards e links.',
+                                        ],
+                                        [
+                                            'name' => 'cor_terciaria',
+                                            'label' => 'Cor terciaria',
+                                            'default' => $siteCores['brand_terciaria'] ?? ($empresa->cor_terciaria ?: '#64748B'),
+                                            'hint' => 'Detalhes sutis e fundos suaves.',
+                                        ],
                                     ],
                                 ],
                                 [
@@ -574,6 +589,9 @@
                                                     <input type="color" class="color-picker" id="{{ $item['name'] }}" name="{{ $item['name'] }}" value="{{ $colorValue }}">
                                                     <input type="text" class="form-control form-control-sm color-text" data-color-text="{{ $item['name'] }}" value="{{ $colorValue }}" maxlength="7" placeholder="#000000">
                                                 </div>
+                                                @if(!empty($item['hint']))
+                                                    <small class="color-hint">{{ $item['hint'] }}</small>
+                                                @endif
                                             </div>
                                         @endforeach
                                     </div>
@@ -1488,6 +1506,13 @@
         grid-template-columns: 42px 1fr;
         gap: 8px;
         align-items: center;
+    }
+
+    .color-hint {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.72rem;
+        color: #6b7c90;
     }
 
     .color-picker {

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\ReservaJobException;
 use App\Models\Reserva;
+use App\Models\Empresa;
 use App\Traits\LogTrait;
 use Auth;
 use Carbon\Carbon;
@@ -21,6 +22,7 @@ class ReservaService extends AbstractBaseService
     protected GrupoFrotaService $grupoFrotaService;
     protected ModeloService $modeloService;
     protected VeiculoService $veiculoService;
+    protected SaldoService $saldoService;
 
     public function __construct(
         Reserva $reserva,
@@ -28,7 +30,8 @@ class ReservaService extends AbstractBaseService
         OpcionalService $opcionalService,
         GrupoFrotaService $grupoFrotaService,
         ModeloService $modeloService,
-        VeiculoService $veiculoService
+        VeiculoService $veiculoService,
+        SaldoService $saldoService
     ) {
         $this->model = $reserva;
         $this->movimentacaoService = $movimentacaoService;
@@ -36,6 +39,7 @@ class ReservaService extends AbstractBaseService
         $this->grupoFrotaService = $grupoFrotaService;
         $this->modeloService = $modeloService;
         $this->veiculoService = $veiculoService;
+        $this->saldoService = $saldoService;
     }
 
     public function setModel(Model $model): void
@@ -419,6 +423,73 @@ class ReservaService extends AbstractBaseService
         }
         return $valorOpcionais;
     }
+    public function processarReservasAtrasadasEAjustarSaldo(): void
+    {
+        $now = Carbon::now();
+
+        $reservas = $this->model
+            ->with(['usuario', 'empresa'])
+            ->where('data_inicio', '<', $now)
+            ->whereIn('status_reserva_id', [2, 6])
+            ->get();
+
+        foreach ($reservas as $reserva) {
+            $minutosAtraso = Carbon::parse($reserva->data_inicio)->diffInMinutes($now, false);
+            if ($minutosAtraso <= 0) {
+                continue;
+            }
+
+            if ((int) $reserva->status_reserva_id === 2) {
+                $reserva->status_reserva_id = 6; // Atrasada
+                $reserva->save();
+            }
+
+            $limite = $this->obterLimiteAtrasoMinutos($reserva);
+            if ($limite === null) {
+                continue;
+            }
+
+            if ((int) $reserva->status_reserva_id === 6 && $minutosAtraso >= $limite) {
+                $this->cancelarReservaPorAtraso($reserva, $limite);
+            }
+        }
+    }
+
+    private function obterLimiteAtrasoMinutos(Reserva $reserva): ?int
+    {
+        $empresa = $reserva->empresa ?: Empresa::find($reserva->empresa_id);
+        if (!$empresa) {
+            return 120;
+        }
+
+        $limite = $empresa->reserva_atraso_max_minutos;
+        if ($limite === null || $limite === '') {
+            return 120;
+        }
+
+        return max(0, (int) $limite);
+    }
+
+    private function cancelarReservaPorAtraso(Reserva $reserva, int $limiteMinutos): void
+    {
+        $reserva->status_reserva_id = 3; // Cancelada
+        $reserva->data_cancelamento = now();
+        $reserva->observacoes = trim(($reserva->observacoes ?? '') . ' Reserva cancelada automaticamente por atraso.');
+        $reserva->save();
+
+        if ($reserva->pagamento_efetuado === 'S' && $reserva->usuario) {
+            $valor = (float) ($reserva->valor_total_final ?? 0);
+            if ($valor > 0) {
+                $this->saldoService->creditar($reserva->usuario, $valor, [
+                    'empresa_id' => $reserva->empresa_id,
+                    'reserva_id' => $reserva->id,
+                    'origem' => 'cancelamento_atraso',
+                    'observacoes' => 'Saldo gerado por cancelamento automatico apos ' . $limiteMinutos . ' minutos de atraso.',
+                ]);
+            }
+        }
+    }
+
     private function calcularValorTotalPorDias($tarifaBase, $quantidadeDias){
         return $tarifaBase * $quantidadeDias;
     }

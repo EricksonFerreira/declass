@@ -3,8 +3,11 @@
 @section('title', $titulo)
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
-        <h1 class="m-0">{{ $titulo }}</h1>
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="$titulo" />
+
+    <div class="d-flex justify-content-between align-items-center mt-2">
+        <div></div>
         @if(auth()->user()?->hasPermissao('nfse.importarPendentes') || auth()->user()?->isAdministrador())
             <div class="d-flex flex-column align-items-end">
                 <form action="{{ route('nfse.importarPendentes') }}" method="POST" class="d-flex align-items-center">

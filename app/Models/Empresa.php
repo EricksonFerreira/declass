@@ -66,6 +66,7 @@ class Empresa extends Model
         'nfse_ultima_importacao_em',
         'reserva_escolher_empresa',
         'reserva_selecionar_modelo',
+        'reserva_atraso_max_minutos',
         'empresa_id',
     ];
 

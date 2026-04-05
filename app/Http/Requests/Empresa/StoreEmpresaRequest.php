@@ -61,6 +61,7 @@ class StoreEmpresaRequest extends FormRequest
             'paypal_mode' => ['nullable', Rule::in(['sandbox', 'live'])],
             'reserva_escolher_empresa' => ['nullable', Rule::in(['S', 'N'])],
             'reserva_selecionar_modelo' => ['nullable', Rule::in(['S', 'N'])],
+            'reserva_atraso_max_minutos' => ['nullable', 'integer', 'min:0', 'max:10080'],
             'nfse_ativo' => ['nullable', Rule::in(['S', 'N'])],
             'nfse_ambiente' => ['nullable', Rule::in(['homologacao', 'producao'])],
             'nfse_provedor' => ['nullable', 'string', 'max:50'],

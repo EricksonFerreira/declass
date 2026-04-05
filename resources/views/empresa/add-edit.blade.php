@@ -119,6 +119,18 @@
                         </select>
                         <small class="text-muted d-block mt-1">Se "Nao", o modelo sera escolhido automaticamente apos selecionar o grupo.</small>
                     </div>
+                    <div class="form-group form-group-empresa">
+                        <label for="reserva_atraso_max_minutos">Maximo de minutos de atraso para cancelamento automatico</label>
+                        <input
+                            type="number"
+                            class="form-control form-control-sm"
+                            id="reserva_atraso_max_minutos"
+                            name="reserva_atraso_max_minutos"
+                            min="0"
+                            value="{{ old('reserva_atraso_max_minutos', $empresa->reserva_atraso_max_minutos ?? 120) }}"
+                        >
+                        <small class="text-muted d-block mt-1">Apos esse tempo, reservas atrasadas sao canceladas e o valor pago vira saldo.</small>
+                    </div>
                 </div>
 
                 <div class="col-12 mt-2">

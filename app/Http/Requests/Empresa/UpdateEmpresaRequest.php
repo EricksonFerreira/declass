@@ -70,6 +70,7 @@ class UpdateEmpresaRequest extends FormRequest
             'nfse_tributacao_issqn' => ['nullable', 'integer', 'min:1', 'max:4'],
             'nfse_tomador_numero_padrao' => ['nullable', 'string', 'max:20'],
             'nfse_tomador_bairro_padrao' => ['nullable', 'string', 'max:80'],
+            'reserva_atraso_max_minutos' => ['nullable', 'integer', 'min:0', 'max:10080'],
         ];
     }
     public function messages(): array
@@ -102,6 +103,9 @@ class UpdateEmpresaRequest extends FormRequest
             'nfse_ativo.in' => 'O campo NFS-e ativo deve ser S ou N.',
             'nfse_ambiente.in' => 'O ambiente NFS-e deve ser homologacao ou producao.',
             'nfse_municipio_codigo.digits_between' => 'O codigo do municipio deve ter 6 ou 7 digitos.',
+            'reserva_atraso_max_minutos.integer' => 'O tempo maximo de atraso deve ser um numero inteiro.',
+            'reserva_atraso_max_minutos.min' => 'O tempo maximo de atraso nao pode ser negativo.',
+            'reserva_atraso_max_minutos.max' => 'O tempo maximo de atraso nao pode ultrapassar 10080 minutos.',
         ];
     }
 

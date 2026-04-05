@@ -46,6 +46,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'acesso_todas_estacoes',
         'forcar_troca_senha',
         'foto_perfil',
+        'saldo_atual',
     ];
 
     /**
@@ -68,6 +69,7 @@ class User extends Authenticatable implements MustVerifyEmail
         'password' => 'hashed',
         'acesso_todas_estacoes' => 'boolean',
         'forcar_troca_senha' => 'boolean',
+        'saldo_atual' => 'decimal:2',
     ];
 
     public function sendEmailVerificationNotification()
