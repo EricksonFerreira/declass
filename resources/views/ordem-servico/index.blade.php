@@ -24,27 +24,39 @@
                     <h3 class="card-title text-sm text-bold mb-2 mb-md-0">
                         REGISTROS <span class="badge badge-success">{{ $ordens->total() }}</span>
                     </h3>
-                    <div class="os-filter-tabs">
-                        <a href="{{ route('ordem-servico.index') }}"
-                            class="btn btn-xs {{ is_null($status ?? null) ? 'btn-primary' : 'btn-outline-secondary' }}">
-                            <i class="fas fa-list mr-1"></i>Todas
-                        </a>
-                        <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_ABERTA]) }}"
-                            class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_ABERTA ? 'btn-primary' : 'btn-outline-secondary' }}">
-                            <i class="fas fa-folder-open mr-1"></i>Abertas
-                        </a>
-                        <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_EM_ANDAMENTO]) }}"
-                            class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_EM_ANDAMENTO ? 'btn-primary' : 'btn-outline-secondary' }}">
-                            <i class="fas fa-spinner mr-1"></i>Em andamento
-                        </a>
-                        <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_CONCLUIDA]) }}"
-                            class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_CONCLUIDA ? 'btn-primary' : 'btn-outline-secondary' }}">
-                            <i class="fas fa-check-circle mr-1"></i>Concluidas
-                        </a>
-                        <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_CANCELADA]) }}"
-                            class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_CANCELADA ? 'btn-primary' : 'btn-outline-secondary' }}">
-                            <i class="fas fa-ban mr-1"></i>Canceladas
-                        </a>
+                    <div class="os-toolbar-right">
+                        <div class="input-group input-group-sm os-search">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" class="form-control" id="osSearch" placeholder="Filtrar: numero, veiculo, reserva, usuario...">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="osSearchClear" title="Limpar filtro">&times;</button>
+                            </div>
+                        </div>
+
+                        <div class="os-filter-tabs">
+                            <a href="{{ route('ordem-servico.index') }}"
+                                class="btn btn-xs {{ is_null($status ?? null) ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                <i class="fas fa-list mr-1"></i>Todas
+                            </a>
+                            <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_ABERTA]) }}"
+                                class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_ABERTA ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                <i class="fas fa-folder-open mr-1"></i>Abertas
+                            </a>
+                            <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_EM_ANDAMENTO]) }}"
+                                class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_EM_ANDAMENTO ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                <i class="fas fa-spinner mr-1"></i>Em andamento
+                            </a>
+                            <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_CONCLUIDA]) }}"
+                                class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_CONCLUIDA ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                <i class="fas fa-check-circle mr-1"></i>Concluidas
+                            </a>
+                            <a href="{{ route('ordem-servico.index', ['status' => \App\Models\OrdemServico::STATUS_CANCELADA]) }}"
+                                class="btn btn-xs {{ ($status ?? null) === \App\Models\OrdemServico::STATUS_CANCELADA ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                <i class="fas fa-ban mr-1"></i>Canceladas
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -64,7 +76,18 @@
                     </thead>
                     <tbody>
                         @forelse($ordens as $os)
-                            <tr onclick="window.location='{{ route('ordem-servico.show', $os) }}';" style="cursor:pointer;">
+                            @php
+                                $osSearch = \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([
+                                    (string) ($os->numero ?? ''),
+                                    (string) ($os->id ?? ''),
+                                    (string) ($os->status ?? ''),
+                                    (string) ($os->reserva_id ?? ''),
+                                    (string) (optional($os->veiculo)->nome ?? ''),
+                                    (string) (optional($os->veiculo)->placa ?? ''),
+                                    (string) (optional($os->usuarioAbertura)->name ?? ''),
+                                ]))));
+                            @endphp
+                            <tr data-search="{{ $osSearch }}" onclick="window.location='{{ route('ordem-servico.show', $os) }}';" style="cursor:pointer;">
                                 <td class="text-center">{{ $os->numero ?? $os->id }}</td>
                                 <td>
                                     <strong>{{ optional($os->veiculo)->nome ?? ('Veiculo #' . $os->veiculo_id) }}</strong><br>
@@ -106,6 +129,11 @@
                                 </td>
                             </tr>
                         @endforelse
+                        <tr id="osNoResultsRow" class="d-none">
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                Sem resultados para o filtro.
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -131,6 +159,19 @@
         gap: 12px;
     }
 
+    .os-toolbar-right {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: flex-end;
+        align-items: center;
+    }
+
+    .os-search {
+        width: 320px;
+        max-width: 100%;
+    }
+
     .os-filter-tabs {
         display: flex;
         flex-wrap: wrap;
@@ -149,10 +190,65 @@
     }
 
     @media (max-width: 767.98px) {
+        .os-toolbar-right {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .os-search {
+            width: 100%;
+        }
+
         .os-filter-tabs {
             width: 100%;
             justify-content: flex-start;
         }
     }
 </style>
+@stop
+
+@section('js')
+<script>
+(function () {
+    'use strict';
+
+    var input = document.getElementById('osSearch');
+    var clearBtn = document.getElementById('osSearchClear');
+    var noResultsRow = document.getElementById('osNoResultsRow');
+
+    if (!input || !clearBtn) return;
+
+    function applyFilter() {
+        var q = (input.value || '').toLowerCase().trim();
+        localStorage.setItem('osIndexSearch', q);
+
+        var rows = document.querySelectorAll('tbody tr[data-search]');
+        var matchCount = 0;
+        rows.forEach(function (row) {
+            var hay = (row.dataset.search || '');
+            var ok = !q || hay.indexOf(q) !== -1;
+            row.style.display = ok ? '' : 'none';
+            if (ok) matchCount++;
+        });
+
+        if (noResultsRow) {
+            noResultsRow.classList.toggle('d-none', matchCount !== 0 || !q);
+        }
+    }
+
+    var saved = localStorage.getItem('osIndexSearch') || '';
+    if (saved) {
+        input.value = saved;
+    }
+
+    input.addEventListener('input', applyFilter);
+    clearBtn.addEventListener('click', function () {
+        input.value = '';
+        applyFilter();
+        input.focus();
+    });
+
+    applyFilter();
+})();
+</script>
 @stop

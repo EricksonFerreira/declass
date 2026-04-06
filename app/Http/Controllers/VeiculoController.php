@@ -149,7 +149,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'ordensServico',
             'movimentacoes' => function ($query) {
                 $query->with([
-                    'usuario:id,name',
+                    'usuario:id,nome',
                     'tipoMovimentacao:id,nome',
                     'statusMovimentacao:id,nome',
                     'localOrigem:id,nome',
