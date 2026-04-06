@@ -39,6 +39,15 @@ class PdfService
 
     }
 
+    public function gerarOrdemServicoPdf(array $data, string $filename = 'ordem-servico.pdf')
+    {
+        $bootstrap5 = file_get_contents(public_path() . '/css/bootstrap.min.css');
+        $data['css'] = $bootstrap5;
+        $htmlContent = view('pdf.ordem-servico', compact('data'))->render();
+
+        return $this->generatePdf($htmlContent, $filename);
+    }
+
     public function generateReportPdf($reportData)
     {
         $htmlContent = view('pdf.report', compact('reportData'))->render();

@@ -8,8 +8,10 @@ use App\Http\Requests\OrdemServico\ConcluirOrdemServicoRequest;
 use App\Http\Requests\OrdemServico\StoreOrdemServicoRequest;
 use App\Models\OrdemServico;
 use App\Models\VeiculoDanos;
+use App\Models\Empresa;
 use App\Services\BreadcrumbService;
 use App\Services\OrdemServicoService;
+use App\Services\PdfService;
 use App\Services\VeiculoService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -19,7 +21,8 @@ class OrdemServicoController extends Controller
     public function __construct(
         protected OrdemServicoService $ordemServicoService,
         protected BreadcrumbService $breadcrumbService,
-        protected VeiculoService $veiculoService
+        protected VeiculoService $veiculoService,
+        protected PdfService $pdfService
     ) {
     }
 
@@ -114,6 +117,81 @@ class OrdemServicoController extends Controller
 
         return view('ordem-servico.show', compact('ordem_servico', 'breadcrumb'))
             ->with('titulo', 'OS ' . ($ordem_servico->numero ?? '#' . $ordem_servico->id));
+    }
+
+    public function pdf(Request $request, OrdemServico $ordem_servico)
+    {
+        $ordem_servico->load([
+            'veiculo',
+            'reserva',
+            'usuarioAbertura',
+            'usuarioEncerramento',
+            'itens.veiculoDano',
+        ]);
+
+        $empresaId = (int) ($ordem_servico->empresa_id ?? 0);
+        if ($empresaId === 0) {
+            $empresaId = (int) $request->session()->get('empresa_context_id', 0);
+        }
+        if ($empresaId === 0) {
+            $empresaId = (int) (Auth::user()->empresa_id ?? 0);
+        }
+        $empresa = $empresaId > 0 ? Empresa::find($empresaId) : null;
+
+        $itens = $ordem_servico->itens->map(function ($item) {
+            $dano = $item->veiculoDano;
+
+            return [
+                'descricao' => (string) ($item->descricao_servico ?? ''),
+                'resultado' => (string) ($item->resultado ?? ''),
+                'dano' => $dano ? [
+                    'id' => $dano->id,
+                    'local' => (string) ($dano->local_dano ?? ''),
+                    'tipo' => (string) ($dano->tipo_dano ?? ''),
+                    'observacoes' => (string) ($dano->observacoes ?? ''),
+                    'correcao' => (string) ($dano->correcao_descricao ?? ''),
+                    'correcao_data' => $dano->correcao_data ? $dano->correcao_data->format('d/m/Y H:i') : null,
+                ] : null,
+            ];
+        })->values()->all();
+
+        $danos = collect($itens)
+            ->pluck('dano')
+            ->filter()
+            ->unique('id')
+            ->values()
+            ->all();
+
+        $data = [
+            'documento' => [
+                'data_emissao' => now()->format('d/m/Y H:i'),
+                'empresa' => [
+                    'nome' => $empresa?->nome ?? config('app.name'),
+                    'logo_url' => $empresa?->logo_url ?? null,
+                ],
+            ],
+            'os' => [
+                'numero' => $ordem_servico->numero ?? ('#' . $ordem_servico->id),
+                'status' => (string) ($ordem_servico->status ?? ''),
+                'aberta_em' => $ordem_servico->created_at?->format('d/m/Y H:i'),
+                'concluida_em' => $ordem_servico->data_conclusao?->format('d/m/Y H:i'),
+                'aberta_por' => $ordem_servico->usuarioAbertura?->name ?? null,
+                'concluida_por' => $ordem_servico->usuarioEncerramento?->name ?? null,
+                'observacoes' => (string) ($ordem_servico->observacoes ?? ''),
+                'relatorio_conclusao' => (string) ($ordem_servico->relatorio_conclusao ?? ''),
+            ],
+            'veiculo' => [
+                'nome' => $ordem_servico->veiculo?->nome ?? null,
+                'placa' => $ordem_servico->veiculo?->placa_licenca ?? null,
+            ],
+            'reserva' => [
+                'id' => $ordem_servico->reserva_id ? (int) $ordem_servico->reserva_id : null,
+            ],
+            'itens' => $itens,
+            'danos' => $danos,
+        ];
+
+        return $this->pdfService->gerarOrdemServicoPdf($data, 'os-' . ($ordem_servico->numero ?? $ordem_servico->id) . '.pdf');
     }
 
     public function danosPendentes(Request $request)

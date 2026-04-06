@@ -147,6 +147,17 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'reservas.statusReserva',
             'veiculoDanos.dano.categoria',
             'ordensServico',
+            'movimentacoes' => function ($query) {
+                $query->with([
+                    'usuario:id,name',
+                    'tipoMovimentacao:id,nome',
+                    'statusMovimentacao:id,nome',
+                    'localOrigem:id,nome',
+                    'localDestino:id,nome',
+                    'reserva:id',
+                    'ordemServico:id,numero,status',
+                ])->orderByDesc('id');
+            },
         ]);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([

@@ -56,13 +56,13 @@ class Movimentacao extends Model
     // Relacionamento com Local de Origem
     public function localOrigem()
     {
-        return $this->belongsTo(Estacao::class, 'local_origem');
+        return $this->belongsTo(Estacao::class, 'local_origem_id');
     }
 
     // Relacionamento com Local de Destino
     public function localDestino()
     {
-        return $this->belongsTo(Estacao::class, 'local_destino');
+        return $this->belongsTo(Estacao::class, 'local_destino_id');
     }
 
     // Relacionamento com Reserva (opcional)

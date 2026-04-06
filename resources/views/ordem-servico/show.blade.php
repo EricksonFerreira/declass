@@ -4,372 +4,573 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="$titulo" />
 @stop
 
 @section('content')
-<div class="container-fluid px-0">
+@php
+    $statusSlug = strtolower((string) ($ordem_servico->status ?? 'aberta'));
+    $statusClass = match ($statusSlug) {
+        \App\Models\OrdemServico::STATUS_CONCLUIDA => 'is-success',
+        \App\Models\OrdemServico::STATUS_CANCELADA => 'is-danger',
+        \App\Models\OrdemServico::STATUS_EM_ANDAMENTO => 'is-primary',
+        default => 'is-warning',
+    };
+    $statusIcon = match ($statusSlug) {
+        \App\Models\OrdemServico::STATUS_CONCLUIDA => 'fas fa-check-circle',
+        \App\Models\OrdemServico::STATUS_CANCELADA => 'fas fa-ban',
+        \App\Models\OrdemServico::STATUS_EM_ANDAMENTO => 'fas fa-spinner',
+        default => 'fas fa-folder-open',
+    };
+@endphp
 
-    {{-- HERO HEADER --}}
-    <div class="module-card mb-4">
-        <div class="module-card-header">
-            <div class="module-header-left">
-                <div class="module-header-icon">
-                    <i class="fas fa-clipboard-check"></i>
-                </div>
-                <div>
-                    <div class="module-header-eyebrow">Ordem de Servico</div>
-                    <h1 class="module-header-title">{{ $ordem_servico->numero ?? 'OS #' . $ordem_servico->id }}</h1>
-                    <p class="module-header-sub">
-                        Veiculo:
-                        <a href="{{ route('veiculo.show', $ordem_servico->veiculo_id) }}" class="module-header-link">
-                            {{ optional($ordem_servico->veiculo)->placa ?? ('#' . $ordem_servico->veiculo_id) }}
-                        </a>
-                    </p>
-                </div>
-            </div>
-            <div class="module-header-right">
-                <a href="{{ route('ordem-servico.index') }}" class="btn-xp btn-xp--outline-light">
-                    <i class="fas fa-arrow-left mr-1"></i>Voltar
-                </a>
-            </div>
-        </div>
-    </div>
-
-    {{-- ALERTAS --}}
+<div class="rs-page os-show-page">
     @if(session('success'))
-        <div class="xp-alert xp-alert--success mb-4">
-            <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
-            <button type="button" class="xp-alert-close" data-dismiss="alert">&times;</button>
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle mr-1"></i>{{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
         </div>
     @endif
+
     @if ($errors->any())
-        <div class="xp-alert xp-alert--danger mb-4">
-            <i class="fas fa-exclamation-triangle mr-2"></i>
+        <div class="alert alert-danger">
             <ul class="mb-0 pl-3">
-                @foreach ($errors->all() as $e)<li>{{ $e }}</li>@endforeach
+                @foreach ($errors->all() as $e)
+                    <li>{{ $e }}</li>
+                @endforeach
             </ul>
         </div>
     @endif
 
-    <div class="row">
-        {{-- COLUNA PRINCIPAL --}}
-        <div class="col-lg-8">
-
-            {{-- Dados da OS --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-info-circle"></i>
-                        <div>
-                            <strong>Dados da OS</strong>
-                            <span>Informacoes gerais desta ordem de servico</span>
-                        </div>
-                    </div>
-
-                    <div class="os-details-grid">
-                        <div class="os-detail-item">
-                            <span class="os-detail-label">Numero</span>
-                            <span class="os-detail-value font-weight-bold">{{ $ordem_servico->numero ?? '#' . $ordem_servico->id }}</span>
-                        </div>
-                        <div class="os-detail-item">
-                            <span class="os-detail-label">Status</span>
-                            <span class="os-detail-value">
-                                @if($ordem_servico->status === \App\Models\OrdemServico::STATUS_ABERTA)
-                                    <span class="status-badge status-badge--amber"><i class="fas fa-folder-open mr-1"></i>Aberta</span>
-                                @elseif($ordem_servico->status === \App\Models\OrdemServico::STATUS_EM_ANDAMENTO)
-                                    <span class="status-badge status-badge--blue"><i class="fas fa-spinner mr-1"></i>Em Andamento</span>
-                                @elseif($ordem_servico->status === \App\Models\OrdemServico::STATUS_CONCLUIDA)
-                                    <span class="status-badge status-badge--green"><i class="fas fa-check-circle mr-1"></i>Concluida</span>
-                                @else
-                                    <span class="status-badge status-badge--gray"><i class="fas fa-ban mr-1"></i>Cancelada</span>
-                                @endif
-                            </span>
-                        </div>
-                        <div class="os-detail-item">
-                            <span class="os-detail-label">Veiculo</span>
-                            <span class="os-detail-value">
-                                <a href="{{ route('veiculo.show', $ordem_servico->veiculo_id) }}" class="xp-link">
-                                    <i class="fas fa-car mr-1"></i>{{ optional($ordem_servico->veiculo)->placa ?? ('#' . $ordem_servico->veiculo_id) }}
-                                </a>
-                            </span>
-                        </div>
-                        <div class="os-detail-item">
-                            <span class="os-detail-label">Reserva</span>
-                            <span class="os-detail-value">
-                                @if($ordem_servico->reserva_id)
-                                    <a href="{{ route('reserva.show', $ordem_servico->reserva_id) }}" class="xp-link">
-                                        <i class="fas fa-calendar-alt mr-1"></i>#{{ $ordem_servico->reserva_id }}
-                                    </a>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </span>
-                        </div>
-                        <div class="os-detail-item">
-                            <span class="os-detail-label">Aberta por</span>
-                            <span class="os-detail-value">{{ optional($ordem_servico->usuarioAbertura)->name ?? '—' }}</span>
-                        </div>
-                        @if($ordem_servico->data_conclusao)
-                            <div class="os-detail-item">
-                                <span class="os-detail-label">Encerramento</span>
-                                <span class="os-detail-value">
-                                    {{ optional($ordem_servico->usuarioEncerramento)->name ?? '—' }}
-                                    <br><small class="text-muted">{{ $ordem_servico->data_conclusao->format('d/m/Y H:i') }}</small>
-                                </span>
-                            </div>
-                        @endif
-                        @if($ordem_servico->observacoes)
-                            <div class="os-detail-item os-detail-item--full">
-                                <span class="os-detail-label">Observacoes</span>
-                                <span class="os-detail-value" style="white-space:pre-wrap;">{{ $ordem_servico->observacoes }}</span>
-                            </div>
-                        @endif
-                        @if($ordem_servico->relatorio_conclusao)
-                            <div class="os-detail-item os-detail-item--full">
-                                <span class="os-detail-label">Relatorio geral</span>
-                                <span class="os-detail-value" style="white-space:pre-wrap;">{{ $ordem_servico->relatorio_conclusao }}</span>
-                            </div>
-                        @endif
-                    </div>
+    <div class="rs-hero rs-hero--{{ $statusSlug }}">
+        <div class="rs-hero__accent"></div>
+        <div class="rs-hero__body">
+            <div class="rs-hero__left">
+                <div class="rs-hero__eyebrow">
+                    <i class="fas fa-tools"></i>
+                    Ordem de servico #{{ $ordem_servico->numero ?? $ordem_servico->id }}
+                </div>
+                <h1 class="rs-hero__title">{{ $titulo }}</h1>
+                <div class="rs-hero__meta">
+                    <span><i class="fas fa-car"></i>{{ optional($ordem_servico->veiculo)->nome ?? ('Veiculo #' . $ordem_servico->veiculo_id) }}</span>
+                    <span><i class="fas fa-user"></i>{{ optional($ordem_servico->usuarioAbertura)->name ?? 'Usuario nao informado' }}</span>
                 </div>
             </div>
+            <div class="rs-hero__right">
+                <span class="rs-status-badge {{ $statusClass }}">
+                    <i class="{{ $statusIcon }}"></i>
+                    {{ strtoupper(str_replace('_', ' ', $statusSlug)) }}
+                </span>
+                <div class="rs-hero__kpis">
+                    <div class="rs-kpi">
+                        <span>Itens</span>
+                        <strong>{{ $ordem_servico->itens->count() }}</strong>
+                    </div>
+                    <div class="rs-kpi-divider"></div>
+                    <div class="rs-kpi">
+                        <span>Reserva</span>
+                        <strong>{{ $ordem_servico->reserva_id ? '#' . $ordem_servico->reserva_id : '-' }}</strong>
+                    </div>
+                </div>
+                <div class="rs-hero__actions">
+                    <a class="rs-btn rs-btn--outline" href="{{ route('ordem-servico.pdf', $ordem_servico) }}" target="_blank" rel="noopener noreferrer">
+                        <i class="fas fa-file-pdf"></i>Exportar PDF
+                    </a>
+                    <a class="rs-btn rs-btn--outline" href="{{ route('ordem-servico.index') }}">
+                        <i class="fas fa-arrow-left"></i>Voltar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-            {{-- Itens do servico --}}
-            <div class="config-card">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-list-ul"></i>
-                        <div>
-                            <strong>Itens do servico</strong>
-                            <span>{{ $ordem_servico->itens->count() }} item(s) nesta OS</span>
+    <div class="rs-grid">
+        <div class="rs-main">
+            <div class="rs-card">
+                <div class="rs-card__header">
+                    <i class="fas fa-info-circle rs-card__icon"></i>
+                    <h2>Dados da OS</h2>
+                </div>
+                <div class="os-detail-grid">
+                    <div class="os-detail">
+                        <span>Numero</span>
+                        <strong>{{ $ordem_servico->numero ?? '#' . $ordem_servico->id }}</strong>
+                    </div>
+                    <div class="os-detail">
+                        <span>Status</span>
+                        <strong>{{ ucfirst(str_replace('_', ' ', $statusSlug)) }}</strong>
+                    </div>
+                    <div class="os-detail">
+                        <span>Veiculo</span>
+                        <strong>{{ optional($ordem_servico->veiculo)->nome ?? '-' }}</strong>
+                        <small>{{ optional($ordem_servico->veiculo)->placa ?? '-' }}</small>
+                    </div>
+                    <div class="os-detail">
+                        <span>Reserva</span>
+                        <strong>{{ $ordem_servico->reserva_id ? '#' . $ordem_servico->reserva_id : '-' }}</strong>
+                    </div>
+                    <div class="os-detail">
+                        <span>Aberta por</span>
+                        <strong>{{ optional($ordem_servico->usuarioAbertura)->name ?? '-' }}</strong>
+                    </div>
+                    @if($ordem_servico->data_conclusao)
+                        <div class="os-detail">
+                            <span>Concluida em</span>
+                            <strong>{{ $ordem_servico->data_conclusao->format('d/m/Y H:i') }}</strong>
+                            <small>{{ optional($ordem_servico->usuarioEncerramento)->name ?? '-' }}</small>
                         </div>
-                    </div>
+                    @endif
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table xp-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Descricao</th>
-                                    <th>Vinculo avaria</th>
-                                    <th>Resultado</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($ordem_servico->itens as $idx => $item)
-                                    <tr>
-                                        <td><span class="xp-id">{{ $idx + 1 }}</span></td>
-                                        <td style="max-width:280px;white-space:normal;">{{ $item->descricao_servico }}</td>
-                                        <td>
-                                            @if($item->veiculo_dano_id)
-                                                <span class="status-badge status-badge--amber"><i class="fas fa-link mr-1"></i>#{{ $item->veiculo_dano_id }}</span>
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                        <td style="max-width:320px;white-space:normal;">
-                                            @if($item->resultado)
-                                                {{ $item->resultado }}
-                                            @else
-                                                <span class="text-muted">—</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                @if($ordem_servico->observacoes)
+                    <div class="os-note-box">
+                        <h3>Observacoes</h3>
+                        <p>{{ $ordem_servico->observacoes }}</p>
                     </div>
+                @endif
+
+                @if($ordem_servico->relatorio_conclusao)
+                    <div class="os-note-box">
+                        <h3>Relatorio geral</h3>
+                        <p>{{ $ordem_servico->relatorio_conclusao }}</p>
+                    </div>
+                @endif
+            </div>
+
+            <div class="rs-card">
+                <div class="rs-card__header rs-card__header--between">
+                    <div class="rs-card__header-left">
+                        <i class="fas fa-list-ul rs-card__icon"></i>
+                        <h2>Itens do servico</h2>
+                    </div>
+                    <span class="rs-card__badge">{{ $ordem_servico->itens->count() }} item(s)</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover table-bordered table-sm mb-0">
+                        <thead class="thead-light">
+                            <tr>
+                                <th class="text-center">#</th>
+                                <th>Descricao</th>
+                                <th>Vinculo com avaria</th>
+                                <th>Resultado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($ordem_servico->itens as $item)
+                                <tr>
+                                    <td class="text-center">{{ $loop->iteration }}</td>
+                                    <td>{{ $item->descricao_servico }}</td>
+                                    <td>
+                                        @if($item->veiculo_dano_id)
+                                            <span class="badge badge-warning">Avaria #{{ $item->veiculo_dano_id }}</span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $item->resultado ?: '-' }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted py-4">Nenhum item registrado nesta OS.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
 
-        {{-- COLUNA LATERAL --}}
-        <div class="col-lg-4">
-
-            {{-- Alterar status --}}
+        <aside class="rs-sidebar">
             @if($ordem_servico->podeAlterarStatus())
-                <div class="config-card mb-4">
-                    <div class="config-block config-block--blue">
-                        <div class="config-block-label">
-                            <i class="fas fa-exchange-alt" style="color:var(--c-sky);"></i>
-                            <div>
-                                <strong>Alterar Status</strong>
-                                <span>Avance ou cancele esta OS</span>
-                            </div>
-                        </div>
+                <div class="rs-card">
+                    <div class="rs-card__header">
+                        <i class="fas fa-exchange-alt rs-card__icon"></i>
+                        <h2>Alterar status</h2>
+                    </div>
 
-                        @if($ordem_servico->status === \App\Models\OrdemServico::STATUS_ABERTA)
-                            <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}" class="mb-2">
-                                @csrf
-                                <input type="hidden" name="status" value="{{ \App\Models\OrdemServico::STATUS_EM_ANDAMENTO }}">
-                                <button type="submit" class="btn-xp btn-xp--info w-100">
-                                    <i class="fas fa-play mr-1"></i>Marcar em andamento
-                                </button>
-                            </form>
-                        @endif
-
-                        <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}"
-                              onsubmit="return confirm('Confirma o cancelamento desta OS?');">
+                    @if($ordem_servico->status === \App\Models\OrdemServico::STATUS_ABERTA)
+                        <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}" class="mb-2">
                             @csrf
-                            <input type="hidden" name="status" value="{{ \App\Models\OrdemServico::STATUS_CANCELADA }}">
-                            <button type="submit" class="btn-xp btn-xp--danger w-100">
-                                <i class="fas fa-ban mr-1"></i>Cancelar OS
+                            <input type="hidden" name="status" value="{{ \App\Models\OrdemServico::STATUS_EM_ANDAMENTO }}">
+                            <button type="submit" class="rs-btn rs-btn--primary rs-btn--full">
+                                <i class="fas fa-play"></i>Marcar em andamento
                             </button>
                         </form>
-                    </div>
+                    @endif
+
+                    <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}"
+                        onsubmit="return confirm('Confirma o cancelamento desta OS?');">
+                        @csrf
+                        <input type="hidden" name="status" value="{{ \App\Models\OrdemServico::STATUS_CANCELADA }}">
+                        <button type="submit" class="rs-btn rs-btn--outline rs-btn--full">
+                            <i class="fas fa-ban"></i>Cancelar OS
+                        </button>
+                    </form>
                 </div>
             @endif
 
-            {{-- Concluir OS --}}
             @if($ordem_servico->podeConcluir())
-                <div class="config-card">
-                    <div class="config-block config-block--green">
-                        <div class="config-block-label">
-                            <i class="fas fa-check-double" style="color:var(--c-green);"></i>
-                            <div>
-                                <strong>Concluir OS</strong>
-                                <span>Finalize e registre as correcoes</span>
-                            </div>
+                <div class="rs-card">
+                    <div class="rs-card__header">
+                        <i class="fas fa-check-double rs-card__icon"></i>
+                        <h2>Concluir OS</h2>
+                    </div>
+
+                    <form method="post" action="{{ route('ordem-servico.concluir', $ordem_servico) }}">
+                        @csrf
+                        <div class="form-group">
+                            <label for="relatorio_geral">Relatorio geral</label>
+                            <textarea name="relatorio_geral" id="relatorio_geral"
+                                class="form-control form-control-sm @error('relatorio_geral') is-invalid @enderror"
+                                rows="4" required minlength="3"
+                                placeholder="Resumo do que foi executado">{{ old('relatorio_geral') }}</textarea>
+                            @error('relatorio_geral')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
                         </div>
 
-                        <p class="xp-hint-text mb-3">Ao concluir, o relatorio geral e obrigatorio. Para itens vinculados a avarias, a correcao sera preenchida com o resultado do item (ou com o relatorio geral se o campo estiver vazio).</p>
-
-                        <form method="post" action="{{ route('ordem-servico.concluir', $ordem_servico) }}">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="xp-form-label" for="relatorio_geral">Relatorio geral <span class="text-danger">*</span></label>
-                                <textarea name="relatorio_geral" id="relatorio_geral"
-                                          class="form-control xp-textarea @error('relatorio_geral') is-invalid @enderror"
-                                          rows="4" required minlength="3"
-                                          placeholder="Resumo do que foi executado">{{ old('relatorio_geral') }}</textarea>
-                                @error('relatorio_geral')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            @if($ordem_servico->itens->isNotEmpty())
-                                <p class="xp-form-label mb-2">Resultado por item (opcional)</p>
+                        @if($ordem_servico->itens->isNotEmpty())
+                            <div class="os-item-results">
+                                <label class="font-weight-bold d-block mb-2">Resultado por item</label>
                                 @foreach($ordem_servico->itens as $item)
-                                    <div class="mb-2">
-                                        <label class="xp-label-sm" for="res_{{ $item->id }}">
+                                    <div class="form-group">
+                                        <label for="res_{{ $item->id }}" class="small text-muted mb-1">
                                             Item {{ $loop->iteration }}
                                             @if($item->veiculo_dano_id)
-                                                <span class="status-badge status-badge--amber ml-1" style="font-size:0.68rem;">avaria #{{ $item->veiculo_dano_id }}</span>
+                                                - avaria #{{ $item->veiculo_dano_id }}
                                             @endif
                                         </label>
                                         <textarea name="resultados[{{ $item->id }}]" id="res_{{ $item->id }}"
-                                                  class="form-control xp-textarea" rows="2"
-                                                  placeholder="Deixe em branco para usar o relatorio geral">{{ old('resultados.'.$item->id) }}</textarea>
+                                            class="form-control form-control-sm" rows="2"
+                                            placeholder="Deixe em branco para usar o relatorio geral">{{ old('resultados.' . $item->id) }}</textarea>
                                     </div>
                                 @endforeach
-                            @endif
+                            </div>
+                        @endif
 
-                            <button type="submit" class="btn-xp btn-xp--success w-100 mt-2">
-                                <i class="fas fa-check mr-1"></i>Concluir e registrar correcoes
-                            </button>
-                        </form>
-                    </div>
+                        <button type="submit" class="rs-btn rs-btn--success rs-btn--full">
+                            <i class="fas fa-check"></i>Concluir e registrar correcoes
+                        </button>
+                    </form>
                 </div>
             @endif
-        </div>
+        </aside>
     </div>
 </div>
 @stop
 
 @section('css')
 <style>
-    :root {
-        --c-ink:    color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 78%, #08111f 22%);
-        --c-navy:   color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 72%, var(--empresa-cor-secundaria, #334155) 28%);
-        --c-indigo: var(--empresa-cor-primaria, #1F2937);
-        --c-sky:    var(--empresa-cor-terciaria, #64748B);
-        --c-green:  color-mix(in srgb, var(--empresa-cor-secundaria, #334155) 45%, #10b981 55%);
-        --c-amber:  #f59e0b;
-        --c-red:    #ef4444;
-        --c-slate:  color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 82%, #475569 18%);
-        --c-border: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 18%, #d7e0ec 82%);
-        --c-bg:     color-mix(in srgb, var(--empresa-cor-secundaria, #334155) 10%, #f5f7fb 90%);
-        --c-card:   #ffffff;
-        --shadow-sm: 0 2px 8px color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 10%, transparent 90%);
-        --shadow-lg: 0 16px 48px color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 16%, transparent 84%);
+    .os-show-page {
+        max-width: 1400px;
+        margin: 0 auto;
     }
-    .content-wrapper { background: var(--c-bg); }
 
-    .module-card { border-radius: 20px; overflow: hidden; background: var(--c-card); box-shadow: var(--shadow-lg); border: 1px solid var(--c-border); }
-    .module-card-header {
+    .rs-page {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .rs-hero {
         position: relative;
-        background: linear-gradient(135deg, var(--c-ink) 0%, var(--c-navy) 58%, color-mix(in srgb, var(--c-sky) 42%, var(--c-navy) 58%) 100%);
-        padding: 1.75rem 2rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; overflow: hidden;
+        overflow: hidden;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%);
+        color: #fff;
+        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
     }
-    .module-card-header::before { content: ''; position: absolute; inset: 0; background-image: radial-gradient(circle, rgba(255,255,255,0.055) 1px, transparent 1px); background-size: 20px 20px; pointer-events: none; }
-    .module-card-header::after { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, var(--c-indigo), var(--c-sky), var(--c-green)); }
-    .module-header-left { position: relative; display: flex; align-items: center; gap: 16px; z-index: 1; }
-    .module-header-right { position: relative; z-index: 1; }
-    .module-header-icon { width: 56px; height: 56px; border-radius: 14px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: rgba(255,255,255,0.85); flex-shrink: 0; backdrop-filter: blur(8px); }
-    .module-header-eyebrow { font-size: 0.65rem; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(148,163,184,0.8); margin-bottom: 3px; }
-    .module-header-title { font-size: 1.2rem; font-weight: 800; color: #fff; margin: 0 0 3px; letter-spacing: -0.02em; }
-    .module-header-sub { font-size: 0.78rem; color: rgba(148,163,184,0.75); margin: 0; }
-    .module-header-link { color: color-mix(in srgb, var(--c-sky) 68%, #ffffff 32%); text-decoration: none; font-weight: 700; }
-    .module-header-link:hover { color: #ffffff; text-decoration: underline; }
 
-    .config-card { border-radius: 18px; overflow: hidden; background: var(--c-card); box-shadow: var(--shadow-sm); border: 1px solid var(--c-border); }
-    .config-block { padding: 1.5rem; border-left: 3px solid var(--c-indigo); margin: 1.25rem; background: color-mix(in srgb, var(--c-sky) 4%, #ffffff 96%); border-radius: 0 12px 12px 0; }
-    .config-block--blue  { border-left-color: var(--c-sky); background: color-mix(in srgb, var(--c-sky) 8%, #ffffff 92%); }
-    .config-block--green { border-left-color: var(--c-green); background: color-mix(in srgb, var(--c-green) 7%, #ffffff 93%); }
-    .config-block-label { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 1rem; }
-    .config-block-label > i { margin-top: 3px; color: var(--c-indigo); font-size: 1rem; }
-    .config-block-label strong { display: block; font-size: 0.9rem; color: #1e293b; }
-    .config-block-label span { font-size: 0.78rem; color: var(--c-slate); }
+    .rs-hero__accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: linear-gradient(90deg, var(--empresa-cor-primaria, #2563eb), var(--empresa-cor-terciaria, #38bdf8));
+    }
 
-    /* OS detail grid */
-    .os-details-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-    .os-detail-item { display: flex; flex-direction: column; gap: 4px; }
-    .os-detail-item--full { grid-column: 1 / -1; }
-    .os-detail-label { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--c-slate); }
-    .os-detail-value { font-size: 0.88rem; color: #1e293b; }
+    .rs-hero__body {
+        padding: 24px 28px;
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        flex-wrap: wrap;
+    }
 
-    /* TABLE */
-    .xp-table { margin: 0; font-size: 0.83rem; }
-    .xp-table thead th { background: color-mix(in srgb, var(--c-sky) 10%, #f8fafc 90%); color: var(--c-ink); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid var(--c-border); padding: 10px 12px; }
-    .xp-table tbody td { padding: 10px 12px; vertical-align: middle; border-color: #eef2f9; }
-    .xp-table tbody tr:hover { background: #f8faff; }
-    .xp-id { font-weight: 700; color: var(--c-slate); font-size: 0.78rem; }
-    .xp-link { color: var(--c-indigo); font-weight: 600; text-decoration: none; font-size: 0.82rem; }
-    .xp-link:hover { color: #3730a3; text-decoration: underline; }
+    .rs-hero__eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: rgba(255, 255, 255, 0.72);
+        margin-bottom: 8px;
+    }
 
-    /* BADGES */
-    .status-badge { display: inline-flex; align-items: center; padding: 3px 10px; border-radius: 20px; font-size: 0.73rem; font-weight: 700; }
-    .status-badge--green { background: #d1fae5; color: #065f46; }
-    .status-badge--amber { background: #fef3c7; color: #92400e; }
-    .status-badge--blue  { background: #dbeafe; color: #1e40af; }
-    .status-badge--gray  { background: #f1f5f9; color: #475569; }
+    .rs-hero__title {
+        margin: 0 0 8px;
+        font-size: 30px;
+        font-weight: 700;
+    }
 
-    /* BUTTONS */
-    .btn-xp { display: inline-flex; align-items: center; justify-content: center; padding: 8px 18px; border-radius: 8px; background: linear-gradient(135deg, var(--c-indigo) 0%, var(--c-sky) 100%); color: #fff; font-size: 0.82rem; font-weight: 700; border: none; cursor: pointer; transition: opacity 0.2s, transform 0.2s; box-shadow: 0 4px 12px color-mix(in srgb, var(--c-indigo) 30%, transparent 70%); text-decoration: none; }
-    .btn-xp:hover { opacity: 0.9; transform: translateY(-1px); color: #fff; text-decoration: none; }
-    .btn-xp--outline-light { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.85); border: 1px solid rgba(255,255,255,0.25); box-shadow: none; }
-    .btn-xp--outline-light:hover { background: rgba(255,255,255,0.2); color: #fff; }
-    .btn-xp--info    { background: linear-gradient(135deg, var(--c-indigo) 0%, var(--c-sky) 100%); box-shadow: 0 4px 12px color-mix(in srgb, var(--c-indigo) 28%, transparent 72%); }
-    .btn-xp--success { background: linear-gradient(135deg, var(--c-green) 0%, var(--c-sky) 100%); box-shadow: 0 4px 12px color-mix(in srgb, var(--c-green) 28%, transparent 72%); }
-    .btn-xp--danger  { background: transparent; color: #991b1b; border: 2px solid #fca5a5; box-shadow: none; }
-    .btn-xp--danger:hover { background: #fef2f2; color: #991b1b; }
-    .w-100 { width: 100%; }
+    .rs-hero__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+    }
 
-    /* FORM ELEMENTS */
-    .xp-textarea { width: 100%; border-radius: 10px; border: 1px solid var(--c-border); font-size: 0.85rem; resize: vertical; padding: 10px 12px; transition: border-color 0.2s; }
-    .xp-textarea:focus { border-color: var(--c-indigo); box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-indigo) 18%, transparent 82%); outline: none; }
-    .xp-form-label { font-size: 0.82rem; font-weight: 700; color: #1e293b; display: block; }
-    .xp-label-sm { font-size: 0.76rem; color: var(--c-slate); font-weight: 600; display: block; margin-bottom: 4px; }
-    .xp-hint-text { font-size: 0.78rem; color: var(--c-slate); line-height: 1.6; }
+    .rs-hero__meta span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+    }
 
-    /* ALERTS */
-    .xp-alert { border-radius: 12px; padding: 0.9rem 1.25rem; font-size: 0.85rem; display: flex; align-items: flex-start; position: relative; }
-    .xp-alert--success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #065f46; }
-    .xp-alert--danger  { background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; }
-    .xp-alert-close { position: absolute; top: 10px; right: 12px; background: none; border: none; font-size: 1.1rem; cursor: pointer; opacity: 0.5; }
-    .xp-alert-close:hover { opacity: 1; }
+    .rs-hero__right {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 14px;
+    }
+
+    .rs-hero__actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+
+    .rs-status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .rs-status-badge.is-success { background: rgba(16, 185, 129, .18); color: #bbf7d0; }
+    .rs-status-badge.is-danger { background: rgba(239, 68, 68, .18); color: #fecaca; }
+    .rs-status-badge.is-warning { background: rgba(245, 158, 11, .18); color: #fde68a; }
+    .rs-status-badge.is-primary { background: rgba(59, 130, 246, .18); color: #bfdbfe; }
+
+    .rs-hero__kpis {
+        display: flex;
+        align-items: stretch;
+        gap: 14px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 12px 16px;
+    }
+
+    .rs-kpi {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 92px;
+    }
+
+    .rs-kpi span {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+    }
+
+    .rs-kpi strong {
+        font-size: 17px;
+        color: #fff;
+    }
+
+    .rs-kpi-divider {
+        width: 1px;
+        background: rgba(255, 255, 255, 0.14);
+    }
+
+    .rs-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 340px;
+        gap: 18px;
+    }
+
+    .rs-main,
+    .rs-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+    }
+
+    .rs-card {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 18px;
+        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+        overflow: hidden;
+    }
+
+    .rs-card__header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 18px 20px;
+        border-bottom: 1px solid #eef2f7;
+    }
+
+    .rs-card__header--between {
+        justify-content: space-between;
+    }
+
+    .rs-card__header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .rs-card__icon {
+        color: var(--empresa-cor-primaria, #2563eb);
+    }
+
+    .rs-card__header h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #0f172a;
+    }
+
+    .rs-card__badge {
+        background: #eff6ff;
+        color: #1d4ed8;
+        border-radius: 999px;
+        padding: 6px 10px;
+        font-size: 12px;
+        font-weight: 700;
+    }
+
+    .os-detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 14px;
+        padding: 20px;
+    }
+
+    .os-detail {
+        padding: 14px;
+        border-radius: 14px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .os-detail span {
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #64748b;
+    }
+
+    .os-detail strong {
+        color: #0f172a;
+        font-size: 15px;
+    }
+
+    .os-detail small {
+        color: #64748b;
+    }
+
+    .os-note-box {
+        margin: 0 20px 20px;
+        padding: 16px;
+        border-radius: 14px;
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+    }
+
+    .os-note-box h3 {
+        font-size: 15px;
+        font-weight: 700;
+        margin: 0 0 8px;
+        color: #0f172a;
+    }
+
+    .os-note-box p {
+        margin: 0;
+        color: #475569;
+        white-space: pre-wrap;
+    }
+
+    .rs-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-weight: 600;
+        border: 1px solid transparent;
+        text-decoration: none;
+        transition: .2s ease;
+    }
+
+    .rs-btn:hover {
+        text-decoration: none;
+        transform: translateY(-1px);
+    }
+
+    .rs-btn--primary {
+        background: linear-gradient(135deg, var(--empresa-cor-primaria, #2563eb), var(--empresa-cor-terciaria, #38bdf8));
+        color: #fff;
+    }
+
+    .rs-btn--success {
+        background: linear-gradient(135deg, #10b981, #34d399);
+        color: #fff;
+    }
+
+    .rs-btn--outline {
+        background: #fff;
+        color: #334155;
+        border-color: #cbd5e1;
+    }
+
+    .rs-btn--full {
+        width: 100%;
+    }
+
+    .os-item-results {
+        margin-bottom: 14px;
+        padding-top: 4px;
+    }
+
+    .rs-sidebar .rs-card {
+        padding: 0 0 18px;
+    }
+
+    .rs-sidebar .form-group,
+    .rs-sidebar .rs-btn {
+        margin-left: 20px;
+        margin-right: 20px;
+    }
+
+    @media (max-width: 991.98px) {
+        .rs-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .rs-hero__right {
+            align-items: flex-start;
+        }
+
+        .rs-hero__actions {
+            justify-content: flex-start;
+        }
+    }
 </style>
-@stop
-
-@section('js')
 @stop

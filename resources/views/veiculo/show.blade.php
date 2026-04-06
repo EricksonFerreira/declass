@@ -317,6 +317,85 @@
                 </div>
             </div>
 
+            {{-- MovimentaÃ§Ãµes --}}
+            <div class="config-card mb-4">
+                <div class="config-block">
+                    <div class="config-block-label">
+                        <i class="fas fa-exchange-alt"></i>
+                        <div>
+                            <strong>MovimentaÃ§Ãµes</strong>
+                            <span>{{ $veiculo->movimentacoes->count() }} registro(s) de movimentaÃ§Ã£o</span>
+                        </div>
+                    </div>
+
+                    @if($veiculo->movimentacoes->isEmpty())
+                        <div class="empty-state">
+                            <i class="fas fa-route"></i>
+                            <p>Nenhuma movimentaÃ§Ã£o registrada para este veÃ­culo.</p>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-hover xp-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Tipo</th>
+                                        <th>Status</th>
+                                        <th>Origem</th>
+                                        <th>Destino</th>
+                                        <th>SaÃ­da</th>
+                                        <th>Chegada</th>
+                                        <th>Reserva</th>
+                                        <th>OS</th>
+                                        <th>UsuÃ¡rio</th>
+                                        <th>Obs</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($veiculo->movimentacoes as $mov)
+                                        <tr>
+                                            <td><span class="xp-id">#{{ $mov->id }}</span></td>
+                                            <td>{{ optional($mov->tipoMovimentacao)->nome ?? 'â€”' }}</td>
+                                            <td>{{ optional($mov->statusMovimentacao)->nome ?? 'â€”' }}</td>
+                                            <td>{{ optional($mov->localOrigem)->nome ?? ($mov->local_origem_id ?? 'â€”') }}</td>
+                                            <td>{{ optional($mov->localDestino)->nome ?? ($mov->local_destino_id ?? 'â€”') }}</td>
+                                            <td>{{ $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('d/m/Y H:i') : 'â€”' }}</td>
+                                            <td>
+                                                @if($mov->data_chegada_real)
+                                                    {{ \Carbon\Carbon::parse($mov->data_chegada_real)->format('d/m/Y H:i') }}
+                                                @elseif($mov->data_chegada_prevista)
+                                                    <span class="text-muted">{{ \Carbon\Carbon::parse($mov->data_chegada_prevista)->format('d/m/Y H:i') }}</span>
+                                                @else
+                                                    â€”
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($mov->reserva_id)
+                                                    <a href="{{ route('reserva.show', $mov->reserva_id) }}" class="xp-link">#{{ $mov->reserva_id }}</a>
+                                                @else
+                                                    <span class="text-muted">â€”</span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @if($mov->ordem_servico_id)
+                                                    <a href="{{ route('ordem-servico.show', $mov->ordem_servico_id) }}" class="xp-link">
+                                                        {{ optional($mov->ordemServico)->numero ?? ('#' . $mov->ordem_servico_id) }}
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">â€”</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ optional($mov->usuario)->name ?? 'â€”' }}</td>
+                                            <td class="obs-cell">{{ \Illuminate\Support\Str::limit((string) ($mov->observacoes ?? ''), 60) ?: 'â€”' }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
         </div>
 
         {{-- ── Coluna direita (1/3) ── --}}
