@@ -134,7 +134,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
                 $data['role_id'] = $roleClienteId;
                 $data['acesso_todas_estacoes'] = true;
-                $data['password'] = 'Tmp@' . random_int(100000, 999999);
+                $data['password'] =$request->password;
             }
 
             // Cria o cliente no Stripe
@@ -164,10 +164,11 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 ], 422);
             }
 
+            $mensagemErro = 'Nao foi possivel cadastrar o usuario no momento.' == $e->getMessage() ? $e->getMessage() : 'Nao foi possivel cadastrar o usuario no momento. Erro: ' . $e->getMessage();
             return redirect()
                 ->back()
                 ->withInput()
-                ->withErrors(['usuario' => 'Nao foi possivel cadastrar o usuario no momento.']);
+                ->withErrors(['usuario' => $mensagemErro]);
         }
     }
 
