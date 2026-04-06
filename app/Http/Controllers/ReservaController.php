@@ -271,7 +271,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             new BreadCrumbItem('Reservas', route('reserva.index')),
             new BreadCrumbItem('Detalhes da Reserva Nº' . $id)
         ]);
-        $reserva = $this->reservaService->getById($id, 'contratoCheckin');
+        $reserva = $this->reservaService->getById($id, ['contratoCheckin']);
+        if (!$reserva) {
+            return redirect()->route('reserva.index')->with('error', 'Reserva nao encontrada.');
+        }
+
         $reserva->load([
             'nfseAtual',
             'transacoes' => function ($query) {
@@ -1520,4 +1524,3 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         return !isset($valor) || is_null($valor) ? '<br>' : $valor;
     }
 }
-

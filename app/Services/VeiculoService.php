@@ -112,8 +112,15 @@ class VeiculoService extends AbstractBaseService
      */
     public function listarAtivosParaOrdemServico(int $limit = 800)
     {
-        return $this->applyEmpresaScope($this->model->newQuery())
-            ->where('ativo', 'S')
+        $query = $this->applyEmpresaScope($this->model->newQuery());
+
+        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+            $query->where('ativo', 'S');
+        } elseif (Schema::hasColumn($this->model->getTable(), 'status_veiculo_id')) {
+            $query = $this->scopeStatusVeiculoDisponivel($query);
+        }
+
+        return $query
             ->orderBy('nome')
             ->limit($limit)
             ->get();
@@ -459,4 +466,3 @@ class VeiculoService extends AbstractBaseService
 
 
 }
-

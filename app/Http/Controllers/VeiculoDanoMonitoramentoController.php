@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\VeiculoDano\RegistrarCorrecaoDanoRequest;
+use App\Models\OrdemServicoItem;
 use App\Models\VeiculoDanos;
 use App\Services\BreadcrumbService;
 use App\DTO\BreadCrumbItem;
@@ -31,6 +32,24 @@ class VeiculoDanoMonitoramentoController extends Controller
         }
 
         $danos = $query->paginate(20)->withQueryString();
+        $osItensPorDano = OrdemServicoItem::query()
+            ->with(['ordemServico:id,numero,status'])
+            ->whereIn('veiculo_dano_id', $danos->getCollection()->pluck('id')->all())
+            ->whereHas('ordemServico', function ($subQuery) {
+                $subQuery->abertasOuEmAndamento();
+            })
+            ->orderByDesc('id')
+            ->get()
+            ->keyBy('veiculo_dano_id');
+
+        $danos->setCollection(
+            $danos->getCollection()->map(function (VeiculoDanos $dano) use ($osItensPorDano) {
+                $itemOs = $osItensPorDano->get($dano->id);
+                $dano->os_aberta = $itemOs?->ordemServico;
+
+                return $dano;
+            })
+        );
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
