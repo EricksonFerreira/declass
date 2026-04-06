@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\DTO\BreadcrumbItem;
+use App\DTO\BreadCrumbItem;
 use App\Helpers\BreadcrumbHelper;
 use App\Models\TipoTransacao;
 use Illuminate\Database\Eloquent\Model;
@@ -33,7 +33,7 @@ class TipoTransacaoService extends AbstractBaseService
     public function prepararBreadcrumbIndex()
     {
         $items = [
-            new BreadcrumbItem('Tipo Transação', route('tipo_transacao.index')),
+            new BreadCrumbItem('Tipo Transação', route('tipo_transacao.index')),
         ];
         return BreadcrumbHelper::generate($items);
     }
@@ -41,8 +41,8 @@ class TipoTransacaoService extends AbstractBaseService
     public function prepararBreadcrumbCreate()
     {
         $items = [
-            new BreadcrumbItem('Tipo Transação', route('tipo_transacao.index')),
-            new BreadcrumbItem('Criar', route('tipo_transacao.create')),
+            new BreadCrumbItem('Tipo Transação', route('tipo_transacao.index')),
+            new BreadCrumbItem('Criar', route('tipo_transacao.create')),
         ];
         return BreadcrumbHelper::generate($items);
     }
@@ -50,8 +50,8 @@ class TipoTransacaoService extends AbstractBaseService
     public function prepararBreadcrumbEdit($id)
     {
         $items = [
-            new BreadcrumbItem('Tipo Transação', route('tipo_transacao.index')),
-            new BreadcrumbItem('Editar', route('tipo_transacao.edit', ['id' => $id])),
+            new BreadCrumbItem('Tipo Transação', route('tipo_transacao.index')),
+            new BreadCrumbItem('Editar', route('tipo_transacao.edit', ['id' => $id])),
         ];
         return BreadcrumbHelper::generate($items);
     }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\DTO\BreadcrumbItem;
+use App\DTO\BreadCrumbItem;
 use App\Exceptions\CartaoNaoCadastradoException;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
@@ -267,9 +267,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     {
         $titulo = "Detalhes da Reserva";
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Reservas', route('reserva.index')),
-            new BreadcrumbItem('Detalhes da Reserva Nº' . $id)
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Reservas', route('reserva.index')),
+            new BreadCrumbItem('Detalhes da Reserva Nº' . $id)
         ]);
         $reserva = $this->reservaService->getById($id, 'contratoCheckin');
         $reserva->load([
@@ -561,10 +561,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $categoriaDanos = $this->categoriaDanoService->getAllForSelect();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Reservas', route('reserva.index')),
-            new BreadcrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
-            new BreadcrumbItem('Check-out / Vistoria'),
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Reservas', route('reserva.index')),
+            new BreadCrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
+            new BreadCrumbItem('Check-out / Vistoria'),
         ]);
 
         return view('reserva.checkout', compact('reserva', 'categoriaDanos', 'breadcrumb'))
@@ -1108,9 +1108,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $titulo = "Efetuar Pagamento da Reserva";
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Reservas', route('reserva.index')),
-            new BreadcrumbItem('Efetuar Pagamento da Reserva Nº' . $id)
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Reservas', route('reserva.index')),
+            new BreadCrumbItem('Efetuar Pagamento da Reserva Nº' . $id)
         ]);
 
         $user = $this->userService->getById($reserva->user_id);
@@ -1238,10 +1238,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $veiculos = collect();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Reservas', route('reserva.index')),
-            new BreadcrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
-            new BreadcrumbItem('Check-in')
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Reservas', route('reserva.index')),
+            new BreadCrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
+            new BreadCrumbItem('Check-in')
         ]);
 
         return view(
@@ -1438,10 +1438,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     {
        
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Reservas', route('reserva.index')),
-            new BreadcrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
-            new BreadcrumbItem('Assinar Contrato de Check-in')
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Reservas', route('reserva.index')),
+            new BreadCrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
+            new BreadCrumbItem('Assinar Contrato de Check-in')
         ]);
 
         $reserva = $this->reservaService->getById($reserva_id,['contratoCheckin']);

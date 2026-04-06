@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Nfse;
 use App\Models\Empresa;
 use App\Support\EmpresaContext;
+use App\Services\BreadcrumbService;
 use App\Services\NfseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -12,8 +13,10 @@ use Illuminate\Support\Facades\Schema;
 
 class NfseController extends Controller
 {
-    public function __construct(private readonly NfseService $nfseService)
-    {
+    public function __construct(
+        private readonly NfseService $nfseService,
+        private readonly BreadcrumbService $breadcrumbService,
+    ) {
     }
 
     public function index(Request $request)
@@ -73,9 +76,12 @@ class NfseController extends Controller
             $empresasDisponiveis = Empresa::query()->orderBy('nome')->get(['id', 'nome']);
         }
 
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Notas Fiscais');
+
         return view('nfse.index', [
             'nfseList' => $nfseList,
             'titulo' => 'Notas Fiscais',
+            'breadcrumb' => $breadcrumb,
             'podeImportar' => $podeImportar,
             'ultimaImportacao' => $ultimaImportacao,
             'proximaImportacao' => $proximaImportacao,

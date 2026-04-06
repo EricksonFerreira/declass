@@ -83,6 +83,16 @@ class Veiculo extends Model
         return $this->hasMany(Reserva::class, 'veiculo_id');
     }
 
+    public function veiculoDanos()
+    {
+        return $this->hasMany(\App\Models\VeiculoDanos::class, 'veiculo_id');
+    }
+
+    public function ordensServico()
+    {
+        return $this->hasMany(\App\Models\OrdemServico::class, 'veiculo_id');
+    }
+
     public function localDisponibilidade()
     {
         return $this->belongsTo(Estacao::class, 'local_disponibilidade');

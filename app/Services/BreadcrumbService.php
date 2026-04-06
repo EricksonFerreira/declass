@@ -14,14 +14,14 @@ class BreadcrumbService
 
     public function prepararBreadcrumbUnico(string $indexName)
     {
-        $items = $this->buildBreadcrumbItems([
+        $items = $this->buildBreadCrumbItems([
             [$indexName, null],
         ]);
         return $this->prepararBreadcrumb($items);
     }
     public function prepararBreadcrumbIndex(string $indexName)
     {
-        $items = $this->buildBreadcrumbItems([
+        $items = $this->buildBreadCrumbItems([
             ['Home', route('home')],
             [$indexName, null],
         ]);
@@ -30,7 +30,7 @@ class BreadcrumbService
 
     public function prepararBreadcrumbCreate(string $indexName, string $routeName, string $createName)
     {
-        $items = $this->buildBreadcrumbItems([
+        $items = $this->buildBreadCrumbItems([
             ['Home', route('home')],
             [$indexName, route($routeName)],
             [$createName, null],
@@ -40,7 +40,7 @@ class BreadcrumbService
 
     public function prepararBreadcrumbEdit( string $indexName,string $routeName, string $editName)
     {
-        $items = $this->buildBreadcrumbItems([
+        $items = $this->buildBreadCrumbItems([
             ['Home', route('home')],
             [$indexName, route($routeName)],
             [$editName, null],
@@ -48,11 +48,11 @@ class BreadcrumbService
         return $this->prepararBreadcrumb($items);
     }
 
-    private function buildBreadcrumbItems(array $itemsData)
+    private function buildBreadCrumbItems(array $itemsData)
     {
         $items = [];
         foreach ($itemsData as $itemData) {
-            $items[] = new BreadcrumbItem($itemData[0], $itemData[1] ?? null);
+            $items[] = new BreadCrumbItem($itemData[0], $itemData[1] ?? null);
         }
         return $items;
     }

@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\DTO\BreadcrumbItem;
+use App\DTO\BreadCrumbItem;
 use App\Http\Requests\OrdemServico\AtualizarStatusOrdemServicoRequest;
 use App\Http\Requests\OrdemServico\ConcluirOrdemServicoRequest;
 use App\Http\Requests\OrdemServico\StoreOrdemServicoRequest;
@@ -43,8 +43,8 @@ class OrdemServicoController extends Controller
         $ordens = $query->paginate(20)->withQueryString();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Ordens de serviço', route('ordem-servico.index')),
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Ordens de serviço', route('ordem-servico.index')),
         ]);
 
         return view('ordem-servico.index', compact('ordens', 'breadcrumb', 'status'))
@@ -63,9 +63,9 @@ class OrdemServicoController extends Controller
         $veiculos = $this->veiculoService->listarAtivosParaOrdemServico(800);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Ordens de serviço', route('ordem-servico.index')),
-            new BreadcrumbItem('Nova OS'),
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Ordens de serviço', route('ordem-servico.index')),
+            new BreadCrumbItem('Nova OS'),
         ]);
 
         return view('ordem-servico.create', compact('veiculos', 'breadcrumb', 'veiculoId', 'danoIds'))
@@ -107,9 +107,9 @@ class OrdemServicoController extends Controller
         $ordem_servico->load(['itens.veiculoDano', 'veiculo', 'reserva', 'usuarioAbertura', 'usuarioEncerramento']);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Ordens de serviço', route('ordem-servico.index')),
-            new BreadcrumbItem($ordem_servico->numero ?? 'OS #' . $ordem_servico->id),
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Ordens de serviço', route('ordem-servico.index')),
+            new BreadCrumbItem($ordem_servico->numero ?? 'OS #' . $ordem_servico->id),
         ]);
 
         return view('ordem-servico.show', compact('ordem_servico', 'breadcrumb'))

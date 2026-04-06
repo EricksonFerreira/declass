@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\VeiculoDano\RegistrarCorrecaoDanoRequest;
 use App\Models\VeiculoDanos;
 use App\Services\BreadcrumbService;
-use App\DTO\BreadcrumbItem;
+use App\DTO\BreadCrumbItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,8 +33,8 @@ class VeiculoDanoMonitoramentoController extends Controller
         $danos = $query->paginate(20)->withQueryString();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadcrumbItem('Home', route('home')),
-            new BreadcrumbItem('Monitoramento de avarias e correções', route('veiculo-dano.monitoramento')),
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Monitoramento de avarias e correções', route('veiculo-dano.monitoramento')),
         ]);
 
         return view('veiculo-dano.monitoramento', compact('danos', 'breadcrumb', 'filtro'))

@@ -2,14 +2,14 @@
 
 namespace App\Helpers;
 
-use App\DTO\BreadcrumbItem;
+use App\DTO\BreadCrumbItem;
 
 class BreadcrumbHelper
 {
     /**
      * Generate a breadcrumb array.
      *
-     * @param BreadcrumbItem[] $items Array of BreadcrumbItem objects.
+     * @param BreadCrumbItem[] $items Array of BreadCrumbItem objects.
      * @return array
      */
     public static function generate(array $items): array

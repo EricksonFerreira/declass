@@ -2,7 +2,7 @@
 
 namespace App\DTO;
 
-class BreadcrumbItem
+class BreadCrumbItem
 {
     private $name;
     private $url;

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\BreadCrumbItem;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Veiculo\StoreVeiculoRequest;
@@ -132,6 +133,31 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->veiculoService->create($request->all());
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function show($id)
+    {
+        $veiculo = $this->veiculoService->getById($id, [
+            'tipoFrota',
+            'grupoFrota',
+            'marca',
+            'modelo',
+            'statusVeiculo',
+            'localDisponibilidade',
+            'reservas.statusReserva',
+            'veiculoDanos.dano.categoria',
+            'ordensServico',
+        ]);
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Veiculos', route('veiculo.index')),
+            new BreadCrumbItem($veiculo->nome ?? 'Detalhes'),
+        ]);
+
+        $titulo = 'Veículo: ' . ($veiculo->nome ?? '#' . $veiculo->id);
+
+        return view('veiculo.show', compact('veiculo', 'breadcrumb', 'titulo'));
     }
 
     public function edit($id)
