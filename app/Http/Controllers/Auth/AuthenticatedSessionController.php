@@ -32,7 +32,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('profile.force-password.edit');
         }
 
-        return redirect()->intended(route('home', absolute: false));
+        return redirect()->route('home');
     }
 
     /**

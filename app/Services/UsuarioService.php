@@ -7,7 +7,6 @@ use App\Models\Estacao;
 use App\Support\EmpresaContext;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Schema;
 
 class UsuarioService extends AbstractBaseService
@@ -47,6 +46,8 @@ class UsuarioService extends AbstractBaseService
             $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
         }
 
+        $data['email_verified_at'] = now();
+        
         /** @var User $user */
         $user = $this->model->create($data);
         $this->syncEstacoesPermitidas($user, $data, $acessoTodasEstacoes);
@@ -62,6 +63,10 @@ class UsuarioService extends AbstractBaseService
 
         if (array_key_exists('forcar_troca_senha', $data) && Schema::hasColumn($this->model->getTable(), 'forcar_troca_senha')) {
             $this->model->forcar_troca_senha = (bool) $data['forcar_troca_senha'];
+        }
+
+        if (array_key_exists('password', $data)) {
+            $this->model->password = $data['password'];
         }
 
         $this->model->save();

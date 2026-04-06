@@ -403,6 +403,7 @@
 @stop
 
 @section('content')
+@if ($hasVisibleCharts)
 <div class="period-bar">
     <label for="data_inicio">Periodo:</label>
     <input type="date" id="data_inicio" name="data_inicio">
@@ -414,6 +415,7 @@
 </div>
 
 <div class="charts-grid">
+    @if ($homeSections['reservas'])
     <div class="chart-card span-12">
         <div class="chart-overlay" id="overlayReservas"><div class="spinner"></div></div>
         <div class="card-head">
@@ -435,7 +437,9 @@
             <canvas id="chartReservas"></canvas>
         </div>
     </div>
+    @endif
 
+    @if ($homeSections['movimentacoes'])
     <div class="chart-card span-4">
         <div class="chart-overlay" id="overlayMovStatus"><div class="spinner"></div></div>
         <div class="card-head">
@@ -449,7 +453,9 @@
             <canvas id="chartMovStatus"></canvas>
         </div>
     </div>
+    @endif
 
+    @if ($homeSections['frota'])
     <div class="chart-card span-8">
         <div class="chart-overlay" id="overlayFrota"><div class="spinner"></div></div>
         <div class="card-head">
@@ -462,7 +468,9 @@
             <canvas id="chartFrota"></canvas>
         </div>
     </div>
+    @endif
 
+    @if ($homeSections['financeiro'])
     <div class="chart-card span-8">
         <div class="chart-overlay" id="overlayFinanceiroLinha"><div class="spinner"></div></div>
         <div class="card-head">
@@ -483,7 +491,9 @@
             <canvas id="chartFinanceiroLinha"></canvas>
         </div>
     </div>
+    @endif
 
+    @if ($homeSections['ocupacao'])
     <div class="chart-card span-4">
         <div class="chart-overlay" id="overlayOcupacao"><div class="spinner"></div></div>
         <div class="card-head">
@@ -498,7 +508,9 @@
         </div>
         <div class="gauge-list" id="gaugeList"></div>
     </div>
+    @endif
 
+    @if ($homeSections['financeiro'])
     <div class="chart-card span-8">
         <div class="chart-overlay" id="overlayFinanceiroGateway"><div class="spinner"></div></div>
         <div class="card-head">
@@ -526,7 +538,9 @@
             <canvas id="chartFinanceiroStatus"></canvas>
         </div>
     </div>
+    @endif
 </div>
+@endif
 
 @php
     $colorMap = [
@@ -537,27 +551,30 @@
     ];
 @endphp
 
-@foreach ($items as $grupoItems)
-    <p class="section-label">{{ $grupoItems['grupo'] }}</p>
-    <div class="stat-grid">
-        @php $colorClass = $colorMap[$grupoItems['backgroundIcone']] ?? 'c-teal'; @endphp
-        @foreach ($grupoItems['items'] as $i)
-            <a href="{{ route($i['route']) }}" class="stat-card {{ $colorClass }}">
-                <div class="stat-icon"><i class="{{ $i['icone'] }}"></i></div>
-                <div>
-                    <p class="stat-name">{{ $i['nome'] }}</p>
-                    <p class="stat-value">{{ $i['prefix'] }}{{ $i['valor'] }}{{ $i['suffix'] }}</p>
-                </div>
-            </a>
-        @endforeach
-    </div>
-@endforeach
+@if ($hasVisibleItems)
+    @foreach ($items as $grupoItems)
+        <p class="section-label">{{ $grupoItems['grupo'] }}</p>
+        <div class="stat-grid">
+            @php $colorClass = $colorMap[$grupoItems['backgroundIcone']] ?? 'c-teal'; @endphp
+            @foreach ($grupoItems['items'] as $i)
+                <a href="{{ route($i['route']) }}" class="stat-card {{ $colorClass }}">
+                    <div class="stat-icon"><i class="{{ $i['icone'] }}"></i></div>
+                    <div>
+                        <p class="stat-name">{{ $i['nome'] }}</p>
+                        <p class="stat-value">{{ $i['prefix'] }}{{ $i['valor'] }}{{ $i['suffix'] }}</p>
+                    </div>
+                </a>
+            @endforeach
+        </div>
+    @endforeach
+@endif
 @stop
 
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 const CHART_DATA_URL = '{{ route('home.chart-data') }}';
+const HOME_SECTIONS = @json($homeSections);
 const textColor = 'rgba(0,0,0,0.45)';
 const gridColor = 'rgba(0,0,0,0.06)';
 const overlayIds = [
@@ -637,8 +654,15 @@ function formatShortDate(isoDate) {
 }
 
 function setDateInputs(inicio, fim) {
-    document.getElementById('data_inicio').value = inicio;
-    document.getElementById('data_fim').value = fim;
+    const dataInicio = document.getElementById('data_inicio');
+    const dataFim = document.getElementById('data_fim');
+
+    if (!dataInicio || !dataFim) {
+        return;
+    }
+
+    dataInicio.value = inicio;
+    dataFim.value = fim;
 }
 
 function showOverlays() {
@@ -660,15 +684,22 @@ function hideOverlays() {
 }
 
 function fetchChartData() {
-    const inicio = document.getElementById('data_inicio').value;
-    const fim = document.getElementById('data_fim').value;
+    const dataInicio = document.getElementById('data_inicio');
+    const dataFim = document.getElementById('data_fim');
+    const btn = document.getElementById('btnFiltrar');
+
+    if (!dataInicio || !dataFim || !btn) {
+        return;
+    }
+
+    const inicio = dataInicio.value;
+    const fim = dataFim.value;
 
     if (!inicio || !fim || inicio > fim) {
         alert('Selecione um periodo valido.');
         return;
     }
 
-    const btn = document.getElementById('btnFiltrar');
     btn.disabled = true;
     showOverlays();
 
@@ -683,13 +714,23 @@ function fetchChartData() {
         })
         .then((data) => {
             simboloMoeda = data.simboloMoeda || 'R$';
-            renderReservas(data.dadosReservas, data.totalReservas, inicio, fim);
-            renderMovStatus(data.movPorStatus, data.totalMovimentacoes);
-            renderFrota(data.veiculosPorGrupo);
-            renderOcupacao(data.ocupacaoFrota, data.ocupacaoGeral);
-            renderFinanceiroLinha(data.financeiroEvolucao, data.financeiroResumo, inicio, fim);
-            renderFinanceiroStatus(data.financeiroStatus, data.financeiroResumo);
-            renderFinanceiroGateway(data.financeiroGateway, data.financeiroResumo);
+            if (HOME_SECTIONS.reservas) {
+                renderReservas(data.dadosReservas, data.totalReservas, inicio, fim);
+            }
+            if (HOME_SECTIONS.movimentacoes) {
+                renderMovStatus(data.movPorStatus, data.totalMovimentacoes);
+            }
+            if (HOME_SECTIONS.frota) {
+                renderFrota(data.veiculosPorGrupo);
+            }
+            if (HOME_SECTIONS.ocupacao) {
+                renderOcupacao(data.ocupacaoFrota, data.ocupacaoGeral);
+            }
+            if (HOME_SECTIONS.financeiro) {
+                renderFinanceiroLinha(data.financeiroEvolucao, data.financeiroResumo, inicio, fim);
+                renderFinanceiroStatus(data.financeiroStatus, data.financeiroResumo);
+                renderFinanceiroGateway(data.financeiroGateway, data.financeiroResumo);
+            }
         })
         .catch(() => alert('Erro ao carregar dados. Tente novamente.'))
         .finally(() => {
@@ -699,6 +740,10 @@ function fetchChartData() {
 }
 
 function renderReservas(dados, total, inicio, fim) {
+    if (!document.getElementById('chartReservas')) {
+        return;
+    }
+
     const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
     const confirmadas = dados?.confirmadas?.length ? dados.confirmadas : [0];
     const cancelamentos = dados?.cancelamentos?.length ? dados.cancelamentos : [0];
@@ -763,6 +808,10 @@ function renderReservas(dados, total, inicio, fim) {
 }
 
 function renderMovStatus(dados, total) {
+    if (!document.getElementById('chartMovStatus')) {
+        return;
+    }
+
     const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
     const valores = dados?.data?.length ? dados.data : [0];
     const palette = labels.map((_, index) => movColors[index % movColors.length]);
@@ -795,6 +844,10 @@ function renderMovStatus(dados, total) {
 }
 
 function renderFrota(dados) {
+    if (!document.getElementById('chartFrota')) {
+        return;
+    }
+
     const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
     const valores = dados?.data?.length ? dados.data : [0];
     const colors = ['#0891b2', '#059669', '#d97706', '#7c3aed', '#e11d48', '#0ea5e9'];
@@ -834,6 +887,10 @@ function renderFrota(dados) {
 }
 
 function renderOcupacao(frota, geral) {
+    if (!document.getElementById('ocupacaoGeral') || !document.getElementById('gaugeList')) {
+        return;
+    }
+
     document.getElementById('ocupacaoGeral').textContent = `${Number(geral || 0)}%`;
 
     const list = document.getElementById('gaugeList');
@@ -855,6 +912,10 @@ function renderOcupacao(frota, geral) {
 }
 
 function renderFinanceiroLinha(dados, resumo, inicio, fim) {
+    if (!document.getElementById('chartFinanceiroLinha')) {
+        return;
+    }
+
     const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
     const valores = dados?.valores?.length ? dados.valores : [0];
     const quantidades = dados?.quantidades?.length ? dados.quantidades : [0];
@@ -923,6 +984,10 @@ function renderFinanceiroLinha(dados, resumo, inicio, fim) {
 }
 
 function renderFinanceiroGateway(dados, resumo) {
+    if (!document.getElementById('chartFinanceiroGateway')) {
+        return;
+    }
+
     const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
     const valores = dados?.data?.length ? dados.data : [0];
     const chartColors = labels.length ? finGatewayColors.slice(0, labels.length) : ['#cbd5e1'];
@@ -972,6 +1037,10 @@ function renderFinanceiroGateway(dados, resumo) {
 }
 
 function renderFinanceiroStatus(dados, resumo) {
+    if (!document.getElementById('chartFinanceiroStatus')) {
+        return;
+    }
+
     const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
     const valores = dados?.data?.length ? dados.data : [0];
     const chartColors = labels.length ? finStatusColors.slice(0, labels.length) : ['#cbd5e1'];
@@ -1003,22 +1072,34 @@ function renderFinanceiroStatus(dados, resumo) {
     });
 }
 
-document.getElementById('btnFiltrar').addEventListener('click', fetchChartData);
+if (Object.values(HOME_SECTIONS).some(Boolean)) {
+    const btnFiltrar = document.getElementById('btnFiltrar');
+    const btnHoje = document.getElementById('btnHoje');
+    const btn12m = document.getElementById('btn12m');
 
-document.getElementById('btnHoje').addEventListener('click', () => {
-    const hoje = formatInputDate(new Date());
-    setDateInputs(hoje, hoje);
+    if (btnFiltrar) {
+        btnFiltrar.addEventListener('click', fetchChartData);
+    }
+
+    if (btnHoje) {
+        btnHoje.addEventListener('click', () => {
+            const hoje = formatInputDate(new Date());
+            setDateInputs(hoje, hoje);
+            fetchChartData();
+        });
+    }
+
+    if (btn12m) {
+        btn12m.addEventListener('click', () => {
+            const periodo = defaultDates();
+            setDateInputs(periodo.inicio, periodo.fim);
+            fetchChartData();
+        });
+    }
+
+    const defaults = defaultDates();
+    setDateInputs(defaults.inicio, defaults.fim);
     fetchChartData();
-});
-
-document.getElementById('btn12m').addEventListener('click', () => {
-    const periodo = defaultDates();
-    setDateInputs(periodo.inicio, periodo.fim);
-    fetchChartData();
-});
-
-const defaults = defaultDates();
-setDateInputs(defaults.inicio, defaults.fim);
-fetchChartData();
+}
 </script>
 @stop

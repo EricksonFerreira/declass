@@ -30,17 +30,25 @@ class HomeController extends Controller
 public function home()
 {
     $breadcrumb    = $this->breadcrumbService->prepararBreadcrumbUnico('Home');
-    $items         = $this->getSystemCards();
-    $veiculosQuery = \App\Models\Veiculo::query();
-    $veiculosQuery = $this->applyEmpresaScope($veiculosQuery, 'veiculos');
-    $totalVeiculos = (int) $veiculosQuery->count();
+    $homeSections  = $this->getHomeSectionPermissions();
+    $items         = $this->filterSystemCards($this->getSystemCards());
+    $hasVisibleItems = collect($items)->contains(fn (array $grupo) => !empty($grupo['items']));
+    $hasVisibleCharts = in_array(true, $homeSections, true);
+    $totalVeiculos = 0;
 
-    return view('home', compact('breadcrumb', 'items', 'totalVeiculos'))
+    if ($homeSections['frota']) {
+        $veiculosQuery = \App\Models\Veiculo::query();
+        $veiculosQuery = $this->applyEmpresaScope($veiculosQuery, 'veiculos');
+        $totalVeiculos = (int) $veiculosQuery->count();
+    }
+
+    return view('home', compact('breadcrumb', 'items', 'totalVeiculos', 'homeSections', 'hasVisibleItems', 'hasVisibleCharts'))
         ->with('titulo', $this->titulo);
 }
 
 public function chartData(Request $request)
 {
+    $homeSections = $this->getHomeSectionPermissions();
     $mesesPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
     $dataInicio = $request->filled('data_inicio')
@@ -60,95 +68,17 @@ public function chartData(Request $request)
         $cursor->addMonth();
     }
 
-    $reservasNoPeriodo = \App\Models\Reserva::query()
-        ->whereBetween('created_at', [$dataInicio, $dataFim]);
-    $reservasNoPeriodo = $this->applyEmpresaScope($reservasNoPeriodo, 'reservas');
-
-    $resConfirmadas = (clone $reservasNoPeriodo)
-        ->whereNull('data_cancelamento')
-        ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
-        ->groupBy('ano', 'mes')
-        ->get()
-        ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
-
-    $resCanceladas = (clone $reservasNoPeriodo)
-        ->whereNotNull('data_cancelamento')
-        ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
-        ->groupBy('ano', 'mes')
-        ->get()
-        ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
-
     $confirmadas = [];
     $cancelamentos = [];
     $tendencia = [];
-    foreach ($meses as $m) {
-        $key = $m->year . '-' . $m->month;
-        $conf = (int) ($resConfirmadas[$key]->total ?? 0);
-        $canc = (int) ($resCanceladas[$key]->total ?? 0);
-        $confirmadas[] = $conf;
-        $cancelamentos[] = $canc;
-        $tendencia[] = $conf + $canc;
-    }
-
-    $movStatusBase = DB::table('movimentacoes')
-        ->join('status_movimentacao', 'movimentacoes.status_movimentacao_id', '=', 'status_movimentacao.id')
-        ->selectRaw('status_movimentacao.nome as label, COUNT(*) as total')
-        ->whereBetween('movimentacoes.created_at', [$dataInicio, $dataFim]);
-    $movStatusBase = $this->applyEmpresaScope($movStatusBase, 'movimentacoes');
-    $movStatus = $movStatusBase
-        ->groupBy('status_movimentacao.id', 'status_movimentacao.nome')
-        ->get();
-
-    $gruposVeiculosBase = DB::table('veiculos')
-        ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
-        ->selectRaw('grupos_frota.nome as label, COUNT(*) as total');
-    $gruposVeiculosBase = $this->applyEmpresaScope($gruposVeiculosBase, 'veiculos');
-    $gruposVeiculos = $gruposVeiculosBase
-        ->groupBy('grupos_frota.id', 'grupos_frota.nome')
-        ->get();
+    $movStatus = collect();
+    $gruposVeiculos = collect();
 
     $cores = ['#0891b2', '#059669', '#d97706', '#7c3aed', '#e11d48', '#0ea5e9'];
-
-    $totalPorGrupoBase = DB::table('veiculos')
-        ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
-        ->selectRaw('grupos_frota.id, grupos_frota.nome, COUNT(*) as total');
-    $totalPorGrupoBase = $this->applyEmpresaScope($totalPorGrupoBase, 'veiculos');
-    $totalPorGrupo = $totalPorGrupoBase
-        ->groupBy('grupos_frota.id', 'grupos_frota.nome')
-        ->get();
-
-    $ativasPorGrupoBase = DB::table('reservas')
-        ->whereNull('data_cancelamento')
-        ->where('data_inicio', '<=', $dataFim)
-        ->where('data_fim', '>=', $dataInicio)
-        ->selectRaw('grupo_frota_id, COUNT(*) as total');
-    $ativasPorGrupoBase = $this->applyEmpresaScope($ativasPorGrupoBase, 'reservas');
-    $ativasPorGrupo = $ativasPorGrupoBase
-        ->groupBy('grupo_frota_id')
-        ->get()
-        ->keyBy('grupo_frota_id');
-
     $ocupacaoFrota = [];
-    foreach ($totalPorGrupo as $i => $grupo) {
-        $ativas = (int) ($ativasPorGrupo[$grupo->id]->total ?? 0);
-        $pct = $grupo->total > 0 ? round($ativas / $grupo->total * 100) : 0;
-        $ocupacaoFrota[] = [
-            'label' => $grupo->nome,
-            'pct' => $pct,
-            'color' => $cores[$i % count($cores)],
-        ];
-    }
-
-    $totalVeiculosGeral = (int) $totalPorGrupo->sum('total');
-    $totalAtivas = (int) $ativasPorGrupo->sum('total');
-    $ocupacaoGeral = $totalVeiculosGeral > 0 ? round($totalAtivas / $totalVeiculosGeral * 100) : 0;
-
-    $totalReservas = (int) (clone $reservasNoPeriodo)->count();
-
-    $movimentacoesNoPeriodo = \App\Models\Movimentacao::query()
-        ->whereBetween('created_at', [$dataInicio, $dataFim]);
-    $movimentacoesNoPeriodo = $this->applyEmpresaScope($movimentacoesNoPeriodo, 'movimentacoes');
-    $totalMovimentacoes = (int) (clone $movimentacoesNoPeriodo)->count();
+    $ocupacaoGeral = 0;
+    $totalReservas = 0;
+    $totalMovimentacoes = 0;
 
     $financeiroValores = array_fill(0, count($labels), 0.0);
     $financeiroQuantidades = array_fill(0, count($labels), 0);
@@ -160,7 +90,101 @@ public function chartData(Request $request)
     $qtdTransacoesFinanceiro = 0;
     $taxaAprovacaoFinanceiro = 0.0;
 
-    if (Schema::hasTable('transacoes')) {
+    if ($homeSections['reservas'] || $homeSections['ocupacao']) {
+        $reservasNoPeriodo = \App\Models\Reserva::query()
+            ->whereBetween('created_at', [$dataInicio, $dataFim]);
+        $reservasNoPeriodo = $this->applyEmpresaScope($reservasNoPeriodo, 'reservas');
+
+        if ($homeSections['reservas']) {
+            $resConfirmadas = (clone $reservasNoPeriodo)
+                ->whereNull('data_cancelamento')
+                ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
+                ->groupBy('ano', 'mes')
+                ->get()
+                ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
+
+            $resCanceladas = (clone $reservasNoPeriodo)
+                ->whereNotNull('data_cancelamento')
+                ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
+                ->groupBy('ano', 'mes')
+                ->get()
+                ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
+
+            foreach ($meses as $m) {
+                $key = $m->year . '-' . $m->month;
+                $conf = (int) ($resConfirmadas[$key]->total ?? 0);
+                $canc = (int) ($resCanceladas[$key]->total ?? 0);
+                $confirmadas[] = $conf;
+                $cancelamentos[] = $canc;
+                $tendencia[] = $conf + $canc;
+            }
+
+            $totalReservas = (int) (clone $reservasNoPeriodo)->count();
+        }
+
+        if ($homeSections['ocupacao'] && Schema::hasTable('grupos_frota')) {
+            $totalPorGrupoBase = DB::table('veiculos')
+                ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
+                ->selectRaw('grupos_frota.id, grupos_frota.nome, COUNT(*) as total');
+            $totalPorGrupoBase = $this->applyEmpresaScope($totalPorGrupoBase, 'veiculos');
+            $totalPorGrupo = $totalPorGrupoBase
+                ->groupBy('grupos_frota.id', 'grupos_frota.nome')
+                ->get();
+
+            $ativasPorGrupoBase = DB::table('reservas')
+                ->whereNull('data_cancelamento')
+                ->where('data_inicio', '<=', $dataFim)
+                ->where('data_fim', '>=', $dataInicio)
+                ->selectRaw('grupo_frota_id, COUNT(*) as total');
+            $ativasPorGrupoBase = $this->applyEmpresaScope($ativasPorGrupoBase, 'reservas');
+            $ativasPorGrupo = $ativasPorGrupoBase
+                ->groupBy('grupo_frota_id')
+                ->get()
+                ->keyBy('grupo_frota_id');
+
+            foreach ($totalPorGrupo as $i => $grupo) {
+                $ativas = (int) ($ativasPorGrupo[$grupo->id]->total ?? 0);
+                $pct = $grupo->total > 0 ? round($ativas / $grupo->total * 100) : 0;
+                $ocupacaoFrota[] = [
+                    'label' => $grupo->nome,
+                    'pct' => $pct,
+                    'color' => $cores[$i % count($cores)],
+                ];
+            }
+
+            $totalVeiculosGeral = (int) $totalPorGrupo->sum('total');
+            $totalAtivas = (int) $ativasPorGrupo->sum('total');
+            $ocupacaoGeral = $totalVeiculosGeral > 0 ? round($totalAtivas / $totalVeiculosGeral * 100) : 0;
+        }
+    }
+
+    if ($homeSections['movimentacoes']) {
+        $movStatusBase = DB::table('movimentacoes')
+            ->join('status_movimentacao', 'movimentacoes.status_movimentacao_id', '=', 'status_movimentacao.id')
+            ->selectRaw('status_movimentacao.nome as label, COUNT(*) as total')
+            ->whereBetween('movimentacoes.created_at', [$dataInicio, $dataFim]);
+        $movStatusBase = $this->applyEmpresaScope($movStatusBase, 'movimentacoes');
+        $movStatus = $movStatusBase
+            ->groupBy('status_movimentacao.id', 'status_movimentacao.nome')
+            ->get();
+
+        $movimentacoesNoPeriodo = \App\Models\Movimentacao::query()
+            ->whereBetween('created_at', [$dataInicio, $dataFim]);
+        $movimentacoesNoPeriodo = $this->applyEmpresaScope($movimentacoesNoPeriodo, 'movimentacoes');
+        $totalMovimentacoes = (int) (clone $movimentacoesNoPeriodo)->count();
+    }
+
+    if ($homeSections['frota'] && Schema::hasTable('grupos_frota')) {
+        $gruposVeiculosBase = DB::table('veiculos')
+            ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
+            ->selectRaw('grupos_frota.nome as label, COUNT(*) as total');
+        $gruposVeiculosBase = $this->applyEmpresaScope($gruposVeiculosBase, 'veiculos');
+        $gruposVeiculos = $gruposVeiculosBase
+            ->groupBy('grupos_frota.id', 'grupos_frota.nome')
+            ->get();
+    }
+
+    if ($homeSections['financeiro'] && Schema::hasTable('transacoes')) {
         $baseFinanceiro = DB::table('transacoes')
             ->whereBetween('transacoes.created_at', [$dataInicio, $dataFim]);
         $baseFinanceiro = $this->applyEmpresaScope($baseFinanceiro, 'transacoes');
@@ -213,6 +237,7 @@ public function chartData(Request $request)
     }
 
     return response()->json([
+        'secoes' => $homeSections,
         'dadosReservas' => compact('labels', 'confirmadas', 'cancelamentos', 'tendencia'),
         'movPorStatus' => [
             'labels' => $movStatus->pluck('label')->toArray(),
@@ -321,6 +346,58 @@ public function dashboard()
             'EUR' => 'EUR',
             default => 'R$',
         };
+    }
+
+    private function getHomeSectionPermissions(): array
+    {
+        return [
+            'reservas' => $this->userCanAccessAny(['reserva.index', 'status_reserva.index']),
+            'movimentacoes' => $this->userCanAccessAny(['movimentacao.index', 'status_movimentacao.index', 'tipo_movimentacao.index']),
+            'frota' => $this->userCanAccessAny(['veiculo.index', 'grupo_frota.index', 'tipo_frota.index', 'marca.index', 'modelo.index', 'segmento.index']),
+            'ocupacao' => $this->userCanAccessAny(['veiculo.index', 'grupo_frota.index', 'reserva.index']),
+            'financeiro' => $this->userCanAccessAny(['financeiro.index', 'financeiro.reservas', 'tipo_transacao.index', 'nfse.index']),
+        ];
+    }
+
+    private function userCanAccessAny(array $routes): bool
+    {
+        $user = Auth::user();
+
+        if (!$user) {
+            return false;
+        }
+
+        if ($user->isAdministrador()) {
+            return true;
+        }
+
+        foreach (array_unique($routes) as $routeName) {
+            if ($user->hasPermissao($routeName)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function filterSystemCards(array $groups): array
+    {
+        if ($this->userCanAccessAny(['*'])) {
+            return $groups;
+        }
+
+        return collect($groups)
+            ->map(function (array $group) {
+                $group['items'] = collect($group['items'])
+                    ->filter(fn (array $item) => $this->userCanAccessAny([$item['route']]))
+                    ->values()
+                    ->all();
+
+                return $group;
+            })
+            ->filter(fn (array $group) => !empty($group['items']))
+            ->values()
+            ->all();
     }
 
     private function getSystemCards()

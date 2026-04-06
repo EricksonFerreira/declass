@@ -44,6 +44,10 @@ class CheckPermissaoPorRota
             return $next($request);
         }
 
+        if (in_array($routeName, ['home', 'dashboard', 'home.chart-data'], true)) {
+            return $next($request);
+        }
+
         if (!$user->hasPermissao($routeName)) {
             if (in_array($routeName, ['home', 'dashboard'], true)) {
                 $fallbackRoute = $user->firstPermittedRouteNameForRedirect();
