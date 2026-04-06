@@ -131,6 +131,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'configuracao_checklist',
         'categoria_dano',
         'dano',
+        'veiculo_dano_monitoramento',
+        'ordem_servico',
     ];
 
     foreach ($webGroupFiles as $groupFile) {

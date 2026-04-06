@@ -27,6 +27,8 @@ return [
     'sidebar.movimentacoes_lista'   => 'Listagem',
     'sidebar.veiculo_lista'         => 'Listagem',
     'sidebar.dano_lista'            => 'Listagem',
+    'sidebar.dano_monitoramento'    => 'Correções / monitoramento',
+    'sidebar.ordem_servico'         => 'Ordens de serviço (OS)',
     'sidebar.reserva' => 'Reservas',
     'sidebar.status_reserva' => 'Status da Reserva',
     'sidebar.movimentacoes' => 'Movimentações',

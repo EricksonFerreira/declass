@@ -548,4 +548,17 @@ class ReservaService extends AbstractBaseService
         $reserva->veiculo_id = $veiculo_id;
         $reserva->save();
     }
+
+    public function checkOutRealizado($reserva_id)
+    {
+        $reserva = $this->model->find($reserva_id);
+
+        // Busca o status "Concluída" da empresa da reserva para suportar multi-empresa
+        $statusConcluida = \App\Models\StatusReserva::where('empresa_id', $reserva->empresa_id)
+            ->where('nome', 'like', 'Conclu%')
+            ->first();
+
+        $reserva->status_reserva_id = $statusConcluida ? $statusConcluida->id : 5;
+        $reserva->save();
+    }
 }

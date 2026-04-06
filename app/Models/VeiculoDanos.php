@@ -20,8 +20,15 @@ class VeiculoDanos extends Model
         'observacoes',
         'veiculo_id',
         'reserva_id',
+        'correcao_descricao',
+        'correcao_data',
+        'correcao_user_id',
     ];
     public $timestamps = true;
+
+    protected $casts = [
+        'correcao_data' => 'datetime',
+    ];
 
     public function dano()
     {
@@ -47,5 +54,18 @@ class VeiculoDanos extends Model
         return $this->hasMany(VeiculoDanosImagem::class, 'dano_veiculo_id');
     }
 
+    public function usuarioCorrecao()
+    {
+        return $this->belongsTo(User::class, 'correcao_user_id');
+    }
 
+    public function scopeSemCorrecao($query)
+    {
+        return $query->whereNull('correcao_data');
+    }
+
+    public function scopeComCorrecao($query)
+    {
+        return $query->whereNotNull('correcao_data');
+    }
 }

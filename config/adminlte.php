@@ -436,6 +436,16 @@ return [
                     'url'  => 'categoria-dano',
                     'icon' => 'fas fa-tags',
                 ],
+                [
+                    'text' => 'sidebar.dano_monitoramento',
+                    'url'  => 'veiculo-dano/monitoramento',
+                    'icon' => 'fas fa-clipboard-list',
+                ],
+                [
+                    'text' => 'sidebar.ordem_servico',
+                    'url'  => 'ordem-servico',
+                    'icon' => 'fas fa-file-alt',
+                ],
             ],
         ],
         [

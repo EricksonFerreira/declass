@@ -9,8 +9,10 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Reserva\AdicionarDanoVeiculoRequest;
 use App\Http\Requests\Reserva\AssinarContratoRequest;
 use App\Http\Requests\Reserva\CriarContratoCheckInRequest;
+use App\Http\Requests\Reserva\FinalizarCheckoutVistoriaRequest;
 use App\Http\Requests\Reserva\StoreReservaRequest;
 use App\Http\Requests\Reserva\UpdateReservaRequest;
+use App\Models\ContratoCheckout;
 use App\Models\Transacao;
 use App\Services\BreadcrumbService;
 use App\Services\CategoriaDanoService;
@@ -536,6 +538,102 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Reserva não pode ser excluida', 'error');
     }
 
+
+    /**
+     * Tela de vistoria de devolução (check-out). A reserva só é concluída após finalizar aqui.
+     */
+    public function checkoutVistoria(Request $request, $reserva_id)
+    {
+        $reserva = $this->reservaService->getById($reserva_id, ['modelos', 'usuario', 'veiculo', 'contratoCheckin']);
+
+        if (!$reserva->podeFazerCheckout()) {
+            return redirect()
+                ->route('reserva.show', $reserva_id)
+                ->with('warning', 'Check-out com vistoria não está disponível para esta reserva.');
+        }
+
+        if (!$reserva->veiculo_id) {
+            return redirect()
+                ->route('reserva.show', $reserva_id)
+                ->with('error', 'Associe um veículo à reserva antes do check-out.');
+        }
+
+        $categoriaDanos = $this->categoriaDanoService->getAllForSelect();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadcrumbItem('Home', route('home')),
+            new BreadcrumbItem('Reservas', route('reserva.index')),
+            new BreadcrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
+            new BreadcrumbItem('Check-out / Vistoria'),
+        ]);
+
+        return view('reserva.checkout', compact('reserva', 'categoriaDanos', 'breadcrumb'))
+            ->with('titulo', 'Check-out (vistoria) — reserva Nº ' . $reserva->id);
+    }
+
+    public function finalizarCheckoutVistoria(FinalizarCheckoutVistoriaRequest $request, $reserva_id)
+    {
+        $reserva = $this->reservaService->getById($reserva_id, ['veiculo']);
+
+        if (!$reserva->podeFazerCheckout()) {
+            return response()->json(['success' => false, 'message' => 'Reserva não está em status válido para check-out.'], 422);
+        }
+
+        if (ContratoCheckout::where('reserva_id', $reserva_id)->exists()) {
+            return response()->json(['success' => false, 'message' => 'Check-out desta reserva já foi registrado.'], 422);
+        }
+
+        if (!$reserva->veiculo_id) {
+            return response()->json(['success' => false, 'message' => 'Veículo não vinculado à reserva.'], 422);
+        }
+
+        $dados = $request->validated();
+
+        try {
+            DB::beginTransaction();
+
+            ContratoCheckout::create([
+                'reserva_id' => (int) $reserva_id,
+                'veiculo_id' => (int) $reserva->veiculo_id,
+                'empresa_id' => $reserva->empresa_id ?? null,
+                'quilometragem_devolucao' => $dados['quilometragem_devolucao'],
+                'nivel_combustivel_devolucao' => $dados['nivel_combustivel_devolucao'],
+                'data_devolucao' => $dados['data_devolucao'],
+                'hora_devolucao' => $dados['hora_devolucao'],
+                'notas_devolucao' => $dados['notas_devolucao'] ?? null,
+                'observacoes_devolucao' => $dados['observacoes_devolucao'] ?? null,
+            ]);
+
+            $this->movimentacaoService->realizarCheckOut(
+                (int) $reserva->veiculo_id,
+                (int) $reserva->estacao_devolucao_id,
+                (int) $reserva_id,
+                'Check-out com vistoria de devolução'
+            );
+
+            $this->reservaService->checkOutRealizado($reserva_id);
+            $this->reservaService->adicionaLog(
+                $reserva_id,
+                Auth::id(),
+                json_encode(['acao' => 'Check-out com vistoria concluído'])
+            );
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Check-out concluído e reserva finalizada.',
+                'redirect' => route('reserva.show', $reserva_id),
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao finalizar check-out: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
 
     public function cancelar($id)
     {
@@ -1117,16 +1215,27 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     }
     public function checkin(Request $request, $reserva_id)
     {
-        $reserva = $this->reservaService->getById($reserva_id,['modelos']);
+        $reserva = $this->reservaService->getById($reserva_id, ['modelos']);
 
         $categoriaDanos = $this->categoriaDanoService->getAllForSelect();
-        $modelos = $this->modeloService->obtemModelosPorGrupoFrota($reserva->grupo_frota_id);
 
-        $marcas_id = array_unique($modelos->pluck('marca_id')->toArray() );
+        $modeloIdsNoGrupo = $this->veiculoService->getModeloIdsDeVeiculosNoGrupo((int) $reserva->grupo_frota_id);
+        $modelos = $this->modeloService->getAtivosPorIds($modeloIdsNoGrupo);
 
-        $marcas = $this->marcaService->getAll(['id' => $marcas_id]);
+        $marcaIds = $modelos->pluck('marca_id')->unique()->filter()->map(static fn ($id) => (int) $id)->values()->all();
+        $marcas = $this->marcaService->getModel()->newQuery()
+            ->whereIn('id', $marcaIds)
+            ->where('ativo', 'S')
+            ->orderBy('nome')
+            ->get();
 
-        $veiculos = $this->veiculoService->getVeiculosDisponiveisParaCheckin($reserva->estacao_retirada_id);
+        $checkinModelosJson = $modelos->map(static fn ($m) => [
+            'id' => $m->id,
+            'nome' => $m->nome,
+            'marca_id' => (int) $m->marca_id,
+        ])->values();
+
+        $veiculos = collect();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadcrumbItem('Home', route('home')),
@@ -1138,40 +1247,87 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         return view(
             'reserva.checkin',
             compact(
-                'reserva', 'marcas', 'modelos','veiculos','breadcrumb',
-                    'categoriaDanos'
-                )
+                'reserva',
+                'marcas',
+                'modelos',
+                'veiculos',
+                'breadcrumb',
+                'categoriaDanos',
+                'checkinModelosJson'
+            )
         )
             ->with('titulo', 'Check-in da reserva Nº ' . $reserva->id);
+    }
+
+    /**
+     * Veículos disponíveis na estação de retirada, no período da reserva, para marca + modelo escolhidos.
+     */
+    public function veiculosDisponiveisCheckin(Request $request, $reserva_id)
+    {
+        $request->validate([
+            'modelo_id' => 'required|integer|exists:modelos,id',
+            'marca_id' => 'required|integer|exists:marcas,id',
+        ]);
+
+        $reserva = $this->reservaService->getById($reserva_id, ['modelos']);
+
+        $permitidos = $this->veiculoService->getModeloIdsDeVeiculosNoGrupo((int) $reserva->grupo_frota_id);
+        $modeloId = (int) $request->modelo_id;
+        if (! in_array($modeloId, $permitidos, true)) {
+            return response()->json(['message' => 'Este modelo não possui veículos cadastrados neste grupo de frota.'], 422);
+        }
+
+        $modelo = $this->modeloService->getById($modeloId);
+        if (! $modelo || (int) $modelo->marca_id !== (int) $request->marca_id) {
+            return response()->json(['message' => 'Marca e modelo não conferem.'], 422);
+        }
+
+        $dataInicio = Carbon::parse($reserva->data_inicio)->format('Y-m-d H:i:s');
+        $dataFim = Carbon::parse($reserva->data_fim)->format('Y-m-d H:i:s');
+
+        $veiculos = $this->veiculoService->getVeiculosDisponiveisPorModeloEEstacaoEIntervaloDatas(
+            $modeloId,
+            (int) $reserva->estacao_retirada_id,
+            $dataInicio,
+            $dataFim,
+            (int) $reserva_id
+        );
+
+        return response()->json(
+            $veiculos->map(static fn ($v) => [
+                'id' => $v->id,
+                'nome' => $v->nome,
+            ])->values()
+        );
     }
 
     public function verContratoCheckin(Request $request, $reserva_id){
 
         // Carrega a reserva com todos os relacionamentos necessários
     $reserva = $this->reservaService->getById($reserva_id, [
-        'usuario', // para dados do cliente
-        // 'condutor', // para dados do condutor
-        'veiculo', // para dados do veículo
-        'grupoFrota', // para dados do grupo
-        'estacaoRetirada', // para local de retirada
-        'estacaoDevolucao', // para local de devolução
-        'opcionais', // para itens de faturação
-        'contratoCheckin', // para dados do contrato
-        'veiculoDano'
-        // 'contratoCheckin.veiculoDanos' // para estado da viatura
+        'usuario',
+        'empresa',
+        'veiculo',
+        'grupoFrota',
+        'estacaoRetirada',
+        'estacaoDevolucao',
+        'opcionais',
+        'contratoCheckin',
+        'veiculoDano',
     ]);
     // dd( $reserva->contratoCheckin->veiculo->modelo->gruposFrota[0]->nome );
 
     $data = [
         'documento' => [
-            'codigo_interno' => 'ARCS-' . date('y'), // Você pode gerar isso
-            'atcud' => 'JJNXXNNC-' . date('y'), // Você pode gerar isso
+            'codigo_interno' => 'ARCS-' . date('y'),
+            'atcud' => 'JJNXXNNC-' . date('y'),
             'data_emissao' => now()->format('Y-m-d H:i:s'),
             'empresa' => [
-                'nome' => config('app.empresa.nome'),
+                'nome' => $reserva->empresa->nome ?? config('app.empresa.nome'),
                 'endereco' => config('app.empresa.endereco'),
                 'site' => config('app.empresa.site'),
                 'instagram' => config('app.empresa.instagram'),
+                'logo_url' => $reserva->empresa?->logo_url ?? null,
             ],
         ],
         'contrato' => [
@@ -1241,11 +1397,17 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ],
         'estado_viatura' => [
             'itens' => $reserva->veiculoDano->map(function ($dano) {
+                $correcao = '';
+                if ($dano->correcao_data) {
+                    $correcao = ($dano->correcao_descricao ?? '') . ' — ' . $dano->correcao_data->format('d/m/Y H:i');
+                }
+
                 return [
-                    'local'=> ucfirst($dano->local_dano).':',
-                    'localizacao'=>$dano->localizacao_dano,
-                    'tipo_dano'=>$dano->observacoes == null ? '' : '('.$dano->tipo_dano.')',
-                    'observacoes'=>$dano->observacoes
+                    'local' => ucfirst((string) $dano->local_dano) . ':',
+                    'localizacao' => $dano->localizacao_problema ?? '',
+                    'tipo_dano' => '(' . ($dano->tipo_dano ?? '') . ')',
+                    'observacoes' => $dano->observacoes ?? '',
+                    'correcao' => $correcao,
                 ];
             })->toArray(),
         ],

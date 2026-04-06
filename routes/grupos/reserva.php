@@ -14,6 +14,9 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/processar-pagamento', [ReservaController::class, 'processarPagamento'])->name('processarPagamento');
     Route::post('{id}/emitir-nfse', [ReservaController::class, 'emitirNfse'])->name('emitirNfse');
     Route::post('{id}/cancelar', [ReservaController::class, 'cancelar'])->name('cancelar');
+    Route::get('{id}/checkout', [ReservaController::class, 'checkoutVistoria'])->name('checkout.vistoria');
+    Route::post('{id}/checkout/finalizar', [ReservaController::class, 'finalizarCheckoutVistoria'])->name('checkout.finalizar');
+    Route::get('{id}/checkin/veiculos-disponiveis', [ReservaController::class, 'veiculosDisponiveisCheckin'])->name('checkin.veiculosDisponiveis');
     Route::get('{id}/checkin', [ReservaController::class, 'checkin'])->name('checkin');
     Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');
     Route::post('{id}/adicionarDanoVeiculo', [ReservaController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');

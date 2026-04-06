@@ -124,6 +124,11 @@ class Reserva extends Model
         return $this->hasOne(ContratoCheckin::class, 'reserva_id');
     }
 
+    public function contratoCheckout()
+    {
+        return $this->hasOne(ContratoCheckout::class, 'reserva_id');
+    }
+
     public function veiculoDano(){
         return $this->hasMany(VeiculoDanos::class, 'reserva_id');
     }

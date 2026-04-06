@@ -105,9 +105,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->select($id, $nome, $subtitle)
-            ->where('ativo', 'S');
-
-        $query = $query->distinct();
+            ->distinct();
 
         if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
@@ -116,8 +114,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             $query->orderBy($orderBy, $orderDirection);
         }
 
-      return $query->get();
-
+        return $query->get();
     }
     public function formatArraySelectSubText($data, string $idField = 'id', string $nameField = 'name'): array
     {
@@ -126,10 +123,8 @@ abstract class AbstractBaseService implements BaseServiceInterface
     }
     public function getAllAtivos($id = 'id', $nome = 'nome', $orderBy = null, $orderDirection = 'asc')
     {
-
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->select($id, $nome)
-            ->where('ativo', 'S')
             ->distinct();
 
         if (Schema::hasColumn($this->model->getTable(), 'ativo')) {

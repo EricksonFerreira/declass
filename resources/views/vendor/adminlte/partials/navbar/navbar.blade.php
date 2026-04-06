@@ -240,22 +240,3 @@
     </ul>
 
 </nav>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const toggle = document.querySelector('[data-widget="pushmenu"]');
-        if (!toggle) return;
-
-        toggle.addEventListener('click', function (event) {
-            event.preventDefault();
-            if (typeof $ !== 'undefined' && typeof $.fn.PushMenu !== 'undefined') {
-                $(this).PushMenu('toggle');
-                return;
-            }
-
-            document.body.classList.toggle('sidebar-open');
-            document.body.classList.toggle('sidebar-collapse');
-        });
-    });
-</script>
-

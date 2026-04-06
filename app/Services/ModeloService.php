@@ -61,4 +61,22 @@ class ModeloService extends AbstractBaseService
             ->select('modelos.*')
             ->get();
     }
+
+    /**
+     * Modelos ativos por lista de IDs (ex.: derivados de veículos do grupo).
+     *
+     * @param  array<int, int>  $modeloIds
+     */
+    public function getAtivosPorIds(array $modeloIds)
+    {
+        if ($modeloIds === []) {
+            return collect();
+        }
+
+        return $this->model
+            ->whereIn('id', $modeloIds)
+            ->where('ativo', 'S')
+            ->orderBy('nome')
+            ->get();
+    }
 }

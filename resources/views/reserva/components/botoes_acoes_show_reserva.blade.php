@@ -55,7 +55,7 @@
                         @endif
 
                         @if($reserva->podeVerContrato())
-                            <a class="dropdown-item border-bottom" href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" id="btnVerContratoCheckinReserva">
+                            <a class="dropdown-item border-bottom" href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" id="btnVerContratoCheckinReserva" target="_blank" rel="noopener noreferrer">
                                 <i class="fas fa-eye mr-2"></i> Ver contrato
                             </a>
                         @endif
@@ -77,10 +77,10 @@
             @endif
 
             @if($reserva->podeFazerCheckout())
-                <button type="button" class="action-pill action-pill--success" id="btnCheckOutReserva">
-                    <i class="fas fa-check-circle"></i>
+                <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="action-pill action-pill--success" id="btnCheckOutReserva">
+                    <i class="fas fa-undo-alt"></i>
                     <span>Check-out</span>
-                </button>
+                </a>
             @endif
         </div>
 
@@ -374,6 +374,7 @@
 <script src="{{ asset('js/alertConfirm.js') }}"></script>
 <script src="{{ asset('js/alertConfirmPequena.js') }}"></script>
 <script>
+    /* ── Cancelar ── */
     (function () {
         const btnCancelar = document.getElementById('btnCancelarReserva');
 

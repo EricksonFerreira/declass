@@ -64,26 +64,3 @@
     </ul>
 
 </nav>
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const toggle = document.querySelector('[data-widget="pushmenu"]');
-        if (!toggle) return;
-
-        toggle.addEventListener('click', function (event) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-
-            const body = document.body;
-
-            if (window.innerWidth < 992) {
-                body.classList.toggle('sidebar-open');
-            } else {
-                body.classList.toggle('sidebar-collapse');
-            }
-
-            // Garante que sidebar-mini nunca seja adicionado
-            body.classList.remove('sidebar-mini', 'sidebar-mini-lg', 'sidebar-mini-md');
-        });
-    });
-</script>

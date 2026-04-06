@@ -105,6 +105,19 @@ class VeiculoService extends AbstractBaseService
         return $veiculo;
     }
 
+    /**
+     * Veículos ativos no escopo de empresa (sem filtro de estação) para selects em fluxos como ordem de serviço.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection<int, Veiculo>
+     */
+    public function listarAtivosParaOrdemServico(int $limit = 800)
+    {
+        return $this->applyEmpresaScope($this->model->newQuery())
+            ->where('ativo', 'S')
+            ->orderBy('nome')
+            ->limit($limit)
+            ->get();
+    }
 
     /**
      * Obtém veículos disponíveis por modelo e estação específica.
@@ -353,6 +366,26 @@ class VeiculoService extends AbstractBaseService
     public function getVeiculosIndisponiveis()
     {
         return $this->model->where('status_veiculo_id', 3)->count();
+    }
+
+    /**
+     * IDs de modelos que possuem pelo menos um veículo cadastrado no grupo de frota informado.
+     */
+    public function getModeloIdsDeVeiculosNoGrupo(int $grupoFrotaId): array
+    {
+        if ($grupoFrotaId <= 0) {
+            return [];
+        }
+
+        return $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->where('grupo_frota_id', $grupoFrotaId)
+            ->whereNotNull('modelo_id')
+            ->distinct()
+            ->pluck('modelo_id')
+            ->map(static fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->toArray();
     }
 
     public function getVeiculosDisponiveisParaCheckin($estacao_id){

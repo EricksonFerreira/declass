@@ -31,52 +31,50 @@ class VeiculoDanoService extends AbstractBaseService
         return $this->model;
     }
 
-    public function obterDanosPorVeiculoEReserva($veiculo_id,$reserva_id){
-        $dados = $this->model->where('veiculo_id', $veiculo_id)
+    public function obterDanosPorVeiculoEReserva($veiculo_id, $reserva_id)
+    {
+        return $this->model->where('veiculo_id', $veiculo_id)
             ->where('reserva_id', $reserva_id)
-            ->leftJoin('veiculo_danos_imagens', 'veiculo_danos.id', '=', 'veiculo_danos_imagens.dano_veiculo_id')
-            ->select('veiculo_danos.local_dano AS localizacao', 'veiculo_danos.observacoes AS descricao', 'veiculo_danos_imagens.nome_imagem')
-            ->orderBy('veiculo_danos.id','asc')
-            ->get();
-
-        $result = $this->formatDanos($dados);
-
-        return $result;
-
+            ->with('imagem')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (VeiculoDanos $d) => $this->mapearDanoParaJson($d))
+            ->values()
+            ->all();
     }
 
     public function obterDanosPorVeiculoExcetoReserva($veiculo_id, $reserva_id)
     {
-            $dados = $this->model->where('veiculo_id', $veiculo_id)
-                ->where(function($query) use ($reserva_id) {
-                    $query->where('reserva_id', '!=', $reserva_id)
-                          ->orWhereNull('reserva_id');
-                })
-                ->leftJoin('veiculo_danos_imagens', 'veiculo_danos.id', '=', 'veiculo_danos_imagens.dano_veiculo_id')
-                ->select('veiculo_danos.local_dano AS localizacao', 'veiculo_danos.observacoes AS descricao', 'veiculo_danos_imagens.nome_imagem')
-                ->orderBy('veiculo_danos.id','asc')
-                ->get();
-
-            $result = $this->formatDanos($dados);
-
-            return $result;
-
+        return $this->model->where('veiculo_id', $veiculo_id)
+            ->where(function ($query) use ($reserva_id) {
+                $query->where('reserva_id', '!=', $reserva_id)
+                    ->orWhereNull('reserva_id');
+            })
+            ->with('imagem')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (VeiculoDanos $d) => $this->mapearDanoParaJson($d))
+            ->values()
+            ->all();
     }
 
-    private function formatDanos($dados)
+    /**
+     * @return array<string, mixed>
+     */
+    private function mapearDanoParaJson(VeiculoDanos $d): array
     {
-    $result = [];
-    foreach ($dados as $dado) {
-        if (!isset($result[$dado->localizacao])) {
-        $imagem =  $dado->nome_imagem ? $dado->nome_imagem : [];
-        $localizacao = $dado->localizacao == 'atras' ? 'ATRÁS' : strtoupper($dado->localizacao);
-        $result[] = [
-            'localizacao' => $localizacao,
-            'descricao' => $dado->descricao,
-            'imagens' => $imagem
+        $loc = $d->local_dano === 'atras' ? 'ATRÁS' : strtoupper((string) $d->local_dano);
+        $imagens = $d->imagem->map(fn ($img) => ['imagem' => $img->nome_imagem])->values()->all();
+
+        return [
+            'id' => $d->id,
+            'localizacao' => $loc,
+            'descricao' => $d->observacoes,
+            'tipo_dano' => $d->tipo_dano,
+            'imagens' => $imagens,
+            'correcao_descricao' => $d->correcao_descricao,
+            'correcao_data' => $d->correcao_data?->format('Y-m-d H:i'),
+            'correcao_realizada' => $d->correcao_data !== null,
         ];
-        }
-    }
-    return $result;
     }
 }
