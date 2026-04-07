@@ -374,10 +374,7 @@
                 @if(!empty($loginLogoUrl))
                     <img class="logo__img" src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}">
                 @else
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 1L18.5 6v8L10 19 1.5 14V6L10 1z" fill="white" fill-opacity=".95"/>
-                        <path d="M10 5.5L15 8.5v6L10 17 5 14.5v-6L10 5.5z" fill="white" fill-opacity=".28"/>
-                    </svg>
+                   <img src="{{assets('imgs/logo.png')}}" alt="Logo {{ $loginTitle }}">
                 @endif
             </div>
             <span class="logo__name">{{ $loginTitle }}</span>
