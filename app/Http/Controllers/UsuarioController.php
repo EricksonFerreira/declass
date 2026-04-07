@@ -150,6 +150,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                     'usuario' => [
                         'id' => (int) $usuario->id,
                         'nome' => (string) $usuario->nome,
+                        'numero_identificacao' => (string) ($usuario->numero_identificacao ?? ''),
                         'email' => (string) $usuario->email,
                     ],
                 ], 201);

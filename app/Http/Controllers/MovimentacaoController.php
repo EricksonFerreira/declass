@@ -8,6 +8,8 @@ use App\Http\Requests\Movimentacao\StoreMovimentacaoRequest;
 use App\Http\Requests\Movimentacao\UpdateMovimentacaoRequest;
 use App\Services\BreadcrumbService;
 use App\Services\MovimentacaoService;
+use App\Services\VeiculoService;
+use App\Services\EstacaoService;
 use App\Services\StatusMovimentacaoService;
 use App\Services\TipoMovimentacaoService;
 use App\Services\UsuarioService;
@@ -25,8 +27,10 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
     protected $tipoMovimentacaoService;
     protected $usuarioService;
     protected $statusMovimentacaoService;
+    protected $veiculoService;
+    protected $estacaoService;
 
-    public function __construct(MovimentacaoService $movimentacaoService, BreadcrumbService $breadcrumbService, TipoMovimentacaoService $tipoMovimentacaoService, UsuarioService $usuarioService, StatusMovimentacaoService $statusMovimentacaoService)
+    public function __construct(MovimentacaoService $movimentacaoService, BreadcrumbService $breadcrumbService, TipoMovimentacaoService $tipoMovimentacaoService, UsuarioService $usuarioService, StatusMovimentacaoService $statusMovimentacaoService, VeiculoService $veiculoService, EstacaoService $estacaoService)
     {
         $this->titulo = "Movimentações";
         $this->nomeFiltro = 'movimentacao';
@@ -35,6 +39,8 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $this->tipoMovimentacaoService = $tipoMovimentacaoService;
         $this->usuarioService = $usuarioService;
         $this->statusMovimentacaoService = $statusMovimentacaoService;
+        $this->veiculoService = $veiculoService;
+        $this->estacaoService = $estacaoService;
     }
 
     public function index()
@@ -44,7 +50,16 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $movimentacaos = $this->movimentacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage,['tipoMovimentacao','usuario','statusMovimentacao'], 'id', 'desc');
+        $movimentacaos = $this->movimentacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, [
+            'tipoMovimentacao',
+            'usuario',
+            'statusMovimentacao',
+            'veiculo.modelo',
+            'veiculo.grupoFrota',
+            'localOrigem',
+            'localDestino',
+            'reserva',
+        ], 'id', 'desc');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Movimentações');
         $filters = $this->obterFiltrosPrincipais();
@@ -66,15 +81,37 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         ))->with('titulo', $this->titulo);
     }
 
-    public function create(){
-        $status = [
-            'S' => 'Ativo',
-            'N' => 'Inativo'
-        ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Movimentações','movimentacao.index','Criar');
+    public function create()
+    {
+        $status = ['S' => 'Ativo', 'N' => 'Inativo'];
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Movimentações', 'movimentacao.index', 'Criar');
 
-        [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('movimentacao.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $usuarios = $this->usuarioService->getAllForReservaSelect();
+        $estacoes = $this->estacaoService->getAllAtivos();
+
+        $veiculosCol = $this->veiculoService->listarAtivosParaOrdemServico(800);
+        $veiculos = $veiculosCol->mapWithKeys(function ($v) {
+            $label = (string) ($v->nome ?? ('Veículo #' . (int) $v->id));
+            if (!empty($v->placa_licenca)) {
+                $label .= ' - ' . $v->placa_licenca;
+            }
+            return [(int) $v->id => $label];
+        })->all();
+
+        [$metodo, $rota] = $this->getFormMethodAndRoute();
+        return view('movimentacao.add-edit', compact(
+            'breadcrumb',
+            'status',
+            'metodo',
+            'rota',
+            'tiposMovimentacao',
+            'statusMovimentacao',
+            'usuarios',
+            'estacoes',
+            'veiculos'
+        ))->with('titulo', 'Nova Movimentação');
     }
 
     public function store(StoreMovimentacaoRequest $request)
@@ -87,14 +124,44 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
     public function edit($id)
     {
         $movimentacao = $this->movimentacaoService->getById($id);
+        if (!$movimentacao) {
+            abort(404);
+        }
+
         $status = [
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Movimentações','movimentacao.index',"Editar: $movimentacao->nome");
-        [$metodo,$rota] = $this->getFormMethodAndRoute($movimentacao);
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Movimentações', 'movimentacao.index', "Editar: #{$movimentacao->id}");
 
-        return view('movimentacao.add-edit', compact('movimentacao','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $usuarios = $this->usuarioService->getAllForReservaSelect();
+        $estacoes = $this->estacaoService->getAllAtivos();
+
+        $veiculosCol = $this->veiculoService->listarAtivosParaOrdemServico(800);
+        $veiculos = $veiculosCol->mapWithKeys(function ($v) {
+            $label = (string) ($v->nome ?? ('Veículo #' . (int) $v->id));
+            if (!empty($v->placa_licenca)) {
+                $label .= ' - ' . $v->placa_licenca;
+            }
+            return [(int) $v->id => $label];
+        })->all();
+
+        [$metodo, $rota] = $this->getFormMethodAndRoute($movimentacao);
+
+        return view('movimentacao.add-edit', compact(
+            'movimentacao',
+            'breadcrumb',
+            'status',
+            'metodo',
+            'rota',
+            'tiposMovimentacao',
+            'statusMovimentacao',
+            'usuarios',
+            'estacoes',
+            'veiculos'
+        ))->with('titulo', "Editar Movimentação #{$movimentacao->id}");
     }
 
     public function update(UpdateMovimentacaoRequest $request, $id)

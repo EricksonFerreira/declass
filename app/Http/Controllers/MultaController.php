@@ -85,9 +85,13 @@ class MultaController extends BaseController
         $reservaId  = $request->query('reserva_id');
         $reserva    = $reservaId ? $this->reservaService->getById($reservaId, ['usuario', 'grupoFrota']) : null;
 
+        $veiculoId = $request->query('veiculo_id');
+        $veiculo   = $veiculoId ? $this->veiculoService->getById($veiculoId, ['marca', 'modelo']) : null;
+
         return view('multa.add-edit', [
             'multa'            => null,
             'reserva'          => $reserva,
+            'veiculo'          => $veiculo,
             'statusMulta'      => Multa::STATUS_MULTA,
             'statusDesconto'   => Multa::STATUS_DESCONTO,
             'breadcrumb'       => $breadcrumb,
@@ -138,12 +142,13 @@ class MultaController extends BaseController
     {
         $this->authorize('multa.edit');
 
-        $multa      = $this->multaService->queryScoped()->with('reserva')->findOrFail($id);
+        $multa      = $this->multaService->queryScoped()->with(['reserva', 'veiculo.marca', 'veiculo.modelo'])->findOrFail($id);
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Multas', 'multa.index', 'Editar Multa');
 
         return view('multa.add-edit', [
             'multa'          => $multa,
             'reserva'        => $multa->reserva,
+            'veiculo'        => $multa->veiculo,
             'statusMulta'    => Multa::STATUS_MULTA,
             'statusDesconto' => Multa::STATUS_DESCONTO,
             'breadcrumb'     => $breadcrumb,

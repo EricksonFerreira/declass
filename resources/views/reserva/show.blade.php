@@ -508,6 +508,72 @@
                 @endif
             </div>
 
+            {{-- Card: Avarias (pós-checkout) --}}
+            @php
+                $danosReserva = $reserva->veiculoDano ?? collect();
+                $danosPendentes = $danosReserva->whereNull('correcao_data');
+                $totalCobrancasAvaria = $reserva->avariaCobrancas?->count() ?? 0;
+            @endphp
+            @if(($danosReserva->count() ?? 0) > 0 || $totalCobrancasAvaria > 0)
+                <div class="rs-card">
+                    <div class="rs-card__header rs-card__header--between">
+                        <div class="rs-card__header-left">
+                            <i class="fas fa-car-crash rs-card__icon" style="color:#f59e0b"></i>
+                            <h2>Avarias</h2>
+                        </div>
+                        <span class="rs-status-badge rs-status-badge--sm is-warning">
+                            {{ $danosPendentes->count() }} pendente(s)
+                        </span>
+                    </div>
+
+                    <div class="rs-info-rows">
+                        <div class="rs-info-row">
+                            <span><i class="fas fa-list"></i>Total registradas</span>
+                            <strong>{{ $danosReserva->count() }}</strong>
+                        </div>
+                        <div class="rs-info-row">
+                            <span><i class="fas fa-receipt"></i>Cobranças</span>
+                            <strong>{{ $totalCobrancasAvaria }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="mt-3" style="display:flex; gap:10px; flex-wrap:wrap">
+                        @can('avaria.cobrar')
+                            <a href="{{ route('reserva.avarias.cobranca', $reserva->id) }}" class="rs-btn rs-btn--outline">
+                                <i class="fas fa-hand-holding-usd"></i>Debitar avarias
+                            </a>
+                        @endcan
+                        <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="rs-btn rs-btn--ghost">
+                            <i class="fas fa-search"></i>Ver vistoria / danos
+                        </a>
+                    </div>
+
+                    @if(($danosReserva->count() ?? 0) > 0)
+                        <div class="mt-3">
+                            <div class="text-muted small mb-2">Últimas avarias desta reserva</div>
+                            <div class="rs-mini-list">
+                                @foreach($danosReserva->take(5) as $d)
+                                    <div class="rs-mini-item">
+                                        <div>
+                                            <strong>{{ strtoupper($d->local_dano ?? $d->localizacao_problema ?? '-') }}</strong>
+                                            <div class="text-muted small">{{ \Illuminate\Support\Str::limit($d->observacoes ?? $d->tipo_dano ?? '', 80) }}</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div><strong>R$ {{ number_format((float) ($d->custo_estimado ?? 0), 2, ',', '.') }}</strong></div>
+                                            @if($d->correcao_data)
+                                                <span class="badge badge-success">Corrigido</span>
+                                            @else
+                                                <span class="badge badge-warning">Pendente</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            @endif
+
             {{-- ── Card: Calção (Feature 4) ── --}}
             @php $calcao = $reserva->calcao ?? null; @endphp
             @if($calcao || ($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S'))
@@ -1043,6 +1109,21 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         font-weight: 700;
         padding: 3px 10px;
         border-radius: 999px;
+    }
+
+    .rs-mini-list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .rs-mini-item {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid #f1f5f9;
+        border-radius: 14px;
+        background: #fbfdff;
     }
 
     /* ═══════════════════════════

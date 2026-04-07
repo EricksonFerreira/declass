@@ -298,6 +298,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'contratoCheckin.veiculo',
             'contratoCheckin.usuarioUpgrade',
             'calcao',
+            'veiculoDano' => fn ($q) => $q->orderByDesc('id')->take(10),
+            'avariaCobrancas' => fn ($q) => $q->orderByDesc('id')->take(10),
             'multas' => fn ($q) => $q->orderByDesc('id')->take(5),
         ]);
 
@@ -346,8 +348,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function edit($id)
     {
-        $tituloFormulario = 'Cadastro de Reservas';
-        $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto']);
+        $tituloFormulario = 'Edição de Reserva';
+        $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto', 'usuario']);
 
         $status = [
             'S' => 'Ativo',

@@ -153,6 +153,11 @@ class Reserva extends Model
         return $this->hasMany(Multa::class, 'reserva_id');
     }
 
+    public function avariaCobrancas()
+    {
+        return $this->hasMany(AvariaCobranca::class, 'reserva_id');
+    }
+
     public function calcao()
     {
         return $this->hasOne(Calcao::class, 'reserva_id')->latest();

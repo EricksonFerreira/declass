@@ -161,8 +161,13 @@ abstract class AbstractBaseService implements BaseServiceInterface
         $empresaId = $this->currentEmpresaId();
         if ($empresaId === null) {
             if (Auth::user()?->isAdministrador()) {
-                // Admin com "todas as empresas" selecionado: leitura sem escopo.
-                return $query;
+                // Permite listar empresas mesmo sem contexto, para que o admin consiga escolher.
+                if ($this->model->getTable() === 'empresas') {
+                    return $query;
+                }
+
+                // Para os demais mÃ³dulos, sempre exige empresa selecionada para evitar vazamento entre empresas.
+                throw new AccessDeniedHttpException('Selecione uma empresa para visualizar estes registros.');
             }
 
             throw new AccessDeniedHttpException('Empresa nao identificada para a operacao.');

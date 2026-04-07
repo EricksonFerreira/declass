@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo"  />
+    <x-page-title :title="$titulo" :createUrl="route('movimentacao.create')" />
 @stop
 
 @section('content')
@@ -12,39 +12,32 @@
         <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
     @endif
 
-    <div class="card p-2 movimentacao-card">
+    <div class="card p-2">
         <div class="card-header px-0 pt-0 pb-1">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div>
-                    <h3 class="card-title text-sm text-bold">
-                        REGISTROS <span class="badge badge-success">{{ $movimentacaos->total() }}</span>
-                    </h3>
-                    <div class="mov-sub">Movimentacoes registradas na frota.</div>
-                </div>
-                <div class="mov-summary-actions">
-                    <div class="mov-summary-card">
-                        <div class="mov-summary-label">Pagina</div>
-                        <div class="mov-summary-value">{{ $movimentacaos->currentPage() }} / {{ $movimentacaos->lastPage() }}</div>
-                    </div>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title text-sm text-bold">
+                    REGISTROS <span class="badge badge-success">{{ $movimentacaos->total() }}</span>
+                </h3>
+                <div class="align-bottom d-flex flex-row justify-between">
                     <form action="{{ route('movimentacao.setPerPage') }}" method="POST">
                         @csrf
                         <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                     </form>
-                    <div class="mov-pagination">
+                    <div class="d-flex align-items-end">
                         {{ $movimentacaos->links() }}
                     </div>
                 </div>
             </div>
         </div>
         <div class="card-body px-0 pt-0 pb-1 table-responsive">
-            <table class="table table-hover table-bordered table-sm mov-table">
+            <table class="table table-striped table-bordered table-sm">
                 <thead>
                     <tr>
                         <th>#</th>
                         <th>Tipo / Status</th>
                         <th>Usuario</th>
                         <th>Veiculo</th>
-                        <th>Grupo</th>
+                        <th>Origem / Destino</th>
                         <th>Datas</th>
                         <th class="text-center" style="width: 160px;">Acoes</th>
                     </tr>
@@ -54,56 +47,38 @@
                         <tr>
                             <td>{{ $movimentacao->id }}</td>
                             <td>
-                                <div class="mov-type">{{ $movimentacao->tipoMovimentacao?->nome ?? '-' }}</div>
-                                <span class="badge badge-pill bg-{{ $movimentacao->statusMovimentacao?->cor ?? 'secondary' }}">
+                                <div class="font-weight-bold">{{ $movimentacao->tipoMovimentacao?->nome ?? '-' }}</div>
+                                <span class="badge badge-xs bg-{{ $movimentacao->statusMovimentacao?->cor ?? 'secondary' }}">
                                     {{ $movimentacao->statusMovimentacao?->nome ?? '-' }}
                                 </span>
                             </td>
                             <td>{{ $movimentacao->usuario?->nome ?? '-' }}</td>
                             <td>
-                                @if($movimentacao->veiculo)
-                                    <div class="mov-vehicle">
-                                        <div class="mov-vehicle__main">
-                                            <i class="fas fa-car"></i>
-                                            <span>{{ $movimentacao->veiculo->modelo->nome ?? 'Modelo' }}</span>
-                                        </div>
-                                        <div class="mov-vehicle__meta">
-                                            <span>Placa: {{ $movimentacao->veiculo->placa ?? '-' }}</span>
-                                            <span>Ano: {{ $movimentacao->veiculo->ano ?? 'N/A' }}</span>
-                                            <span>Cor: {{ $movimentacao->veiculo->cor ?? 'N/A' }}</span>
-                                        </div>
-                                    </div>
-                                @else
-                                    <span class="text-muted">Nao definido</span>
+                                @php
+                                    $veiculoLabel = null;
+                                    if ($movimentacao->veiculo) {
+                                        $veiculoLabel = $movimentacao->veiculo->nome ?? ('Veículo #' . $movimentacao->veiculo->id);
+                                        if (!empty($movimentacao->veiculo->placa_licenca)) {
+                                            $veiculoLabel .= ' - ' . $movimentacao->veiculo->placa_licenca;
+                                        }
+                                    }
+                                @endphp
+
+                                <div>{{ $veiculoLabel ?? ($movimentacao->modelo?->nome ?? '-') }}</div>
+                                @if($movimentacao->veiculo?->grupoFrota)
+                                    <div class="text-muted small">Grupo: {{ $movimentacao->veiculo->grupoFrota->nome }}</div>
                                 @endif
                             </td>
                             <td>
-                                @if($movimentacao->veiculo && $movimentacao->veiculo->grupoFrota)
-                                    {{ $movimentacao->veiculo->grupoFrota->nome }}
-                                @else
-                                    <span class="text-muted">Nao definido</span>
-                                @endif
+                                <div>{{ $movimentacao->localOrigem?->nome ?? '-' }}</div>
+                                <div class="text-muted small">{{ $movimentacao->localDestino?->nome ?? '-' }}</div>
                             </td>
                             <td>
-                                <div class="mov-date">
-                                    <span>Registro</span>
-                                    <strong>
-                                        @if($movimentacao->data_registro)
-                                            {{ Carbon\Carbon::parse($movimentacao->data_registro)->format('d/m/Y H:i') }}
-                                        @else
-                                            --
-                                        @endif
-                                    </strong>
-                                </div>
-                                <div class="mov-date">
-                                    <span>Saida</span>
-                                    <strong>
-                                        @if($movimentacao->data_saida)
-                                            {{ Carbon\Carbon::parse($movimentacao->data_saida)->format('d/m/Y H:i') }}
-                                        @else
-                                            --
-                                        @endif
-                                    </strong>
+                                <div class="small">
+                                    <div><span class="text-muted">Registro:</span> {{ $movimentacao->data_registro ? \Carbon\Carbon::parse($movimentacao->data_registro)->format('d/m/Y H:i') : '--' }}</div>
+                                    <div><span class="text-muted">Saida:</span> {{ $movimentacao->data_saida ? \Carbon\Carbon::parse($movimentacao->data_saida)->format('d/m/Y H:i') : '--' }}</div>
+                                    <div><span class="text-muted">Prev.:</span> {{ $movimentacao->data_chegada_prevista ? \Carbon\Carbon::parse($movimentacao->data_chegada_prevista)->format('d/m/Y H:i') : '--' }}</div>
+                                    <div><span class="text-muted">Chegada:</span> {{ $movimentacao->data_chegada_real ? \Carbon\Carbon::parse($movimentacao->data_chegada_real)->format('d/m/Y H:i') : '--' }}</div>
                                 </div>
                             </td>
                             <td class="text-center">
@@ -122,109 +97,6 @@
             </table>
         </div>
     </div>
-@stop
-
-@section('css')
-<style>
-    .mov-summary-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 12px;
-        padding: 12px 16px;
-        min-width: 180px;
-        box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
-    }
-    .mov-summary-label {
-        font-size: .8rem;
-        color: #64748b;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        margin-bottom: 6px;
-    }
-    .mov-summary-value {
-        font-size: 1.1rem;
-        font-weight: 700;
-        color: #0f172a;
-    }
-    .mov-summary-actions {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-    .movimentacao-card {
-        border-radius: 14px;
-        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.06);
-    }
-    .mov-sub {
-        color: #64748b;
-        font-size: .9rem;
-        margin-top: 4px;
-    }
-    .mov-pagination {
-        display: flex;
-        align-items: center;
-    }
-    .mov-table thead th {
-        background: #f8fafc;
-        border-bottom: 1px solid #e2e8f0;
-        font-size: .8rem;
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        color: #475569;
-    }
-    .mov-table tbody td {
-        vertical-align: middle;
-    }
-    .mov-type {
-        font-weight: 700;
-        color: #0f172a;
-        margin-bottom: 6px;
-    }
-    .mov-vehicle {
-        display: grid;
-        gap: 6px;
-    }
-    .mov-vehicle__main {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        font-weight: 600;
-        color: #0f172a;
-    }
-    .mov-vehicle__meta {
-        display: grid;
-        gap: 4px;
-        font-size: .85rem;
-        color: #64748b;
-    }
-    .mov-date {
-        display: grid;
-        gap: 2px;
-        font-size: .82rem;
-        color: #64748b;
-        margin-bottom: 6px;
-    }
-    .mov-date strong {
-        font-size: .86rem;
-        color: #0f172a;
-        font-weight: 600;
-    }
-    @media (max-width: 991px) {
-        .mov-header {
-            flex-direction: column;
-            align-items: flex-start;
-        }
-        .mov-actions {
-            width: 100%;
-            justify-content: space-between;
-        }
-        .mov-summary-actions {
-            width: 100%;
-            justify-content: space-between;
-        }
-    }
-</style>
 @stop
 
 @section('js')

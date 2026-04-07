@@ -5,8 +5,8 @@
     :root {
         --c-ink:    #0c1428;
         --c-navy:   #1a2848;
-        --c-indigo: #4338ca;
-        --c-sky:    #0ea5e9;
+        --c-indigo: var(--empresa-cor-primaria, #4338ca);
+        --c-sky:    var(--empresa-cor-terciaria, #0ea5e9);
         --c-green:  #10b981;
         --c-amber:  #f59e0b;
         --c-red:    #ef4444;
@@ -18,6 +18,12 @@
         --shadow-sm: 0 2px 8px rgba(12,20,40,.07);
         --shadow-md: 0 6px 24px rgba(12,20,40,.10);
         --shadow-lg: 0 16px 48px rgba(12,20,40,.13);
+
+        /* Tema empresa */
+        --ci-step-active-bg: var(--empresa-cor-primaria, #4338ca);
+        --ci-step-active-fg: var(--empresa-cor-secundaria, #ffffff);
+        --ci-btn-primary-bg: var(--empresa-cor-primaria, #4338ca);
+        --ci-btn-primary-fg: var(--empresa-cor-secundaria, #ffffff);
     }
 
     .content-wrapper { background: var(--c-bg); }
@@ -183,7 +189,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        background: none;
+        background: var(--empresa-cor-primaria, #4338ca);
         border: none;
         cursor: pointer;
         padding: 10px 16px;
@@ -192,7 +198,7 @@
         transition: background 0.2s;
     }
 
-    .step-btn:hover { background: #f1f5ff; }
+    .step-btn:hover { filter: brightness(0.98); }
 
     .step-num {
         width: 30px;
@@ -214,9 +220,9 @@
 
     .step-btn.active .step-num {
         border-color: transparent;
-        background: linear-gradient(135deg, var(--c-indigo), var(--c-sky));
-        color: #fff;
-        box-shadow: 0 3px 10px rgba(67,56,202,0.35);
+        background: var(--ci-step-active-bg);
+        color: var(--ci-step-active-fg);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--ci-step-active-bg) 42%, transparent 58%);
     }
 
     .step-btn.completed .step-num {
@@ -228,14 +234,20 @@
     .step-label-text {
         font-size: 0.78rem;
         font-weight: 600;
-        color: #94a3b8;
+        color: var(--empresa-cor-secundaria, #ffffff);
         white-space: nowrap;
         display: flex;
         align-items: center;
         gap: 5px;
     }
 
-    .step-btn.active .step-label-text { color: var(--c-indigo); font-weight: 700; }
+    .step-btn.active {
+        background: var(--empresa-cor-primaria, #4338ca);
+        /* Cor padrão com leve transparência (quando suportado) */
+        background: color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 82%, transparent 18%);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 18%, transparent 82%);
+    }
+    .step-btn.active .step-label-text { color: var(--ci-step-active-fg); font-weight: 800; }
     .step-btn.completed .step-label-text { color: var(--c-green); }
 
     .step-divider {
@@ -659,15 +671,23 @@
     .btn-action-secondary:hover { background: #f1f5f9; color: var(--c-ink); }
 
     .btn-action-primary {
-        background: linear-gradient(135deg, var(--c-indigo), #6366f1);
-        color: #fff;
-        box-shadow: 0 4px 12px rgba(67,56,202,0.28);
+        background: var(--ci-btn-primary-bg);
+        color: var(--ci-btn-primary-fg);
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--ci-btn-primary-bg) 30%, transparent 70%);
     }
 
     .btn-action-primary:hover {
-        opacity: 0.92;
+        filter: brightness(0.98);
         transform: translateY(-1px);
-        color: #fff;
+        color: var(--ci-btn-primary-fg);
+    }
+
+    .btn-action-primary:disabled,
+    .btn-action-primary[disabled] {
+        opacity: 0.55;
+        transform: none;
+        cursor: not-allowed;
+        box-shadow: none;
     }
 
     .btn-action-success {

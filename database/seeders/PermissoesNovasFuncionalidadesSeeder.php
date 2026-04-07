@@ -33,6 +33,9 @@ class PermissoesNovasFuncionalidadesSeeder extends Seeder
         'calcao.capturar',
         'calcao.cancelar',
         'calcao.visualizar',
+
+        // Feature 5: CobranÃ§a por avarias (pÃ³s-checkout)
+        'avaria.cobrar',
     ];
 
     /** Fragmentos de nome (lower) que identificam perfis de funcionário. */

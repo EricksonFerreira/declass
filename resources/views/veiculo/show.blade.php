@@ -432,6 +432,88 @@
                 </div>
             </div>
 
+            {{-- Multas --}}
+            <div class="config-card mb-4">
+                <div class="config-block">
+                    <div class="config-block-label">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div>
+                            <strong>Multas</strong>
+                            <span>{{ $veiculo->multas->count() }} multa(s) registrada(s)</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex" style="gap:8px; flex-wrap: wrap">
+                        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
+                            <i class="fas fa-plus mr-1"></i>Cadastrar multa
+                        </a>
+                        <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
+                            <i class="fas fa-list mr-1"></i>Ver todas
+                        </a>
+                    </div>
+
+                    @if($veiculo->multas->isEmpty())
+                        <div class="empty-state mt-3">
+                            <i class="fas fa-receipt"></i>
+                            <p>Nenhuma multa registrada para este veículo.</p>
+                        </div>
+                    @else
+                        <div class="table-responsive mt-3">
+                            <table class="table table-hover xp-table">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Data</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Valor final</th>
+                                        <th>Reserva</th>
+                                        <th>Responsável</th>
+                                        <th>Ação</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($veiculo->multas->take(5) as $multa)
+                                        @php
+                                            $badgeMulta = match($multa->status_multa) {
+                                                'paga' => 'success',
+                                                'cancelada' => 'secondary',
+                                                'recorrida' => 'info',
+                                                'indeferida' => 'danger',
+                                                'deferida' => 'success',
+                                                'em_analise' => 'warning',
+                                                default => 'warning',
+                                            };
+                                        @endphp
+                                        <tr>
+                                            <td><span class="xp-id">#{{ $multa->id }}</span></td>
+                                            <td>{{ $multa->data_hora_infracao?->format('d/m/Y H:i') ?? '—' }}</td>
+                                            <td><span class="badge badge-{{ $badgeMulta }}">{{ $multa->label_status_multa }}</span></td>
+                                            <td class="text-right">R$ {{ number_format((float) $multa->valor_final, 2, ',', '.') }}</td>
+                                            <td>
+                                                @if($multa->reserva_id)
+                                                    <a href="{{ route('reserva.show', $multa->reserva_id) }}" class="xp-link">#{{ $multa->reserva_id }}</a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $multa->responsavelLancamento->nome ?? '—' }}</td>
+                                            <td>
+                                                <a href="{{ route('multa.show', $multa->id) }}" class="btn-xp btn-xp--sm">
+                                                    <i class="fas fa-eye mr-1"></i>Ver
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @if($veiculo->multas->count() > 5)
+                            <p class="text-muted small mb-0">Mostrando as 5 mais recentes.</p>
+                        @endif
+                    @endif
+                </div>
+            </div>
+
             {{-- Últimas reservas --}}
             <div class="config-card mb-4">
                 <div class="config-block">
@@ -471,8 +553,8 @@
                         <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn-xp btn-xp--sm w-100 justify-content-center">
                             <i class="fas fa-pen mr-1"></i>Editar veículo
                         </a>
-                        <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline w-100 justify-content-center">
-                            <i class="fas fa-exclamation-triangle mr-1"></i>Multas do veÃ­culo
+                        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline w-100 justify-content-center">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Cadastrar multa
                         </a>
                         <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline w-100 justify-content-center">
                             <i class="fas fa-plus mr-1"></i>Abrir OS

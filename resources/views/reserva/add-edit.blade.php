@@ -242,16 +242,20 @@
                     <div class="col-12" data-reserva-step="3">
                         <x-section-division-header-form class="reserva-section-title">Opcionais</x-section-division-header-form>
                     </div>
-                    <div id="opcionais" data-reserva-step="3" class="d-flex justify-content-center flex-wrap w-100" style="padding:1em;  background: linear-gradient(
-                90deg,
-                color-mix(in srgb, var(--empresa-cor-primaria, #1e293b) 90%, #000 10%) 0%,
-                color-mix(in srgb, var(--empresa-cor-terciaria, #334155) 90%, #000 10%) 100%
-            );">
-                        <div class="alert alert-light col-md-8 d-flex align-items-center text-xs py-1 mt-1" data-reserva-step="3">
-                            <i class="fa-solid fa-circle-info me-2"></i>
-                            <span>Selecione um grupo de veiculos e um modelo para visualizar os opcionais disponiveis.</span>
+                    <div id="opcionaisWrapper" data-reserva-step="3" class="w-100">
+                        <div id="opcionais" class="" 
+                        style="padding:1em; 
+                                background: linear-gradient(
+                                    90deg,
+                                    color-mix(in srgb, var(--empresa-cor-primaria, #1e293b) 90%, #000 10%) 0%,
+                                    color-mix(in srgb, var(--empresa-cor-terciaria, #334155) 90%, #000 10%) 100%
+                                );
+                                width:100%">
+                            <div class="alert alert-light col-md-8 d-flex align-items-center text-xs py-1 mt-1">
+                                <i class="fa-solid fa-circle-info me-2"></i>
+                                <span>Selecione um grupo de veiculos para visualizar os opcionais disponiveis.</span>
+                            </div>
                         </div>
-
                     </div>
                     {{-- @if (count($tipoOpcional) > 0) --}}
                     {{-- @component('reserva.components.opcionais', ['tiposOpcionais' => $tipoOpcional])
@@ -291,7 +295,7 @@
                             @endforeach
                         @endif
                     </div> --}}
-                    <br data-reserva-step="3">
+                    <br>
 
 
                     <div class="col-12" data-reserva-step="4">
@@ -300,7 +304,7 @@
 
 
                     <!-- Identificacoes -->
-                    <div class="col-md-7" data-reserva-step="4">
+                    <div class="col-md-12" data-reserva-step="4">
                         <div class="form-group">
                             <x-form-select name="user_id" label="Usuario" :options="$users" id="user_id"
                                 placeholder="Selecione um usuario" :selected="old('user_id', isset($reserva->user_id) ? $reserva->user_id : null)"
@@ -1296,7 +1300,17 @@
             const select = $('#user_id');
             const usuarioId = String(usuario.id);
             let option = select.find(`option[value="${usuarioId}"]`);
-            const label = usuario.nome || usuario.email || `Usuario #${usuarioId}`;
+
+            const nome = (usuario.nome || '').trim();
+            const cpf = (usuario.numero_identificacao || '').trim();
+            const email = (usuario.email || '').trim();
+
+            let label = nome || email || `Usuario #${usuarioId}`;
+            if (cpf) {
+                label = `${label} - ${cpf}`;
+            } else if (email && label === nome) {
+                label = `${label} - ${email}`;
+            }
 
             if (option.length === 0) {
                 select.append(`<option value="${usuarioId}">${label}</option>`);
@@ -1412,6 +1426,12 @@
                         el.classList.toggle('d-none', Number(el.dataset.reservaStep) !== s);
                     });
 
+                    // Garantia extra: opcionais/placeholder nunca aparecem fora do passo 3
+                    const opcionaisWrapperEl = document.getElementById('opcionaisWrapper');
+                    if (opcionaisWrapperEl) {
+                        opcionaisWrapperEl.classList.toggle('d-none', s !== 3);
+                    }
+
                     document.querySelectorAll('[data-reserva-step-btn]').forEach(btn => {
                         btn.classList.toggle('is-active', Number(btn.dataset.reservaStepBtn) === s);
                     });
@@ -1493,7 +1513,18 @@
                 setEstacaoDevolucao(reserva.estacao_devolucao_id, reserva.estacao_devolucao?.nome);
                 setGrupoFrota(reserva.grupo_frota_id, reserva.grupo_frota?.nome);
                 setModelo(reserva.modelo_id, reserva.modelos?.nome);
-                setUser(reserva.user_id, reserva.usuario?.nome);
+
+                const usuarioNome = (reserva.usuario?.nome || '').trim();
+                const usuarioCpf = (reserva.usuario?.numero_identificacao || '').trim();
+                const usuarioEmail = (reserva.usuario?.email || '').trim();
+                let usuarioLabel = usuarioNome || usuarioEmail || `Usuario #${reserva.user_id}`;
+                if (usuarioCpf) {
+                    usuarioLabel = `${usuarioLabel} - ${usuarioCpf}`;
+                } else if (usuarioEmail && usuarioLabel === usuarioNome) {
+                    usuarioLabel = `${usuarioLabel} - ${usuarioEmail}`;
+                }
+
+                setUser(reserva.user_id, usuarioLabel);
                 if(opcionaisSelecionados.length > 0){
                     setOpcionaisReserva(opcionaisSelecionados);
                 }

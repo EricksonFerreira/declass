@@ -36,11 +36,24 @@
                                    placeholder="ID da reserva">
                         </div>
 
+                        <div class="form-group">
+                            <label>Veículo</label>
+                            <input type="number" name="veiculo_id" class="form-control form-control-sm"
+                                   value="{{ old('veiculo_id', $multa->veiculo_id ?? $veiculo?->id ?? '') }}"
+                                   placeholder="ID do veículo">
+                            @if(!empty($veiculo?->id))
+                                <small class="text-muted">
+                                    Selecionado: {{ $veiculo->nome ?? ('#' . $veiculo->id) }}
+                                    @if(!empty($veiculo->placa_licenca)) ({{ $veiculo->placa_licenca }}) @endif
+                                </small>
+                            @endif
+                        </div>
+
                         <div class="row">
                             <div class="col-md-6 form-group">
                                 <label>Placa no Momento <span class="text-danger">*</span></label>
                                 <input type="text" name="placa_momento" class="form-control form-control-sm"
-                                       value="{{ old('placa_momento', $multa->placa_momento ?? '') }}" required>
+                                       value="{{ old('placa_momento', $multa->placa_momento ?? $veiculo?->placa_licenca ?? '') }}" required>
                             </div>
                             <div class="col-md-6 form-group">
                                 <label>Numero do Auto</label>

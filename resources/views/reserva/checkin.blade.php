@@ -98,12 +98,24 @@
                                     <p class="mb-1 small">
                                         Nao ha veiculos disponiveis na categoria reservada
                                         (<span id="upgrade-grupo-original"></span>).
-                                        Selecione um veiculo de categoria superior abaixo.
+                                        Selecionamos abaixo os veiculos livres no periodo desta reserva.
+                                        Somente os marcados como <strong>upgrade</strong> ficam habilitados.
                                     </p>
+                                    <div class="small mb-2" style="opacity:.9">
+                                        <span class="mr-2"><strong>Legenda:</strong></span>
+                                        <span class="mr-3">⬆ elegivel (upgrade)</span>
+                                        <span>⬇ inferior (bloqueado)</span>
+                                    </div>
                                     <div class="form-group mb-1">
                                         <label class="small mb-0">Motivo do upgrade</label>
                                         <input type="text" id="motivo_upgrade_input" class="form-control form-control-sm"
                                                value="Indisponibilidade na categoria original" maxlength="500">
+                                    </div>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" value="1" id="upgrade_mostrar_bloqueados">
+                                        <label class="form-check-label small" for="upgrade_mostrar_bloqueados">
+                                            Mostrar veiculos inferiores (bloqueados)
+                                        </label>
                                     </div>
                                 </div>
                             </div>
@@ -115,14 +127,15 @@
                                 <i class="fas fa-car"></i>
                                 <div>
                                     <strong>Identificacao do Veiculo</strong>
-                                    <span>Marcas e modelos vêm apenas de veículos deste grupo de frota. Depois de escolher os dois, listamos os veículos livres no período desta reserva.</span>
+                                    <span id="identificacao_hint_normal">Marcas e modelos vêm apenas de veículos deste grupo de frota. Depois de escolher os dois, listamos os veículos livres no período desta reserva.</span>
+                                    <span id="identificacao_hint_upgrade" class="d-none">Selecione diretamente um veículo disponível no período. Apenas categorias superiores ficam habilitadas.</span>
                                 </div>
                             </div>
                             @if($marcas->isEmpty())
                                 <p class="text-warning small mb-2"><i class="fas fa-exclamation-triangle"></i> Não há veículos cadastrados neste grupo de frota (ou sem modelo). Cadastre veículos antes do check-in.</p>
                             @endif
                             <div class="row">
-                                <div class="col-md-4">
+                                <div class="col-md-4" id="marca_col">
                                     <label for="marca">Marca <span class="req">*</span></label>
                                     <select required name="marca" id="marca" class="form-control form-control-sm select2ci">
                                         @php $marcaReserva = (int) ($reserva->modelos->marca_id ?? 0); @endphp
@@ -132,13 +145,13 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4" id="modelo_col">
                                     <label for="modelo">Modelo <span class="req">*</span></label>
                                     <select required name="modelo" id="modelo" class="form-control form-control-sm select2ci">
                                         <option value="" selected disabled>Selecione a marca</option>
                                     </select>
                                 </div>
-                                <div class="col-md-4">
+                                <div class="col-md-4" id="veiculo_col">
                                     <label for="veiculo">Veiculo <span class="req">*</span></label>
                                     <select required name="veiculo" id="veiculo" class="form-control form-control-sm select2ci">
                                         <option value="" selected disabled>Selecione marca e modelo</option>
@@ -397,7 +410,7 @@
                         <i class="fas fa-arrow-left mr-1"></i>Voltar
                     </button>
                     <div class="wizard-actions-right">
-                        <button type="button" class="btn-action btn-action-primary" id="wizardNext">
+                        <button type="button" class="btn-action btn-primary" id="wizardNext">
                             Continuar<i class="fas fa-arrow-right ml-1"></i>
                         </button>
                         <button type="button" class="btn-action btn-action-success d-none" id="wizardCreateBtn">
@@ -923,7 +936,28 @@
                     if (grupoLabel) grupoLabel.textContent = data.grupo_original?.nome ?? 'categoria original';
                 }
 
-                // Substitui o select de veiculo por um select de upgrade
+                // Ajusta UI do passo 1: ocultar marca/modelo e focar no veiculo disponivel no periodo
+                const hintNormal = document.getElementById('identificacao_hint_normal');
+                const hintUpgrade = document.getElementById('identificacao_hint_upgrade');
+                if (hintNormal) hintNormal.classList.add('d-none');
+                if (hintUpgrade) hintUpgrade.classList.remove('d-none');
+
+                const marcaCol = document.getElementById('marca_col');
+                const modeloCol = document.getElementById('modelo_col');
+                const veiculoCol = document.getElementById('veiculo_col');
+                if (marcaCol) marcaCol.classList.add('d-none');
+                if (modeloCol) modeloCol.classList.add('d-none');
+                if (veiculoCol) {
+                    veiculoCol.classList.remove('col-md-4');
+                    veiculoCol.classList.add('col-md-12');
+                }
+
+                const marcaEl = document.getElementById('marca');
+                const modeloEl = document.getElementById('modelo');
+                if (marcaEl) { marcaEl.required = false; marcaEl.disabled = true; }
+                if (modeloEl) { modeloEl.required = false; modeloEl.disabled = true; }
+
+                // Substitui o select de veiculo por um select de upgrade (somente elegiveis por padrao)
                 const veiculoSelect = document.getElementById('veiculo');
                 if (!veiculoSelect) return;
 
@@ -934,8 +968,7 @@
                     return;
                 }
 
-                veiculoSelect.disabled = false;
-                veiculoSelect.innerHTML = '<option value="" disabled selected>Selecione um veiculo</option>';
+                const mostrarBloqueadosEl = document.getElementById('upgrade_mostrar_bloqueados');
 
                 const gruposMap = new Map();
                 todos.forEach(v => {
@@ -952,29 +985,63 @@
                     return ob - oa; // melhores primeiro
                 });
 
+                const eligibleGroups = [];
+                const blockedGroups = [];
+
                 gruposOrdenados.forEach(item => {
                     const veiculos = item.veiculos ?? [];
-                    const existeElegivel = veiculos.some(v => !!v.elegivel_upgrade);
-                    const labelPrefix = existeElegivel ? '\u2B06 ' : '\u2B07 ';
-                    const labelSuffix = existeElegivel ? '(upgrade)' : '(downgrade bloqueado)';
+                    const elegiveis = veiculos.filter(v => !!v.elegivel_upgrade);
+                    const bloqueados = veiculos.filter(v => !v.elegivel_upgrade);
 
-                    const optGroup = document.createElement('optgroup');
-                    optGroup.label = `${labelPrefix}${item.grupo?.nome ?? 'Grupo'} ${labelSuffix}`;
+                    if (elegiveis.length) eligibleGroups.push({ ...item, veiculos: elegiveis });
+                    if (bloqueados.length) blockedGroups.push({ ...item, veiculos: bloqueados });
+                });
 
-                    veiculos.forEach(v => {
-                        const opt = document.createElement('option');
-                        opt.value = v.id;
-                        opt.textContent = (v.nome ?? 'Veiculo') + (v.placa ? ' - ' + v.placa : '');
-                        if (v.elegivel_upgrade) {
+                function buildOptions(includeBlocked) {
+                    veiculoSelect.disabled = false;
+                    veiculoSelect.innerHTML = '<option value="" disabled selected>Selecione um veículo</option>';
+
+                    if (!eligibleGroups.length) {
+                        veiculoSelect.innerHTML = '<option value="" disabled selected>Nenhum veículo elegível para upgrade</option>';
+                        veiculoSelect.disabled = true;
+                        return;
+                    }
+
+                    eligibleGroups.forEach(item => {
+                        const optGroup = document.createElement('optgroup');
+                        optGroup.label = `⬆ ${item.grupo?.nome ?? 'Grupo'} (upgrade)`;
+                        (item.veiculos ?? []).forEach(v => {
+                            const opt = document.createElement('option');
+                            opt.value = v.id;
+                            opt.textContent = (v.nome ?? 'Veículo') + (v.placa ? ' - ' + v.placa : '');
                             opt.dataset.upgrade = '1';
-                        } else {
-                            opt.disabled = true;
-                            opt.textContent += ' (inferior)';
-                        }
-                        optGroup.appendChild(opt);
+                            optGroup.appendChild(opt);
+                        });
+                        veiculoSelect.appendChild(optGroup);
                     });
 
-                    veiculoSelect.appendChild(optGroup);
+                    if (includeBlocked && blockedGroups.length) {
+                        blockedGroups.forEach(item => {
+                            const optGroup = document.createElement('optgroup');
+                            optGroup.label = `⬇ ${item.grupo?.nome ?? 'Grupo'} (inferior - bloqueado)`;
+                            (item.veiculos ?? []).forEach(v => {
+                                const opt = document.createElement('option');
+                                opt.value = v.id;
+                                opt.textContent = (v.nome ?? 'Veículo') + (v.placa ? ' - ' + v.placa : '') + ' (inferior)';
+                                opt.disabled = true;
+                                optGroup.appendChild(opt);
+                            });
+                            veiculoSelect.appendChild(optGroup);
+                        });
+                    }
+
+                    // refresh select2
+                    try { $('#veiculo').trigger('change.select2'); } catch (e) {}
+                }
+
+                buildOptions(!!mostrarBloqueadosEl?.checked);
+                mostrarBloqueadosEl?.addEventListener('change', function () {
+                    buildOptions(!!this.checked);
                 });
 
                 return;

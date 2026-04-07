@@ -1,6 +1,7 @@
 <?php
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\AvariaCobrancaController;
 
 Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('obterOpcionais', [ReservaController::class, 'obterOpcionais'])->name('obterOpcionais');
@@ -27,6 +28,9 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/calcao/autorizar', [ReservaController::class, 'autorizarCalcao'])->name('calcao.autorizar');
     Route::post('{id}/calcao/capturar', [ReservaController::class, 'capturarCalcao'])->name('calcao.capturar');
     Route::post('{id}/calcao/liberar', [ReservaController::class, 'liberarCalcao'])->name('calcao.liberar');
+    // Feature 5: CobranÃ§a por avarias (pÃ³s-checkout)
+    Route::get('{id}/avarias/cobranca', [AvariaCobrancaController::class, 'create'])->name('avarias.cobranca');
+    Route::post('{id}/avarias/cobranca', [AvariaCobrancaController::class, 'store'])->name('avarias.cobrar');
     Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');
     Route::post('{id}/adicionarDanoVeiculo', [ReservaController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');
     Route::get('{id}/assinarContratoCheckin', [ReservaController::class, 'assinarContratoCheckin'])->name('assinarContratoCheckin');
