@@ -111,7 +111,7 @@ return [
 
     'preloader' => [
         'enabled' => true,
-        'mode' => 'fullscreen',
+        'mode' => 'cwrapper',
         'img' => [
             'path' => 'public/assets/imgs/logo.png',
             'alt' => 'Imagem de Pré-carregamento DECARS',
