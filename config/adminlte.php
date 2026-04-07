@@ -30,7 +30,7 @@ return [
     |
     */
 
-    'use_ico_only' => false,
+    'use_ico_only' => true,
     'use_full_favicon' => false,
 
     /*
@@ -113,8 +113,8 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
-            'alt' => 'Imagem de Pré-carregamento AdminLTE',
+            'path' => 'public/assets/logo.png',
+            'alt' => 'Imagem de Pré-carregamento DECars',
             'effect' => 'animation__shake',
             'width' => 60,
             'height' => 60,
