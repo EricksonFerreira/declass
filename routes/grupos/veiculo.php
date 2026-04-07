@@ -3,6 +3,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\VeiculoController;
 
 Route::prefix('veiculo')->name('veiculo.')->group(function () {
+    Route::get('buscar', [VeiculoController::class, 'buscar'])->name('buscar');
     Route::get('disponibilidade', [VeiculoController::class, 'disponibilidade'])->name('disponibilidade');
     Route::post('setperpage', [VeiculoController::class, 'setPerPage'])->name('setPerPage');
     Route::get('removerfiltro', [VeiculoController::class, 'removerFiltro'])->name('removerFiltro');

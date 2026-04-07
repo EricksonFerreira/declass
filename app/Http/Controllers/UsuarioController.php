@@ -185,6 +185,74 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         ]);
     }
 
+    public function buscar(Request $request)
+    {
+        $query = User::with('regra')
+            ->select(['id', 'nome', 'email', 'numero_identificacao', 'telefone', 'empresa_id', 'role_id', 'data_nascimento', 'created_at'])
+            ->orderBy('nome');
+
+        if (\Illuminate\Support\Facades\Schema::hasColumn('users', 'empresa_id')) {
+            $empresaId = app(\App\Support\EmpresaContext::class)->empresaId()
+                ?? \Illuminate\Support\Facades\Auth::user()?->empresa_id;
+            if ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            }
+        }
+
+        // Busca global
+        $q = trim((string) $request->input('q', ''));
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('nome', 'like', "%{$q}%")
+                    ->orWhere('email', 'like', "%{$q}%")
+                    ->orWhere('numero_identificacao', 'like', "%{$q}%")
+                    ->orWhere('telefone', 'like', "%{$q}%");
+            });
+        }
+
+        // Filtros individuais
+        if ($v = trim((string) $request->input('nome', ''))) {
+            $query->where('nome', 'like', "%{$v}%");
+        }
+        if ($v = trim((string) $request->input('email', ''))) {
+            $query->where('email', 'like', "%{$v}%");
+        }
+        if ($v = trim((string) $request->input('documento', ''))) {
+            $query->where('numero_identificacao', 'like', "%{$v}%");
+        }
+        if ($v = trim((string) $request->input('telefone', ''))) {
+            $query->where('telefone', 'like', "%{$v}%");
+        }
+        if ($v = (int) $request->input('role_id', 0)) {
+            $query->where('role_id', $v);
+        }
+        if ($v = trim((string) $request->input('nascimento_de', ''))) {
+            $query->whereDate('data_nascimento', '>=', $v);
+        }
+        if ($v = trim((string) $request->input('nascimento_ate', ''))) {
+            $query->whereDate('data_nascimento', '<=', $v);
+        }
+        if ($v = trim((string) $request->input('cadastro_de', ''))) {
+            $query->whereDate('created_at', '>=', $v);
+        }
+        if ($v = trim((string) $request->input('cadastro_ate', ''))) {
+            $query->whereDate('created_at', '<=', $v);
+        }
+
+        $usuarios = $query->limit(80)->get()->map(fn ($u) => [
+            'id'          => $u->id,
+            'nome'        => $u->nome ?? ('Usuario #' . $u->id),
+            'email'       => $u->email ?? '',
+            'documento'   => $u->numero_identificacao ?? '',
+            'telefone'    => $u->telefone ?? '',
+            'perfil'      => $u->regra?->name ?? '',
+            'nascimento'  => $u->data_nascimento ? \Carbon\Carbon::parse($u->data_nascimento)->format('d/m/Y') : '',
+            'cadastro'    => $u->created_at ? $u->created_at->format('d/m/Y') : '',
+        ]);
+
+        return response()->json(['usuarios' => $usuarios]);
+    }
+
     public function edit($id)
     {
         $usuario = $this->usuarioService->getById($id);

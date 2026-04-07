@@ -223,6 +223,100 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     }
 
 
+    public function buscar(Request $request)
+    {
+        $empresaId = app(EmpresaContext::class)->empresaId()
+            ?? Auth::user()?->empresa_id;
+
+        $query = \App\Models\Veiculo::with(['modelo', 'grupoFrota', 'marca', 'tipoFrota', 'statusVeiculo', 'localDisponibilidade'])
+            ->select([
+                'veiculos.id', 'veiculos.nome', 'veiculos.placa_licenca', 'veiculos.chassi',
+                'veiculos.ano_fabricacao', 'veiculos.ano_modelo', 'veiculos.cor', 'veiculos.kms',
+                'veiculos.ativo', 'veiculos.empresa_id',
+                'veiculos.modelo_id', 'veiculos.grupo_frota_id', 'veiculos.marca_id',
+                'veiculos.tipo_frota_id', 'veiculos.status_veiculo_id', 'veiculos.local_disponibilidade',
+            ]);
+
+        if ($empresaId && Schema::hasColumn('veiculos', 'empresa_id')) {
+            $query->where('veiculos.empresa_id', $empresaId);
+        }
+
+        // Busca global
+        $q = trim((string) $request->input('q', ''));
+        if ($q !== '') {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('veiculos.nome', 'like', "%{$q}%")
+                    ->orWhere('veiculos.placa_licenca', 'like', "%{$q}%")
+                    ->orWhere('veiculos.chassi', 'like', "%{$q}%")
+                    ->orWhere('veiculos.cor', 'like', "%{$q}%")
+                    ->orWhereHas('modelo', fn ($m) => $m->where('nome', 'like', "%{$q}%"))
+                    ->orWhereHas('marca', fn ($m) => $m->where('nome', 'like', "%{$q}%"))
+                    ->orWhereHas('grupoFrota', fn ($g) => $g->where('nome', 'like', "%{$q}%"));
+            });
+        }
+
+        // Filtros individuais
+        if ($v = trim((string) $request->input('placa', ''))) {
+            $query->where('veiculos.placa_licenca', 'like', "%{$v}%");
+        }
+        if ($v = trim((string) $request->input('nome', ''))) {
+            $query->where('veiculos.nome', 'like', "%{$v}%");
+        }
+        if ($v = trim((string) $request->input('chassi', ''))) {
+            $query->where('veiculos.chassi', 'like', "%{$v}%");
+        }
+        if ($v = trim((string) $request->input('cor', ''))) {
+            $query->where('veiculos.cor', 'like', "%{$v}%");
+        }
+        if ($v = (int) $request->input('marca_id', 0)) {
+            $query->where('veiculos.marca_id', $v);
+        }
+        if ($v = trim((string) $request->input('modelo', ''))) {
+            $query->whereHas('modelo', fn ($m) => $m->where('nome', 'like', "%{$v}%"));
+        }
+        if ($v = (int) $request->input('grupo_frota_id', 0)) {
+            $query->where('veiculos.grupo_frota_id', $v);
+        }
+        if ($v = (int) $request->input('tipo_frota_id', 0)) {
+            $query->where('veiculos.tipo_frota_id', $v);
+        }
+        if ($v = (int) $request->input('status_veiculo_id', 0)) {
+            $query->where('veiculos.status_veiculo_id', $v);
+        }
+        if ($request->input('ativo') !== null && $request->input('ativo') !== '') {
+            $query->where('veiculos.ativo', (bool) $request->input('ativo'));
+        }
+        if ($v = (int) $request->input('ano_de', 0)) {
+            $query->where('veiculos.ano_modelo', '>=', $v);
+        }
+        if ($v = (int) $request->input('ano_ate', 0)) {
+            $query->where('veiculos.ano_modelo', '<=', $v);
+        }
+        if ($v = (int) $request->input('kms_ate', 0)) {
+            $query->where('veiculos.kms', '<=', $v);
+        }
+
+        $veiculos = $query->orderBy('veiculos.placa_licenca')->limit(80)->get()->map(fn ($v) => [
+            'id'          => $v->id,
+            'nome'        => $v->nome ?? ('Veiculo #' . $v->id),
+            'placa'       => $v->placa_licenca ?? '',
+            'chassi'      => $v->chassi ?? '',
+            'marca'       => $v->marca?->nome ?? '',
+            'modelo'      => $v->modelo?->nome ?? '',
+            'grupo'       => $v->grupoFrota?->nome ?? '',
+            'tipo'        => $v->tipoFrota?->nome ?? '',
+            'status'      => $v->statusVeiculo?->nome ?? '',
+            'ano_fab'     => $v->ano_fabricacao ?? '',
+            'ano_mod'     => $v->ano_modelo ?? '',
+            'cor'         => $v->cor ?? '',
+            'kms'         => $v->kms !== null ? number_format((float)$v->kms, 0, ',', '.') : '',
+            'ativo'       => $v->ativo ? 'Sim' : 'Não',
+            'estacao'     => $v->localDisponibilidade?->nome ?? '',
+        ]);
+
+        return response()->json(['veiculos' => $veiculos]);
+    }
+
     public function disponibilidade(Request $request)
     {
         $titulo = 'Disponibilidade de Veiculos';

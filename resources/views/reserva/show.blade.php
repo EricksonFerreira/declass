@@ -1920,10 +1920,6 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function () {
-            const forms = document.querySelectorAll('.js-nfse-form');
-
-            if (!forms.length) return;
-
             const showToast = (title, text, icon) => {
                 if (typeof Swal !== 'undefined') {
                     Swal.fire({ title, text, icon, timer: 4200, showConfirmButton: false, toast: true, position: 'top-end' });
@@ -1931,6 +1927,17 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 }
                 alert(text || title);
             };
+
+            const flashSuccess = @json(session('success'));
+            const flashWarning = @json(session('warning'));
+            const flashError = @json(session('error'));
+
+            if (flashSuccess) showToast('Reserva', flashSuccess, 'success');
+            if (flashWarning) showToast('Reserva', flashWarning, 'warning');
+            if (flashError) showToast('Reserva', flashError, 'error');
+
+            const forms = document.querySelectorAll('.js-nfse-form');
+            if (!forms.length) return;
 
             forms.forEach((form) => {
                 form.addEventListener('submit', async (event) => {

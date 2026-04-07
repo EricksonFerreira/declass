@@ -1180,12 +1180,24 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 ->resolver($gateway)
                 ->cobrarPagamento($payload);
         } catch (\Throwable $e) {
+            \Log::error('Falha ao processar pagamento da reserva', [
+                'reserva_id' => (int) $id,
+                'gateway' => (string) $gateway,
+                'message' => $e->getMessage(),
+                'exception' => get_class($e),
+            ]);
             return redirect()
                 ->route('reserva.show', $id)
                 ->with('error', 'Falha ao processar o pagamento. Tente novamente.');
         }
 
         if (($resultado['status'] ?? 'error') !== 'success') {
+            \Log::warning('Pagamento nao efetuado para reserva', [
+                'reserva_id' => (int) $id,
+                'gateway' => (string) $gateway,
+                'status' => (string) ($resultado['status'] ?? 'error'),
+                'raw_status' => (string) ($resultado['raw_status'] ?? ''),
+            ]);
             return redirect()->route('reserva.show', $id)->with('error', $resultado['message'] ?? 'Pagamento não efetuado');
         }
 

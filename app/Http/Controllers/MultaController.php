@@ -5,12 +5,17 @@ namespace App\Http\Controllers;
 use App\DTO\BreadCrumbItem;
 use App\Http\Requests\Multa\StoreMultaRequest;
 use App\Http\Requests\Multa\UpdateMultaRequest;
+use App\Models\Marca;
 use App\Models\Multa;
+use App\Models\GrupoFrota;
+use App\Models\TipoFrota;
+use App\Models\StatusVeiculo;
 use App\Services\BreadcrumbService;
 use App\Services\MultaService;
 use App\Services\ReservaService;
 use App\Services\UsuarioService;
 use App\Services\VeiculoService;
+use App\Support\EmpresaContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -77,6 +82,21 @@ class MultaController extends BaseController
             ->with('titulo', $this->titulo);
     }
 
+    private function dadosFiltroVeiculo(): array
+    {
+        $empresaId = app(EmpresaContext::class)->empresaId()
+            ?? Auth::user()?->empresa_id;
+
+        $scope = fn ($q) => $empresaId ? $q->where('empresa_id', $empresaId) : $q;
+
+        return [
+            'filtroMarcas'      => $scope(Marca::query())->orderBy('nome')->pluck('nome', 'id'),
+            'filtroGrupos'      => $scope(GrupoFrota::query())->orderBy('nome')->pluck('nome', 'id'),
+            'filtroTipos'       => $scope(TipoFrota::query())->orderBy('nome')->pluck('nome', 'id'),
+            'filtroStatus'      => $scope(StatusVeiculo::query())->orderBy('nome')->pluck('nome', 'id'),
+        ];
+    }
+
     public function create(Request $request)
     {
         $this->authorize('multa.create');
@@ -88,7 +108,7 @@ class MultaController extends BaseController
         $veiculoId = $request->query('veiculo_id');
         $veiculo   = $veiculoId ? $this->veiculoService->getById($veiculoId, ['marca', 'modelo']) : null;
 
-        return view('multa.add-edit', [
+        return view('multa.add-edit', array_merge($this->dadosFiltroVeiculo(), [
             'multa'            => null,
             'reserva'          => $reserva,
             'veiculo'          => $veiculo,
@@ -98,7 +118,7 @@ class MultaController extends BaseController
             'titulo'           => 'Nova Multa',
             'metodo'           => 'POST',
             'rota'             => route('multa.store'),
-        ]);
+        ]));
     }
 
     public function store(StoreMultaRequest $request)
@@ -145,7 +165,7 @@ class MultaController extends BaseController
         $multa      = $this->multaService->queryScoped()->with(['reserva', 'veiculo.marca', 'veiculo.modelo'])->findOrFail($id);
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Multas', 'multa.index', 'Editar Multa');
 
-        return view('multa.add-edit', [
+        return view('multa.add-edit', array_merge($this->dadosFiltroVeiculo(), [
             'multa'          => $multa,
             'reserva'        => $multa->reserva,
             'veiculo'        => $multa->veiculo,
@@ -155,7 +175,7 @@ class MultaController extends BaseController
             'titulo'         => 'Editar Multa #' . $multa->id,
             'metodo'         => 'PUT',
             'rota'           => route('multa.update', $multa->id),
-        ]);
+        ]));
     }
 
     public function update(UpdateMultaRequest $request, int $id)

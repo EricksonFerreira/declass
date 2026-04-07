@@ -96,6 +96,7 @@
                             <div class="vc__avatar">{{ $iniciais }}</div>
                             <div class="vc__head-info">
                                 <div class="vc__id">VEICULO #{{ $veiculo->id }}</div>
+                                <div class="vc__id">Empresa #{{ $veiculo->empresa_id }}</div>
                                 <div class="vc__title">{{ $nomeVeiculo }}</div>
                                 <div class="vc__sub">{{ $placaVeiculo ? ('Placa: ' . $placaVeiculo) : 'Placa: -' }}</div>
                             </div>

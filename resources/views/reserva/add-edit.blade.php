@@ -79,7 +79,7 @@
         @endif
     </div>
 
-    <x-pre-requisitos-alerta
+    {{-- <x-pre-requisitos-alerta
         title="Disponibilidade de veiculos por estacao"
         :chips="[
             ['label' => 'Veiculos nas estacoes', 'value' => $qtdVeiculosTotal],
@@ -88,7 +88,7 @@
         :details="$detalhesVeiculosEstacao"
         :missing-items="[]"
         :action-links="[]"
-    />
+    /> --}}
 
     <div class="reserva-page">
     <div class="d-flex justify-content-between flex-wrap reserva-layout">
@@ -124,7 +124,7 @@
                     </div>
 
                     <!-- Estações e Datas -->
-                    <div class="col-md-3" data-reserva-step="1">
+                    <div class="col-md-8" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estacao de Retirada"
                                 :options="$estacoes" placeholder="Selecione uma estacao" :selected="old(
@@ -140,7 +140,7 @@
                             </small>
                         </div>
                     </div>
-                    <div class="col-md-3" data-reserva-step="1">
+                    <div class="col-md-4" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
                                 id="data_inicio" name="data_inicio" label="Data Retirada"
@@ -149,7 +149,7 @@
                                 min="{{ isset($reserva) ? '' : date('Y-m-d\TH:i') }}" />
                         </div>
                     </div>
-                    <div class="col-md-3" data-reserva-step="1">
+                    <div class="col-md-8" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-select id="estacao_devolucao_id" name="estacao_devolucao_id"
                                 label="Estacao de Devolucao" :options="$estacoes" placeholder="Selecione uma estacao"
@@ -162,7 +162,7 @@
                             @endif
                         </div>
                     </div>
-                    <div class="col-md-3" data-reserva-step="1">
+                    <div class="col-md-4" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
                                 id="data_fim" name="data_fim" label="Data Devolucao" value="{{ $reserva->data_fim ?? '' }}"
@@ -304,26 +304,36 @@
 
 
                     <!-- Identificacoes -->
+                    @php
+                        $userIdSelecionado = old('user_id', $reserva->user_id ?? null);
+                        $userNomeSelecionado = $userIdSelecionado && isset($users[$userIdSelecionado])
+                            ? $users[$userIdSelecionado]
+                            : ($reserva->usuario->nome ?? '');
+                    @endphp
                     <div class="col-md-12" data-reserva-step="4">
                         <div class="form-group">
-                            <x-form-select name="user_id" label="Usuario" :options="$users" id="user_id"
-                                placeholder="Selecione um usuario" :selected="old('user_id', isset($reserva->user_id) ? $reserva->user_id : null)"
-                                class="form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
-
-                            <div class="reserva-user-actions mt-2">
-                                <button type="button" class="btn btn-outline-primary btn-sm" id="btnNovoUsuarioModal">
+                            <label>Usuario <span class="text-danger">*</span></label>
+                            <input type="hidden" name="user_id" id="user_id" value="{{ $userIdSelecionado }}" required>
+                            <div class="input-group input-group-sm">
+                                <input type="text" id="user_display" class="form-control form-control-sm"
+                                       readonly placeholder="Clique na lupa para buscar um usuario..."
+                                       value="{{ $userNomeSelecionado }}">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-outline-primary" id="btnBuscarUsuarioReserva"
+                                            title="Buscar usuario">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-outline-danger {{ $userIdSelecionado ? '' : 'd-none' }}" id="btnLimparUsuarioReserva"
+                                            title="Limpar selecao">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mt-2 d-flex" style="gap:.5rem">
+                                <button type="button" class="btn btn-outline-success btn-sm" id="btnNovoUsuarioModal">
                                     <i class="fas fa-user-plus mr-1"></i>Novo usuario
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnAtualizarUsuarios">
-                                    <i class="fas fa-sync-alt mr-1"></i>Atualizar lista
-                                </button>
                             </div>
-
-                            @if (empty($users))
-                                <small class="text-danger d-block mt-1">
-                                    Nenhum usuario disponivel. Clique em "Novo usuario" para cadastrar sem sair da reserva.
-                                </small>
-                            @endif
                         </div>
                     </div>
 
@@ -372,6 +382,96 @@
     </div>
     @component('reserva.components.modal-pesquisa')
     @endcomponent
+
+    {{-- Modal busca de usuario --}}
+    <div class="modal fade" id="modalBuscarUsuarioReserva" tabindex="-1" role="dialog" aria-labelledby="modalBuscarUsuarioReservaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title font-weight-bold" id="modalBuscarUsuarioReservaLabel">
+                        <i class="fas fa-user-search mr-2"></i>Buscar Usuario
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+
+                    {{-- Filtros --}}
+                    <div class="card card-outline card-secondary mb-3">
+                        <div class="card-header py-2">
+                            <h6 class="card-title mb-0"><i class="fas fa-filter mr-1"></i> Filtros</h6>
+                            <div class="card-tools">
+                                <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                                    <i class="fas fa-minus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body pb-1">
+                            <div class="row">
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="small mb-1">Nome</label>
+                                    <input type="text" id="fu_nome" class="form-control form-control-sm" placeholder="Nome do usuario">
+                                </div>
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="small mb-1">E-mail</label>
+                                    <input type="text" id="fu_email" class="form-control form-control-sm" placeholder="email@exemplo.com">
+                                </div>
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="small mb-1">CPF / Documento</label>
+                                    <input type="text" id="fu_documento" class="form-control form-control-sm" placeholder="000.000.000-00">
+                                </div>
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="small mb-1">Telefone</label>
+                                    <input type="text" id="fu_telefone" class="form-control form-control-sm" placeholder="(00) 00000-0000">
+                                </div>
+                                <div class="col-md-3 form-group mb-2">
+                                    <label class="small mb-1">Perfil / Regra</label>
+                                    <select id="fu_role_id" class="form-control form-control-sm">
+                                        <option value="">Todos os perfis</option>
+                                        @foreach($tiposUsuario as $id => $nome)
+                                            <option value="{{ $id }}">{{ $nome }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-2 form-group mb-2">
+                                    <label class="small mb-1">Nasc. de</label>
+                                    <input type="date" id="fu_nascimento_de" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-2 form-group mb-2">
+                                    <label class="small mb-1">Nasc. até</label>
+                                    <input type="date" id="fu_nascimento_ate" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-2 form-group mb-2">
+                                    <label class="small mb-1">Cadastro de</label>
+                                    <input type="date" id="fu_cadastro_de" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-2 form-group mb-2">
+                                    <label class="small mb-1">Cadastro até</label>
+                                    <input type="date" id="fu_cadastro_ate" class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end form-group mb-2">
+                                    <button type="button" class="btn btn-primary btn-sm btn-block" id="btnAplicarFiltroUsuario">
+                                        <i class="fas fa-search mr-1"></i> Buscar
+                                    </button>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end form-group mb-2">
+                                    <button type="button" class="btn btn-outline-secondary btn-sm btn-block" id="btnLimparFiltroUsuario">
+                                        <i class="fas fa-eraser mr-1"></i> Limpar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="modalUsuarioLoading" class="text-center d-none py-3">
+                        <i class="fas fa-spinner fa-spin mr-1"></i> Buscando...
+                    </div>
+                    <div id="modalUsuarioResultados"></div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <div class="modal fade" id="modalNovoUsuarioReserva" tabindex="-1" role="dialog" aria-labelledby="modalNovoUsuarioReservaLabel" aria-hidden="true">
         <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
@@ -1297,12 +1397,9 @@
                 return;
             }
 
-            const select = $('#user_id');
             const usuarioId = String(usuario.id);
-            let option = select.find(`option[value="${usuarioId}"]`);
-
             const nome = (usuario.nome || '').trim();
-            const cpf = (usuario.numero_identificacao || '').trim();
+            const cpf  = (usuario.numero_identificacao || '').trim();
             const email = (usuario.email || '').trim();
 
             let label = nome || email || `Usuario #${usuarioId}`;
@@ -1312,54 +1409,19 @@
                 label = `${label} - ${email}`;
             }
 
-            if (option.length === 0) {
-                select.append(`<option value="${usuarioId}">${label}</option>`);
-                option = select.find(`option[value="${usuarioId}"]`);
-            } else {
-                option.text(label);
-            }
-
-            select.val(usuarioId);
-            if (select.hasClass('js-selectpicker')) {
-                select.selectpicker('refresh');
-            }
+            // Atualiza input readonly + hidden
+            document.getElementById('user_id').value      = usuarioId;
+            document.getElementById('user_display').value = label;
+            const btnLimpar = document.getElementById('btnLimparUsuarioReserva');
+            if (btnLimpar) btnLimpar.classList.remove('d-none');
 
             setUser(usuarioId, label);
             atualizarMinhaReserva();
         }
 
-        function atualizarUsuariosSelectReserva(selecionarId = null) {
-            const select = $('#user_id');
-            const idAtual = selecionarId || select.val();
-
-            return $.ajax({
-                url: rotaUsuariosSelect,
-                method: 'GET',
-                dataType: 'json'
-            }).done(function(response) {
-                const usuarios = response?.usuarios || [];
-                select.empty();
-                select.append('<option value="" disabled>Selecione um usuario</option>');
-
-                usuarios.forEach(function(usuario) {
-                    select.append(`<option value="${usuario.id}">${usuario.nome}</option>`);
-                });
-
-                if (idAtual) {
-                    select.val(String(idAtual));
-                }
-
-                if (!select.val()) {
-                    select.prop('selectedIndex', 0);
-                }
-
-                if (select.hasClass('js-selectpicker')) {
-                    select.selectpicker('refresh');
-                }
-
-            }).fail(function() {
-                alert('Nao foi possivel atualizar a lista de usuarios.');
-            });
+        function atualizarUsuariosSelectReserva() {
+            // mantido por compatibilidade — nao ha mais select de usuarios
+            return $.Deferred().resolve().promise();
         }
 
         $('#formularioReserva').on('submit', function(e) {
@@ -1576,15 +1638,14 @@
                 $('#modalNovoUsuarioReserva').modal('show');
             });
 
-            $('#btnAtualizarUsuarios').on('click', function() {
-                const botao = $(this);
-                const textoOriginal = botao.html();
-                botao.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Atualizando');
-
-                atualizarUsuariosSelectReserva()
-                    .always(function() {
-                        botao.prop('disabled', false).html(textoOriginal);
-                    });
+            // Novo usuario criado via modal: preenche input readonly
+            $(document).on('novoUsuarioCriado', function(e, usuario) {
+                if (usuario && usuario.id) {
+                    document.getElementById('user_id').value      = usuario.id;
+                    document.getElementById('user_display').value = usuario.nome || ('Usuario #' + usuario.id);
+                    const btnLimpar = document.getElementById('btnLimparUsuarioReserva');
+                    if (btnLimpar) btnLimpar.classList.remove('d-none');
+                }
             });
 
             $('#btnSalvarNovoUsuarioReserva').on('click', function() {
@@ -1638,6 +1699,128 @@
             $('#modalNovoUsuarioReserva').on('hidden.bs.modal', function() {
                 limparFormularioNovoUsuario();
             });
+
+            // Modal busca de usuario
+            (function () {
+                const URL_BUSCAR_USUARIO = @json(route('usuario.buscar'));
+
+                function coletarFiltrosUsuario() {
+                    const p = new URLSearchParams();
+                    const add = (id, key) => { const v = document.getElementById(id)?.value?.trim(); if (v) p.set(key, v); };
+                    add('fu_nome',           'nome');
+                    add('fu_email',          'email');
+                    add('fu_documento',      'documento');
+                    add('fu_telefone',       'telefone');
+                    add('fu_role_id',        'role_id');
+                    add('fu_nascimento_de',  'nascimento_de');
+                    add('fu_nascimento_ate', 'nascimento_ate');
+                    add('fu_cadastro_de',    'cadastro_de');
+                    add('fu_cadastro_ate',   'cadastro_ate');
+                    return p.toString();
+                }
+
+                function executarBuscaUsuario() {
+                    const loading    = document.getElementById('modalUsuarioLoading');
+                    const resultados = document.getElementById('modalUsuarioResultados');
+                    loading.classList.remove('d-none');
+                    resultados.innerHTML = '';
+
+                    fetch(`${URL_BUSCAR_USUARIO}?${coletarFiltrosUsuario()}`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    })
+                    .then(r => r.json())
+                    .then(data => {
+                        loading.classList.add('d-none');
+                        if (!data.usuarios || data.usuarios.length === 0) {
+                            resultados.innerHTML = '<p class="text-muted text-center py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>Nenhum usuario encontrado com os filtros informados.</p>';
+                            return;
+                        }
+                        const badge = `<span class="badge badge-secondary mb-2">${data.usuarios.length} resultado(s)</span>`;
+                        let html = `${badge}<div class="table-responsive"><table class="table table-sm table-hover table-bordered" style="font-size:.82rem">`;
+                        html += `<thead class="thead-light">
+                            <tr>
+                                <th>Nome</th>
+                                <th>E-mail</th>
+                                <th>CPF / Documento</th>
+                                <th>Telefone</th>
+                                <th>Perfil</th>
+                                <th>Nascimento</th>
+                                <th>Cadastro</th>
+                                <th class="text-center">Ação</th>
+                            </tr>
+                        </thead><tbody>`;
+                        data.usuarios.forEach(u => {
+                            html += `<tr>
+                                <td><strong>${u.nome}</strong></td>
+                                <td>${u.email || '—'}</td>
+                                <td>${u.documento || '—'}</td>
+                                <td>${u.telefone || '—'}</td>
+                                <td><span class="badge badge-info">${u.perfil || '—'}</span></td>
+                                <td>${u.nascimento || '—'}</td>
+                                <td>${u.cadastro || '—'}</td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-success btn-selecionar-usuario"
+                                        data-id="${u.id}" data-nome="${u.nome.replace(/"/g,'&quot;')}">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                </td>
+                            </tr>`;
+                        });
+                        html += '</tbody></table></div>';
+                        resultados.innerHTML = html;
+
+                        resultados.querySelectorAll('.btn-selecionar-usuario').forEach(btn => {
+                            btn.addEventListener('click', function () {
+                                const id   = parseInt(this.dataset.id);
+                                const nome = this.dataset.nome;
+                                document.getElementById('user_id').value      = id;
+                                document.getElementById('user_display').value = nome;
+                                const btnLimpar = document.getElementById('btnLimparUsuarioReserva');
+                                if (btnLimpar) btnLimpar.classList.remove('d-none');
+                                $('#modalBuscarUsuarioReserva').modal('hide');
+                            });
+                        });
+                    })
+                    .catch(() => {
+                        loading.classList.add('d-none');
+                        resultados.innerHTML = '<p class="text-danger text-center py-3"><i class="fas fa-exclamation-triangle mr-1"></i>Erro ao buscar usuarios.</p>';
+                    });
+                }
+
+                document.getElementById('btnBuscarUsuarioReserva').addEventListener('click', function () {
+                    document.getElementById('modalUsuarioResultados').innerHTML = '';
+                    $('#modalBuscarUsuarioReserva').modal('show');
+                    setTimeout(() => document.getElementById('fu_nome').focus(), 400);
+                    executarBuscaUsuario();
+                });
+
+                document.getElementById('btnAplicarFiltroUsuario').addEventListener('click', executarBuscaUsuario);
+
+                const btnLimparReservaUser = document.getElementById('btnLimparUsuarioReserva');
+                if (btnLimparReservaUser) {
+                    btnLimparReservaUser.addEventListener('click', function () {
+                        document.getElementById('user_id').value      = '';
+                        document.getElementById('user_display').value = '';
+                        this.classList.add('d-none');
+                    });
+                }
+
+                document.getElementById('btnLimparFiltroUsuario').addEventListener('click', function () {
+                    ['fu_nome','fu_email','fu_documento','fu_telefone','fu_nascimento_de','fu_nascimento_ate','fu_cadastro_de','fu_cadastro_ate'].forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.value = '';
+                    });
+                    const roleEl = document.getElementById('fu_role_id');
+                    if (roleEl) roleEl.selectedIndex = 0;
+                    document.getElementById('modalUsuarioResultados').innerHTML = '';
+                });
+
+                // Enter em qualquer filtro de texto
+                ['fu_nome','fu_email','fu_documento','fu_telefone'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); executarBuscaUsuario(); } });
+                });
+            })();
 
 
             // Inicializar Select2 quando o modal for aberto
