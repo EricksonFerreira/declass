@@ -113,7 +113,7 @@ return [
         'enabled' => true,
         'mode' => 'fullscreen',
         'img' => [
-            'path' => 'public/assets/logo.png',
+            'path' => 'public/assets/imgs/logo.png',
             'alt' => 'Imagem de Pré-carregamento DECars',
             'effect' => 'animation__shake',
             'width' => 60,
