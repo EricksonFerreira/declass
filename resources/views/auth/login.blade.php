@@ -375,9 +375,9 @@
                 <img src="{{asset('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}" style="width:9em">
                 @endif
             </div>
-            @if(!empty($loginLogoUrl))
+            {{-- @if(!empty($loginLogoUrl))
             <span class="logo__name">{{ $loginTitle }}</span>
-            @endif
+            @endif --}}
         </div>
 
         {{-- Card --}}
