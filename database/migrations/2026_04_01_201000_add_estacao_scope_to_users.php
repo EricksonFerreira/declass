@@ -8,10 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('users') && !Schema::hasColumn('users', 'acesso_todas_estacoes')) {
             Schema::table('users', function (Blueprint $table): void {
                 $table->boolean('acesso_todas_estacoes')->default(true)->after('empresa_id');
-            });
+    });
         }
 
         if (!Schema::hasTable('estacao_user')) {
@@ -26,18 +27,21 @@ return new class extends Migration
                 $table->foreign('estacao_id')->references('id')->on('estacoes')->onDelete('cascade');
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('estacao_user')) {
             Schema::drop('estacao_user');
-        }
+    }
 
         if (Schema::hasTable('users') && Schema::hasColumn('users', 'acesso_todas_estacoes')) {
             Schema::table('users', function (Blueprint $table): void {
                 $table->dropColumn('acesso_todas_estacoes');
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         $teams = config('permission.teams');
         $tableNames = config('permission.table_names');
         $columnNames = config('permission.column_names');
@@ -118,6 +119,7 @@ return new class extends Migration
         app('cache')
             ->store(config('permission.cache.store') != 'default' ? config('permission.cache.store') : null)
             ->forget(config('permission.cache.key'));
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -125,6 +127,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         $tableNames = config('permission.table_names');
 
         if (empty($tableNames)) {
@@ -136,5 +139,6 @@ return new class extends Migration
         Schema::drop($tableNames['model_has_permissions']);
         Schema::drop($tableNames['roles']);
         Schema::drop($tableNames['permissions']);
+        Schema::enableForeignKeyConstraints();
     }
 };

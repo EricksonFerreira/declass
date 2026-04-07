@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('users') || Schema::hasColumn('users', 'foto_perfil')) {
             return;
         }
@@ -15,10 +16,12 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->string('foto_perfil')->nullable()->after('empresa_id');
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('users') || !Schema::hasColumn('users', 'foto_perfil')) {
             return;
         }
@@ -26,6 +29,7 @@ return new class extends Migration
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn('foto_perfil');
         });
+        Schema::enableForeignKeyConstraints();
     }
 };
 

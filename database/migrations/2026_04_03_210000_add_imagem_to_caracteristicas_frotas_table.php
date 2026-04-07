@@ -11,10 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('caracteristicas_frotas') && !Schema::hasColumn('caracteristicas_frotas', 'imagem')) {
             Schema::table('caracteristicas_frotas', function (Blueprint $table) {
                 $table->string('imagem')->nullable();
-            });
+    });
         }
 
         if (Schema::hasTable('caracteristica_frotas') && !Schema::hasColumn('caracteristica_frotas', 'imagem')) {
@@ -22,6 +23,7 @@ return new class extends Migration
                 $table->string('imagem')->nullable();
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -29,10 +31,11 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('caracteristicas_frotas') && Schema::hasColumn('caracteristicas_frotas', 'imagem')) {
             Schema::table('caracteristicas_frotas', function (Blueprint $table) {
                 $table->dropColumn('imagem');
-            });
+    });
         }
 
         if (Schema::hasTable('caracteristica_frotas') && Schema::hasColumn('caracteristica_frotas', 'imagem')) {
@@ -40,5 +43,6 @@ return new class extends Migration
                 $table->dropColumn('imagem');
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 };

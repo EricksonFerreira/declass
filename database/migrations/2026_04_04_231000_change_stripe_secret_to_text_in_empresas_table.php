@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'stripe_secret')) {
             return;
         }
@@ -15,16 +16,19 @@ return new class extends Migration
         if (DB::getDriverName() === 'mysql') {
             DB::statement('ALTER TABLE empresas MODIFY stripe_secret TEXT NULL');
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'stripe_secret')) {
             return;
         }
 
         if (DB::getDriverName() === 'mysql') {
-            DB::statement('ALTER TABLE empresas MODIFY stripe_secret VARCHAR(255) NULL');
+            DB::statement('ALTER TABLE empresas MODIFY stripe_secret text NULL');
         }
+        Schema::enableForeignKeyConstraints();
     }
 };

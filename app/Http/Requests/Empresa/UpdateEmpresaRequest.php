@@ -39,6 +39,7 @@ class UpdateEmpresaRequest extends FormRequest
             'nome' => ['required', 'string', 'max:255'],
             'slug' => $slugRules,
             'ativo' => ['nullable', 'in:S,N'],
+            'reserva_selecionar_modelo' => ['nullable', 'in:S,N'],
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],

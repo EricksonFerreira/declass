@@ -8,16 +8,18 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('permissions')) {
             try {
                 Schema::table('permissions', function (Blueprint $table) {
                     $table->dropUnique(['name', 'guard_name']);
-                });
+    });
             } catch (\Throwable $e) {
                 // Index may already be removed.
             }
 
             try {
+                if (!Schema::hasTable('permissions')) { Schema::enableForeignKeyConstraints(); return; }
                 Schema::table('permissions', function (Blueprint $table) {
                     $table->unique(['empresa_id', 'name', 'guard_name'], 'permissions_empresa_name_guard_unique');
                 });
@@ -36,6 +38,7 @@ return new class extends Migration
             }
 
             try {
+                if (!Schema::hasTable('roles')) { Schema::enableForeignKeyConstraints(); return; }
                 Schema::table('roles', function (Blueprint $table) {
                     $table->unique(['empresa_id', 'name', 'guard_name'], 'roles_empresa_name_guard_unique');
                 });
@@ -43,10 +46,12 @@ return new class extends Migration
                 // Index may already exist.
             }
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('permissions')) {
             try {
                 Schema::table('permissions', function (Blueprint $table) {
@@ -57,6 +62,7 @@ return new class extends Migration
             }
 
             try {
+                if (!Schema::hasTable('permissions')) { Schema::enableForeignKeyConstraints(); return; }
                 Schema::table('permissions', function (Blueprint $table) {
                     $table->unique(['name', 'guard_name']);
                 });
@@ -75,6 +81,7 @@ return new class extends Migration
             }
 
             try {
+                if (!Schema::hasTable('roles')) { Schema::enableForeignKeyConstraints(); return; }
                 Schema::table('roles', function (Blueprint $table) {
                     $table->unique(['name', 'guard_name']);
                 });
@@ -82,5 +89,6 @@ return new class extends Migration
                 // Ignore.
             }
         }
+        Schema::enableForeignKeyConstraints();
     }
 };

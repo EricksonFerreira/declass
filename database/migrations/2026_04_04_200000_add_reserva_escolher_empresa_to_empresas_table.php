@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('empresas') && !Schema::hasColumn('empresas', 'reserva_escolher_empresa')) {
             Schema::table('empresas', function (Blueprint $table) {
                 $table->string('reserva_escolher_empresa', 1)->default('N');
-            });
+    });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -23,10 +25,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('empresas') && Schema::hasColumn('empresas', 'reserva_escolher_empresa')) {
             Schema::table('empresas', function (Blueprint $table) {
                 $table->dropColumn('reserva_escolher_empresa');
-            });
+    });
         }
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             Schema::create('empresas', function (Blueprint $table) {
                 $table->id();
@@ -18,9 +19,10 @@ return new class extends Migration
                 $table->string('slug')->unique();
                 $table->string('ativo', 1)->default('S');
                 $table->timestamps();
-            });
+    });
         }
 
+        if (!Schema::hasTable('empresas')) { Schema::enableForeignKeyConstraints(); return; }
         Schema::table('empresas', function (Blueprint $table) {
             if (!Schema::hasColumn('empresas', 'cnpj')) {
                 $table->string('cnpj', 20)->nullable()->after('nome');
@@ -35,6 +37,7 @@ return new class extends Migration
                 $table->string('dominio')->nullable()->after('telefone');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -42,6 +45,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -60,5 +64,6 @@ return new class extends Migration
                 $table->dropColumn('cnpj');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

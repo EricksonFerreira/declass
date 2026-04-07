@@ -2,6 +2,39 @@
     $empresaTemaAtual = null;
     $empresaSelecionada = 0;
 
+    $contrasteParaHex = function (?string $hex, string $fallback = '#FFFFFF'): string {
+        $hex = trim((string) ($hex ?? ''));
+        if ($hex === '') {
+            return $fallback;
+        }
+
+        if ($hex[0] === '#') {
+            $hex = substr($hex, 1);
+        }
+
+        if (strlen($hex) === 3) {
+            $hex = $hex[0].$hex[0].$hex[1].$hex[1].$hex[2].$hex[2];
+        }
+
+        if (strlen($hex) !== 6 || !ctype_xdigit($hex)) {
+            return $fallback;
+        }
+
+        $r = hexdec(substr($hex, 0, 2)) / 255;
+        $g = hexdec(substr($hex, 2, 2)) / 255;
+        $b = hexdec(substr($hex, 4, 2)) / 255;
+
+        // sRGB -> linear
+        $rl = $r <= 0.03928 ? $r / 12.92 : pow(($r + 0.055) / 1.055, 2.4);
+        $gl = $g <= 0.03928 ? $g / 12.92 : pow(($g + 0.055) / 1.055, 2.4);
+        $bl = $b <= 0.03928 ? $b / 12.92 : pow(($b + 0.055) / 1.055, 2.4);
+
+        $luminancia = 0.2126 * $rl + 0.7152 * $gl + 0.0722 * $bl;
+
+        // Se fundo for claro, texto escuro; se fundo for escuro, texto branco.
+        return $luminancia > 0.58 ? '#0F172A' : '#FFFFFF';
+    };
+
     if (Auth::check() && \Illuminate\Support\Facades\Schema::hasTable('empresas')) {
         $empresaIdTema = null;
 
@@ -24,11 +57,25 @@
     }
 @endphp
 
+@php
+    $corPrimaria = $empresaTemaAtual->cor_primaria ?? '#1F2937';
+    $corSecundaria = $empresaTemaAtual->cor_secundaria ?? '#E2E8F0';
+    $corTerciaria = $empresaTemaAtual->cor_terciaria ?? '#64748B';
+
+    $corPrimariaContraste = $contrasteParaHex($corPrimaria);
+    $corSecundariaContraste = $contrasteParaHex($corSecundaria);
+    $corTerciariaContraste = $contrasteParaHex($corTerciaria);
+@endphp
+
 <style>
     :root {
-        --empresa-cor-primaria: {{ $empresaTemaAtual->cor_primaria ?? '#1F2937' }};
-        --empresa-cor-secundaria: {{ $empresaTemaAtual->cor_secundaria ?? '#E2E8F0' }};
-        --empresa-cor-terciaria: {{ $empresaTemaAtual->cor_terciaria ?? '#64748B' }};
+        --empresa-cor-primaria: {{ $corPrimaria }};
+        --empresa-cor-secundaria: {{ $corSecundaria }};
+        --empresa-cor-terciaria: {{ $corTerciaria }};
+
+        --empresa-cor-primaria-contraste: {{ $corPrimariaContraste }};
+        --empresa-cor-secundaria-contraste: {{ $corSecundariaContraste }};
+        --empresa-cor-terciaria-contraste: {{ $corTerciariaContraste }};
     }
 
     /* Sidebar search: keep typed match text readable on light results panel */
@@ -108,7 +155,7 @@
         body:not(.login-page) .main-header.navbar .nav-link,
         body:not(.login-page) .main-header.navbar .navbar-nav .nav-link i {
             background: var(--empresa-cor-primaria) !important;
-            color: var(--empresa-cor-secundaria) !important;
+            color: var(--empresa-cor-primaria-contraste, #fff) !important;
             align-items: center;
         }
 
@@ -121,13 +168,13 @@
         body:not(.login-page) .main-sidebar .nav-header,
         body:not(.login-page) .main-sidebar .user-panel .info,
         body:not(.login-page) .main-sidebar .user-panel .info a {
-            color: var(--empresa-cor-secundaria) !important;
+            color: var(--empresa-cor-primaria-contraste, #fff) !important;
         }
 
         body:not(.login-page) .main-sidebar .nav-sidebar .nav-link.active,
         body:not(.login-page) .main-sidebar .nav-sidebar .nav-link:hover {
             background: color-mix(in srgb, var(--empresa-cor-terciaria) 35%, transparent 65%) !important;
-            color: var(--empresa-cor-secundaria) !important;
+            color: var(--empresa-cor-primaria-contraste, #fff) !important;
         }
 
         body:not(.login-page) .main-sidebar .nav-item.menu-open > .nav-treeview > .nav-item > .nav-link {
@@ -153,7 +200,7 @@
             padding: .3rem .6rem;
             border-radius: 999px;
             background: color-mix(in srgb, var(--empresa-cor-terciaria) 35%, #0f172a 65%);
-            color: var(--empresa-cor-secundaria);
+            color: var(--empresa-cor-terciaria-contraste, #fff);
             font-size: 12px;
             line-height: 1;
         }

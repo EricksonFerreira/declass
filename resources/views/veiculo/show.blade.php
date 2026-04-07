@@ -471,6 +471,9 @@
                         <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn-xp btn-xp--sm w-100 justify-content-center">
                             <i class="fas fa-pen mr-1"></i>Editar veículo
                         </a>
+                        <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline w-100 justify-content-center">
+                            <i class="fas fa-exclamation-triangle mr-1"></i>Multas do veÃ­culo
+                        </a>
                         <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline w-100 justify-content-center">
                             <i class="fas fa-plus mr-1"></i>Abrir OS
                         </a>

@@ -8,10 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('users') && !Schema::hasColumn('users', 'saldo_atual')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->decimal('saldo_atual', 12, 2)->default(0)->after('foto_perfil');
-            });
+    });
         }
 
         if (!Schema::hasTable('saldo_movimentacoes')) {
@@ -32,18 +33,21 @@ return new class extends Migration
                 $table->index(['reserva_id']);
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('saldo_movimentacoes')) {
             Schema::dropIfExists('saldo_movimentacoes');
-        }
+    }
 
         if (Schema::hasTable('users') && Schema::hasColumn('users', 'saldo_atual')) {
             Schema::table('users', function (Blueprint $table) {
                 $table->dropColumn('saldo_atual');
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 };

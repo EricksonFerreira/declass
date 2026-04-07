@@ -107,7 +107,7 @@ class OrdemServicoController extends Controller
 
     public function show(OrdemServico $ordem_servico)
     {
-        $ordem_servico->load(['itens.veiculoDano', 'veiculo', 'reserva', 'usuarioAbertura', 'usuarioEncerramento']);
+        $ordem_servico->load(['itens.veiculoDano', 'anexos.usuario', 'veiculo', 'reserva', 'usuarioAbertura', 'usuarioEncerramento']);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
@@ -239,7 +239,23 @@ class OrdemServicoController extends Controller
         }
 
         try {
-            $this->ordemServicoService->concluir($ordem_servico, $dados['relatorio_geral'], $map);
+            $dir = 'ordem-servico/os_' . (int) $ordem_servico->id . '/anexos';
+            $anexosMeta = [];
+            foreach (($request->file('anexos') ?? []) as $file) {
+                if (! $file) {
+                    continue;
+                }
+                $path = $file->storePublicly($dir, 'public');
+                $anexosMeta[] = [
+                    'path' => $path,
+                    'original_name' => $file->getClientOriginalName(),
+                    'mime' => $file->getClientMimeType(),
+                    'size_bytes' => $file->getSize(),
+                    'user_id' => Auth::id(),
+                ];
+            }
+
+            $this->ordemServicoService->concluir($ordem_servico, $dados['relatorio_geral'], $map, $anexosMeta);
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['os' => $e->getMessage()]);
         }

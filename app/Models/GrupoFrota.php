@@ -19,6 +19,7 @@ class GrupoFrota extends Model
         'imagem',
         'imagens',
         'ativo',
+        'ordem',
     ];
 
     protected $casts = [

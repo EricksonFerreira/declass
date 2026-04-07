@@ -31,6 +31,13 @@ class CriarContratoCheckInRequest extends FormRequest
             'observacoes_saida' => 'nullable|string|max:255',
             'quilometragem_atual' => 'required|numeric',
             'veiculo_id' => 'required|integer|exists:veiculos,id',
+            'motivo_upgrade' => 'nullable|string|max:500',
+            'foto_direita' => 'required|image|max:8192',
+            'foto_esquerda' => 'required|image|max:8192',
+            'foto_frente' => 'required|image|max:8192',
+            'foto_tras' => 'required|image|max:8192',
+            'foto_velocimetro' => 'required|image|max:8192',
+            'foto_combustivel' => 'required|image|max:8192',
         ];
     }
 

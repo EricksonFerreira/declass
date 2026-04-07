@@ -62,6 +62,7 @@ return new class extends Migration
 
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         foreach ($this->tables as $tableName) {
             $this->renameColumnToEmpresaId($tableName);
         }
@@ -76,6 +77,7 @@ return new class extends Migration
             }
 
             try {
+                if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
                 Schema::table('users', function (Blueprint $table) {
                     $table->unique(['empresa_id', 'email'], 'users_empresa_email_unique');
                 });
@@ -83,10 +85,12 @@ return new class extends Migration
                 // Ignore when index already exists.
             }
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         foreach ($this->tables as $tableName) {
             $this->renameColumnToTenantId($tableName);
         }
@@ -101,6 +105,7 @@ return new class extends Migration
             }
 
             try {
+                if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
                 Schema::table('users', function (Blueprint $table) {
                     $table->unique(['tenant_id', 'email'], 'users_tenant_email_unique');
                 });
@@ -108,6 +113,7 @@ return new class extends Migration
                 // Ignore when index already exists.
             }
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     private function renameColumnToEmpresaId(string $tableName): void

@@ -61,7 +61,7 @@
                                 </div>
                             </div>
 
-                            <div class="os-section-title">Avarias vinculadas</div>
+                            <div class="os-section-title">Avarias vinculadas (opcional)</div>
                             <div class="form-group">
                                 <div id="danos_container" class="os-box-list">
                                     <p class="text-muted small mb-0">
@@ -116,7 +116,7 @@
                             <strong>1.</strong> Escolha o veiculo.
                         </div>
                         <div class="os-tip">
-                            <strong>2.</strong> Marque as avarias que farao parte da OS.
+                            <strong>2.</strong> (Opcional) Marque as avarias que farao parte da OS.
                         </div>
                         <div class="os-tip">
                             <strong>3.</strong> Adicione servicos extras se necessario.
@@ -186,7 +186,7 @@
     function renderDanos(list) {
         container.innerHTML = '';
         if (!list.length) {
-            container.innerHTML = '<p class="text-muted small mb-0">Nenhuma avaria pendente disponivel para OS.</p>';
+            container.innerHTML = '<p class="text-muted small mb-0">Nenhuma avaria pendente disponivel para OS. Voce pode abrir a OS mesmo assim.</p>';
             return;
         }
         list.forEach(function (d) {

@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -45,10 +46,12 @@ return new class extends Migration
                 $table->string('paypal_mode', 20)->default('sandbox')->after('paypal_client_secret');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -69,5 +72,6 @@ return new class extends Migration
                 }
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

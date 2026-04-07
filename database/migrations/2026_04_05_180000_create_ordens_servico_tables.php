@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('ordens_servico', function (Blueprint $table) {
             $table->id();
             $table->string('numero', 32)->nullable()->unique();
@@ -24,7 +25,7 @@ return new class extends Migration
 
             $table->index(['status', 'created_at']);
             $table->index('veiculo_id');
-        });
+    });
 
         Schema::create('ordem_servico_itens', function (Blueprint $table) {
             $table->id();
@@ -38,11 +39,14 @@ return new class extends Migration
             $table->foreign('ordem_servico_id')->references('id')->on('ordens_servico')->cascadeOnDelete();
             $table->index('veiculo_dano_id');
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('ordem_servico_itens');
         Schema::dropIfExists('ordens_servico');
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -294,7 +294,6 @@ return [
     */
 
     'menu' => [
-        // Navbar items:
         [
             'type'         => 'navbar-search',
             'text'         => 'search',
@@ -304,25 +303,21 @@ return [
             'type'         => 'fullscreen-widget',
             'topnav_right' => false,
         ],
-
-        // Sidebar items:
         [
             'type' => 'sidebar-menu-search',
             'text' => 'Procurar...',
         ],
 
-        // ── Dashboard ──
+        // Dashboard
         [
             'text' => 'sidebar.home',
             'url'  => 'home',
             'icon' => 'fas fa-tachometer-alt',
         ],
 
-        // ══════════════════════════════════════
-        // OPERACIONAL
-        // ══════════════════════════════════════
+        // OPERAÇÃO
         [
-            'header'  => 'sidebar.operacional',
+            'header'  => 'sidebar.operacao',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
         [
@@ -331,8 +326,14 @@ return [
             'icon' => 'fas fa-calendar-check',
         ],
         [
+            'text' => 'Multas',
+            'url'  => 'multa',
+            'icon' => 'fas fa-exclamation-triangle',
+            'can'  => 'multa.index',
+        ],
+        [
             'text'    => 'sidebar.movimentacoes',
-            'icon'    => 'fas fa-truck-moving',
+            'icon'    => 'fas fa-route',
             'submenu' => [
                 [
                     'text' => 'sidebar.movimentacoes_lista',
@@ -342,12 +343,12 @@ return [
                 [
                     'text' => 'sidebar.tipo_movimentacao',
                     'url'  => 'tipo_movimentacao',
-                    'icon' => 'fas fa-truck',
+                    'icon' => 'fas fa-random',
                 ],
                 [
                     'text' => 'sidebar.status_movimentacao',
                     'url'  => 'status_movimentacao',
-                    'icon' => 'fas fa-circle',
+                    'icon' => 'fas fa-circle-notch',
                 ],
                 [
                     'text' => 'sidebar.tempo_estacoes',
@@ -357,9 +358,7 @@ return [
             ],
         ],
 
-        // ══════════════════════════════════════
         // FROTA
-        // ══════════════════════════════════════
         [
             'header'  => 'sidebar.frota',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
@@ -371,23 +370,28 @@ return [
                 [
                     'text' => 'sidebar.veiculo_lista',
                     'url'  => 'veiculo',
-                    'icon' => 'fas fa-car',
+                    'icon' => 'fas fa-car-side',
                 ],
                 [
-                    'text' => 'sidebar.veiculo_e_opcional.disponibilidade',
+                    'text' => 'sidebar.disponibilidade_veiculos',
                     'url'  => 'veiculo/disponibilidade',
                     'icon' => 'fas fa-calendar-alt',
+                ],
+                [
+                    'text' => 'sidebar.status_veiculo',
+                    'url'  => 'status_veiculo',
+                    'icon' => 'fas fa-traffic-light',
                 ],
             ],
         ],
         [
-            'text'    => 'sidebar.configuracao_frota',
+            'text'    => 'sidebar.parametrizacao_frota',
             'icon'    => 'fas fa-cogs',
             'submenu' => [
                 [
                     'text' => 'sidebar.grupo_frota',
                     'url'  => 'grupo_frota',
-                    'icon' => 'fas fa-th-list',
+                    'icon' => 'fas fa-layer-group',
                 ],
                 [
                     'text' => 'sidebar.tipo_frota',
@@ -397,18 +401,33 @@ return [
                 [
                     'text' => 'sidebar.caracteristica_tipo_frota',
                     'url'  => 'caracteristica_frota',
-                    'icon' => 'fas fa-th',
+                    'icon' => 'fas fa-th-large',
                 ],
                 [
                     'text' => 'sidebar.caracteristica_valor_tipo_frota',
                     'url'  => 'tipovalorcaracteristicafrota',
+                    'icon' => 'fas fa-tags',
+                ],
+                [
+                    'text' => 'sidebar.marca',
+                    'url'  => 'marca',
                     'icon' => 'fas fa-tag',
+                ],
+                [
+                    'text' => 'sidebar.modelo',
+                    'url'  => 'modelo',
+                    'icon' => 'fas fa-car-side',
+                ],
+                [
+                    'text' => 'sidebar.segmento',
+                    'url'  => 'segmento',
+                    'icon' => 'fas fa-stream',
                 ],
             ],
         ],
         [
-            'text'    => 'sidebar.configuracao_opcionais',
-            'icon'    => 'fas fa-sliders-h',
+            'text'    => 'sidebar.opcionais',
+            'icon'    => 'fas fa-puzzle-piece',
             'submenu' => [
                 [
                     'text' => 'sidebar.opcionais',
@@ -424,12 +443,12 @@ return [
         ],
         [
             'text'    => 'sidebar.dano',
-            'icon'    => 'fas fa-exclamation-triangle',
+            'icon'    => 'fas fa-tools',
             'submenu' => [
                 [
                     'text' => 'sidebar.dano_lista',
                     'url'  => 'dano',
-                    'icon' => 'fas fa-tools',
+                    'icon' => 'fas fa-exclamation-triangle',
                 ],
                 [
                     'text' => 'sidebar.categoria_dano',
@@ -455,7 +474,7 @@ return [
                 [
                     'text' => 'sidebar.configuracao_checklist',
                     'url'  => 'configuracao-checklist',
-                    'icon' => 'fas fa-clipboard-check',
+                    'icon' => 'fas fa-sliders-h',
                 ],
                 [
                     'text' => 'sidebar.item_checklist',
@@ -465,7 +484,7 @@ return [
                 [
                     'text' => 'sidebar.tipo_checklist',
                     'url'  => 'tipo_checklist',
-                    'icon' => 'fas fa-clipboard-list',
+                    'icon' => 'fas fa-list',
                 ],
                 [
                     'text' => 'sidebar.status_item_checklist',
@@ -474,77 +493,47 @@ return [
                 ],
             ],
         ],
+
+        // FINANCEIRO
         [
-            'text' => 'sidebar.cupom_desconto',
-            'url'  => 'cupom_desconto',
-            'icon' => 'fas fa-percentage',
+            'header'  => 'sidebar.financeiro',
+            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
         [
             'text'    => 'sidebar.financeiro',
             'icon'    => 'fas fa-wallet',
             'submenu' => [
                 [
-                    'text' => 'sidebar.financeiro_transferencias',
-                    'route'  => 'financeiro.index',
-                    'icon' => 'fas fa-exchange-alt',
+                    'text'  => 'sidebar.financeiro_transferencias',
+                    'route' => 'financeiro.index',
+                    'icon'  => 'fas fa-exchange-alt',
                 ],
                 [
-                    'text' => 'sidebar.financeiro_reservas',
-                    'route'  => 'financeiro.reservas',
-                    'icon' => 'fas fa-receipt',
+                    'text'  => 'sidebar.financeiro_reservas',
+                    'route' => 'financeiro.reservas',
+                    'icon'  => 'fas fa-receipt',
                 ],
                 [
-                    'text' => 'Notas Fiscais',
-                    'route'  => 'nfse.index',
-                    'icon' => 'fas fa-file-invoice',
+                    'text'  => 'sidebar.notas_fiscais',
+                    'route' => 'nfse.index',
+                    'icon'  => 'fas fa-file-invoice',
+                ],
+                [
+                    'text' => 'sidebar.cupom_desconto',
+                    'url'  => 'cupom_desconto',
+                    'icon' => 'fas fa-percentage',
                 ],
             ],
         ],
 
-        // ══════════════════════════════════════
-        // CADASTROS
-        // ══════════════════════════════════════
+        // CADASTROS E CONFIGURAÇÕES
         [
-            'header'  => 'sidebar.cadastros',
+            'header'  => 'sidebar.configuracoes',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
         [
-            'text'    => 'Cadastros Básicos',
-            'icon'    => 'fas fa-folder-open',
-            'submenu' => [
-                [
-                    'text' => 'sidebar.marca',
-                    'url'  => 'marca',
-                    'icon' => 'fas fa-tags',
-                ],
-                [
-                    'text' => 'sidebar.modelo',
-                    'url'  => 'modelo',
-                    'icon' => 'fas fa-car-side',
-                ],
-                [
-                    'text' => 'sidebar.segmento',
-                    'url'  => 'segmento',
-                    'icon' => 'fas fa-layer-group',
-                ],
-                [
-                    'text' => 'sidebar.status_veiculo',
-                    'url'  => 'status_veiculo',
-                    'icon' => 'fas fa-traffic-light',
-                ],
-            ],
-        ],
-
-        // ══════════════════════════════════════
-        // CONFIGURAÇÕES DAS RESERVAS
-        // ══════════════════════════════════════
-        [
-            'header'  => 'sidebar.configuracao_reserva',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-        ],
-        [
-            'text'    => 'Estrutura de Reservas',
-            'icon'    => 'fas fa-folder-open',
+            'text'    => 'sidebar.parametrizacao_reserva',
+            'icon'    => 'fas fa-calendar-cog',
             'submenu' => [
                 [
                     'text' => 'sidebar.pais',
@@ -574,56 +563,54 @@ return [
             ],
         ],
 
-        // ══════════════════════════════════════
         // USUÁRIOS E ACESSOS
-        // ══════════════════════════════════════
         [
-            'header'  => 'sidebar.configuracao_usuario',
+            'header'  => 'sidebar.usuarios_acessos',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
         [
-            'text'       => 'sidebar.meu_perfil',
-            'route'      => 'profile.edit',
-            'icon'       => 'fas fa-user-circle',
-            'can'        => 'acessar-perfil',
+            'text'  => 'sidebar.meu_perfil',
+            'route' => 'profile.edit',
+            'icon'  => 'fas fa-user-circle',
+            'can'   => 'acessar-perfil',
         ],
         [
-            'text'       => 'sidebar.usuario',
-            'url'        => 'usuario',
-            'icon'       => 'fas fa-users',
+            'text' => 'sidebar.usuario',
+            'url'  => 'usuario',
+            'icon' => 'fas fa-users',
         ],
         [
-            'text'       => 'sidebar.empresa',
-            'url'        => 'empresa',
-            'icon'       => 'fas fa-building',
-            'can'        => 'gerenciar-empresa',
+            'text' => 'sidebar.tipo_usuario',
+            'url'  => 'tipo_usuario',
+            'icon' => 'fas fa-user-tag',
+            'can'  => 'gerenciar-empresa',
         ],
         [
-            'text'       => 'sidebar.replicacao_base',
-            'route'      => 'replicacao_base.index',
-            'icon'       => 'fas fa-copy',
-            'can'        => 'gerenciar-empresa',
+            'text' => 'sidebar.permissao',
+            'url'  => 'permissao',
+            'icon' => 'fas fa-lock',
         ],
         [
-            'text'       => 'sidebar.regra',
-            'url'        => 'regra',
-            'icon'       => 'fas fa-key',
+            'text' => 'sidebar.regra',
+            'url'  => 'regra',
+            'icon' => 'fas fa-key',
         ],
         [
-            'text'       => 'sidebar.tipo_usuario',
-            'url'        => 'tipo_usuario',
-            'icon'       => 'fas fa-user-tag',
-            'can'        => 'gerenciar-empresa',
+            'text' => 'sidebar.empresa',
+            'url'  => 'empresa',
+            'icon' => 'fas fa-building',
+            'can'  => 'gerenciar-empresa',
         ],
         [
-            'text'       => 'sidebar.permissao',
-            'url'        => 'permissao',
-            'icon'       => 'fas fa-lock',
+            'text'  => 'sidebar.replicacao_base',
+            'route' => 'replicacao_base.index',
+            'icon'  => 'fas fa-copy',
+            'can'   => 'gerenciar-empresa',
         ],
         [
-            'text'       => 'sidebar.termo_consentimento',
-            'url'        => 'termo_consentimento',
-            'icon'       => 'fas fa-file-signature',
+            'text' => 'sidebar.termo_consentimento',
+            'url'  => 'termo_consentimento',
+            'icon' => 'fas fa-file-signature',
         ],
     ],
 

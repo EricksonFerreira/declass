@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -35,6 +36,7 @@ return new class extends Migration
                 ->whereNull('empresa_id')
                 ->update(['empresa_id' => $empresaId]);
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void

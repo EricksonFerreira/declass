@@ -21,9 +21,27 @@ class ContratoCheckin extends Model
         'observacoes_saida',
         'quilometragem_atual',
         'veiculo_id',
+        'foto_direita_path',
+        'foto_esquerda_path',
+        'foto_frente_path',
+        'foto_tras_path',
+        'foto_velocimetro_path',
+        'foto_combustivel_path',
         'assinatura',
         'data_assinatura',
-        'assinado'
+        'assinado',
+        // Campos de upgrade de categoria
+        'grupo_frota_original_id',
+        'veiculo_previsto_id',
+        'houve_upgrade_categoria',
+        'motivo_upgrade',
+        'usuario_upgrade_id',
+        'data_hora_upgrade',
+    ];
+
+    protected $casts = [
+        'houve_upgrade_categoria' => 'boolean',
+        'data_hora_upgrade'       => 'datetime',
     ];
     public $timestamps = true;
 
@@ -45,5 +63,25 @@ class ContratoCheckin extends Model
     public function modelo()
     {
         return $this->belongsTo(Modelo::class, 'modelo_id');
+    }
+
+    public function grupoFrotaOriginal()
+    {
+        return $this->belongsTo(GrupoFrota::class, 'grupo_frota_original_id');
+    }
+
+    public function veiculoPrevisto()
+    {
+        return $this->belongsTo(Veiculo::class, 'veiculo_previsto_id');
+    }
+
+    public function usuarioUpgrade()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'usuario_upgrade_id');
+    }
+
+    public function calcao()
+    {
+        return $this->hasOne(Calcao::class, 'contrato_checkin_id');
     }
 }

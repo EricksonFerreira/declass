@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -37,10 +38,12 @@ return new class extends Migration
                 $table->string('site_apresentacao_botao_url')->nullable()->after('site_apresentacao_botao_texto');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -66,5 +69,6 @@ return new class extends Migration
                 $table->dropColumn($existingColumns);
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

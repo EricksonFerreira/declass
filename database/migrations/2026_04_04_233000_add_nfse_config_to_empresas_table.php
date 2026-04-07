@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -56,10 +57,12 @@ return new class extends Migration
                 $table->string('nfse_tomador_bairro_padrao', 80)->nullable()->after('nfse_tomador_numero_padrao');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -86,5 +89,6 @@ return new class extends Migration
                 }
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('status_reservas')) {
             return;
         }
@@ -19,6 +20,7 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -26,6 +28,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('status_reservas');
+        Schema::enableForeignKeyConstraints();
     }
 };

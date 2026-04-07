@@ -59,6 +59,7 @@
                     @php
                         $steps = [
                             ['label' => 'Dados do Veiculo', 'icon' => 'fas fa-car'],
+                            ['label' => 'Fotos do Veiculo', 'icon' => 'fas fa-camera'],
                             ['label' => 'Estado do Veiculo', 'icon' => 'fas fa-search'],
                             ['label' => 'Observacoes', 'icon' => 'fas fa-comment-alt'],
                         ];
@@ -87,6 +88,26 @@
                     </div>
 
                     <form id="form_dados_veiculos">
+
+                        {{-- Banner de upgrade de categoria (exibido via JS quando categoria original indisponivel) --}}
+                        <div id="upgrade-banner" class="alert alert-warning d-none mb-3" role="alert">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-arrow-circle-up fa-2x mr-3 text-warning mt-1"></i>
+                                <div>
+                                    <strong>Upgrade por Indisponibilidade de Categoria</strong>
+                                    <p class="mb-1 small">
+                                        Nao ha veiculos disponiveis na categoria reservada
+                                        (<span id="upgrade-grupo-original"></span>).
+                                        Selecione um veiculo de categoria superior abaixo.
+                                    </p>
+                                    <div class="form-group mb-1">
+                                        <label class="small mb-0">Motivo do upgrade</label>
+                                        <input type="text" id="motivo_upgrade_input" class="form-control form-control-sm"
+                                               value="Indisponibilidade na categoria original" maxlength="500">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
 
                         {{-- Bloco: Selecao do veiculo --}}
                         <div class="ci-block">
@@ -172,6 +193,51 @@
                      PASSO 2 — Estado do Veiculo
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="2">
+                    <div class="step-head">
+                        <h5><i class="fas fa-camera mr-2"></i>Fotos do Veiculo</h5>
+                        <p>Envie as fotos obrigatorias para registrar o estado do veiculo no check-in. Nao e possivel continuar sem concluir este passo.</p>
+                    </div>
+
+                    <div class="ci-block">
+                        <div class="ci-block-label">
+                            <i class="fas fa-images"></i>
+                            <div>
+                                <strong>Fotos Obrigatorias</strong>
+                                <span>Direita, esquerda, frente, tras, velocimetro e combustivel</span>
+                            </div>
+                        </div>
+
+                        @php
+                            $fotos = [
+                                ['id' => 'foto_direita',     'label' => 'Direita'],
+                                ['id' => 'foto_esquerda',    'label' => 'Esquerda'],
+                                ['id' => 'foto_frente',      'label' => 'Frente'],
+                                ['id' => 'foto_tras',        'label' => 'Tras'],
+                                ['id' => 'foto_velocimetro', 'label' => 'Velocimetro'],
+                                ['id' => 'foto_combustivel', 'label' => 'Medidor de Combustivel'],
+                            ];
+                        @endphp
+
+                        <div class="row">
+                            @foreach($fotos as $f)
+                                <div class="col-md-4">
+                                    <div class="ci-photo-card">
+                                        <label for="{{ $f['id'] }}">{{ $f['label'] }} <span class="req">*</span></label>
+                                        <input type="file" class="form-control form-control-sm" id="{{ $f['id'] }}" name="{{ $f['id'] }}" required accept="image/*">
+                                        <div class="ci-photo-preview" data-preview-for="{{ $f['id'] }}">
+                                            <span class="ci-photo-preview__placeholder">
+                                                <i class="far fa-image mr-1"></i>Sem imagem
+                                            </span>
+                                        </div>
+                                        <small class="ci-hint">Max 8MB. Formatos: JPG/PNG/WEBP.</small>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
+
+                <section class="wizard-step" data-step="3">
                     <div class="step-head">
                         <h5><i class="fas fa-search mr-2"></i>Estado do Veiculo</h5>
                         <p>Clique em uma das vistas do veiculo para registrar um novo dano. O veiculo deve estar selecionado no Passo 1.</p>
@@ -281,7 +347,7 @@
                 {{-- ═══════════════════════════════════
                      PASSO 3 — Observacoes
                 ═══════════════════════════════════ --}}
-                <section class="wizard-step" data-step="3">
+                <section class="wizard-step" data-step="4">
                     <div class="step-head">
                         <h5><i class="fas fa-comment-alt mr-2"></i>Observacoes e Notas</h5>
                         <p>Registre quaisquer observacoes adicionais sobre a saida do veiculo.</p>
@@ -316,7 +382,7 @@
                         </div>
                         <div class="ci-summary-card__content">
                             <strong>Pronto para criar o contrato?</strong>
-                            <p>Verifique se todos os dados do Passo 1 estao preenchidos. Ao clicar em <em>Criar Contrato</em> o contrato sera gerado e voce sera redirecionado para a reserva.</p>
+                            <p>Verifique se todos os dados dos Passos 1 e 2 estao preenchidos. Ao clicar em <em>Criar Contrato</em> o contrato sera gerado e voce sera redirecionado para a reserva.</p>
                         </div>
                         <button type="button" class="ci-btn-create" id="btn_criar_contrato">
                             <i class="fas fa-file-contract"></i>
@@ -350,6 +416,34 @@
 <link rel="stylesheet" href="{{ asset('css/select2.min.css') }}">
 <style>
     @include('reserva.partials.vistoria_reserva_estilos_inner')
+
+    .ci-photo-card {
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 14px;
+        background: #fff;
+    }
+    .ci-photo-preview {
+        margin-top: 10px;
+        height: 130px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px dashed rgba(0,0,0,.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .ci-photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .ci-photo-preview__placeholder {
+        color: rgba(0,0,0,.55);
+        font-size: .9rem;
+    }
 </style>
 @stop
 
@@ -457,6 +551,15 @@
     /* ========================
        WIZARD STEPS
     ======================== */
+    const PHOTO_INPUT_IDS = [
+        'foto_direita',
+        'foto_esquerda',
+        'foto_frente',
+        'foto_tras',
+        'foto_velocimetro',
+        'foto_combustivel',
+    ];
+
     const stepBtns   = Array.from(document.querySelectorAll('.step-btn'));
     const stepPanels = Array.from(document.querySelectorAll('.wizard-step[data-step]'));
     const prevBtn    = document.getElementById('wizardPrev');
@@ -464,6 +567,37 @@
     const createBtn  = document.getElementById('wizardCreateBtn');
     let current      = 1;
     const lastStep   = stepPanels.length;
+
+    function setupPhotoPreviews() {
+        PHOTO_INPUT_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            const preview = document.querySelector(`.ci-photo-preview[data-preview-for="${id}"]`);
+            if (!input || !preview) return;
+
+            let objectUrl = null;
+            input.addEventListener('change', function () {
+                input.classList.remove('is-invalid');
+
+                if (objectUrl) {
+                    URL.revokeObjectURL(objectUrl);
+                    objectUrl = null;
+                }
+
+                if (this.files && this.files[0]) {
+                    objectUrl = URL.createObjectURL(this.files[0]);
+                    preview.innerHTML = `<img src="${objectUrl}" alt="Preview">`;
+                } else {
+                    preview.innerHTML = `
+                        <span class="ci-photo-preview__placeholder">
+                            <i class="far fa-image mr-1"></i>Sem imagem
+                        </span>
+                    `;
+                }
+            });
+        });
+    }
+
+    setupPhotoPreviews();
 
     function showStep(n) {
         current = Math.min(Math.max(n, 1), lastStep);
@@ -485,26 +619,7 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
-    stepBtns.forEach(btn => {
-        btn.addEventListener('click', () => showStep(Number(btn.dataset.stepTarget)));
-    });
-
-    prevBtn.addEventListener('click', () => showStep(current - 1));
-    nextBtn.addEventListener('click', () => showStep(current + 1));
-
-    /* ========================
-       CRIAR CONTRATO
-    ======================== */
-    function triggerCriarContrato() {
-        document.getElementById('form_dados_veiculos').dispatchEvent(new Event('submit'));
-    }
-
-    document.getElementById('btn_criar_contrato')?.addEventListener('click', triggerCriarContrato);
-    createBtn?.addEventListener('click', triggerCriarContrato);
-
-    document.getElementById('form_dados_veiculos').addEventListener('submit', function (event) {
-        event.preventDefault();
-
+    function validateStep1(showAlert = true) {
         const campos = document.querySelectorAll('#form_dados_veiculos input:required, #form_dados_veiculos select:required');
         const camposInvalidos = [];
 
@@ -515,19 +630,104 @@
         });
 
         if (camposInvalidos.length > 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Campos obrigatorios nao preenchidos',
-                html: `<ul style="text-align:left">${camposInvalidos.map(c => `<li>${c.replace(/_/g, ' ')}</li>`).join('')}</ul>`,
-                showConfirmButton: true,
-                confirmButtonColor: '#4338ca',
-                toast: false,
-            });
+            if (showAlert) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Campos obrigatorios nao preenchidos',
+                    html: `<ul style="text-align:left">${camposInvalidos.map(c => `<li>${String(c).replace(/_/g, ' ')}</li>`).join('')}</ul>`,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#4338ca',
+                    toast: false,
+                });
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    function validateStep2Photos(showAlert = true) {
+        const invalidos = [];
+
+        PHOTO_INPUT_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            const invalido = !input || !input.files || input.files.length === 0;
+            if (input) input.classList.toggle('is-invalid', invalido);
+            if (invalido) invalidos.push(id);
+        });
+
+        if (invalidos.length > 0) {
+            if (showAlert) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Fotos obrigatorias nao enviadas',
+                    html: `<div style="text-align:left">Envie todas as fotos do Passo 2 para continuar.</div>`,
+                    showConfirmButton: true,
+                    confirmButtonColor: '#4338ca',
+                    toast: false,
+                });
+            }
+            return false;
+        }
+
+        return true;
+    }
+
+    function goToStep(target) {
+        // Voltar nunca bloqueia; avancar exige concluir os passos anteriores.
+        if (target <= current) {
+            showStep(target);
+            return;
+        }
+
+        if (target >= 2 && !validateStep1(true)) {
             showStep(1);
             return;
         }
 
+        if (target >= 3 && !validateStep2Photos(true)) {
+            showStep(2);
+            return;
+        }
+
+        showStep(target);
+    }
+
+    stepBtns.forEach(btn => {
+        btn.addEventListener('click', () => goToStep(Number(btn.dataset.stepTarget)));
+    });
+
+    prevBtn.addEventListener('click', () => showStep(current - 1));
+    nextBtn.addEventListener('click', () => goToStep(current + 1));
+
+    /* ========================
+       CRIAR CONTRATO
+    ======================== */
+    function triggerCriarContrato() {
+        if (!validateStep1(true)) {
+            showStep(1);
+            return;
+        }
+        if (!validateStep2Photos(true)) {
+            showStep(2);
+            return;
+        }
+
         criarContrato();
+    }
+
+    document.getElementById('btn_criar_contrato')?.addEventListener('click', triggerCriarContrato);
+    createBtn?.addEventListener('click', triggerCriarContrato);
+
+    document.getElementById('form_dados_veiculos').addEventListener('submit', function (event) {
+        event.preventDefault();
+        if (!validateStep1(true)) {
+            showStep(1);
+            return;
+        }
+
+        // Enter no Passo 1 avanca para o Passo 2.
+        goToStep(2);
     });
 
     function criarContrato() {
@@ -547,6 +747,23 @@
             observacoes_saida:  document.getElementById('observacoes_saida')?.value || null,
         };
 
+        const fd = new FormData();
+        Object.entries(contrato).forEach(([k, v]) => fd.append(k, v ?? ''));
+        PHOTO_INPUT_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            if (input && input.files && input.files[0]) {
+                fd.append(id, input.files[0]);
+            }
+        });
+
+        // Se for upgrade, envia motivo_upgrade para auditoria
+        const selectedOpt = document.querySelector('#veiculo option:checked');
+        const isUpgrade = selectedOpt?.dataset?.upgrade === '1';
+        if (isUpgrade) {
+            const motivo = document.getElementById('motivo_upgrade_input')?.value || '';
+            fd.append('motivo_upgrade', motivo);
+        }
+
         const createBtnEl = document.getElementById('btn_criar_contrato');
         const wizBtnEl    = document.getElementById('wizardCreateBtn');
         [createBtnEl, wizBtnEl].forEach(b => {
@@ -560,8 +777,10 @@
         $.ajax({
             url,
             type: 'POST',
-            data: contrato,
+            data: fd,
             headers: { 'X-CSRF-TOKEN': csrf },
+            processData: false,
+            contentType: false,
             success: function (data) {
                 Swal.fire({
                     icon: 'success',
@@ -575,11 +794,22 @@
                     window.location.href = "{{ route('reserva.show', ':id') }}".replace(':id', reserva_id);
                 }, 2600);
             },
-            error: function () {
+            error: function (xhr) {
+                let title = 'Erro ao criar contrato';
+                let html = 'Verifique os dados e tente novamente.';
+
+                if (xhr && xhr.status === 422 && xhr.responseJSON && xhr.responseJSON.errors) {
+                    title = 'Validacao falhou';
+                    const msgs = Object.values(xhr.responseJSON.errors).flat();
+                    html = `<ul style=\"text-align:left\">${msgs.map(m => `<li>${m}</li>`).join('')}</ul>`;
+                } else if (xhr && xhr.responseJSON && xhr.responseJSON.message) {
+                    html = xhr.responseJSON.message;
+                }
+
                 Swal.fire({
                     icon: 'error',
-                    title: 'Erro ao criar contrato',
-                    text: 'Verifique os dados e tente novamente.',
+                    title,
+                    html,
                     showConfirmButton: true,
                     confirmButtonColor: '#4338ca',
                 });
@@ -674,6 +904,97 @@
 
     /* Init */
     showStep(1);
+
+    /* ========================
+       UPGRADE DE CATEGORIA
+    ======================== */
+    (function initUpgradeCheck() {
+        const statusUpgradeUrl = @json(route('reserva.checkin.statusUpgrade', $reserva->id));
+
+        fetch(statusUpgradeUrl, { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.tem_disponibilidade_categoria_original) return; // sem upgrade
+
+                const banner = document.getElementById('upgrade-banner');
+                const grupoLabel = document.getElementById('upgrade-grupo-original');
+                if (banner) {
+                    banner.classList.remove('d-none');
+                    if (grupoLabel) grupoLabel.textContent = data.grupo_original?.nome ?? 'categoria original';
+                }
+
+                // Substitui o select de veiculo por um select de upgrade
+                const veiculoSelect = document.getElementById('veiculo');
+                if (!veiculoSelect) return;
+
+                const todos = Array.isArray(data.veiculos_periodo) ? data.veiculos_periodo : [];
+                if (!todos.length) {
+                    veiculoSelect.innerHTML = '<option value="" disabled selected>Nenhum veiculo disponivel no periodo</option>';
+                    veiculoSelect.disabled = true;
+                    return;
+                }
+
+                veiculoSelect.disabled = false;
+                veiculoSelect.innerHTML = '<option value="" disabled selected>Selecione um veiculo</option>';
+
+                const gruposMap = new Map();
+                todos.forEach(v => {
+                    const grupoId = v.grupo?.id ?? 0;
+                    if (!gruposMap.has(grupoId)) {
+                        gruposMap.set(grupoId, { grupo: v.grupo ?? { id: 0, nome: 'Sem grupo', ordem: 0 }, veiculos: [] });
+                    }
+                    gruposMap.get(grupoId).veiculos.push(v);
+                });
+
+                const gruposOrdenados = Array.from(gruposMap.values()).sort((a, b) => {
+                    const oa = Number(a.grupo?.ordem ?? 0);
+                    const ob = Number(b.grupo?.ordem ?? 0);
+                    return ob - oa; // melhores primeiro
+                });
+
+                gruposOrdenados.forEach(item => {
+                    const veiculos = item.veiculos ?? [];
+                    const existeElegivel = veiculos.some(v => !!v.elegivel_upgrade);
+                    const labelPrefix = existeElegivel ? '\u2B06 ' : '\u2B07 ';
+                    const labelSuffix = existeElegivel ? '(upgrade)' : '(downgrade bloqueado)';
+
+                    const optGroup = document.createElement('optgroup');
+                    optGroup.label = `${labelPrefix}${item.grupo?.nome ?? 'Grupo'} ${labelSuffix}`;
+
+                    veiculos.forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.id;
+                        opt.textContent = (v.nome ?? 'Veiculo') + (v.placa ? ' - ' + v.placa : '');
+                        if (v.elegivel_upgrade) {
+                            opt.dataset.upgrade = '1';
+                        } else {
+                            opt.disabled = true;
+                            opt.textContent += ' (inferior)';
+                        }
+                        optGroup.appendChild(opt);
+                    });
+
+                    veiculoSelect.appendChild(optGroup);
+                });
+
+                return;
+
+                veiculoSelect.innerHTML = '<option value="" disabled selected>Selecione veiculo de upgrade</option>';
+                (data.grupos_upgrade ?? []).forEach(item => {
+                    const optGroup = document.createElement('optgroup');
+                    optGroup.label = '\u2B06 ' + item.grupo.nome + ' (upgrade)';
+                    (item.veiculos ?? []).forEach(v => {
+                        const opt = document.createElement('option');
+                        opt.value = v.id;
+                        opt.textContent = v.nome + (v.placa ? ' — ' + v.placa : '');
+                        opt.dataset.upgrade = '1';
+                        optGroup.appendChild(opt);
+                    });
+                    veiculoSelect.appendChild(optGroup);
+                });
+            })
+            .catch(() => { /* silencioso — funciona sem upgrade */ });
+    })();
 
 })();
 </script>

@@ -64,4 +64,15 @@ class Opcional extends Model
         return $this->belongsToMany(Reserva::class, 'reservas_opcionais', 'opcional_id', 'reserva_id')
             ->withPivot('quantidade', 'preco_total');
     }
+
+      protected static function boot()
+    {
+        parent::boot();
+
+        static::deleting(function ($opcional) {
+            $opcional->gruposFrota()->detach();
+            $opcional->gruposVeiculos()->detach();
+            $opcional->reservas()->detach();
+        });
+    }
 }

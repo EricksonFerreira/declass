@@ -57,6 +57,11 @@ class OrdemServico extends Model
         return $this->hasMany(OrdemServicoItem::class, 'ordem_servico_id')->orderBy('sort_order')->orderBy('id');
     }
 
+    public function anexos(): HasMany
+    {
+        return $this->hasMany(OrdemServicoAnexo::class, 'ordem_servico_id')->orderByDesc('id');
+    }
+
     public function scopeAbertasOuEmAndamento($query)
     {
         return $query->whereIn('status', [self::STATUS_ABERTA, self::STATUS_EM_ANDAMENTO]);

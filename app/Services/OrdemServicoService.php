@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\OrdemServico;
+use App\Models\OrdemServicoAnexo;
 use App\Models\OrdemServicoItem;
 use App\Models\VeiculoDanos;
 use Illuminate\Support\Facades\Auth;
@@ -81,7 +82,14 @@ class OrdemServicoService
             }
 
             if ($order === 0) {
-                throw new \InvalidArgumentException('Inclua ao menos uma avaria ou um serviço descrito.');
+                // OS nao precisa obrigatoriamente estar vinculada a avarias.
+                // Se nenhum item foi informado, cria um item "livre" padrao.
+                OrdemServicoItem::create([
+                    'ordem_servico_id' => $os->id,
+                    'veiculo_dano_id' => null,
+                    'descricao_servico' => 'Servico a definir',
+                    'sort_order' => $order++,
+                ]);
             }
 
             return $os->fresh(['itens']);
@@ -130,14 +138,15 @@ class OrdemServicoService
 
     /**
      * @param  array<int, string>  $resultadoPorItemId  [ item_id => texto ]
+     * @param  array<int, array{path:string, original_name?:string|null, mime?:string|null, size_bytes?:int|null, user_id?:int|null}>  $anexosMeta
      */
-    public function concluir(OrdemServico $os, string $relatorioGeral, array $resultadoPorItemId): void
+    public function concluir(OrdemServico $os, string $relatorioGeral, array $resultadoPorItemId, array $anexosMeta = []): void
     {
         if (! $os->podeConcluir()) {
             throw new \InvalidArgumentException('Esta OS não pode ser concluída.');
         }
 
-        DB::transaction(function () use ($os, $relatorioGeral, $resultadoPorItemId) {
+        DB::transaction(function () use ($os, $relatorioGeral, $resultadoPorItemId, $anexosMeta) {
             $os->load('itens.veiculoDano');
 
             foreach ($os->itens as $item) {
@@ -167,6 +176,22 @@ class OrdemServicoService
                 'user_id_encerramento' => Auth::id(),
                 'data_conclusao' => now(),
             ]);
+
+            foreach ($anexosMeta as $meta) {
+                $path = trim((string) ($meta['path'] ?? ''));
+                if ($path === '') {
+                    continue;
+                }
+
+                OrdemServicoAnexo::create([
+                    'ordem_servico_id' => $os->id,
+                    'path' => $path,
+                    'original_name' => $meta['original_name'] ?? null,
+                    'mime' => $meta['mime'] ?? null,
+                    'size_bytes' => $meta['size_bytes'] ?? null,
+                    'user_id' => $meta['user_id'] ?? Auth::id(),
+                ]);
+            }
         });
     }
 }

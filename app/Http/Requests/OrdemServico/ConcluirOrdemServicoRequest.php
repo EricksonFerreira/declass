@@ -17,6 +17,8 @@ class ConcluirOrdemServicoRequest extends FormRequest
             'relatorio_geral' => 'required|string|min:3|max:20000',
             'resultados' => 'nullable|array',
             'resultados.*' => 'nullable|string|max:20000',
+            'anexos' => 'nullable|array',
+            'anexos.*' => 'file|max:10240|mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx,txt',
         ];
     }
 }

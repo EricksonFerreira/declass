@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+        if (Schema::hasTable('tempo_entre_entacaos')) { return; }
         Schema::create('tempo_entre_entacaos', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->nullable();
             $table->timestamps();
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -23,6 +26,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('tempo_entre_entacaos');
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('tipo_usuarios')) {
             Schema::create('tipo_usuarios', function (Blueprint $table) {
                 $table->id();
@@ -19,8 +20,9 @@ return new class extends Migration
                 $table->string('ativo', 1)->default('S');
                 $table->unsignedBigInteger('empresa_id')->nullable()->index();
                 $table->timestamps();
-            });
+    });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -28,6 +30,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('tipo_usuarios');
+        Schema::enableForeignKeyConstraints();
     }
 };

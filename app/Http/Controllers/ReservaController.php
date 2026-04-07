@@ -10,10 +10,15 @@ use App\Http\Requests\Reserva\AdicionarDanoVeiculoRequest;
 use App\Http\Requests\Reserva\AssinarContratoRequest;
 use App\Http\Requests\Reserva\CriarContratoCheckInRequest;
 use App\Http\Requests\Reserva\FinalizarCheckoutVistoriaRequest;
+use App\Http\Requests\Calcao\AutorizarCalcaoRequest;
+use App\Http\Requests\Calcao\CapturarCalcaoRequest;
 use App\Http\Requests\Reserva\StoreReservaRequest;
 use App\Http\Requests\Reserva\UpdateReservaRequest;
+use App\Models\Calcao;
 use App\Models\ContratoCheckout;
 use App\Models\Transacao;
+use App\Services\CalcaoService;
+use App\Services\UpgradeVeiculoService;
 use App\Services\BreadcrumbService;
 use App\Services\CategoriaDanoService;
 use App\Services\ClienteStripeService;
@@ -44,7 +49,9 @@ use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\ValidationException;
 
 class ReservaController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -53,6 +60,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     protected $reservaService;
     protected $breadcrumbService;
+    protected UpgradeVeiculoService $upgradeVeiculoService;
+    protected CalcaoService $calcaoService;
     protected $userService;
     protected $veiculoService;
     protected $estacaoService;
@@ -96,7 +105,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         RegraService $regraService,
         PaisService $paisService,
         NfseService $nfseService,
-        StatusReservaService $statusReservaService
+        StatusReservaService $statusReservaService,
+        UpgradeVeiculoService $upgradeVeiculoService,
+        CalcaoService $calcaoService
     ) {
         $this->titulo = "Reservas";
         $this->nomeFiltro = 'reserva';
@@ -122,6 +133,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $this->paisService = $paisService;
         $this->nfseService = $nfseService;
         $this->statusReservaService = $statusReservaService;
+        $this->upgradeVeiculoService = $upgradeVeiculoService;
+        $this->calcaoService = $calcaoService;
     }
 
     public function index()
@@ -281,6 +294,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'transacoes' => function ($query) {
                 $query->with(['user', 'pagoPor'])->orderByDesc('id');
             },
+            'contratoCheckin.grupoFrotaOriginal',
+            'contratoCheckin.veiculo',
+            'contratoCheckin.usuarioUpgrade',
+            'calcao',
+            'multas' => fn ($q) => $q->orderByDesc('id')->take(5),
         ]);
 
         return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo'));
@@ -330,14 +348,6 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     {
         $tituloFormulario = 'Cadastro de Reservas';
         $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto']);
-        $reserva->opcionais = $reserva->opcionais->map(function ($opcional) {
-            return [
-                'id' => $opcional->id,
-                'nome' => $opcional->nome,
-                'preco_total' => $opcional->pivot->preco_total,
-                'quantidade' => $opcional->pivot->quantidade
-            ];
-        });
 
         $status = [
             'S' => 'Ativo',
@@ -1482,7 +1492,32 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $dados['reserva_id'] = $reserva_id;
 
         try{
-            $this->reservaService->adicionaLog($reserva_id,Auth::id(),json_encode(['acao' => 'Contrato de check-in criado']));
+            // Salva as fotos do check-in (passo 2) no storage e registra os paths no contrato.
+            $dir = 'checkin/reserva_' . (int) $reserva_id;
+            $map = [
+                'foto_direita' => 'foto_direita_path',
+                'foto_esquerda' => 'foto_esquerda_path',
+                'foto_frente' => 'foto_frente_path',
+                'foto_tras' => 'foto_tras_path',
+                'foto_velocimetro' => 'foto_velocimetro_path',
+                'foto_combustivel' => 'foto_combustivel_path',
+            ];
+
+            foreach ($map as $input => $col) {
+                if ($request->hasFile($input)) {
+                    $path = $request->file($input)->storePublicly($dir, 'public');
+                    $dados[$col] = $path;
+                }
+            }
+
+            // Detecta e registra upgrade de categoria automaticamente
+            $this->resolverDadosUpgrade($dados, (int) $reserva_id);
+
+            $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
+                'acao'              => 'Contrato de check-in criado',
+                'houve_upgrade'     => $dados['houve_upgrade_categoria'] ?? false,
+                'motivo_upgrade'    => $dados['motivo_upgrade'] ?? null,
+            ]));
             $contrato = $this->contratoCheckinService->create($dados);
             return response()->json($contrato);
 
@@ -1522,5 +1557,389 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     }
     private function convertBrCasoValorSejaNulo($valor){
         return !isset($valor) || is_null($valor) ? '<br>' : $valor;
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // FEATURE 1: Upgrade de categoria no check-in
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * API: verifica disponibilidade na categoria original e retorna
+     * veículos elegíveis para upgrade, se necessário.
+     */
+    public function checkinStatusUpgrade(Request $request, $reserva_id)
+    {
+        $reserva = $this->reservaService->getById($reserva_id, ['grupoFrota', 'modelos']);
+
+        $temDisponibilidade = $this->upgradeVeiculoService->categoriaOriginalTemDisponibilidade($reserva);
+
+        $payload = [
+            'tem_disponibilidade_categoria_original' => $temDisponibilidade,
+            'grupo_original' => [
+                'id'   => $reserva->grupoFrota?->id,
+                'nome' => $reserva->grupoFrota?->nome,
+            ],
+        ];
+
+        if (!$temDisponibilidade) {
+            $grupos = $this->upgradeVeiculoService->veiculosDisponiveisParaUpgrade($reserva);
+            $payload['grupos_upgrade'] = collect($grupos)->map(fn ($item) => [
+                'grupo' => [
+                    'id'    => $item['grupo']->id,
+                    'nome'  => $item['grupo']->nome,
+                    'ordem' => $item['grupo']->ordem,
+                ],
+                'veiculos' => $item['veiculos']->map(fn ($v) => [
+                    'id'   => $v->id,
+                    'nome' => $v->nome,
+                    'placa' => $v->placa_licenca,
+                ])->values(),
+            ])->values();
+
+            $todos = $this->upgradeVeiculoService->veiculosDisponiveisNoPeriodo($reserva);
+            $payload['veiculos_periodo'] = $todos->map(function ($v) use ($reserva) {
+                $grupo = $v->grupoFrota ?? null;
+                return [
+                    'id'   => $v->id,
+                    'nome' => $v->nome,
+                    'placa' => $v->placa_licenca,
+                    'grupo' => [
+                        'id'    => $grupo?->id,
+                        'nome'  => $grupo?->nome,
+                        'ordem' => $grupo?->ordem,
+                    ],
+                    'elegivel_upgrade' => $this->upgradeVeiculoService->veiculoElegivelParaUpgrade($v, $reserva),
+                ];
+            })->values();
+        }
+
+        return response()->json($payload);
+    }
+
+    /**
+     * Modifica criarContratoCheckIn para registrar upgrade quando detectado.
+     * Lógica extra injetada no método existente via método auxiliar.
+     */
+    private function resolverDadosUpgrade(array &$dados, int $reservaId): void
+    {
+        $reserva = $this->reservaService->getById($reservaId, ['grupoFrota']);
+        if (!$reserva || !$reserva->grupo_frota_id) {
+            return;
+        }
+
+        $veiculoId = (int) ($dados['veiculo_id'] ?? 0);
+        if (!$veiculoId) {
+            return;
+        }
+
+        $veiculo = $this->veiculoService->getById($veiculoId);
+        if (!$veiculo) {
+            return;
+        }
+
+        // Registra grupo original sempre
+        $dados['grupo_frota_original_id'] = $reserva->grupo_frota_id;
+
+        // Registra veiculo previsto, se existir na reserva
+        if (!empty($reserva->veiculo_id)) {
+            $dados['veiculo_previsto_id'] = (int) $reserva->veiculo_id;
+        }
+
+        // Blindagem: veiculo deve estar na estacao de retirada (quando aplicavel)
+        if (!empty($reserva->estacao_retirada_id) && !empty($veiculo->local_disponibilidade)) {
+            if ((int) $veiculo->local_disponibilidade !== (int) $reserva->estacao_retirada_id) {
+                throw ValidationException::withMessages([
+                    'veiculo_id' => 'Veiculo selecionado nao esta disponivel na estacao de retirada desta reserva.',
+                ]);
+            }
+        }
+
+        // Mesmo grupo: sem upgrade
+        if ((int) $veiculo->grupo_frota_id === (int) $reserva->grupo_frota_id) {
+            return;
+        }
+
+        // Regras de upgrade/downgrade
+        // Diferente do grupo original: precisa ser upgrade (nunca downgrade)
+        $ehUpgrade = $this->upgradeVeiculoService->veiculoElegivelParaUpgrade($veiculo, $reserva);
+        if (!$ehUpgrade) {
+            throw ValidationException::withMessages([
+                'veiculo_id' => 'Nao e permitido selecionar veiculo de categoria inferior a reservada (downgrade bloqueado).',
+            ]);
+        }
+
+        // Upgrade so e permitido quando nao ha disponibilidade na categoria original
+        if ($this->upgradeVeiculoService->categoriaOriginalTemDisponibilidade($reserva)) {
+            throw ValidationException::withMessages([
+                'veiculo_id' => 'Upgrade permitido apenas quando nao ha veiculo disponivel na categoria original.',
+            ]);
+        }
+
+        $motivo = trim((string) ($dados['motivo_upgrade'] ?? ''));
+
+        $dados['houve_upgrade_categoria'] = true;
+        $dados['motivo_upgrade']          = $motivo !== '' ? $motivo : 'Indisponibilidade na categoria original';
+        $dados['usuario_upgrade_id']      = Auth::id();
+        $dados['data_hora_upgrade']       = now();
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // FEATURE 2: Editar reserva no show
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * Retorna os dados da reserva + opcionais em JSON para edição inline no show.
+     */
+    public function dadosParaEdicaoNoShow(Request $request, $id)
+    {
+        $this->authorize('reserva.editar_no_show');
+
+        $reserva = $this->reservaService->getById($id, ['opcionais', 'grupoFrota', 'estacaoRetirada', 'estacaoDevolucao']);
+        if (!$reserva) {
+            return response()->json(['error' => 'Reserva nao encontrada.'], 404);
+        }
+
+        $estacoes     = $this->estacaoService->getAllAtivos();
+        $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
+        $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
+
+        return response()->json([
+            'reserva'        => $reserva->only([
+                'id', 'data_inicio', 'data_fim', 'estacao_retirada_id', 'estacao_devolucao_id',
+                'grupo_frota_id', 'modelo_id', 'observacoes',
+                'tarifa_base', 'valor_total_final', 'quantidade_dias',
+            ]),
+            'opcionais_ids'  => $reserva->opcionais->pluck('id')->toArray(),
+            'opcionais_pivot' => $reserva->opcionais->map(fn ($o) => [
+                'id'          => $o->id,
+                'nome'        => $o->nome,
+                'quantidade'  => $o->pivot->quantidade,
+                'preco_total' => $o->pivot->preco_total,
+            ]),
+            'estacoes'       => $estacoes,
+            'grupos_veiculo' => $gruposVeiculo,
+            'tipos_opcionais' => $tiposOpcionais,
+        ]);
+    }
+
+    /**
+     * Atualiza datas, estações, observações e opcionais da reserva via show.
+     */
+    public function atualizarNoShow(Request $request, $id)
+    {
+        $this->authorize('reserva.editar_no_show');
+
+        $reserva = $this->reservaService->getById($id, ['opcionais']);
+        if (!$reserva) {
+            return response()->json(['error' => 'Reserva nao encontrada.'], 404);
+        }
+
+        // Campos editáveis bloqueados após certos status
+        $statusBloqueados = [3, 4, 5]; // cancelada, em andamento, concluída
+        if (in_array((int) $reserva->status_reserva_id, $statusBloqueados, true)) {
+            return response()->json([
+                'error' => 'Reserva no status atual nao pode ser editada.',
+            ], 422);
+        }
+
+        $request->validate([
+            'data_inicio'            => 'nullable|date',
+            'data_fim'               => 'nullable|date|after_or_equal:data_inicio',
+            'estacao_retirada_id'    => 'nullable|integer|exists:estacoes,id',
+            'estacao_devolucao_id'   => 'nullable|integer|exists:estacoes,id',
+            'observacoes'            => 'nullable|string|max:1000',
+            'opcionais'              => 'nullable|array',
+            'opcionais.*.id'         => 'required|integer|exists:opcionais,id',
+            'opcionais.*.quantidade' => 'required|integer|min:1',
+            'opcionais.*.preco_total' => 'required|numeric|min:0',
+        ]);
+
+        $camposAntes = $reserva->only([
+            'data_inicio', 'data_fim', 'estacao_retirada_id', 'estacao_devolucao_id', 'observacoes',
+        ]);
+
+        $dados = $request->only([
+            'data_inicio', 'data_fim', 'estacao_retirada_id', 'estacao_devolucao_id', 'observacoes',
+        ]);
+
+        $dados = array_filter($dados, fn ($v) => $v !== null);
+        $reserva->update($dados);
+
+        // Atualiza opcionais se enviados
+        if ($request->has('opcionais')) {
+            $this->authorize('reserva.gerenciar_opcionais');
+            $sync = [];
+            foreach ($request->input('opcionais', []) as $opc) {
+                $sync[$opc['id']] = [
+                    'quantidade'  => $opc['quantidade'],
+                    'preco_total' => $opc['preco_total'],
+                ];
+            }
+            $reserva->opcionais()->sync($sync);
+        }
+
+        $this->reservaService->adicionaLog($id, Auth::id(), json_encode([
+            'acao'   => 'Edicao no show',
+            'antes'  => $camposAntes,
+            'depois' => $dados,
+        ]));
+
+        return response()->json(['success' => true, 'message' => 'Reserva atualizada com sucesso.']);
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // FEATURE 4: Calção no cartão (Stripe)
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * Exibe a tela de calção após assinatura do contrato.
+     */
+    public function calcaoCheckin(Request $request, $reserva_id)
+    {
+        $this->authorize('calcao.autorizar');
+
+        $reserva = $this->reservaService->getById($reserva_id, ['contratoCheckin', 'grupoFrota', 'modelos', 'usuario']);
+        if (!$reserva || !$reserva->contratoCheckin || $reserva->contratoCheckin->assinado !== 'S') {
+            return redirect()->route('reserva.show', $reserva_id)
+                ->with('error', 'O contrato de check-in deve ser assinado antes de registrar o calcao.');
+        }
+
+        $calcaoExistente = $reserva->calcao;
+        $calculo         = $this->calcaoService->calcularValor($reserva);
+
+        $empresa       = $this->gatewayEmpresaConfigService->empresaAtual();
+        $stripePublicKey = $empresa?->stripe_public_key ?? '';
+        $metodosPagamento = [];
+        $user = $reserva->usuario;
+        if ($empresa && !empty($user?->stripe_id) && $empresa->stripe_secret) {
+            $metodosPagamento = $this->clienteStripeService->getPaymentMethods(
+                $user->stripe_id,
+                $empresa->stripe_secret
+            );
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Reservas', route('reserva.index')),
+            new BreadCrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
+            new BreadCrumbItem('Calcao'),
+        ]);
+
+        return view('reserva.calcao', compact(
+            'reserva', 'calcaoExistente', 'calculo',
+            'stripePublicKey', 'metodosPagamento', 'breadcrumb'
+        ))->with('titulo', 'Calcao — Reserva Nº ' . $reserva->id);
+    }
+
+    /**
+     * Cria pré-autorização no Stripe e persiste o calção.
+     */
+    public function autorizarCalcao(AutorizarCalcaoRequest $request, $reserva_id)
+    {
+        $this->authorize('calcao.autorizar');
+
+        $reserva = $this->reservaService->getById($reserva_id, ['contratoCheckin', 'usuario']);
+        if (!$reserva || !$reserva->contratoCheckin) {
+            return response()->json(['error' => 'Contrato de check-in nao encontrado.'], 404);
+        }
+
+        if ($reserva->contratoCheckin->assinado !== 'S') {
+            return response()->json(['error' => 'Contrato deve estar assinado antes do calcao.'], 422);
+        }
+
+        // Idempotência: não duplicar calcão autorizado
+        $calcaoExistente = $reserva->calcao;
+        if ($calcaoExistente && $calcaoExistente->status === Calcao::STATUS_AUTORIZADO) {
+            return response()->json(['success' => true, 'calcao_id' => $calcaoExistente->id, 'message' => 'Calcao ja autorizado.']);
+        }
+
+        try {
+            $calcao = $this->calcaoService->autorizarCalcao(
+                $reserva,
+                $reserva->contratoCheckin,
+                $request->input('payment_method_id'),
+                $request->input('stripe_customer_id')
+            );
+
+            $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
+                'acao'        => 'Calcao autorizado',
+                'calcao_id'   => $calcao->id,
+                'valor'       => $calcao->valor_autorizado,
+                'payment_intent' => $calcao->payment_intent_id,
+            ]));
+
+            return response()->json([
+                'success'   => true,
+                'calcao_id' => $calcao->id,
+                'message'   => 'Calcao autorizado com sucesso. Valor pre-autorizado: R$ ' . number_format((float) $calcao->valor_autorizado, 2, ',', '.'),
+            ]);
+        } catch (\RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        } catch (\Throwable $e) {
+            return response()->json(['error' => 'Falha inesperada ao autorizar calcao.'], 500);
+        }
+    }
+
+    /**
+     * Captura (total ou parcial) o valor do calção no checkout.
+     */
+    public function capturarCalcao(CapturarCalcaoRequest $request, $reserva_id)
+    {
+        $this->authorize('calcao.capturar');
+
+        $reserva = $this->reservaService->getById($reserva_id);
+        $calcao  = $reserva?->calcao;
+
+        if (!$calcao) {
+            return response()->json(['error' => 'Calcao nao encontrado para esta reserva.'], 404);
+        }
+
+        try {
+            $calcao = $this->calcaoService->capturar(
+                $calcao,
+                (float) $request->input('valor_captura'),
+                $request->input('justificativa')
+            );
+
+            $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
+                'acao'           => 'Calcao capturado',
+                'calcao_id'      => $calcao->id,
+                'valor_capturado' => $calcao->valor_capturado,
+            ]));
+
+            return response()->json(['success' => true, 'message' => 'Calcao capturado com sucesso.', 'calcao' => $calcao->only(['id', 'status', 'valor_capturado'])]);
+        } catch (\RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Libera (cancela) o hold do calção no checkout.
+     */
+    public function liberarCalcao(Request $request, $reserva_id)
+    {
+        $this->authorize('calcao.cancelar');
+
+        $request->validate(['observacao' => 'nullable|string|max:500']);
+
+        $reserva = $this->reservaService->getById($reserva_id);
+        $calcao  = $reserva?->calcao;
+
+        if (!$calcao) {
+            return response()->json(['error' => 'Calcao nao encontrado para esta reserva.'], 404);
+        }
+
+        try {
+            $calcao = $this->calcaoService->cancelar($calcao, $request->input('observacao', ''));
+
+            $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
+                'acao'      => 'Calcao liberado (cancelado)',
+                'calcao_id' => $calcao->id,
+            ]));
+
+            return response()->json(['success' => true, 'message' => 'Calcao liberado com sucesso.']);
+        } catch (\RuntimeException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 }

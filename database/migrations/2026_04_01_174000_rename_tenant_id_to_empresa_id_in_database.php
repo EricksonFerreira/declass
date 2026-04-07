@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         $tables = $this->tablesWithColumn('tenant_id');
 
         foreach ($tables as $tableName) {
@@ -24,10 +25,12 @@ return new class extends Migration
                 $table->renameColumn('tenant_id', 'empresa_id');
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         $tables = $this->tablesWithColumn('empresa_id');
 
         foreach ($tables as $tableName) {
@@ -43,6 +46,7 @@ return new class extends Migration
                 $table->renameColumn('empresa_id', 'tenant_id');
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     /**

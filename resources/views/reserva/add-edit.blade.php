@@ -96,10 +96,35 @@
             <div class="card-body">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" id="formularioReserva" rowClass="row" novalidate>
 
-                    <x-section-division-header-form class="reserva-section-title">Estacoes e Datas</x-section-division-header-form>
+                    <div class="col-12 reserva-wizard-top">
+                        <div class="reserva-wizard-steps" role="tablist" aria-label="Passos da reserva">
+                            <button type="button" class="reserva-wizard-step is-active" data-reserva-step-btn="1">
+                                <span class="num">1</span><span class="txt">Datas</span>
+                            </button>
+                            <div class="div"></div>
+                            <button type="button" class="reserva-wizard-step" data-reserva-step-btn="2">
+                                <span class="num">2</span><span class="txt">Veiculo</span>
+                            </button>
+                            <div class="div"></div>
+                            <button type="button" class="reserva-wizard-step" data-reserva-step-btn="3">
+                                <span class="num">3</span><span class="txt">Opcionais</span>
+                            </button>
+                            <div class="div"></div>
+                            <button type="button" class="reserva-wizard-step" data-reserva-step-btn="4">
+                                <span class="num">4</span><span class="txt">Cliente</span>
+                            </button>
+                        </div>
+                        <small class="text-muted d-block mt-2">
+                            Dica: avance pelos passos e finalize em "Cliente" para salvar.
+                        </small>
+                    </div>
+
+                    <div class="col-12" data-reserva-step="1">
+                        <x-section-division-header-form class="reserva-section-title">Estacoes e Datas</x-section-division-header-form>
+                    </div>
 
                     <!-- Estações e Datas -->
-                    <div class="col-md-3">
+                    <div class="col-md-3" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estacao de Retirada"
                                 :options="$estacoes" placeholder="Selecione uma estacao" :selected="old(
@@ -115,7 +140,7 @@
                             </small>
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
                                 id="data_inicio" name="data_inicio" label="Data Retirada"
@@ -124,7 +149,7 @@
                                 min="{{ isset($reserva) ? '' : date('Y-m-d\TH:i') }}" />
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-select id="estacao_devolucao_id" name="estacao_devolucao_id"
                                 label="Estacao de Devolucao" :options="$estacoes" placeholder="Selecione uma estacao"
@@ -137,7 +162,7 @@
                             @endif
                         </div>
                     </div>
-                    <div class="col-md-3">
+                    <div class="col-md-3" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
                                 id="data_fim" name="data_fim" label="Data Devolucao" value="{{ $reserva->data_fim ?? '' }}"
@@ -147,9 +172,11 @@
                     </div>
 
 
-                    <x-section-division-header-form class="reserva-section-title">Veiculo</x-section-division-header-form>
+                    <div class="col-12" data-reserva-step="2">
+                        <x-section-division-header-form class="reserva-section-title">Veiculo</x-section-division-header-form>
+                    </div>
 
-                    <div class="col-md-8">
+                    <div class="col-md-8" data-reserva-step="2">
                         <div class="form-group">
                             <div class="form-group">
                                 <label for="grupo_frota_id">Grupo de Veiculos</label>
@@ -174,7 +201,7 @@
 
                         </div>
                     </div>
-                     <div class="col-md-3">
+                     <div class="col-md-3" data-reserva-step="2">
                         <x-form-input maxlength="7" id="cupom_desconto" name="cupom_desconto" label="Cupom de Desconto"
                             value="{{ $reserva->cupomDesconto->codigo ?? '' }}" class="form-control form-control-sm" />
                     </div>
@@ -185,7 +212,7 @@
                             Pesquisar
                         </a>
                     </div> --}}
-                    <div class="col-md-4 pb-2">
+                    <div class="col-md-4 pb-2" data-reserva-step="2">
                         @if (isset($reserva))
                             <x-form-select name="modelo_id" label="Modelo" :options="$modelos" :selected="old('modelo_id', isset($reserva->modelos) ? $reserva->modelos->id : null)"
                                 id="modelo" onchange="getMarcaESegmento(this.value, $(this).find('option:selected').text())" placeholder="Selecione um modelo"
@@ -200,20 +227,22 @@
                         @endif
                         <small id="modelo_disponibilidade_feedback" class="text-warning d-block mt-1 d-none"></small>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4" data-reserva-step="2">
                         <x-form-input type="text" class="form-control form-control-sm" disabled id="marca"
                             name="marca" label="Marca"
                             value="{{ isset($marcas) && isset($marcas->nome) ? $marcas->nome : '' }}" />
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-4" data-reserva-step="2">
                         <x-form-input type="text" class="form-control form-control-sm" disabled id="segmento"
                             name="segmento" label="Segmento"
                             value="{{ isset($segmentos) && isset($segmentos->nome) ? $segmentos->nome : '' }} " />
                     </div>
 
 
-                    <x-section-division-header-form class="reserva-section-title">Opcionais</x-section-division-header-form>
-                    <div id="opcionais"class="d-flex justify-content-center flex-wrap w-100" style="padding:1em;  background: linear-gradient(
+                    <div class="col-12" data-reserva-step="3">
+                        <x-section-division-header-form class="reserva-section-title">Opcionais</x-section-division-header-form>
+                    </div>
+                    <div id="opcionais" data-reserva-step="3" class="d-flex justify-content-center flex-wrap w-100" style="padding:1em;  background: linear-gradient(
                 90deg,
                 color-mix(in srgb, var(--empresa-cor-primaria, #1e293b) 90%, #000 10%) 0%,
                 color-mix(in srgb, var(--empresa-cor-terciaria, #334155) 90%, #000 10%) 100%
@@ -262,14 +291,16 @@
                             @endforeach
                         @endif
                     </div> --}}
-                    <br>
+                    <br data-reserva-step="3">
 
 
-                    <x-section-division-header-form class="reserva-section-title">Informacoes Pessoais</x-section-division-header-form>
+                    <div class="col-12" data-reserva-step="4">
+                        <x-section-division-header-form class="reserva-section-title">Informacoes Pessoais</x-section-division-header-form>
+                    </div>
 
 
                     <!-- Identificacoes -->
-                    <div class="col-md-7">
+                    <div class="col-md-7" data-reserva-step="4">
                         <div class="form-group">
                             <x-form-select name="user_id" label="Usuario" :options="$users" id="user_id"
                                 placeholder="Selecione um usuario" :selected="old('user_id', isset($reserva->user_id) ? $reserva->user_id : null)"
@@ -282,17 +313,7 @@
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="btnAtualizarUsuarios">
                                     <i class="fas fa-sync-alt mr-1"></i>Atualizar lista
                                 </button>
-                                @if (auth()->user()?->isAdministrador() || auth()->user()?->hasPermissao('usuario.salvarNovaSenha'))
-                                    <button type="button" class="btn btn-outline-warning btn-sm" id="btnResetarSenhaUsuario" disabled>
-                                        <i class="fas fa-key mr-1"></i>Resetar senha de acesso
-                                    </button>
-                                @endif
                             </div>
-                            @if (auth()->user()?->isAdministrador() || auth()->user()?->hasPermissao('usuario.salvarNovaSenha'))
-                                <small class="text-muted d-block mt-2">
-                                    O reset define a senha temporaria <strong>car@12345</strong> e obriga troca no primeiro login.
-                                </small>
-                            @endif
 
                             @if (empty($users))
                                 <small class="text-danger d-block mt-1">
@@ -322,12 +343,21 @@
                     </div>
                 </div> --}}
 
+            <div class="col-12 reserva-wizard-footer">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="reservaWizardPrev">
+                    <i class="fas fa-arrow-left mr-1"></i>Voltar
+                </button>
+                <button type="button" class="btn btn-primary btn-sm" id="reservaWizardNext">
+                    Continuar <i class="fas fa-arrow-right ml-1"></i>
+                </button>
+                <button type="submit" id="btnSalvarReserva"
+                    class="btn btn-success btn-sm reserva-submit-btn d-none"
+                    {{ !$preRequisitosReserva['pode_reservar'] ? 'disabled' : '' }}>
+                    <i class="fas fa-check mr-1"></i>Salvar reserva
+                </button>
+            </div>
+
             <input type="hidden" id="reservaHidden" name="reservaHidden">
-            <button type="submit" id="btnSalvarReserva"
-                class="btn btn-primary btn-sm col-12 reserva-submit-btn"
-                {{ !$preRequisitosReserva['pode_reservar'] ? 'disabled' : '' }}>
-                Reservar
-            </button>
             </x-form>
         </div>
         <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-xs-12 reserva-sidebar ">
@@ -499,13 +529,252 @@
             --reserva-border: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 35%, #dbe3ef 65%);
             --reserva-title: var(--empresa-cor-primaria, #0f172a);
         }
+
+        .reserva-wizard-top {
+            border: 1px solid var(--reserva-border);
+            border-radius: 14px;
+            padding: 12px 12px 10px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+            margin-bottom: 10px;
+        }
+
+        .reserva-wizard-steps {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .reserva-wizard-steps .div {
+            flex: 1 1 20px;
+            height: 2px;
+            background: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 22%, #e5edf7 78%);
+            border-radius: 999px;
+            min-width: 12px;
+        }
+        .reserva-wizard-step {
+            appearance: none;
+            border: 1px solid color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 30%, #dbe3ef 70%);
+            background: #fff;
+            border-radius: 999px;
+            padding: 8px 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+            cursor: pointer;
+            transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease, color .12s ease;
+        }
+        .reserva-wizard-step .num {
+            width: 22px;
+            height: 22px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 12%, #ffffff 88%);
+            color: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 88%, #111827 12%);
+            border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 25%, #dbe3ef 75%);
+        }
+        .reserva-wizard-step.is-active {
+            background: var(--empresa-cor-primaria, #2563eb);
+            border-color: var(--empresa-cor-primaria, #2563eb);
+            color: var(--empresa-cor-primaria-contraste, #fff);
+            box-shadow: 0 10px 22px color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 22%, transparent 78%);
+        }
+        .reserva-wizard-step.is-active .num {
+            background: rgba(255,255,255,.18);
+            color: var(--empresa-cor-primaria-contraste, #fff);
+            border-color: rgba(255,255,255,.24);
+        }
+
+        .reserva-wizard-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 10px 0 0;
+            margin-top: 10px;
+            border-top: 1px dashed color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 28%, #e5edf7 72%);
+        }
+        .reserva-wizard-footer .btn {
+            border-radius: 999px;
+            font-weight: 700;
+        }
+
+        /* ===== Minha Reserva (sidebar) ===== */
+        .minha-reserva-card {
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 22%, #e5edf7 78%);
+            background: #fff;
+            box-shadow: 0 10px 28px rgba(15, 23, 42, 0.08);
+        }
+        .minha-reserva-card__header {
+            padding: 16px 16px 14px;
+            background: linear-gradient(
+                135deg,
+                color-mix(in srgb, var(--empresa-cor-primaria, #1e293b) 86%, #000 14%) 0%,
+                color-mix(in srgb, var(--empresa-cor-terciaria, #334155) 86%, #000 14%) 100%
+            );
+            color: var(--empresa-cor-primaria-contraste, #fff);
+            position: relative;
+        }
+        .minha-reserva-card__header::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+            background-size: 18px 18px;
+            pointer-events: none;
+        }
+        .minha-reserva-card__title {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+        .minha-reserva-card__icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,.14);
+            border: 1px solid rgba(255,255,255,.18);
+            color: var(--empresa-cor-primaria-contraste, #fff);
+            backdrop-filter: blur(8px);
+        }
+        .minha-reserva-card__eyebrow {
+            font-size: 10px;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            opacity: .85;
+            font-weight: 800;
+            margin-bottom: 2px;
+        }
+        .minha-reserva-card__name {
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: -.02em;
+            line-height: 1.15;
+        }
+        .minha-reserva-card__section {
+            padding: 14px 16px 6px;
+        }
+        .minha-reserva-card__section + .minha-reserva-card__section {
+            border-top: 1px solid #eef2f7;
+        }
+        .minha-reserva-card__section-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            font-weight: 900;
+            color: color-mix(in srgb, var(--empresa-cor-primaria, #0f172a) 82%, #0f172a 18%);
+            margin-bottom: 10px;
+        }
+        .minha-reserva-card__section-title i {
+            color: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 70%, #0f172a 30%);
+        }
+        .minha-reserva-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: grid;
+            gap: 8px;
+        }
+        .minha-reserva-list__item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px solid #eef2f7;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        }
+        .minha-reserva-list__label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #0f172a;
+        }
+        .minha-reserva-list__value {
+            font-size: 12px;
+            font-weight: 900;
+            color: #0f172a;
+        }
+        .minha-reserva-list__empty {
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px dashed #e2e8f0;
+            color: #64748b;
+            font-size: 12px;
+            background: #f8fafc;
+        }
+        .minha-reserva-qty {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 8px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 900;
+            border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 18%, #e2e8f0 82%);
+            background: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 10%, #ffffff 90%);
+            color: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 82%, #0f172a 18%);
+        }
+        .minha-reserva-card__total {
+            padding: 14px 16px 16px;
+            border-top: 1px solid #eef2f7;
+            display: flex;
+            gap: 10px;
+            justify-content: space-between;
+            align-items: flex-end;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+        .minha-reserva-card__total-label {
+            font-size: 12px;
+            font-weight: 900;
+            color: #0f172a;
+            text-transform: uppercase;
+            letter-spacing: .12em;
+        }
+        .minha-reserva-card__total-hint {
+            font-size: 12px;
+            color: #64748b;
+            font-weight: 700;
+        }
+        .minha-reserva-card__total-value {
+            font-size: 22px;
+            font-weight: 1000;
+            letter-spacing: -.02em;
+            color: #0f172a;
+            text-align: right;
+        }
+        .minha-reserva-card__total-sub {
+            margin-top: 4px;
+            font-size: 12px;
+            color: #334155;
+            text-align: right;
+            font-weight: 700;
+        }
+        .minha-reserva-card__total-sub .muted {
+            color: #64748b;
+            font-weight: 700;
+        }
         .content-header h1 {
             background: linear-gradient(
                 90deg,
                 color-mix(in srgb, var(--empresa-cor-primaria, #1e293b) 90%, #000 10%) 0%,
                 color-mix(in srgb, var(--empresa-cor-terciaria, #334155) 90%, #000 10%) 100%
             );
-            color: #fff !important;
+            color: var(--empresa-cor-primaria-contraste, #fff) !important;
             border-radius: 10px;
             padding: 8px 12px;
             display: inline-block;
@@ -1133,6 +1402,84 @@
 
         $(document).ready(function() {
 
+            // Wizard/Steps do cadastro de reserva
+            (function initReservaWizard() {
+                const maxStep = 4;
+                const storageKey = 'reservaWizardStep';
+
+                const prevBtn = document.getElementById('reservaWizardPrev');
+                const nextBtn = document.getElementById('reservaWizardNext');
+                const submitBtn = document.getElementById('btnSalvarReserva');
+
+                function getStep() {
+                    const saved = Number(localStorage.getItem(storageKey) || '1');
+                    return Number.isFinite(saved) && saved >= 1 && saved <= maxStep ? saved : 1;
+                }
+
+                function setStep(step, persist = true) {
+                    const s = Math.min(maxStep, Math.max(1, Number(step) || 1));
+
+                    document.querySelectorAll('[data-reserva-step]').forEach(el => {
+                        el.classList.toggle('d-none', Number(el.dataset.reservaStep) !== s);
+                    });
+
+                    document.querySelectorAll('[data-reserva-step-btn]').forEach(btn => {
+                        btn.classList.toggle('is-active', Number(btn.dataset.reservaStepBtn) === s);
+                    });
+
+                    if (prevBtn) prevBtn.disabled = s <= 1;
+                    if (nextBtn) nextBtn.classList.toggle('d-none', s >= maxStep);
+                    if (submitBtn) submitBtn.classList.toggle('d-none', s < maxStep);
+
+                    if (persist) localStorage.setItem(storageKey, String(s));
+
+                    // Evita glitch do bootstrap-select em elementos que estavam ocultos.
+                    try {
+                        $('.js-selectpicker').selectpicker('refresh');
+                    } catch (e) {}
+                }
+
+                function validateStep(step) {
+                    const containers = Array.from(document.querySelectorAll(`[data-reserva-step="${step}"]`));
+                    const fields = [];
+
+                    containers.forEach(c => fields.push(...c.querySelectorAll('input, select, textarea')));
+
+                    const uniqueFields = Array.from(new Set(fields)).filter(f => {
+                        if (!f) return false;
+                        if (f.disabled) return false;
+                        if (f.type === 'hidden') return false;
+                        return !!f.willValidate;
+                    });
+
+                    const invalid = uniqueFields.find(f => !f.checkValidity());
+                    if (invalid) {
+                        invalid.reportValidity();
+                        return false;
+                    }
+
+                    return true;
+                }
+
+                prevBtn?.addEventListener('click', () => setStep(getStep() - 1));
+                nextBtn?.addEventListener('click', () => {
+                    const current = getStep();
+                    if (!validateStep(current)) return;
+                    setStep(current + 1);
+                });
+
+                document.querySelectorAll('[data-reserva-step-btn]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const target = Number(btn.dataset.reservaStepBtn);
+                        const current = getStep();
+                        if (target > current && !validateStep(current)) return;
+                        setStep(target);
+                    });
+                });
+
+                setStep(getStep(), false);
+            })();
+
             // Se for edicao, definir os valores da variavel reserva
             const reserva = {!! $reserva ?? 'null' !!};
             if (reserva) { // se for diferente de nan ou null ou undefined
@@ -1633,7 +1980,7 @@
 
             // Clear the existing optional items
             // $("#opcionais").empty();
-            $('#minhaReserva_opcionals_ul').html('')
+            $('#minhaReserva_opcionals_ul').html('<li class="minha-reserva-list__empty">Selecione opcionais para aparecerem aqui.</li>');
             $("#tarifa_base").empty();
             $("#segmento").val('');
             $("#marca").val('');
@@ -1735,17 +2082,20 @@
                 novaQuantidade = 1;
             }
 
-            const html = ` <li class="d-flex px-3" style="border-bottom: 1px solid #9d9c9c4d;">
-                <div class="col d-flex align-items-center" style="justify-content:left">
-                    <strong>${nome}</strong> <span class="badge badge-secondary"
-                        style="padding:3px;font-size:8px;background:#7f8c8d">${novaQuantidade ? novaQuantidade+'x' : '0x'}</span>
-                </div>
-                <div class="col-md-6 d-flex align-items-center" style="justify-content:right">
-                    ${formatarMoeda(valor)}</div>
+            // Remove placeholder
+            $('#minhaReserva_opcionals_ul .minha-reserva-list__empty').remove();
 
-            </li>`;
+            const html = `
+                <li class="minha-reserva-list__item">
+                    <span class="minha-reserva-list__label">
+                        ${nome}
+                        <span class="minha-reserva-qty">${novaQuantidade ? novaQuantidade + 'x' : '0x'}</span>
+                    </span>
+                    <span class="minha-reserva-list__value">${formatarMoeda(valor)}</span>
+                </li>
+            `;
 
-            $('#minhaReserva_opcionals_ul').append(html);
+            $('#minhaReserva_opcionals_ul').append(html.trim());
 
         }
     </script>

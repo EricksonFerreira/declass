@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -21,10 +22,12 @@ return new class extends Migration
                 $table->longText('site_apresentacao_imagens')->nullable()->after('site_apresentacao_textos');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -41,5 +44,6 @@ return new class extends Migration
                 $table->dropColumn($columns);
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

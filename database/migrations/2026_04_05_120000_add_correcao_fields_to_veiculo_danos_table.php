@@ -8,10 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+        if (!Schema::hasTable('veiculo_danos')) {
+            return;
+        }
         Schema::table('veiculo_danos', function (Blueprint $table) {
             if (!Schema::hasColumn('veiculo_danos', 'correcao_descricao')) {
                 $table->text('correcao_descricao')->nullable();
-            }
+    }
             if (!Schema::hasColumn('veiculo_danos', 'correcao_data')) {
                 $table->timestamp('correcao_data')->nullable();
             }
@@ -20,12 +24,18 @@ return new class extends Migration
             }
         });
 
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
+        if (!Schema::hasTable('veiculo_danos')) {
+            return;
+        }
         Schema::table('veiculo_danos', function (Blueprint $table) {
             $table->dropColumn(['correcao_descricao', 'correcao_data', 'correcao_user_id']);
-        });
+    });
+        Schema::enableForeignKeyConstraints();
     }
 };

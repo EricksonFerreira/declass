@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('nfse')) {
             return;
         }
@@ -30,10 +31,13 @@ return new class extends Migration
             $table->timestamps();
             $table->index(['empresa_id', 'reserva_id']);
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('nfse');
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -137,6 +137,30 @@
                         <p>{{ $ordem_servico->relatorio_conclusao }}</p>
                     </div>
                 @endif
+
+                @if($ordem_servico->anexos->isNotEmpty())
+                    <div class="os-note-box">
+                        <h3>Anexos</h3>
+                        <ul class="os-attachments mb-0">
+                            @foreach($ordem_servico->anexos as $anexo)
+                                @php
+                                    $nome = $anexo->original_name ?: basename((string) $anexo->path);
+                                @endphp
+                                <li class="os-attachment">
+                                    <a href="{{ asset('storage/' . $anexo->path) }}" target="_blank" rel="noopener noreferrer">
+                                        <i class="fas fa-paperclip mr-1"></i>{{ $nome }}
+                                    </a>
+                                    <small class="text-muted d-block">
+                                        {{ $anexo->created_at?->format('d/m/Y H:i') ?? '' }}
+                                        @if($anexo->usuario)
+                                            &middot; {{ $anexo->usuario->name }}
+                                        @endif
+                                    </small>
+                                </li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
             </div>
 
             <div class="rs-card">
@@ -219,7 +243,7 @@
                         <h2>Concluir OS</h2>
                     </div>
 
-                    <form method="post" action="{{ route('ordem-servico.concluir', $ordem_servico) }}">
+                    <form method="post" action="{{ route('ordem-servico.concluir', $ordem_servico) }}" enctype="multipart/form-data">
                         @csrf
                         <div class="form-group">
                             <label for="relatorio_geral">Relatorio geral</label>
@@ -250,6 +274,20 @@
                                 @endforeach
                             </div>
                         @endif
+
+                        <div class="form-group">
+                            <label for="anexos">Anexos (opcional)</label>
+                            <input type="file"
+                                name="anexos[]"
+                                id="anexos"
+                                class="form-control form-control-sm @error('anexos.*') is-invalid @enderror"
+                                multiple
+                                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt">
+                            @error('anexos.*')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                            <small class="text-muted d-block mt-1">Voce pode anexar varios arquivos (max 10MB cada).</small>
+                        </div>
 
                         <button type="submit" class="rs-btn rs-btn--success rs-btn--full">
                             <i class="fas fa-check"></i>Concluir e registrar correcoes
@@ -504,6 +542,17 @@
         margin: 0;
         color: #475569;
         white-space: pre-wrap;
+    }
+
+    .os-attachments {
+        list-style: none;
+        padding-left: 0;
+    }
+
+    .os-attachment + .os-attachment {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #e5e7eb;
     }
 
     .rs-btn {

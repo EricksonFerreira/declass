@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+        if (Schema::hasTable('cupom_descontos')) { return; }
         Schema::create('cupom_descontos', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->nullable();
             $table->timestamps();
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -23,6 +26,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('cupom_descontos');
+        Schema::enableForeignKeyConstraints();
     }
 };

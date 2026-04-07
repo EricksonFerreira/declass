@@ -34,6 +34,15 @@
                 </a>
             @endif
 
+            @can('reserva.editar_no_show')
+                @if(!$reserva->podeEditar() && !in_array((int)$reserva->status_reserva_id, [3,4,5]))
+                    <a href="{{ route('reserva.edit', $reserva->id) }}" class="action-pill action-pill--primary">
+                        <i class="fas fa-pen"></i>
+                        <span>Editar reserva</span>
+                    </a>
+                @endif
+            @endcan
+
             @if($reserva->podeEfetuarPagamento())
                 <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="action-pill action-pill--accent">
                     <i class="fas fa-credit-card"></i>
@@ -67,6 +76,19 @@
                         @endif
                     </div>
                 </div>
+            @endif
+
+            {{-- Calção: disponível após contrato assinado --}}
+            @if($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S')
+                @can('calcao.autorizar')
+                @php $calcaoAtual = $reserva->calcao ?? null; @endphp
+                @if(!$calcaoAtual || $calcaoAtual->status === 'falhou')
+                <a href="{{ route('reserva.calcao', $reserva->id) }}" class="action-pill" style="background:linear-gradient(135deg,#6f42c1,#9061f9)">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Calcao no cartao</span>
+                </a>
+                @endif
+                @endcan
             @endif
 
             @if($reserva->podeFazerCancelamento())

@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -29,10 +30,12 @@ return new class extends Migration
                 $table->string('cor_terciaria', 7)->nullable()->after('cor_secundaria');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -51,5 +54,6 @@ return new class extends Migration
                 $table->dropColumn($existing);
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

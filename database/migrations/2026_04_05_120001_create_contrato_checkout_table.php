@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('contrato_checkout', function (Blueprint $table) {
             $table->id();
             $table->unsignedInteger('reserva_id');
@@ -22,11 +23,14 @@ return new class extends Migration
             $table->timestamps();
 
             $table->unique('reserva_id');
-        });
+    });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('contrato_checkout');
+        Schema::enableForeignKeyConstraints();
     }
 };

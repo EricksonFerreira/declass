@@ -17,7 +17,16 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('{id}/checkout', [ReservaController::class, 'checkoutVistoria'])->name('checkout.vistoria');
     Route::post('{id}/checkout/finalizar', [ReservaController::class, 'finalizarCheckoutVistoria'])->name('checkout.finalizar');
     Route::get('{id}/checkin/veiculos-disponiveis', [ReservaController::class, 'veiculosDisponiveisCheckin'])->name('checkin.veiculosDisponiveis');
+    Route::get('{id}/checkin/status-upgrade', [ReservaController::class, 'checkinStatusUpgrade'])->name('checkin.statusUpgrade');
     Route::get('{id}/checkin', [ReservaController::class, 'checkin'])->name('checkin');
+    // Feature 2: Editar no show
+    Route::get('{id}/dados-edicao', [ReservaController::class, 'dadosParaEdicaoNoShow'])->name('dadosEdicaoNoShow');
+    Route::post('{id}/atualizar-no-show', [ReservaController::class, 'atualizarNoShow'])->name('atualizarNoShow');
+    // Feature 4: Calção
+    Route::get('{id}/calcao', [ReservaController::class, 'calcaoCheckin'])->name('calcao');
+    Route::post('{id}/calcao/autorizar', [ReservaController::class, 'autorizarCalcao'])->name('calcao.autorizar');
+    Route::post('{id}/calcao/capturar', [ReservaController::class, 'capturarCalcao'])->name('calcao.capturar');
+    Route::post('{id}/calcao/liberar', [ReservaController::class, 'liberarCalcao'])->name('calcao.liberar');
     Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');
     Route::post('{id}/adicionarDanoVeiculo', [ReservaController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');
     Route::get('{id}/assinarContratoCheckin', [ReservaController::class, 'assinarContratoCheckin'])->name('assinarContratoCheckin');

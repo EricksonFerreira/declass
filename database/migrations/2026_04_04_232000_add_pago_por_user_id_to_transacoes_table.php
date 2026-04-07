@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('transacoes') || Schema::hasColumn('transacoes', 'pago_por_user_id')) {
             return;
         }
@@ -15,10 +16,12 @@ return new class extends Migration
         Schema::table('transacoes', function (Blueprint $table) {
             $table->unsignedBigInteger('pago_por_user_id')->nullable()->after('user_id');
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('transacoes') || !Schema::hasColumn('transacoes', 'pago_por_user_id')) {
             return;
         }
@@ -26,5 +29,6 @@ return new class extends Migration
         Schema::table('transacoes', function (Blueprint $table) {
             $table->dropColumn('pago_por_user_id');
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -19,10 +20,12 @@ return new class extends Migration
                     ->after('reserva_selecionar_modelo');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -32,5 +35,6 @@ return new class extends Migration
                 $table->dropColumn('reserva_atraso_max_minutos');
             }
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

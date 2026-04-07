@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('sessions')) {
             return;
         }
@@ -23,6 +24,7 @@ return new class extends Migration
             $table->longText('payload');
             $table->integer('last_activity')->index();
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -30,6 +32,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('sessions');
+        Schema::enableForeignKeyConstraints();
     }
 };

@@ -11,11 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('tiop_valor_caracteristic_a_frotas', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->nullable();
             $table->timestamps();
-        });
+    });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -23,6 +25,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('tiop_valor_caracteristic_a_frotas');
+        Schema::enableForeignKeyConstraints();
     }
 };

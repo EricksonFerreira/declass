@@ -8,6 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas') || Schema::hasColumn('empresas', 'nfse_ultima_importacao_em')) {
             return;
         }
@@ -15,10 +16,12 @@ return new class extends Migration
         Schema::table('empresas', function (Blueprint $table) {
             $table->timestamp('nfse_ultima_importacao_em')->nullable()->after('nfse_tomador_bairro_padrao');
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'nfse_ultima_importacao_em')) {
             return;
         }
@@ -26,5 +29,6 @@ return new class extends Migration
         Schema::table('empresas', function (Blueprint $table) {
             $table->dropColumn('nfse_ultima_importacao_em');
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

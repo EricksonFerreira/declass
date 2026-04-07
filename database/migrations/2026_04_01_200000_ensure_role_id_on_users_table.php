@@ -9,13 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('users')) {
             return;
         }
 
         if (!Schema::hasColumn('users', 'role_id')) {
             Schema::table('users', function (Blueprint $table) {
-                $table->unsignedBigInteger('role_id')->nullable()->after('numero_identificacao');
+                $table->unsignedBigInteger('role_id')->nullable();
                 $table->index('role_id', 'users_role_id_index');
             });
         }
@@ -29,10 +30,12 @@ return new class extends Migration
                   AND tipo_usuario_id <> ''
             ");
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('users') || !Schema::hasColumn('users', 'role_id')) {
             return;
         }
@@ -45,10 +48,15 @@ return new class extends Migration
             ");
         }
 
+        if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
         Schema::table('users', function (Blueprint $table) {
-            $table->dropIndex('users_role_id_index');
+            $indexes = collect(Schema::getIndexes('users'))->pluck('name')->toArray();
+            if (in_array('users_role_id_index', $indexes)) {
+                $table->dropIndex('users_role_id_index');
+            }
             $table->dropColumn('role_id');
         });
+        Schema::enableForeignKeyConstraints();
     }
 };
 

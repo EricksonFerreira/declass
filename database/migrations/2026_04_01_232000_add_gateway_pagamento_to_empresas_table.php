@@ -9,6 +9,7 @@ return new class extends Migration
 {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
         }
@@ -22,10 +23,12 @@ return new class extends Migration
         DB::table('empresas')
             ->whereNull('gateway_pagamento')
             ->update(['gateway_pagamento' => 'stripe']);
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'gateway_pagamento')) {
             return;
         }
@@ -33,5 +36,6 @@ return new class extends Migration
         Schema::table('empresas', function (Blueprint $table) {
             $table->dropColumn('gateway_pagamento');
         });
+        Schema::enableForeignKeyConstraints();
     }
 };

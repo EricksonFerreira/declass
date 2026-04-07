@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id');
@@ -24,7 +25,8 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['user_id', 'stripe_status']);
-        });
+    });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -32,6 +34,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('subscriptions');
+        Schema::enableForeignKeyConstraints();
     }
 };

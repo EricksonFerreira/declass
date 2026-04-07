@@ -508,10 +508,232 @@
                 @endif
             </div>
 
+            {{-- ── Card: Calção (Feature 4) ── --}}
+            @php $calcao = $reserva->calcao ?? null; @endphp
+            @if($calcao || ($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S'))
+            <div class="rs-card">
+                <div class="rs-card__header">
+                    <i class="fas fa-shield-alt rs-card__icon" style="color:#6f42c1"></i>
+                    <h2>Calcao no Cartao</h2>
+                </div>
+                @if($calcao)
+                    @php
+                        $calcaoBadge = match($calcao->status) {
+                            'autorizado' => '#28a745', 'capturado' => '#dc3545',
+                            'parcialmente_capturado' => '#fd7e14', 'cancelado' => '#6c757d',
+                            'falhou' => '#dc3545', default => '#17a2b8',
+                        };
+                    @endphp
+                    <div class="rs-info-rows">
+                        <div class="rs-info-row">
+                            <span>Status</span>
+                            <strong style="color:{{ $calcaoBadge }}">{{ $calcao->label_status }}</strong>
+                        </div>
+                        <div class="rs-info-row">
+                            <span>Valor Autorizado</span>
+                            <strong>R$ {{ number_format((float)$calcao->valor_autorizado, 2, ',', '.') }}</strong>
+                        </div>
+                        @if($calcao->valor_capturado)
+                        <div class="rs-info-row">
+                            <span>Valor Capturado</span>
+                            <strong>R$ {{ number_format((float)$calcao->valor_capturado, 2, ',', '.') }}</strong>
+                        </div>
+                        @endif
+                        <div class="rs-info-row">
+                            <span>Regra Aplicada</span>
+                            <strong>{{ $calcao->tipo_regra_aplicada }} / {{ $calcao->origem_regra_aplicada }}</strong>
+                        </div>
+                    </div>
+                    @if($calcao->podeLiberar())
+                    @can('calcao.cancelar')
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="liberarCalcao({{ $calcao->id }})">
+                            <i class="fas fa-unlock mr-1"></i> Liberar Hold (sem cobrar)
+                        </button>
+                    </div>
+                    @endcan
+                    @endif
+                    @if($calcao->podeCapturar())
+                    @can('calcao.capturar')
+                    <div class="mt-1">
+                        <button type="button" class="btn btn-sm btn-outline-danger w-100" data-toggle="modal" data-target="#modalCapturarCalcao">
+                            <i class="fas fa-hand-holding-usd mr-1"></i> Capturar Valor
+                        </button>
+                    </div>
+                    @endcan
+                    @endif
+                @else
+                    @can('calcao.autorizar')
+                    <div class="text-center py-2">
+                        <a href="{{ route('reserva.calcao', $reserva->id) }}" class="btn btn-sm btn-outline-primary w-100">
+                            <i class="fas fa-lock mr-1"></i> Registrar Calcao
+                        </a>
+                    </div>
+                    @endcan
+                @endif
+            </div>
+            @endif
+
+            {{-- ── Card: Upgrade de Categoria (Feature 1) ── --}}
+            @if($reserva->contratoCheckin && $reserva->contratoCheckin->houve_upgrade_categoria)
+            <div class="rs-card" style="border-left:4px solid #fd7e14">
+                <div class="rs-card__header">
+                    <i class="fas fa-arrow-circle-up rs-card__icon" style="color:#fd7e14"></i>
+                    <h2>Upgrade de Categoria</h2>
+                </div>
+                <div class="rs-info-rows">
+                    <div class="rs-info-row">
+                        <span>Categoria Reservada</span>
+                        <strong>{{ $reserva->contratoCheckin->grupoFrotaOriginal?->nome ?? 'Grupo #' . $reserva->contratoCheckin->grupo_frota_original_id }}</strong>
+                    </div>
+                    <div class="rs-info-row">
+                        <span>Veiculo Entregue</span>
+                        <strong>{{ $reserva->contratoCheckin->veiculo?->nome ?? '—' }}</strong>
+                    </div>
+                    <div class="rs-info-row">
+                        <span>Motivo</span>
+                        <strong>{{ $reserva->contratoCheckin->motivo_upgrade ?? '—' }}</strong>
+                    </div>
+                    <div class="rs-info-row">
+                        <span>Operador</span>
+                        <strong>{{ $reserva->contratoCheckin->usuarioUpgrade?->nome ?? '—' }}</strong>
+                    </div>
+                    <div class="rs-info-row">
+                        <span>Data/Hora</span>
+                        <strong>{{ $reserva->contratoCheckin->data_hora_upgrade?->format('d/m/Y H:i') ?? '—' }}</strong>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+            {{-- ── Card: Multas da reserva ── --}}
+            @php $totalMultas = $reserva->multas?->count() ?? 0; @endphp
+            @if($totalMultas > 0)
+            <div class="rs-card">
+                <div class="rs-card__header">
+                    <i class="fas fa-exclamation-triangle rs-card__icon text-danger"></i>
+                    <h2>Multas ({{ $totalMultas }})</h2>
+                </div>
+                <div class="rs-info-rows">
+                    @foreach($reserva->multas->take(3) as $multaItem)
+                    <div class="rs-info-row">
+                        <span>
+                            <a href="{{ route('multa.show', $multaItem->id) }}">#{{ $multaItem->id }}</a>
+                            — {{ $multaItem->orgao_autuador ?? 'S/O' }}
+                        </span>
+                        <strong>R$ {{ number_format((float)$multaItem->valor_final, 2, ',', '.') }}</strong>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="text-center mt-1">
+                    <a href="{{ route('multa.index', ['reserva_id' => $reserva->id]) }}" class="btn btn-xs btn-outline-danger">
+                        Ver todas
+                    </a>
+                    @can('multa.create')
+                    <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="btn btn-xs btn-outline-secondary">
+                        + Nova multa
+                    </a>
+                    @endcan
+                </div>
+            </div>
+            @endif
+
         </aside>
     </div>
+
+    {{-- ── Modal Captura de Calção ── --}}
+    @if(isset($calcao) && $calcao?->podeCapturar())
+    <div class="modal fade" id="modalCapturarCalcao" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-hand-holding-usd mr-1"></i> Capturar Calcao</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Valor a capturar (max R$ {{ number_format((float)$calcao->valor_autorizado, 2, ',', '.') }})</label>
+                        <input type="number" step="0.01" id="valor_captura_input" class="form-control"
+                               max="{{ $calcao->valor_autorizado }}" min="0.01"
+                               value="{{ $calcao->valor_autorizado }}">
+                    </div>
+                    <div class="form-group">
+                        <label>Justificativa <span class="text-danger">*</span></label>
+                        <textarea id="justificativa_captura_input" class="form-control" rows="3" placeholder="Motivo da captura..."></textarea>
+                    </div>
+                    <div id="calcao-capture-status"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-danger" id="btn-confirmar-captura">
+                        <i class="fas fa-check mr-1"></i> Confirmar Captura
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+
+
 </div>
 @stop
+
+@push('js')
+<script>
+const csrfToken = @json(csrf_token());
+const reservaId = @json($reserva->id);
+
+// ── Liberar calção ──
+function liberarCalcao(calcaoId) {
+    if (!confirm('Confirma a liberacao do calcao? O valor sera devolvido ao cartao do cliente.')) return;
+    fetch(@json(route('reserva.calcao.liberar', $reserva->id)), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        body: JSON.stringify({ observacao: 'Liberado no check-out' })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) { location.reload(); }
+        else alert(d.error ?? 'Erro ao liberar calcao.');
+    });
+}
+
+// ── Capturar calção ──
+document.getElementById('btn-confirmar-captura')?.addEventListener('click', function () {
+    const valor = document.getElementById('valor_captura_input')?.value;
+    const just  = document.getElementById('justificativa_captura_input')?.value;
+    const statusEl = document.getElementById('calcao-capture-status');
+
+    if (!just || just.trim().length < 5) {
+        statusEl.innerHTML = '<div class="alert alert-warning">Informe uma justificativa de ao menos 5 caracteres.</div>';
+        return;
+    }
+
+    this.disabled = true;
+    fetch(@json(route('reserva.calcao.capturar', $reserva->id)), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        body: JSON.stringify({ valor_captura: valor, justificativa: just })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            statusEl.innerHTML = '<div class="alert alert-success">Capturado com sucesso.</div>';
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            statusEl.innerHTML = '<div class="alert alert-danger">' + (d.error ?? 'Erro ao capturar.') + '</div>';
+            this.disabled = false;
+        }
+    });
+});
+
+
+
+
+
+</script>
+@endpush
 
 @section('css')
 <style>

@@ -11,11 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+        if (Schema::hasTable('opcionals')) { return; }
         Schema::create('opcionals', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->nullable();
             $table->timestamps();
         });
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -23,6 +26,8 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('opcionals');
+        Schema::enableForeignKeyConstraints();
     }
 };
