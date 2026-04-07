@@ -359,7 +359,7 @@
             font-size:.75rem;
             color:#9ca3af;
         }
-        .powered img{ height:5em; width:auto; display:block; opacity:.95; }
+        .powered img{ height:2em; width:auto; display:block; opacity:.95; }
     </style>
 </head>
 <body>
@@ -370,9 +370,9 @@
         <div class="logo">
             <div class="">
                 @if(!empty($loginLogoUrl))
-                <img src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}" style="width:18em">
+                <img src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}" style="width:9em">
                 @else
-                <img src="{{asset('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}" style="width:18em">
+                <img src="{{asset('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}" style="width:9em">
                 @endif
             </div>
             @if(!empty($loginLogoUrl))
