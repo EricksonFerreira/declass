@@ -35,29 +35,28 @@
                     @csrf
                     @if($metodo === 'PUT') @method('PUT') @endif
 
-                    {{-- Tabs --}}
-                    <ul class="nav nav-pills mb-3" id="multa-tab" role="tablist">
-                        <li class="nav-item">
-                            <a class="nav-link active" data-toggle="pill" href="#tab-infracao" role="tab">
-                                <i class="fas fa-map-marker-alt mr-1"></i> Infração
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="pill" href="#tab-valores" role="tab">
-                                <i class="fas fa-dollar-sign mr-1"></i> Valores e Status
-                            </a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" data-toggle="pill" href="#tab-documentos" role="tab">
-                                <i class="fas fa-paperclip mr-1"></i> Documentos
-                            </a>
-                        </li>
-                    </ul>
+                    <div class="multa-page">
+                        <div class="multa-wizard-top">
+                            <div class="multa-wizard-steps" role="tablist" aria-label="Passos da multa">
+                                <button type="button" class="multa-wizard-step is-active" data-multa-step-btn="1">
+                                    <span class="num">1</span><span class="txt">Infração</span>
+                                </button>
+                                <div class="div"></div>
+                                <button type="button" class="multa-wizard-step" data-multa-step-btn="2">
+                                    <span class="num">2</span><span class="txt">Valores</span>
+                                </button>
+                                <div class="div"></div>
+                                <button type="button" class="multa-wizard-step" data-multa-step-btn="3">
+                                    <span class="num">3</span><span class="txt">Documentos</span>
+                                </button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                Dica: avance pelos passos e finalize em "Documentos" para salvar.
+                            </small>
+                        </div>
 
-                    <div class="tab-content" id="multa-tab-content">
-
-                        {{-- ABA: Infração --}}
-                        <div class="tab-pane fade show active" id="tab-infracao" role="tabpanel">
+                        {{-- STEP: Infração --}}
+                        <div data-multa-step="1">
                             <div class="multa-section-title">Vínculo com Reserva e Veículo</div>
                             <div class="form-row">
                                 <div class="col-lg-4 form-group">
@@ -125,8 +124,8 @@
                             </div>
                         </div>
 
-                        {{-- ABA: Valores e Status --}}
-                        <div class="tab-pane fade" id="tab-valores" role="tabpanel">
+                        {{-- STEP: Valores e Status --}}
+                        <div data-multa-step="2">
                             <div class="multa-section-title">Valores</div>
                             <div class="form-row">
                                 <div class="col-lg-3 form-group">
@@ -189,8 +188,8 @@
                             </div>
                         </div>
 
-                        {{-- ABA: Documentos --}}
-                        <div class="tab-pane fade" id="tab-documentos" role="tabpanel">
+                        {{-- STEP: Documentos --}}
+                        <div data-multa-step="3">
                             <div class="multa-section-title">Anexos</div>
                             <div class="form-row">
                                 <div class="col-lg-6 form-group">
@@ -219,15 +218,23 @@
                             </div>
                         </div>
 
-                    </div>{{-- /tab-content --}}
+                        <div class="multa-wizard-footer">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="multaWizardPrev">
+                                <i class="fas fa-arrow-left mr-1"></i>Voltar
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" id="multaWizardNext">
+                                Continuar <i class="fas fa-arrow-right ml-1"></i>
+                            </button>
+                            <button type="submit" id="btnSalvarMulta" class="btn btn-danger btn-sm d-none">
+                                <i class="fas fa-save mr-1"></i>Salvar multa
+                            </button>
+                        </div>
 
-                    <div class="d-flex justify-content-between mt-4 pt-3 border-top">
-                        <a href="{{ route('multa.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left mr-1"></i> Voltar
-                        </a>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-save mr-1"></i> Salvar Multa
-                        </button>
+                        <div class="text-center mt-3">
+                            <a href="{{ route('multa.index') }}" class="btn btn-link text-muted">
+                                <i class="fas fa-arrow-left mr-1"></i>Voltar para lista
+                            </a>
+                        </div>
                     </div>
 
                 </form>
@@ -379,6 +386,79 @@
     display: block;
     color: #444;
 }
+.multa-page {
+    --multa-border: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 35%, #dbe3ef 65%);
+}
+.multa-wizard-top {
+    border: 1px solid var(--multa-border);
+    border-radius: 14px;
+    padding: 12px 12px 10px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    margin-bottom: 14px;
+}
+.multa-wizard-steps {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+.multa-wizard-steps .div {
+    flex: 1 1 20px;
+    height: 2px;
+    background: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 22%, #e5edf7 78%);
+    border-radius: 999px;
+    min-width: 12px;
+}
+.multa-wizard-step {
+    appearance: none;
+    border: 1px solid color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 30%, #dbe3ef 70%);
+    background: #fff;
+    border-radius: 999px;
+    padding: 8px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #0f172a;
+    cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease, color .12s ease;
+}
+.multa-wizard-step .num {
+    width: 22px;
+    height: 22px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--empresa-cor-primaria, #dc3545) 12%, #ffffff 88%);
+    color: color-mix(in srgb, var(--empresa-cor-primaria, #dc3545) 88%, #111827 12%);
+    border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria, #dc3545) 25%, #dbe3ef 75%);
+}
+.multa-wizard-step.is-active {
+    background: var(--empresa-cor-primaria, #dc3545);
+    border-color: var(--empresa-cor-primaria, #dc3545);
+    color: var(--empresa-cor-primaria-contraste, #fff);
+    box-shadow: 0 10px 22px color-mix(in srgb, var(--empresa-cor-primaria, #dc3545) 22%, transparent 78%);
+}
+.multa-wizard-step.is-active .num {
+    background: rgba(255,255,255,.18);
+    color: var(--empresa-cor-primaria-contraste, #fff);
+    border-color: rgba(255,255,255,.24);
+}
+.multa-wizard-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 10px 0 0;
+    margin-top: 14px;
+    border-top: 1px dashed color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 28%, #e5edf7 72%);
+}
+.multa-wizard-footer .btn {
+    border-radius: 999px;
+    font-weight: 700;
+}
 </style>
 @stop
 
@@ -393,25 +473,108 @@
         });
     });
 
-    // Abrir aba com erro
+    // Wizard/Steps da multa (igual ao admin reserva)
+    (function initMultaWizard() {
+        const maxStep = 3;
+        const storageKey = 'multaWizardStep';
+
+        const prevBtn = document.getElementById('multaWizardPrev');
+        const nextBtn = document.getElementById('multaWizardNext');
+        const submitBtn = document.getElementById('btnSalvarMulta');
+
+        function getStep() {
+            const saved = Number(localStorage.getItem(storageKey) || '1');
+            return Number.isFinite(saved) && saved >= 1 && saved <= maxStep ? saved : 1;
+        }
+
+        function setStep(step, persist = true) {
+            const s = Math.min(maxStep, Math.max(1, Number(step) || 1));
+
+            document.querySelectorAll('[data-multa-step]').forEach(el => {
+                el.classList.toggle('d-none', Number(el.dataset.multaStep) !== s);
+            });
+
+            document.querySelectorAll('[data-multa-step-btn]').forEach(btn => {
+                btn.classList.toggle('is-active', Number(btn.dataset.multaStepBtn) === s);
+            });
+
+            if (prevBtn) prevBtn.disabled = s <= 1;
+            if (nextBtn) nextBtn.classList.toggle('d-none', s >= maxStep);
+            if (submitBtn) submitBtn.classList.toggle('d-none', s < maxStep);
+
+            if (persist) localStorage.setItem(storageKey, String(s));
+        }
+
+        function validateStep(step) {
+            const containers = Array.from(document.querySelectorAll(`[data-multa-step="${step}"]`));
+            const fields = [];
+
+            containers.forEach(c => fields.push(...c.querySelectorAll('input, select, textarea')));
+
+            const uniqueFields = Array.from(new Set(fields)).filter(f => {
+                if (!f) return false;
+                if (f.disabled) return false;
+                if (f.type === 'hidden') return false;
+                return !!f.willValidate;
+            });
+
+            const invalid = uniqueFields.find(f => !f.checkValidity());
+            if (invalid) {
+                invalid.reportValidity();
+                return false;
+            }
+
+            return true;
+        }
+
+        prevBtn?.addEventListener('click', () => setStep(getStep() - 1));
+        nextBtn?.addEventListener('click', () => {
+            const current = getStep();
+            if (!validateStep(current)) return;
+            setStep(current + 1);
+        });
+
+        document.querySelectorAll('[data-multa-step-btn]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const target = Number(btn.dataset.multaStepBtn);
+                const current = getStep();
+                if (target > current && !validateStep(current)) return;
+                setStep(target);
+            });
+        });
+
+        const form = document.getElementById('formMulta');
+        form?.addEventListener('submit', (event) => {
+            const current = getStep();
+            if (current >= maxStep) return;
+            event.preventDefault();
+            if (!validateStep(current)) return;
+            setStep(current + 1);
+        });
+
+        window.multaWizardSetStep = (step, persist = true) => setStep(step, persist);
+        setStep(getStep(), false);
+    })();
+
+    // Abrir step com erro
     (function () {
         const errosCampos = @json(array_keys($errors->messages()));
-        const mapaAbas = {
-            'reserva_id': 'tab-infracao', 'veiculo_id': 'tab-infracao',
-            'placa_momento': 'tab-infracao', 'numero_auto': 'tab-infracao',
-            'orgao_autuador': 'tab-infracao', 'data_hora_infracao': 'tab-infracao',
-            'data_vencimento': 'tab-infracao', 'local_infracao': 'tab-infracao',
-            'descricao': 'tab-infracao',
-            'valor_original': 'tab-valores', 'valor_desconto': 'tab-valores',
-            'valor_final': 'tab-valores', 'pontos': 'tab-valores',
-            'status_multa': 'tab-valores', 'status_desconto': 'tab-valores',
-            'observacao': 'tab-valores',
-            'anexo_comprovante': 'tab-documentos', 'anexo_pdf': 'tab-documentos',
+        const mapaSteps = {
+            'reserva_id': 1, 'veiculo_id': 1,
+            'placa_momento': 1, 'numero_auto': 1,
+            'orgao_autuador': 1, 'data_hora_infracao': 1,
+            'data_vencimento': 1, 'local_infracao': 1,
+            'descricao': 1,
+            'valor_original': 2, 'valor_desconto': 2,
+            'valor_final': 2, 'pontos': 2,
+            'status_multa': 2, 'status_desconto': 2,
+            'observacao': 2,
+            'anexo_comprovante': 3, 'anexo_pdf': 3,
         };
         for (const campo of errosCampos) {
-            const aba = mapaAbas[campo];
-            if (aba) {
-                document.querySelector(`[href="#${aba}"]`)?.click();
+            const step = mapaSteps[campo];
+            if (step) {
+                window.multaWizardSetStep?.(step, true);
                 break;
             }
         }

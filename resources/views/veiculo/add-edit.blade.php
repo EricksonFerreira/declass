@@ -264,7 +264,7 @@
                                     <div class="form-group form-group-veiculo">
                                         <x-form-input type="date" class="form-control form-control-sm" id="data_validade"
                                             name="data_validade" label="Data de Validade da Documentacao/Licenca"
-                                            value="{{ old('data_validade', $veiculo->data_validade ?? '') }}" />
+                                            value="{{ old('data_validade', $veiculo->data_validade ?? '') }}"  required />
                                     </div>
                                 </div>
                                 <div class="col-lg-3 col-md-6">

@@ -36,7 +36,7 @@ class StoreVeiculoRequest extends FormRequest
             'numero_motor' => 'required|string|max:50',
             'data_placa_licenca' => 'required|date',
             'data_compra' => 'required|date',
-            'data_validade' => 'nullable|date',
+            'data_validade' => 'required|date',
             'data_proxima_manutencao' => 'required|date',
             'data_proxima_inspecao' => 'required|date',
             'kms' => 'required|integer|min:0',
@@ -86,6 +86,7 @@ class StoreVeiculoRequest extends FormRequest
             'data_placa_licenca.date' => 'O campo data de emissão da placa/licença deve ser uma data válida',
             'data_compra.required' => 'O campo data de compra é obrigatório',
             'data_compra.date' => 'O campo data de compra deve ser uma data válida',
+            'data_validade.required' => 'O campo data de validade é obrigatório',
             'data_validade.date' => 'O campo data de validade deve ser uma data válida',
             'data_proxima_manutencao.required' => 'O campo
             data da próxima manutenção é obrigatório',

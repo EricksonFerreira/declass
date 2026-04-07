@@ -430,3 +430,102 @@ function atualizarMinhaReserva() {
 function faltaPreencherEstacoesEDatas(){
     return window.reserva.estacao_retirada_id == null || window.reserva.estacao_devolucao_id == null || window.reserva.data_inicio == null || window.reserva.data_fim == null;
 }
+
+function formatarPrecosOpcionais() {
+    if (typeof formatarMoeda !== 'function') {
+        return;
+    }
+
+    $('.opcional-price__value').each(function() {
+        const valor = Number($(this).data('valor'));
+        $(this).text(formatarMoeda(Number.isFinite(valor) ? valor : 0));
+    });
+}
+
+function toggleDescCard(code) {
+    $('#desc_card_' + code).stop(true, true).slideToggle(120);
+}
+
+function modificaEstado(id) {
+    const botaoElemento = $('#modificaEstado' + id);
+    const idOpcional = id.replace('opcional', '');
+    const opcionalCard = $('#list_' + id);
+
+    if (botaoElemento.length && botaoElemento.text().trim() === 'ADICIONAR') {
+        botaoElemento.text('REMOVER');
+        botaoElemento.addClass('btn-outline-dark').removeClass('btn-dark');
+        opcionalCard.addClass('activated');
+        addOpcionalReserva(idOpcional, true);
+    } else {
+        if (botaoElemento.length) {
+            botaoElemento.text('ADICIONAR');
+            botaoElemento.removeClass('btn-outline-dark').addClass('btn-dark');
+        }
+        opcionalCard.removeClass('activated');
+        removeOpcionalReserva(idOpcional);
+    }
+
+    if (typeof atualizarMinhaReserva === 'function') {
+        atualizarMinhaReserva();
+    }
+}
+
+function increment(id) {
+    const valueElement = $('#value' + id);
+    const incrementButton = $('#increment' + id);
+    const decrementButton = $('#decrement' + id);
+    const countMaxIncrement = $('#max_accepted_qty' + id);
+    const value = parseInt(valueElement.text(), 10) || 0;
+    const novoValor = value + 1;
+
+    incrementButton.removeClass('disabled');
+    decrementButton.removeClass('disabled');
+
+    const max = parseInt(countMaxIncrement.val(), 10);
+    if (Number.isFinite(max) && max >= novoValor) {
+        valueElement.text(novoValor);
+        $('#list_' + id).addClass('activated');
+
+        if (max === novoValor) {
+            incrementButton.addClass('disabled');
+        }
+    } else if (!Number.isFinite(max)) {
+        valueElement.text(novoValor);
+        $('#list_' + id).addClass('activated');
+    }
+
+    const idOpcional = id.replace('opcional', '');
+    addOpcionalReserva(idOpcional, novoValor);
+
+    if (typeof atualizarMinhaReserva === 'function') {
+        atualizarMinhaReserva();
+    }
+}
+
+function decrement(id) {
+    const valueElement = $('#value' + id);
+    const incrementButton = $('#increment' + id);
+    const decrementButton = $('#decrement' + id);
+    const value = parseInt(valueElement.text(), 10) || 0;
+
+    incrementButton.removeClass('disabled');
+    decrementButton.removeClass('disabled');
+
+    let novoValor = 0;
+    if (value > 0) {
+        novoValor = value - 1;
+        valueElement.text(novoValor);
+
+        if (novoValor === 0) {
+            $('#list_' + id).removeClass('activated');
+            decrementButton.addClass('disabled');
+        }
+    }
+
+    const idOpcional = id.replace('opcional', '');
+    removeOpcionalReserva(idOpcional);
+
+    if (typeof atualizarMinhaReserva === 'function') {
+        atualizarMinhaReserva();
+    }
+}

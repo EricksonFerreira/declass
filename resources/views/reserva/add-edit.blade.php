@@ -1605,6 +1605,9 @@
                 },
                 success: function(data) {
                     $('#opcionais').html(data);
+                    if (typeof formatarPrecosOpcionais === 'function') {
+                        formatarPrecosOpcionais();
+                    }
 
                     if(tiposOpcionais.length > 0){
                         tiposOpcionais.forEach(tipoOpcional => {
@@ -1726,9 +1729,25 @@
                     resultados.innerHTML = '';
 
                     fetch(`${URL_BUSCAR_USUARIO}?${coletarFiltrosUsuario()}`, {
-                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
                     })
-                    .then(r => r.json())
+                    .then(async (r) => {
+                        let data = null;
+                        try {
+                            data = await r.json();
+                        } catch (e) {
+                            data = null;
+                        }
+
+                        if (!r.ok) {
+                            throw new Error((data && data.message) ? data.message : 'Erro ao buscar usuarios.');
+                        }
+
+                        return data || {};
+                    })
                     .then(data => {
                         loading.classList.add('d-none');
                         if (!data.usuarios || data.usuarios.length === 0) {
@@ -1781,9 +1800,9 @@
                             });
                         });
                     })
-                    .catch(() => {
+                    .catch((error) => {
                         loading.classList.add('d-none');
-                        resultados.innerHTML = '<p class="text-danger text-center py-3"><i class="fas fa-exclamation-triangle mr-1"></i>Erro ao buscar usuarios.</p>';
+                        resultados.innerHTML = `<p class="text-danger text-center py-3"><i class="fas fa-exclamation-triangle mr-1"></i>${(error && error.message) ? error.message : 'Erro ao buscar usuarios.'}</p>`;
                     });
                 }
 
@@ -2011,6 +2030,9 @@
                 },
                 success: function(data) {
                     $('#opcionais').html(data);
+                    if (typeof formatarPrecosOpcionais === 'function') {
+                        formatarPrecosOpcionais();
+                    }
                 },
                 error: function(error) {
                     console.error('Error fetching data:', error);
@@ -2047,13 +2069,14 @@
                     estacao_devolucao_id: estacao_devolucao_id,
                     data_fim: data_fim,
                 },
-                success: handleSuccess,
+                success: function(data) {
+                    handleSuccess(data);
+                    obterOpcionais(id);
+                },
                 error: function(error) {
                     console.error('Error fetching data:', error);
                 }
             });
-
-            obterOpcionais(id);
 
         }
 

@@ -195,7 +195,10 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             $empresaId = app(\App\Support\EmpresaContext::class)->empresaId()
                 ?? \Illuminate\Support\Facades\Auth::user()?->empresa_id;
             if ($empresaId) {
-                $query->where('empresa_id', $empresaId);
+                $query->where(function ($sub) use ($empresaId) {
+                    $sub->whereNull('empresa_id')
+                        ->orWhere('empresa_id', $empresaId);
+                });
             }
         }
 

@@ -4,18 +4,64 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('adminlte.title', 'Sistema') }} — Entrar</title>
+    @php
+        $loginEmpresa = null;
+        $loginTitle = config('adminlte.title', 'Sistema');
+        $loginBrandColor = '#1e4fd8';
+        $loginLogoUrl = null;
+        $loginPoweredLogoUrl = asset('assets/imgs/logo.png');
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('empresas')) {
+                $host = \App\Support\DomainNormalizer::normalize(request()->getHost());
+                if ($host) {
+                    $loginEmpresa = \App\Models\Empresa::query()
+                        ->withoutGlobalScopes()
+                        ->where('ativo', 'S')
+                        ->whereNotNull('dominio')
+                        ->get()
+                        ->first(function (\App\Models\Empresa $empresa) use ($host) {
+                            return \App\Support\DomainNormalizer::normalize($empresa->dominio) === $host;
+                        });
+                }
+            }
+        } catch (\Throwable $e) {
+            $loginEmpresa = null;
+        }
+
+        if ($loginEmpresa) {
+            $loginTitle = (string) ($loginEmpresa->nome ?: $loginTitle);
+            $loginBrandColor = (string) ($loginEmpresa->cor_primaria ?: $loginBrandColor);
+            $loginLogoUrl = $loginEmpresa->logo_url ?? null;
+        }
+
+        $hex = ltrim(trim((string) $loginBrandColor), '#');
+        $loginBrandContrast = '#FFFFFF';
+        if (preg_match('/^[A-Fa-f0-9]{6}$/', $hex)) {
+            $r = hexdec(substr($hex, 0, 2));
+            $g = hexdec(substr($hex, 2, 2));
+            $b = hexdec(substr($hex, 4, 2));
+            $brightness = (($r * 299) + ($g * 587) + ($b * 114)) / 1000;
+            $loginBrandContrast = $brightness >= 155 ? '#0F172A' : '#FFFFFF';
+        }
+    @endphp
+    <title>{{ $loginTitle }} — Entrar</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
+        :root{
+            --brand: {{ $loginBrandColor }};
+            --brand-contrast: {{ $loginBrandContrast }};
+        }
+
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         html, body {
             height: 100%;
             font-family: 'Inter', system-ui, sans-serif;
-            background: #f0f2f6;
+            background: color-mix(in srgb, var(--brand) 6%, #f0f2f6 94%);
             color: #111827;
             -webkit-font-smoothing: antialiased;
         }
@@ -49,12 +95,12 @@
             width: 38px;
             height: 38px;
             border-radius: 11px;
-            background: #1e4fd8;
+            background: var(--brand);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(30,79,216,.35);
+            box-shadow: 0 2px 8px color-mix(in srgb, var(--brand) 35%, transparent 65%);
         }
 
         .logo__name {
@@ -62,6 +108,14 @@
             font-weight: 600;
             color: #111827;
             letter-spacing: -.02em;
+        }
+
+        .logo__img{
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+            display: block;
+            filter: drop-shadow(0 1px 0 rgba(0,0,0,.06));
         }
 
         /* ── Card ── */
@@ -89,7 +143,7 @@
         }
 
         .card__footer a {
-            color: #1e4fd8;
+            color: var(--brand);
             font-weight: 600;
             text-decoration: none;
         }
@@ -145,11 +199,11 @@
 
         .field__link {
             font-size: .775rem;
-            color: #1e4fd8;
+            color: var(--brand);
             text-decoration: none;
             transition: color .15s;
         }
-        .field__link:hover { color: #1338b0; text-decoration: underline; }
+        .field__link:hover { color: color-mix(in srgb, var(--brand) 80%, #000 20%); text-decoration: underline; }
 
         /* ── Input ── */
         .input-wrap {
@@ -168,7 +222,7 @@
             transition: color .15s;
         }
 
-        .input-wrap:focus-within .input-wrap__icon { color: #1e4fd8; }
+        .input-wrap:focus-within .input-wrap__icon { color: var(--brand); }
 
         .input {
             width: 100%;
@@ -188,9 +242,9 @@
         .input::placeholder { color: #c5ccd7; }
         .input:hover { border-color: #d1d5db; background: #f3f4f8; }
         .input:focus {
-            border-color: #1e4fd8;
+            border-color: var(--brand);
             background: #fff;
-            box-shadow: 0 0 0 3.5px rgba(30,79,216,.1);
+            box-shadow: 0 0 0 3.5px color-mix(in srgb, var(--brand) 12%, transparent 88%);
         }
 
         .field--error .input { border-color: #f05252; background: #fef7f7; }
@@ -245,8 +299,8 @@
         }
 
         .check input:checked + .check__box {
-            background: #1e4fd8;
-            border-color: #1e4fd8;
+            background: var(--brand);
+            border-color: var(--brand);
         }
 
         .check input:checked + .check__box::after {
@@ -273,7 +327,7 @@
             align-items: center;
             justify-content: center;
             gap: .45rem;
-            background: #1e4fd8;
+            background: var(--brand);
             color: #fff;
             font-size: .875rem;
             font-weight: 600;
@@ -283,16 +337,31 @@
             border-radius: 10px;
             cursor: pointer;
             transition: background .15s, transform .1s, box-shadow .15s;
-            box-shadow: 0 1px 3px rgba(30,79,216,.3), 0 4px 14px rgba(30,79,216,.2);
+            box-shadow:
+                0 1px 3px color-mix(in srgb, var(--brand) 30%, transparent 70%),
+                0 4px 14px color-mix(in srgb, var(--brand) 20%, transparent 80%);
         }
 
         .btn:hover {
-            background: #1338b0;
+            background: color-mix(in srgb, var(--brand) 82%, #000 18%);
             transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(30,79,216,.35), 0 8px 22px rgba(30,79,216,.22);
+            box-shadow:
+                0 2px 6px color-mix(in srgb, var(--brand) 35%, transparent 65%),
+                0 8px 22px color-mix(in srgb, var(--brand) 22%, transparent 78%);
         }
 
-        .btn:active { transform: translateY(0); background: #1030a0; }
+        .btn:active { transform: translateY(0); background: color-mix(in srgb, var(--brand) 72%, #000 28%); }
+
+        .powered{
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            gap:.5rem;
+            margin-top:.75rem;
+            font-size:.75rem;
+            color:#9ca3af;
+        }
+        .powered img{ height:18px; width:auto; display:block; opacity:.95; }
     </style>
 </head>
 <body>
@@ -302,12 +371,16 @@
         {{-- Logo --}}
         <div class="logo">
             <div class="logo__mark">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M10 1L18.5 6v8L10 19 1.5 14V6L10 1z" fill="white" fill-opacity=".95"/>
-                    <path d="M10 5.5L15 8.5v6L10 17 5 14.5v-6L10 5.5z" fill="white" fill-opacity=".28"/>
-                </svg>
+                @if(!empty($loginLogoUrl))
+                    <img class="logo__img" src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}">
+                @else
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 1L18.5 6v8L10 19 1.5 14V6L10 1z" fill="white" fill-opacity=".95"/>
+                        <path d="M10 5.5L15 8.5v6L10 17 5 14.5v-6L10 5.5z" fill="white" fill-opacity=".28"/>
+                    </svg>
+                @endif
             </div>
-            <span class="logo__name">{{ config('adminlte.title', 'Sistema') }}</span>
+            <span class="logo__name">{{ $loginTitle }}</span>
         </div>
 
         {{-- Card --}}
@@ -418,12 +491,16 @@
             </div>
 
             {{-- Footer --}}
-            @if (Route::has('register'))
-                <div class="card__footer">
+            <div class="card__footer">
+                @if (Route::has('register'))
                     Não possui uma conta?
                     <a href="{{ route('register') }}">Criar conta</a>
+                @endif
+                <div class="powered">
+                    <span>Powered by</span>
+                    <img src="{{ $loginPoweredLogoUrl }}" alt="XpandCars">
                 </div>
-            @endif
+            </div>
         </div>
 
     </div>

@@ -9,7 +9,9 @@
 
 @section('content')
     @if (isset($filters) && is_array($filters) && count($filters) > 0)
-        <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
+        <div class="veiculo-filter-sticky">
+            <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
+        </div>
     @endif
 
     <div class="card p-2">
@@ -96,7 +98,6 @@
                             <div class="vc__avatar">{{ $iniciais }}</div>
                             <div class="vc__head-info">
                                 <div class="vc__id">VEICULO #{{ $veiculo->id }}</div>
-                                <div class="vc__id">Empresa #{{ $veiculo->empresa_id }}</div>
                                 <div class="vc__title">{{ $nomeVeiculo }}</div>
                                 <div class="vc__sub">{{ $placaVeiculo ? ('Placa: ' . $placaVeiculo) : 'Placa: -' }}</div>
                             </div>
@@ -264,6 +265,12 @@
 
 @section('css')
 <style>
+    .veiculo-filter-sticky {
+        position: sticky;
+        top: 10px;
+        z-index: 1030;
+    }
+
     .veiculo-disponibilidade-filter {
         display: flex;
         gap: 5px;
@@ -290,6 +297,19 @@
 
     .veiculo-index-body[data-view="table"] .veiculo-cards { display: none; }
     .veiculo-index-body[data-view="cards"] .veiculo-table { display: none; }
+
+    .veiculo-index-body[data-view="table"] .veiculo-table {
+        max-height: calc(100vh - 360px);
+        overflow: auto;
+        border-radius: 6px;
+    }
+
+    .veiculo-index-body[data-view="table"] .veiculo-table thead th {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: #f8fafc;
+    }
 
     .veiculo-cards {
         display: grid;
