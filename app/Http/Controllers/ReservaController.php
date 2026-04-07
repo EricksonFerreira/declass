@@ -207,7 +207,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Reservas', 'reserva.index', 'Criar');
 
         // Consultando as variáveis necessárias
-        $users = $this->userService->getAllForSelect();
+        $users = $this->userService->getAllForReservaSelect();
         $estacoes = $this->estacaoService->getAllAtivos();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
         $modelosAtivos = $this->modeloService->getAllAtivos();
@@ -357,7 +357,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         [$metodo, $rota] = $this->getFormMethodAndRoute($reserva);
 
         // Consultando as variáveis necessárias
-        $users = $this->userService->getAllForSelect();
+        $users = $this->userService->getAllForReservaSelect();
         $estacoes = $this->estacaoService->getAllAtivos();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
         $modelosAtivos = $this->modeloService->getAllAtivos();

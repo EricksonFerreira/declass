@@ -174,7 +174,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function selectOptions(Request $request)
     {
-        $usuarios = collect($this->usuarioService->getAllForSelect())
+        $usuarios = collect($this->usuarioService->getAllForReservaSelect())
             ->map(fn ($nome, $id) => ['id' => (int) $id, 'nome' => (string) $nome])
             ->sortBy('nome', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();

@@ -247,7 +247,7 @@
                 color-mix(in srgb, var(--empresa-cor-primaria, #1e293b) 90%, #000 10%) 0%,
                 color-mix(in srgb, var(--empresa-cor-terciaria, #334155) 90%, #000 10%) 100%
             );">
-                        <div class="alert alert-light col-md-8 d-flex align-items-center text-xs py-1 mt-1">
+                        <div class="alert alert-light col-md-8 d-flex align-items-center text-xs py-1 mt-1" data-reserva-step="3">
                             <i class="fa-solid fa-circle-info me-2"></i>
                             <span>Selecione um grupo de veiculos e um modelo para visualizar os opcionais disponiveis.</span>
                         </div>
@@ -1211,8 +1211,6 @@
         );
         const rotaCriarUsuario = @json(route('usuario.store'));
         const rotaUsuariosSelect = @json(route('usuario.selectOptions'));
-        const rotaResetarSenhaUsuarioTemplate = @json(route('usuario.salvarNovaSenha', ['id' => '__USUARIO_ID__']));
-        const senhaPadraoAcessoUsuario = 'car@12345';
         const mapaCamposAbaNovoUsuario = {
             nome: '#tab-dados-pessoais-tab',
             email: '#tab-dados-pessoais-tab',
@@ -1288,14 +1286,7 @@
             abrirPrimeiraAbaNovoUsuario();
         }
 
-        function rotaResetarSenhaUsuario(usuarioId) {
-            return rotaResetarSenhaUsuarioTemplate.replace('__USUARIO_ID__', encodeURIComponent(String(usuarioId)));
-        }
 
-        function atualizarEstadoBotaoResetSenha() {
-            const usuarioId = $('#user_id').val();
-            $('#btnResetarSenhaUsuario').prop('disabled', !usuarioId);
-        }
 
         function adicionarUsuarioSelectReserva(usuario) {
             if (!usuario || !usuario.id) {
@@ -1321,7 +1312,6 @@
 
             setUser(usuarioId, label);
             atualizarMinhaReserva();
-            atualizarEstadoBotaoResetSenha();
         }
 
         function atualizarUsuariosSelectReserva(selecionarId = null) {
@@ -1353,7 +1343,6 @@
                     select.selectpicker('refresh');
                 }
 
-                atualizarEstadoBotaoResetSenha();
             }).fail(function() {
                 alert('Nao foi possivel atualizar a lista de usuarios.');
             });
@@ -1567,55 +1556,6 @@
                     });
             });
 
-            $('#btnResetarSenhaUsuario').on('click', function() {
-                const usuarioId = $('#user_id').val();
-                if (!usuarioId) {
-                    alert('Selecione um usuario antes de resetar a senha.');
-                    return;
-                }
-
-                const nomeUsuario = $('#user_id option:selected').text().trim();
-                const confirmar = confirm(`Deseja resetar a senha de acesso de ${nomeUsuario} para ${senhaPadraoAcessoUsuario}?`);
-                if (!confirmar) {
-                    return;
-                }
-
-                const botao = $(this);
-                const textoOriginal = botao.html();
-                botao.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Resetando');
-
-                $.ajax({
-                    url: rotaResetarSenhaUsuario(usuarioId),
-                    method: 'POST',
-                    headers: {
-                        Accept: 'application/json'
-                    },
-                    data: {
-                        _token: $('meta[name="csrf-token"]').attr('content'),
-                        _method: 'PUT',
-                        resetar_para_acesso: 1,
-                        password: senhaPadraoAcessoUsuario,
-                        confirmacao_senha: senhaPadraoAcessoUsuario
-                    }
-                }).done(function(response) {
-                    alert(response?.message || 'Senha resetada com sucesso.');
-                }).fail(function(xhr) {
-                    let mensagemErro = 'Nao foi possivel resetar a senha agora.';
-                    if (xhr.status === 422 && xhr.responseJSON?.errors) {
-                        const primeiroErro = Object.values(xhr.responseJSON.errors)[0];
-                        if (Array.isArray(primeiroErro) && primeiroErro.length > 0) {
-                            mensagemErro = primeiroErro[0];
-                        }
-                    } else if (xhr.responseJSON?.message) {
-                        mensagemErro = xhr.responseJSON.message;
-                    }
-                    alert(mensagemErro);
-                }).always(function() {
-                    botao.prop('disabled', false).html(textoOriginal);
-                    atualizarEstadoBotaoResetSenha();
-                });
-            });
-
             $('#btnSalvarNovoUsuarioReserva').on('click', function() {
                 $('#formNovoUsuarioReserva').trigger('submit');
             });
@@ -1668,7 +1608,6 @@
                 limparFormularioNovoUsuario();
             });
 
-            atualizarEstadoBotaoResetSenha();
 
             // Inicializar Select2 quando o modal for aberto
             $('.select2').select2();
@@ -1732,7 +1671,6 @@
         $('#user_id').on('change', function() {
             setUser($(this).val(),  $(this).find('option:selected').text().trim());
             atualizarMinhaReserva();
-            atualizarEstadoBotaoResetSenha();
         });
 
         function validarDatas() {

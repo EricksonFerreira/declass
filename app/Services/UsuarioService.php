@@ -31,6 +31,37 @@ class UsuarioService extends AbstractBaseService
         return $this->model;
     }
 
+    /**
+     * Retorna usuarios para selects no contexto de reserva.
+     * Formato: "Nome - CPF" (numero_identificacao) ou "Nome - email".
+     */
+    public function getAllForReservaSelect(): array
+    {
+        $query = $this->applyEmpresaScope($this->model->newQuery())
+            ->select(['id', 'nome', 'numero_identificacao', 'email'])
+            ->orderBy('nome');
+
+        $usuarios = $query->get();
+
+        $out = [];
+        foreach ($usuarios as $u) {
+            $nome = trim((string) ($u->nome ?? ''));
+            $doc = trim((string) ($u->numero_identificacao ?? ''));
+            if ($doc === '') {
+                $doc = trim((string) ($u->email ?? ''));
+            }
+
+            $label = $nome !== '' ? $nome : ('Usuario #' . (int) $u->id);
+            if ($doc !== '') {
+                $label .= ' - ' . $doc;
+            }
+
+            $out[(int) $u->id] = $label;
+        }
+
+        return $out;
+    }
+
     public function createUser($data)
     {
         $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data);
