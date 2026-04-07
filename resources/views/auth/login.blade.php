@@ -374,7 +374,7 @@
                 @if(!empty($loginLogoUrl))
                 <img class="logo__img" src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}">
                 @else
-                <img src="{{assets('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}">
+                <img src="{{asset('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}">
                 @endif
             </div>
             @if(!empty($loginLogoUrl))
