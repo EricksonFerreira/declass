@@ -372,12 +372,14 @@
         <div class="logo">
             <div class="logo__mark">
                 @if(!empty($loginLogoUrl))
-                    <img class="logo__img" src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}">
+                <img class="logo__img" src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}">
                 @else
-                   <img src="{{assets('imgs/logo.png')}}" alt="Logo {{ $loginTitle }}">
+                <img src="{{assets('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}">
                 @endif
             </div>
+            @if(!empty($loginLogoUrl))
             <span class="logo__name">{{ $loginTitle }}</span>
+            @endif
         </div>
 
         {{-- Card --}}
