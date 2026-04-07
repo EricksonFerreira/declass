@@ -64,7 +64,7 @@ return [
     */
 
     'logo' => '<b>DECARS</b>',
-    'logo_img' => 'assets/imgs/logo.png',
+    'logo_img' => 'assets/imgs/logo-sem-texto.png',
     'logo_img_class' => 'brand-image',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
@@ -86,7 +86,7 @@ return [
     'auth_logo' => [
         'enabled' => true,
         'img' => [
-            'path' => 'vendor/adminlte/dist/img/AdminLTELogo.png',
+            'path' => 'public/assets/imgs/logo-sem-texto.png',
             'alt' => 'Logo de Autenticação',
             'class' => '',
             'width' => 50,
@@ -113,7 +113,7 @@ return [
         'enabled' => true,
         'mode' => 'cwrapper',
         'img' => [
-            'path' => 'public/assets/imgs/logo.png',
+            'path' => 'public/assets/imgs/logo-sem-texto.png',
             'alt' => 'Imagem de Pré-carregamento DECARS',
             'effect' => 'animation__shake',
             'width' => 160,
