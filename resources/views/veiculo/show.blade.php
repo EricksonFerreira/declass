@@ -187,44 +187,361 @@
                 </div>
             </div>
 
-            {{-- ════ TABS OPERACIONAIS ════ --}}
-            <div class="vt-shell mb-4">
+            {{-- ════ ETAPAS OPERACIONAIS ════ --}}
+            
 
-                {{-- Barra de tabs --}}
-                <div class="vt-tabbar">
-                    <button class="vt-tab is-active" data-vt-tab="disp">
-                        <i class="fas fa-calendar-alt"></i>
-                        <span>Disponibilidade</span>
-                    </button>
-                    <button class="vt-tab" data-vt-tab="avarias">
-                        <i class="fas fa-car-crash"></i>
-                        <span>Avarias</span>
-                        <em class="vt-count">{{ $veiculo->veiculoDanos->count() }}</em>
-                    </button>
-                    <button class="vt-tab" data-vt-tab="os">
-                        <i class="fas fa-clipboard-check"></i>
-                        <span>Ordens de Serviço</span>
-                        <em class="vt-count">{{ $veiculo->ordensServico->count() }}</em>
-                    </button>
-                    <button class="vt-tab" data-vt-tab="mov">
+        {{-- ── Coluna direita (1/3) ── --}}
+    </div>
+    <div class="col-lg-4">
+
+        {{-- Ações rápidas (PRIMEIRO — mais acessado) --}}
+        <div class="config-card mb-4">
+            <div class="config-block">
+                <div class="config-block-label">
+                    <i class="fas fa-bolt"></i>
+                    <div>
+                        <strong>Ações rápidas</strong>
+                    </div>
+                </div>
+                <div class="veiculo-acoes-grid">
+                    <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="veiculo-acao veiculo-acao--primary">
+                        <i class="fas fa-pen"></i>
+                        <span>Editar veículo</span>
+                    </a>
+                    <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="veiculo-acao">
                         <i class="fas fa-route"></i>
-                        <span>Movimentações</span>
-                        <em class="vt-count">{{ $veiculo->movimentacoes->count() }}</em>
-                    </button>
-                    <button class="vt-tab" data-vt-tab="sinistros">
+                        <span>Transferir estação</span>
+                    </a>
+                    <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao veiculo-acao--danger">
                         <i class="fas fa-car-crash"></i>
-                        <span>Sinistros</span>
-                        <em class="vt-count {{ $veiculo->sinistros->whereIn('status',['aberto','em_analise','aguardando_documentos'])->count() ? 'vt-count--alert' : '' }}">{{ $veiculo->sinistros->count() }}</em>
-                    </button>
-                    <button class="vt-tab" data-vt-tab="multas">
+                        <span>Registrar sinistro</span>
+                    </a>
+                    <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao">
                         <i class="fas fa-exclamation-triangle"></i>
-                        <span>Multas</span>
-                        <em class="vt-count {{ $veiculo->multas->whereIn('status_multa',['pendente','em_analise'])->count() ? 'vt-count--alert' : '' }}">{{ $veiculo->multas->count() }}</em>
+                        <span>Cadastrar multa</span>
+                    </a>
+                    <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao">
+                        <i class="fas fa-tools"></i>
+                        <span>Abrir OS</span>
+                    </a>
+                    <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="veiculo-acao">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Ver avarias</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {{-- Resumo --}}
+        <div class="config-card mb-4">
+            <div class="config-block">
+                <div class="config-block-label">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Resumo</strong>
+                        <span>Visão rápida do veículo</span>
+                    </div>
+                </div>
+                <div class="veiculo-summary">
+                    <div class="veiculo-summary__row">
+                        <span>Avarias pendentes</span>
+                        <strong class="text-warning">{{ $veiculo->veiculoDanos->whereNull('correcao_data')->count() }}</strong>
+                    </div>
+                    <div class="veiculo-summary__row">
+                        <span>Avarias corrigidas</span>
+                        <strong class="text-success">{{ $veiculo->veiculoDanos->whereNotNull('correcao_data')->count() }}</strong>
+                    </div>
+                    <div class="veiculo-summary__row">
+                        <span>OS abertas</span>
+                        <strong class="text-info">{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_ABERTA)->count() }}</strong>
+                    </div>
+                    <div class="veiculo-summary__row">
+                        <span>Sinistros abertos</span>
+                        <strong class="text-danger">{{ $veiculo->sinistros->whereIn('status', ['aberto','em_analise','aguardando_documentos'])->count() }}</strong>
+                    </div>
+                    <div class="veiculo-summary__row">
+                        <span>Multas pendentes</span>
+                        <strong class="text-warning">{{ $veiculo->multas->whereIn('status_multa', ['pendente','em_analise'])->count() }}</strong>
+                    </div>
+                    <div class="veiculo-summary__row">
+                        <span>Reservas totais</span>
+                        <strong>{{ $veiculo->reservas->count() }}</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Sinistros --}}
+        {{-- <div class="config-card mb-4">
+            <div class="config-block">
+                <div class="config-block-label">
+                    <i class="fas fa-car-crash text-danger"></i>
+                    <div>
+                        <strong>Sinistros</strong>
+                        <span>{{ $veiculo->sinistros->count() }} sinistro(s) registrado(s)</span>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-2" style="gap:8px; flex-wrap: wrap">
+                    <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
+                        <i class="fas fa-plus mr-1"></i>Registrar sinistro
+                    </a>
+                    <a href="{{ route('sinistro.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
+                        <i class="fas fa-list mr-1"></i>Ver todos
+                    </a>
+                </div>
+
+                @if($veiculo->sinistros->isEmpty())
+                    <div class="empty-state mt-2">
+                        <i class="fas fa-shield-alt"></i>
+                        <p>Nenhum sinistro registrado para este veículo.</p>
+                    </div>
+                @else
+                    @foreach($veiculo->sinistros->take(5) as $sinistro)
+                        @php
+                            $snBadge = match($sinistro->status) {
+                                'encerrado', 'indenizado' => 'success',
+                                'aprovado'   => 'primary',
+                                'cancelado'  => 'secondary',
+                                'aguardando_documentos' => 'warning',
+                                default => 'danger',
+                            };
+                        @endphp
+                        <div class="veiculo-sinistro-item">
+                            <div class="veiculo-sinistro-item__head">
+                                <span class="xp-id">#{{ $sinistro->id }}</span>
+                                <span class="badge badge-{{ $snBadge }} ml-1">{{ $sinistro->label_status }}</span>
+                            </div>
+                            <div class="veiculo-sinistro-item__body">
+                                <span class="veiculo-sinistro-item__tipo">{{ $sinistro->label_tipo }}</span>
+                                <small class="text-muted">{{ $sinistro->data_hora_ocorrido?->format('d/m/Y') ?? '—' }}</small>
+                            </div>
+                            <a href="{{ route('sinistro.show', $sinistro->id) }}" class="btn-xp btn-xp--sm mt-1">
+                                <i class="fas fa-eye mr-1"></i>Ver
+                            </a>
+                        </div>
+                    @endforeach
+                    @if($veiculo->sinistros->count() > 5)
+                        <p class="text-muted small mb-0 mt-1">Mostrando os 5 mais recentes.</p>
+                    @endif
+                @endif
+            </div>
+        </div> --}}
+
+        {{-- Multas --}}
+        {{-- <div class="config-card mb-4">
+            <div class="config-block">
+                <div class="config-block-label">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>Multas</strong>
+                        <span>{{ $veiculo->multas->count() }} multa(s) registrada(s)</span>
+                    </div>
+                </div>
+
+                <div class="d-flex mb-2" style="gap:8px; flex-wrap: wrap">
+                    <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
+                        <i class="fas fa-plus mr-1"></i>Cadastrar multa
+                    </a>
+                    <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
+                        <i class="fas fa-list mr-1"></i>Ver todas
+                    </a>
+                </div>
+
+                @if($veiculo->multas->isEmpty())
+                    <div class="empty-state mt-2">
+                        <i class="fas fa-receipt"></i>
+                        <p>Nenhuma multa registrada para este veículo.</p>
+                    </div>
+                @else
+                    <div class="table-responsive mt-2">
+                        <table class="table table-hover xp-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Data</th>
+                                    <th>Status</th>
+                                    <th class="text-right">Valor</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($veiculo->multas->take(5) as $multa)
+                                    @php
+                                        $badgeMulta = match($multa->status_multa) {
+                                            'paga', 'deferida' => 'success',
+                                            'cancelada'  => 'secondary',
+                                            'recorrida'  => 'info',
+                                            'indeferida' => 'danger',
+                                            default      => 'warning',
+                                        };
+                                    @endphp
+                                    <tr>
+                                        <td><span class="xp-id">#{{ $multa->id }}</span></td>
+                                        <td>{{ $multa->data_hora_infracao?->format('d/m/Y') ?? '—' }}</td>
+                                        <td><span class="badge badge-{{ $badgeMulta }}">{{ $multa->label_status_multa }}</span></td>
+                                        <td class="text-right">R$ {{ number_format((float) $multa->valor_final, 2, ',', '.') }}</td>
+                                        <td>
+                                            <a href="{{ route('multa.show', $multa->id) }}" class="btn-xp btn-xp--sm">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($veiculo->multas->count() > 5)
+                        <p class="text-muted small mb-0">Mostrando as 5 mais recentes.</p>
+                    @endif
+                @endif
+            </div>
+        </div> --}}
+
+        {{-- Últimas reservas --}}
+        <div class="config-card mb-4">
+            <div class="config-block">
+                <div class="config-block-label">
+                    <i class="fas fa-calendar-alt"></i>
+                    <div>
+                        <strong>Últimas Reservas</strong>
+                        <span>5 reservas mais recentes</span>
+                    </div>
+                </div>
+                @forelse($veiculo->reservas->sortByDesc('id')->take(5) as $reserva)
+                    <div class="veiculo-reserva-item">
+                        <div class="veiculo-reserva-item__id">
+                            <a href="{{ route('reserva.show', $reserva->id) }}" class="xp-link">#{{ $reserva->id }}</a>
+                        </div>
+                        <div class="veiculo-reserva-item__info">
+                            <span>{{ optional($reserva->statusReserva)->nome ?? '—' }}</span>
+                            <small>{{ $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y') : '—' }} → {{ $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y') : '—' }}</small>
+                        </div>
+                    </div>
+                @empty
+                    <p class="text-muted small mb-0">Nenhuma reserva registrada.</p>
+                @endforelse
+            </div>
+        </div>
+
+    </div>
+    <div class="col-lg-12">
+        <div class="vs-shell mb-4">
+                <div class="vs-shell__intro">
+                    <div>
+                        <span class="vs-shell__eyebrow">Linha operacional do veículo</span>
+                        <h3 class="vs-shell__title">Acompanhe cada etapa com filtros e leitura mais clara</h3>
+                        <p class="vs-shell__sub">
+                            Navegue entre disponibilidade, avarias, ordens, movimentações, sinistros e multas
+                            sem perder o contexto do veículo.
+                        </p>
+                    </div>
+                    <div class="vs-shell__intro-badges">
+                        <span class="vs-badge-soft">
+                            <i class="fas fa-layer-group"></i>
+                            6 etapas monitoradas
+                        </span>
+                        <span class="vs-badge-soft {{ $veiculo->disponivel ? 'is-success' : 'is-warning' }}">
+                            <i class="fas {{ $veiculo->disponivel ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                            {{ $veiculo->disponivel ? 'Disponível para operação' : 'Indisponível no momento' }}
+                        </span>
+                    </div>
+                </div>
+
+                <div class="vs-steps" id="vsSteps">
+                    <button class="vs-step is-active" type="button" data-step="disp">
+                        <span class="vs-step__icon"><i class="fas fa-calendar-check"></i></span>
+                        <span class="vs-step__content">
+                            <strong>Disponibilidade</strong>
+                            <small>Agenda, bloqueios e calendário</small>
+                        </span>
+                        <span class="vs-step__count">{{ $veiculo->reservas->count() }}</span>
+                    </button>
+
+                    <button class="vs-step" type="button" data-step="avarias">
+                        <span class="vs-step__icon"><i class="fas fa-car-crash"></i></span>
+                        <span class="vs-step__content">
+                            <strong>Avarias</strong>
+                            <small>Danos e correções do veículo</small>
+                        </span>
+                        <span class="vs-step__count {{ $veiculo->veiculoDanos->whereNull('correcao_data')->count() ? 'vs-step__count--alert' : '' }}">
+                            {{ $veiculo->veiculoDanos->count() }}
+                        </span>
+                    </button>
+
+                    <button class="vs-step" type="button" data-step="os">
+                        <span class="vs-step__icon"><i class="fas fa-tools"></i></span>
+                        <span class="vs-step__content">
+                            <strong>Ordens</strong>
+                            <small>Serviços, manutenção e execução</small>
+                        </span>
+                        <span class="vs-step__count">{{ $veiculo->ordensServico->count() }}</span>
+                    </button>
+
+                    <button class="vs-step" type="button" data-step="mov">
+                        <span class="vs-step__icon"><i class="fas fa-route"></i></span>
+                        <span class="vs-step__content">
+                            <strong>Movimentações</strong>
+                            <small>Saídas, chegadas e transferências</small>
+                        </span>
+                        <span class="vs-step__count">{{ $veiculo->movimentacoes->count() }}</span>
+                    </button>
+
+                    <button class="vs-step" type="button" data-step="sinistros">
+                        <span class="vs-step__icon"><i class="fas fa-shield-alt"></i></span>
+                        <span class="vs-step__content">
+                            <strong>Sinistros</strong>
+                            <small>Ocorrências, seguradora e análise</small>
+                        </span>
+                        <span class="vs-step__count {{ $veiculo->sinistros->whereIn('status',['aberto','em_analise','aguardando_documentos'])->count() ? 'vs-step__count--alert' : '' }}">
+                            {{ $veiculo->sinistros->count() }}
+                        </span>
+                    </button>
+
+                    <button class="vs-step" type="button" data-step="multas">
+                        <span class="vs-step__icon"><i class="fas fa-exclamation-triangle"></i></span>
+                        <span class="vs-step__content">
+                            <strong>Multas</strong>
+                            <small>Infrações, descontos e recursos</small>
+                        </span>
+                        <span class="vs-step__count {{ $veiculo->multas->whereIn('status_multa',['pendente','em_analise'])->count() ? 'vs-step__count--alert' : '' }}">
+                            {{ $veiculo->multas->count() }}
+                        </span>
                     </button>
                 </div>
 
                 {{-- ── PAINEL: Disponibilidade ── --}}
-                <div class="vt-panel is-active" data-vt-panel="disp">
+                <div class="vs-panel is-active" data-step-panel="disp">
+                    <div class="vs-panel-head">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Etapa 01</span>
+                            <h4 class="vs-panel-head__title">Disponibilidade do veículo</h4>
+                            <p class="vs-panel-head__sub">Visualize reservas, movimentações e bloqueios por período com foco em entendimento rápido.</p>
+                        </div>
+                        <div class="vs-kpis">
+                            <div class="vs-kpi">
+                                <span>Status atual</span>
+                                <strong>{{ $veiculo->disponivel ? 'Disponível' : 'Indisponível' }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Reservas totais</span>
+                                <strong>{{ $veiculo->reservas->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Bloqueio entre reservas</span>
+                                <strong>{{ $reservaBloqueioHoras ?? 0 }}h</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="vs-info-banner">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            Use os filtros do calendário abaixo para navegar por mês, estação e tipo de ocupação.
+                            Os botões de legenda continuam funcionando dentro do calendário.
+                        </div>
+                    </div>
+
                     @include('veiculo.components.disponibilidade', [
                         'veiculo'             => $veiculo,
                         'dispMes'             => $dispMes ?? null,
@@ -242,44 +559,95 @@
                 </div>
 
                 {{-- ── PAINEL: Avarias ── --}}
-                <div class="vt-panel" data-vt-panel="avarias">
+                <div class="vs-panel" data-step-panel="avarias">
+                    <div class="vs-panel-head">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Etapa 02</span>
+                            <h4 class="vs-panel-head__title">Avarias registradas</h4>
+                            <p class="vs-panel-head__sub">Filtre rapidamente por pendências, tipo do dano, local afetado e vínculo com reserva.</p>
+                        </div>
+                        <div class="vs-kpis">
+                            <div class="vs-kpi">
+                                <span>Pendentes</span>
+                                <strong>{{ $veiculo->veiculoDanos->whereNull('correcao_data')->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Corrigidas</span>
+                                <strong>{{ $veiculo->veiculoDanos->whereNotNull('correcao_data')->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Total</span>
+                                <strong>{{ $veiculo->veiculoDanos->count() }}</strong>
+                            </div>
+                        </div>
+                    </div>
 
-                    {{-- Filtros avarias --}}
-                    <div class="vt-filter-bar" id="filterAvarias">
-                        <div class="vt-filter-grid">
-                            <div class="vt-filter-field">
-                                <label>Status</label>
-                                <select id="avf_status" class="vt-select">
-                                    <option value="">Todos</option>
-                                    <option value="pendente">Pendente</option>
-                                    <option value="corrigido">Corrigido</option>
-                                </select>
+                    <div class="vs-filter-wrap">
+                        <div class="vs-filter-top">
+                            <div class="vs-filter-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="avf_busca" class="vs-search-input" placeholder="Buscar por local, tipo, observação ou reserva..." oninput="filtrarAvarias()">
                             </div>
-                            <div class="vt-filter-field">
-                                <label>Tipo de Dano</label>
-                                <input type="text" id="avf_tipo" class="vt-input" placeholder="Ex: amassado, risco…">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Local do Dano</label>
-                                <input type="text" id="avf_local" class="vt-input" placeholder="Ex: parachoque, porta…">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Reserva #</label>
-                                <input type="number" id="avf_reserva" class="vt-input" placeholder="ID da reserva">
-                            </div>
-                            <div class="vt-filter-field vt-filter-field--actions">
-                                <button type="button" class="vt-btn-filter" onclick="filtrarAvarias()">
-                                    <i class="fas fa-search"></i> Filtrar
-                                </button>
-                                <button type="button" class="vt-btn-clear" onclick="limparFiltroAvarias()">
-                                    <i class="fas fa-times"></i>
+
+                            <div class="vs-filter-actions">
+                                <button type="button" class="vs-chip is-active" data-chip-group="avarias" onclick="chipAvarias(this, 'todos')">Todos</button>
+                                <button type="button" class="vs-chip" data-chip-group="avarias" onclick="chipAvarias(this, 'pendente')">Pendentes</button>
+                                <button type="button" class="vs-chip" data-chip-group="avarias" onclick="chipAvarias(this, 'corrigido')">Corrigidas</button>
+                                <button type="button" class="vs-chip" data-chip-group="avarias" onclick="chipAvarias(this, 'reserva')">Com reserva</button>
+                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('avarias')">
+                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
                                 </button>
                             </div>
                         </div>
-                        <div class="vt-filter-result" id="avf_result"></div>
+
+                        <div class="vs-advanced-filters" id="vsAdvanced-avarias">
+                            <div class="vs-filter-grid">
+                                <div class="vs-filter-field">
+                                    <label>Status</label>
+                                    <select id="avf_status" class="vt-select" onchange="filtrarAvarias()">
+                                        <option value="">Todos</option>
+                                        <option value="pendente">Pendente</option>
+                                        <option value="corrigido">Corrigido</option>
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Tipo de dano</label>
+                                    <input type="text" id="avf_tipo" class="vt-input" placeholder="Ex: amassado, risco..." oninput="filtrarAvarias()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Local do dano</label>
+                                    <input type="text" id="avf_local" class="vt-input" placeholder="Ex: porta, para-choque..." oninput="filtrarAvarias()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Reserva #</label>
+                                    <input type="number" id="avf_reserva" class="vt-input" placeholder="ID da reserva" oninput="filtrarAvarias()">
+                                </div>
+
+                                <div class="vs-filter-field vs-filter-field--check">
+                                    <label class="vs-check">
+                                        <input type="checkbox" id="avf_com_reserva" onchange="filtrarAvarias()">
+                                        <span>Mostrar apenas itens com reserva vinculada</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="vs-filter-footer">
+                                <div class="vs-filter-result" id="avf_result"></div>
+                                <div class="vs-filter-footer__actions">
+                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroAvarias()">
+                                        <i class="fas fa-times"></i> Limpar
+                                    </button>
+                                    <button type="button" class="vt-btn-filter" onclick="filtrarAvarias()">
+                                        <i class="fas fa-search"></i> Aplicar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Ações --}}
                     <div class="vt-panel-actions">
                         <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'todos']) }}" class="btn-xp btn-xp--sm btn-xp--outline">
                             <i class="fas fa-list mr-1"></i>Ver todas as avarias
@@ -339,46 +707,91 @@
                 </div>
 
                 {{-- ── PAINEL: Ordens de Serviço ── --}}
-                <div class="vt-panel" data-vt-panel="os">
+                <div class="vs-panel" data-step-panel="os">
+                    <div class="vs-panel-head">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Etapa 03</span>
+                            <h4 class="vs-panel-head__title">Ordens de serviço</h4>
+                            <p class="vs-panel-head__sub">Acompanhe aberturas, andamento e conclusões com filtros mais objetivos.</p>
+                        </div>
+                        <div class="vs-kpis">
+                            <div class="vs-kpi">
+                                <span>Abertas</span>
+                                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_ABERTA)->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Em andamento</span>
+                                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_EM_ANDAMENTO)->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Concluídas</span>
+                                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_CONCLUIDA)->count() }}</strong>
+                            </div>
+                        </div>
+                    </div>
 
-                    {{-- Filtros OS --}}
-                    <div class="vt-filter-bar" id="filterOs">
-                        <div class="vt-filter-grid">
-                            <div class="vt-filter-field">
-                                <label>Status</label>
-                                <select id="osf_status" class="vt-select">
-                                    <option value="">Todos</option>
-                                    <option value="aberta">Aberta</option>
-                                    <option value="em_andamento">Em Andamento</option>
-                                    <option value="concluida">Concluída</option>
-                                    <option value="cancelada">Cancelada</option>
-                                </select>
+                    <div class="vs-filter-wrap">
+                        <div class="vs-filter-top">
+                            <div class="vs-filter-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="osf_busca" class="vs-search-input" placeholder="Buscar por número, status ou itens..." oninput="filtrarOs()">
                             </div>
-                            <div class="vt-filter-field">
-                                <label>Número / ID</label>
-                                <input type="text" id="osf_numero" class="vt-input" placeholder="Ex: OS-001">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Abertura de</label>
-                                <input type="date" id="osf_data_de" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Abertura até</label>
-                                <input type="date" id="osf_data_ate" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field vt-filter-field--actions">
-                                <button type="button" class="vt-btn-filter" onclick="filtrarOs()">
-                                    <i class="fas fa-search"></i> Filtrar
-                                </button>
-                                <button type="button" class="vt-btn-clear" onclick="limparFiltroOs()">
-                                    <i class="fas fa-times"></i>
+
+                            <div class="vs-filter-actions">
+                                <button type="button" class="vs-chip is-active" data-chip-group="os" onclick="chipOs(this, 'todos')">Todas</button>
+                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'aberta')">Abertas</button>
+                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'em_andamento')">Em andamento</button>
+                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'concluida')">Concluídas</button>
+                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, '30dias')">Últimos 30 dias</button>
+                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('os')">
+                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
                                 </button>
                             </div>
                         </div>
-                        <div class="vt-filter-result" id="osf_result"></div>
+
+                        <div class="vs-advanced-filters" id="vsAdvanced-os">
+                            <div class="vs-filter-grid">
+                                <div class="vs-filter-field">
+                                    <label>Status</label>
+                                    <select id="osf_status" class="vt-select" onchange="filtrarOs()">
+                                        <option value="">Todos</option>
+                                        <option value="aberta">Aberta</option>
+                                        <option value="em_andamento">Em Andamento</option>
+                                        <option value="concluida">Concluída</option>
+                                        <option value="cancelada">Cancelada</option>
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Número / ID</label>
+                                    <input type="text" id="osf_numero" class="vt-input" placeholder="Ex: OS-001" oninput="filtrarOs()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Abertura de</label>
+                                    <input type="date" id="osf_data_de" class="vt-input" onchange="filtrarOs()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Abertura até</label>
+                                    <input type="date" id="osf_data_ate" class="vt-input" onchange="filtrarOs()">
+                                </div>
+                            </div>
+
+                            <div class="vs-filter-footer">
+                                <div class="vs-filter-result" id="osf_result"></div>
+                                <div class="vs-filter-footer__actions">
+                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroOs()">
+                                        <i class="fas fa-times"></i> Limpar
+                                    </button>
+                                    <button type="button" class="vt-btn-filter" onclick="filtrarOs()">
+                                        <i class="fas fa-search"></i> Aplicar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Ações --}}
                     <div class="vt-panel-actions">
                         <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
                             <i class="fas fa-plus mr-1"></i>Nova OS para este veículo
@@ -404,7 +817,7 @@
                                 @foreach($veiculo->ordensServico->sortByDesc('id') as $os)
                                 @php
                                     $osStatusVal = $os->status ?? '';
-                                    $osDataAb    = $os->created_at?->format('Y-m-d') ?? '';
+                                    $osDataAb    = $os->created_at ? $os->created_at->format('Y-m-d') : '';
                                     $osNumero    = strtolower($os->numero ?? (string)$os->id);
                                 @endphp
                                 <tr
@@ -424,9 +837,9 @@
                                             <span class="status-badge status-badge--gray">Cancelada</span>
                                         @endif
                                     </td>
-                                    <td>{{ $os->created_at?->format('d/m/Y') ?? '—' }}</td>
-                                    <td>{{ $os->data_conclusao?->format('d/m/Y') ?? '—' }}</td>
-                                    <td>{{ $os->itens?->count() ?? '—' }}</td>
+                                    <td>{{ $os->created_at ? $os->created_at->format('d/m/Y') : '—' }}</td>
+                                    <td>{{ $os->data_conclusao ? $os->data_conclusao->format('d/m/Y') : '—' }}</td>
+                                    <td>{{ $os->itens ? $os->itens->count() : '—' }}</td>
                                     <td>
                                         <a href="{{ route('ordem-servico.show', $os) }}" class="btn-xp btn-xp--sm">
                                             <i class="fas fa-eye mr-1"></i>Ver
@@ -441,66 +854,128 @@
                 </div>
 
                 {{-- ── PAINEL: Movimentações ── --}}
-                <div class="vt-panel" data-vt-panel="mov">
+                <div class="vs-panel" data-step-panel="mov">
+                    <div class="vs-panel-head">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Etapa 04</span>
+                            <h4 class="vs-panel-head__title">Movimentações do veículo</h4>
+                            <p class="vs-panel-head__sub">Cruze tipo, status, origem, destino, data, usuário e vínculo com reserva em uma leitura só.</p>
+                        </div>
+                        <div class="vs-kpis">
+                            <div class="vs-kpi">
+                                <span>Total</span>
+                                <strong>{{ $veiculo->movimentacoes->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Com reserva</span>
+                                <strong>{{ $veiculo->movimentacoes->whereNotNull('reserva_id')->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Sem chegada</span>
+                                <strong>{{ $veiculo->movimentacoes->whereNull('data_chegada_real')->count() }}</strong>
+                            </div>
+                        </div>
+                    </div>
 
-                    {{-- Filtros Movimentações --}}
-                    <div class="vt-filter-bar" id="filterMov">
-                        <div class="vt-filter-grid">
-                            <div class="vt-filter-field">
-                                <label>Tipo</label>
-                                <select id="mvf_tipo" class="vt-select">
-                                    <option value="">Todos</option>
-                                    @foreach($veiculo->movimentacoes->pluck('tipoMovimentacao.nome','tipoMovimentacao.nome')->filter()->unique() as $tn)
-                                        <option value="{{ strtolower($tn) }}">{{ $tn }}</option>
-                                    @endforeach
-                                </select>
+                    <div class="vs-filter-wrap">
+                        <div class="vs-filter-top">
+                            <div class="vs-filter-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="mvf_busca" class="vs-search-input" placeholder="Buscar por origem, destino, usuário, reserva ou OS..." oninput="filtrarMov()">
                             </div>
-                            <div class="vt-filter-field">
-                                <label>Status</label>
-                                <select id="mvf_status" class="vt-select">
-                                    <option value="">Todos</option>
-                                    @foreach($veiculo->movimentacoes->pluck('statusMovimentacao.nome','statusMovimentacao.nome')->filter()->unique() as $sn)
-                                        <option value="{{ strtolower($sn) }}">{{ $sn }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Origem</label>
-                                <input type="text" id="mvf_origem" class="vt-input" placeholder="Nome da estação">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Destino</label>
-                                <input type="text" id="mvf_destino" class="vt-input" placeholder="Nome da estação">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Saída de</label>
-                                <input type="date" id="mvf_data_de" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Saída até</label>
-                                <input type="date" id="mvf_data_ate" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Reserva #</label>
-                                <input type="number" id="mvf_reserva" class="vt-input" placeholder="ID">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Usuário</label>
-                                <input type="text" id="mvf_usuario" class="vt-input" placeholder="Nome do usuário">
-                            </div>
-                            <div class="vt-filter-field vt-filter-field--actions">
-                                <button type="button" class="vt-btn-filter" onclick="filtrarMov()">
-                                    <i class="fas fa-search"></i> Filtrar
-                                </button>
-                                <button type="button" class="vt-btn-clear" onclick="limparFiltroMov()">
-                                    <i class="fas fa-times"></i>
+
+                            <div class="vs-filter-actions">
+                                <button type="button" class="vs-chip is-active" data-chip-group="mov" onclick="chipMov(this, 'todos')">Todas</button>
+                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'reserva')">Com reserva</button>
+                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'sem_chegada')">Sem chegada</button>
+                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'hoje')">Hoje</button>
+                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('mov')">
+                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
                                 </button>
                             </div>
                         </div>
-                        <div class="vt-filter-result" id="mvf_result"></div>
+
+                        <div class="vs-advanced-filters" id="vsAdvanced-mov">
+                            <div class="vs-filter-grid">
+                                <div class="vs-filter-field">
+                                    <label>Tipo</label>
+                                    <select id="mvf_tipo" class="vt-select" onchange="filtrarMov()">
+                                        <option value="">Todos</option>
+                                        @foreach($veiculo->movimentacoes->pluck('tipoMovimentacao.nome','tipoMovimentacao.nome')->filter()->unique() as $tn)
+                                            <option value="{{ strtolower($tn) }}">{{ $tn }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Status</label>
+                                    <select id="mvf_status" class="vt-select" onchange="filtrarMov()">
+                                        <option value="">Todos</option>
+                                        @foreach($veiculo->movimentacoes->pluck('statusMovimentacao.nome','statusMovimentacao.nome')->filter()->unique() as $sn)
+                                            <option value="{{ strtolower($sn) }}">{{ $sn }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Origem</label>
+                                    <input type="text" id="mvf_origem" class="vt-input" placeholder="Nome da estação" oninput="filtrarMov()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Destino</label>
+                                    <input type="text" id="mvf_destino" class="vt-input" placeholder="Nome da estação" oninput="filtrarMov()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Saída de</label>
+                                    <input type="date" id="mvf_data_de" class="vt-input" onchange="filtrarMov()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Saída até</label>
+                                    <input type="date" id="mvf_data_ate" class="vt-input" onchange="filtrarMov()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Reserva #</label>
+                                    <input type="number" id="mvf_reserva" class="vt-input" placeholder="ID" oninput="filtrarMov()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Usuário</label>
+                                    <input type="text" id="mvf_usuario" class="vt-input" placeholder="Nome do usuário" oninput="filtrarMov()">
+                                </div>
+
+                                <div class="vs-filter-field vs-filter-field--check">
+                                    <label class="vs-check">
+                                        <input type="checkbox" id="mvf_com_reserva" onchange="filtrarMov()">
+                                        <span>Mostrar apenas movimentações com reserva</span>
+                                    </label>
+                                </div>
+
+                                <div class="vs-filter-field vs-filter-field--check">
+                                    <label class="vs-check">
+                                        <input type="checkbox" id="mvf_sem_chegada" onchange="filtrarMov()">
+                                        <span>Mostrar apenas movimentações sem chegada registrada</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="vs-filter-footer">
+                                <div class="vs-filter-result" id="mvf_result"></div>
+                                <div class="vs-filter-footer__actions">
+                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroMov()">
+                                        <i class="fas fa-times"></i> Limpar
+                                    </button>
+                                    <button type="button" class="vt-btn-filter" onclick="filtrarMov()">
+                                        <i class="fas fa-search"></i> Aplicar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- Ações --}}
                     <div class="vt-panel-actions">
                         <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="btn-xp btn-xp--sm">
                             <i class="fas fa-route mr-1"></i>Transferir entre estações
@@ -549,6 +1024,7 @@
                                     data-mv-reserva="{{ $mov->reserva_id ?? '' }}"
                                     data-mv-usuario="{{ $mvUsuario }}"
                                     data-mv-data="{{ $mvDataSaida }}"
+                                    data-mv-chegada="{{ $mov->data_chegada_real ? 1 : 0 }}"
                                 >
                                     <td><span class="xp-id">#{{ $mov->id }}</span></td>
                                     <td>{{ optional($mov->tipoMovimentacao)->nome ?? '—' }}</td>
@@ -596,54 +1072,102 @@
                 </div>
 
                 {{-- ── PAINEL: Sinistros ── --}}
-                <div class="vt-panel" data-vt-panel="sinistros">
+                <div class="vs-panel" data-step-panel="sinistros">
+                    <div class="vs-panel-head">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Etapa 05</span>
+                            <h4 class="vs-panel-head__title">Sinistros</h4>
+                            <p class="vs-panel-head__sub">Entenda rapidamente status, período, seguradora e números do processo.</p>
+                        </div>
+                        <div class="vs-kpis">
+                            <div class="vs-kpi">
+                                <span>Abertos</span>
+                                <strong>{{ $veiculo->sinistros->whereIn('status', ['aberto','em_analise','aguardando_documentos'])->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Encerrados</span>
+                                <strong>{{ $veiculo->sinistros->whereIn('status', ['encerrado','indenizado'])->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Total</span>
+                                <strong>{{ $veiculo->sinistros->count() }}</strong>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="vt-filter-bar">
-                        <div class="vt-filter-grid">
-                            <div class="vt-filter-field">
-                                <label>Status</label>
-                                <select id="snf_status" class="vt-select">
-                                    <option value="">Todos</option>
-                                    @foreach(\App\Models\Sinistro::STATUS as $k => $v)
-                                        <option value="{{ $k }}">{{ $v }}</option>
-                                    @endforeach
-                                </select>
+                    <div class="vs-filter-wrap">
+                        <div class="vs-filter-top">
+                            <div class="vs-filter-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="snf_busca" class="vs-search-input" placeholder="Buscar por local, seguradora, número ou tipo..." oninput="filtrarSn()">
                             </div>
-                            <div class="vt-filter-field">
-                                <label>Tipo</label>
-                                <select id="snf_tipo" class="vt-select">
-                                    <option value="">Todos</option>
-                                    @foreach(\App\Models\Sinistro::TIPOS as $k => $v)
-                                        <option value="{{ $k }}">{{ $v }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Data ocorrido de</label>
-                                <input type="date" id="snf_data_de" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Data ocorrido até</label>
-                                <input type="date" id="snf_data_ate" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Seguradora</label>
-                                <input type="text" id="snf_seguradora" class="vt-input" placeholder="Nome da seguradora">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Nº Sinistro Seguradora</label>
-                                <input type="text" id="snf_num_seg" class="vt-input" placeholder="Ex: SIN-2026-001">
-                            </div>
-                            <div class="vt-filter-field vt-filter-field--actions">
-                                <button type="button" class="vt-btn-filter" onclick="filtrarSn()">
-                                    <i class="fas fa-search"></i> Filtrar
-                                </button>
-                                <button type="button" class="vt-btn-clear" onclick="limparFiltroSn()">
-                                    <i class="fas fa-times"></i>
+
+                            <div class="vs-filter-actions">
+                                <button type="button" class="vs-chip is-active" data-chip-group="sinistros" onclick="chipSn(this, 'todos')">Todos</button>
+                                <button type="button" class="vs-chip" data-chip-group="sinistros" onclick="chipSn(this, 'aberto')">Abertos</button>
+                                <button type="button" class="vs-chip" data-chip-group="sinistros" onclick="chipSn(this, 'aguardando_documentos')">Aguardando docs</button>
+                                <button type="button" class="vs-chip" data-chip-group="sinistros" onclick="chipSn(this, 'encerrado')">Encerrados</button>
+                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('sinistros')">
+                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
                                 </button>
                             </div>
                         </div>
-                        <div class="vt-filter-result" id="snf_result"></div>
+
+                        <div class="vs-advanced-filters" id="vsAdvanced-sinistros">
+                            <div class="vs-filter-grid">
+                                <div class="vs-filter-field">
+                                    <label>Status</label>
+                                    <select id="snf_status" class="vt-select" onchange="filtrarSn()">
+                                        <option value="">Todos</option>
+                                        @foreach(\App\Models\Sinistro::STATUS as $k => $v)
+                                            <option value="{{ $k }}">{{ $v }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Tipo</label>
+                                    <select id="snf_tipo" class="vt-select" onchange="filtrarSn()">
+                                        <option value="">Todos</option>
+                                        @foreach(\App\Models\Sinistro::TIPOS as $k => $v)
+                                            <option value="{{ $k }}">{{ $v }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Data ocorrido de</label>
+                                    <input type="date" id="snf_data_de" class="vt-input" onchange="filtrarSn()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Data ocorrido até</label>
+                                    <input type="date" id="snf_data_ate" class="vt-input" onchange="filtrarSn()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Seguradora</label>
+                                    <input type="text" id="snf_seguradora" class="vt-input" placeholder="Nome da seguradora" oninput="filtrarSn()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Nº Sinistro Seguradora</label>
+                                    <input type="text" id="snf_num_seg" class="vt-input" placeholder="Ex: SIN-2026-001" oninput="filtrarSn()">
+                                </div>
+                            </div>
+
+                            <div class="vs-filter-footer">
+                                <div class="vs-filter-result" id="snf_result"></div>
+                                <div class="vs-filter-footer__actions">
+                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroSn()">
+                                        <i class="fas fa-times"></i> Limpar
+                                    </button>
+                                    <button type="button" class="vt-btn-filter" onclick="filtrarSn()">
+                                        <i class="fas fa-search"></i> Aplicar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="vt-panel-actions">
@@ -690,11 +1214,11 @@
                                     data-sn-tipo="{{ $sn->tipo_sinistro }}"
                                     data-sn-seguradora="{{ strtolower($sn->seguradora ?? '') }}"
                                     data-sn-num-seg="{{ strtolower($sn->numero_sinistro_seguradora ?? '') }}"
-                                    data-sn-data="{{ $sn->data_hora_ocorrido?->format('Y-m-d') ?? '' }}"
+                                    data-sn-data="{{ $sn->data_hora_ocorrido ? $sn->data_hora_ocorrido->format('Y-m-d') : '' }}"
                                 >
                                     <td><span class="xp-id">#{{ $sn->id }}</span></td>
                                     <td>{{ $sn->label_tipo }}</td>
-                                    <td>{{ $sn->data_hora_ocorrido?->format('d/m/Y') ?? '—' }}</td>
+                                    <td>{{ $sn->data_hora_ocorrido ? $sn->data_hora_ocorrido->format('d/m/Y') : '—' }}</td>
                                     <td class="obs-cell">{{ \Illuminate\Support\Str::limit($sn->local_ocorrido ?? '—', 35) }}</td>
                                     <td>{{ $sn->seguradora ?? '—' }}</td>
                                     <td>{{ $sn->numero_sinistro_seguradora ?? '—' }}</td>
@@ -715,62 +1239,120 @@
                 </div>
 
                 {{-- ── PAINEL: Multas ── --}}
-                <div class="vt-panel" data-vt-panel="multas">
+                <div class="vs-panel" data-step-panel="multas">
+                    <div class="vs-panel-head">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Etapa 06</span>
+                            <h4 class="vs-panel-head__title">Multas e infrações</h4>
+                            <p class="vs-panel-head__sub">Use filtros mais ricos por status, órgão, auto, período, valor e desconto.</p>
+                        </div>
+                        <div class="vs-kpis">
+                            <div class="vs-kpi">
+                                <span>Pendentes</span>
+                                <strong>{{ $veiculo->multas->whereIn('status_multa', ['pendente','em_analise'])->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Pagas</span>
+                                <strong>{{ $veiculo->multas->where('status_multa', 'paga')->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Total</span>
+                                <strong>{{ $veiculo->multas->count() }}</strong>
+                            </div>
+                        </div>
+                    </div>
 
-                    <div class="vt-filter-bar">
-                        <div class="vt-filter-grid">
-                            <div class="vt-filter-field">
-                                <label>Status da Multa</label>
-                                <select id="mtf_status" class="vt-select">
-                                    <option value="">Todos</option>
-                                    @foreach(\App\Models\Multa::STATUS_MULTA as $k => $v)
-                                        <option value="{{ $k }}">{{ $v }}</option>
-                                    @endforeach
-                                </select>
+                    <div class="vs-filter-wrap">
+                        <div class="vs-filter-top">
+                            <div class="vs-filter-search">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="mtf_busca" class="vs-search-input" placeholder="Buscar por órgão, auto, local ou reserva..." oninput="filtrarMt()">
                             </div>
-                            <div class="vt-filter-field">
-                                <label>Status Desconto</label>
-                                <select id="mtf_desconto" class="vt-select">
-                                    <option value="">Todos</option>
-                                    @foreach(\App\Models\Multa::STATUS_DESCONTO as $k => $v)
-                                        <option value="{{ $k }}">{{ $v }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Órgão Autuador</label>
-                                <input type="text" id="mtf_orgao" class="vt-input" placeholder="Ex: DETRAN, PRF…">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Nº Auto</label>
-                                <input type="text" id="mtf_auto" class="vt-input" placeholder="Número do auto">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Infração de</label>
-                                <input type="date" id="mtf_data_de" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Infração até</label>
-                                <input type="date" id="mtf_data_ate" class="vt-input">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Valor mín. (R$)</label>
-                                <input type="number" id="mtf_valor_min" class="vt-input" placeholder="0,00" step="0.01">
-                            </div>
-                            <div class="vt-filter-field">
-                                <label>Valor máx. (R$)</label>
-                                <input type="number" id="mtf_valor_max" class="vt-input" placeholder="9999,99" step="0.01">
-                            </div>
-                            <div class="vt-filter-field vt-filter-field--actions">
-                                <button type="button" class="vt-btn-filter" onclick="filtrarMt()">
-                                    <i class="fas fa-search"></i> Filtrar
-                                </button>
-                                <button type="button" class="vt-btn-clear" onclick="limparFiltroMt()">
-                                    <i class="fas fa-times"></i>
+
+                            <div class="vs-filter-actions">
+                                <button type="button" class="vs-chip is-active" data-chip-group="multas" onclick="chipMt(this, 'todos')">Todas</button>
+                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'pendente')">Pendentes</button>
+                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'paga')">Pagas</button>
+                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'recorrida')">Recorridas</button>
+                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'com_desconto')">Com desconto</button>
+                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('multas')">
+                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
                                 </button>
                             </div>
                         </div>
-                        <div class="vt-filter-result" id="mtf_result"></div>
+
+                        <div class="vs-advanced-filters" id="vsAdvanced-multas">
+                            <div class="vs-filter-grid">
+                                <div class="vs-filter-field">
+                                    <label>Status da Multa</label>
+                                    <select id="mtf_status" class="vt-select" onchange="filtrarMt()">
+                                        <option value="">Todos</option>
+                                        @foreach(\App\Models\Multa::STATUS_MULTA as $k => $v)
+                                            <option value="{{ $k }}">{{ $v }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Status Desconto</label>
+                                    <select id="mtf_desconto" class="vt-select" onchange="filtrarMt()">
+                                        <option value="">Todos</option>
+                                        @foreach(\App\Models\Multa::STATUS_DESCONTO as $k => $v)
+                                            <option value="{{ $k }}">{{ $v }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Órgão Autuador</label>
+                                    <input type="text" id="mtf_orgao" class="vt-input" placeholder="Ex: DETRAN, PRF..." oninput="filtrarMt()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Nº Auto</label>
+                                    <input type="text" id="mtf_auto" class="vt-input" placeholder="Número do auto" oninput="filtrarMt()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Infração de</label>
+                                    <input type="date" id="mtf_data_de" class="vt-input" onchange="filtrarMt()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Infração até</label>
+                                    <input type="date" id="mtf_data_ate" class="vt-input" onchange="filtrarMt()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Valor mín. (R$)</label>
+                                    <input type="number" id="mtf_valor_min" class="vt-input" placeholder="0.00" step="0.01" oninput="filtrarMt()">
+                                </div>
+
+                                <div class="vs-filter-field">
+                                    <label>Valor máx. (R$)</label>
+                                    <input type="number" id="mtf_valor_max" class="vt-input" placeholder="9999.99" step="0.01" oninput="filtrarMt()">
+                                </div>
+
+                                <div class="vs-filter-field vs-filter-field--check">
+                                    <label class="vs-check">
+                                        <input type="checkbox" id="mtf_com_desconto" onchange="filtrarMt()">
+                                        <span>Mostrar apenas multas com desconto aplicado</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="vs-filter-footer">
+                                <div class="vs-filter-result" id="mtf_result"></div>
+                                <div class="vs-filter-footer__actions">
+                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroMt()">
+                                        <i class="fas fa-times"></i> Limpar
+                                    </button>
+                                    <button type="button" class="vt-btn-filter" onclick="filtrarMt()">
+                                        <i class="fas fa-search"></i> Aplicar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="vt-panel-actions">
@@ -821,15 +1403,16 @@
                                     data-mt-desconto="{{ $mt->status_desconto }}"
                                     data-mt-orgao="{{ strtolower($mt->orgao_autuador ?? '') }}"
                                     data-mt-auto="{{ strtolower($mt->numero_auto ?? '') }}"
-                                    data-mt-data="{{ $mt->data_hora_infracao?->format('Y-m-d') ?? '' }}"
+                                    data-mt-data="{{ $mt->data_hora_infracao ? $mt->data_hora_infracao->format('Y-m-d') : '' }}"
                                     data-mt-valor="{{ (float)($mt->valor_final ?? 0) }}"
+                                    data-mt-has-desconto="{{ $mt->valor_desconto !== null ? 1 : 0 }}"
                                 >
                                     <td><span class="xp-id">#{{ $mt->id }}</span></td>
-                                    <td>{{ $mt->data_hora_infracao?->format('d/m/Y H:i') ?? '—' }}</td>
+                                    <td>{{ $mt->data_hora_infracao ? $mt->data_hora_infracao->format('d/m/Y H:i') : '—' }}</td>
                                     <td>{{ $mt->orgao_autuador ?? '—' }}</td>
                                     <td>{{ $mt->numero_auto ?? '—' }}</td>
                                     <td class="obs-cell">{{ \Illuminate\Support\Str::limit($mt->local_infracao ?? '—', 30) }}</td>
-                                    <td>{{ $mt->data_vencimento?->format('d/m/Y') ?? '—' }}</td>
+                                    <td>{{ $mt->data_vencimento ? $mt->data_vencimento->format('d/m/Y') : '—' }}</td>
                                     <td>{{ $mt->pontos ?? '—' }}</td>
                                     <td class="text-right">R$ {{ number_format((float)$mt->valor_original,2,',','.') }}</td>
                                     <td class="text-right">{{ $mt->valor_desconto !== null ? 'R$ '.number_format((float)$mt->valor_desconto,2,',','.') : '—' }}</td>
@@ -854,245 +1437,7 @@
                     </div>
                     @endif
                 </div>
-
-            </div>{{-- /vt-shell --}}
-
-        </div>
-
-        {{-- ── Coluna direita (1/3) ── --}}
-        <div class="col-lg-4">
-
-            {{-- Ações rápidas (PRIMEIRO — mais acessado) --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-bolt"></i>
-                        <div>
-                            <strong>Ações rápidas</strong>
-                        </div>
-                    </div>
-                    <div class="veiculo-acoes-grid">
-                        <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="veiculo-acao veiculo-acao--primary">
-                            <i class="fas fa-pen"></i>
-                            <span>Editar veículo</span>
-                        </a>
-                        <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="veiculo-acao">
-                            <i class="fas fa-route"></i>
-                            <span>Transferir estação</span>
-                        </a>
-                        <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao veiculo-acao--danger">
-                            <i class="fas fa-car-crash"></i>
-                            <span>Registrar sinistro</span>
-                        </a>
-                        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <span>Cadastrar multa</span>
-                        </a>
-                        <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao">
-                            <i class="fas fa-tools"></i>
-                            <span>Abrir OS</span>
-                        </a>
-                        <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="veiculo-acao">
-                            <i class="fas fa-shield-alt"></i>
-                            <span>Ver avarias</span>
-                        </a>
-                    </div>
-                </div>
             </div>
-
-            {{-- Resumo --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-info-circle"></i>
-                        <div>
-                            <strong>Resumo</strong>
-                            <span>Visão rápida do veículo</span>
-                        </div>
-                    </div>
-                    <div class="veiculo-summary">
-                        <div class="veiculo-summary__row">
-                            <span>Avarias pendentes</span>
-                            <strong class="text-warning">{{ $veiculo->veiculoDanos->whereNull('correcao_data')->count() }}</strong>
-                        </div>
-                        <div class="veiculo-summary__row">
-                            <span>Avarias corrigidas</span>
-                            <strong class="text-success">{{ $veiculo->veiculoDanos->whereNotNull('correcao_data')->count() }}</strong>
-                        </div>
-                        <div class="veiculo-summary__row">
-                            <span>OS abertas</span>
-                            <strong class="text-info">{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_ABERTA)->count() }}</strong>
-                        </div>
-                        <div class="veiculo-summary__row">
-                            <span>Sinistros abertos</span>
-                            <strong class="text-danger">{{ $veiculo->sinistros->whereIn('status', ['aberto','em_analise','aguardando_documentos'])->count() }}</strong>
-                        </div>
-                        <div class="veiculo-summary__row">
-                            <span>Multas pendentes</span>
-                            <strong class="text-warning">{{ $veiculo->multas->whereIn('status_multa', ['pendente','em_analise'])->count() }}</strong>
-                        </div>
-                        <div class="veiculo-summary__row">
-                            <span>Reservas totais</span>
-                            <strong>{{ $veiculo->reservas->count() }}</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Sinistros --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-car-crash text-danger"></i>
-                        <div>
-                            <strong>Sinistros</strong>
-                            <span>{{ $veiculo->sinistros->count() }} sinistro(s) registrado(s)</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex mb-2" style="gap:8px; flex-wrap: wrap">
-                        <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-plus mr-1"></i>Registrar sinistro
-                        </a>
-                        <a href="{{ route('sinistro.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
-                            <i class="fas fa-list mr-1"></i>Ver todos
-                        </a>
-                    </div>
-
-                    @if($veiculo->sinistros->isEmpty())
-                        <div class="empty-state mt-2">
-                            <i class="fas fa-shield-alt"></i>
-                            <p>Nenhum sinistro registrado para este veículo.</p>
-                        </div>
-                    @else
-                        @foreach($veiculo->sinistros->take(5) as $sinistro)
-                            @php
-                                $snBadge = match($sinistro->status) {
-                                    'encerrado', 'indenizado' => 'success',
-                                    'aprovado'   => 'primary',
-                                    'cancelado'  => 'secondary',
-                                    'aguardando_documentos' => 'warning',
-                                    default => 'danger',
-                                };
-                            @endphp
-                            <div class="veiculo-sinistro-item">
-                                <div class="veiculo-sinistro-item__head">
-                                    <span class="xp-id">#{{ $sinistro->id }}</span>
-                                    <span class="badge badge-{{ $snBadge }} ml-1">{{ $sinistro->label_status }}</span>
-                                </div>
-                                <div class="veiculo-sinistro-item__body">
-                                    <span class="veiculo-sinistro-item__tipo">{{ $sinistro->label_tipo }}</span>
-                                    <small class="text-muted">{{ $sinistro->data_hora_ocorrido?->format('d/m/Y') ?? '—' }}</small>
-                                </div>
-                                <a href="{{ route('sinistro.show', $sinistro->id) }}" class="btn-xp btn-xp--sm mt-1">
-                                    <i class="fas fa-eye mr-1"></i>Ver
-                                </a>
-                            </div>
-                        @endforeach
-                        @if($veiculo->sinistros->count() > 5)
-                            <p class="text-muted small mb-0 mt-1">Mostrando os 5 mais recentes.</p>
-                        @endif
-                    @endif
-                </div>
-            </div>
-
-            {{-- Multas --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <div>
-                            <strong>Multas</strong>
-                            <span>{{ $veiculo->multas->count() }} multa(s) registrada(s)</span>
-                        </div>
-                    </div>
-
-                    <div class="d-flex mb-2" style="gap:8px; flex-wrap: wrap">
-                        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-plus mr-1"></i>Cadastrar multa
-                        </a>
-                        <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
-                            <i class="fas fa-list mr-1"></i>Ver todas
-                        </a>
-                    </div>
-
-                    @if($veiculo->multas->isEmpty())
-                        <div class="empty-state mt-2">
-                            <i class="fas fa-receipt"></i>
-                            <p>Nenhuma multa registrada para este veículo.</p>
-                        </div>
-                    @else
-                        <div class="table-responsive mt-2">
-                            <table class="table table-hover xp-table">
-                                <thead>
-                                    <tr>
-                                        <th>#</th>
-                                        <th>Data</th>
-                                        <th>Status</th>
-                                        <th class="text-right">Valor</th>
-                                        <th></th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($veiculo->multas->take(5) as $multa)
-                                        @php
-                                            $badgeMulta = match($multa->status_multa) {
-                                                'paga', 'deferida' => 'success',
-                                                'cancelada'  => 'secondary',
-                                                'recorrida'  => 'info',
-                                                'indeferida' => 'danger',
-                                                default      => 'warning',
-                                            };
-                                        @endphp
-                                        <tr>
-                                            <td><span class="xp-id">#{{ $multa->id }}</span></td>
-                                            <td>{{ $multa->data_hora_infracao?->format('d/m/Y') ?? '—' }}</td>
-                                            <td><span class="badge badge-{{ $badgeMulta }}">{{ $multa->label_status_multa }}</span></td>
-                                            <td class="text-right">R$ {{ number_format((float) $multa->valor_final, 2, ',', '.') }}</td>
-                                            <td>
-                                                <a href="{{ route('multa.show', $multa->id) }}" class="btn-xp btn-xp--sm">
-                                                    <i class="fas fa-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                        @if($veiculo->multas->count() > 5)
-                            <p class="text-muted small mb-0">Mostrando as 5 mais recentes.</p>
-                        @endif
-                    @endif
-                </div>
-            </div>
-
-            {{-- Últimas reservas --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-calendar-alt"></i>
-                        <div>
-                            <strong>Últimas Reservas</strong>
-                            <span>5 reservas mais recentes</span>
-                        </div>
-                    </div>
-                    @forelse($veiculo->reservas->sortByDesc('id')->take(5) as $reserva)
-                        <div class="veiculo-reserva-item">
-                            <div class="veiculo-reserva-item__id">
-                                <a href="{{ route('reserva.show', $reserva->id) }}" class="xp-link">#{{ $reserva->id }}</a>
-                            </div>
-                            <div class="veiculo-reserva-item__info">
-                                <span>{{ optional($reserva->statusReserva)->nome ?? '—' }}</span>
-                                <small>{{ $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y') : '—' }} → {{ $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y') : '—' }}</small>
-                            </div>
-                        </div>
-                    @empty
-                        <p class="text-muted small mb-0">Nenhuma reserva registrada.</p>
-                    @endforelse
-                </div>
-            </div>
-
-        </div>
     </div>
 </div>
 @stop
@@ -1531,37 +1876,857 @@
         gap: 10px;
         user-select: none;
     }
+
+    /* ── Steps operacionais ── */
+    .vs-shell {
+        background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
+        border: 1px solid var(--c-border);
+        border-radius: 22px;
+        padding: 18px;
+        box-shadow: 0 10px 28px rgba(12,20,40,.07);
+        overflow: hidden;
+    }
+    .vs-shell__intro {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 16px;
+        margin-bottom: 16px;
+    }
+    .vs-shell__eyebrow {
+        display: inline-block;
+        margin-bottom: 6px;
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+    .vs-shell__title {
+        margin: 0 0 6px;
+        font-size: 1.12rem;
+        font-weight: 800;
+        color: #0c1428;
+    }
+    .vs-shell__sub {
+        margin: 0;
+        color: #64748b;
+        font-size: .84rem;
+        max-width: 680px;
+    }
+    .vs-shell__intro-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .vs-badge-soft {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        background: #eef2ff;
+        color: #3730a3;
+        border: 1px solid #c7d2fe;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .vs-badge-soft.is-success {
+        background: #ecfdf5;
+        border-color: #bbf7d0;
+        color: #166534;
+    }
+    .vs-badge-soft.is-warning {
+        background: #fff7ed;
+        border-color: #fed7aa;
+        color: #9a3412;
+    }
+
+    .vs-steps {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(180px, 1fr));
+        gap: 12px;
+        margin-bottom: 18px;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+    .vs-step {
+        position: relative;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+        border-radius: 18px;
+        padding: 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        cursor: pointer;
+        min-height: 82px;
+        text-align: left;
+        transition: all .18s ease;
+        box-shadow: 0 5px 14px rgba(15,23,42,.05);
+    }
+    .vs-step:hover {
+        transform: translateY(-1px);
+        border-color: #c7d2fe;
+        box-shadow: 0 12px 26px rgba(67,56,202,.10);
+    }
+    .vs-step.is-active {
+        background: linear-gradient(135deg, #eef2ff 0%, #ffffff 100%);
+        border-color: #4338ca;
+        box-shadow: 0 14px 28px rgba(67,56,202,.16);
+    }
+    .vs-step__icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: #eef2ff;
+        color: #4338ca;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .vs-step__content {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+    }
+    .vs-step__content strong {
+        color: #0c1428;
+        font-size: .86rem;
+        font-weight: 800;
+        line-height: 1.2;
+    }
+    .vs-step__content small {
+        margin-top: 3px;
+        color: #64748b;
+        font-size: .71rem;
+        line-height: 1.25;
+    }
+    .vs-step__count {
+        margin-left: auto;
+        min-width: 32px;
+        height: 32px;
+        padding: 0 8px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: #e2e8f0;
+        color: #0f172a;
+        font-size: .75rem;
+        font-weight: 800;
+    }
+    .vs-step__count--alert {
+        background: #fee2e2;
+        color: #b91c1c;
+    }
+
+    .vs-panel {
+        display: none;
+        border: 1px solid #e7edf8;
+        border-radius: 20px;
+        background: #fff;
+        padding: 18px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.4);
+    }
+    .vs-panel.is-active {
+        display: block;
+        animation: fadeVsPanel .18s ease;
+    }
+    @keyframes fadeVsPanel {
+        from { opacity: 0; transform: translateY(4px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .vs-panel-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+        margin-bottom: 16px;
+    }
+    .vs-panel-head__eyebrow {
+        display: inline-block;
+        margin-bottom: 5px;
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .16em;
+        text-transform: uppercase;
+        color: #6366f1;
+    }
+    .vs-panel-head__title {
+        margin: 0 0 5px;
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0c1428;
+    }
+    .vs-panel-head__sub {
+        margin: 0;
+        color: #64748b;
+        font-size: .82rem;
+        max-width: 700px;
+    }
+
+    .vs-kpis {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .vs-kpi {
+        min-width: 145px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 10px 12px;
+    }
+    .vs-kpi span {
+        display: block;
+        margin-bottom: 4px;
+        font-size: .64rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+    .vs-kpi strong {
+        display: block;
+        color: #0c1428;
+        font-size: .95rem;
+        font-weight: 800;
+    }
+
+    .vs-info-banner {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        border-radius: 14px;
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        color: #1d4ed8;
+        font-size: .82rem;
+        font-weight: 600;
+    }
+
+    .vs-filter-wrap {
+        background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+        border: 1px solid #e2e8f0;
+        border-radius: 18px;
+        padding: 14px;
+        margin-bottom: 16px;
+    }
+    .vs-filter-top {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .vs-filter-search {
+        min-width: 280px;
+        flex: 1;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        height: 46px;
+        padding: 0 14px;
+        background: #fff;
+        border: 1px solid #dbe3ee;
+        border-radius: 14px;
+        box-shadow: 0 2px 8px rgba(15,23,42,.04);
+    }
+    .vs-filter-search i {
+        color: #64748b;
+    }
+    .vs-search-input {
+        border: none;
+        outline: none;
+        background: transparent;
+        width: 100%;
+        font-size: .88rem;
+        color: #0f172a;
+    }
+    .vs-filter-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .vs-chip {
+        border: 1px solid #dbe3ee;
+        background: #fff;
+        color: #334155;
+        border-radius: 999px;
+        padding: 7px 12px;
+        font-size: .76rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all .15s ease;
+    }
+    .vs-chip:hover {
+        border-color: #c7d2fe;
+        color: #3730a3;
+    }
+    .vs-chip.is-active {
+        background: #eef2ff;
+        border-color: #4338ca;
+        color: #4338ca;
+        box-shadow: 0 8px 18px rgba(67,56,202,.10);
+    }
+
+    .vs-advanced-filters {
+        display: none;
+        margin-top: 14px;
+        padding-top: 14px;
+        border-top: 1px dashed #dbe3ee;
+    }
+    .vs-advanced-filters.is-open {
+        display: block;
+    }
+    .vs-filter-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+    }
+    .vs-filter-field label {
+        display: block;
+        margin-bottom: 5px;
+        font-size: .66rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+    .vt-input,
+    .vt-select {
+        width: 100%;
+        min-height: 42px;
+        border: 1px solid #dbe3ee;
+        border-radius: 12px;
+        background: #fff;
+        padding: 10px 12px;
+        font-size: .84rem;
+        color: #0f172a;
+        outline: none;
+        transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    .vt-input:focus,
+    .vt-select:focus {
+        border-color: #818cf8;
+        box-shadow: 0 0 0 3px rgba(99,102,241,.12);
+    }
+
+    .vs-filter-field--check {
+        display: flex;
+        align-items: end;
+    }
+    .vs-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 42px;
+        margin: 0;
+        padding: 10px 12px;
+        border: 1px solid #dbe3ee;
+        border-radius: 12px;
+        background: #fff;
+        font-size: .82rem;
+        color: #334155;
+        width: 100%;
+    }
+    .vs-check input {
+        margin: 0;
+    }
+
+    .vs-filter-footer {
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .vs-filter-result {
+        font-size: .8rem;
+        font-weight: 700;
+        color: #475569;
+    }
+    .vs-filter-footer__actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .vt-btn-filter,
+    .vt-btn-clear {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        cursor: pointer;
+        border-radius: 10px;
+        padding: 9px 14px;
+        font-size: .8rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all .18s ease;
+    }
+    .vt-btn-filter {
+        background: linear-gradient(135deg, var(--c-indigo), #6366f1);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(67,56,202,.22);
+    }
+    .vt-btn-filter:hover {
+        opacity: .9;
+        transform: translateY(-1px);
+    }
+    .vt-btn-clear {
+        background: #f1f5f9;
+        color: #334155;
+        border: 1px solid #dbe3ee;
+    }
+    .vt-btn-clear:hover {
+        background: #e2e8f0;
+    }
+
+    .vt-panel-actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+
+    .vs-row-hidden {
+        display: none !important;
+    }
+
+    @media (max-width: 1199px) {
+        .vs-steps {
+            grid-template-columns: repeat(6, minmax(220px, 1fr));
+        }
+    }
+    @media (max-width: 991px) {
+        .module-card-header,
+        .vs-shell__intro,
+        .vs-panel-head {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        .module-header-right,
+        .vs-shell__intro-badges,
+        .vs-kpis {
+            justify-content: flex-start;
+        }
+        .veiculo-acoes-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    @media (max-width: 767px) {
+        .config-block,
+        .vs-shell,
+        .vs-panel {
+            padding: 14px;
+        }
+        .vs-filter-search {
+            min-width: 100%;
+        }
+        .vs-kpi {
+            min-width: calc(50% - 6px);
+        }
+        .vs-filter-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+
 </style>
 @stop
 
 @section('js')
 <script>
     (function () {
-        var buttons = Array.from(document.querySelectorAll('[data-vd-filter]'));
-        var calendar = document.getElementById('vdCalendar');
-        if (!buttons.length || !calendar) return;
+        function q(id) {
+            return document.getElementById(id);
+        }
 
-        function setFilter(key) {
-            buttons.forEach(function (btn) {
-                btn.classList.toggle('is-active', btn.dataset.vdFilter === key);
+        function normalize(value) {
+            return (value || '').toString().toLowerCase().trim();
+        }
+
+        function contains(value, search) {
+            search = normalize(search);
+            if (!search) return true;
+            return normalize(value).indexOf(search) !== -1;
+        }
+
+        function inDateRange(value, from, to) {
+            if (!from && !to) return true;
+            if (!value) return false;
+            if (from && value < from) return false;
+            if (to && value > to) return false;
+            return true;
+        }
+
+        function inNumberRange(value, min, max) {
+            value = parseFloat(value);
+            min = min === '' || min === null ? null : parseFloat(min);
+            max = max === '' || max === null ? null : parseFloat(max);
+
+            if (isNaN(value)) value = 0;
+            if (min !== null && !isNaN(min) && value < min) return false;
+            if (max !== null && !isNaN(max) && value > max) return false;
+            return true;
+        }
+
+        function setResult(resultId, count) {
+            var el = q(resultId);
+            if (!el) return;
+            el.textContent = count + ' registro(s) encontrado(s).';
+        }
+
+        function hideRows(rows, predicate, resultId) {
+            var count = 0;
+            rows.forEach(function (row) {
+                var show = predicate(row);
+                row.classList.toggle('vs-row-hidden', !show);
+                if (show) count++;
+            });
+            setResult(resultId, count);
+        }
+
+        function activateChip(group, button) {
+            document.querySelectorAll('[data-chip-group="' + group + '"]').forEach(function (chip) {
+                chip.classList.remove('is-active');
+            });
+            if (button) button.classList.add('is-active');
+        }
+
+        function clearInput(id, value) {
+            var el = q(id);
+            if (!el) return;
+            if (el.type === 'checkbox') {
+                el.checked = !!value;
+                return;
+            }
+            el.value = value || '';
+        }
+
+        window.toggleFiltrosAvancados = function (key) {
+            var panel = q('vsAdvanced-' + key);
+            if (!panel) return;
+            panel.classList.toggle('is-open');
+        };
+
+        function activateStep(step) {
+            document.querySelectorAll('.vs-step').forEach(function (btn) {
+                btn.classList.toggle('is-active', btn.getAttribute('data-step') === step);
             });
 
-            calendar.querySelectorAll('[data-vd-type]').forEach(function (day) {
-                if (key === 'all') {
-                    day.classList.remove('is-hidden');
-                    return;
-                }
-                day.classList.toggle('is-hidden', day.dataset.vdType !== key);
+            document.querySelectorAll('[data-step-panel]').forEach(function (panel) {
+                panel.classList.toggle('is-active', panel.getAttribute('data-step-panel') === step);
             });
         }
 
-        buttons.forEach(function (btn) {
-            btn.addEventListener('click', function () {
-                setFilter(this.dataset.vdFilter);
+        document.querySelectorAll('.vs-step').forEach(function (button) {
+            button.addEventListener('click', function () {
+                activateStep(this.getAttribute('data-step'));
             });
         });
 
-        setFilter('all');
+        activateStep('disp');
+
+        window.chipAvarias = function (button, action) {
+            activateChip('avarias', button);
+            limparFiltroAvarias(false);
+
+            if (action === 'pendente') clearInput('avf_status', 'pendente');
+            if (action === 'corrigido') clearInput('avf_status', 'corrigido');
+            if (action === 'reserva') clearInput('avf_com_reserva', true);
+
+            filtrarAvarias();
+        };
+
+        window.filtrarAvarias = function () {
+            var busca = normalize(q('avf_busca') && q('avf_busca').value);
+            var status = normalize(q('avf_status') && q('avf_status').value);
+            var tipo = normalize(q('avf_tipo') && q('avf_tipo').value);
+            var local = normalize(q('avf_local') && q('avf_local').value);
+            var reserva = normalize(q('avf_reserva') && q('avf_reserva').value);
+            var comReserva = q('avf_com_reserva') && q('avf_com_reserva').checked;
+
+            var rows = Array.prototype.slice.call(document.querySelectorAll('#tabelaAvarias tbody tr'));
+            hideRows(rows, function (row) {
+                var ds = row.dataset;
+                var hasReserva = !!normalize(ds.avReserva);
+
+                if (status && normalize(ds.avStatus) !== status) return false;
+                if (!contains(ds.avTipo, tipo)) return false;
+                if (!contains(ds.avLocal, local)) return false;
+                if (reserva && normalize(ds.avReserva) !== reserva) return false;
+                if (comReserva && !hasReserva) return false;
+                if (busca && !contains(row.textContent, busca)) return false;
+
+                return true;
+            }, 'avf_result');
+        };
+
+        window.limparFiltroAvarias = function (resetChip) {
+            ['avf_busca', 'avf_status', 'avf_tipo', 'avf_local', 'avf_reserva'].forEach(function (id) {
+                clearInput(id, '');
+            });
+            clearInput('avf_com_reserva', false);
+            if (resetChip !== false) {
+                var chip = document.querySelector('[data-chip-group="avarias"]');
+                activateChip('avarias', chip);
+            }
+            filtrarAvarias();
+        };
+
+        window.chipOs = function (button, action) {
+            activateChip('os', button);
+            limparFiltroOs(false);
+
+            if (action === 'aberta') clearInput('osf_status', 'aberta');
+            if (action === 'em_andamento') clearInput('osf_status', 'em_andamento');
+            if (action === 'concluida') clearInput('osf_status', 'concluida');
+            if (action === '30dias') {
+                var today = '{{ now()->format('Y-m-d') }}';
+                var past = '{{ now()->subDays(30)->format('Y-m-d') }}';
+                clearInput('osf_data_de', past);
+                clearInput('osf_data_ate', today);
+            }
+
+            filtrarOs();
+        };
+
+        window.filtrarOs = function () {
+            var busca = normalize(q('osf_busca') && q('osf_busca').value);
+            var status = normalize(q('osf_status') && q('osf_status').value);
+            var numero = normalize(q('osf_numero') && q('osf_numero').value);
+            var dataDe = q('osf_data_de') && q('osf_data_de').value;
+            var dataAte = q('osf_data_ate') && q('osf_data_ate').value;
+
+            var rows = Array.prototype.slice.call(document.querySelectorAll('#tabelaOs tbody tr'));
+            hideRows(rows, function (row) {
+                var ds = row.dataset;
+
+                if (status && normalize(ds.osStatus) !== status) return false;
+                if (!contains(ds.osNumero, numero)) return false;
+                if (!inDateRange(ds.osData, dataDe, dataAte)) return false;
+                if (busca && !contains(row.textContent, busca)) return false;
+
+                return true;
+            }, 'osf_result');
+        };
+
+        window.limparFiltroOs = function (resetChip) {
+            ['osf_busca', 'osf_status', 'osf_numero', 'osf_data_de', 'osf_data_ate'].forEach(function (id) {
+                clearInput(id, '');
+            });
+            if (resetChip !== false) {
+                var chip = document.querySelector('[data-chip-group="os"]');
+                activateChip('os', chip);
+            }
+            filtrarOs();
+        };
+
+        window.chipMov = function (button, action) {
+            activateChip('mov', button);
+            limparFiltroMov(false);
+
+            if (action === 'reserva') clearInput('mvf_com_reserva', true);
+            if (action === 'sem_chegada') clearInput('mvf_sem_chegada', true);
+            if (action === 'hoje') {
+                var today = '{{ now()->format('Y-m-d') }}';
+                clearInput('mvf_data_de', today);
+                clearInput('mvf_data_ate', today);
+            }
+
+            filtrarMov();
+        };
+
+        window.filtrarMov = function () {
+            var busca = normalize(q('mvf_busca') && q('mvf_busca').value);
+            var tipo = normalize(q('mvf_tipo') && q('mvf_tipo').value);
+            var status = normalize(q('mvf_status') && q('mvf_status').value);
+            var origem = normalize(q('mvf_origem') && q('mvf_origem').value);
+            var destino = normalize(q('mvf_destino') && q('mvf_destino').value);
+            var dataDe = q('mvf_data_de') && q('mvf_data_de').value;
+            var dataAte = q('mvf_data_ate') && q('mvf_data_ate').value;
+            var reserva = normalize(q('mvf_reserva') && q('mvf_reserva').value);
+            var usuario = normalize(q('mvf_usuario') && q('mvf_usuario').value);
+            var comReserva = q('mvf_com_reserva') && q('mvf_com_reserva').checked;
+            var semChegada = q('mvf_sem_chegada') && q('mvf_sem_chegada').checked;
+
+            var rows = Array.prototype.slice.call(document.querySelectorAll('#tabelaMov tbody tr'));
+            hideRows(rows, function (row) {
+                var ds = row.dataset;
+                var hasReserva = !!normalize(ds.mvReserva);
+
+                if (tipo && normalize(ds.mvTipo) !== tipo) return false;
+                if (status && normalize(ds.mvStatus) !== status) return false;
+                if (!contains(ds.mvOrigem, origem)) return false;
+                if (!contains(ds.mvDestino, destino)) return false;
+                if (!inDateRange(ds.mvData, dataDe, dataAte)) return false;
+                if (reserva && normalize(ds.mvReserva) !== reserva) return false;
+                if (!contains(ds.mvUsuario, usuario)) return false;
+                if (comReserva && !hasReserva) return false;
+                if (semChegada && ds.mvChegada !== '0') return false;
+                if (busca && !contains(row.textContent, busca)) return false;
+
+                return true;
+            }, 'mvf_result');
+        };
+
+        window.limparFiltroMov = function (resetChip) {
+            ['mvf_busca', 'mvf_tipo', 'mvf_status', 'mvf_origem', 'mvf_destino', 'mvf_data_de', 'mvf_data_ate', 'mvf_reserva', 'mvf_usuario'].forEach(function (id) {
+                clearInput(id, '');
+            });
+            clearInput('mvf_com_reserva', false);
+            clearInput('mvf_sem_chegada', false);
+            if (resetChip !== false) {
+                var chip = document.querySelector('[data-chip-group="mov"]');
+                activateChip('mov', chip);
+            }
+            filtrarMov();
+        };
+
+        window.chipSn = function (button, action) {
+            activateChip('sinistros', button);
+            limparFiltroSn(false);
+
+            if (action === 'aberto') clearInput('snf_status', 'aberto');
+            if (action === 'aguardando_documentos') clearInput('snf_status', 'aguardando_documentos');
+            if (action === 'encerrado') clearInput('snf_status', 'encerrado');
+
+            filtrarSn();
+        };
+
+        window.filtrarSn = function () {
+            var busca = normalize(q('snf_busca') && q('snf_busca').value);
+            var status = normalize(q('snf_status') && q('snf_status').value);
+            var tipo = normalize(q('snf_tipo') && q('snf_tipo').value);
+            var dataDe = q('snf_data_de') && q('snf_data_de').value;
+            var dataAte = q('snf_data_ate') && q('snf_data_ate').value;
+            var seguradora = normalize(q('snf_seguradora') && q('snf_seguradora').value);
+            var numSeg = normalize(q('snf_num_seg') && q('snf_num_seg').value);
+
+            var rows = Array.prototype.slice.call(document.querySelectorAll('#tabelaSn tbody tr'));
+            hideRows(rows, function (row) {
+                var ds = row.dataset;
+
+                if (status && normalize(ds.snStatus) !== status) return false;
+                if (tipo && normalize(ds.snTipo) !== tipo) return false;
+                if (!inDateRange(ds.snData, dataDe, dataAte)) return false;
+                if (!contains(ds.snSeguradora, seguradora)) return false;
+                if (!contains(ds.snNumSeg, numSeg)) return false;
+                if (busca && !contains(row.textContent, busca)) return false;
+
+                return true;
+            }, 'snf_result');
+        };
+
+        window.limparFiltroSn = function (resetChip) {
+            ['snf_busca', 'snf_status', 'snf_tipo', 'snf_data_de', 'snf_data_ate', 'snf_seguradora', 'snf_num_seg'].forEach(function (id) {
+                clearInput(id, '');
+            });
+            if (resetChip !== false) {
+                var chip = document.querySelector('[data-chip-group="sinistros"]');
+                activateChip('sinistros', chip);
+            }
+            filtrarSn();
+        };
+
+        window.chipMt = function (button, action) {
+            activateChip('multas', button);
+            limparFiltroMt(false);
+
+            if (action === 'pendente') clearInput('mtf_status', 'pendente');
+            if (action === 'paga') clearInput('mtf_status', 'paga');
+            if (action === 'recorrida') clearInput('mtf_status', 'recorrida');
+            if (action === 'com_desconto') clearInput('mtf_com_desconto', true);
+
+            filtrarMt();
+        };
+
+        window.filtrarMt = function () {
+            var busca = normalize(q('mtf_busca') && q('mtf_busca').value);
+            var status = normalize(q('mtf_status') && q('mtf_status').value);
+            var desconto = normalize(q('mtf_desconto') && q('mtf_desconto').value);
+            var orgao = normalize(q('mtf_orgao') && q('mtf_orgao').value);
+            var auto = normalize(q('mtf_auto') && q('mtf_auto').value);
+            var dataDe = q('mtf_data_de') && q('mtf_data_de').value;
+            var dataAte = q('mtf_data_ate') && q('mtf_data_ate').value;
+            var valorMin = q('mtf_valor_min') && q('mtf_valor_min').value;
+            var valorMax = q('mtf_valor_max') && q('mtf_valor_max').value;
+            var comDesconto = q('mtf_com_desconto') && q('mtf_com_desconto').checked;
+
+            var rows = Array.prototype.slice.call(document.querySelectorAll('#tabelaMt tbody tr'));
+            hideRows(rows, function (row) {
+                var ds = row.dataset;
+
+                if (status && normalize(ds.mtStatus) !== status) return false;
+                if (desconto && normalize(ds.mtDesconto) !== desconto) return false;
+                if (!contains(ds.mtOrgao, orgao)) return false;
+                if (!contains(ds.mtAuto, auto)) return false;
+                if (!inDateRange(ds.mtData, dataDe, dataAte)) return false;
+                if (!inNumberRange(ds.mtValor, valorMin, valorMax)) return false;
+                if (comDesconto && ds.mtHasDesconto !== '1') return false;
+                if (busca && !contains(row.textContent, busca)) return false;
+
+                return true;
+            }, 'mtf_result');
+        };
+
+        window.limparFiltroMt = function (resetChip) {
+            ['mtf_busca', 'mtf_status', 'mtf_desconto', 'mtf_orgao', 'mtf_auto', 'mtf_data_de', 'mtf_data_ate', 'mtf_valor_min', 'mtf_valor_max'].forEach(function (id) {
+                clearInput(id, '');
+            });
+            clearInput('mtf_com_desconto', false);
+            if (resetChip !== false) {
+                var chip = document.querySelector('[data-chip-group="multas"]');
+                activateChip('multas', chip);
+            }
+            filtrarMt();
+        };
+
+        // Disponibilidade: mantém o filtro por legenda do calendário
+        var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-vd-filter]'));
+        var calendar = q('vdCalendar');
+        if (buttons.length && calendar) {
+            function setCalendarFilter(key) {
+                buttons.forEach(function (btn) {
+                    btn.classList.toggle('is-active', btn.dataset.vdFilter === key);
+                });
+
+                calendar.querySelectorAll('[data-vd-type]').forEach(function (day) {
+                    if (key === 'all') {
+                        day.classList.remove('is-hidden');
+                        return;
+                    }
+                    day.classList.toggle('is-hidden', day.dataset.vdType !== key);
+                });
+            }
+
+            buttons.forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    setCalendarFilter(this.dataset.vdFilter);
+                });
+            });
+
+            setCalendarFilter('all');
+        }
+
+        filtrarAvarias();
+        filtrarOs();
+        filtrarMov();
+        filtrarSn();
+        filtrarMt();
     }());
 </script>
 @stop
