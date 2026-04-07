@@ -69,9 +69,122 @@
         cursor: not-allowed;
     }
 
+    .btn-secondary {
+        background: #64748b;
+        color: #fff;
+        border: none;
+        border-radius: 8px;
+        padding: 7px 14px;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+
+    .btn-secondary:hover { background: #475569; }
+
     .period-sep {
         color: #8b92a9;
         font-size: 12px;
+    }
+
+    .kpi-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+
+    .kpi-card {
+        background: #fff;
+        border: 1px solid #e2e5ef;
+        border-radius: 16px;
+        padding: 16px 16px 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .kpi-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--accent);
+    }
+
+    .kpi-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+    }
+
+    .kpi-label {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .kpi-value {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        color: #0f172a;
+        letter-spacing: -0.02em;
+        margin: 0;
+        line-height: 1.1;
+    }
+
+    .kpi-sub {
+        font-size: 12px;
+        color: #8b92a9;
+        margin: 0;
+    }
+
+    .kpi-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--accent-soft);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        color: var(--accent);
+        flex-shrink: 0;
+    }
+
+    .home-details {
+        display: none;
+    }
+
+    .home-details.is-open {
+        display: block;
+    }
+
+    .btn-more-cards {
+        background: transparent;
+        border: 1px dashed #cbd5e1;
+        color: #475569;
+        border-radius: 999px;
+        padding: 8px 12px;
+        font-size: 12px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+
+    .btn-more-cards:hover {
+        background: #f8fafc;
     }
 
     .charts-grid {
@@ -358,6 +471,7 @@
     .c-amber { --accent: #d97706; --accent-soft: #fef3c7; }
     .c-emerald { --accent: #059669; --accent-soft: #d1fae5; }
     .c-rose { --accent: #e11d48; --accent-soft: #ffe4e6; }
+    .c-indigo { --accent: #4f46e5; --accent-soft: #e0e7ff; }
 
     @keyframes fadeUp {
         from { opacity: 0; transform: translateY(10px); }
@@ -412,8 +526,67 @@
     <button class="btn-filtrar" id="btnFiltrar">Aplicar</button>
     <button class="btn-filtrar" id="btnHoje" style="background:#059669;">Hoje</button>
     <button class="btn-filtrar" id="btn12m" style="background:#7c3aed;">Ultimos 12 meses</button>
+    <button class="btn-secondary" id="btnToggleDetalhes" type="button">Detalhes</button>
 </div>
 
+<div class="kpi-grid">
+    <div class="kpi-card c-teal">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">Reservas</p>
+                <p class="kpi-value" id="kpiTotalReservas">--</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-calendar-check"></i></div>
+        </div>
+        <p class="kpi-sub" id="kpiPeriodo">--</p>
+    </div>
+
+    <div class="kpi-card c-emerald">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">Receita</p>
+                <p class="kpi-value" id="kpiTotalFinanceiro">--</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-dollar-sign"></i></div>
+        </div>
+        <p class="kpi-sub" id="kpiTicketMedio">--</p>
+    </div>
+
+    <div class="kpi-card c-indigo">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">Ocupacao</p>
+                <p class="kpi-value" id="kpiOcupacao">--</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-chart-pie"></i></div>
+        </div>
+        <p class="kpi-sub">Frota no periodo</p>
+    </div>
+
+    <div class="kpi-card c-amber">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">Movimentacoes</p>
+                <p class="kpi-value" id="kpiMovimentacoes">--</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-exchange-alt"></i></div>
+        </div>
+        <p class="kpi-sub">Total no periodo</p>
+    </div>
+
+    <div class="kpi-card c-rose">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">Veiculos</p>
+                <p class="kpi-value" id="kpiVeiculos">{{ $totalVeiculos }}</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-car"></i></div>
+        </div>
+        <p class="kpi-sub">Cadastrados</p>
+    </div>
+</div>
+
+<div class="home-details" id="homeDetails">
 <div class="charts-grid">
     @if ($homeSections['reservas'])
     <div class="chart-card span-12">
@@ -540,6 +713,7 @@
     </div>
     @endif
 </div>
+</div>
 @endif
 
 @php
@@ -552,21 +726,50 @@
 @endphp
 
 @if ($hasVisibleItems)
-    @foreach ($items as $grupoItems)
-        <p class="section-label">{{ $grupoItems['grupo'] }}</p>
-        <div class="stat-grid">
-            @php $colorClass = $colorMap[$grupoItems['backgroundIcone']] ?? 'c-teal'; @endphp
-            @foreach ($grupoItems['items'] as $i)
-                <a href="{{ route($i['route']) }}" class="stat-card {{ $colorClass }}">
-                    <div class="stat-icon"><i class="{{ $i['icone'] }}"></i></div>
-                    <div>
-                        <p class="stat-name">{{ $i['nome'] }}</p>
-                        <p class="stat-value">{{ $i['prefix'] }}{{ $i['valor'] }}{{ $i['suffix'] }}</p>
-                    </div>
-                </a>
-            @endforeach
+    @php
+        $allCards = [];
+        foreach ($items as $grupoItems) {
+            $colorClass = $colorMap[$grupoItems['backgroundIcone']] ?? 'c-teal';
+            foreach (($grupoItems['items'] ?? []) as $card) {
+                $card['_colorClass'] = $colorClass;
+                $allCards[] = $card;
+            }
+        }
+        $quickCards = array_slice($allCards, 0, 8);
+        $moreCards = array_slice($allCards, 8);
+    @endphp
+
+    <p class="section-label">Acesso rapido</p>
+    <div class="stat-grid">
+        @foreach ($quickCards as $i)
+            <a href="{{ route($i['route']) }}" class="stat-card {{ $i['_colorClass'] ?? 'c-teal' }}">
+                <div class="stat-icon"><i class="{{ $i['icone'] }}"></i></div>
+                <div>
+                    <p class="stat-name">{{ $i['nome'] }}</p>
+                    <p class="stat-value">{{ $i['prefix'] }}{{ $i['valor'] }}{{ $i['suffix'] }}</p>
+                </div>
+            </a>
+        @endforeach
+    </div>
+
+    @if (count($moreCards) > 0)
+        <div class="mt-3">
+            <button type="button" class="btn-more-cards" id="btnMoreCards">Mostrar mais atalhos</button>
         </div>
-    @endforeach
+        <div class="mt-3 d-none" id="moreCards">
+            <div class="stat-grid">
+                @foreach ($moreCards as $i)
+                    <a href="{{ route($i['route']) }}" class="stat-card {{ $i['_colorClass'] ?? 'c-teal' }}">
+                        <div class="stat-icon"><i class="{{ $i['icone'] }}"></i></div>
+                        <div>
+                            <p class="stat-name">{{ $i['nome'] }}</p>
+                            <p class="stat-value">{{ $i['prefix'] }}{{ $i['valor'] }}{{ $i['suffix'] }}</p>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        </div>
+    @endif
 @endif
 @stop
 
@@ -603,6 +806,8 @@ let chartFinanceiroLinha = null;
 let chartFinanceiroStatus = null;
 let chartFinanceiroGateway = null;
 let simboloMoeda = 'R$';
+let lastDashboardData = null;
+let detailsOpen = false;
 
 const movColors = ['#0891b2', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0ea5e9', '#f59e0b', '#10b981'];
 const finStatusColors = ['#16a34a', '#d97706', '#dc2626'];
@@ -665,7 +870,58 @@ function setDateInputs(inicio, fim) {
     dataFim.value = fim;
 }
 
+function setDetailsOpen(open) {
+    detailsOpen = !!open;
+    const details = document.getElementById('homeDetails');
+    const btn = document.getElementById('btnToggleDetalhes');
+    if (details) details.classList.toggle('is-open', detailsOpen);
+    if (btn) btn.textContent = detailsOpen ? 'Ocultar detalhes' : 'Detalhes';
+    localStorage.setItem('homeDetailsOpen', detailsOpen ? '1' : '0');
+
+    if (detailsOpen && lastDashboardData) {
+        const dataInicio = document.getElementById('data_inicio')?.value;
+        const dataFim = document.getElementById('data_fim')?.value;
+        if (dataInicio && dataFim) {
+            showOverlays();
+            try {
+                if (HOME_SECTIONS.reservas) renderReservas(lastDashboardData.dadosReservas, lastDashboardData.totalReservas, dataInicio, dataFim);
+                if (HOME_SECTIONS.movimentacoes) renderMovStatus(lastDashboardData.movPorStatus, lastDashboardData.totalMovimentacoes);
+                if (HOME_SECTIONS.frota) renderFrota(lastDashboardData.veiculosPorGrupo);
+                if (HOME_SECTIONS.ocupacao) renderOcupacao(lastDashboardData.ocupacaoFrota, lastDashboardData.ocupacaoGeral);
+                if (HOME_SECTIONS.financeiro) {
+                    renderFinanceiroLinha(lastDashboardData.financeiroEvolucao, lastDashboardData.financeiroResumo, dataInicio, dataFim);
+                    renderFinanceiroStatus(lastDashboardData.financeiroStatus, lastDashboardData.financeiroResumo);
+                    renderFinanceiroGateway(lastDashboardData.financeiroGateway, lastDashboardData.financeiroResumo);
+                }
+            } finally {
+                hideOverlays();
+            }
+        }
+    }
+}
+
+function initHomeToggles() {
+    const btnDetails = document.getElementById('btnToggleDetalhes');
+    if (btnDetails) {
+        btnDetails.addEventListener('click', () => setDetailsOpen(!detailsOpen));
+    }
+
+    const saved = localStorage.getItem('homeDetailsOpen') === '1';
+    setDetailsOpen(saved);
+
+    const btnMore = document.getElementById('btnMoreCards');
+    const more = document.getElementById('moreCards');
+    if (btnMore && more) {
+        btnMore.addEventListener('click', () => {
+            const isHidden = more.classList.contains('d-none');
+            more.classList.toggle('d-none', !isHidden);
+            btnMore.textContent = isHidden ? 'Mostrar menos atalhos' : 'Mostrar mais atalhos';
+        });
+    }
+}
+
 function showOverlays() {
+    if (!detailsOpen) return;
     overlayIds.forEach((id) => {
         const el = document.getElementById(id);
         if (el) {
@@ -675,6 +931,7 @@ function showOverlays() {
 }
 
 function hideOverlays() {
+    if (!detailsOpen) return;
     overlayIds.forEach((id) => {
         const el = document.getElementById(id);
         if (el) {
@@ -713,7 +970,14 @@ function fetchChartData() {
             return response.json();
         })
         .then((data) => {
+            lastDashboardData = data;
             simboloMoeda = data.simboloMoeda || 'R$';
+
+            renderKpis(data, inicio, fim);
+
+            if (!detailsOpen) {
+                return;
+            }
             if (HOME_SECTIONS.reservas) {
                 renderReservas(data.dadosReservas, data.totalReservas, inicio, fim);
             }
@@ -737,6 +1001,28 @@ function fetchChartData() {
             btn.disabled = false;
             hideOverlays();
         });
+}
+
+function renderKpis(data, inicio, fim) {
+    const totalReservas = Number(data?.totalReservas ?? 0);
+    const totalMov = Number(data?.totalMovimentacoes ?? 0);
+    const ocupacao = Number(data?.ocupacaoGeral ?? 0);
+    const totalFin = Number(data?.financeiroResumo?.total ?? 0);
+    const ticket = Number(data?.financeiroResumo?.ticket_medio ?? 0);
+
+    const elReservas = document.getElementById('kpiTotalReservas');
+    const elMov = document.getElementById('kpiMovimentacoes');
+    const elOcup = document.getElementById('kpiOcupacao');
+    const elFin = document.getElementById('kpiTotalFinanceiro');
+    const elTicket = document.getElementById('kpiTicketMedio');
+    const elPeriodo = document.getElementById('kpiPeriodo');
+
+    if (elReservas) elReservas.textContent = totalReservas.toLocaleString('pt-BR');
+    if (elMov) elMov.textContent = totalMov.toLocaleString('pt-BR');
+    if (elOcup) elOcup.textContent = formatPercent(ocupacao);
+    if (elFin) elFin.textContent = formatMoney(totalFin);
+    if (elTicket) elTicket.textContent = `Ticket medio: ${formatMoney(ticket)}`;
+    if (elPeriodo) elPeriodo.textContent = `${formatShortDate(inicio)} - ${formatShortDate(fim)}`;
 }
 
 function renderReservas(dados, total, inicio, fim) {
@@ -1073,6 +1359,8 @@ function renderFinanceiroStatus(dados, resumo) {
 }
 
 if (Object.values(HOME_SECTIONS).some(Boolean)) {
+    initHomeToggles();
+
     const btnFiltrar = document.getElementById('btnFiltrar');
     const btnHoje = document.getElementById('btnHoje');
     const btn12m = document.getElementById('btn12m');
