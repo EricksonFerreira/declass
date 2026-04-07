@@ -359,7 +359,7 @@
             font-size:.75rem;
             color:#9ca3af;
         }
-        .powered img{ height:18px; width:auto; display:block; opacity:.95; }
+        .powered img{ height:5em; width:auto; display:block; opacity:.95; }
     </style>
 </head>
 <body>
