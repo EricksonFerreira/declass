@@ -96,7 +96,7 @@ class VeiculoService extends AbstractBaseService
         $naoMovimentouInicialmente = is_null($veiculo->data_hora_disponibilidade) || is_null($veiculo->local_disponibilidade);
         $veiculo->update($data);
 
-        if($naoMovimentouInicialmente){
+        if ($naoMovimentouInicialmente) {
             $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
             $this->disponibilidadeInicialVeiculoService->create([
                 'veiculo_id' => $veiculo->id,
@@ -127,6 +127,26 @@ class VeiculoService extends AbstractBaseService
             ->orderBy('nome')
             ->limit($limit)
             ->get();
+    }
+
+    public function getVeiculosDisponibilidade(?string $estacaoFiltro = null, int $perPage = 1000)
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope(
+            $this->model->newQuery()
+        ))->with([
+            'grupoFrota',
+            'modelo',
+            'localDisponibilidade',
+            'statusVeiculo'
+        ]);
+
+        if ($estacaoFiltro === 'sem_estacao') {
+            $query->whereNull('local_disponibilidade');
+        } elseif (is_numeric($estacaoFiltro) && (int) $estacaoFiltro > 0) {
+            $query->where('local_disponibilidade', (int) $estacaoFiltro);
+        }
+
+        return $query->orderBy('id', 'asc')->paginate($perPage);
     }
 
     /**
@@ -242,11 +262,11 @@ class VeiculoService extends AbstractBaseService
         // Subquery para obter IDs de veículos com movimentações no período
         $veiculosComMovimentacoes = Movimentacao::where(function ($query) use ($data_inicio, $data_fim) {
             $query->whereBetween('data_inicio', [$data_inicio, $data_fim])
-                  ->orWhereBetween('data_fim', [$data_inicio, $data_fim])
-                  ->orWhere(function ($query) use ($data_inicio, $data_fim) {
-                      $query->where('data_inicio', '<=', $data_inicio)
-                            ->where('data_fim', '>=', $data_fim);
-                  });
+                ->orWhereBetween('data_fim', [$data_inicio, $data_fim])
+                ->orWhere(function ($query) use ($data_inicio, $data_fim) {
+                    $query->where('data_inicio', '<=', $data_inicio)
+                        ->where('data_fim', '>=', $data_fim);
+                });
         })->pluck('veiculo_id');
 
         // Obter veículos ativos que não estão na subquery
@@ -416,7 +436,7 @@ class VeiculoService extends AbstractBaseService
                     ->select('id')
                     ->whereRaw('LOWER(nome) LIKE ?', ['%cancel%'])
                     ->pluck('id')
-                    ->map(fn ($v) => (int) $v)
+                    ->map(fn($v) => (int) $v)
                     ->filter()
                     ->unique()
                     ->values()
@@ -507,16 +527,17 @@ class VeiculoService extends AbstractBaseService
             ->whereNotNull('modelo_id')
             ->distinct()
             ->pluck('modelo_id')
-            ->map(static fn ($id) => (int) $id)
+            ->map(static fn($id) => (int) $id)
             ->unique()
             ->values()
             ->toArray();
     }
 
-    public function getVeiculosDisponiveisParaCheckin($estacao_id){
+    public function getVeiculosDisponiveisParaCheckin($estacao_id)
+    {
         // Falta corrigir essa lógica
         return $this->model->where('local_disponibilidade', $estacao_id)
-            ->where('disponivel','S')
+            ->where('disponivel', 'S')
             ->get();
     }
 
@@ -573,7 +594,7 @@ class VeiculoService extends AbstractBaseService
             $ids = $fallback
                 ->where('id', 1)
                 ->pluck('id')
-                ->map(static fn ($id) => (int) $id)
+                ->map(static fn($id) => (int) $id)
                 ->toArray();
         }
 
@@ -581,6 +602,4 @@ class VeiculoService extends AbstractBaseService
 
         return $this->statusVeiculoDisponivelIds;
     }
-
-
 }

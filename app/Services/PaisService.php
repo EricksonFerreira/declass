@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Pais;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
+use Illuminate\Support\Facades\Auth;
 
 class PaisService extends AbstractBaseService
 {
@@ -44,6 +45,7 @@ class PaisService extends AbstractBaseService
         }
 
         $data = $query
+            ->where('empresa_id', Auth::user()->empresa_id)
             ->orderBy('nome', 'asc')
             ->get();
 

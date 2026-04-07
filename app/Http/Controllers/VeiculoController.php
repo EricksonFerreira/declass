@@ -401,11 +401,22 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         $query = \App\Models\Veiculo::with(['modelo', 'grupoFrota', 'marca', 'tipoFrota', 'statusVeiculo', 'localDisponibilidade'])
             ->select([
-                'veiculos.id', 'veiculos.nome', 'veiculos.placa_licenca', 'veiculos.chassi',
-                'veiculos.ano_fabricacao', 'veiculos.ano_modelo', 'veiculos.cor', 'veiculos.kms',
-                'veiculos.ativo', 'veiculos.empresa_id',
-                'veiculos.modelo_id', 'veiculos.grupo_frota_id', 'veiculos.marca_id',
-                'veiculos.tipo_frota_id', 'veiculos.status_veiculo_id', 'veiculos.local_disponibilidade',
+                'veiculos.id',
+                'veiculos.nome',
+                'veiculos.placa_licenca',
+                'veiculos.chassi',
+                'veiculos.ano_fabricacao',
+                'veiculos.ano_modelo',
+                'veiculos.cor',
+                'veiculos.kms',
+                'veiculos.ativo',
+                'veiculos.empresa_id',
+                'veiculos.modelo_id',
+                'veiculos.grupo_frota_id',
+                'veiculos.marca_id',
+                'veiculos.tipo_frota_id',
+                'veiculos.status_veiculo_id',
+                'veiculos.local_disponibilidade',
             ]);
 
         if ($empresaId && Schema::hasColumn('veiculos', 'empresa_id')) {
@@ -420,9 +431,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     ->orWhere('veiculos.placa_licenca', 'like', "%{$q}%")
                     ->orWhere('veiculos.chassi', 'like', "%{$q}%")
                     ->orWhere('veiculos.cor', 'like', "%{$q}%")
-                    ->orWhereHas('modelo', fn ($m) => $m->where('nome', 'like', "%{$q}%"))
-                    ->orWhereHas('marca', fn ($m) => $m->where('nome', 'like', "%{$q}%"))
-                    ->orWhereHas('grupoFrota', fn ($g) => $g->where('nome', 'like', "%{$q}%"));
+                    ->orWhereHas('modelo', fn($m) => $m->where('nome', 'like', "%{$q}%"))
+                    ->orWhereHas('marca', fn($m) => $m->where('nome', 'like', "%{$q}%"))
+                    ->orWhereHas('grupoFrota', fn($g) => $g->where('nome', 'like', "%{$q}%"));
             });
         }
 
@@ -443,7 +454,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $query->where('veiculos.marca_id', $v);
         }
         if ($v = trim((string) $request->input('modelo', ''))) {
-            $query->whereHas('modelo', fn ($m) => $m->where('nome', 'like', "%{$v}%"));
+            $query->whereHas('modelo', fn($m) => $m->where('nome', 'like', "%{$v}%"));
         }
         if ($v = (int) $request->input('grupo_frota_id', 0)) {
             $query->where('veiculos.grupo_frota_id', $v);
@@ -467,7 +478,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $query->where('veiculos.kms', '<=', $v);
         }
 
-        $veiculos = $query->orderBy('veiculos.placa_licenca')->limit(80)->get()->map(fn ($v) => [
+        $veiculos = $query->orderBy('veiculos.placa_licenca')->limit(80)->get()->map(fn($v) => [
             'id'          => $v->id,
             'nome'        => $v->nome ?? ('Veiculo #' . $v->id),
             'placa'       => $v->placa_licenca ?? '',
@@ -514,24 +525,35 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $veiculosIndisponiveis = $this->veiculoService->getVeiculosIndisponiveis();
 
         // $diasDoMes = range(1, 31);
-       // pegue os dias do mes dependendo do mês selecionado. se nao tiver mes selecionado pegue o mes atual
+        // pegue os dias do mes dependendo do mês selecionado. se nao tiver mes selecionado pegue o mes atual
         $mes = (int) ($request->mes ?? date('n'));
         $ano = (int) ($request->ano ?? date('Y'));
+        $estacaoFiltro = $request->input('estacao_id');
+        $estacaoId = is_numeric($estacaoFiltro) ? (int) $estacaoFiltro : 0;
         $diasNoMes = (int) cal_days_in_month(CAL_GREGORIAN, $mes, $ano);
         $diasDoMes = range(1, $diasNoMes);
 
         $inicioMes = Carbon::create($ano, $mes, 1)->startOfDay();
         $fimMes = Carbon::create($ano, $mes, $diasNoMes)->endOfDay();
 
-        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination([], 1000, [
-            'grupoFrota',
-            'modelo',
-            'localDisponibilidade',
-            'statusVeiculo',
-        ]);
+        $filtros = [];
+        if ($estacaoFiltro === 'sem_estacao') {
+            $filtros['local_disponibilidade'] = [
+                'typeWhere' => 'whereNull',
+                'valor' => null,
+            ];
+        } elseif ($estacaoId > 0) {
+            $filtros['local_disponibilidade'] = [
+                'typeWhere' => 'where',
+                'valor' => $estacaoId,
+            ];
+        }
+
+        $estacaoFiltro = $request->input('estacao_id');
+        $veiculos = $this->veiculoService->getVeiculosDisponibilidade($estacaoFiltro, 1000);
 
         $veiculosCollection = method_exists($veiculos, 'getCollection') ? $veiculos->getCollection() : collect($veiculos);
-        $veiculoIds = $veiculosCollection->pluck('id')->map(static fn ($id) => (int) $id)->filter()->values()->toArray();
+        $veiculoIds = $veiculosCollection->pluck('id')->map(static fn($id) => (int) $id)->filter()->values()->toArray();
 
         $reservaBloqueioHoras = 0;
         $empresaId = null;
@@ -652,6 +674,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             }
         }
 
+        $estacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc', $empresaId);
+
         return view('veiculo.disponibilidade', compact(
             'totalVeiculos',
             'veiculosDisponiveis',
@@ -663,6 +687,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'reservaBloqueioHoras',
             'anos',
             'meses',
+            'estacoes',
             'titulo',
             'breadcrumb'
         ));
@@ -708,11 +733,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'tipo_frota_id', 'label'=> 'Tipos de Frotas','type'=>'select','typeWhere' => 'where','options'=> $dataTipoFrota],
-            ['name' => 'grupo_frota_id', 'label'=> 'Grupos de Frotas','type'=>'select','typeWhere' => 'where','options'=> $dataGrupoFrota],
-            ['name' => 'marca_id', 'label'=> 'Marcas','type'=>'select','typeWhere' => 'where','options'=> $dataMarca],
-            ['name' => 'modelo_id', 'label'=> 'Modelos','type'=>'select','typeWhere' => 'where','options'=> $dataModelo],
-            ['name' => 'status_veiculo_id', 'label'=> 'Status','type'=>'select','typeWhere' => 'where','options'=> $dataStatusVeiculo],
+            ['name' => 'tipo_frota_id', 'label' => 'Tipos de Frotas', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataTipoFrota],
+            ['name' => 'grupo_frota_id', 'label' => 'Grupos de Frotas', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataGrupoFrota],
+            ['name' => 'marca_id', 'label' => 'Marcas', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataMarca],
+            ['name' => 'modelo_id', 'label' => 'Modelos', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataModelo],
+            ['name' => 'status_veiculo_id', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataStatusVeiculo],
         ];
     }
 

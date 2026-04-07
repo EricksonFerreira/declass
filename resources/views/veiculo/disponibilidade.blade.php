@@ -12,33 +12,55 @@
         <div class="availability-hero card border-0 shadow-sm mb-3">
             <div class="card-body py-3">
                 <form action="{{ route('veiculo.disponibilidade') }}" method="GET" class="row align-items-end">
-                    <div class="col-lg-3 col-md-4 mb-2">
+                    <div class="col-lg-2 col-md-3 mb-2">
                         <label class="text-uppercase small font-weight-bold text-muted mb-1">Ano</label>
                         <select name="ano" class="form-control form-control-sm">
-                            @foreach($anos as $ano)
-                                <option value="{{ $ano }}" {{ (string) request('ano', date('Y')) === (string) $ano ? 'selected' : '' }}>
+                            @foreach ($anos as $ano)
+                                <option value="{{ $ano }}"
+                                    {{ (string) request('ano', date('Y')) === (string) $ano ? 'selected' : '' }}>
                                     {{ $ano }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-4 mb-2">
+
+                    <div class="col-lg-2 col-md-3 mb-2">
                         <label class="text-uppercase small font-weight-bold text-muted mb-1">Mes</label>
                         <select name="mes" class="form-control form-control-sm">
-                            @foreach($meses as $mes => $nomeMes)
-                                <option value="{{ $mes }}" {{ (int) request('mes', date('n')) === (int) $mes ? 'selected' : '' }}>
+                            @foreach ($meses as $mes => $nomeMes)
+                                <option value="{{ $mes }}"
+                                    {{ (int) request('mes', date('n')) === (int) $mes ? 'selected' : '' }}>
                                     {{ $nomeMes }}
                                 </option>
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-lg-3 col-md-4 mb-2">
-                        <label class="text-uppercase small font-weight-bold text-muted mb-1">Buscar veiculo</label>
-                        <input id="tableSearch" type="text" class="form-control form-control-sm" placeholder="Placa, modelo ou grupo...">
+
+                    <div class="col-lg-3 col-md-3 mb-2">
+                        <label class="text-uppercase small font-weight-bold text-muted mb-1">Estação</label>
+                        <select name="estacao_id" class="form-control form-control-sm">
+                            <option value="">Todas as estações</option>
+                            <option value="sem_estacao" {{ request('estacao_id') === 'sem_estacao' ? 'selected' : '' }}>
+                                Sem estação
+                            </option>
+                            @foreach ($estacoes as $id => $nome)
+                                <option value="{{ $id }}"
+                                    {{ (string) request('estacao_id') === (string) $id ? 'selected' : '' }}>
+                                    {{ $nome }}
+                                </option>
+                            @endforeach
+                        </select>
                     </div>
-                    <div class="col-lg-3 mb-2 d-flex gap-2">
+
+                    <div class="col-lg-3 col-md-3 mb-2">
+                        <label class="text-uppercase small font-weight-bold text-muted mb-1">Buscar veiculo</label>
+                        <input id="tableSearch" type="text" class="form-control form-control-sm"
+                            placeholder="Placa, modelo, grupo ou estação...">
+                    </div>
+
+                    <div class="col-lg-2 mb-2 d-flex gap-2">
                         <button type="submit" class="btn btn-primary btn-sm mr-2">
-                            <i class="fas fa-filter mr-1"></i>Aplicar periodo
+                            <i class="fas fa-filter mr-1"></i>Aplicar
                         </button>
                         <a href="{{ route('veiculo.disponibilidade') }}" class="btn btn-outline-secondary btn-sm">
                             Limpar
@@ -95,7 +117,8 @@
                         <span class="legend-item"><i class="fas fa-circle text-success"></i> Disponivel</span>
                         <span class="legend-item"><i class="fas fa-circle text-warning"></i> Indisponivel por reserva</span>
                         <span class="legend-item"><i class="fas fa-circle text-danger"></i> Indisponivel</span>
-                        <span class="legend-item"><i class="fas fa-circle text-secondary"></i> Sem local (nao reservavel)</span>
+                        <span class="legend-item"><i class="fas fa-circle text-secondary"></i> Sem local (nao
+                            reservavel)</span>
                     </div>
                 </div>
             </div>
@@ -104,11 +127,13 @@
                     <table class="table table-hover table-sm text-nowrap mb-0 availability-table">
                         <thead>
                             <tr>
-                                <th class="sticky-column col-group">Grupo</th>
-                                <th class="sticky-column col-model">Modelo</th>
+                                <th class="sticky-column col-group">Grupo|Modelo</th>
+                                <th class="sticky-column col-model">Nome</th>
                                 <th class="sticky-column col-plate">Placa</th>
-                                <th class="sticky-column col-ratio text-center" title="Percentual de disponibilidade no mes">Disp.</th>
-                                @foreach($diasDoMes as $dia)
+                                <th class="sticky-column col-station">Estação</th>
+                                <th class="sticky-column col-ratio text-center"
+                                    title="Percentual de disponibilidade no mes">Disp.</th>
+                                @foreach ($diasDoMes as $dia)
                                     <th class="text-center day-col">{{ str_pad((string) $dia, 2, '0', STR_PAD_LEFT) }}</th>
                                 @endforeach
                             </tr>
@@ -119,7 +144,7 @@
                                     $grupo = trim((string) ($veiculo->grupoFrota->nome ?? 'Sem grupo'));
                                     $modelo = trim((string) ($veiculo->modelo->nome ?? 'Sem modelo'));
                                     $placa = trim((string) ($veiculo->placa_licenca ?? 'Sem placa'));
-
+                                    $estacao = optional($veiculo->localDisponibilidade)->nome ?? 'Sem estação';
                                     $availableCount = 0;
                                     $reservedCount = 0;
                                     foreach ($diasDoMes as $diaLoop) {
@@ -133,49 +158,86 @@
 
                                     $totalDias = max(count($diasDoMes), 1);
                                     $ratio = (int) round(($availableCount / $totalDias) * 100);
-                                    $rowStatus = ($availableCount === $totalDias)
-                                        ? 'available'
-                                        : (($availableCount === 0 && $reservedCount === 0) ? 'unavailable' : 'reserved');
+                                    $rowStatus =
+                                        $availableCount === $totalDias
+                                            ? 'available'
+                                            : ($availableCount === 0 && $reservedCount === 0
+                                                ? 'unavailable'
+                                                : 'reserved');
                                 @endphp
-                                <tr
-                                    data-search="{{ strtolower($grupo . ' ' . $modelo . ' ' . $placa) }}"
-                                    data-status="{{ $rowStatus }}"
-                                >
-                                    <td class="sticky-column col-group">{{ $grupo }}</td>
-                                    <td class="sticky-column col-model">{{ $modelo }}</td>
+                                <tr data-search="{{ strtolower($grupo . ' ' . $modelo . ' ' . $placa . ' ' . $estacao . ' ' . $veiculo->nome) }}"
+                                    data-status="{{ $rowStatus }}">
+                                    <td class="sticky-column col-group">
+                                        <div class="vehicle-meta">
+                                            <span class="meta-badge meta-group">
+                                                <i class="fas fa-layer-group mr-1"></i> {{ $grupo }}
+                                            </span>
+
+                                            <span class="meta-separator">
+                                                <i class="fas fa-chevron-right"></i>
+                                            </span>
+
+                                            <span class="meta-badge meta-model">
+                                                <i class="fas fa-car-side mr-1"></i> {{ $modelo }}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td class="sticky-column col-model">
+                                        <div class="vehicle-name-wrap">
+                                            <a href="{{ route('veiculo.show', $veiculo->id) }}"
+                                                class="vehicle-name-link">
+                                                <span class="vehicle-name">{{ $veiculo->nome }}</span>
+                                            </a>
+                                        </div>
+                                    </td>
                                     <td class="sticky-column col-plate">
                                         <span class="plate-badge">{{ $placa }}</span>
                                     </td>
+
+                                    <td class="sticky-column col-station">
+                                        <span
+                                            class="station-badge {{ $estacao === 'Sem estação' ? 'station-badge-danger' : 'station-badge-success' }}">
+                                            {{ $estacao }}
+                                        </span>
+                                    </td>
+
                                     <td class="sticky-column col-ratio text-center">
                                         <span class="ratio-pill">{{ $ratio }}%</span>
                                     </td>
-                                    @foreach($diasDoMes as $dia)
+                                    @foreach ($diasDoMes as $dia)
                                         @php
-                                            $cell = $grade[$veiculo->id][$dia] ?? ['tipo' => 'off', 'titulo' => 'Indisponivel', 'reserva_id' => null];
+                                            $cell = $grade[$veiculo->id][$dia] ?? [
+                                                'tipo' => 'off',
+                                                'titulo' => 'Indisponivel',
+                                                'reserva_id' => null,
+                                            ];
                                         @endphp
                                         <td class="text-center">
-                                            @if(($cell['tipo'] ?? null) === 'reserved' && !empty($cell['reserva_id']))
-                                                <a
-                                                    href="{{ route('reserva.show', $cell['reserva_id']) }}"
-                                                    class="status-dot is-reserved"
-                                                    style="text-decoration: none;"
-                                                    title="{{ $cell['titulo'] ?? 'Indisponivel por reserva' }}"
-                                                >
+                                            @if (($cell['tipo'] ?? null) === 'reserved' && !empty($cell['reserva_id']))
+                                                <a href="{{ route('reserva.show', $cell['reserva_id']) }}"
+                                                    class="status-dot is-reserved" style="text-decoration: none;"
+                                                    title="{{ $cell['titulo'] ?? 'Indisponivel por reserva' }}">
                                                     <i class="fas fa-calendar-check"></i>
                                                 </a>
                                             @elseif(($cell['tipo'] ?? null) === 'pending')
-                                                <span class="status-dot is-pending" title="{{ $cell['titulo'] ?? 'Sem local' }}"><i class="fas fa-map-marker-alt"></i></span>
+                                                <span class="status-dot is-pending"
+                                                    title="{{ $cell['titulo'] ?? 'Sem local' }}"><i
+                                                        class="fas fa-map-marker-alt"></i></span>
                                             @elseif(($cell['tipo'] ?? null) === 'ok')
-                                                <span class="status-dot is-ok" title="{{ $cell['titulo'] ?? 'Disponivel' }}"><i class="fas fa-check"></i></span>
+                                                <span class="status-dot is-ok"
+                                                    title="{{ $cell['titulo'] ?? 'Disponivel' }}"><i
+                                                        class="fas fa-check"></i></span>
                                             @else
-                                                <span class="status-dot is-off" title="{{ $cell['titulo'] ?? 'Indisponivel' }}"><i class="fas fa-times"></i></span>
+                                                <span class="status-dot is-off"
+                                                    title="{{ $cell['titulo'] ?? 'Indisponivel' }}"><i
+                                                        class="fas fa-times"></i></span>
                                             @endif
                                         </td>
                                     @endforeach
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ 4 + count($diasDoMes) }}" class="text-center text-muted py-4">
+                                    <td colspan="{{ 5 + count($diasDoMes) }}" class="text-center text-muted py-4">
                                         Nenhum veiculo encontrado para o periodo selecionado.
                                     </td>
                                 </tr>
@@ -198,6 +260,136 @@
 
 @section('css')
     <style>
+        .station-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .station-badge-success {
+            background: #ecfeff;
+            color: #0f766e;
+            border: 1px solid #bae6fd;
+        }
+
+        .station-badge-danger {
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border: 1px solid #fecaca !important;
+        }
+
+        .col-station {
+            left: 450px;
+            min-width: 150px;
+        }
+
+        .col-ratio {
+            left: 600px;
+            min-width: 80px;
+        }
+
+        .station-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 999px;
+            background: #ecfeff;
+            color: #0f766e;
+            border: 1px solid #bae6fd;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .col-group,
+        .col-model {
+            vertical-align: middle;
+        }
+
+        .vehicle-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            min-width: 220px;
+        }
+
+        .meta-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 6px 10px;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 600;
+            line-height: 1.2;
+            white-space: nowrap;
+        }
+
+        .meta-group {
+            background: #eef4ff;
+            color: #3157a5;
+            border: 1px solid #d7e4ff;
+        }
+
+        .meta-model {
+            background: #f3f4f6;
+            color: #444;
+            border: 1px solid #e1e3e8;
+        }
+
+        .meta-separator {
+            color: #a0a7b4;
+            font-size: 11px;
+            display: flex;
+            align-items: center;
+        }
+
+        .vehicle-name-wrap {
+            display: flex;
+            align-items: center;
+            min-height: 40px;
+        }
+
+        .vehicle-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1.3;
+        }
+
+        .availability-table tbody tr:hover .vehicle-name {
+            color: #0d6efd;
+        }
+
+        .vehicle-name-wrap {
+            display: flex;
+            align-items: center;
+            min-height: 40px;
+        }
+
+        .vehicle-name-link {
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .vehicle-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: #1f2937;
+            line-height: 1.3;
+            transition: all 0.2s ease;
+        }
+
+        .vehicle-name-link:hover .vehicle-name {
+            color: #0d6efd;
+            text-decoration: underline;
+        }
+
         .availability-hero {
             background: linear-gradient(120deg, #f8fafc 0%, #eef2ff 100%);
         }
@@ -244,14 +436,41 @@
             line-height: 1.1;
         }
 
-        .kpi-total { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); }
-        .kpi-total .kpi-icon { background: #94a3b8; color: #fff; }
-        .kpi-available { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
-        .kpi-available .kpi-icon { background: #16a34a; color: #fff; }
-        .kpi-reserved { background: linear-gradient(135deg, #fef9c3, #fde68a); }
-        .kpi-reserved .kpi-icon { background: #d97706; color: #fff; }
-        .kpi-unavailable { background: linear-gradient(135deg, #fee2e2, #fecaca); }
-        .kpi-unavailable .kpi-icon { background: #dc2626; color: #fff; }
+        .kpi-total {
+            background: linear-gradient(135deg, #e2e8f0, #cbd5e1);
+        }
+
+        .kpi-total .kpi-icon {
+            background: #94a3b8;
+            color: #fff;
+        }
+
+        .kpi-available {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+        }
+
+        .kpi-available .kpi-icon {
+            background: #16a34a;
+            color: #fff;
+        }
+
+        .kpi-reserved {
+            background: linear-gradient(135deg, #fef9c3, #fde68a);
+        }
+
+        .kpi-reserved .kpi-icon {
+            background: #d97706;
+            color: #fff;
+        }
+
+        .kpi-unavailable {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+        }
+
+        .kpi-unavailable .kpi-icon {
+            background: #dc2626;
+            color: #fff;
+        }
 
         .kpi-card.is-active {
             outline: 2px solid rgba(15, 23, 42, .35);
@@ -304,11 +523,34 @@
             box-shadow: 1px 0 0 #e2e8f0;
         }
 
-        .col-group { left: 0; min-width: 160px; }
-        .col-model { left: 160px; min-width: 160px; }
-        .col-plate { left: 320px; min-width: 130px; }
-        .col-ratio { left: 450px; min-width: 80px; }
-        .day-col { min-width: 42px; }
+        .col-group {
+            left: 0;
+            min-width: 160px;
+        }
+
+        .col-model {
+            left: 160px;
+            min-width: 160px;
+        }
+
+        .col-plate {
+            left: 320px;
+            min-width: 130px;
+        }
+
+        .col-station {
+            left: 450px;
+            min-width: 150px;
+        }
+
+        .col-ratio {
+            left: 600px;
+            min-width: 80px;
+        }
+
+        .day-col {
+            min-width: 42px;
+        }
 
         .plate-badge {
             background: #0f172a;
@@ -340,27 +582,53 @@
             color: #fff;
         }
 
-        .status-dot.is-ok { background: #16a34a; }
-        .status-dot.is-off { background: #dc2626; }
-        .status-dot.is-reserved { background: #d97706; }
-        .status-dot.is-pending { background: #64748b; }
+        .status-dot.is-ok {
+            background: #16a34a;
+        }
+
+        .status-dot.is-off {
+            background: #dc2626;
+        }
+
+        .status-dot.is-reserved {
+            background: #d97706;
+        }
+
+        .status-dot.is-pending {
+            background: #64748b;
+        }
 
         @media (max-width: 992px) {
             .availability-table-wrap {
                 max-height: 68vh;
             }
 
-            .col-group { left: 0; min-width: 130px; }
-            .col-model { left: 130px; min-width: 130px; }
-            .col-plate { left: 260px; min-width: 120px; }
-            .col-ratio { left: 380px; min-width: 76px; }
+            .col-group {
+                left: 0;
+                min-width: 130px;
+            }
+
+            .col-model {
+                left: 130px;
+                min-width: 130px;
+            }
+
+            .col-plate {
+                left: 260px;
+                min-width: 120px;
+            }
+
+            .col-ratio {
+                left: 380px;
+                min-width: 76px;
+            }
         }
     </style>
 @stop
 
 @section('js')
     <script>
-        $(function () {
+        $(function() {
             const rows = Array.from(document.querySelectorAll('#availabilityRows tr[data-search]'));
             const searchInput = document.getElementById('tableSearch');
             const statusButtons = Array.from(document.querySelectorAll('.js-status-filter'));
@@ -393,7 +661,7 @@
             }
 
             statusButtons.forEach((button) => {
-                button.addEventListener('click', function () {
+                button.addEventListener('click', function() {
                     activeStatus = normalize(this.dataset.status || 'all');
                     statusButtons.forEach((item) => item.classList.remove('is-active'));
                     this.classList.add('is-active');

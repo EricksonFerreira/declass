@@ -114,7 +114,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             $query->orderBy($orderBy, $orderDirection);
         }
 
-        return $query->get();
+        return $query->where('empresa_id',Auth::user()->empresa_id)->get();
     }
     public function formatArraySelectSubText($data, string $idField = 'id', string $nameField = 'name'): array
     {
@@ -133,8 +133,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
         if ($orderBy) {
             $query->orderBy($orderBy, $orderDirection);
         }
-
-        $data = $query->get();
+        $data =  $query->where('empresa_id',Auth::user()->empresa_id)->get();
 
         return $this->formatArraySelect($data, $id, $nome);
     }
