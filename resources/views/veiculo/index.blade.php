@@ -87,6 +87,18 @@
 
                     @php
                         $availKey = $temDisponibilidade ? ($disponivel ? 'disponivel' : 'indisponivel') : 'sem_data';
+                        $statusNorm = mb_strtolower(trim($statusNome));
+                        $statusBadgeClass = match (true) {
+                            $statusNorm === '' => 'vc__badge--slate',
+                            in_array($statusNorm, ['ativo', 'disponivel'], true) => 'vc__badge--green',
+                            $statusNorm === 'reservado' || str_contains($statusNorm, 'reserva') || str_contains($statusNorm, 'loca') || str_contains($statusNorm, 'alug') || str_contains($statusNorm, 'em uso') => 'vc__badge--amber',
+                            $statusNorm === 'indisponivel' || $statusNorm === 'inativo' || str_contains($statusNorm, 'manut') || str_contains($statusNorm, 'avaria') => 'vc__badge--red',
+                            default => 'vc__badge--slate',
+                        };
+
+                        $showStatusBadge = $statusNorm !== ''
+                            && !($disponivel && in_array($statusNorm, ['ativo', 'disponivel'], true))
+                            && !(!$disponivel && $statusNorm === 'indisponivel');
                     @endphp
 
                     <article class="vc {{ $accentClass }}"
@@ -105,9 +117,11 @@
                                 <span class="vc__badge {{ $disponivel ? 'vc__badge--green' : 'vc__badge--red' }}">
                                     {{ $disponivel ? 'Disponivel' : 'Indisponivel' }}
                                 </span>
-                                <span class="vc__badge vc__badge--slate" title="Status do veiculo">
-                                    {{ $statusNome ?: 'Status -' }}
-                                </span>
+                                @if($showStatusBadge)
+                                    <span class="vc__badge {{ $statusBadgeClass }}" title="Status do veiculo">
+                                        {{ $statusNome }}
+                                    </span>
+                                @endif
                             </div>
                         </div>
 
@@ -416,6 +430,7 @@
     }
 
     .vc__badge--green  { background: rgba(16,185,129,.12); color: #047857; border-color: rgba(16,185,129,.22); }
+    .vc__badge--amber  { background: rgba(245,158,11,.14); color: #b45309; border-color: rgba(245,158,11,.28); }
     .vc__badge--red    { background: rgba(239,68,68,.12);  color: #b91c1c; border-color: rgba(239,68,68,.22); }
     .vc__badge--slate  { background: rgba(100,116,139,.12); color: #475569; border-color: rgba(100,116,139,.2); }
 

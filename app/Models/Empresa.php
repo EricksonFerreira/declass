@@ -67,6 +67,7 @@ class Empresa extends Model
         'reserva_escolher_empresa',
         'reserva_selecionar_modelo',
         'reserva_atraso_max_minutos',
+        'reserva_bloqueio_pos_reserva_horas',
         'empresa_id',
     ];
 

@@ -10,6 +10,7 @@
 @section('content')
     @php
         $isEdit = isset($movimentacao) && $movimentacao;
+        $prefill = $prefill ?? [];
         $dataRegistro = $isEdit && $movimentacao->data_registro
             ? \Carbon\Carbon::parse($movimentacao->data_registro)->format('Y-m-d\\TH:i')
             : now()->format('Y-m-d\\TH:i');
@@ -38,7 +39,7 @@
                             label="Tipo"
                             :options="$tiposMovimentacao ?? []"
                             placeholder="Selecione um tipo"
-                            :selected="old('tipo_movimentacao_id', $movimentacao->tipo_movimentacao_id ?? null)"
+                            :selected="old('tipo_movimentacao_id', $movimentacao->tipo_movimentacao_id ?? ($prefill['tipo_movimentacao_id'] ?? null))"
                             class="form-control form-control-sm"
                             required
                         />
@@ -52,7 +53,7 @@
                             label="Status da movimentação"
                             :options="$statusMovimentacao ?? []"
                             placeholder="Selecione um status"
-                            :selected="old('status_movimentacao_id', $movimentacao->status_movimentacao_id ?? null)"
+                            :selected="old('status_movimentacao_id', $movimentacao->status_movimentacao_id ?? ($prefill['status_movimentacao_id'] ?? null))"
                             class="form-control form-control-sm"
                             required
                         />
@@ -80,7 +81,7 @@
                             label="Veículo (opcional)"
                             :options="$veiculos ?? []"
                             placeholder="Selecione um veículo"
-                            :selected="old('veiculo_id', $movimentacao->veiculo_id ?? null)"
+                            :selected="old('veiculo_id', $movimentacao->veiculo_id ?? ($prefill['veiculo_id'] ?? null))"
                             class="form-control form-control-sm"
                         />
                     </div>
@@ -109,7 +110,7 @@
                             label="Origem (opcional)"
                             :options="$estacoes ?? []"
                             placeholder="Selecione a origem"
-                            :selected="old('local_origem_id', $movimentacao->local_origem_id ?? null)"
+                            :selected="old('local_origem_id', $movimentacao->local_origem_id ?? ($prefill['local_origem_id'] ?? null))"
                             class="form-control form-control-sm"
                         />
                     </div>
@@ -122,7 +123,7 @@
                             label="Destino (opcional)"
                             :options="$estacoes ?? []"
                             placeholder="Selecione o destino"
-                            :selected="old('local_destino_id', $movimentacao->local_destino_id ?? null)"
+                            :selected="old('local_destino_id', $movimentacao->local_destino_id ?? ($prefill['local_destino_id'] ?? null))"
                             class="form-control form-control-sm"
                         />
                     </div>
@@ -160,6 +161,20 @@
                 <div class="col-md-3">
                     <div class="form-group">
                         <x-form-input
+                            type="number"
+                            name="km_saida"
+                            label="KM de saída (opcional)"
+                            class="form-control form-control-sm"
+                            value="{{ old('km_saida', $movimentacao->km_saida ?? ($prefill['km_saida'] ?? '')) }}"
+                            min="0"
+                            step="1"
+                        />
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <x-form-input
                             type="datetime-local"
                             name="data_chegada_prevista"
                             label="Chegada prevista (opcional)"
@@ -181,6 +196,20 @@
                     </div>
                 </div>
 
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <x-form-input
+                            type="number"
+                            name="km_chegada"
+                            label="KM de chegada (opcional)"
+                            class="form-control form-control-sm"
+                            value="{{ old('km_chegada', $movimentacao->km_chegada ?? '') }}"
+                            min="0"
+                            step="1"
+                        />
+                    </div>
+                </div>
+
                 <div class="col-12 mt-2">
                     <div class="mb-2 text-bold">Vínculos</div>
                 </div>
@@ -192,7 +221,7 @@
                             label="Usuário"
                             :options="$usuarios ?? []"
                             placeholder="Selecione um usuário"
-                            :selected="old('user_id', $movimentacao->user_id ?? null)"
+                            :selected="old('user_id', $movimentacao->user_id ?? ($prefill['user_id'] ?? null))"
                             class="form-control form-control-sm"
                             required
                         />

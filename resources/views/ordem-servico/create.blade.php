@@ -33,21 +33,27 @@
                             <div class="os-section-title">Dados da ordem de servico</div>
                             <div class="row">
                                 <div class="col-md-8">
-                                    <div class="form-group">
-                                        <label for="veiculo_id">Veiculo</label>
-                                        <select name="veiculo_id" id="veiculo_id" class="form-control form-control-sm @error('veiculo_id') is-invalid @enderror" required>
-                                            <option value="">Selecione um veiculo</option>
-                                            @foreach($veiculos as $v)
-                                                <option value="{{ $v->id }}" @selected((int) old('veiculo_id', $veiculoId ?? null) === (int) $v->id)>
-                                                    {{ $v->nome }} ({{ $v->placa ?? $v->id }})
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                <div class="form-group">
+                                    <label for="veiculo_id">Veiculo</label>
+                                        <div class="d-flex align-items-end">
+                                            <select name="veiculo_id" id="veiculo_id" class="form-control form-control-sm @error('veiculo_id') is-invalid @enderror" required>
+                                                <option value="">Selecione um veiculo</option>
+                                                @foreach($veiculos as $v)
+                                                    <option value="{{ $v->id }}" @selected((int) old('veiculo_id', $veiculoId ?? null) === (int) $v->id)>
+                                                        {{ $v->nome }} ({{ $v->placa ?? $v->id }})
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm ml-2" id="btnBuscarVeiculoOS" title="Busca avancada de veiculos">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                        <small class="text-muted d-block mt-1">Use a busca avancada para filtrar por placa, grupo, marca, status e mais.</small>
                                         @error('veiculo_id')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
-                                    </div>
                                 </div>
+                            </div>
                                 <div class="col-md-4">
                                     <div class="form-group">
                                         <label for="reserva_id">Reserva (opcional)</label>
@@ -130,6 +136,17 @@
         </div>
     </div>
 @stop
+
+<x-veiculo.busca-avancada-modal
+    prefix="os"
+    title="Buscar veiculo"
+    trigger-id="btnBuscarVeiculoOS"
+    target-select-id="veiculo_id"
+    :filtro-marcas="$filtroMarcas"
+    :filtro-grupos="$filtroGrupos"
+    :filtro-tipos="$filtroTipos"
+    :filtro-status="$filtroStatus"
+/>
 
 @section('css')
 <style>

@@ -24,8 +24,12 @@ use App\Models\TipoFrota;
 use App\Models\GrupoFrota;
 use App\Models\Marca;
 use App\Models\Modelo;
+use App\Models\Movimentacao;
+use App\Models\Reserva;
 use App\Models\StatusVeiculo;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class VeiculoController extends BaseController implements FiltroInterface, ResourceInterface
@@ -137,6 +141,19 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function show($id)
     {
+        $dispMes = (int) request()->query('disp_mes', date('n'));
+        $dispAno = (int) request()->query('disp_ano', date('Y'));
+        $dispEstacaoId = (int) request()->query('disp_estacao_id', 0);
+        if ($dispMes < 1 || $dispMes > 12) {
+            $dispMes = (int) date('n');
+        }
+        if ($dispAno < 2024 || $dispAno > ((int) date('Y') + 1)) {
+            $dispAno = (int) date('Y');
+        }
+        if ($dispEstacaoId < 0) {
+            $dispEstacaoId = 0;
+        }
+
         $veiculo = $this->veiculoService->getById($id, [
             'tipoFrota',
             'grupoFrota',
@@ -151,6 +168,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 $query->with(['reserva:id', 'responsavelLancamento:id,nome'])
                     ->orderByDesc('id');
             },
+            'sinistros' => function ($query) {
+                $query->orderByDesc('id');
+            },
             'movimentacoes' => function ($query) {
                 $query->with([
                     'usuario:id,nome',
@@ -164,6 +184,142 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             },
         ]);
 
+        $reservaBloqueioHoras = 0;
+        $empresaId = null;
+        /** @var EmpresaContext $empresaContext */
+        $empresaContext = app(EmpresaContext::class);
+        if (Auth::user()?->isAdministrador()) {
+            $empresaId = $empresaContext->empresaId();
+        } else {
+            $empresaId = Auth::user()?->empresa_id ?? $empresaContext->empresaId();
+        }
+
+        if ($empresaId && Schema::hasTable('empresas') && Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
+            $reservaBloqueioHoras = (int) (DB::table('empresas')->where('id', (int) $empresaId)->value('reserva_bloqueio_pos_reserva_horas') ?? 0);
+            if ($reservaBloqueioHoras < 0) {
+                $reservaBloqueioHoras = 0;
+            }
+        }
+
+        $dispDiasNoMes = (int) cal_days_in_month(CAL_GREGORIAN, $dispMes, $dispAno);
+        $dispInicioMes = Carbon::create($dispAno, $dispMes, 1)->startOfDay();
+        $dispFimMes = Carbon::create($dispAno, $dispMes, $dispDiasNoMes)->endOfDay();
+        $dispInicioMesComFolga = $dispInicioMes->copy()->subHours($reservaBloqueioHoras);
+        $dispFirstDow = (int) Carbon::create($dispAno, $dispMes, 1)->dayOfWeekIso; // 1..7 (Seg..Dom)
+
+        $dispReservas = Reserva::query()
+            ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim', 'status_reserva_id', 'user_id'])
+            ->where('veiculo_id', (int) $veiculo->id)
+            ->whereIn('status_reserva_id', [1, 2, 4, 6])
+            ->where('data_inicio', '<', $dispFimMes->toDateTimeString())
+            ->where('data_fim', '>', $dispInicioMesComFolga->toDateTimeString())
+            ->orderBy('data_inicio')
+            ->get();
+
+        $dispMovimentacoes = Movimentacao::query()
+            ->select(['id', 'veiculo_id', 'data_saida', 'data_chegada_real', 'status_movimentacao_id', 'reserva_id'])
+            ->where('veiculo_id', (int) $veiculo->id)
+            ->whereIn('status_movimentacao_id', [1, 2, 5, 6, 7])
+            ->where(function ($query) use ($dispFimMes) {
+                $query->whereNull('data_saida')
+                    ->orWhere('data_saida', '<=', $dispFimMes->toDateTimeString());
+            })
+            ->where(function ($query) use ($dispInicioMes) {
+                $query->whereNull('data_chegada_real')
+                    ->orWhere('data_chegada_real', '>=', $dispInicioMes->toDateTimeString());
+            })
+            ->orderBy('data_saida')
+            ->get();
+
+        $dispGrade = [];
+        $dispStats = [
+            'ok' => 0,
+            'reserved' => 0,
+            'off' => 0,
+            'pending' => 0,
+        ];
+
+        $inicioDisponibilidade = !empty($veiculo->data_hora_disponibilidade) ? Carbon::parse($veiculo->data_hora_disponibilidade) : null;
+
+        for ($dia = 1; $dia <= $dispDiasNoMes; $dia++) {
+            $diaInicio = Carbon::create($dispAno, $dispMes, $dia)->startOfDay();
+            $diaFim = Carbon::create($dispAno, $dispMes, $dia)->endOfDay();
+
+            $cell = [
+                'tipo' => 'ok',
+                'titulo' => 'Disponivel',
+                'reserva_id' => null,
+            ];
+
+            if ($inicioDisponibilidade && $diaFim->lt($inicioDisponibilidade)) {
+                $cell['tipo'] = 'off';
+                $cell['titulo'] = 'Indisponivel (disponivel a partir de ' . $inicioDisponibilidade->format('d/m/Y H:i') . ')';
+                $dispGrade[$dia] = $cell;
+                $dispStats['off']++;
+                continue;
+            }
+
+            $movIndisp = $dispMovimentacoes->first(function ($mov) use ($diaInicio, $diaFim) {
+                $saida = !empty($mov->data_saida) ? Carbon::parse($mov->data_saida) : null;
+                $chegada = !empty($mov->data_chegada_real) ? Carbon::parse($mov->data_chegada_real) : null;
+
+                $inicio = $saida ?? $diaInicio;
+                $fim = $chegada ?? Carbon::create(2999, 12, 31)->endOfDay();
+
+                return $inicio->lt($diaFim) && $fim->gt($diaInicio);
+            });
+
+            if ($movIndisp) {
+                $cell['tipo'] = 'off';
+                $cell['titulo'] = 'Indisponivel (movimentacao)';
+                $dispGrade[$dia] = $cell;
+                $dispStats['off']++;
+                continue;
+            }
+
+            $resIndisp = $dispReservas->first(function ($res) use ($diaInicio, $diaFim, $reservaBloqueioHoras) {
+                $inicio = !empty($res->data_inicio) ? Carbon::parse($res->data_inicio) : null;
+                $fim = !empty($res->data_fim) ? Carbon::parse($res->data_fim) : null;
+                if (!$inicio || !$fim) {
+                    return false;
+                }
+
+                $fimComFolga = $reservaBloqueioHoras > 0 ? $fim->copy()->addHours($reservaBloqueioHoras) : $fim;
+
+                return $inicio->lt($diaFim) && $fimComFolga->gt($diaInicio);
+            });
+
+            if ($resIndisp) {
+                $cell['tipo'] = 'reserved';
+                $cell['reserva_id'] = (int) $resIndisp->id;
+                $cell['titulo'] = 'Indisponivel por reserva #' . (int) $resIndisp->id . ' (clique para abrir)';
+                $dispGrade[$dia] = $cell;
+                $dispStats['reserved']++;
+                continue;
+            }
+
+            if (empty($veiculo->local_disponibilidade)) {
+                $cell['tipo'] = 'pending';
+                $cell['titulo'] = 'Sem local de disponibilidade (nao aparece na reserva)';
+                $dispGrade[$dia] = $cell;
+                $dispStats['pending']++;
+                continue;
+            }
+
+            if ($dispEstacaoId > 0 && (int) $veiculo->local_disponibilidade !== $dispEstacaoId) {
+                $cell['tipo'] = 'pending';
+                $cell['titulo'] = 'Nao reservavel para a estacao selecionada (veiculo em outra estacao)';
+                $dispGrade[$dia] = $cell;
+                $dispStats['pending']++;
+                continue;
+            }
+
+            $dispGrade[$dia] = $cell;
+            $dispStats['ok']++;
+        }
+
+        $dispEstacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc');
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Veiculos', route('veiculo.index')),
@@ -172,7 +328,22 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         $titulo = 'Veículo: ' . ($veiculo->nome ?? '#' . $veiculo->id);
 
-        return view('veiculo.show', compact('veiculo', 'breadcrumb', 'titulo'));
+        return view('veiculo.show', compact(
+            'veiculo',
+            'breadcrumb',
+            'titulo',
+            'dispMes',
+            'dispAno',
+            'dispEstacaoId',
+            'dispDiasNoMes',
+            'dispFirstDow',
+            'dispGrade',
+            'dispStats',
+            'dispReservas',
+            'dispMovimentacoes',
+            'reservaBloqueioHoras',
+            'dispEstacoes'
+        ));
     }
 
     public function edit($id)
@@ -344,11 +515,142 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         // $diasDoMes = range(1, 31);
        // pegue os dias do mes dependendo do mês selecionado. se nao tiver mes selecionado pegue o mes atual
-       $mes = $request->mes ?? date('m');
-       $ano = $request->ano ?? date('Y');
-       $diasDoMes = range(1, cal_days_in_month(CAL_GREGORIAN, $mes, $ano));
-        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination([], 1000);
-        // dd($veiculos);
+        $mes = (int) ($request->mes ?? date('n'));
+        $ano = (int) ($request->ano ?? date('Y'));
+        $diasNoMes = (int) cal_days_in_month(CAL_GREGORIAN, $mes, $ano);
+        $diasDoMes = range(1, $diasNoMes);
+
+        $inicioMes = Carbon::create($ano, $mes, 1)->startOfDay();
+        $fimMes = Carbon::create($ano, $mes, $diasNoMes)->endOfDay();
+
+        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination([], 1000, [
+            'grupoFrota',
+            'modelo',
+            'localDisponibilidade',
+            'statusVeiculo',
+        ]);
+
+        $veiculosCollection = method_exists($veiculos, 'getCollection') ? $veiculos->getCollection() : collect($veiculos);
+        $veiculoIds = $veiculosCollection->pluck('id')->map(static fn ($id) => (int) $id)->filter()->values()->toArray();
+
+        $reservaBloqueioHoras = 0;
+        $empresaId = null;
+        /** @var EmpresaContext $empresaContext */
+        $empresaContext = app(EmpresaContext::class);
+        if (Auth::user()?->isAdministrador()) {
+            $empresaId = $empresaContext->empresaId();
+        } else {
+            $empresaId = Auth::user()?->empresa_id ?? $empresaContext->empresaId();
+        }
+
+        if ($empresaId && Schema::hasTable('empresas') && Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
+            $reservaBloqueioHoras = (int) (DB::table('empresas')->where('id', (int) $empresaId)->value('reserva_bloqueio_pos_reserva_horas') ?? 0);
+            if ($reservaBloqueioHoras < 0) {
+                $reservaBloqueioHoras = 0;
+            }
+        }
+
+        $inicioMesComFolga = $inicioMes->copy()->subHours($reservaBloqueioHoras);
+
+        $reservasPorVeiculo = collect();
+        $movimentacoesPorVeiculo = collect();
+
+        if (!empty($veiculoIds)) {
+            $reservasPorVeiculo = Reserva::query()
+                ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim'])
+                ->whereIn('veiculo_id', $veiculoIds)
+                ->whereIn('status_reserva_id', [1, 2, 4, 6])
+                ->where('data_inicio', '<', $fimMes->toDateTimeString())
+                ->where('data_fim', '>', $inicioMesComFolga->toDateTimeString())
+                ->orderBy('data_inicio')
+                ->get()
+                ->groupBy('veiculo_id');
+
+            $movimentacoesPorVeiculo = Movimentacao::query()
+                ->select(['id', 'veiculo_id', 'data_saida', 'data_chegada_real', 'status_movimentacao_id', 'reserva_id'])
+                ->whereIn('veiculo_id', $veiculoIds)
+                ->whereIn('status_movimentacao_id', [1, 2, 5, 6, 7])
+                ->where(function ($query) use ($fimMes) {
+                    $query->whereNull('data_saida')
+                        ->orWhere('data_saida', '<=', $fimMes->toDateTimeString());
+                })
+                ->where(function ($query) use ($inicioMes) {
+                    $query->whereNull('data_chegada_real')
+                        ->orWhere('data_chegada_real', '>=', $inicioMes->toDateTimeString());
+                })
+                ->orderBy('data_saida')
+                ->get()
+                ->groupBy('veiculo_id');
+        }
+
+        $grade = [];
+        foreach ($veiculosCollection as $veiculo) {
+            $veiculoReservas = $reservasPorVeiculo->get($veiculo->id, collect());
+            $veiculoMovs = $movimentacoesPorVeiculo->get($veiculo->id, collect());
+            $inicioDisponibilidade = !empty($veiculo->data_hora_disponibilidade) ? Carbon::parse($veiculo->data_hora_disponibilidade) : null;
+
+            foreach ($diasDoMes as $dia) {
+                $diaInicio = Carbon::create($ano, $mes, (int) $dia)->startOfDay();
+                $diaFim = Carbon::create($ano, $mes, (int) $dia)->endOfDay();
+
+                $cell = [
+                    'tipo' => 'ok',
+                    'titulo' => 'Disponivel',
+                    'reserva_id' => null,
+                ];
+
+                if ($inicioDisponibilidade && $diaFim->lt($inicioDisponibilidade)) {
+                    $cell['tipo'] = 'off';
+                    $cell['titulo'] = 'Indisponivel (disponivel a partir de ' . $inicioDisponibilidade->format('d/m/Y H:i') . ')';
+                    $grade[$veiculo->id][$dia] = $cell;
+                    continue;
+                }
+
+                $movIndisp = $veiculoMovs->first(function ($mov) use ($diaInicio, $diaFim) {
+                    $saida = !empty($mov->data_saida) ? Carbon::parse($mov->data_saida) : null;
+                    $chegada = !empty($mov->data_chegada_real) ? Carbon::parse($mov->data_chegada_real) : null;
+
+                    $inicio = $saida ?? $diaInicio;
+                    $fim = $chegada ?? Carbon::create(2999, 12, 31)->endOfDay();
+
+                    return $inicio->lt($diaFim) && $fim->gt($diaInicio);
+                });
+
+                if ($movIndisp) {
+                    $cell['tipo'] = 'off';
+                    $cell['titulo'] = 'Indisponivel (movimentacao)';
+                    $grade[$veiculo->id][$dia] = $cell;
+                    continue;
+                }
+
+                $reservaIndisp = $veiculoReservas->first(function ($res) use ($diaInicio, $diaFim, $reservaBloqueioHoras) {
+                    $inicio = !empty($res->data_inicio) ? Carbon::parse($res->data_inicio) : null;
+                    $fim = !empty($res->data_fim) ? Carbon::parse($res->data_fim) : null;
+                    if (!$inicio || !$fim) {
+                        return false;
+                    }
+
+                    $fimComFolga = $reservaBloqueioHoras > 0 ? $fim->copy()->addHours($reservaBloqueioHoras) : $fim;
+
+                    return $inicio->lt($diaFim) && $fimComFolga->gt($diaInicio);
+                });
+
+                if ($reservaIndisp) {
+                    $cell['tipo'] = 'reserved';
+                    $cell['reserva_id'] = (int) $reservaIndisp->id;
+                    $cell['titulo'] = 'Indisponivel por reserva #' . (int) $reservaIndisp->id . ' (clique para abrir)';
+                    $grade[$veiculo->id][$dia] = $cell;
+                    continue;
+                }
+
+                if (empty($veiculo->local_disponibilidade)) {
+                    $cell['tipo'] = 'pending';
+                    $cell['titulo'] = 'Sem local de disponibilidade (nao aparece na reserva)';
+                }
+
+                $grade[$veiculo->id][$dia] = $cell;
+            }
+        }
 
         return view('veiculo.disponibilidade', compact(
             'totalVeiculos',
@@ -357,6 +659,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'veiculosIndisponiveis',
             'diasDoMes',
             'veiculos',
+            'grade',
+            'reservaBloqueioHoras',
             'anos',
             'meses',
             'titulo',

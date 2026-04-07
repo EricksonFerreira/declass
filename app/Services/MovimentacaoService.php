@@ -4,10 +4,12 @@ namespace App\Services;
 
 use App\Exceptions\TipoEStatusMovimentacaoException;
 use App\Models\Movimentacao;
+use App\Models\Veiculo;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class MovimentacaoService extends AbstractBaseService
 {
@@ -61,6 +63,28 @@ class MovimentacaoService extends AbstractBaseService
         return $this->model;
     }
 
+    public function create(array $data)
+    {
+        $movimentacao = parent::create($data);
+
+        if ($movimentacao instanceof Movimentacao) {
+            $this->syncVeiculoFromMovimentacao($movimentacao);
+        }
+
+        return $movimentacao;
+    }
+
+    public function update($id, array $data)
+    {
+        $movimentacao = parent::update($id, $data);
+
+        if ($movimentacao instanceof Movimentacao) {
+            $this->syncVeiculoFromMovimentacao($movimentacao);
+        }
+
+        return $movimentacao;
+    }
+
     /**
      * Registra movimentacao inicial ao cadastrar veiculo.
      *
@@ -89,7 +113,7 @@ class MovimentacaoService extends AbstractBaseService
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
         ];
 
-        return $this->model->create($valor);
+        return $this->create($valor);
     }
 
     /**
@@ -271,6 +295,55 @@ class MovimentacaoService extends AbstractBaseService
     }
 
 
+    private function syncVeiculoFromMovimentacao(Movimentacao $movimentacao): void
+    {
+        if (empty($movimentacao->veiculo_id)) {
+            return;
+        }
+
+        $query = Veiculo::query();
+
+        if (
+            Schema::hasColumn('veiculos', 'empresa_id')
+            && Schema::hasColumn('movimentacoes', 'empresa_id')
+            && !empty($movimentacao->empresa_id)
+        ) {
+            $query->where('empresa_id', (int) $movimentacao->empresa_id);
+        }
+
+        /** @var Veiculo|null $veiculo */
+        $veiculo = $query->find((int) $movimentacao->veiculo_id);
+        if (!$veiculo) {
+            return;
+        }
+
+        $updates = [];
+
+        if ($movimentacao->km_chegada !== null) {
+            $kmChegada = (int) $movimentacao->km_chegada;
+            $kmSaida = $movimentacao->km_saida !== null ? (int) $movimentacao->km_saida : null;
+
+            if ($kmChegada >= 0 && ($kmSaida === null || $kmChegada >= $kmSaida)) {
+                $kmAtualVeiculo = $veiculo->kms !== null ? (int) $veiculo->kms : null;
+                if ($kmAtualVeiculo === null || $kmChegada >= $kmAtualVeiculo) {
+                    $updates['kms'] = $kmChegada;
+                }
+            }
+        }
+
+        if (!empty($movimentacao->local_destino_id) && !empty($movimentacao->data_chegada_real)) {
+            $updates['local_disponibilidade'] = (int) $movimentacao->local_destino_id;
+
+            if (Schema::hasColumn('veiculos', 'data_hora_disponibilidade')) {
+                $updates['data_hora_disponibilidade'] = $movimentacao->data_chegada_real;
+            }
+        }
+
+        if (!empty($updates)) {
+            $veiculo->update($updates);
+        }
+    }
+
     private function registrarMovimentacao(
         $veiculo_id,
         $local_id = null,
@@ -293,16 +366,15 @@ class MovimentacaoService extends AbstractBaseService
             'veiculo_id' => $veiculo_id,
             'tipo_movimentacao_id' => $tipoMovimentacao,
             'status_movimentacao_id' => $statusMovimentacao,
-            'local_origem_id' =>   $local_id,
-            'local_destino_id' => $local_origem_id,
-            'local' => $local_destino_id,
+            'local_origem_id' => $local_origem_id ?? $local_id,
+            'local_destino_id' => $local_destino_id,
             'data_registro' => Carbon::now(),
             'reserva_id' => $reserva_id,
             'observacoes' => $observacao,
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
         ];
 
-        $this->model->create($valor);
+        $this->create($valor);
     }
 
 

@@ -72,6 +72,7 @@ class UpdateEmpresaRequest extends FormRequest
             'nfse_tomador_numero_padrao' => ['nullable', 'string', 'max:20'],
             'nfse_tomador_bairro_padrao' => ['nullable', 'string', 'max:80'],
             'reserva_atraso_max_minutos' => ['nullable', 'integer', 'min:0', 'max:10080'],
+            'reserva_bloqueio_pos_reserva_horas' => ['nullable', 'integer', 'min:0', 'max:720'],
         ];
     }
     public function messages(): array
@@ -107,6 +108,9 @@ class UpdateEmpresaRequest extends FormRequest
             'reserva_atraso_max_minutos.integer' => 'O tempo maximo de atraso deve ser um numero inteiro.',
             'reserva_atraso_max_minutos.min' => 'O tempo maximo de atraso nao pode ser negativo.',
             'reserva_atraso_max_minutos.max' => 'O tempo maximo de atraso nao pode ultrapassar 10080 minutos.',
+            'reserva_bloqueio_pos_reserva_horas.integer' => 'O bloqueio pos-reserva deve ser um numero inteiro de horas.',
+            'reserva_bloqueio_pos_reserva_horas.min' => 'O bloqueio pos-reserva nao pode ser negativo.',
+            'reserva_bloqueio_pos_reserva_horas.max' => 'O bloqueio pos-reserva nao pode ultrapassar 720 horas.',
         ];
     }
 

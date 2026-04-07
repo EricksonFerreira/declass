@@ -40,8 +40,10 @@ class StoreMovimentacaoRequest extends FormRequest
 
             'data_registro' => ['required', 'date'],
             'data_saida' => ['nullable', 'date'],
+            'km_saida' => ['nullable', 'integer', 'min:0'],
             'data_chegada_prevista' => ['nullable', 'date'],
             'data_chegada_real' => ['nullable', 'date'],
+            'km_chegada' => ['nullable', 'integer', 'min:0', 'gte:km_saida'],
 
             'observacoes' => ['nullable', 'string'],
         ];

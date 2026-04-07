@@ -62,6 +62,7 @@ class StoreEmpresaRequest extends FormRequest
             'reserva_escolher_empresa' => ['nullable', Rule::in(['S', 'N'])],
             'reserva_selecionar_modelo' => ['nullable', Rule::in(['S', 'N'])],
             'reserva_atraso_max_minutos' => ['nullable', 'integer', 'min:0', 'max:10080'],
+            'reserva_bloqueio_pos_reserva_horas' => ['nullable', 'integer', 'min:0', 'max:720'],
             'nfse_ativo' => ['nullable', Rule::in(['S', 'N'])],
             'nfse_ambiente' => ['nullable', Rule::in(['homologacao', 'producao'])],
             'nfse_provedor' => ['nullable', 'string', 'max:50'],
@@ -76,6 +77,15 @@ class StoreEmpresaRequest extends FormRequest
             'nfse_tributacao_issqn' => ['nullable', 'integer', 'min:1', 'max:4'],
             'nfse_tomador_numero_padrao' => ['nullable', 'string', 'max:20'],
             'nfse_tomador_bairro_padrao' => ['nullable', 'string', 'max:80'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'reserva_bloqueio_pos_reserva_horas.integer' => 'O bloqueio pos-reserva deve ser um numero inteiro de horas.',
+            'reserva_bloqueio_pos_reserva_horas.min' => 'O bloqueio pos-reserva nao pode ser negativo.',
+            'reserva_bloqueio_pos_reserva_horas.max' => 'O bloqueio pos-reserva nao pode ultrapassar 720 horas.',
         ];
     }
 

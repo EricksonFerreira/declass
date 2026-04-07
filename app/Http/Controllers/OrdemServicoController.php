@@ -6,13 +6,18 @@ use App\DTO\BreadCrumbItem;
 use App\Http\Requests\OrdemServico\AtualizarStatusOrdemServicoRequest;
 use App\Http\Requests\OrdemServico\ConcluirOrdemServicoRequest;
 use App\Http\Requests\OrdemServico\StoreOrdemServicoRequest;
+use App\Models\GrupoFrota;
+use App\Models\Marca;
 use App\Models\OrdemServico;
+use App\Models\StatusVeiculo;
+use App\Models\TipoFrota;
 use App\Models\VeiculoDanos;
 use App\Models\Empresa;
 use App\Services\BreadcrumbService;
 use App\Services\OrdemServicoService;
 use App\Services\PdfService;
 use App\Services\VeiculoService;
+use App\Support\EmpresaContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -24,6 +29,21 @@ class OrdemServicoController extends Controller
         protected VeiculoService $veiculoService,
         protected PdfService $pdfService
     ) {
+    }
+
+    private function dadosFiltroVeiculo(): array
+    {
+        $empresaId = app(EmpresaContext::class)->empresaId()
+            ?? Auth::user()?->empresa_id;
+
+        $scope = fn ($q) => $empresaId ? $q->where('empresa_id', $empresaId) : $q;
+
+        return [
+            'filtroMarcas' => $scope(Marca::query())->orderBy('nome')->pluck('nome', 'id'),
+            'filtroGrupos' => $scope(GrupoFrota::query())->orderBy('nome')->pluck('nome', 'id'),
+            'filtroTipos'  => $scope(TipoFrota::query())->orderBy('nome')->pluck('nome', 'id'),
+            'filtroStatus' => $scope(StatusVeiculo::query())->orderBy('nome')->pluck('nome', 'id'),
+        ];
     }
 
     public function index(Request $request)
@@ -71,7 +91,7 @@ class OrdemServicoController extends Controller
             new BreadCrumbItem('Nova OS'),
         ]);
 
-        return view('ordem-servico.create', compact('veiculos', 'breadcrumb', 'veiculoId', 'danoIds'))
+        return view('ordem-servico.create', array_merge($this->dadosFiltroVeiculo(), compact('veiculos', 'breadcrumb', 'veiculoId', 'danoIds')))
             ->with('titulo', 'Nova ordem de serviço');
     }
 

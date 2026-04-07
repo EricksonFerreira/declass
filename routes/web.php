@@ -134,6 +134,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'veiculo_dano_monitoramento',
         'ordem_servico',
         'multa',
+        'sinistro',
     ];
 
     foreach ($webGroupFiles as $groupFile) {

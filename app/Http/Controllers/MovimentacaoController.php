@@ -86,6 +86,26 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $status = ['S' => 'Ativo', 'N' => 'Inativo'];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Movimentações', 'movimentacao.index', 'Criar');
 
+        $prefill = [
+            'veiculo_id' => (int) request()->query('veiculo_id', 0) ?: null,
+            'tipo_movimentacao_id' => (int) request()->query('tipo_movimentacao_id', 0) ?: null,
+            'status_movimentacao_id' => (int) request()->query('status_movimentacao_id', 0) ?: null,
+            'local_origem_id' => (int) request()->query('local_origem_id', 0) ?: null,
+            'local_destino_id' => (int) request()->query('local_destino_id', 0) ?: null,
+            'km_saida' => request()->query('km_saida') !== null ? (int) request()->query('km_saida') : null,
+            'user_id' => (int) request()->query('user_id', auth()->id() ?? 0) ?: null,
+        ];
+
+        if ($prefill['veiculo_id']) {
+            $veiculo = $this->veiculoService->getById($prefill['veiculo_id'], ['localDisponibilidade']);
+            if ($veiculo) {
+                $prefill['local_origem_id'] = $prefill['local_origem_id'] ?: ($veiculo->local_disponibilidade ? (int) $veiculo->local_disponibilidade : null);
+                if ($prefill['km_saida'] === null && $veiculo->kms !== null) {
+                    $prefill['km_saida'] = (int) $veiculo->kms;
+                }
+            }
+        }
+
         $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
         $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
         $usuarios = $this->usuarioService->getAllForReservaSelect();
@@ -110,7 +130,8 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'statusMovimentacao',
             'usuarios',
             'estacoes',
-            'veiculos'
+            'veiculos',
+            'prefill'
         ))->with('titulo', 'Nova Movimentação');
     }
 

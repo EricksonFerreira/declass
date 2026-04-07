@@ -98,6 +98,11 @@ class Veiculo extends Model
         return $this->hasMany(\App\Models\Multa::class, 'veiculo_id');
     }
 
+    public function sinistros()
+    {
+        return $this->hasMany(\App\Models\Sinistro::class, 'veiculo_id');
+    }
+
     public function localDisponibilidade()
     {
         return $this->belongsTo(Estacao::class, 'local_disponibilidade');

@@ -449,10 +449,10 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function setPerPage(Request $request)
     {
-        // Salva o valor de paginaÃ§Ã£o na sessÃ£o
+        // Salva o valor de paginação na sessão
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
-        // Redireciona de volta para a pÃ¡gina de listagem
+        // Redireciona de volta para a página de listagem
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -488,7 +488,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * FunÃ§Ã£o para obter o mÃ©todo e a rota para o formulÃ¡rio.
+     * Função para obter o mÃ©todo e a rota para o formulÃ¡rio.
      *
      * @param  User|null  $usuario
      * @return array

@@ -332,6 +332,12 @@ return [
             'can'  => 'multa.index',
         ],
         [
+            'text' => 'Sinistros',
+            'url'  => 'sinistro',
+            'icon' => 'fas fa-car-crash',
+            'can'  => 'sinistro.index',
+        ],
+        [
             'text'    => 'sidebar.movimentacoes',
             'icon'    => 'fas fa-route',
             'submenu' => [

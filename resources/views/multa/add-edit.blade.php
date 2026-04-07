@@ -244,128 +244,19 @@
 
 @stop
 
-{{-- Modal busca de veiculo --}}
-<div class="modal fade" id="modalBuscarVeiculo" tabindex="-1" role="dialog" aria-labelledby="modalBuscarVeiculoLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
-        <div class="modal-content">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title font-weight-bold" id="modalBuscarVeiculoLabel">
-                    <i class="fas fa-car mr-2"></i>Buscar Veículo
-                </h5>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                    <span aria-hidden="true">&times;</span>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="card card-outline card-secondary mb-3">
-                    <div class="card-header py-2">
-                        <h6 class="card-title mb-0"><i class="fas fa-filter mr-1"></i> Filtros</h6>
-                        <div class="card-tools">
-                            <button type="button" class="btn btn-tool" data-card-widget="collapse">
-                                <i class="fas fa-minus"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="card-body pb-1">
-                        <div class="row">
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Placa</label>
-                                <input type="text" id="fv_placa" class="form-control form-control-sm" placeholder="ABC-1234">
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Nome / Identificação</label>
-                                <input type="text" id="fv_nome" class="form-control form-control-sm" placeholder="Ex: Gol, HB20...">
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Chassi</label>
-                                <input type="text" id="fv_chassi" class="form-control form-control-sm" placeholder="Número do chassi">
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Cor</label>
-                                <input type="text" id="fv_cor" class="form-control form-control-sm" placeholder="Branco, Preto...">
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Marca</label>
-                                <select id="fv_marca_id" class="form-control form-control-sm">
-                                    <option value="">Todas as marcas</option>
-                                    @foreach($filtroMarcas as $id => $nome)
-                                        <option value="{{ $id }}">{{ $nome }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Modelo</label>
-                                <input type="text" id="fv_modelo" class="form-control form-control-sm" placeholder="Nome do modelo">
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Grupo de Frota</label>
-                                <select id="fv_grupo_frota_id" class="form-control form-control-sm">
-                                    <option value="">Todos os grupos</option>
-                                    @foreach($filtroGrupos as $id => $nome)
-                                        <option value="{{ $id }}">{{ $nome }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Tipo de Frota</label>
-                                <select id="fv_tipo_frota_id" class="form-control form-control-sm">
-                                    <option value="">Todos os tipos</option>
-                                    @foreach($filtroTipos as $id => $nome)
-                                        <option value="{{ $id }}">{{ $nome }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-3 form-group mb-2">
-                                <label class="small mb-1">Status</label>
-                                <select id="fv_status_veiculo_id" class="form-control form-control-sm">
-                                    <option value="">Todos os status</option>
-                                    @foreach($filtroStatus as $id => $nome)
-                                        <option value="{{ $id }}">{{ $nome }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            <div class="col-md-2 form-group mb-2">
-                                <label class="small mb-1">Ano modelo de</label>
-                                <input type="number" id="fv_ano_de" class="form-control form-control-sm" placeholder="2015" min="1990" max="{{ date('Y')+1 }}">
-                            </div>
-                            <div class="col-md-2 form-group mb-2">
-                                <label class="small mb-1">Ano modelo até</label>
-                                <input type="number" id="fv_ano_ate" class="form-control form-control-sm" placeholder="{{ date('Y') }}" min="1990" max="{{ date('Y')+1 }}">
-                            </div>
-                            <div class="col-md-2 form-group mb-2">
-                                <label class="small mb-1">KMs até</label>
-                                <input type="number" id="fv_kms_ate" class="form-control form-control-sm" placeholder="100000" min="0">
-                            </div>
-                            <div class="col-md-2 form-group mb-2">
-                                <label class="small mb-1">Ativo</label>
-                                <select id="fv_ativo" class="form-control form-control-sm">
-                                    <option value="">Todos</option>
-                                    <option value="1">Sim</option>
-                                    <option value="0">Não</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end form-group mb-2">
-                                <button type="button" class="btn btn-primary btn-sm btn-block" id="btnAplicarFiltroVeiculo">
-                                    <i class="fas fa-search mr-1"></i> Buscar
-                                </button>
-                            </div>
-                            <div class="col-md-2 d-flex align-items-end form-group mb-2">
-                                <button type="button" class="btn btn-outline-secondary btn-sm btn-block" id="btnLimparFiltroVeiculo">
-                                    <i class="fas fa-eraser mr-1"></i> Limpar
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div id="modalVeiculoLoading" class="text-center d-none py-3">
-                    <i class="fas fa-spinner fa-spin mr-1"></i> Buscando...
-                </div>
-                <div id="modalVeiculoResultados"></div>
-            </div>
-        </div>
-    </div>
-</div>
+<x-veiculo.busca-avancada-modal
+    prefix="multa"
+    title="Buscar veiculo"
+    trigger-id="btnBuscarVeiculo"
+    hidden-input-id="veiculo_id_input"
+    display-input-id="veiculo_display"
+    clear-btn-id="btnLimparVeiculo"
+    auto-fill-placa-selector="[name=placa_momento]"
+    :filtro-marcas="$filtroMarcas"
+    :filtro-grupos="$filtroGrupos"
+    :filtro-tipos="$filtroTipos"
+    :filtro-status="$filtroStatus"
+/>
 
 @section('css')
 <style>
@@ -582,6 +473,8 @@
 
     // Modal busca de veiculo
     (function () {
+        // Migrado para componente: <x-veiculo.busca-avancada-modal prefix="multa" ... />
+        return;
         const URL_BUSCAR  = '{{ route("veiculo.buscar") }}';
         const hiddenInput  = document.getElementById('veiculo_id_input');
         const displayInput = document.getElementById('veiculo_display');

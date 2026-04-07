@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\DisponibilidadeInicialVeiculo;
 use App\Models\Movimentacao;
 use App\Models\Veiculo;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,8 @@ class VeiculoService extends AbstractBaseService
     public MovimentacaoService $movimentacaoService;
     public DisponibilidadeInicialVeiculoService $disponibilidadeInicialVeiculoService;
     private ?array $statusVeiculoDisponivelIds = null;
+    private ?int $reservaBloqueioPosReservaHoras = null;
+    private ?array $statusMovimentacaoCanceladoIds = null;
 
     public function __construct(Veiculo $veiculo, DisponibilidadeInicialVeiculoService $disponibilidadeInicialVeiculoService)
     {
@@ -207,6 +210,19 @@ class VeiculoService extends AbstractBaseService
                     ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
                     ->where('reservas.data_inicio', '<', $data_fim)
                     ->where('reservas.data_fim', '>', $data_inicio);
+            })
+            ->whereDoesntHave('movimentacoes', function ($query) use ($data_fim) {
+                // Bloqueia veÃ­culos com movimentaÃ§Ã£o ainda nÃ£o concluÃ­da (ex: transferÃªncia entre estaÃ§Ãµes),
+                // mesmo quando a movimentaÃ§Ã£o nÃ£o estÃ¡ vinculada a uma reserva.
+                $query->whereNull('data_chegada_real')
+                    ->where(function ($sub) use ($data_fim) {
+                        $sub->whereNull('data_saida')->orWhere('data_saida', '<', $data_fim);
+                    });
+
+                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
+                if (!empty($cancelados)) {
+                    $query->whereNotIn('status_movimentacao_id', $cancelados);
+                }
             });
 
         $query = $this->scopeStatusVeiculoDisponivel($query);
@@ -254,6 +270,8 @@ class VeiculoService extends AbstractBaseService
      */
     public function getModelosComVeiculosDisponiveis(int $idGrupoFrota, int $idLocal, string $data_inicio, string $data_fim)
     {
+        $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($data_inicio);
+
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->whereHas('modelo.gruposFrota', function ($query) use ($idGrupoFrota) {
                 $query->where('grupos_frota.id', $idGrupoFrota);
@@ -263,11 +281,22 @@ class VeiculoService extends AbstractBaseService
                 $query->whereNull('data_hora_disponibilidade')
                     ->orWhere('data_hora_disponibilidade', '<=', $data_inicio);
             })
-            ->whereDoesntHave('movimentacoes', function ($query) use ($data_inicio, $data_fim) {
+            ->whereDoesntHave('movimentacoes', function ($query) use ($data_inicio, $data_fim, $dataInicioComFolga) {
                 $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
                     ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
                     ->where('reservas.data_inicio', '<', $data_fim)
-                    ->where('reservas.data_fim', '>', $data_inicio);
+                    ->where('reservas.data_fim', '>', $dataInicioComFolga);
+            })
+            ->whereDoesntHave('movimentacoes', function ($query) use ($data_fim) {
+                $query->whereNull('data_chegada_real')
+                    ->where(function ($sub) use ($data_fim) {
+                        $sub->whereNull('data_saida')->orWhere('data_saida', '<', $data_fim);
+                    });
+
+                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
+                if (!empty($cancelados)) {
+                    $query->whereNotIn('status_movimentacao_id', $cancelados);
+                }
             })
             ->with('modelo');
 
@@ -331,13 +360,15 @@ class VeiculoService extends AbstractBaseService
             return 0;
         }
 
+        $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($dataInicio);
+
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->where('local_disponibilidade', $estacaoId)
             ->where(function ($subQuery) use ($dataInicio) {
                 $subQuery->whereNull('data_hora_disponibilidade')
                     ->orWhere('data_hora_disponibilidade', '<=', $dataInicio);
             })
-            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicio, $dataFim, $reservaId) {
+            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicioComFolga, $dataFim, $reservaId, $dataInicio) {
                 if ($reservaId) {
                     $subQuery->where('movimentacoes.reserva_id', '!=', $reservaId);
                 }
@@ -345,12 +376,99 @@ class VeiculoService extends AbstractBaseService
                 $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
                     ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
                     ->where('reservas.data_inicio', '<', $dataFim)
-                    ->where('reservas.data_fim', '>', $dataInicio);
+                    ->where('reservas.data_fim', '>', $dataInicioComFolga);
+            })
+            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataFim) {
+                $subQuery->whereNull('data_chegada_real')
+                    ->where(function ($sub) use ($dataFim) {
+                        $sub->whereNull('data_saida')->orWhere('data_saida', '<', $dataFim);
+                    });
+
+                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
+                if (!empty($cancelados)) {
+                    $subQuery->whereNotIn('status_movimentacao_id', $cancelados);
+                }
             });
 
         $query = $this->scopeStatusVeiculoDisponivel($query);
 
         return (int) $query->count();
+    }
+
+    private function getStatusMovimentacaoCanceladoIds(): array
+    {
+        if ($this->statusMovimentacaoCanceladoIds !== null) {
+            return $this->statusMovimentacaoCanceladoIds;
+        }
+
+        $this->statusMovimentacaoCanceladoIds = [3];
+
+        $table = null;
+        if (Schema::hasTable('status_movimentacao')) {
+            $table = 'status_movimentacao';
+        } elseif (Schema::hasTable('status_movimentacaos')) {
+            $table = 'status_movimentacaos';
+        }
+
+        if ($table && Schema::hasColumn($table, 'nome')) {
+            try {
+                $ids = DB::table($table)
+                    ->select('id')
+                    ->whereRaw('LOWER(nome) LIKE ?', ['%cancel%'])
+                    ->pluck('id')
+                    ->map(fn ($v) => (int) $v)
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if (!empty($ids)) {
+                    $this->statusMovimentacaoCanceladoIds = $ids;
+                }
+            } catch (\Throwable $e) {
+                // MantÃ©m fallback.
+            }
+        }
+
+        return $this->statusMovimentacaoCanceladoIds;
+    }
+
+    private function dataInicioComFolgaPosReserva(string $dataInicio): string
+    {
+        $horas = $this->getReservaBloqueioPosReservaHoras();
+        if ($horas <= 0) {
+            return $dataInicio;
+        }
+
+        return Carbon::parse($dataInicio)->subHours($horas)->toDateTimeString();
+    }
+
+    private function getReservaBloqueioPosReservaHoras(): int
+    {
+        if ($this->reservaBloqueioPosReservaHoras !== null) {
+            return $this->reservaBloqueioPosReservaHoras;
+        }
+
+        if (!Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
+            $this->reservaBloqueioPosReservaHoras = 0;
+            return 0;
+        }
+
+        $empresaId = $this->currentEmpresaId();
+        if ($empresaId === null) {
+            $this->reservaBloqueioPosReservaHoras = 0;
+            return 0;
+        }
+
+        $valor = DB::table('empresas')->where('id', $empresaId)->value('reserva_bloqueio_pos_reserva_horas');
+        $horas = (int) ($valor ?? 0);
+        if ($horas < 0) {
+            $horas = 0;
+        }
+
+        $this->reservaBloqueioPosReservaHoras = $horas;
+
+        return $horas;
     }
 
     public function getTotalVeiculos()

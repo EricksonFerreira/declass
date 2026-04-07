@@ -93,7 +93,9 @@
                     <h3 class="card-title font-weight-bold mb-2 mb-md-0">Grade diaria de disponibilidade</h3>
                     <div class="legend d-flex flex-wrap">
                         <span class="legend-item"><i class="fas fa-circle text-success"></i> Disponivel</span>
+                        <span class="legend-item"><i class="fas fa-circle text-warning"></i> Indisponivel por reserva</span>
                         <span class="legend-item"><i class="fas fa-circle text-danger"></i> Indisponivel</span>
+                        <span class="legend-item"><i class="fas fa-circle text-secondary"></i> Sem local (nao reservavel)</span>
                     </div>
                 </div>
             </div>
@@ -119,15 +121,21 @@
                                     $placa = trim((string) ($veiculo->placa_licenca ?? 'Sem placa'));
 
                                     $availableCount = 0;
+                                    $reservedCount = 0;
                                     foreach ($diasDoMes as $diaLoop) {
-                                        if ($veiculo->estaDisponivel($diaLoop)) {
+                                        $tipo = $grade[$veiculo->id][$diaLoop]['tipo'] ?? 'off';
+                                        if ($tipo === 'ok') {
                                             $availableCount++;
+                                        } elseif ($tipo === 'reserved') {
+                                            $reservedCount++;
                                         }
                                     }
 
                                     $totalDias = max(count($diasDoMes), 1);
                                     $ratio = (int) round(($availableCount / $totalDias) * 100);
-                                    $rowStatus = $availableCount === 0 ? 'unavailable' : (($availableCount === $totalDias) ? 'available' : 'reserved');
+                                    $rowStatus = ($availableCount === $totalDias)
+                                        ? 'available'
+                                        : (($availableCount === 0 && $reservedCount === 0) ? 'unavailable' : 'reserved');
                                 @endphp
                                 <tr
                                     data-search="{{ strtolower($grupo . ' ' . $modelo . ' ' . $placa) }}"
@@ -142,15 +150,27 @@
                                         <span class="ratio-pill">{{ $ratio }}%</span>
                                     </td>
                                     @foreach($diasDoMes as $dia)
-                                        @if($veiculo->estaDisponivel($dia))
-                                            <td class="text-center">
-                                                <span class="status-dot is-ok" title="Disponivel"><i class="fas fa-check"></i></span>
-                                            </td>
-                                        @else
-                                            <td class="text-center">
-                                                <span class="status-dot is-off" title="Indisponivel"><i class="fas fa-times"></i></span>
-                                            </td>
-                                        @endif
+                                        @php
+                                            $cell = $grade[$veiculo->id][$dia] ?? ['tipo' => 'off', 'titulo' => 'Indisponivel', 'reserva_id' => null];
+                                        @endphp
+                                        <td class="text-center">
+                                            @if(($cell['tipo'] ?? null) === 'reserved' && !empty($cell['reserva_id']))
+                                                <a
+                                                    href="{{ route('reserva.show', $cell['reserva_id']) }}"
+                                                    class="status-dot is-reserved"
+                                                    style="text-decoration: none;"
+                                                    title="{{ $cell['titulo'] ?? 'Indisponivel por reserva' }}"
+                                                >
+                                                    <i class="fas fa-calendar-check"></i>
+                                                </a>
+                                            @elseif(($cell['tipo'] ?? null) === 'pending')
+                                                <span class="status-dot is-pending" title="{{ $cell['titulo'] ?? 'Sem local' }}"><i class="fas fa-map-marker-alt"></i></span>
+                                            @elseif(($cell['tipo'] ?? null) === 'ok')
+                                                <span class="status-dot is-ok" title="{{ $cell['titulo'] ?? 'Disponivel' }}"><i class="fas fa-check"></i></span>
+                                            @else
+                                                <span class="status-dot is-off" title="{{ $cell['titulo'] ?? 'Indisponivel' }}"><i class="fas fa-times"></i></span>
+                                            @endif
+                                        </td>
                                     @endforeach
                                 </tr>
                             @empty
@@ -322,6 +342,8 @@
 
         .status-dot.is-ok { background: #16a34a; }
         .status-dot.is-off { background: #dc2626; }
+        .status-dot.is-reserved { background: #d97706; }
+        .status-dot.is-pending { background: #64748b; }
 
         @media (max-width: 992px) {
             .availability-table-wrap {
