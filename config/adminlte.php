@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'title' => 'DECars',
+    'title' => 'DECARS',
     'title_prefix' => '',
     'title_postfix' => '',
 
@@ -63,12 +63,12 @@ return [
     |
     */
 
-    'logo' => '<b>DEC</b>ars',
+    'logo' => '<b>DECARS</b>',
     'logo_img' => 'assets/imgs/logo.png',
     'logo_img_class' => 'brand-image elevation-3',
     'logo_img_xl' => null,
     'logo_img_xl_class' => 'brand-image-xs',
-    'logo_img_alt' => 'Logo DECars',
+    'logo_img_alt' => 'Logo DECARS',
 
     /*
     |--------------------------------------------------------------------------
@@ -114,7 +114,7 @@ return [
         'mode' => 'fullscreen',
         'img' => [
             'path' => 'public/assets/imgs/logo.png',
-            'alt' => 'Imagem de Pré-carregamento DECars',
+            'alt' => 'Imagem de Pré-carregamento DECARS',
             'effect' => 'animation__shake',
             'width' => 160,
             'height' => 160,
