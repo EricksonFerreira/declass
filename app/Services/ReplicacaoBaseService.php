@@ -37,6 +37,7 @@ class ReplicacaoBaseService
             'status_reserva' => ['label' => 'Status de Reserva', 'area' => 'Operacao e Reservas', 'tables' => ['status_reserva']],
             'status_veiculos' => ['label' => 'Status de Veiculo', 'area' => 'Operacao e Reservas', 'tables' => ['status_veiculos']],
             'termo_consentimento' => ['label' => 'Termo de Consentimento', 'area' => 'Configuracoes do Usuario', 'tables' => ['termo_consentimento']],
+            'configuracoes_calcao' => ['label' => 'Configuracoes de Calcao', 'area' => 'Operacao e Reservas', 'tables' => ['configuracoes_calcao']],
             'regras' => ['label' => 'Regras de Usuario', 'area' => 'Configuracoes do Usuario', 'tables' => ['roles']],
             'permissoes' => ['label' => 'Permissoes', 'area' => 'Configuracoes do Usuario', 'tables' => ['permissions']],
             'regras_permissoes' => [

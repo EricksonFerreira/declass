@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Movimentacao;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreMovimentacaoRequest extends FormRequest
 {
@@ -23,18 +24,38 @@ class StoreMovimentacaoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'required|string|max:255',
-            'ativo' => 'required|string|max:1',
+            'nome' => ['nullable', 'string', 'max:255'],
+            'ativo' => ['required', Rule::in(['S', 'N'])],
+
+            'veiculo_id' => ['nullable', 'integer', 'exists:veiculos,id'],
+            'modelo_id' => ['nullable', 'integer', 'exists:modelos,id'],
+            'tipo_movimentacao_id' => ['required', 'integer', 'exists:tipos_movimentacao,id'],
+            'status_movimentacao_id' => ['required', 'integer', 'exists:status_movimentacao,id'],
+            'local_origem_id' => ['nullable', 'integer', 'exists:estacoes,id'],
+            'local_destino_id' => ['nullable', 'integer', 'exists:estacoes,id'],
+
+            'ordem_servico_id' => ['nullable', 'integer', 'exists:ordens_servico,id'],
+            'reserva_id' => ['nullable', 'integer', 'exists:reservas,id'],
+            'user_id' => ['required', 'integer', 'exists:users,id'],
+
+            'data_registro' => ['required', 'date'],
+            'data_saida' => ['nullable', 'date'],
+            'data_chegada_prevista' => ['nullable', 'date'],
+            'data_chegada_real' => ['nullable', 'date'],
+
+            'observacoes' => ['nullable', 'string'],
         ];
     }
 
     public function messages()
     {
         return [
-            'nome.required' => 'O campo nome é obrigatório',
-            'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
-            'ativo.required' => 'O campo ativo é obrigatório',
-            'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
+            'ativo.required' => 'O campo status do registro é obrigatório.',
+            'ativo.in' => 'O campo status do registro deve ser Ativo ou Inativo.',
+            'tipo_movimentacao_id.required' => 'O tipo de movimentação é obrigatório.',
+            'status_movimentacao_id.required' => 'O status da movimentação é obrigatório.',
+            'user_id.required' => 'O usuário é obrigatório.',
+            'data_registro.required' => 'A data de registro é obrigatória.',
         ];
     }
 }
