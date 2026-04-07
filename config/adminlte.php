@@ -116,8 +116,8 @@ return [
             'path' => 'public/assets/imgs/logo.png',
             'alt' => 'Imagem de Pré-carregamento DECars',
             'effect' => 'animation__shake',
-            'width' => 60,
-            'height' => 60,
+            'width' => 120,
+            'height' => 120,
         ],
     ],
 
