@@ -95,12 +95,10 @@
             width: 38px;
             height: 38px;
             border-radius: 11px;
-            background: var(--brand);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            box-shadow: 0 2px 8px color-mix(in srgb, var(--brand) 35%, transparent 65%);
         }
 
         .logo__name {
@@ -370,11 +368,11 @@
 
         {{-- Logo --}}
         <div class="logo">
-            <div class="logo__mark">
+            <div class="">
                 @if(!empty($loginLogoUrl))
-                <img class="logo__img" src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}">
+                <img src="{{ $loginLogoUrl }}" alt="Logo {{ $loginTitle }}" style="width:18em">
                 @else
-                <img src="{{asset('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}">
+                <img src="{{asset('assets/imgs/logo.png')}}" alt="Logo {{ $loginTitle }}" style="width:18em">
                 @endif
             </div>
             @if(!empty($loginLogoUrl))
