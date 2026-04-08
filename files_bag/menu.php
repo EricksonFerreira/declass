@@ -391,6 +391,11 @@ return [
                     'url' => 'admin/settings',
                     'icon' => 'fas fa-exclamation-circle',
                 ],
+                [
+                    'text' => 'sidebar.feriado',
+                    'url' => 'admin/feriado',
+                    'icon' => 'fas fa-flag',
+                ],
             ],
         ],
         [

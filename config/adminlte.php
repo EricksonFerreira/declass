@@ -566,6 +566,11 @@ return [
                     'url'  => 'horario_diario',
                     'icon' => 'fas fa-clock',
                 ],
+                [
+                    'text' => 'sidebar.feriado',
+                    'url'  => 'feriado',
+                    'icon' => 'fas fa-calendar-alt',
+                ],
             ],
         ],
 

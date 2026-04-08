@@ -16,7 +16,6 @@ class Feriado extends Model
         'estacao_id',
         'data',
         'nome',
-        'global',
         'ativo',
     ];
 

@@ -22,7 +22,7 @@
             <div class="card-header border-0">
                 <div>
                     <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Gerencie feriados globais e por estação.</p>
+                    <p class="mb-0 text-muted">Gerencie feriados por estação (cada estação deve ter seu próprio feriado).</p>
                 </div>
             </div>
 
@@ -46,9 +46,9 @@
 
                     <div class="col-lg-4 col-md-12">
                         <div class="form-group">
-                            <label for="estacao_id">Estação (opcional)</label>
-                            <select name="estacao_id" id="estacao_id" class="form-control form-control-sm">
-                                <option value="">Padrão / Global</option>
+                            <label for="estacao_id">Estação</label>
+                            <select name="estacao_id" id="estacao_id" class="form-control form-control-sm" required>
+                                <option value="">Selecione a estação</option>
                                 @foreach($estacoes as $id => $label)
                                     <option value="{{ $id }}" {{ old('estacao_id', $feriado->estacao_id ?? '') == $id ? 'selected' : '' }}>{{ $label }}</option>
                                 @endforeach
@@ -58,13 +58,12 @@
 
                     <div class="col-lg-3 col-md-4">
                         <div class="form-group">
-                            <x-form-select name="global" label="Escopo" :options="[['value' => 'S','label' => 'Global'],['value' => 'N','label' => 'Estação/Empresa']]" :selected="old('global', $feriado->global ?? 'N')" />
-                        </div>
-                    </div>
-
-                    <div class="col-lg-3 col-md-4">
-                        <div class="form-group">
-                            <x-form-select name="ativo" label="Status" :options="[['value' => 'S','label' => 'Ativo'],['value' => 'N','label' => 'Inativo']]" :selected="old('ativo', $feriado->ativo ?? 'S')" />
+                            <label for="ativo">Status</label>
+                             <select name="ativo" id="ativo" class="form-control form-control-sm" required>
+                                <option disabled>Selecione o status</option>
+                                <option value="S" {{ old('ativo', $feriado->ativo ?? 'S') == 'S' ? 'selected' : '' }}>Ativo</option>
+                                <option value="N" {{ old('ativo', $feriado->ativo ?? '') == 'N' ? 'selected' : '' }}>Inativo</option>
+                            </select>
                         </div>
                     </div>
 

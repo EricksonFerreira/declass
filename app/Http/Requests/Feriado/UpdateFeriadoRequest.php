@@ -16,8 +16,7 @@ class UpdateFeriadoRequest extends FormRequest
         return [
             'data' => 'required|date',
             'nome' => 'required|string|max:255',
-            'estacao_id' => 'nullable|integer|exists:estacoes,id',
-            'global' => 'required|string|in:S,N',
+            'estacao_id' => 'required|integer|exists:estacoes,id',
             'ativo' => 'required|string|in:S,N',
         ];
     }
@@ -27,6 +26,7 @@ class UpdateFeriadoRequest extends FormRequest
         return [
             'data.required' => 'A data do feriado é obrigatória',
             'nome.required' => 'O nome do feriado é obrigatório',
+            'estacao_id.required' => 'Selecione a estação para este feriado',
         ];
     }
 }

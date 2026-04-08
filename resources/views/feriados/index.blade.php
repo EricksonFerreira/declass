@@ -37,7 +37,6 @@
                         <th>Data</th>
                         <th>Nome</th>
                         <th>Estação</th>
-                        <th>Abrangência</th>
                         <th>Status</th>
                         <th style="width:180px;">Ações</th>
                     </tr>
@@ -53,13 +52,6 @@
                             </td>
                             <td>{{ $feriado->nome }}</td>
                             <td>{{ $feriado->estacao?->nome ?? '—' }}</td>
-                            <td>
-                                @if($feriado->global === 'S')
-                                    <span class="badge badge-info"><i class="fas fa-globe mr-1"></i>Global</span>
-                                @else
-                                    <span class="badge badge-secondary"><i class="fas fa-map-marker-alt mr-1"></i>Estação específica</span>
-                                @endif
-                            </td>
                             <td>
                                 <span class="badge badge-xs bg-{{ $feriado->ativo === 'S' ? 'success' : 'danger' }}">
                                     {{ $feriado->ativo === 'S' ? 'ATIVO' : 'INATIVO' }}

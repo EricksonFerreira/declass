@@ -81,6 +81,7 @@ return [
     'sidebar.horario_diario'               => 'Horários Diários',
     'sidebar.horario_funcionamento'        => 'Horários de Funcionamento',
     'sidebar.fora_horario'                 => 'Atendimento Fora do Horário',
+    'sidebar.feriado'                      => 'Feriados',
 
     // Usuários e acessos
     'sidebar.configuracao_usuario'         => 'Configuração do Usuário',

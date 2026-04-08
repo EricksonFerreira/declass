@@ -39,17 +39,17 @@ class UpdateEstacaoRequest extends FormRequest
             'checkin' => 'required|string|max:1|in:S,N',
             'checkout' => 'required|string|max:1|in:S,N',
             'hora_abertura' => 'required|array',
-            'hora_abertura.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_abertura.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'hora_fechamento' => 'required|array',
-            'hora_fechamento.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_fechamento.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'hora_inicio_almoco' => 'required|array',
-            'hora_inicio_almoco.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_inicio_almoco.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'hora_fim_almoco' => 'required|array',
-            'hora_fim_almoco.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_fim_almoco.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'hora_inicio_fora_expediente' => 'required|array',
-            'hora_inicio_fora_expediente.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_inicio_fora_expediente.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'hora_fim_fora_expediente' => 'required|array',
-            'hora_fim_fora_expediente.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/', 'not_in:00:00,00:00:00'],
+            'hora_fim_fora_expediente.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'cobrar_na_coleta' => 'required|string|max:1|in:S,N',
             'cobrar_na_entrega' => 'required|string|max:1|in:S,N',
             'valido_no_intervalo' => 'required|string|max:1|in:S,N',
@@ -92,6 +92,7 @@ class UpdateEstacaoRequest extends FormRequest
             $fechamentos = $this->input('hora_fechamento', []);
             $inicioAlmocos = $this->input('hora_inicio_almoco', []);
             $fimAlmocos = $this->input('hora_fim_almoco', []);
+            $funciona24h = $this->input('funciona_24h', []);
 
             $toMinutes = function ($value): ?int {
                 if (!is_string($value) || trim($value) === '' || $value === '00:00') {
@@ -106,7 +107,7 @@ class UpdateEstacaoRequest extends FormRequest
                 return ((int) $h * 60) + (int) $m;
             };
 
-            $total = max(count($aberturas), count($fechamentos), count($inicioAlmocos), count($fimAlmocos));
+            $total = max(count($aberturas), count($fechamentos), count($inicioAlmocos), count($fimAlmocos), count($funciona24h));
 
             for ($i = 0; $i < $total; $i++) {
                 $abertura = $toMinutes($aberturas[$i] ?? null);
@@ -114,7 +115,15 @@ class UpdateEstacaoRequest extends FormRequest
                 $inicioAlmoco = $toMinutes($inicioAlmocos[$i] ?? null);
                 $fimAlmoco = $toMinutes($fimAlmocos[$i] ?? null);
 
+                $is24h = isset($funciona24h[$i]) && $funciona24h[$i] === 'S';
+
+                if ($is24h) {
+                    continue;
+                }
+
                 if ($abertura === null || $fechamento === null) {
+                    $validator->errors()->add("hora_abertura.$i", 'Preencha todos os campos de Horario Diario na aba Horarios.');
+                    $validator->errors()->add("hora_fechamento.$i", 'Preencha todos os campos de Horario Diario na aba Horarios.');
                     continue;
                 }
 
