@@ -51,6 +51,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class ReservaController extends BaseController implements FiltroInterface, ResourceInterface
@@ -230,8 +231,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
-        return view('reserva.add-edit', compact(
+        $resetWizardStep = Auth::user()?->isAdministrador() ? true : false;
 
+        return view('reserva.add-edit', compact(
             'breadcrumb',
             'status',
             'metodo',
@@ -244,7 +246,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'simboloMoedaEmpresa',
             'tiposOpcionais',
             'tiposUsuario',
-            'paises'
+            'paises',
+            'resetWizardStep'
         ))
             ->with('titulo', $tituloFormulario);
     }
@@ -263,6 +266,15 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         // Cria a reserva com os dados processados
         $reserva = $this->reservaService->create($data);
+
+        // Se o serviço retornou um RedirectResponse (validação falhou dentro do serviço), retornar direto
+        if ($reserva instanceof \Illuminate\Http\RedirectResponse) {
+            return $reserva;
+        }
+
+        if (!$reserva) {
+            return redirect()->back()->with('error', 'Falha ao criar a reserva.');
+        }
 
         // Adiciona um log da ação realizada
         $json = json_encode([
@@ -1136,7 +1148,35 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $stripePublicKey = (string) ($empresa->stripe_public_key ?? config('services.stripe.key'));
             $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
             if ($stripeSecret !== '') {
-                $metodosPagamento = $this->clienteStripeService->getPaymentMethods($user->stripe_id, $stripeSecret);
+                try {
+                    $metodosPagamento = $this->clienteStripeService->getPaymentMethods($user->stripe_id, $stripeSecret);
+                } catch (\Stripe\Exception\InvalidRequestException $e) {
+                    \Log::warning('Stripe customer invalid or not found for user when loading payment methods - attempting reconcile', [
+                        'user_id' => $user->id ?? null,
+                        'stripe_id' => $user->stripe_id ?? null,
+                        'exception' => $e->getMessage(),
+                    ]);
+
+                    try {
+                        $novoStripeId = $this->clienteStripeService->garantirClienteValido($user->stripe_id, $user->email ?? '', $user->nome ?? 'Cliente', $stripeSecret);
+                        if (!empty($novoStripeId) && $novoStripeId !== ($user->stripe_id ?? '')) {
+                            // Atualiza o usuário local para apontar para o cliente correto no Stripe
+                            $this->userService->updateUser($user->id, ['stripe_id' => $novoStripeId]);
+                            $user = $this->userService->getById($user->id);
+                        }
+
+                        // Tenta novamente obter métodos com o id reconciliado
+                        $metodosPagamento = $this->clienteStripeService->getPaymentMethods($user->stripe_id, $stripeSecret);
+                    } catch (\Exception $e2) {
+                        \Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile', ['exception' => $e2->getMessage()]);
+                        session()->flash('warning', 'Não foi possível carregar os métodos de pagamento salvos. Remova e adicione novamente o cartão do cliente ou entre em contato com o suporte.');
+                        $metodosPagamento = [];
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao consultar métodos de pagamento Stripe', ['exception' => $e->getMessage()]);
+                    session()->flash('error', 'Erro ao conectar com o provedor de pagamento. Tente novamente mais tarde.');
+                    $metodosPagamento = [];
+                }
             }
         }
 
@@ -1826,10 +1866,34 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $metodosPagamento = [];
         $user = $reserva->usuario;
         if ($empresa && !empty($user?->stripe_id) && $empresa->stripe_secret) {
-            $metodosPagamento = $this->clienteStripeService->getPaymentMethods(
-                $user->stripe_id,
-                $empresa->stripe_secret
-            );
+            try {
+                $metodosPagamento = $this->clienteStripeService->getPaymentMethods(
+                    $user->stripe_id,
+                    $empresa->stripe_secret
+                );
+            } catch (\Stripe\Exception\InvalidRequestException $e) {
+                \Log::warning('Stripe customer invalid or not found for user when loading calcao payment methods - attempting reconcile', [
+                    'user_id' => $user->id ?? null,
+                    'stripe_id' => $user->stripe_id ?? null,
+                    'exception' => $e->getMessage(),
+                ]);
+
+                try {
+                    $novoStripeId = $this->clienteStripeService->garantirClienteValido($user->stripe_id, $user->email ?? '', $user->nome ?? 'Cliente', $empresa->stripe_secret);
+                    if (!empty($novoStripeId) && $novoStripeId !== ($user->stripe_id ?? '')) {
+                        $this->userService->updateUser($user->id, ['stripe_id' => $novoStripeId]);
+                        $user = $this->userService->getById($user->id);
+                    }
+
+                    $metodosPagamento = $this->clienteStripeService->getPaymentMethods($user->stripe_id, $empresa->stripe_secret);
+                } catch (\Exception $e2) {
+                    \Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (calcao)', ['exception' => $e2->getMessage()]);
+                    $metodosPagamento = [];
+                }
+            } catch (\Exception $e) {
+                \Log::error('Erro ao listar métodos de pagamento para calcao', ['exception' => $e->getMessage()]);
+                $metodosPagamento = [];
+            }
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([

@@ -8,6 +8,8 @@ use App\Models\HorarioDiario;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
 
 class EstacaoService extends AbstractBaseService
@@ -141,6 +143,27 @@ class EstacaoService extends AbstractBaseService
     {
         $estacoes = $this->model->where('id', '!=', $estacaoOrigem)->get();
         return $estacoes;
+    }
+
+    /**
+     * Lista estações ativas em formato de coleção (para modais/listagens).
+     * Diferente de getAllAtivos(), que retorna array id => nome (para selects).
+     */
+    public function listarAtivasParaModal(array $columns = ['id', 'nome', 'cidade']): Collection
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->select($columns)
+            ->distinct();
+
+        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+            $query->where('ativo', 'S');
+        }
+
+        if (in_array('nome', $columns, true)) {
+            $query->orderBy('nome', 'asc');
+        }
+
+        return $query->get();
     }
 
 

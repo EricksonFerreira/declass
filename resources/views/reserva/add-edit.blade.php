@@ -44,6 +44,40 @@
             @endforeach
         </div>
     @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <h5><i class="icon fas fa-ban"></i> Atencao!</h5>
+            <span>{{ session('error') }}</span>
+        </div>
+    @endif
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <span>{{ session('success') }}</span>
+        </div>
+    @endif
+    @if (session('warning'))
+        <div class="alert alert-warning alert-dismissible">
+            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
+            <span>{{ session('warning') }}</span>
+        </div>
+    @endif
+    @if (!empty($resetWizardStep) && $resetWizardStep)
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                try {
+                    localStorage.setItem('reservaWizardStep', '1');
+                    var btn = document.querySelector('[data-reserva-step-btn="1"]');
+                    if (btn) {
+                        btn.click();
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            });
+        </script>
+    @endif
     <div class="reserva-top-header mb-3">
         <div class="reserva-top-header__badges">
             <span class="reserva-chip">Estacoes: {{ $preRequisitosReserva['qtd_estacoes'] }}</span>
@@ -142,9 +176,9 @@
                     </div>
                     <div class="col-md-4" data-reserva-step="1">
                         <div class="form-group">
-                            <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
+                                <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
                                 id="data_inicio" name="data_inicio" label="Data Retirada"
-                                value="{{ $reserva->data_inicio ?? '' }}" required
+                                value="{{ old('data_inicio', $reserva->data_inicio ?? '') }}" required
                                 onchange="validarDatas()"
                                 min="{{ isset($reserva) ? '' : date('Y-m-d\TH:i') }}" />
                         </div>
@@ -165,7 +199,7 @@
                     <div class="col-md-4" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
-                                id="data_fim" name="data_fim" label="Data Devolucao" value="{{ $reserva->data_fim ?? '' }}"
+                                id="data_fim" name="data_fim" label="Data Devolucao" value="{{ old('data_fim', $reserva->data_fim ?? '') }}"
                                 required onchange="validarDatas()"
                                 />
                         </div>
@@ -203,7 +237,7 @@
                     </div>
                      <div class="col-md-3" data-reserva-step="2">
                         <x-form-input maxlength="7" id="cupom_desconto" name="cupom_desconto" label="Cupom de Desconto"
-                            value="{{ $reserva->cupomDesconto->codigo ?? '' }}" class="form-control form-control-sm" />
+                            value="{{ old('cupom_desconto', $reserva->cupomDesconto->codigo ?? '') }}" class="form-control form-control-sm" />
                     </div>
                     {{-- <div class="col-md-2 d-flex align-items-center">
 
@@ -219,6 +253,7 @@
                                 class="form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
                         @else
                             <x-form-select name="modelo_id" label="Modelo" id="modelo" :options="[]"
+                                :selected="old('modelo_id')"
                                 onchange="getMarcaESegmento(this.value)" placeholder="Selecione primeiro o grupo de frotas"
                                 class="form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" disabled required />
                         @endif
@@ -228,14 +263,14 @@
                         <small id="modelo_disponibilidade_feedback" class="text-warning d-block mt-1 d-none"></small>
                     </div>
                     <div class="col-md-4" data-reserva-step="2">
-                        <x-form-input type="text" class="form-control form-control-sm" disabled id="marca"
+                            <x-form-input type="text" class="form-control form-control-sm" disabled id="marca"
                             name="marca" label="Marca"
-                            value="{{ isset($marcas) && isset($marcas->nome) ? $marcas->nome : '' }}" />
+                            value="{{ old('marca', isset($marcas) && isset($marcas->nome) ? $marcas->nome : '') }}" />
                     </div>
                     <div class="col-md-4" data-reserva-step="2">
                         <x-form-input type="text" class="form-control form-control-sm" disabled id="segmento"
                             name="segmento" label="Segmento"
-                            value="{{ isset($segmentos) && isset($segmentos->nome) ? $segmentos->nome : '' }} " />
+                            value="{{ old('segmento', isset($segmentos) && isset($segmentos->nome) ? $segmentos->nome : '') }} " />
                     </div>
 
 
@@ -352,7 +387,7 @@
                     <div class="col-md-6">
                         <div class="form-group">
                             <x-form-input type="datetime-local" class="form-control form-control-sm" id="data_cancelamento" name="data_cancelamento"
-                                label="Data de Cancelamento" value="{{ $reserva->data_cancelamento ?? '' }}" />
+                                label="Data de Cancelamento" value="{{ old('data_cancelamento', $reserva->data_cancelamento ?? '') }}" />
                         </div>
                     </div>
                 </div> --}}
@@ -518,32 +553,32 @@
                                 <div class="form-row">
                                     <div class="col-md-6">
                                         <label for="novo_usuario_nome">Nome <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_nome" name="nome" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_nome" name="nome" value="{{ old('nome') }}" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="novo_usuario_email">E-mail <span class="text-danger">*</span></label>
-                                        <input type="email" class="form-control form-control-sm" id="novo_usuario_email" name="email" required>
+                                        <input type="email" class="form-control form-control-sm" id="novo_usuario_email" name="email" value="{{ old('email') }}" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="novo_usuario_sexo">Sexo <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_sexo" name="sexo" data-size="6" required>
                                             <option value="">Selecione...</option>
-                                            <option value="M">Masculino</option>
-                                            <option value="F">Feminino</option>
-                                            <option value="O">Outro</option>
+                                            <option value="M" {{ old('sexo') == 'M' ? 'selected' : '' }}>Masculino</option>
+                                            <option value="F" {{ old('sexo') == 'F' ? 'selected' : '' }}>Feminino</option>
+                                            <option value="O" {{ old('sexo') == 'O' ? 'selected' : '' }}>Outro</option>
                                         </select>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="novo_usuario_data_nascimento">Data de Nascimento <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_nascimento" name="data_nascimento" required>
+                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_nascimento" name="data_nascimento" value="{{ old('data_nascimento') }}" required>
                                     </div>
                                     <div class="col-md-6">
                                         <label for="novo_usuario_local_nascimento">Local de Nascimento <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_local_nascimento" name="local_nascimento" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_local_nascimento" name="local_nascimento" value="{{ old('local_nascimento') }}" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="novo_usuario_numero_identificacao">Numero de Identificacao <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_identificacao" name="numero_identificacao" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_identificacao" name="numero_identificacao" value="{{ old('numero_identificacao') }}" required>
                                     </div>
                                 </div>
                             </div>
@@ -553,32 +588,32 @@
                                 <div class="form-row">
                                     <div class="col-md-3">
                                         <label for="novo_usuario_telefone">Telefone <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_telefone" name="telefone" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_telefone" name="telefone" value="{{ old('telefone') }}" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="novo_usuario_celular">Celular <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_celular" name="celular" placeholder="(99) 99999-9999" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_celular" name="celular" value="{{ old('celular') }}" placeholder="(99) 99999-9999" required>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="novo_usuario_pais_sigla">Pais <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_sigla" name="pais_sigla" data-live-search="true" data-size="8" required>
                                             <option value="">Selecione...</option>
                                             @foreach (($paises ?? []) as $siglaPais => $nomePais)
-                                                <option value="{{ $siglaPais }}">{{ $nomePais }}</option>
+                                                <option value="{{ $siglaPais }}" {{ old('pais_sigla') == $siglaPais ? 'selected' : '' }}>{{ $nomePais }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="col-md-3">
                                         <label for="novo_usuario_zip_code">Zip Code <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_zip_code" name="zip_code" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_zip_code" name="zip_code" value="{{ old('zip_code') }}" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="novo_usuario_cidade">Cidade <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_cidade" name="cidade" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_cidade" name="cidade" value="{{ old('cidade') }}" required>
                                     </div>
                                     <div class="col-md-8">
                                         <label for="novo_usuario_endereco">Endereco <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_endereco" name="endereco" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_endereco" name="endereco" value="{{ old('endereco') }}" required>
                                     </div>
                                 </div>
                             </div>
@@ -588,28 +623,28 @@
                                 <div class="form-row">
                                     <div class="col-md-4">
                                         <label for="novo_usuario_numero_carta_conducao">Numero Carta de Conducao <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_carta_conducao" name="numero_carta_conducao" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_carta_conducao" name="numero_carta_conducao" value="{{ old('numero_carta_conducao') }}" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="novo_usuario_local_emissao_carta_conducao">Local de Emissao <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_local_emissao_carta_conducao" name="local_emissao_carta_conducao" required>
+                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_local_emissao_carta_conducao" name="local_emissao_carta_conducao" value="{{ old('local_emissao_carta_conducao') }}" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="novo_usuario_pais_emissao_carta_conducao">Pais de Emissao <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_emissao_carta_conducao" name="pais_emissao_carta_conducao" data-live-search="true" data-size="8" required>
                                             <option value="">Selecione...</option>
                                             @foreach (($paises ?? []) as $siglaPais => $nomePais)
-                                                <option value="{{ $siglaPais }}">{{ $nomePais }}</option>
+                                                <option value="{{ $siglaPais }}" {{ old('pais_emissao_carta_conducao') == $siglaPais ? 'selected' : '' }}>{{ $nomePais }}</option>
                                             @endforeach
                                         </select>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="novo_usuario_data_emissao_carta_conducao">Data de Emissao <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_emissao_carta_conducao" name="data_emissao_carta_conducao" required>
+                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_emissao_carta_conducao" name="data_emissao_carta_conducao" value="{{ old('data_emissao_carta_conducao') }}" required>
                                     </div>
                                     <div class="col-md-4">
                                         <label for="novo_usuario_data_validade_carta_conducao">Data de Validade</label>
-                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_validade_carta_conducao" name="data_validade_carta_conducao">
+                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_validade_carta_conducao" name="data_validade_carta_conducao" value="{{ old('data_validade_carta_conducao') }}">
                                     </div>
                                 </div>
                             </div>
@@ -1439,9 +1474,41 @@
 
             e.preventDefault();
             // quero que formate os opcionais para eu levar para o servidor em input hidden
-            $('#reservaHidden').val(JSON.stringify(getMinhaReserva()));
+            try {
+                const reservaObj = getMinhaReserva() || {};
+                // garantir que o user_id do campo hidden seja incluído na reservaHidden
+                const userIdHidden = document.getElementById('user_id') ? document.getElementById('user_id').value : null;
+                if (userIdHidden) {
+                    reservaObj.user_id = Number(userIdHidden);
+                }
+                $('#reservaHidden').val(JSON.stringify(reservaObj));
+            } catch (err) {
+                console.error('Erro ao montar reservaHidden', err);
+                $('#reservaHidden').val(JSON.stringify(getMinhaReserva()));
+            }
 
             this.submit();
+        });
+
+        // Compatibilidade: sincroniza checkbox legados (opcionais[]) com o estado da reserva
+        $(document).on('change', 'input[name="opcionais[]"]', function() {
+            try {
+                const id = Number($(this).val());
+                if (!Number.isFinite(id) || id <= 0) return;
+
+                if ($(this).is(':checked')) {
+                    // adiciona com quantidade 1 por padrao
+                    addOpcionalReserva(id, 1);
+                } else {
+                    removeOpcionalReserva(id);
+                }
+
+                if (typeof atualizarMinhaReserva === 'function') {
+                    atualizarMinhaReserva();
+                }
+            } catch (e) {
+                console.error('Erro ao sincronizar opcional checkbox:', e);
+            }
         });
 
         function initSelectPickers(scope = document) {
@@ -1493,7 +1560,6 @@
                     if (opcionaisWrapperEl) {
                         opcionaisWrapperEl.classList.toggle('d-none', s !== 3);
                     }
-
                     document.querySelectorAll('[data-reserva-step-btn]').forEach(btn => {
                         btn.classList.toggle('is-active', Number(btn.dataset.reservaStepBtn) === s);
                     });

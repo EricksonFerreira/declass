@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Exceptions\TipoEStatusMovimentacaoException;
 use App\Models\Movimentacao;
+use App\Models\MovimentacaoHistorico;
 use App\Models\Veiculo;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
@@ -69,6 +70,7 @@ class MovimentacaoService extends AbstractBaseService
 
         if ($movimentacao instanceof Movimentacao) {
             $this->syncVeiculoFromMovimentacao($movimentacao);
+            $this->registrarHistorico($movimentacao, null, 'create', 'Movimentação criada');
         }
 
         return $movimentacao;
@@ -76,13 +78,102 @@ class MovimentacaoService extends AbstractBaseService
 
     public function update($id, array $data)
     {
+        $original = $this->getById($id);
         $movimentacao = parent::update($id, $data);
 
-        if ($movimentacao instanceof Movimentacao) {
+        if ($movimentacao instanceof Movimentacao && $original) {
             $this->syncVeiculoFromMovimentacao($movimentacao);
+            $this->registrarAlteracoes($original, $movimentacao);
         }
 
         return $movimentacao;
+    }
+
+    /**
+     * Conclui a movimentação: define status=Concluído e salva chegada_real=agora.
+     */
+    public function concluir(int $id, ?string $chegadaReal = null): Movimentacao
+    {
+        $movimentacao = $this->getById($id);
+        if (!$movimentacao) {
+            abort(404);
+        }
+
+        $chegadaReal = $chegadaReal ?? now()->format('Y-m-d H:i:s');
+
+        // ID 1 = Concluído (empresa-scoped: busca pelo nome)
+        $statusConcluido = \App\Models\StatusMovimentacao::where('nome', 'Concluído')
+            ->where('empresa_id', $movimentacao->empresa_id)
+            ->first();
+
+        $movimentacao->update([
+            'status_movimentacao_id' => $statusConcluido?->id ?? 1,
+            'data_chegada_real'      => $chegadaReal,
+        ]);
+
+        $this->syncVeiculoFromMovimentacao($movimentacao->fresh());
+
+        MovimentacaoHistorico::create([
+            'movimentacao_id' => $movimentacao->id,
+            'user_id'         => Auth::id(),
+            'acao'            => 'concluir',
+            'observacao'      => 'Movimentação concluída. Chegada real registrada: ' . Carbon::parse($chegadaReal)->format('d/m/Y H:i'),
+            'empresa_id'      => $movimentacao->empresa_id,
+        ]);
+
+        return $movimentacao->fresh();
+    }
+
+    private function registrarHistorico(Movimentacao $mov, ?array $campos, string $acao, ?string $observacao = null): void
+    {
+        MovimentacaoHistorico::create([
+            'movimentacao_id' => $mov->id,
+            'user_id'         => Auth::id(),
+            'acao'            => $acao,
+            'campo'           => $campos ? implode(', ', array_keys($campos)) : null,
+            'observacao'      => $observacao,
+            'empresa_id'      => $mov->empresa_id,
+        ]);
+    }
+
+    private function registrarAlteracoes(Movimentacao $original, Movimentacao $novo): void
+    {
+        $camposMonitorados = [
+            'tipo_movimentacao_id'  => 'Tipo',
+            'status_movimentacao_id'=> 'Status',
+            'veiculo_id'            => 'Veículo',
+            'local_origem_id'       => 'Estação de Origem',
+            'local_destino_id'      => 'Estação de Destino',
+            'km_saida'              => 'KM Saída',
+            'km_chegada'            => 'KM Chegada',
+            'data_saida'            => 'Data de Saída',
+            'data_chegada_prevista' => 'Chegada Prevista',
+            'data_chegada_real'     => 'Chegada Real',
+            'user_id'               => 'Usuário',
+            'reserva_id'            => 'Reserva',
+            'ordem_servico_id'      => 'Ordem de Serviço',
+            'observacoes'           => 'Observações',
+        ];
+
+        $alteracoes = [];
+        foreach ($camposMonitorados as $campo => $label) {
+            $antes  = (string) ($original->$campo ?? '');
+            $depois = (string) ($novo->$campo ?? '');
+            if ($antes !== $depois) {
+                $alteracoes[] = $label;
+            }
+        }
+
+        if (!empty($alteracoes)) {
+            MovimentacaoHistorico::create([
+                'movimentacao_id' => $novo->id,
+                'user_id'         => Auth::id(),
+                'acao'            => 'update',
+                'campo'           => implode(', ', $alteracoes),
+                'observacao'      => 'Campos alterados: ' . implode(', ', $alteracoes),
+                'empresa_id'      => $novo->empresa_id,
+            ]);
+        }
     }
 
     /**

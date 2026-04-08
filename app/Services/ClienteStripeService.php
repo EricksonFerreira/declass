@@ -10,6 +10,7 @@ use Stripe\PaymentIntent;
 use Stripe\PaymentMethod;
 use Stripe\StripeClient;
 use Stripe\Token;
+use Stripe\Exception\InvalidRequestException;
 
 class ClienteStripeService
 {
@@ -204,6 +205,41 @@ class ClienteStripeService
     public function createCharge(string $paymentMethodId, float $valorTotal, string $customerId, ?string $stripeSecret = null, string $currency = 'brl'): PaymentIntent
     {
         return $this->criarCobranca($paymentMethodId, $valorTotal, $customerId, $stripeSecret, $currency);
+    }
+
+    /**
+     * Garante que exista um cliente válido no Stripe para os dados fornecidos.
+     *
+     * - Se o `stripeId` atual existir no Stripe, retorna-o.
+     * - Caso não exista (InvalidRequestException), faz uma busca por e-mail;
+     *   se encontrar, retorna o id encontrado.
+     * - Se não encontrar, cria um novo cliente e retorna o id.
+     *
+     * Não atualiza o usuário local — o chamador deve persistir `stripe_id` no banco.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function garantirClienteValido(?string $stripeId, string $email, string $nome, ?string $stripeSecret = null): string
+    {
+        // Se já tem um stripe id, tenta recuperar
+        if (!empty($stripeId)) {
+            try {
+                $this->client($stripeSecret)->customers->retrieve($stripeId);
+                return (string) $stripeId;
+            } catch (InvalidRequestException $e) {
+                // Cliente nao encontrado no Stripe — prossegue para buscar por email/criar
+            }
+        }
+
+        // Busca por email
+        $resultado = $this->buscarClientePorEmail($email, $stripeSecret);
+        if (!empty($resultado->data)) {
+            return (string) ($resultado->data[0]->id ?? '');
+        }
+
+        // Cria novo cliente
+        $cliente = $this->criarCliente($email, $nome, $stripeSecret);
+        return (string) ($cliente->id ?? '');
     }
 
     // -------------------------------------------------------------------------

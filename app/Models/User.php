@@ -101,6 +101,15 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->belongsTo(Regra::class, 'role_id');
     }
 
+    /**
+     * Alias historicamente usado em muitos pontos do sistema.
+     * Mantemos `regra()` para compatibilidade com código que usa `$user->regra`.
+     */
+    public function regra()
+    {
+        return $this->belongsTo(Regra::class, 'role_id');
+    }
+
     public function getTipoUsuarioIdAttribute(): mixed
     {
         return $this->role_id;

@@ -84,4 +84,10 @@ class Movimentacao extends Model
     {
         return $this->belongsTo(StatusMovimentacao::class, 'status_movimentacao_id');
     }
+
+    // Histórico de alterações
+    public function historico()
+    {
+        return $this->hasMany(MovimentacaoHistorico::class, 'movimentacao_id')->orderByDesc('created_at');
+    }
 }

@@ -69,6 +69,8 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $this->atualizarFiltros($itensFiltered, $additionalFilters);
 
         $perPages = [5, 10, 15, 25, 50, 100];
+        $statusList = \App\Models\StatusMovimentacao::where('empresa_id', auth()->user()->empresa_id)
+            ->orderBy('nome')->get(['id', 'nome', 'cor']);
 
         return view('movimentacao.index', compact(
             'movimentacaos',
@@ -77,7 +79,8 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'itensFiltered',
             'additionalFilters',
             'perPages',
-            'perPage'
+            'perPage',
+            'statusList'
         ))->with('titulo', $this->titulo);
     }
 
@@ -108,8 +111,11 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
         $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
         $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
+        $statusMovimentacaoObj = \App\Models\StatusMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
+        $usuariosObj = \App\Models\User::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
         $usuarios = $this->usuarioService->getAllForReservaSelect();
-        $estacoes = $this->estacaoService->getAllAtivos();
+        $estacoes = $this->estacaoService->listarAtivasParaModal();
 
         $veiculosCol = $this->veiculoService->listarAtivosParaOrdemServico(800);
         $veiculos = $veiculosCol->mapWithKeys(function ($v) {
@@ -128,6 +134,9 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'rota',
             'tiposMovimentacao',
             'statusMovimentacao',
+            'tiposMovimentacaoObj',
+            'statusMovimentacaoObj',
+            'usuariosObj',
             'usuarios',
             'estacoes',
             'veiculos',
@@ -144,7 +153,7 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
     public function edit($id)
     {
-        $movimentacao = $this->movimentacaoService->getById($id);
+        $movimentacao = $this->movimentacaoService->getById($id, ['historico.usuario']);
         if (!$movimentacao) {
             abort(404);
         }
@@ -157,8 +166,11 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
         $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
         $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
+        $statusMovimentacaoObj = \App\Models\StatusMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
+        $usuariosObj = \App\Models\User::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
         $usuarios = $this->usuarioService->getAllForReservaSelect();
-        $estacoes = $this->estacaoService->getAllAtivos();
+        $estacoes = $this->estacaoService->listarAtivasParaModal();
 
         $veiculosCol = $this->veiculoService->listarAtivosParaOrdemServico(800);
         $veiculos = $veiculosCol->mapWithKeys(function ($v) {
@@ -179,6 +191,9 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'rota',
             'tiposMovimentacao',
             'statusMovimentacao',
+            'tiposMovimentacaoObj',
+            'statusMovimentacaoObj',
+            'usuariosObj',
             'usuarios',
             'estacoes',
             'veiculos'
@@ -195,6 +210,69 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
     {
         $success = $this->movimentacaoService->delete($id);
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function concluir(Request $request, $id)
+    {
+        $chegadaReal = $request->input('chegada_real');
+        $this->movimentacaoService->concluir((int) $id, $chegadaReal ?: null);
+        return response()->json(['success' => true]);
+    }
+
+    public function buscarReservas(Request $request)
+    {
+        $q = $request->query('q', '');
+        $query = \App\Models\Reserva::with(['usuario:id,nome', 'grupoFrota:id,nome', 'statusReserva:id,nome'])
+            ->orderByDesc('id')
+            ->limit(50);
+
+        if ($q) {
+            $query->where(function ($sub) use ($q) {
+                $sub->where('id', $q)
+                    ->orWhereHas('usuario', fn($u) => $u->where('nome', 'like', "%{$q}%"));
+            });
+        }
+
+        return response()->json($query->get()->map(fn($r) => [
+            'id'      => $r->id,
+            'cliente' => $r->usuario?->nome ?? '—',
+            'grupo'   => $r->grupoFrota?->nome ?? '—',
+            'status'  => $r->statusReserva?->nome ?? '—',
+            'inicio'  => $r->data_inicio ? \Carbon\Carbon::parse($r->data_inicio)->format('d/m/Y') : '—',
+            'fim'     => $r->data_fim    ? \Carbon\Carbon::parse($r->data_fim)->format('d/m/Y')    : '—',
+        ]));
+    }
+
+    public function buscarOrdens(Request $request)
+    {
+        $q = $request->query('q', '');
+        $query = \App\Models\OrdemServico::orderByDesc('id')->limit(50);
+
+        if ($q) {
+            $query->where('id', $q)
+                  ->orWhere('numero', 'like', "%{$q}%");
+        }
+
+        return response()->json($query->get()->map(fn($os) => [
+            'id'     => $os->id,
+            'numero' => $os->numero ?? ('#' . $os->id),
+            'status' => $os->status ?? '—',
+            'data'   => $os->created_at?->format('d/m/Y') ?? '—',
+        ]));
+    }
+
+    public function kmVeiculo(Request $request)
+    {
+        $veiculoId = (int) $request->query('veiculo_id', 0);
+        if (!$veiculoId) {
+            return response()->json(['kms' => null]);
+        }
+        $v = \App\Models\Veiculo::find($veiculoId, ['id', 'kms', 'nome', 'placa_licenca']);
+        return response()->json([
+            'kms'   => $v?->kms,
+            'nome'  => $v?->nome ?? '',
+            'placa' => $v?->placa_licenca ?? '',
+        ]);
     }
 
     public function filtro(Request $request)
