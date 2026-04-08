@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', $título)
+@section('title', $titulo)
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
@@ -29,7 +29,7 @@
             if (!is_string($value) || trim($value) === '') {
                 return null;
             }
-            return \Illuminate\Support\Façades\Storage::url($value);
+            return \Illuminate\Support\Facades\Storage::url($value);
         };
 
         $imagemAtiva = function (string $key) use ($siteImagensConfig): bool {
@@ -44,95 +44,95 @@
         $modelCards = [
             [
                 'valor'    => 'modelo_1',
-                'título'   => 'Modelo 1 — Premium Locadora',
-                'status'   => 'Disponível',
+                'titulo'   => 'Modelo 1 — Premium Locadora',
+                'status'   => 'Disponivel',
                 'icon'     => 'fas fa-star',
-                'descrição' => 'Layout completo com banner, formulário de reserva e seções configuráveis.',
+                'descricao' => 'Layout completo com banner, formulario de reserva e secoes configuráveis.',
             ],
             [
                 'valor'    => 'modelo_2',
-                'título'   => 'Modelo 2 — Compacto',
+                'titulo'   => 'Modelo 2 — Compacto',
                 'status'   => 'Em breve',
                 'icon'     => 'fas fa-bolt',
-                'descrição' => 'Variação focada em conversão rapida para campanhas de mídia.',
+                'descricao' => 'Variacao focada em conversao rapida para campanhas de midia.',
             ],
             [
                 'valor'    => 'modelo_3',
-                'título'   => 'Modelo 3 — Corporativo',
+                'titulo'   => 'Modelo 3 — Corporativo',
                 'status'   => 'Em breve',
                 'icon'     => 'fas fa-building',
-                'descrição' => 'Layout institucional para operações B2B com blocos corporativos.',
+                'descricao' => 'Layout institucional para operacoes B2B com blocos corporativos.',
             ],
         ];
 
         $textGroups = [
             [
-                'title'    => 'Menu de Navegação e Botões',
+                'title'    => 'Menu de Navegacao e Botoes',
                 'icon'     => 'fas fa-bars',
-                'descrição' => 'Nomes dos itens do menu, botão de reserva e texto do rodapé.',
+                'descricao' => 'Nomes dos itens do menu, botao de reserva e texto do rodape.',
                 'fields'   => [
-                    ['name' => 'menu_itêm_frota',              'label' => 'Itêm de menu: Frota',                  'hint' => 'Ex: Nossa Frota',                                      'type' => 'text',     'max' => 50],
-                    ['name' => 'menu_itêm_vantagens',          'label' => 'Itêm de menu: Vantagens',              'hint' => 'Ex: Por que nos escolher',                             'type' => 'text',     'max' => 50],
-                    ['name' => 'menu_itêm_etapas',             'label' => 'Itêm de menu: Como funciona',          'hint' => 'Ex: Como funciona',                                    'type' => 'text',     'max' => 50],
-                    ['name' => 'menu_itêm_contato',            'label' => 'Itêm de menu: Contato',                'hint' => 'Ex: Fale conosco',                                     'type' => 'text',     'max' => 50],
-                    ['name' => 'site_apresentacao_botao_texto','label' => 'Texto do botão de reserva',            'hint' => 'Ex: Reserve agora',                                    'type' => 'text',     'max' => 60],
-                    ['name' => 'site_apresentacao_botao_url',  'label' => 'Link do botão de reserva (opcional)',  'hint' => 'Deixe em branco para usar o sistêma de reservas',      'type' => 'text',     'max' => 255],
-                    ['name' => 'botão_admin_texto',            'label' => 'Botao da área administrativa',         'hint' => 'Ex: Área do Cliente',                                  'type' => 'text',     'max' => 80],
-                    ['name' => 'footer_texto',                 'label' => 'Texto do rodapé',                      'hint' => 'Ex: Todos os direitos reservados.',   'type' => 'text',     'max' => 200],
+                    ['name' => 'menu_item_frota',              'label' => 'Item de menu: Frota',                  'hint' => 'Ex: Nossa Frota',                                      'type' => 'text',     'max' => 50],
+                    ['name' => 'menu_item_vantagens',          'label' => 'Item de menu: Vantagens',              'hint' => 'Ex: Por que nos escolher',                             'type' => 'text',     'max' => 50],
+                    ['name' => 'menu_item_etapas',             'label' => 'Item de menu: Como funciona',          'hint' => 'Ex: Como funciona',                                    'type' => 'text',     'max' => 50],
+                    ['name' => 'menu_item_contato',            'label' => 'Item de menu: Contato',                'hint' => 'Ex: Fale conosco',                                     'type' => 'text',     'max' => 50],
+                    ['name' => 'site_apresentacao_botao_texto','label' => 'Texto do botao de reserva',            'hint' => 'Ex: Reserve agora',                                    'type' => 'text',     'max' => 60],
+                    ['name' => 'site_apresentacao_botao_url',  'label' => 'Link do botao de reserva (opcional)',  'hint' => 'Deixe em branco para usar o sistema de reservas',      'type' => 'text',     'max' => 255],
+                    ['name' => 'botao_admin_texto',            'label' => 'Botao da area administrativa',         'hint' => 'Ex: Area do Cliente',                                  'type' => 'text',     'max' => 80],
+                    ['name' => 'footer_texto',                 'label' => 'Texto do rodape',                      'hint' => 'Ex: Todos os direitos reservados.',   'type' => 'text',     'max' => 200],
                 ],
             ],
             [
-                'title'    => 'Seção Principal (Banner)',
+                'title'    => 'Secao Principal (Banner)',
                 'icon'     => 'fas fa-image',
-                'descrição' => 'Textos do grande banner que aparece no topo da página.',
+                'descricao' => 'Textos do grande banner que aparece no topo da pagina.',
                 'fields'   => [
-                    ['name' => 'hero_tag',        'label' => 'Etiqueta em destaque',     'hint' => 'Pequeno texto colorido acima do título. Ex: Aluguel de carros',         'type' => 'text',     'max' => 120],
-                    ['name' => 'hero_titulo',     'label' => 'Título principal',          'hint' => 'Ex: Alugue o carro ideal para sua viagem',                             'type' => 'text',     'max' => 180],
-                    ['name' => 'hero_subtítulo',  'label' => 'Subtítulo',                 'hint' => 'Ex: Frota completa, precos acessiveis e atendimento rapido',           'type' => 'text',     'max' => 220],
-                    ['name' => 'hero_descricao',  'label' => 'Descrição complementar',   'hint' => 'Texto adicional abaixo do subtítulo (pode deixar em branco)',           'type' => 'textárea', 'max' => 2000],
+                    ['name' => 'hero_tag',        'label' => 'Etiqueta em destaque',     'hint' => 'Pequeno texto colorido acima do titulo. Ex: Aluguel de carros',         'type' => 'text',     'max' => 120],
+                    ['name' => 'hero_titulo',     'label' => 'Titulo principal',          'hint' => 'Ex: Alugue o carro ideal para sua viagem',                             'type' => 'text',     'max' => 180],
+                    ['name' => 'hero_subtitulo',  'label' => 'Subtitulo',                 'hint' => 'Ex: Frota completa, precos acessiveis e atendimento rapido',           'type' => 'text',     'max' => 220],
+                    ['name' => 'hero_descricao',  'label' => 'Descricao complementar',   'hint' => 'Texto adicional abaixo do subtitulo (pode deixar em branco)',           'type' => 'textarea', 'max' => 2000],
                 ],
             ],
             [
-                'title'    => 'Formulário de Reserva',
+                'title'    => 'Formulario de Reserva',
                 'icon'     => 'fas fa-calendar-alt',
-                'descrição' => 'Textos exibidos dentro do formulário de reserva no banner principal.',
+                'descricao' => 'Textos exibidos dentro do formulario de reserva no banner principal.',
                 'fields'   => [
-                    ['name' => 'hero_form_titulo',              'label' => 'Título do formulário',                'hint' => 'Ex: Faça sua reserva',                                 'type' => 'text',     'max' => 120],
-                    ['name' => 'hero_form_descricao',           'label' => 'Descrição do formulário',            'hint' => 'Texto explicativo acima dos campos de data',           'type' => 'textárea', 'max' => 500],
-                    ['name' => 'hero_form_label_retirada',      'label' => 'Campo: Local de retirada',           'hint' => 'Ex: Onde você vai retirar o carro?',                   'type' => 'text',     'max' => 80],
-                    ['name' => 'hero_form_label_devolucao',     'label' => 'Campo: Local de devolução',          'hint' => 'Ex: Onde você vai devolver o carro?',                  'type' => 'text',     'max' => 80],
+                    ['name' => 'hero_form_titulo',              'label' => 'Titulo do formulario',                'hint' => 'Ex: Faca sua reserva',                                 'type' => 'text',     'max' => 120],
+                    ['name' => 'hero_form_descricao',           'label' => 'Descricao do formulario',            'hint' => 'Texto explicativo acima dos campos de data',           'type' => 'textarea', 'max' => 500],
+                    ['name' => 'hero_form_label_retirada',      'label' => 'Campo: Local de retirada',           'hint' => 'Ex: Onde voce vai retirar o carro?',                   'type' => 'text',     'max' => 80],
+                    ['name' => 'hero_form_label_devolucao',     'label' => 'Campo: Local de devolucao',          'hint' => 'Ex: Onde voce vai devolver o carro?',                  'type' => 'text',     'max' => 80],
                     ['name' => 'hero_form_label_data_retirada', 'label' => 'Campo: Data de retirada',            'hint' => 'Ex: Data de retirada',                                 'type' => 'text',     'max' => 80],
                     ['name' => 'hero_form_label_hora_retirada', 'label' => 'Campo: Hora de retirada',            'hint' => 'Ex: Hora de retirada',                                 'type' => 'text',     'max' => 80],
-                    ['name' => 'hero_form_label_data_devolucao','label' => 'Campo: Data de devolução',           'hint' => 'Ex: Data de devolução',                                'type' => 'text',     'max' => 80],
-                    ['name' => 'hero_form_label_hora_devolucao','label' => 'Campo: Hora de devolução',           'hint' => 'Ex: Hora de devolução',                                'type' => 'text',     'max' => 80],
-                    ['name' => 'hero_form_texto_botao',         'label' => 'Texto do botão do formulário',       'hint' => 'Ex: Ver disponibilidade',                              'type' => 'text',     'max' => 80],
-                    ['name' => 'hero_form_nota',                'label' => 'Nota abaixo do formulário',          'hint' => 'Ex: Reserva sem cartão de crédito',                    'type' => 'textárea', 'max' => 280],
+                    ['name' => 'hero_form_label_data_devolucao','label' => 'Campo: Data de devolucao',           'hint' => 'Ex: Data de devolucao',                                'type' => 'text',     'max' => 80],
+                    ['name' => 'hero_form_label_hora_devolucao','label' => 'Campo: Hora de devolucao',           'hint' => 'Ex: Hora de devolucao',                                'type' => 'text',     'max' => 80],
+                    ['name' => 'hero_form_texto_botao',         'label' => 'Texto do botao do formulario',       'hint' => 'Ex: Ver disponibilidade',                              'type' => 'text',     'max' => 80],
+                    ['name' => 'hero_form_nota',                'label' => 'Nota abaixo do formulario',          'hint' => 'Ex: Reserva sem cartao de credito',                    'type' => 'textarea', 'max' => 280],
                 ],
             ],
             [
-                'title'    => 'Seção Frota (Nossos Veículos)',
+                'title'    => 'Secao Frota (Nossos Veiculos)',
                 'icon'     => 'fas fa-car',
-                'descrição' => 'Textos da seção que apresenta os veículos disponíveis.',
+                'descricao' => 'Textos da secao que apresenta os veiculos disponiveis.',
                 'fields'   => [
-                    ['name' => 'frota_label_superior',   'label' => 'Etiqueta acima do título',  'hint' => 'Ex: Nossos veículos',                                           'type' => 'text',     'max' => 60],
-                    ['name' => 'frota_titulo',           'label' => 'Título da seção',            'hint' => 'Ex: Escolha o carro ideal',                                    'type' => 'text',     'max' => 160],
-                    ['name' => 'frota_descricao',        'label' => 'Descrição da seção',         'hint' => 'Texto introdutório sobre a frota',                             'type' => 'textárea', 'max' => 1000],
-                    ['name' => 'frota_card_1_titulo',    'label' => 'Card 1 — Título',            'hint' => 'Ex: Hatch Econômico',                                          'type' => 'text',     'max' => 120],
-                    ['name' => 'frota_card_1_descricao', 'label' => 'Card 1 — Descrição',         'hint' => 'Ex: Ideal para a cidade, econômico e confortável',             'type' => 'textárea', 'max' => 400],
-                    ['name' => 'frota_card_2_titulo',    'label' => 'Card 2 — Título',            'hint' => 'Ex: Sedan Executivo',                                          'type' => 'text',     'max' => 120],
-                    ['name' => 'frota_card_2_descricao', 'label' => 'Card 2 — Descrição',         'hint' => 'Ex: Conforto e elegância para viagens longas',                 'type' => 'textárea', 'max' => 400],
-                    ['name' => 'frota_card_3_titulo',    'label' => 'Card 3 — Título',            'hint' => 'Ex: SUV Familiar',                                             'type' => 'text',     'max' => 120],
-                    ['name' => 'frota_card_3_descricao', 'label' => 'Card 3 — Descrição',         'hint' => 'Ex: Espaço e seguranca para toda a família',                   'type' => 'textárea', 'max' => 400],
+                    ['name' => 'frota_label_superior',   'label' => 'Etiqueta acima do titulo',  'hint' => 'Ex: Nossos veiculos',                                           'type' => 'text',     'max' => 60],
+                    ['name' => 'frota_titulo',           'label' => 'Titulo da secao',            'hint' => 'Ex: Escolha o carro ideal',                                    'type' => 'text',     'max' => 160],
+                    ['name' => 'frota_descricao',        'label' => 'Descricao da secao',         'hint' => 'Texto introdutorio sobre a frota',                             'type' => 'textarea', 'max' => 1000],
+                    ['name' => 'frota_card_1_titulo',    'label' => 'Card 1 — Titulo',            'hint' => 'Ex: Hatch Economico',                                          'type' => 'text',     'max' => 120],
+                    ['name' => 'frota_card_1_descricao', 'label' => 'Card 1 — Descricao',         'hint' => 'Ex: Ideal para a cidade, economico e confortavel',             'type' => 'textarea', 'max' => 400],
+                    ['name' => 'frota_card_2_titulo',    'label' => 'Card 2 — Titulo',            'hint' => 'Ex: Sedan Executivo',                                          'type' => 'text',     'max' => 120],
+                    ['name' => 'frota_card_2_descricao', 'label' => 'Card 2 — Descricao',         'hint' => 'Ex: Conforto e elegancia para viagens longas',                 'type' => 'textarea', 'max' => 400],
+                    ['name' => 'frota_card_3_titulo',    'label' => 'Card 3 — Titulo',            'hint' => 'Ex: SUV Familiar',                                             'type' => 'text',     'max' => 120],
+                    ['name' => 'frota_card_3_descricao', 'label' => 'Card 3 — Descricao',         'hint' => 'Ex: Espaco e seguranca para toda a familia',                   'type' => 'textarea', 'max' => 400],
                 ],
             ],
             [
-                'title'    => 'Seção Vantagens',
+                'title'    => 'Secao Vantagens',
                 'icon'     => 'fas fa-thumbs-up',
-                'descrição' => 'Textos que destacam os diferenciais da empresa.',
+                'descricao' => 'Textos que destacam os diferenciais da empresa.',
                 'fields'   => [
-                    ['name' => 'vantagens_label_superior', 'label' => 'Etiqueta acima do título', 'hint' => 'Ex: Por que nos escolher',                                      'type' => 'text',     'max' => 60],
-                    ['name' => 'vantagens_titulo',         'label' => 'Título da seção',           'hint' => 'Ex: Nossas vantagens',                                         'type' => 'text',     'max' => 160],
-                    ['name' => 'vantagens_descricao',      'label' => 'Descrição da seção',        'hint' => 'Texto introdutório sobre os benefícios',                       'type' => 'textárea', 'max' => 1000],
+                    ['name' => 'vantagens_label_superior', 'label' => 'Etiqueta acima do titulo', 'hint' => 'Ex: Por que nos escolher',                                      'type' => 'text',     'max' => 60],
+                    ['name' => 'vantagens_titulo',         'label' => 'Titulo da secao',           'hint' => 'Ex: Nossas vantagens',                                         'type' => 'text',     'max' => 160],
+                    ['name' => 'vantagens_descricao',      'label' => 'Descricao da secao',        'hint' => 'Texto introdutorio sobre os beneficios',                       'type' => 'textarea', 'max' => 1000],
                     ['name' => 'beneficio_1',              'label' => 'Vantagem 1',                'hint' => 'Ex: Atendimento 24 horas',                                     'type' => 'text',     'max' => 220],
                     ['name' => 'beneficio_2',              'label' => 'Vantagem 2',                'hint' => 'Ex: Frota revisada e garantida',                               'type' => 'text',     'max' => 220],
                     ['name' => 'beneficio_3',              'label' => 'Vantagem 3',                'hint' => 'Ex: Sem taxa de cancelamento',                                 'type' => 'text',     'max' => 220],
@@ -140,27 +140,27 @@
                 ],
             ],
             [
-                'title'    => 'Seção Como Funciona (Etapas)',
+                'title'    => 'Secao Como Funciona (Etapas)',
                 'icon'     => 'fas fa-list-ol',
-                'descrição' => 'Passo a passo explicando como o cliente faz a reserva.',
+                'descricao' => 'Passo a passo explicando como o cliente faz a reserva.',
                 'fields'   => [
-                    ['name' => 'etapas_label_superior', 'label' => 'Etiqueta acima do título',   'hint' => 'Ex: É muito simples',                                           'type' => 'text',     'max' => 60],
-                    ['name' => 'etapas_titulo',         'label' => 'Título da seção',             'hint' => 'Ex: Como funciona',                                            'type' => 'text',     'max' => 160],
-                    ['name' => 'etapa_1_titulo',        'label' => 'Passo 1 — Título',            'hint' => 'Ex: Escolha o veículo',                                        'type' => 'text',     'max' => 120],
-                    ['name' => 'etapa_1_descricao',     'label' => 'Passo 1 — Descrição',         'hint' => 'Ex: Navegue pela nossa frota e encontre o carro ideal',        'type' => 'textárea', 'max' => 300],
-                    ['name' => 'etapa_2_titulo',        'label' => 'Passo 2 — Título',            'hint' => 'Ex: Faça a reserva',                                           'type' => 'text',     'max' => 120],
-                    ['name' => 'etapa_2_descricao',     'label' => 'Passo 2 — Descrição',         'hint' => 'Ex: Preencha o formulário com as datas desejadas',             'type' => 'textárea', 'max' => 300],
-                    ['name' => 'etapa_3_titulo',        'label' => 'Passo 3 — Título',            'hint' => 'Ex: Retire e aproveite',                                       'type' => 'text',     'max' => 120],
-                    ['name' => 'etapa_3_descricao',     'label' => 'Passo 3 — Descrição',         'hint' => 'Ex: Retire o veículo no local combinado e aproveite',          'type' => 'textárea', 'max' => 300],
+                    ['name' => 'etapas_label_superior', 'label' => 'Etiqueta acima do titulo',   'hint' => 'Ex: E muito simples',                                           'type' => 'text',     'max' => 60],
+                    ['name' => 'etapas_titulo',         'label' => 'Titulo da secao',             'hint' => 'Ex: Como funciona',                                            'type' => 'text',     'max' => 160],
+                    ['name' => 'etapa_1_titulo',        'label' => 'Passo 1 — Titulo',            'hint' => 'Ex: Escolha o veiculo',                                        'type' => 'text',     'max' => 120],
+                    ['name' => 'etapa_1_descricao',     'label' => 'Passo 1 — Descricao',         'hint' => 'Ex: Navegue pela nossa frota e encontre o carro ideal',        'type' => 'textarea', 'max' => 300],
+                    ['name' => 'etapa_2_titulo',        'label' => 'Passo 2 — Titulo',            'hint' => 'Ex: Faca a reserva',                                           'type' => 'text',     'max' => 120],
+                    ['name' => 'etapa_2_descricao',     'label' => 'Passo 2 — Descricao',         'hint' => 'Ex: Preencha o formulario com as datas desejadas',             'type' => 'textarea', 'max' => 300],
+                    ['name' => 'etapa_3_titulo',        'label' => 'Passo 3 — Titulo',            'hint' => 'Ex: Retire e aproveite',                                       'type' => 'text',     'max' => 120],
+                    ['name' => 'etapa_3_descricao',     'label' => 'Passo 3 — Descricao',         'hint' => 'Ex: Retire o veiculo no local combinado e aproveite',          'type' => 'textarea', 'max' => 300],
                 ],
             ],
             [
-                'title'    => 'Seção Contato',
+                'title'    => 'Secao Contato',
                 'icon'     => 'fas fa-envelope',
-                'descrição' => 'Textos da seção de contato ao final da página.',
+                'descricao' => 'Textos da secao de contato ao final da pagina.',
                 'fields'   => [
-                    ['name' => 'contato_label_superior', 'label' => 'Etiqueta acima do título', 'hint' => 'Ex: Estamos aqui para ajudar',    'type' => 'text', 'max' => 60],
-                    ['name' => 'contato_titulo',         'label' => 'Título da seção',           'hint' => 'Ex: Entre em contato',             'type' => 'text', 'max' => 160],
+                    ['name' => 'contato_label_superior', 'label' => 'Etiqueta acima do titulo', 'hint' => 'Ex: Estamos aqui para ajudar',    'type' => 'text', 'max' => 60],
+                    ['name' => 'contato_titulo',         'label' => 'Titulo da secao',           'hint' => 'Ex: Entre em contato',             'type' => 'text', 'max' => 160],
                 ],
             ],
         ];
@@ -180,7 +180,7 @@
     <div class="col-12 px-0">
         <div class="config-card">
 
-            {{-- Cabeçalho --}}
+            {{-- Cabecalho --}}
             <div class="config-card-header">
                 <div class="config-header-left">
                     @if(!empty($empresa->logo_url))
@@ -193,25 +193,25 @@
                         </div>
                     @endif
                     <div>
-                        <div class="config-header-eyebrow">Site de Apresentação</div>
+                        <div class="config-header-eyebrow">Site de Apresentacao</div>
                         <h4 class="config-header-title">{{ $empresa->nome ?? 'Configurar site' }}</h4>
-                        <p class="config-header-sub">Personalize o site público desta empresa passo a passo.</p>
+                        <p class="config-header-sub">Personalize o site publico desta empresa passo a passo.</p>
                     </div>
                 </div>
                 <div class="config-header-right">
-                    @if(!empty($empresa->domínio))
+                    @if(!empty($empresa->dominio))
                         <div class="config-domain-badge">
                             <i class="fas fa-wifi"></i>
-                            <span>{{ $empresa->domínio }}</span>
+                            <span>{{ $empresa->dominio }}</span>
                         </div>
-                        <a href="https://{{ $empresa->domínio }}" target="_blank" class="config-btn-preview">
+                        <a href="https://{{ $empresa->dominio }}" target="_blank" class="config-btn-preview">
                             <i class="fas fa-external-link-alt"></i>
                             <span>Ver site</span>
                         </a>
                     @else
                         <div class="config-domain-badge config-domain-badge--empty">
                             <i class="fas fa-unlink"></i>
-                            <span>Sem domínio</span>
+                            <span>Sem dominio</span>
                         </div>
                     @endif
                 </div>
@@ -253,35 +253,35 @@
                     <section class="wizard-step active" data-step="1">
                         <div class="step-head">
                             <h5><i class="fas fa-cog mr-2"></i>Dados Gerais</h5>
-                            <p>Configure o domínio, situação, modelo de layout, textos padrão e logo da empresa.</p>
+                            <p>Configure o dominio, situacao, modelo de layout, textos padrao e logo da empresa.</p>
                         </div>
 
-                        {{-- Bloco: Publicação --}}
+                        {{-- Bloco: Publicacao --}}
                         <div class="config-block">
                             <div class="config-block-label">
                                 <i class="fas fa-globe"></i>
                                 <div>
-                                    <strong>Publicação do site</strong>
-                                    <span>Endereço e situação do site na internet</span>
+                                    <strong>Publicacao do site</strong>
+                                    <span>Endereco e situacao do site na internet</span>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
-                                    <label for="domínio">Domínio da empresa</label>
-                                    <input type="text" class="form-control form-control-sm" id="domínio" name="domínio"
-                                        value="{{ old('domínio', $empresa->domínio ?? '') }}"
+                                    <label for="dominio">Dominio da empresa</label>
+                                    <input type="text" class="form-control form-control-sm" id="dominio" name="dominio"
+                                        value="{{ old('dominio', $empresa->dominio ?? '') }}"
                                         placeholder="Ex: minhalocadora.com.br">
-                                    <small class="field-hint-text">Endereço que os clientes vao usar para acessar o site.</small>
+                                    <small class="field-hint-text">Endereco que os clientes vao usar para acessar o site.</small>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="site_apresentacao_ativo">Situação do site</label>
+                                    <label for="site_apresentacao_ativo">Situacao do site</label>
                                     @php $statusAtual = old('site_apresentacao_ativo', $empresa->site_apresentacao_ativo ?: 'S'); @endphp
                                     <select class="form-control form-control-sm" id="site_apresentacao_ativo" name="site_apresentacao_ativo">
                                         @foreach($status as $value => $label)
                                             <option value="{{ $value }}" {{ $statusAtual === $value ? 'selected' : '' }}>{{ $label }}</option>
                                         @endforeach
                                     </select>
-                                    <small class="field-hint-text">Quando <strong>Ativo</strong>, o site fica visível ao público.</small>
+                                    <small class="field-hint-text">Quando <strong>Ativo</strong>, o site fica visivel ao publico.</small>
                                 </div>
                             </div>
                         </div>
@@ -292,14 +292,14 @@
                                 <i class="fas fa-image"></i>
                                 <div>
                                     <strong>Logo da empresa</strong>
-                                    <span>Aparece no menu de navegação e no rodapé do site</span>
+                                    <span>Aparece no menu de navegacao e no rodape do site</span>
                                 </div>
                             </div>
-                            <div class="row align-itêms-center">
+                            <div class="row align-items-center">
                                 <div class="col-md-6">
                                     <label for="logo">Enviar nova logo</label>
                                     <input type="file" id="logo" name="logo" class="form-control form-control-sm" accept=".jpg,.jpeg,.png,.webp,.svg">
-                                    <small class="field-hint-text">Formatos aceitos: JPG, PNG, WEBP ou SVG. Tamanho máximo: 2MB.</small>
+                                    <small class="field-hint-text">Formatos aceitos: JPG, PNG, WEBP ou SVG. Tamanho maximo: 2MB.</small>
                                 </div>
                                 <div class="col-md-6 mt-3 mt-md-0">
                                     <div class="logo-preview">
@@ -323,13 +323,13 @@
                                 <i class="fas fa-desktop"></i>
                                 <div>
                                     <strong>Modelo de layout</strong>
-                                    <span>Escolha o design visual do site de apresentação</span>
+                                    <span>Escolha o design visual do site de apresentacao</span>
                                 </div>
                             </div>
                             <input type="hidden" id="site_apresentacao_modelo" name="site_apresentacao_modelo" value="{{ $modeloAtual }}">
                             <div class="model-grid">
                                 @foreach($modelCards as $modelCard)
-                                    @php $isEnabled = $modelCard['status'] === 'Disponível'; @endphp
+                                    @php $isEnabled = $modelCard['status'] === 'Disponivel'; @endphp
                                     <div class="model-card {{ $modeloAtual === $modelCard['valor'] ? 'active' : '' }} {{ !$isEnabled ? 'disabled' : '' }}"
                                         data-model-card="{{ $modelCard['valor'] }}"
                                         role="button"
@@ -339,8 +339,8 @@
                                             <i class="{{ $modelCard['icon'] }} model-icon"></i>
                                             <span class="model-status {{ $isEnabled ? 'available' : 'soon' }}">{{ $modelCard['status'] }}</span>
                                         </div>
-                                        <h6>{{ $modelCard['título'] }}</h6>
-                                        <p>{{ $modelCard['descrição'] }}</p>
+                                        <h6>{{ $modelCard['titulo'] }}</h6>
+                                        <p>{{ $modelCard['descricao'] }}</p>
                                         @if($isEnabled)
                                             <div class="model-check"><i class="fas fa-check-circle"></i></div>
                                         @endif
@@ -356,18 +356,18 @@
                     <section class="wizard-step" data-step="2">
                         <div class="step-head">
                             <h5><i class="fas fa-pen mr-2"></i>Textos do Site</h5>
-                            <p>Personalize todos os textos que aparecem em cada seção do site. Clique em uma seção para editar.</p>
+                            <p>Personalize todos os textos que aparecem em cada secao do site. Clique em uma secao para editar.</p>
                         </div>
 
                         <div class="text-accordion">
                             @foreach($textGroups as $groupIndex => $group)
-                                <div class="text-acc-itêm {{ $groupIndex === 0 ? 'open' : '' }}" id="acc-group-{{ $groupIndex }}">
+                                <div class="text-acc-item {{ $groupIndex === 0 ? 'open' : '' }}" id="acc-group-{{ $groupIndex }}">
                                     <button type="button" class="text-acc-header" data-acc-toggle="{{ $groupIndex }}">
                                         <div class="text-acc-header-left">
                                             <i class="{{ $group['icon'] }} text-acc-icon"></i>
                                             <div>
                                                 <span class="text-acc-title">{{ $group['title'] }}</span>
-                                                <span class="text-acc-desc">{{ $group['descrição'] }}</span>
+                                                <span class="text-acc-desc">{{ $group['descricao'] }}</span>
                                             </div>
                                         </div>
                                         <i class="fas fa-chevron-down text-acc-arrow"></i>
@@ -375,16 +375,16 @@
                                     <div class="text-acc-body">
                                         <div class="text-fields-grid">
                                             @foreach($group['fields'] as $field)
-                                                @php $isTextárea = $field['type'] === 'textárea'; @endphp
-                                                <div class="text-field-itêm {{ $isTextárea ? 'text-field-full' : '' }}">
+                                                @php $isTextarea = $field['type'] === 'textarea'; @endphp
+                                                <div class="text-field-item {{ $isTextarea ? 'text-field-full' : '' }}">
                                                     <label for="{{ $field['name'] }}">{{ $field['label'] }}</label>
-                                                    @if($isTextárea)
-                                                        <textárea class="form-control form-control-sm"
+                                                    @if($isTextarea)
+                                                        <textarea class="form-control form-control-sm"
                                                             id="{{ $field['name'] }}"
                                                             name="{{ $field['name'] }}"
                                                             rows="3"
                                                             maxlength="{{ $field['max'] }}"
-                                                            placeholder="{{ $field['hint'] ?? '' }}">{{ $texto($field['name']) }}</textárea>
+                                                            placeholder="{{ $field['hint'] ?? '' }}">{{ $texto($field['name']) }}</textarea>
                                                     @else
                                                         <input type="text"
                                                             class="form-control form-control-sm"
@@ -415,93 +415,93 @@
                                 [
                                     'title'    => 'Identidade principal da empresa',
                                     'icon'     => 'fas fa-paint-brush',
-                                    'descrição' => 'As 3 cores base da empresa. São usadas em toda a página.',
-                                    'itêms'    => [
+                                    'descricao' => 'As 3 cores base da empresa. Sao usadas em toda a pagina.',
+                                    'items'    => [
                                         [
                                             'name' => 'cor_primaria',
-                                            'label' => 'Cor primária',
+                                            'label' => 'Cor primaria',
                                             'default' => $siteCores['brand_primaria'] ?? ($empresa->cor_primaria ?: '#1F2937'),
-                                            'hint' => 'Principal da marca: usada nos botões e destaques.',
+                                            'hint' => 'Principal da marca: usada nos botoes e destaques.',
                                         ],
                                         [
                                             'name' => 'cor_secundaria',
-                                            'label' => 'Cor secundária',
+                                            'label' => 'Cor secundaria',
                                             'default' => $siteCores['brand_secundaria'] ?? ($empresa->cor_secundaria ?: '#334155'),
-                                            'hint' => 'Complementa a primária em cards e links.',
+                                            'hint' => 'Complementa a primaria em cards e links.',
                                         ],
                                         [
                                             'name' => 'cor_terciaria',
-                                            'label' => 'Cor terciária',
+                                            'label' => 'Cor terciaria',
                                             'default' => $siteCores['brand_terciaria'] ?? ($empresa->cor_terciaria ?: '#64748B'),
                                             'hint' => 'Detalhes sutis e fundos suaves.',
                                         ],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Topo / Navegação',
+                                    'title'    => 'Topo / Navegacao',
                                     'icon'     => 'fas fa-window-maximize',
-                                    'descrição' => 'Barra de menu no topo da página.',
-                                    'itêms'    => [
+                                    'descricao' => 'Barra de menu no topo da pagina.',
+                                    'items'    => [
                                         ['name' => 'cor_topbar_fundo',      'label' => 'Fundo do menu',    'default' => '#FFFFFF'],
                                         ['name' => 'cor_topbar_texto',      'label' => 'Texto do menu',    'default' => '#0F172A'],
                                         ['name' => 'cor_topbar_link_hover', 'label' => 'Cor ao passar o mouse', 'default' => '#1F2937'],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Seção Principal (Banner)',
+                                    'title'    => 'Secao Principal (Banner)',
                                     'icon'     => 'fas fa-image',
-                                    'descrição' => 'Grande banner no topo da página.',
-                                    'itêms'    => [
+                                    'descricao' => 'Grande banner no topo da pagina.',
+                                    'items'    => [
                                         ['name' => 'cor_hero_fundo', 'label' => 'Cor de fundo', 'default' => '#1F2937'],
                                         ['name' => 'cor_hero_texto', 'label' => 'Cor do texto', 'default' => '#FFFFFF'],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Formulário de Reserva',
+                                    'title'    => 'Formulario de Reserva',
                                     'icon'     => 'fas fa-calendar-alt',
-                                    'descrição' => 'Caixa de reserva dentro do banner.',
-                                    'itêms'    => [
+                                    'descricao' => 'Caixa de reserva dentro do banner.',
+                                    'items'    => [
                                         ['name' => 'cor_form_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
                                         ['name' => 'cor_form_texto', 'label' => 'Cor do texto', 'default' => '#0F172A'],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Seção Frota',
+                                    'title'    => 'Secao Frota',
                                     'icon'     => 'fas fa-car',
-                                    'descrição' => 'Área que exibe os veículos disponíveis.',
-                                    'itêms'    => [
+                                    'descricao' => 'Area que exibe os veiculos disponiveis.',
+                                    'items'    => [
                                         ['name' => 'cor_frota_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Seção Vantagens',
+                                    'title'    => 'Secao Vantagens',
                                     'icon'     => 'fas fa-thumbs-up',
-                                    'descrição' => 'Área de diferenciais da empresa.',
-                                    'itêms'    => [
+                                    'descricao' => 'Area de diferenciais da empresa.',
+                                    'items'    => [
                                         ['name' => 'cor_vantagens_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Seção Como Funciona (Etapas)',
+                                    'title'    => 'Secao Como Funciona (Etapas)',
                                     'icon'     => 'fas fa-list-ol',
-                                    'descrição' => 'Área do passo a passo da reserva.',
-                                    'itêms'    => [
+                                    'descricao' => 'Area do passo a passo da reserva.',
+                                    'items'    => [
                                         ['name' => 'cor_etapas_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Seção Contato',
+                                    'title'    => 'Secao Contato',
                                     'icon'     => 'fas fa-envelope',
-                                    'descrição' => 'Área de contato ao final da página.',
-                                    'itêms'    => [
+                                    'descricao' => 'Area de contato ao final da pagina.',
+                                    'items'    => [
                                         ['name' => 'cor_contato_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Botões',
+                                    'title'    => 'Botoes',
                                     'icon'     => 'fas fa-hand-pointer',
-                                    'descrição' => 'Botões de ação em toda a página.',
-                                    'itêms'    => [
+                                    'descricao' => 'Botoes de acao em toda a pagina.',
+                                    'items'    => [
                                         ['name' => 'cor_botao_primario_fundo',    'label' => 'Botao principal: fundo',    'default' => '#E7B93A'],
                                         ['name' => 'cor_botao_primario_texto',    'label' => 'Botao principal: texto',    'default' => '#111827'],
                                         ['name' => 'cor_botao_secundario_fundo',  'label' => 'Botao secundario: fundo',  'default' => '#FFFFFF'],
@@ -509,10 +509,10 @@
                                     ],
                                 ],
                                 [
-                                    'title'    => 'Rodapé',
+                                    'title'    => 'Rodape',
                                     'icon'     => 'fas fa-minus',
-                                    'descrição' => 'Barra inferior da página.',
-                                    'itêms'    => [
+                                    'descricao' => 'Barra inferior da pagina.',
+                                    'items'    => [
                                         ['name' => 'cor_footer_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
                                         ['name' => 'cor_footer_texto', 'label' => 'Cor do texto', 'default' => '#64748B'],
                                     ],
@@ -520,8 +520,8 @@
                                 [
                                     'title'    => 'Tela Administrativa',
                                     'icon'     => 'fas fa-shield-alt',
-                                    'descrição' => 'Painel administrativo acessado pelo domínio da empresa.',
-                                    'itêms'    => [
+                                    'descricao' => 'Painel administrativo acessado pelo dominio da empresa.',
+                                    'items'    => [
                                         ['name' => 'cor_admin_fundo', 'label' => 'Cor de fundo', 'default' => '#193C68'],
                                         ['name' => 'cor_admin_texto', 'label' => 'Cor do texto', 'default' => '#FFFFFF'],
                                     ],
@@ -541,24 +541,24 @@
                                         <i class="{{ $group['icon'] }} color-group-icon"></i>
                                         <div>
                                             <strong>{{ $group['title'] }}</strong>
-                                            <span class="color-group-desc">{{ $group['descrição'] }}</span>
+                                            <span class="color-group-desc">{{ $group['descricao'] }}</span>
                                         </div>
                                     </div>
-                                    <div class="color-itêms">
-                                        @foreach($group['itêms'] as $itêm)
+                                    <div class="color-items">
+                                        @foreach($group['items'] as $item)
                                             @php
-                                                $colorValue = old($itêm['name'], str_starts_with($itêm['name'], 'cor_') && !in_array($itêm['name'], ['cor_primaria', 'cor_secundaria', 'cor_terciaria'], true)
-                                                    ? ($siteCores[str_replace('cor_', '', $itêm['name'])] ?? $itêm['default'])
-                                                    : $itêm['default']);
+                                                $colorValue = old($item['name'], str_starts_with($item['name'], 'cor_') && !in_array($item['name'], ['cor_primaria', 'cor_secundaria', 'cor_terciaria'], true)
+                                                    ? ($siteCores[str_replace('cor_', '', $item['name'])] ?? $item['default'])
+                                                    : $item['default']);
                                             @endphp
-                                            <div class="color-itêm">
-                                                <label for="{{ $itêm['name'] }}">{{ $itêm['label'] }}</label>
+                                            <div class="color-item">
+                                                <label for="{{ $item['name'] }}">{{ $item['label'] }}</label>
                                                 <div class="color-field">
-                                                    <input type="color" class="color-picker" id="{{ $itêm['name'] }}" name="{{ $itêm['name'] }}" value="{{ $colorValue }}">
-                                                    <input type="text" class="form-control form-control-sm color-text" data-color-text="{{ $itêm['name'] }}" value="{{ $colorValue }}" maxlength="7" placeholder="#000000">
+                                                    <input type="color" class="color-picker" id="{{ $item['name'] }}" name="{{ $item['name'] }}" value="{{ $colorValue }}">
+                                                    <input type="text" class="form-control form-control-sm color-text" data-color-text="{{ $item['name'] }}" value="{{ $colorValue }}" maxlength="7" placeholder="#000000">
                                                 </div>
-                                                @if(!empty($itêm['hint']))
-                                                    <small class="color-hint">{{ $itêm['hint'] }}</small>
+                                                @if(!empty($item['hint']))
+                                                    <small class="color-hint">{{ $item['hint'] }}</small>
                                                 @endif
                                             </div>
                                         @endforeach
@@ -569,11 +569,11 @@
 
                         <div class="color-preview-row mt-4">
                             <div class="color-preview-box" id="previewSite">
-                                <div class="preview-label">Pre-visualização do site</div>
-                                <div class="preview-sublabel">Cores primária, secundária e terciária</div>
+                                <div class="preview-label">Pre-visualizacao do site</div>
+                                <div class="preview-sublabel">Cores primaria, secundaria e terciaria</div>
                             </div>
                             <div class="color-preview-box" id="previewAdmin">
-                                <div class="preview-label">Pre-visualização administrativa</div>
+                                <div class="preview-label">Pre-visualizacao administrativa</div>
                                 <div class="preview-sublabel">Cores da tela administrativa</div>
                             </div>
                         </div>
@@ -589,14 +589,14 @@
                                 ['key' => 'frota_1', 'upload' => 'imagem_frota_1', 'toggle' => 'usar_imagem_frota_1', 'label' => 'Frota — Card 1',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
                                 ['key' => 'frota_2', 'upload' => 'imagem_frota_2', 'toggle' => 'usar_imagem_frota_2', 'label' => 'Frota — Card 2',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
                                 ['key' => 'frota_3', 'upload' => 'imagem_frota_3', 'toggle' => 'usar_imagem_frota_3', 'label' => 'Frota — Card 3',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
-                                ['key' => 'vantagens','upload' => 'imagem_vantagens','toggle' => 'usar_imagem_vantagens','label' => 'Seção Vantagens',        'icon' => 'fas fa-thumbs-up',    'hint' => 'Recomendado: 1200 x 700 pixels'],
-                                ['key' => 'contato', 'upload' => 'imagem_contato', 'toggle' => 'usar_imagem_contato', 'label' => 'Seção Contato',           'icon' => 'fas fa-envelope',     'hint' => 'Recomendado: 900 x 500 pixels'],
+                                ['key' => 'vantagens','upload' => 'imagem_vantagens','toggle' => 'usar_imagem_vantagens','label' => 'Secao Vantagens',        'icon' => 'fas fa-thumbs-up',    'hint' => 'Recomendado: 1200 x 700 pixels'],
+                                ['key' => 'contato', 'upload' => 'imagem_contato', 'toggle' => 'usar_imagem_contato', 'label' => 'Secao Contato',           'icon' => 'fas fa-envelope',     'hint' => 'Recomendado: 900 x 500 pixels'],
                             ];
                         @endphp
 
                         <div class="step-head">
                             <h5><i class="fas fa-images mr-2"></i>Imagens do Site</h5>
-                            <p>Envie as fotos para cada seção do site. Use o botão <strong>Usar imagem</strong> para ativar ou desativar cada foto.</p>
+                            <p>Envie as fotos para cada secao do site. Use o botao <strong>Usar imagem</strong> para ativar ou desativar cada foto.</p>
                         </div>
 
                         <div class="image-grid">
@@ -623,7 +623,7 @@
                                         </div>
                                     </div>
 
-                                    <div class="image-preview-área">
+                                    <div class="image-preview-area">
                                         @if(!empty($urlAtual))
                                             <img src="{{ $urlAtual }}" alt="{{ $field['label'] }}">
                                         @else
@@ -634,7 +634,7 @@
                                         @endif
                                     </div>
 
-                                    <div class="image-upload-área">
+                                    <div class="image-upload-area">
                                         <label for="{{ $field['upload'] }}" class="upload-btn">
                                             <i class="fas fa-upload mr-1"></i>
                                             {{ !empty($urlAtual) ? 'Trocar imagem' : 'Enviar imagem' }}
@@ -644,7 +644,7 @@
                                             id="{{ $field['upload'] }}"
                                             name="{{ $field['upload'] }}"
                                             accept=".jpg,.jpeg,.png,.webp">
-                                        <small class="field-hint-text">JPG, PNG ou WEBP — máx. 4MB<br>{{ $field['hint'] }}</small>
+                                        <small class="field-hint-text">JPG, PNG ou WEBP — max 4MB<br>{{ $field['hint'] }}</small>
                                     </div>
                                 </div>
                             @endforeach
@@ -657,17 +657,17 @@
                     <section class="wizard-step" data-step="5">
                         <div class="step-head">
                             <h5><i class="fas fa-rocket mr-2"></i>Revisar e Publicar</h5>
-                            <p>Confira o checklist abaixo antes de salvar. Não e obrigatorio preencher tudo agora.</p>
+                            <p>Confira o checklist abaixo antes de salvar. Nao e obrigatorio preencher tudo agora.</p>
                         </div>
 
                         <div class="publish-grid">
                             <div class="publish-card checklist-card">
                                 <h6><i class="fas fa-clipboard-check mr-2"></i>Checklist essencial</h6>
                                 <ul class="checklist">
-                                    <li><i class="fas fa-check-circle"></i> Preencha o domínio da empresa (Passo 1)</li>
+                                    <li><i class="fas fa-check-circle"></i> Preencha o dominio da empresa (Passo 1)</li>
                                     <li><i class="fas fa-check-circle"></i> Coloque o site como <strong>Ativo</strong> (Passo 1)</li>
                                     <li><i class="fas fa-check-circle"></i> Envie a logo da empresa (Passo 1)</li>
-                                    <li><i class="fas fa-check-circle"></i> Preencha o título e subtítulo do banner (Passo 2)</li>
+                                    <li><i class="fas fa-check-circle"></i> Preencha o titulo e subtitulo do banner (Passo 2)</li>
                                     <li><i class="fas fa-check-circle"></i> Escolha as cores principais da empresa (Passo 3)</li>
                                     <li><i class="fas fa-check-circle"></i> Envie pelo menos a imagem do banner (Passo 4)</li>
                                 </ul>
@@ -676,49 +676,49 @@
                             <div class="publish-card tips-card">
                                 <h6><i class="fas fa-lightbulb mr-2"></i>Dicas para um bom resultado</h6>
                                 <ul class="checklist tips-list">
-                                    <li><i class="fas fa-info-circle"></i> Use imagens com boa resolução para o site ficar bonito</li>
+                                    <li><i class="fas fa-info-circle"></i> Use imagens com boa resolucao para o site ficar bonito</li>
                                     <li><i class="fas fa-info-circle"></i> Se nao tiver imagens agora, desmarque os toggles no Passo 4</li>
-                                    <li><i class="fas fa-info-circle"></i> Salve e abra o domínio para conferir o resultado</li>
-                                    <li><i class="fas fa-info-circle"></i> Voce pode voltar e editar qualquer informação a qualquer momento</li>
+                                    <li><i class="fas fa-info-circle"></i> Salve e abra o dominio para conferir o resultado</li>
+                                    <li><i class="fas fa-info-circle"></i> Voce pode voltar e editar qualquer informacao a qualquer momento</li>
                                 </ul>
                             </div>
                         </div>
 
                         <div class="publish-faq">
-                            <details class="faq-itêm">
+                            <details class="faq-item">
                                 <summary><i class="fas fa-question-circle mr-2"></i>Como vejo o site publicado?</summary>
                                 <div class="faq-body">
-                                    Acesse o domínio configurado no Passo 1
-                                    @if(!empty($empresa->domínio))
-                                        (<a href="https://{{ $empresa->domínio }}" target="_blank"><strong>{{ $empresa->domínio }}</strong></a>)
+                                    Acesse o dominio configurado no Passo 1
+                                    @if(!empty($empresa->dominio))
+                                        (<a href="https://{{ $empresa->dominio }}" target="_blank"><strong>{{ $empresa->dominio }}</strong></a>)
                                     @endif
-                                    pelo navegador após salvar.
+                                    pelo navegador apos salvar.
                                 </div>
                             </details>
-                            <details class="faq-itêm">
+                            <details class="faq-item">
                                 <summary><i class="fas fa-question-circle mr-2"></i>Preciso preencher todos os campos?</summary>
                                 <div class="faq-body">
-                                    Não. Os campos do Passo 1 são os mais importantes. Os textos das seções (Passo 2) têm valores padrão quando nao preenchidos.
+                                    Nao. Os campos do Passo 1 sao os mais importantes. Os textos das secoes (Passo 2) tem valores padrao quando nao preenchidos.
                                 </div>
                             </details>
-                            <details class="faq-itêm">
-                                <summary><i class="fas fa-question-circle mr-2"></i>O que é a tela administrativa?</summary>
+                            <details class="faq-item">
+                                <summary><i class="fas fa-question-circle mr-2"></i>O que e a tela administrativa?</summary>
                                 <div class="faq-body">
-                                    E a tela de login do sistêma. Quando o cliente acessar <code>/administrativa</code> pelo domínio da empresa, verá a logo e as cores definidas no Passo 3 (Tela Administrativa).
+                                    E a tela de login do sistema. Quando o cliente acessar <code>/administrativa</code> pelo dominio da empresa, vera a logo e as cores definidas no Passo 3 (Tela Administrativa).
                                 </div>
                             </details>
                         </div>
 
-                        @if(!empty($empresa->domínio))
+                        @if(!empty($empresa->dominio))
                             <div class="publish-action-row">
-                                <a href="https://{{ $empresa->domínio }}" target="_blank" class="btn-preview-site">
+                                <a href="https://{{ $empresa->dominio }}" target="_blank" class="btn-preview-site">
                                     <i class="fas fa-external-link-alt mr-2"></i>Abrir site para conferir
                                 </a>
                             </div>
                         @endif
                     </section>
 
-                    {{-- Ações do wizard --}}
+                    {{-- Acoes do wizard --}}
                     <div class="wizard-actions">
                         <button type="button" class="btn-action btn-action-secondary" id="wizardPrev">
                             <i class="fas fa-arrow-left mr-1"></i>Voltar
@@ -728,7 +728,7 @@
                                 Continuar<i class="fas fa-arrow-right ml-1"></i>
                             </button>
                             <button type="submit" class="btn-action btn-action-success" id="wizardSave">
-                                <i class="fas fa-save mr-1"></i>Salvar configurações
+                                <i class="fas fa-save mr-1"></i>Salvar configuracoes
                             </button>
                         </div>
                     </div>
@@ -784,14 +784,14 @@
         background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
         padding: 1.75rem 2rem;
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: space-between;
         flex-wrap: wrap;
         gap: 16px;
         overflow: hidden;
     }
 
-    /* Padrão de pontos no header */
+    /* Padrao de pontos no header */
     .config-card-header::before {
         content: '';
         position: absolute;
@@ -801,7 +801,7 @@
         pointer-events: none;
     }
 
-    /* Linha destaque no topo do header */
+    /* Linha accent no topo do header */
     .config-card-header::after {
         content: '';
         position: absolute;
@@ -813,7 +813,7 @@
     .config-header-left {
         position: relative;
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 16px;
         z-index: 1;
     }
@@ -825,7 +825,7 @@
         background: rgba(255,255,255,0.12);
         border: 1px solid rgba(255,255,255,0.18);
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: center;
         overflow: hidden;
         flex-shrink: 0;
@@ -870,7 +870,7 @@
     .config-header-right {
         position: relative;
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
         z-index: 1;
@@ -878,7 +878,7 @@
 
     .config-domain-badge {
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 6px;
         background: rgba(255,255,255,0.08);
         border: 1px solid rgba(255,255,255,0.15);
@@ -896,7 +896,7 @@
 
     .config-btn-preview {
         display: inline-flex;
-        align-itêms: center;
+        align-items: center;
         gap: 7px;
         background: linear-gradient(135deg, #4338ca 0%, #0ea5e9 100%);
         color: #fff;
@@ -926,7 +926,7 @@
     ================================================ */
     .step-indicator {
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 0;
         margin-bottom: 2rem;
         background: #fff;
@@ -938,7 +938,7 @@
 
     .step-btn {
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 10px;
         background: none;
         border: none;
@@ -964,7 +964,7 @@
         font-weight: 800;
         font-size: 0.78rem;
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: center;
         flex-shrink: 0;
         transition: all 0.25s;
@@ -993,7 +993,7 @@
         color: #94a3b8;
         white-space: nowrap;
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 5px;
     }
 
@@ -1070,7 +1070,7 @@
 
     .config-block-label {
         display: flex;
-        align-itêms: flex-start;
+        align-items: flex-start;
         gap: 12px;
         margin-bottom: 1rem;
         padding-bottom: 0.8rem;
@@ -1084,7 +1084,7 @@
         background: #eef2ff;
         color: var(--c-indigo);
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: center;
         font-size: 0.85rem;
         flex-shrink: 0;
@@ -1113,7 +1113,7 @@
     }
 
     .config-block .form-control,
-    .text-field-itêm .form-control {
+    .text-field-item .form-control {
         border-radius: 9px;
         border-color: #dce6f4;
         font-size: 0.84rem;
@@ -1122,7 +1122,7 @@
     }
 
     .config-block .form-control:focus,
-    .text-field-itêm .form-control:focus {
+    .text-field-item .form-control:focus {
         border-color: var(--c-indigo);
         box-shadow: 0 0 0 3px rgba(67,56,202,0.10);
     }
@@ -1144,7 +1144,7 @@
         border-radius: 12px;
         background: linear-gradient(135deg, #f6f9ff 0%, #eef3ff 100%);
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: center;
         padding: 14px;
         transition: border-color 0.2s;
@@ -1163,7 +1163,7 @@
     .logo-empty {
         display: flex;
         flex-direction: column;
-        align-itêms: center;
+        align-items: center;
         gap: 8px;
         color: #b0c4de;
     }
@@ -1176,7 +1176,7 @@
     ================================================ */
     .model-grid {
         display: grid;
-        grid-têmplate-columns: repeat(3, minmax(0, 1fr));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 12px;
     }
 
@@ -1227,7 +1227,7 @@
 
     .model-card-top {
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: space-between;
         margin-bottom: 10px;
     }
@@ -1283,7 +1283,7 @@
         gap: 6px;
     }
 
-    .text-acc-itêm {
+    .text-acc-item {
         border: 1px solid var(--c-border);
         border-radius: 12px;
         overflow: hidden;
@@ -1291,7 +1291,7 @@
         transition: box-shadow 0.2s;
     }
 
-    .text-acc-itêm.open {
+    .text-acc-item.open {
         border-color: #c7d4ff;
         box-shadow: 0 4px 16px rgba(67,56,202,0.08);
     }
@@ -1301,7 +1301,7 @@
         background: #fafbff;
         border: none;
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: space-between;
         padding: 13px 16px;
         cursor: pointer;
@@ -1310,7 +1310,7 @@
         gap: 12px;
     }
 
-    .text-acc-itêm.open .text-acc-header {
+    .text-acc-item.open .text-acc-header {
         background: #f0f2ff;
         border-bottom: 1px solid #dce2ff;
     }
@@ -1319,7 +1319,7 @@
 
     .text-acc-header-left {
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 12px;
         flex: 1;
         min-width: 0;
@@ -1332,14 +1332,14 @@
         background: #eef0ff;
         color: var(--c-indigo);
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: center;
         font-size: 0.8rem;
         flex-shrink: 0;
         transition: background 0.18s;
     }
 
-    .text-acc-itêm.open .text-acc-icon {
+    .text-acc-item.open .text-acc-icon {
         background: var(--c-indigo);
         color: #fff;
     }
@@ -1365,7 +1365,7 @@
         transition: transform 0.25s, color 0.18s;
     }
 
-    .text-acc-itêm.open .text-acc-arrow {
+    .text-acc-item.open .text-acc-arrow {
         transform: rotate(180deg);
         color: var(--c-indigo);
     }
@@ -1376,20 +1376,20 @@
         background: #fafbff;
     }
 
-    .text-acc-itêm.open .text-acc-body { display: block; }
+    .text-acc-item.open .text-acc-body { display: block; }
 
     .text-fields-grid {
         display: grid;
-        grid-têmplate-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
     }
 
-    .text-field-itêm {
+    .text-field-item {
         display: flex;
         flex-direction: column;
     }
 
-    .text-field-itêm label {
+    .text-field-item label {
         font-size: 0.76rem;
         font-weight: 600;
         color: #3d4f63;
@@ -1403,7 +1403,7 @@
     ================================================ */
     .color-groups-grid {
         display: grid;
-        grid-têmplate-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
     }
 
@@ -1421,7 +1421,7 @@
 
     .color-group-header {
         display: flex;
-        align-itêms: flex-start;
+        align-items: flex-start;
         gap: 10px;
         margin-bottom: 12px;
         padding-bottom: 10px;
@@ -1435,7 +1435,7 @@
         background: #eef0ff;
         color: var(--c-indigo);
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: center;
         font-size: 0.75rem;
         flex-shrink: 0;
@@ -1455,13 +1455,13 @@
         margin-top: 1px;
     }
 
-    .color-itêms {
+    .color-items {
         display: flex;
         flex-direction: column;
         gap: 10px;
     }
 
-    .color-itêm label {
+    .color-item label {
         font-size: 0.73rem;
         font-weight: 600;
         color: #3d4f63;
@@ -1471,9 +1471,9 @@
 
     .color-field {
         display: grid;
-        grid-têmplate-columns: 42px 1fr;
+        grid-template-columns: 42px 1fr;
         gap: 8px;
-        align-itêms: center;
+        align-items: center;
     }
 
     .color-hint {
@@ -1506,7 +1506,7 @@
 
     .color-preview-row {
         display: grid;
-        grid-têmplate-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr;
         gap: 12px;
     }
 
@@ -1538,7 +1538,7 @@
     ================================================ */
     .image-grid {
         display: grid;
-        grid-têmplate-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
     }
 
@@ -1556,7 +1556,7 @@
 
     .image-card-header {
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: space-between;
         padding: 11px 14px;
         background: #f8faff;
@@ -1567,7 +1567,7 @@
 
     .image-card-title {
         display: flex;
-        align-itêms: center;
+        align-items: center;
         gap: 8px;
         font-size: 0.82rem;
     }
@@ -1579,31 +1579,31 @@
         font-weight: 700;
     }
 
-    .image-preview-área {
+    .image-preview-area {
         min-height: 150px;
         background: linear-gradient(135deg, #f6f8ff 0%, #eef1ff 100%);
         display: flex;
-        align-itêms: center;
+        align-items: center;
         justify-content: center;
         overflow: hidden;
         position: relative;
     }
 
-    .image-preview-área img {
+    .image-preview-area img {
         width: 100%;
         max-height: 190px;
         object-fit: cover;
         transition: transform 0.3s ease;
     }
 
-    .image-card:hover .image-preview-área img {
+    .image-card:hover .image-preview-area img {
         transform: scale(1.02);
     }
 
     .image-empty {
         display: flex;
         flex-direction: column;
-        align-itêms: center;
+        align-items: center;
         gap: 8px;
         color: #c0cfe4;
         padding: 24px;
@@ -1612,7 +1612,7 @@
     .image-empty i { font-size: 2.2rem; }
     .image-empty span { font-size: 0.76rem; }
 
-    .image-upload-área {
+    .image-upload-area {
         padding: 12px 14px;
         border-top: 1px solid var(--c-border);
         background: #fafbff;
@@ -1620,7 +1620,7 @@
 
     .upload-btn {
         display: inline-flex;
-        align-itêms: center;
+        align-items: center;
         gap: 6px;
         background: #eef0ff;
         border: 1px solid #c7d0ff;
@@ -1647,7 +1647,7 @@
     ================================================ */
     .publish-grid {
         display: grid;
-        grid-têmplate-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 14px;
         margin-bottom: 1.25rem;
     }
@@ -1686,7 +1686,7 @@
 
     .checklist li {
         display: flex;
-        align-itêms: flex-start;
+        align-items: flex-start;
         gap: 9px;
         font-size: 0.82rem;
         color: #334155;
@@ -1712,14 +1712,14 @@
         margin-bottom: 1.25rem;
     }
 
-    .faq-itêm {
+    .faq-item {
         border: 1px solid var(--c-border);
         border-radius: 10px;
         overflow: hidden;
         background: #fff;
     }
 
-    .faq-itêm summary {
+    .faq-item summary {
         padding: 12px 16px;
         font-size: 0.82rem;
         font-weight: 600;
@@ -1728,15 +1728,15 @@
         background: #fafbff;
         list-style: none;
         display: flex;
-        align-itêms: center;
+        align-items: center;
         transition: background 0.18s;
     }
 
-    .faq-itêm summary::-webkit-details-marker { display: none; }
+    .faq-item summary::-webkit-details-marker { display: none; }
 
-    .faq-itêm summary:hover { background: #f0f2ff; }
+    .faq-item summary:hover { background: #f0f2ff; }
 
-    .faq-itêm[open] summary {
+    .faq-item[open] summary {
         background: #f0f2ff;
         border-bottom: 1px solid #dce2ff;
         color: var(--c-indigo);
@@ -1772,7 +1772,7 @@
         font-weight: 800;
         text-decoration: none;
         display: inline-flex;
-        align-itêms: center;
+        align-items: center;
         gap: 8px;
         transition: all 0.2s;
         box-shadow: 0 6px 20px rgba(67,56,202,0.28);
@@ -1795,7 +1795,7 @@
         border-top: 1px solid var(--c-border);
         display: flex;
         justify-content: space-between;
-        align-itêms: center;
+        align-items: center;
         gap: 10px;
         flex-wrap: wrap;
     }
@@ -1803,12 +1803,12 @@
     .wizard-actions-right {
         display: flex;
         gap: 8px;
-        align-itêms: center;
+        align-items: center;
     }
 
     .btn-action {
         display: inline-flex;
-        align-itêms: center;
+        align-items: center;
         gap: 6px;
         border: none;
         border-radius: 10px;
@@ -1861,15 +1861,15 @@
     }
 
     /* ================================================
-       RESPONSIVO
+       RESPONSIVE
     ================================================ */
     @media (max-width: 1100px) {
         .model-grid {
-            grid-têmplate-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
 
         .color-groups-grid {
-            grid-têmplate-columns: 1fr;
+            grid-template-columns: 1fr;
         }
     }
 
@@ -1878,11 +1878,11 @@
         .image-grid,
         .publish-grid,
         .color-preview-row {
-            grid-têmplate-columns: 1fr;
+            grid-template-columns: 1fr;
         }
 
         .text-fields-grid {
-            grid-têmplate-columns: 1fr;
+            grid-template-columns: 1fr;
         }
 
         .step-btn {
@@ -1897,7 +1897,7 @@
     @media (max-width: 768px) {
         .config-card-header {
             flex-direction: column;
-            align-itêms: flex-start;
+            align-items: flex-start;
         }
 
         .config-body {
@@ -1975,15 +1975,15 @@
            TEXT ACCORDION
         ======================== */
         function initAccordion() {
-            const itêms = Array.from(document.querySelectorAll('.text-acc-itêm'));
+            const items = Array.from(document.querySelectorAll('.text-acc-item'));
 
-            itêms.forEach(itêm => {
-                const header = itêm.querySelector('.text-acc-header');
+            items.forEach(item => {
+                const header = item.querySelector('.text-acc-header');
                 if (!header) return;
 
                 header.addEventListener('click', () => {
-                    const isOpen = itêm.classList.contains('open');
-                    itêm.classList.toggle('open', !isOpen);
+                    const isOpen = item.classList.contains('open');
+                    item.classList.toggle('open', !isOpen);
                 });
             });
         }
