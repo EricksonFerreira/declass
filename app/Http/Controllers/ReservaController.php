@@ -1311,6 +1311,12 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ->where('reserva_id', $reserva_id)
             ->first();
 
+        // Contrato já assinado não pode ser editado — redireciona para a reserva
+        if ($contratoExistente && $contratoExistente->assinado === 'S') {
+            return redirect()->route('reserva.show', $reserva_id)
+                ->with('warning', 'O contrato de check-in já foi assinado e não pode ser editado. Para criar um novo, exclua o contrato atual.');
+        }
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
