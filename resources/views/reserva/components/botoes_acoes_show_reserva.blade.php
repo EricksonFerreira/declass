@@ -49,7 +49,7 @@
                     <span>Efetuar pagamento</span>
                 </a>
             @endif
-
+{{-- 
             @if($reserva->podeCriarContrato() || $reserva->podeVerContrato() || $reserva->podeAssinarContrato())
                 <div class="dropdown">
                     <button type="button" class="action-pill action-pill--sun dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -92,7 +92,7 @@
                         @endif
                     </div>
                 </div>
-            @endif
+            @endif --}}
 
             {{-- Calção: disponível após contrato assinado --}}
             @if($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S')
@@ -114,12 +114,12 @@
                 </button>
             @endif
 
-            @if($reserva->podeFazerCheckout())
+            {{-- @if($reserva->podeFazerCheckout())
                 <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="action-pill action-pill--success" id="btnCheckOutReserva">
                     <i class="fas fa-undo-alt"></i>
                     <span>Check-out</span>
                 </a>
-            @endif
+            @endif --}}
         </div>
 
         <div class="reservation-actions-card__side">
