@@ -18,6 +18,7 @@ class ReplicacaoBaseService
             'segmentos' => ['label' => 'Segmentos', 'area' => 'Cadastros Basicos', 'tables' => ['segmentos']],
             'marcas' => ['label' => 'Marcas', 'area' => 'Cadastros Basicos', 'tables' => ['marcas']],
             'dias_uteis' => ['label' => 'Dias Uteis', 'area' => 'Cadastros Basicos', 'tables' => ['dias_uteis']],
+            'horarios_diarios' => ['label' => 'Horarios Diarios', 'area' => 'Cadastros Basicos', 'tables' => ['horarios_diarios']],
             'tipo_valor_caracteristica_frota' => ['label' => 'Tipos de Valor da Caracteristica de Frota', 'area' => 'Frota', 'tables' => ['tipo_valor_caracteristica_frota']],
             'caracteristicas_frotas' => ['label' => 'Caracteristicas de Frota', 'area' => 'Frota', 'tables' => ['caracteristicas_frotas']],
             'tipo_frota' => ['label' => 'Tipos de Frota', 'area' => 'Frota', 'tables' => ['tipo_frota']],
@@ -395,5 +396,33 @@ class ReplicacaoBaseService
         }
 
         return null;
+    }
+
+    /**
+     * Retorna os horários diários configurados para execução automática da replicação.
+     * Formato esperado: array de strings "HH:MM".
+     *
+     * @return array<int, string>
+     */
+    public function horariosDiarios(): array
+    {
+        $raw = config('replicacao.horarios_diarios', []);
+        if (!is_array($raw)) {
+            return [];
+        }
+
+        $valid = [];
+        foreach ($raw as $item) {
+            $item = trim((string) $item);
+            if ($item === '') {
+                continue;
+            }
+            // Valida formato HH:MM
+            if (preg_match('/^([01]\d|2[0-3]):([0-5]\d)$/', $item)) {
+                $valid[] = $item;
+            }
+        }
+
+        return array_values(array_unique($valid));
     }
 }

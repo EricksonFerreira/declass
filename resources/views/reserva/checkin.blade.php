@@ -89,7 +89,7 @@
 
                     <form id="form_dados_veiculos">
 
-                        @if($contratoExistente && $contratoExistente->assinado)
+                        @if($contratoExistente && $contratoExistente->assinado == 'S')
                         <div class="alert alert-danger mb-3" role="alert">
                             <i class="fas fa-lock mr-2"></i>
                             <strong>Contrato assinado.</strong> Os campos estão bloqueados para edição. Para modificar, acesse a reserva, exclua o contrato e crie um novo.
@@ -493,7 +493,7 @@
                     </div>
 
                     {{-- Resumo antes de criar/salvar --}}
-                    @if($contratoExistente && $contratoExistente->assinado)
+                    @if($contratoExistente && $contratoExistente->assinado == 'S')
                     {{-- Contrato assinado: bloqueia edição --}}
                     <div class="ci-summary-card" style="background:linear-gradient(135deg,#fff5f5 0%,#fee2e2 100%);border-color:#fca5a5;">
                         <div class="ci-summary-card__icon" style="background:linear-gradient(135deg,#ef4444,#b91c1c);">
@@ -539,12 +539,12 @@
                         <button type="button" class="btn-action btn-primary" id="wizardNext">
                             Continuar<i class="fas fa-arrow-right ml-1"></i>
                         </button>
-                        @if(!($contratoExistente && $contratoExistente->assinado))
+                        {{-- @if(!($contratoExistente && $contratoExistente->assinado == 'S'))
                         <button type="button" class="btn-action btn-action-success d-none" id="wizardCreateBtn">
                             <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }} mr-1"></i>
                             {{ $contratoExistente ? 'Salvar Contrato' : 'Criar Contrato' }}
                         </button>
-                        @endif
+                        @endif --}}
                     </div>
                 </div>
 
@@ -1155,7 +1155,7 @@
     @endif
 
     // Contrato assinado: bloqueia todos os campos e botões do wizard
-    @if($contratoExistente && $contratoExistente->assinado)
+    @if($contratoExistente && $contratoExistente->assinado == 'S')
     (function() {
         const form = document.getElementById('form_dados_veiculos');
         if (form) {

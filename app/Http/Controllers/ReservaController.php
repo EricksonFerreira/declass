@@ -1907,23 +1907,33 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $contrato->delete();
 
+        // Volta o status da reserva para "Confirmada" (da empresa correspondente)
+        $statusConfirmada = \App\Models\StatusReserva::where('nome', 'Confirmada')
+            ->where('empresa_id', $reserva->empresa_id)
+            ->first();
+
+        if ($statusConfirmada) {
+            $reserva->update(['status_reserva_id' => $statusConfirmada->id]);
+        }
+
         $this->reservaService->adicionaLog(
             $reserva_id,
             Auth::id(),
             json_encode([
-                'acao'        => 'Contrato de check-in excluído',
+                'acao'         => 'Contrato de check-in excluído',
                 'foi_assinado' => $foiAssinado,
-                'veiculo'     => $veiculoNome,
+                'veiculo'      => $veiculoNome,
                 'excluido_por' => Auth::user()?->name ?? Auth::user()?->nome ?? 'Usuário',
+                'status_alterado_para' => $statusConfirmada?->nome ?? 'não alterado',
             ]),
-            'Contrato de check-in excluído' . ($foiAssinado ? ' (estava assinado)' : ''),
+            'Contrato de check-in excluído' . ($foiAssinado ? ' (estava assinado)' : '') . ' — status voltou para Confirmada',
             $foiAssinado ? 'danger' : 'warning'
         );
 
         return redirect()->route('reserva.checkin', $reserva_id)
             ->with('warning', $foiAssinado
-                ? 'Contrato assinado excluído. Crie um novo contrato.'
-                : 'Contrato excluído. Crie um novo contrato.'
+                ? 'Contrato assinado excluído. Status da reserva voltou para Confirmada. Crie um novo contrato.'
+                : 'Contrato excluído. Status da reserva voltou para Confirmada. Crie um novo contrato.'
             );
     }
 

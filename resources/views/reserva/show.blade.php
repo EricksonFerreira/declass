@@ -88,6 +88,12 @@
             $nfseErroDetalhado = implode(' ', (array) $nfseAtual->response['errors']);
         }
     }
+
+    $totalMultas = $reserva->multas?->count() ?? 0;
+    $danosReserva = $reserva->veiculoDano ?? collect();
+    $danosPendentes = $danosReserva->whereNull('correcao_data');
+    $totalCobrancasAvaria = $reserva->avariaCobrancas?->count() ?? 0;
+    $calcao = $reserva->calcao ?? null;
 @endphp
 
 <div class="rs-page">
@@ -162,480 +168,669 @@
     @endif
 
     {{-- ══════════════════════════════════════════
-         CARD: CONTRATO DE CHECK-IN
+         ABAS PRINCIPAIS
     ══════════════════════════════════════════ --}}
-    @if($reserva->contratoCheckin)
-    @php
-        $ci          = $reserva->contratoCheckin;
-        $ciAssinado  = $ci->assinado === 'S';
-        $ciVeiculo   = $ci->veiculo?->nome ?? ('ID ' . $ci->veiculo_id);
-        $ciBorder    = $ciAssinado ? '#10b981' : '#f59e0b';
-        $ciBgFrom    = $ciAssinado ? '#ecfdf5' : '#fffbeb';
-        $ciBgTo      = $ciAssinado ? '#d1fae5' : '#fef3c7';
-        $ciBadgeBg   = $ciAssinado ? 'rgba(16,185,129,.15)' : 'rgba(245,158,11,.18)';
-        $ciBadgeClr  = $ciAssinado ? '#047857' : '#b45309';
-        $ciBadgeTxt  = $ciAssinado ? 'Contrato Assinado' : 'Aguardando Assinatura';
-        $ciBadgeIcon = $ciAssinado ? 'fa-check-circle' : 'fa-clock';
-    @endphp
-    <div class="rs-ci-card" style="border-left:5px solid {{ $ciBorder }};background:linear-gradient(135deg,{{ $ciBgFrom }},{{ $ciBgTo }})">
-        <div class="rs-ci-card__top">
-            <div class="rs-ci-card__icon" style="background:{{ $ciBorder }}">
-                <i class="fas fa-file-signature"></i>
-            </div>
-            <div class="rs-ci-card__info">
-                <div class="rs-ci-card__title">Contrato de Check-in</div>
-                <span class="rs-ci-card__badge" style="background:{{ $ciBadgeBg }};color:{{ $ciBadgeClr }}">
-                    <i class="fas {{ $ciBadgeIcon }} mr-1"></i>{{ $ciBadgeTxt }}
-                </span>
-            </div>
-        </div>
-
-        <div class="rs-ci-card__details">
-            <div class="rs-ci-detail">
-                <span><i class="fas fa-car mr-1"></i>Veículo</span>
-                <strong>{{ $ciVeiculo }}</strong>
-            </div>
-            <div class="rs-ci-detail">
-                <span><i class="fas fa-tachometer-alt mr-1"></i>Quilometragem</span>
-                <strong>{{ number_format((float)($ci->quilometragem_atual ?? 0), 0, ',', '.') }} km</strong>
-            </div>
-            <div class="rs-ci-detail">
-                <span><i class="fas fa-gas-pump mr-1"></i>Combustível</span>
-                <strong>{{ $ci->nivel_combustivel ?? '—' }}</strong>
-            </div>
-            <div class="rs-ci-detail">
-                <span><i class="fas fa-calendar mr-1"></i>Saída</span>
-                <strong>
-                    {{ $ci->data_saida ? \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') : '—' }}
-                    {{ $ci->hora_saida ? substr($ci->hora_saida, 0, 5) : '' }}
-                </strong>
-            </div>
-            @if($ciAssinado && $ci->data_assinatura)
-            <div class="rs-ci-detail">
-                <span><i class="fas fa-pen-nib mr-1"></i>Assinado em</span>
-                <strong>{{ \Carbon\Carbon::parse($ci->data_assinatura)->format('d/m/Y H:i') }}</strong>
-            </div>
-            @endif
-        </div>
-
-        <div class="rs-ci-card__actions">
-            <a href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" target="_blank" class="rs-ci-btn rs-ci-btn--view">
-                <i class="fas fa-eye"></i> Ver contrato
-            </a>
-            @if(!$ciAssinado)
-                <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
-                    <i class="fas fa-signature"></i> Assinar
+    <div class="rs-tabs-wrapper">
+        <ul class="nav nav-tabs rs-nav-tabs" id="reservaMainTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="tab-visao-geral" data-toggle="tab" href="#pane-visao-geral" role="tab">
+                    <i class="fas fa-home"></i>
+                    <span>Visão Geral</span>
                 </a>
-                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--edit">
-                    <i class="fas fa-edit"></i> Editar contrato
-                </a>
-            @endif
-            <button type="button" class="rs-ci-btn rs-ci-btn--delete js-excluir-contrato-checkin"
-                    data-url="{{ route('reserva.checkin.excluirContrato', $reserva->id) }}"
-                    data-assinado="{{ $ciAssinado ? '1' : '0' }}">
-                <i class="fas fa-trash"></i>
-                {{ $ciAssinado ? 'Excluir e recriar' : 'Excluir contrato' }}
-            </button>
-        </div>
-    </div>
-    @endif
-
-    {{-- ══════════════════════════════════════════
-         GRID PRINCIPAL
-    ══════════════════════════════════════════ --}}
-    <div class="rs-grid">
-
-        {{-- COLUNA PRINCIPAL --}}
-        <div class="rs-main">
-
-            {{-- Card: Rota da viagem --}}
-            <div class="rs-card">
-                <div class="rs-card__header">
-                    <i class="fas fa-route rs-card__icon"></i>
-                    <h2>Rota da viagem</h2>
-                </div>
-                <div class="rs-route">
-                    <div class="rs-route__stop rs-route__stop--origin">
-                        <div class="rs-route__dot rs-route__dot--origin">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </div>
-                        <div class="rs-route__info">
-                            <span class="rs-route__label">Retirada</span>
-                            <strong class="rs-route__place">{{ $reserva->estacaoRetirada->nome ?? 'Nao informado' }}</strong>
-                            <div class="rs-route__datetime">
-                                <span class="rs-route__date">{{ $inicioData }}</span>
-                                @if($inicioHora)
-                                    <span class="rs-route__time">{{ $inicioHora }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="rs-route__middle">
-                        <div class="rs-route__line"></div>
-                        <div class="rs-route__duration">
-                            <i class="fas fa-moon"></i>
-                            {{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }}
-                        </div>
-                        <div class="rs-route__line"></div>
-                    </div>
-
-                    <div class="rs-route__stop rs-route__stop--dest">
-                        <div class="rs-route__dot rs-route__dot--dest">
-                            <i class="fas fa-flag-checkered"></i>
-                        </div>
-                        <div class="rs-route__info">
-                            <span class="rs-route__label">Devolucao</span>
-                            <strong class="rs-route__place">{{ $reserva->estacaoDevolucao->nome ?? 'Nao informado' }}</strong>
-                            <div class="rs-route__datetime">
-                                <span class="rs-route__date">{{ $fimData }}</span>
-                                @if($fimHora)
-                                    <span class="rs-route__time">{{ $fimHora }}</span>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Card: Veiculo --}}
-            <div class="rs-card rs-card--vehicle">
-                <div class="rs-card__header">
-                    <i class="fas fa-car rs-card__icon"></i>
-                    <h2>Veiculo reservado</h2>
-                </div>
-                <div class="rs-vehicle">
-                    <div class="rs-vehicle__media">
-                        <img src="{{ $reserva->modelos->imagem_url ?? asset('img/no-image.jpg') }}"
-                             alt="{{ $reserva->modelos->nome ?? 'Veiculo reservado' }}">
-                    </div>
-                    <div class="rs-vehicle__info">
-                        <div class="rs-vehicle__brand">{{ $reserva->modelos->marca->nome ?? 'Marca nao informada' }}</div>
-                        <h3 class="rs-vehicle__name">{{ $reserva->modelos->nome ?? 'Nao informado' }}</h3>
-
-                        <div class="rs-vehicle__chips">
-                            @if(!empty($reserva->grupoFrota->nome))
-                                <span class="rs-chip rs-chip--blue">
-                                    <i class="fas fa-layer-group"></i>
-                                    {{ $reserva->grupoFrota->nome }}
-                                </span>
-                            @endif
-                            @if(!empty($reserva->modelos->transmissao))
-                                <span class="rs-chip rs-chip--slate">
-                                    <i class="fas fa-cogs"></i>
-                                    {{ $reserva->modelos->transmissao }}
-                                </span>
-                            @endif
-                            @if(!empty($reserva->modelos->combustivel))
-                                <span class="rs-chip rs-chip--green">
-                                    <i class="fas fa-gas-pump"></i>
-                                    {{ $reserva->modelos->combustivel }}
-                                </span>
-                            @endif
-                        </div>
-
-                        <div class="rs-vehicle__specs">
-                            <div class="rs-spec">
-                                <i class="fas fa-calendar-alt"></i>
-                                <span>Ano</span>
-                                <strong>{{ $reserva->modelos->ano ?? '-' }}</strong>
-                            </div>
-                            <div class="rs-spec">
-                                <i class="fas fa-users"></i>
-                                <span>Capacidade</span>
-                                <strong>{{ $reserva->modelos->capacidade ? $reserva->modelos->capacidade . ' pessoas' : '-' }}</strong>
-                            </div>
-                        </div>
-
-                        <div class="rs-vehicle__pricing">
-                            <div>
-                                <span>Tarifa diaria</span>
-                                <strong>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</strong>
-                            </div>
-                            <div>
-                                <span>{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }}</span>
-                                <strong>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</strong>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Card: Opcionais --}}
-            @if($reserva->opcionais->isNotEmpty())
-                <div class="rs-card">
-                    <div class="rs-card__header">
-                        <i class="fas fa-plus-circle rs-card__icon"></i>
-                        <h2>Opcionais contratados</h2>
-                        <span class="rs-card__badge">{{ $reserva->opcionais->count() }} item(s)</span>
-                    </div>
-                    <div class="rs-optionals">
-                        @foreach($reserva->opcionais as $opcional)
-                            @php
-                                $qtd   = (int) ($opcional->pivot->quantidade ?? 0);
-                                $preco = (float) ($opcional->pivot->preco_total ?? 0);
-                                $total = $qtd * $preco;
-                            @endphp
-                            <div class="rs-optional-row">
-                                <div class="rs-optional-row__info">
-                                    <strong>{{ $opcional->nome }}</strong>
-                                    <span>
-                                        {{ $opcional->tipo_cobranca == 'por_dia' ? 'Cobrado por dia' : 'Valor integral' }}
-                                        &middot; {{ $qtd }}x
-                                    </span>
-                                </div>
-                                <div class="rs-optional-row__price">
-                                    R$ {{ number_format($total, 2, ',', '.') }}
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-        </div>
-
-        {{-- SIDEBAR --}}
-        <aside class="rs-sidebar">
-
-            {{-- Card: Cliente --}}
-            <div class="rs-card">
-                <div class="rs-card__header">
-                    <i class="fas fa-user rs-card__icon"></i>
-                    <h2>Cliente</h2>
-                </div>
-                <div class="rs-client">
-                    <div class="rs-client__avatar">{{ $clienteIniciais }}</div>
-                    <div class="rs-client__main">
-                        <strong>{{ $clienteNome }}</strong>
-                        <span>{{ $reserva->usuario->email ?? 'E-mail nao informado' }}</span>
-                    </div>
-                </div>
-                <div class="rs-info-rows">
-                    <div class="rs-info-row">
-                        <span><i class="fas fa-phone-alt"></i>Telefone</span>
-                        <strong>{{ $reserva->usuario->telefone ?? '-' }}</strong>
-                    </div>
-                    <div class="rs-info-row">
-                        <span><i class="fas fa-id-card"></i>Documento</span>
-                        <strong>{{ $reserva->usuario->numero_identificacao ?? '-' }}</strong>
-                    </div>
-                    <div class="rs-info-row">
-                        <span><i class="fas fa-birthday-cake"></i>Nascimento</span>
-                        <strong>{{ $reserva->usuario->data_nascimento ? \Carbon\Carbon::parse($reserva->usuario->data_nascimento)->format('d/m/Y') : '-' }}</strong>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Card: Resumo financeiro --}}
-            <div class="rs-card">
-                <div class="rs-card__header">
-                    <i class="fas fa-file-invoice-dollar rs-card__icon"></i>
-                    <h2>Resumo financeiro</h2>
-                </div>
-                <div class="rs-summary">
-                    <div class="rs-summary__row">
-                        <span>Tarifa diaria</span>
-                        <span>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</span>
-                    </div>
-                    <div class="rs-summary__row">
-                        <span>{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }} &times; tarifa</span>
-                        <span>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</span>
-                    </div>
-                    @if($valorOpcionais > 0)
-                        <div class="rs-summary__row">
-                            <span>Opcionais</span>
-                            <span>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</span>
-                        </div>
-                    @endif
-                    @if($percentualDesconto > 0)
-                        <div class="rs-summary__divider"></div>
-                        <div class="rs-summary__row rs-summary__row--discount">
-                            <span><i class="fas fa-tag"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)</span>
-                            <span>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</span>
-                        </div>
-                    @endif
-                    <div class="rs-summary__total">
-                        <span>Total</span>
-                        <strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Card: Transferencias financeiras --}}
-            <div class="rs-card">
-                <div class="rs-card__header">
-                    <i class="fas fa-exchange-alt rs-card__icon"></i>
-                    <h2>Transferencias</h2>
-                </div>
-
-                <div class="rs-finance-kpis">
-                    <div class="rs-fkpi rs-fkpi--green">
-                        <i class="fas fa-arrow-down"></i>
-                        <div>
-                            <strong>R$ {{ number_format($totalPagamentos, 2, ',', '.') }}</strong>
-                            <span>{{ $transacoesPagamento->count() }} pagamento(s)</span>
-                        </div>
-                    </div>
-                    <div class="rs-fkpi rs-fkpi--red">
-                        <i class="fas fa-arrow-up"></i>
-                        <div>
-                            <strong>R$ {{ number_format($totalEstornos, 2, ',', '.') }}</strong>
-                            <span>{{ $transacoesEstorno->count() }} estorno(s)</span>
-                        </div>
-                    </div>
-                    @if($transacoesPendentes->count() > 0)
-                        <div class="rs-fkpi rs-fkpi--amber">
-                            <i class="fas fa-clock"></i>
-                            <div>
-                                <strong>{{ $transacoesPendentes->count() }}</strong>
-                                <span>Pendente(s)</span>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-
-                @if($transacoesReserva->isNotEmpty())
-                    <div class="rs-transactions">
-                        @foreach($transacoesReserva->take(5) as $transacao)
-                            @php
-                                $valorTx  = (float) ($transacao->valor ?? 0);
-                                $statusTx = strtolower((string) ($transacao->status ?? ''));
-                                $isEstorno = $valorTx < 0 || in_array($statusTx, $statusPagamentoEstornado, true);
-                            @endphp
-                            <div class="rs-tx">
-                                <div class="rs-tx__icon {{ $isEstorno ? 'rs-tx__icon--red' : 'rs-tx__icon--green' }}">
-                                    <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
-                                </div>
-                                <div class="rs-tx__info">
-                                    <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
-                                    <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
-                                </div>
-                                <div class="rs-tx__amount {{ $isEstorno ? 'rs-tx__amount--red' : 'rs-tx__amount--green' }}">
-                                    <strong>R$ {{ number_format($valorTx, 2, ',', '.') }}</strong>
-                                    <span>{{ $transacao->status ?? '-' }}</span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="rs-empty">
-                        <i class="fas fa-inbox"></i>
-                        <span>Nenhuma transferencia vinculada.</span>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Card: NFS-e --}}
-            <div class="rs-card">
-                <div class="rs-card__header rs-card__header--between">
-                    <div class="rs-card__header-left">
-                        <i class="fas fa-file-alt rs-card__icon"></i>
-                        <h2>Nota Fiscal (NFS-e)</h2>
-                    </div>
-                    <span class="rs-status-badge rs-status-badge--sm {{ $nfseBadgeClass }}">{{ $nfseStatusLabel }}</span>
-                </div>
-
-                @if($nfseAtual)
-                    <div class="rs-info-rows">
-                        <div class="rs-info-row">
-                            <span><i class="fas fa-hashtag"></i>Numero</span>
-                            <strong>{{ $nfseAtual->numero ?? '-' }}</strong>
-                        </div>
-                        <div class="rs-info-row">
-                            <span><i class="fas fa-server"></i>Ambiente</span>
-                            <strong>{{ $nfseAtual->ambiente ?? '-' }}</strong>
-                        </div>
-                    </div>
-
-                    @if($nfseErroDetalhado || $nfseMotivo)
-                        <div class="rs-nfse-error">
-                            <i class="fas fa-exclamation-circle"></i>
-                            <p>{{ $nfseErroDetalhado ?? $nfseMotivo }}</p>
-                        </div>
-                    @endif
-
-                    @if(!empty($nfseAtual->nfse_id) && (auth()->user()?->hasPermissao('nfse.download') || auth()->user()?->isAdministrador()))
-                        <div class="rs-nfse-downloads">
-                            <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'xml']) }}" class="rs-btn rs-btn--outline">
-                                <i class="fas fa-download"></i>Baixar XML
-                            </a>
-                            <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'dps']) }}" class="rs-btn rs-btn--outline">
-                                <i class="fas fa-file-alt"></i>Baixar DPS
-                            </a>
-                        </div>
-                    @endif
-
-                    @if(($nfseAtual->status ?? '') !== 'emitida')
-                        <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form mt-3">
-                            @csrf
-                            <button type="submit" class="rs-btn rs-btn--ghost rs-btn--full js-nfse-btn">
-                                <i class="fas fa-redo"></i>Tentar emitir novamente
-                            </button>
-                        </form>
-                    @endif
-                @else
-                    <div class="rs-empty">
-                        <i class="fas fa-file-times"></i>
-                        <span>Nenhuma nota vinculada ainda.</span>
-                    </div>
-                    <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form mt-3">
-                        @csrf
-                        <button type="submit" class="rs-btn rs-btn--ghost rs-btn--full js-nfse-btn">
-                            <i class="fas fa-redo"></i>Emitir nota fiscal
-                        </button>
-                    </form>
-                @endif
-            </div>
-
-            {{-- Card: Avarias (pós-checkout) --}}
-            @php
-                $danosReserva = $reserva->veiculoDano ?? collect();
-                $danosPendentes = $danosReserva->whereNull('correcao_data');
-                $totalCobrancasAvaria = $reserva->avariaCobrancas?->count() ?? 0;
-            @endphp
-            @if(($danosReserva->count() ?? 0) > 0 || $totalCobrancasAvaria > 0)
-                <div class="rs-card">
-                    <div class="rs-card__header rs-card__header--between">
-                        <div class="rs-card__header-left">
-                            <i class="fas fa-car-crash rs-card__icon" style="color:#f59e0b"></i>
-                            <h2>Avarias</h2>
-                        </div>
-                        <span class="rs-status-badge rs-status-badge--sm is-warning">
-                            {{ $danosPendentes->count() }} pendente(s)
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-checkin" data-toggle="tab" href="#pane-checkin" role="tab">
+                    <i class="fas fa-file-signature"></i>
+                    <span>Check-in</span>
+                    @if($reserva->contratoCheckin)
+                        @php $ciAssinadoTab = $reserva->contratoCheckin->assinado === 'S'; @endphp
+                        <span class="rs-tab-badge {{ $ciAssinadoTab ? 'rs-tab-badge--green' : 'rs-tab-badge--amber' }}">
+                            {{ $ciAssinadoTab ? 'Assinado' : 'Pendente' }}
                         </span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-checkout" data-toggle="tab" href="#pane-checkout" role="tab">
+                    <i class="fas fa-car-crash"></i>
+                    <span>Check-out</span>
+                    @if(($danosReserva->count() ?? 0) > 0)
+                        <span class="rs-tab-badge rs-tab-badge--amber">{{ $danosReserva->count() }}</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-financeiro" data-toggle="tab" href="#pane-financeiro" role="tab">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                    <span>Financeiro</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-multas" data-toggle="tab" href="#pane-multas" role="tab">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Multas</span>
+                    @if($totalMultas > 0)
+                        <span class="rs-tab-badge rs-tab-badge--red">{{ $totalMultas }}</span>
+                    @endif
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="tab-historico" data-toggle="tab" href="#pane-historico" role="tab">
+                    <i class="fas fa-history"></i>
+                    <span>Histórico</span>
+                    <span class="rs-tab-badge rs-tab-badge--slate" id="historicoCount">—</span>
+                </a>
+            </li>
+        </ul>
+
+        <div class="tab-content rs-tab-content" id="reservaMainTabContent">
+
+            {{-- ══════════ TAB 1 — VISÃO GERAL ══════════ --}}
+            <div class="tab-pane fade show active" id="pane-visao-geral" role="tabpanel">
+                <div class="rs-grid">
+                    {{-- COLUNA PRINCIPAL --}}
+                    <div class="rs-main">
+
+                        {{-- Card: Rota da viagem --}}
+                        <div class="rs-card">
+                            <div class="rs-card__header">
+                                <i class="fas fa-route rs-card__icon"></i>
+                                <h2>Rota da viagem</h2>
+                            </div>
+                            <div class="rs-route">
+                                <div class="rs-route__stop rs-route__stop--origin">
+                                    <div class="rs-route__dot rs-route__dot--origin">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div class="rs-route__info">
+                                        <span class="rs-route__label">Retirada</span>
+                                        <strong class="rs-route__place">{{ $reserva->estacaoRetirada->nome ?? 'Nao informado' }}</strong>
+                                        <div class="rs-route__datetime">
+                                            <span class="rs-route__date">{{ $inicioData }}</span>
+                                            @if($inicioHora)
+                                                <span class="rs-route__time">{{ $inicioHora }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="rs-route__middle">
+                                    <div class="rs-route__line"></div>
+                                    <div class="rs-route__duration">
+                                        <i class="fas fa-moon"></i>
+                                        {{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }}
+                                    </div>
+                                    <div class="rs-route__line"></div>
+                                </div>
+
+                                <div class="rs-route__stop rs-route__stop--dest">
+                                    <div class="rs-route__dot rs-route__dot--dest">
+                                        <i class="fas fa-flag-checkered"></i>
+                                    </div>
+                                    <div class="rs-route__info">
+                                        <span class="rs-route__label">Devolucao</span>
+                                        <strong class="rs-route__place">{{ $reserva->estacaoDevolucao->nome ?? 'Nao informado' }}</strong>
+                                        <div class="rs-route__datetime">
+                                            <span class="rs-route__date">{{ $fimData }}</span>
+                                            @if($fimHora)
+                                                <span class="rs-route__time">{{ $fimHora }}</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Card: Veiculo --}}
+                        <div class="rs-card rs-card--vehicle">
+                            <div class="rs-card__header">
+                                <i class="fas fa-car rs-card__icon"></i>
+                                <h2>Veiculo reservado</h2>
+                            </div>
+                            <div class="rs-vehicle">
+                                <div class="rs-vehicle__media">
+                                    <img src="{{ $reserva->modelos->imagem_url ?? asset('img/no-image.jpg') }}"
+                                         alt="{{ $reserva->modelos->nome ?? 'Veiculo reservado' }}">
+                                </div>
+                                <div class="rs-vehicle__info">
+                                    <div class="rs-vehicle__brand">{{ $reserva->modelos->marca->nome ?? 'Marca nao informada' }}</div>
+                                    <h3 class="rs-vehicle__name">{{ $reserva->modelos->nome ?? 'Nao informado' }}</h3>
+
+                                    <div class="rs-vehicle__chips">
+                                        @if(!empty($reserva->grupoFrota->nome))
+                                            <span class="rs-chip rs-chip--blue">
+                                                <i class="fas fa-layer-group"></i>
+                                                {{ $reserva->grupoFrota->nome }}
+                                            </span>
+                                        @endif
+                                        @if(!empty($reserva->modelos->transmissao))
+                                            <span class="rs-chip rs-chip--slate">
+                                                <i class="fas fa-cogs"></i>
+                                                {{ $reserva->modelos->transmissao }}
+                                            </span>
+                                        @endif
+                                        @if(!empty($reserva->modelos->combustivel))
+                                            <span class="rs-chip rs-chip--green">
+                                                <i class="fas fa-gas-pump"></i>
+                                                {{ $reserva->modelos->combustivel }}
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <div class="rs-vehicle__specs">
+                                        <div class="rs-spec">
+                                            <i class="fas fa-calendar-alt"></i>
+                                            <span>Ano</span>
+                                            <strong>{{ $reserva->modelos->ano ?? '-' }}</strong>
+                                        </div>
+                                        <div class="rs-spec">
+                                            <i class="fas fa-users"></i>
+                                            <span>Capacidade</span>
+                                            <strong>{{ $reserva->modelos->capacidade ? $reserva->modelos->capacidade . ' pessoas' : '-' }}</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="rs-vehicle__pricing">
+                                        <div>
+                                            <span>Tarifa diaria</span>
+                                            <strong>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</strong>
+                                        </div>
+                                        <div>
+                                            <span>{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }}</span>
+                                            <strong>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Card: Opcionais --}}
+                        @if($reserva->opcionais->isNotEmpty())
+                            <div class="rs-card">
+                                <div class="rs-card__header">
+                                    <i class="fas fa-plus-circle rs-card__icon"></i>
+                                    <h2>Opcionais contratados</h2>
+                                    <span class="rs-card__badge">{{ $reserva->opcionais->count() }} item(s)</span>
+                                </div>
+                                <div class="rs-optionals">
+                                    @foreach($reserva->opcionais as $opcional)
+                                        @php
+                                            $qtd   = (int) ($opcional->pivot->quantidade ?? 0);
+                                            $preco = (float) ($opcional->pivot->preco_total ?? 0);
+                                            $total = $qtd * $preco;
+                                        @endphp
+                                        <div class="rs-optional-row">
+                                            <div class="rs-optional-row__info">
+                                                <strong>{{ $opcional->nome }}</strong>
+                                                <span>
+                                                    {{ $opcional->tipo_cobranca == 'por_dia' ? 'Cobrado por dia' : 'Valor integral' }}
+                                                    &middot; {{ $qtd }}x
+                                                </span>
+                                            </div>
+                                            <div class="rs-optional-row__price">
+                                                R$ {{ number_format($total, 2, ',', '.') }}
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
-                    <div class="rs-info-rows">
-                        <div class="rs-info-row">
-                            <span><i class="fas fa-list"></i>Total registradas</span>
-                            <strong>{{ $danosReserva->count() }}</strong>
-                        </div>
-                        <div class="rs-info-row">
-                            <span><i class="fas fa-receipt"></i>Cobranças</span>
-                            <strong>{{ $totalCobrancasAvaria }}</strong>
-                        </div>
-                    </div>
+                    {{-- SIDEBAR --}}
+                    <aside class="rs-sidebar">
 
-                    <div class="mt-3" style="display:flex; gap:10px; flex-wrap:wrap">
-                        @can('avaria.cobrar')
-                            <a href="{{ route('reserva.avarias.cobranca', $reserva->id) }}" class="rs-btn rs-btn--outline">
-                                <i class="fas fa-hand-holding-usd"></i>Debitar avarias
+                        {{-- Card: Cliente --}}
+                        <div class="rs-card">
+                            <div class="rs-card__header">
+                                <i class="fas fa-user rs-card__icon"></i>
+                                <h2>Cliente</h2>
+                            </div>
+                            <div class="rs-client">
+                                <div class="rs-client__avatar">{{ $clienteIniciais }}</div>
+                                <div class="rs-client__main">
+                                    <strong>{{ $clienteNome }}</strong>
+                                    <span>{{ $reserva->usuario->email ?? 'E-mail nao informado' }}</span>
+                                </div>
+                            </div>
+                            <div class="rs-info-rows">
+                                <div class="rs-info-row">
+                                    <span><i class="fas fa-phone-alt"></i>Telefone</span>
+                                    <strong>{{ $reserva->usuario->telefone ?? '-' }}</strong>
+                                </div>
+                                <div class="rs-info-row">
+                                    <span><i class="fas fa-id-card"></i>Documento</span>
+                                    <strong>{{ $reserva->usuario->numero_identificacao ?? '-' }}</strong>
+                                </div>
+                                <div class="rs-info-row">
+                                    <span><i class="fas fa-birthday-cake"></i>Nascimento</span>
+                                    <strong>{{ $reserva->usuario->data_nascimento ? \Carbon\Carbon::parse($reserva->usuario->data_nascimento)->format('d/m/Y') : '-' }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Card: Resumo financeiro --}}
+                        <div class="rs-card">
+                            <div class="rs-card__header">
+                                <i class="fas fa-file-invoice-dollar rs-card__icon"></i>
+                                <h2>Resumo financeiro</h2>
+                            </div>
+                            <div class="rs-summary">
+                                <div class="rs-summary__row">
+                                    <span>Tarifa diaria</span>
+                                    <span>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="rs-summary__row">
+                                    <span>{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }} &times; tarifa</span>
+                                    <span>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</span>
+                                </div>
+                                @if($valorOpcionais > 0)
+                                    <div class="rs-summary__row">
+                                        <span>Opcionais</span>
+                                        <span>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                                @if($percentualDesconto > 0)
+                                    <div class="rs-summary__divider"></div>
+                                    <div class="rs-summary__row rs-summary__row--discount">
+                                        <span><i class="fas fa-tag"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)</span>
+                                        <span>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                                <div class="rs-summary__total">
+                                    <span>Total</span>
+                                    <strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Card: Transferencias (resumo) --}}
+                        <div class="rs-card">
+                            <div class="rs-card__header">
+                                <i class="fas fa-exchange-alt rs-card__icon"></i>
+                                <h2>Transferencias</h2>
+                            </div>
+                            <div class="rs-finance-kpis">
+                                <div class="rs-fkpi rs-fkpi--green">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <div>
+                                        <strong>R$ {{ number_format($totalPagamentos, 2, ',', '.') }}</strong>
+                                        <span>{{ $transacoesPagamento->count() }} pagamento(s)</span>
+                                    </div>
+                                </div>
+                                <div class="rs-fkpi rs-fkpi--red">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <div>
+                                        <strong>R$ {{ number_format($totalEstornos, 2, ',', '.') }}</strong>
+                                        <span>{{ $transacoesEstorno->count() }} estorno(s)</span>
+                                    </div>
+                                </div>
+                                @if($transacoesPendentes->count() > 0)
+                                    <div class="rs-fkpi rs-fkpi--amber">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <strong>{{ $transacoesPendentes->count() }}</strong>
+                                            <span>Pendente(s)</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+                            @if($transacoesReserva->isNotEmpty())
+                                <div class="rs-transactions">
+                                    @foreach($transacoesReserva->take(5) as $transacao)
+                                        @php
+                                            $valorTx  = (float) ($transacao->valor ?? 0);
+                                            $statusTx = strtolower((string) ($transacao->status ?? ''));
+                                            $isEstorno = $valorTx < 0 || in_array($statusTx, $statusPagamentoEstornado, true);
+                                        @endphp
+                                        <div class="rs-tx">
+                                            <div class="rs-tx__icon {{ $isEstorno ? 'rs-tx__icon--red' : 'rs-tx__icon--green' }}">
+                                                <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                                            </div>
+                                            <div class="rs-tx__info">
+                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
+                                                <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
+                                            </div>
+                                            <div class="rs-tx__amount {{ $isEstorno ? 'rs-tx__amount--red' : 'rs-tx__amount--green' }}">
+                                                <strong>R$ {{ number_format($valorTx, 2, ',', '.') }}</strong>
+                                                <span>{{ $transacao->status ?? '-' }}</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                @if($transacoesReserva->count() > 5)
+                                    <div class="text-center mt-2">
+                                        <a href="#pane-financeiro" class="rs-btn rs-btn--outline rs-tab-link" data-tab="tab-financeiro">
+                                            <i class="fas fa-list"></i> Ver todas ({{ $transacoesReserva->count() }})
+                                        </a>
+                                    </div>
+                                @endif
+                            @else
+                                <div class="rs-empty">
+                                    <i class="fas fa-inbox"></i>
+                                    <span>Nenhuma transferencia vinculada.</span>
+                                </div>
+                            @endif
+                        </div>
+
+                    </aside>
+                </div>
+            </div>
+
+            {{-- ══════════ TAB 2 — CHECK-IN ══════════ --}}
+            <div class="tab-pane fade" id="pane-checkin" role="tabpanel">
+                @if($reserva->contratoCheckin)
+                @php
+                    $ci          = $reserva->contratoCheckin;
+                    $ciAssinado  = $ci->assinado === 'S';
+                    $ciVeiculo   = $ci->veiculo?->nome ?? ('ID ' . $ci->veiculo_id);
+                    $ciBorder    = $ciAssinado ? '#10b981' : '#f59e0b';
+                    $ciBgFrom    = $ciAssinado ? '#ecfdf5' : '#fffbeb';
+                    $ciBgTo      = $ciAssinado ? '#d1fae5' : '#fef3c7';
+                    $ciBadgeBg   = $ciAssinado ? 'rgba(16,185,129,.15)' : 'rgba(245,158,11,.18)';
+                    $ciBadgeClr  = $ciAssinado ? '#047857' : '#b45309';
+                    $ciBadgeTxt  = $ciAssinado ? 'Contrato Assinado' : 'Aguardando Assinatura';
+                    $ciBadgeIcon = $ciAssinado ? 'fa-check-circle' : 'fa-clock';
+
+                    $fotosPaths = [
+                        'Direita'      => $ci->foto_direita_path ?? null,
+                        'Esquerda'     => $ci->foto_esquerda_path ?? null,
+                        'Frente'       => $ci->foto_frente_path ?? null,
+                        'Trás'         => $ci->foto_tras_path ?? null,
+                        'Velocímetro'  => $ci->foto_velocimetro_path ?? null,
+                        'Combustível'  => $ci->foto_combustivel_path ?? null,
+                    ];
+                @endphp
+
+                <div class="rs-checkin-layout">
+
+                    {{-- Contrato status card --}}
+                    <div class="rs-ci-card" style="border-left:5px solid {{ $ciBorder }};background:linear-gradient(135deg,{{ $ciBgFrom }},{{ $ciBgTo }})">
+                        <div class="rs-ci-card__top">
+                            <div class="rs-ci-card__icon" style="background:{{ $ciBorder }}">
+                                <i class="fas fa-file-signature"></i>
+                            </div>
+                            <div class="rs-ci-card__info">
+                                <div class="rs-ci-card__title">Contrato de Check-in</div>
+                                <span class="rs-ci-card__badge" style="background:{{ $ciBadgeBg }};color:{{ $ciBadgeClr }}">
+                                    <i class="fas {{ $ciBadgeIcon }} mr-1"></i>{{ $ciBadgeTxt }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="rs-ci-card__details">
+                            <div class="rs-ci-detail">
+                                <span><i class="fas fa-car mr-1"></i>Veículo</span>
+                                <strong>{{ $ciVeiculo }}</strong>
+                            </div>
+                            <div class="rs-ci-detail">
+                                <span><i class="fas fa-tachometer-alt mr-1"></i>Quilometragem</span>
+                                <strong>{{ number_format((float)($ci->quilometragem_atual ?? 0), 0, ',', '.') }} km</strong>
+                            </div>
+                            <div class="rs-ci-detail">
+                                <span><i class="fas fa-gas-pump mr-1"></i>Combustível</span>
+                                <strong>{{ $ci->nivel_combustivel ?? '—' }}</strong>
+                            </div>
+                            <div class="rs-ci-detail">
+                                <span><i class="fas fa-calendar mr-1"></i>Saída</span>
+                                <strong>
+                                    {{ $ci->data_saida ? \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') : '—' }}
+                                    {{ $ci->hora_saida ? substr($ci->hora_saida, 0, 5) : '' }}
+                                </strong>
+                            </div>
+                            @if($ciAssinado && $ci->data_assinatura)
+                            <div class="rs-ci-detail">
+                                <span><i class="fas fa-pen-nib mr-1"></i>Assinado em</span>
+                                <strong>{{ \Carbon\Carbon::parse($ci->data_assinatura)->format('d/m/Y H:i') }}</strong>
+                            </div>
+                            @endif
+                            @if(!empty($ci->notas_saida))
+                            <div class="rs-ci-detail" style="width:100%">
+                                <span><i class="fas fa-sticky-note mr-1"></i>Notas de saída</span>
+                                <strong>{{ $ci->notas_saida }}</strong>
+                            </div>
+                            @endif
+                            @if(!empty($ci->observacoes_saida))
+                            <div class="rs-ci-detail" style="width:100%">
+                                <span><i class="fas fa-comment-alt mr-1"></i>Observações</span>
+                                <strong>{{ $ci->observacoes_saida }}</strong>
+                            </div>
+                            @endif
+                        </div>
+
+                        <div class="rs-ci-card__actions">
+                            <a href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" target="_blank" class="rs-ci-btn rs-ci-btn--view">
+                                <i class="fas fa-eye"></i> Ver contrato
                             </a>
-                        @endcan
-                        <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="rs-btn rs-btn--ghost">
-                            <i class="fas fa-search"></i>Ver vistoria / danos
+                            @if(!$ciAssinado)
+                                <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
+                                    <i class="fas fa-signature"></i> Assinar
+                                </a>
+                                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--edit">
+                                    <i class="fas fa-edit"></i> Editar contrato
+                                </a>
+                            @endif
+                            <button type="button" class="rs-ci-btn rs-ci-btn--delete js-excluir-contrato-checkin"
+                                    data-url="{{ route('reserva.checkin.excluirContrato', $reserva->id) }}"
+                                    data-assinado="{{ $ciAssinado ? '1' : '0' }}">
+                                <i class="fas fa-trash"></i>
+                                {{ $ciAssinado ? 'Excluir e recriar' : 'Excluir contrato' }}
+                            </button>
+                        </div>
+                    </div>
+
+                    {{-- Upgrade de Categoria --}}
+                    @if($ci->houve_upgrade_categoria)
+                    <div class="rs-card" style="border-left:4px solid #fd7e14">
+                        <div class="rs-card__header">
+                            <i class="fas fa-arrow-circle-up rs-card__icon" style="color:#fd7e14"></i>
+                            <h2>Upgrade de Categoria</h2>
+                        </div>
+                        <div class="rs-info-rows">
+                            <div class="rs-info-row">
+                                <span>Categoria Reservada</span>
+                                <strong>{{ $ci->grupoFrotaOriginal?->nome ?? 'Grupo #' . $ci->grupo_frota_original_id }}</strong>
+                            </div>
+                            <div class="rs-info-row">
+                                <span>Veiculo Entregue</span>
+                                <strong>{{ $ci->veiculo?->nome ?? '—' }}</strong>
+                            </div>
+                            <div class="rs-info-row">
+                                <span>Motivo</span>
+                                <strong>{{ $ci->motivo_upgrade ?? '—' }}</strong>
+                            </div>
+                            <div class="rs-info-row">
+                                <span>Operador</span>
+                                <strong>{{ $ci->usuarioUpgrade?->nome ?? '—' }}</strong>
+                            </div>
+                            <div class="rs-info-row">
+                                <span>Data/Hora</span>
+                                <strong>{{ $ci->data_hora_upgrade?->format('d/m/Y H:i') ?? '—' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    @endif
+
+                    {{-- Fotos do veículo no check-in --}}
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-camera rs-card__icon"></i>
+                            <h2>Fotos do Veículo no Check-in</h2>
+                        </div>
+                        <div class="rs-photo-grid">
+                            @foreach($fotosPaths as $label => $path)
+                                @php $fotoUrl = $path ? asset('storage/' . $path) : null; @endphp
+                                <div class="rs-photo-item">
+                                    @if($fotoUrl)
+                                        <img src="{{ $fotoUrl }}" alt="Foto {{ $label }}" class="rs-photo-thumb js-lightbox-trigger"
+                                             data-src="{{ $fotoUrl }}" data-label="{{ $label }}">
+                                    @else
+                                        <div class="rs-photo-placeholder">
+                                            <i class="fas fa-image"></i>
+                                            <span>Sem foto</span>
+                                        </div>
+                                    @endif
+                                    <div class="rs-photo-label">{{ $label }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    {{-- Danos existentes no check-in --}}
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-car-crash rs-card__icon" style="color:#64748b"></i>
+                            <h2>Danos Existentes (pré-reserva)</h2>
+                        </div>
+                        <div id="danos-existentes-loading" class="text-center py-3">
+                            <i class="fas fa-spinner fa-spin mr-1"></i> Carregando danos...
+                        </div>
+                        <div id="danos-existentes-container" class="d-none"></div>
+                    </div>
+
+                    {{-- Danos detectados nesta reserva --}}
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-search rs-card__icon" style="color:#ef4444"></i>
+                            <h2>Danos Detectados nesta Reserva</h2>
+                        </div>
+                        <div id="danos-detectados-loading" class="text-center py-3">
+                            <i class="fas fa-spinner fa-spin mr-1"></i> Carregando danos...
+                        </div>
+                        <div id="danos-detectados-container" class="d-none"></div>
+                    </div>
+
+                    {{-- Calção --}}
+                    @if($calcao || ($ci->assinado === 'S'))
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-shield-alt rs-card__icon" style="color:#6f42c1"></i>
+                            <h2>Calcao no Cartao</h2>
+                        </div>
+                        @if($calcao)
+                            @php
+                                $calcaoBadge = match($calcao->status) {
+                                    'autorizado' => '#28a745', 'capturado' => '#dc3545',
+                                    'parcialmente_capturado' => '#fd7e14', 'cancelado' => '#6c757d',
+                                    'falhou' => '#dc3545', default => '#17a2b8',
+                                };
+                            @endphp
+                            <div class="rs-info-rows">
+                                <div class="rs-info-row">
+                                    <span>Status</span>
+                                    <strong style="color:{{ $calcaoBadge }}">{{ $calcao->label_status }}</strong>
+                                </div>
+                                <div class="rs-info-row">
+                                    <span>Valor Autorizado</span>
+                                    <strong>R$ {{ number_format((float)$calcao->valor_autorizado, 2, ',', '.') }}</strong>
+                                </div>
+                                @if($calcao->valor_capturado)
+                                <div class="rs-info-row">
+                                    <span>Valor Capturado</span>
+                                    <strong>R$ {{ number_format((float)$calcao->valor_capturado, 2, ',', '.') }}</strong>
+                                </div>
+                                @endif
+                                <div class="rs-info-row">
+                                    <span>Regra Aplicada</span>
+                                    <strong>{{ $calcao->tipo_regra_aplicada }} / {{ $calcao->origem_regra_aplicada }}</strong>
+                                </div>
+                            </div>
+                            @if($calcao->podeLiberar())
+                            @can('calcao.cancelar')
+                            <div class="mt-2">
+                                <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="liberarCalcao({{ $calcao->id }})">
+                                    <i class="fas fa-unlock mr-1"></i> Liberar Hold (sem cobrar)
+                                </button>
+                            </div>
+                            @endcan
+                            @endif
+                            @if($calcao->podeCapturar())
+                            @can('calcao.capturar')
+                            <div class="mt-1">
+                                <button type="button" class="btn btn-sm btn-outline-danger w-100" data-toggle="modal" data-target="#modalCapturarCalcao">
+                                    <i class="fas fa-hand-holding-usd mr-1"></i> Capturar Valor
+                                </button>
+                            </div>
+                            @endcan
+                            @endif
+                        @else
+                            @can('calcao.autorizar')
+                            <div class="text-center py-2">
+                                <a href="{{ route('reserva.calcao', $reserva->id) }}" class="btn btn-sm btn-outline-primary w-100">
+                                    <i class="fas fa-lock mr-1"></i> Registrar Calcao
+                                </a>
+                            </div>
+                            @endcan
+                        @endif
+                    </div>
+                    @endif
+
+                </div>
+                @else
+                    <div class="rs-empty py-5">
+                        <i class="fas fa-file-signature" style="font-size:2.5rem;color:#cbd5e1"></i>
+                        <span>Nenhum contrato de check-in cadastrado para esta reserva.</span>
+                        <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-btn rs-btn--outline mt-2">
+                            <i class="fas fa-plus"></i> Criar check-in
                         </a>
                     </div>
+                @endif
+            </div>
 
-                    @if(($danosReserva->count() ?? 0) > 0)
-                        <div class="mt-3">
-                            <div class="text-muted small mb-2">Últimas avarias desta reserva</div>
+            {{-- ══════════ TAB 3 — CHECK-OUT ══════════ --}}
+            <div class="tab-pane fade" id="pane-checkout" role="tabpanel">
+                <div class="rs-checkin-layout">
+
+                    {{-- Link para vistoria --}}
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-search rs-card__icon"></i>
+                            <h2>Vistoria de Check-out</h2>
+                        </div>
+                        <div class="d-flex align-items-center gap-3 flex-wrap" style="gap:12px">
+                            <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="rs-btn rs-btn--outline">
+                                <i class="fas fa-search"></i> Abrir vistoria / danos
+                            </a>
+                            @can('avaria.cobrar')
+                                <a href="{{ route('reserva.avarias.cobranca', $reserva->id) }}" class="rs-btn rs-btn--outline">
+                                    <i class="fas fa-hand-holding-usd"></i> Debitar avarias
+                                </a>
+                            @endcan
+                        </div>
+                    </div>
+
+                    {{-- Avarias registradas --}}
+                    <div class="rs-card">
+                        <div class="rs-card__header rs-card__header--between">
+                            <div class="rs-card__header-left">
+                                <i class="fas fa-car-crash rs-card__icon" style="color:#f59e0b"></i>
+                                <h2>Avarias Registradas</h2>
+                            </div>
+                            @if(($danosReserva->count() ?? 0) > 0)
+                                <span class="rs-status-badge rs-status-badge--sm is-warning">
+                                    {{ $danosPendentes->count() }} pendente(s)
+                                </span>
+                            @endif
+                        </div>
+
+                        @if(($danosReserva->count() ?? 0) > 0)
+                            <div class="rs-info-rows mb-3">
+                                <div class="rs-info-row">
+                                    <span><i class="fas fa-list"></i>Total registradas</span>
+                                    <strong>{{ $danosReserva->count() }}</strong>
+                                </div>
+                                <div class="rs-info-row">
+                                    <span><i class="fas fa-receipt"></i>Cobranças</span>
+                                    <strong>{{ $totalCobrancasAvaria }}</strong>
+                                </div>
+                            </div>
+
                             <div class="rs-mini-list">
-                                @foreach($danosReserva->take(5) as $d)
+                                @foreach($danosReserva as $d)
                                     <div class="rs-mini-item">
                                         <div>
                                             <strong>{{ strtoupper($d->local_dano ?? $d->localizacao_problema ?? '-') }}</strong>
-                                            <div class="text-muted small">{{ \Illuminate\Support\Str::limit($d->observacoes ?? $d->tipo_dano ?? '', 80) }}</div>
+                                            <div class="text-muted small">{{ \Illuminate\Support\Str::limit($d->observacoes ?? $d->tipo_dano ?? '', 120) }}</div>
                                         </div>
                                         <div class="text-right">
                                             <div><strong>R$ {{ number_format((float) ($d->custo_estimado ?? 0), 2, ',', '.') }}</strong></div>
@@ -648,161 +843,305 @@
                                     </div>
                                 @endforeach
                             </div>
-                        </div>
-                    @endif
-                </div>
-            @endif
-
-            {{-- ── Card: Calção (Feature 4) ── --}}
-            @php $calcao = $reserva->calcao ?? null; @endphp
-            @if($calcao || ($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S'))
-            <div class="rs-card">
-                <div class="rs-card__header">
-                    <i class="fas fa-shield-alt rs-card__icon" style="color:#6f42c1"></i>
-                    <h2>Calcao no Cartao</h2>
-                </div>
-                @if($calcao)
-                    @php
-                        $calcaoBadge = match($calcao->status) {
-                            'autorizado' => '#28a745', 'capturado' => '#dc3545',
-                            'parcialmente_capturado' => '#fd7e14', 'cancelado' => '#6c757d',
-                            'falhou' => '#dc3545', default => '#17a2b8',
-                        };
-                    @endphp
-                    <div class="rs-info-rows">
-                        <div class="rs-info-row">
-                            <span>Status</span>
-                            <strong style="color:{{ $calcaoBadge }}">{{ $calcao->label_status }}</strong>
-                        </div>
-                        <div class="rs-info-row">
-                            <span>Valor Autorizado</span>
-                            <strong>R$ {{ number_format((float)$calcao->valor_autorizado, 2, ',', '.') }}</strong>
-                        </div>
-                        @if($calcao->valor_capturado)
-                        <div class="rs-info-row">
-                            <span>Valor Capturado</span>
-                            <strong>R$ {{ number_format((float)$calcao->valor_capturado, 2, ',', '.') }}</strong>
-                        </div>
+                        @else
+                            <div class="rs-empty">
+                                <i class="fas fa-check-circle" style="color:#10b981"></i>
+                                <span>Nenhuma avaria registrada nesta reserva.</span>
+                            </div>
                         @endif
-                        <div class="rs-info-row">
-                            <span>Regra Aplicada</span>
-                            <strong>{{ $calcao->tipo_regra_aplicada }} / {{ $calcao->origem_regra_aplicada }}</strong>
+                    </div>
+
+                    {{-- Cobranças de avarias --}}
+                    @if($totalCobrancasAvaria > 0)
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-receipt rs-card__icon" style="color:#dc2626"></i>
+                            <h2>Cobranças de Avarias</h2>
+                            <span class="rs-card__badge">{{ $totalCobrancasAvaria }}</span>
+                        </div>
+                        <div class="rs-mini-list">
+                            @foreach($reserva->avariaCobrancas as $cobranca)
+                                <div class="rs-mini-item">
+                                    <div>
+                                        <strong>{{ $cobranca->descricao ?? 'Cobrança #' . $cobranca->id }}</strong>
+                                        <div class="text-muted small">{{ $cobranca->created_at ? \Carbon\Carbon::parse($cobranca->created_at)->format('d/m/Y H:i') : '' }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <strong>R$ {{ number_format((float)($cobranca->valor ?? 0), 2, ',', '.') }}</strong>
+                                        @if(!empty($cobranca->status))
+                                            <div><span class="badge badge-secondary">{{ $cobranca->status }}</span></div>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endforeach
                         </div>
                     </div>
-                    @if($calcao->podeLiberar())
-                    @can('calcao.cancelar')
-                    <div class="mt-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary w-100" onclick="liberarCalcao({{ $calcao->id }})">
-                            <i class="fas fa-unlock mr-1"></i> Liberar Hold (sem cobrar)
-                        </button>
-                    </div>
-                    @endcan
                     @endif
-                    @if($calcao->podeCapturar())
-                    @can('calcao.capturar')
-                    <div class="mt-1">
-                        <button type="button" class="btn btn-sm btn-outline-danger w-100" data-toggle="modal" data-target="#modalCapturarCalcao">
-                            <i class="fas fa-hand-holding-usd mr-1"></i> Capturar Valor
-                        </button>
+
+                </div>
+            </div>
+
+            {{-- ══════════ TAB 4 — FINANCEIRO ══════════ --}}
+            <div class="tab-pane fade" id="pane-financeiro" role="tabpanel">
+                <div class="rs-grid">
+                    <div class="rs-main">
+
+                        {{-- Transferências completas --}}
+                        <div class="rs-card">
+                            <div class="rs-card__header">
+                                <i class="fas fa-exchange-alt rs-card__icon"></i>
+                                <h2>Todas as Transferencias</h2>
+                                <span class="rs-card__badge">{{ $transacoesReserva->count() }}</span>
+                            </div>
+
+                            <div class="rs-finance-kpis">
+                                <div class="rs-fkpi rs-fkpi--green">
+                                    <i class="fas fa-arrow-down"></i>
+                                    <div>
+                                        <strong>R$ {{ number_format($totalPagamentos, 2, ',', '.') }}</strong>
+                                        <span>{{ $transacoesPagamento->count() }} pagamento(s)</span>
+                                    </div>
+                                </div>
+                                <div class="rs-fkpi rs-fkpi--red">
+                                    <i class="fas fa-arrow-up"></i>
+                                    <div>
+                                        <strong>R$ {{ number_format($totalEstornos, 2, ',', '.') }}</strong>
+                                        <span>{{ $transacoesEstorno->count() }} estorno(s)</span>
+                                    </div>
+                                </div>
+                                @if($transacoesPendentes->count() > 0)
+                                    <div class="rs-fkpi rs-fkpi--amber">
+                                        <i class="fas fa-clock"></i>
+                                        <div>
+                                            <strong>{{ $transacoesPendentes->count() }}</strong>
+                                            <span>Pendente(s)</span>
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            @if($transacoesReserva->isNotEmpty())
+                                <div class="rs-transactions">
+                                    @foreach($transacoesReserva as $transacao)
+                                        @php
+                                            $valorTx  = (float) ($transacao->valor ?? 0);
+                                            $statusTx = strtolower((string) ($transacao->status ?? ''));
+                                            $isEstorno = $valorTx < 0 || in_array($statusTx, $statusPagamentoEstornado, true);
+                                        @endphp
+                                        <div class="rs-tx">
+                                            <div class="rs-tx__icon {{ $isEstorno ? 'rs-tx__icon--red' : 'rs-tx__icon--green' }}">
+                                                <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                                            </div>
+                                            <div class="rs-tx__info">
+                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
+                                                <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
+                                            </div>
+                                            <div class="rs-tx__amount {{ $isEstorno ? 'rs-tx__amount--red' : 'rs-tx__amount--green' }}">
+                                                <strong>R$ {{ number_format($valorTx, 2, ',', '.') }}</strong>
+                                                <span>{{ $transacao->status ?? '-' }}</span>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="rs-empty">
+                                    <i class="fas fa-inbox"></i>
+                                    <span>Nenhuma transferencia vinculada.</span>
+                                </div>
+                            @endif
+                        </div>
+
                     </div>
-                    @endcan
+
+                    <aside class="rs-sidebar">
+
+                        {{-- Resumo financeiro detalhado --}}
+                        <div class="rs-card">
+                            <div class="rs-card__header">
+                                <i class="fas fa-file-invoice-dollar rs-card__icon"></i>
+                                <h2>Resumo Detalhado</h2>
+                            </div>
+                            <div class="rs-summary">
+                                <div class="rs-summary__row">
+                                    <span>Tarifa diaria</span>
+                                    <span>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="rs-summary__row">
+                                    <span>{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }} &times; tarifa</span>
+                                    <span>R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</span>
+                                </div>
+                                @if($valorOpcionais > 0)
+                                    <div class="rs-summary__row">
+                                        <span>Opcionais</span>
+                                        <span>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                                @if($percentualDesconto > 0)
+                                    <div class="rs-summary__divider"></div>
+                                    <div class="rs-summary__row rs-summary__row--discount">
+                                        <span><i class="fas fa-tag"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)</span>
+                                        <span>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                                <div class="rs-summary__total">
+                                    <span>Total</span>
+                                    <strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- NFS-e card completo --}}
+                        <div class="rs-card">
+                            <div class="rs-card__header rs-card__header--between">
+                                <div class="rs-card__header-left">
+                                    <i class="fas fa-file-alt rs-card__icon"></i>
+                                    <h2>Nota Fiscal (NFS-e)</h2>
+                                </div>
+                                <span class="rs-status-badge rs-status-badge--sm {{ $nfseBadgeClass }}">{{ $nfseStatusLabel }}</span>
+                            </div>
+
+                            @if($nfseAtual)
+                                <div class="rs-info-rows">
+                                    <div class="rs-info-row">
+                                        <span><i class="fas fa-hashtag"></i>Numero</span>
+                                        <strong>{{ $nfseAtual->numero ?? '-' }}</strong>
+                                    </div>
+                                    <div class="rs-info-row">
+                                        <span><i class="fas fa-server"></i>Ambiente</span>
+                                        <strong>{{ $nfseAtual->ambiente ?? '-' }}</strong>
+                                    </div>
+                                </div>
+
+                                @if($nfseErroDetalhado || $nfseMotivo)
+                                    <div class="rs-nfse-error">
+                                        <i class="fas fa-exclamation-circle"></i>
+                                        <p>{{ $nfseErroDetalhado ?? $nfseMotivo }}</p>
+                                    </div>
+                                @endif
+
+                                @if(!empty($nfseAtual->nfse_id) && (auth()->user()?->hasPermissao('nfse.download') || auth()->user()?->isAdministrador()))
+                                    <div class="rs-nfse-downloads">
+                                        <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'xml']) }}" class="rs-btn rs-btn--outline">
+                                            <i class="fas fa-download"></i>Baixar XML
+                                        </a>
+                                        <a href="{{ route('nfse.download', ['id' => $nfseAtual->id, 'tipo' => 'dps']) }}" class="rs-btn rs-btn--outline">
+                                            <i class="fas fa-file-alt"></i>Baixar DPS
+                                        </a>
+                                    </div>
+                                @endif
+
+                                @if(($nfseAtual->status ?? '') !== 'emitida')
+                                    <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form mt-3">
+                                        @csrf
+                                        <button type="submit" class="rs-btn rs-btn--ghost rs-btn--full js-nfse-btn">
+                                            <i class="fas fa-redo"></i>Tentar emitir novamente
+                                        </button>
+                                    </form>
+                                @endif
+                            @else
+                                <div class="rs-empty">
+                                    <i class="fas fa-file-times"></i>
+                                    <span>Nenhuma nota vinculada ainda.</span>
+                                </div>
+                                <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form mt-3">
+                                    @csrf
+                                    <button type="submit" class="rs-btn rs-btn--ghost rs-btn--full js-nfse-btn">
+                                        <i class="fas fa-redo"></i>Emitir nota fiscal
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+
+                    </aside>
+                </div>
+            </div>
+
+            {{-- ══════════ TAB 5 — MULTAS ══════════ --}}
+            <div class="tab-pane fade" id="pane-multas" role="tabpanel">
+                <div class="rs-card">
+                    <div class="rs-card__header rs-card__header--between">
+                        <div class="rs-card__header-left">
+                            <i class="fas fa-exclamation-triangle rs-card__icon text-danger"></i>
+                            <h2>Multas da Reserva</h2>
+                        </div>
+                        <div style="display:flex;gap:8px;align-items:center">
+                            @can('multa.create')
+                            <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline">
+                                <i class="fas fa-plus"></i> Nova multa
+                            </a>
+                            @endcan
+                            @if($totalMultas > 0)
+                            <a href="{{ route('multa.index', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline">
+                                <i class="fas fa-list"></i> Ver todas
+                            </a>
+                            @endif
+                        </div>
+                    </div>
+
+                    @if($totalMultas > 0)
+                        <div class="rs-mini-list">
+                            @foreach($reserva->multas as $multaItem)
+                            <div class="rs-mini-item">
+                                <div>
+                                    <strong>
+                                        <a href="{{ route('multa.show', $multaItem->id) }}">#{{ $multaItem->id }}</a>
+                                        — {{ $multaItem->orgao_autuador ?? 'Orgão não informado' }}
+                                    </strong>
+                                    @if(!empty($multaItem->infracao))
+                                        <div class="text-muted small">{{ \Illuminate\Support\Str::limit($multaItem->infracao, 100) }}</div>
+                                    @endif
+                                    @if(!empty($multaItem->data_infracao))
+                                        <div class="text-muted small">
+                                            <i class="fas fa-calendar mr-1"></i>
+                                            {{ \Carbon\Carbon::parse($multaItem->data_infracao)->format('d/m/Y') }}
+                                        </div>
+                                    @endif
+                                </div>
+                                <div class="text-right" style="flex-shrink:0">
+                                    <strong class="text-danger">R$ {{ number_format((float)$multaItem->valor_final, 2, ',', '.') }}</strong>
+                                    @if(!empty($multaItem->status))
+                                        <div><span class="badge badge-secondary">{{ $multaItem->status }}</span></div>
+                                    @endif
+                                    <div class="mt-1">
+                                        <a href="{{ route('multa.show', $multaItem->id) }}" class="btn btn-xs btn-outline-primary">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="rs-empty py-5">
+                            <i class="fas fa-check-circle" style="font-size:2.5rem;color:#10b981"></i>
+                            <span>Nenhuma multa registrada nesta reserva.</span>
+                            @can('multa.create')
+                            <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline mt-2">
+                                <i class="fas fa-plus"></i> Registrar primeira multa
+                            </a>
+                            @endcan
+                        </div>
                     @endif
-                @else
-                    @can('calcao.autorizar')
-                    <div class="text-center py-2">
-                        <a href="{{ route('reserva.calcao', $reserva->id) }}" class="btn btn-sm btn-outline-primary w-100">
-                            <i class="fas fa-lock mr-1"></i> Registrar Calcao
-                        </a>
-                    </div>
-                    @endcan
-                @endif
-            </div>
-            @endif
-
-            {{-- ── Card: Upgrade de Categoria (Feature 1) ── --}}
-            @if($reserva->contratoCheckin && $reserva->contratoCheckin->houve_upgrade_categoria)
-            <div class="rs-card" style="border-left:4px solid #fd7e14">
-                <div class="rs-card__header">
-                    <i class="fas fa-arrow-circle-up rs-card__icon" style="color:#fd7e14"></i>
-                    <h2>Upgrade de Categoria</h2>
-                </div>
-                <div class="rs-info-rows">
-                    <div class="rs-info-row">
-                        <span>Categoria Reservada</span>
-                        <strong>{{ $reserva->contratoCheckin->grupoFrotaOriginal?->nome ?? 'Grupo #' . $reserva->contratoCheckin->grupo_frota_original_id }}</strong>
-                    </div>
-                    <div class="rs-info-row">
-                        <span>Veiculo Entregue</span>
-                        <strong>{{ $reserva->contratoCheckin->veiculo?->nome ?? '—' }}</strong>
-                    </div>
-                    <div class="rs-info-row">
-                        <span>Motivo</span>
-                        <strong>{{ $reserva->contratoCheckin->motivo_upgrade ?? '—' }}</strong>
-                    </div>
-                    <div class="rs-info-row">
-                        <span>Operador</span>
-                        <strong>{{ $reserva->contratoCheckin->usuarioUpgrade?->nome ?? '—' }}</strong>
-                    </div>
-                    <div class="rs-info-row">
-                        <span>Data/Hora</span>
-                        <strong>{{ $reserva->contratoCheckin->data_hora_upgrade?->format('d/m/Y H:i') ?? '—' }}</strong>
-                    </div>
                 </div>
             </div>
-            @endif
 
-            {{-- ── Card: Multas da reserva ── --}}
-            @php $totalMultas = $reserva->multas?->count() ?? 0; @endphp
-            @if($totalMultas > 0)
-            <div class="rs-card">
-                <div class="rs-card__header">
-                    <i class="fas fa-exclamation-triangle rs-card__icon text-danger"></i>
-                    <h2>Multas ({{ $totalMultas }})</h2>
-                </div>
-                <div class="rs-info-rows">
-                    @foreach($reserva->multas->take(3) as $multaItem)
-                    <div class="rs-info-row">
-                        <span>
-                            <a href="{{ route('multa.show', $multaItem->id) }}">#{{ $multaItem->id }}</a>
-                            — {{ $multaItem->orgao_autuador ?? 'S/O' }}
-                        </span>
-                        <strong>R$ {{ number_format((float)$multaItem->valor_final, 2, ',', '.') }}</strong>
+            {{-- ══════════ TAB 6 — HISTÓRICO ══════════ --}}
+            <div class="tab-pane fade" id="pane-historico" role="tabpanel">
+                <div class="rs-card rs-historico-card">
+                    <div class="rs-card__header">
+                        <i class="fas fa-history rs-card__icon"></i>
+                        <h2>Histórico da Reserva</h2>
+                        <span class="ml-auto badge badge-secondary" id="historicoCountPane">—</span>
                     </div>
-                    @endforeach
-                </div>
-                <div class="text-center mt-1">
-                    <a href="{{ route('multa.index', ['reserva_id' => $reserva->id]) }}" class="btn btn-xs btn-outline-danger">
-                        Ver todas
-                    </a>
-                    @can('multa.create')
-                    <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="btn btn-xs btn-outline-secondary">
-                        + Nova multa
-                    </a>
-                    @endcan
+                    <div id="historicoLoading" class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin mr-1"></i> Carregando histórico...
+                    </div>
+                    <div id="historicoTimeline" class="rs-timeline d-none"></div>
                 </div>
             </div>
-            @endif
 
-        </aside>
-    </div>
-
-    {{-- ══════════════════════════════════════════
-         HISTÓRICO / LOG DA RESERVA
-    ══════════════════════════════════════════ --}}
-    <div class="rs-card rs-historico-card mt-4" id="secaoHistorico">
-        <div class="rs-card__header" style="cursor:pointer" id="toggleHistorico">
-            <i class="fas fa-history rs-card__icon"></i>
-            <h2>Histórico da Reserva</h2>
-            <span class="ml-auto badge badge-secondary" id="historicoCount">—</span>
-            <i class="fas fa-chevron-down ml-2 text-muted" id="toggleHistoricoIcon"></i>
-        </div>
-        <div id="historicoBody" class="d-none">
-            <div id="historicoLoading" class="text-center py-4">
-                <i class="fas fa-spinner fa-spin mr-1"></i> Carregando histórico...
-            </div>
-            <div id="historicoTimeline" class="rs-timeline d-none"></div>
-        </div>
-    </div>
+        </div>{{-- /tab-content --}}
+    </div>{{-- /rs-tabs-wrapper --}}
 
     {{-- ── Modal Captura de Calção ── --}}
     @if(isset($calcao) && $calcao?->podeCapturar())
@@ -837,7 +1176,17 @@
     </div>
     @endif
 
-
+    {{-- Lightbox overlay --}}
+    <div id="rs-lightbox" class="rs-lightbox d-none" role="dialog" aria-modal="true">
+        <div class="rs-lightbox__backdrop" id="rs-lightbox-backdrop"></div>
+        <div class="rs-lightbox__inner">
+            <div class="rs-lightbox__label" id="rs-lightbox-label"></div>
+            <img src="" alt="" id="rs-lightbox-img" class="rs-lightbox__img">
+            <button class="rs-lightbox__close" id="rs-lightbox-close" aria-label="Fechar">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    </div>
 
 </div>
 @stop
@@ -890,11 +1239,6 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         }
     });
 });
-
-
-
-
-
 </script>
 @endpush
 
@@ -1133,7 +1477,89 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     }
 
     /* ═══════════════════════════
-       GRID
+       TABS
+    ═══════════════════════════ */
+    .rs-tabs-wrapper {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+    }
+
+    .rs-nav-tabs {
+        background: #f8fafc;
+        border-bottom: 2px solid #e2e8f0;
+        padding: 0 16px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .rs-nav-tabs::-webkit-scrollbar { display: none; }
+
+    .rs-nav-tabs .nav-item {
+        flex-shrink: 0;
+    }
+
+    .rs-nav-tabs .nav-link {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 14px 18px;
+        font-size: 0.83rem;
+        font-weight: 600;
+        color: #64748b;
+        border: none;
+        border-bottom: 3px solid transparent;
+        border-radius: 0;
+        white-space: nowrap;
+        transition: color 0.15s, border-color 0.15s;
+        margin-bottom: -2px;
+    }
+
+    .rs-nav-tabs .nav-link:hover {
+        color: #2563eb;
+        border-bottom-color: #bfdbfe;
+        background: transparent;
+    }
+
+    .rs-nav-tabs .nav-link.active {
+        color: #2563eb;
+        border-bottom-color: #2563eb;
+        background: transparent;
+        font-weight: 700;
+    }
+
+    .rs-nav-tabs .nav-link i {
+        font-size: 0.85rem;
+    }
+
+    .rs-tab-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 6px;
+        border-radius: 999px;
+        font-size: 0.65rem;
+        font-weight: 800;
+        line-height: 1;
+    }
+
+    .rs-tab-badge--green  { background: #dcfce7; color: #15803d; }
+    .rs-tab-badge--amber  { background: #fef3c7; color: #b45309; }
+    .rs-tab-badge--red    { background: #fee2e2; color: #dc2626; }
+    .rs-tab-badge--slate  { background: #f1f5f9; color: #475569; }
+
+    .rs-tab-content {
+        padding: 24px;
+    }
+
+    /* ═══════════════════════════
+       GRID (inside tabs)
     ═══════════════════════════ */
     .rs-grid {
         display: grid;
@@ -1146,6 +1572,12 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     .rs-sidebar {
         display: grid;
         gap: 16px;
+    }
+
+    /* Checkin/checkout single column layout */
+    .rs-checkin-layout {
+        display: grid;
+        gap: 20px;
     }
 
     /* ═══════════════════════════
@@ -1926,6 +2358,288 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         font-size: 0.8rem;
     }
 
+    /* ── Card Contrato de Check-in ── */
+    .rs-ci-card {
+        border-radius: 18px;
+        border: 1px solid rgba(0,0,0,.07);
+        padding: 20px 24px;
+        box-shadow: 0 4px 18px rgba(15,23,42,.07);
+    }
+    .rs-ci-card__top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+    .rs-ci-card__icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+    }
+    .rs-ci-card__title {
+        font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;
+    }
+    .rs-ci-card__badge {
+        display: inline-flex; align-items: center;
+        padding: 4px 12px; border-radius: 999px;
+        font-size: .76rem; font-weight: 700;
+    }
+    .rs-ci-card__details {
+        display: flex; flex-wrap: wrap; gap: 6px 0;
+        margin-bottom: 16px;
+        border-top: 1px solid rgba(0,0,0,.07);
+        padding-top: 14px;
+    }
+    .rs-ci-detail {
+        width: 50%; display: flex; flex-direction: column;
+        padding: 4px 12px 4px 0;
+    }
+    .rs-ci-detail span { font-size: .75rem; color: #64748b; margin-bottom: 2px; }
+    .rs-ci-detail strong { font-size: .88rem; color: #0f172a; }
+    .rs-ci-card__actions {
+        display: flex; flex-wrap: wrap; gap: 8px;
+        border-top: 1px solid rgba(0,0,0,.07);
+        padding-top: 14px;
+    }
+    .rs-ci-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        border: none; border-radius: 10px;
+        padding: 9px 16px; font-size: .83rem; font-weight: 700;
+        cursor: pointer; text-decoration: none;
+        transition: opacity .15s, transform .15s;
+    }
+    .rs-ci-btn:hover { opacity:.82; transform:translateY(-1px); text-decoration:none; }
+    .rs-ci-btn--view   { background:rgba(59,130,246,.13);  color:#1d4ed8; }
+    .rs-ci-btn--sign   { background:rgba(16,185,129,.13);  color:#047857; }
+    .rs-ci-btn--edit   { background:rgba(245,158,11,.14);  color:#92400e; }
+    .rs-ci-btn--delete { background:rgba(239,68,68,.11);   color:#b91c1c; }
+
+    /* ── Fotos check-in ── */
+    .rs-photo-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+    }
+
+    .rs-photo-item {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .rs-photo-thumb {
+        width: 100%;
+        aspect-ratio: 4/3;
+        object-fit: cover;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: transform 0.18s, box-shadow 0.18s;
+    }
+
+    .rs-photo-thumb:hover {
+        transform: scale(1.03);
+        box-shadow: 0 6px 20px rgba(15,23,42,0.15);
+    }
+
+    .rs-photo-placeholder {
+        width: 100%;
+        aspect-ratio: 4/3;
+        border-radius: 12px;
+        border: 2px dashed #e2e8f0;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        color: #cbd5e1;
+        font-size: 0.75rem;
+    }
+
+    .rs-photo-placeholder i {
+        font-size: 1.4rem;
+    }
+
+    .rs-photo-label {
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: #64748b;
+        text-align: center;
+    }
+
+    /* ── Lightbox ── */
+    .rs-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .rs-lightbox__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.88);
+        cursor: pointer;
+    }
+
+    .rs-lightbox__inner {
+        position: relative;
+        z-index: 1;
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .rs-lightbox__img {
+        max-width: 90vw;
+        max-height: 80vh;
+        border-radius: 16px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        object-fit: contain;
+    }
+
+    .rs-lightbox__label {
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+    }
+
+    .rs-lightbox__close {
+        position: absolute;
+        top: -44px;
+        right: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+    }
+
+    .rs-lightbox__close:hover {
+        background: rgba(255,255,255,0.3);
+    }
+
+    /* ── Danos AJAX containers ── */
+    .rs-dano-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 10px 12px;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        margin-bottom: 8px;
+        background: #fbfdff;
+    }
+
+    .rs-dano-item:last-child { margin-bottom: 0; }
+
+    /* ── Histórico ── */
+    .rs-historico-card .rs-card__header { display:flex; align-items:center; gap:10px; user-select:none; }
+    .rs-timeline { padding: 1rem 1.5rem; }
+    .rs-tl-item {
+        display: flex;
+        gap: 14px;
+        padding-bottom: 1.4rem;
+        position: relative;
+    }
+    .rs-tl-item:not(:last-child)::before {
+        content:'';
+        position:absolute;
+        left: 17px;
+        top: 36px;
+        bottom: 0;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .rs-tl-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        flex-shrink: 0;
+        color: #fff;
+    }
+    .rs-tl-icon--info    { background: #3b82f6; }
+    .rs-tl-icon--success { background: #10b981; }
+    .rs-tl-icon--warning { background: #f59e0b; }
+    .rs-tl-icon--danger  { background: #ef4444; }
+    .rs-tl-body { flex:1; min-width:0; }
+    .rs-tl-acao {
+        font-size: .88rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+    .rs-tl-meta {
+        font-size: .76rem;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    .rs-tl-detalhes {
+        font-size: .78rem;
+        color: #475569;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-top: 4px;
+    }
+    .rs-tl-detalhes table { width:100%; border-collapse:collapse; }
+    .rs-tl-detalhes td { padding: 2px 6px 2px 0; vertical-align:top; }
+    .rs-tl-detalhes td:first-child { color:#94a3b8; white-space:nowrap; font-weight:600; width:40%; }
+
+    /* ── Contrato legado ── */
+    .rs-contrato-badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .rs-contrato-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .rs-contrato-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: .82rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity .15s, transform .15s;
+    }
+    .rs-contrato-btn:hover { opacity:.85; transform:translateY(-1px); text-decoration:none; }
+    .rs-contrato-btn--view  { background:rgba(59,130,246,.12);  color:#1d4ed8; }
+    .rs-contrato-btn--sign  { background:rgba(16,185,129,.12);  color:#047857; }
+    .rs-contrato-btn--edit  { background:rgba(245,158,11,.13);  color:#b45309; }
+    .rs-contrato-btn--delete{ background:rgba(239,68,68,.10);   color:#b91c1c; }
+
     /* ═══════════════════════════
        RESPONSIVE
     ═══════════════════════════ */
@@ -1940,6 +2654,12 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 
         .rs-hero__right {
             align-items: flex-start;
+        }
+    }
+
+    @media (max-width: 992px) {
+        .rs-photo-grid {
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 
@@ -2009,161 +2729,25 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         .rs-btn--full {
             width: 100%;
         }
-    }
 
-    /* ── Card Contrato de Check-in (full-width) ── */
-    .rs-ci-card {
-        border-radius: 18px;
-        border: 1px solid rgba(0,0,0,.07);
-        padding: 20px 24px;
-        margin-bottom: 16px;
-        box-shadow: 0 4px 18px rgba(15,23,42,.07);
-    }
-    .rs-ci-card__top {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        margin-bottom: 16px;
-    }
-    .rs-ci-card__icon {
-        width: 44px; height: 44px;
-        border-radius: 12px;
-        color: #fff;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; flex-shrink: 0;
-    }
-    .rs-ci-card__title {
-        font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;
-    }
-    .rs-ci-card__badge {
-        display: inline-flex; align-items: center;
-        padding: 4px 12px; border-radius: 999px;
-        font-size: .76rem; font-weight: 700;
-    }
-    .rs-ci-card__details {
-        display: flex; flex-wrap: wrap; gap: 6px 0;
-        margin-bottom: 16px;
-        border-top: 1px solid rgba(0,0,0,.07);
-        padding-top: 14px;
-    }
-    .rs-ci-detail {
-        width: 50%; display: flex; flex-direction: column;
-        padding: 4px 12px 4px 0;
-    }
-    .rs-ci-detail span { font-size: .75rem; color: #64748b; margin-bottom: 2px; }
-    .rs-ci-detail strong { font-size: .88rem; color: #0f172a; }
-    .rs-ci-card__actions {
-        display: flex; flex-wrap: wrap; gap: 8px;
-        border-top: 1px solid rgba(0,0,0,.07);
-        padding-top: 14px;
-    }
-    .rs-ci-btn {
-        display: inline-flex; align-items: center; gap: 7px;
-        border: none; border-radius: 10px;
-        padding: 9px 16px; font-size: .83rem; font-weight: 700;
-        cursor: pointer; text-decoration: none;
-        transition: opacity .15s, transform .15s;
-    }
-    .rs-ci-btn:hover { opacity:.82; transform:translateY(-1px); text-decoration:none; }
-    .rs-ci-btn--view   { background:rgba(59,130,246,.13);  color:#1d4ed8; }
-    .rs-ci-btn--sign   { background:rgba(16,185,129,.13);  color:#047857; }
-    .rs-ci-btn--edit   { background:rgba(245,158,11,.14);  color:#92400e; }
-    .rs-ci-btn--delete { background:rgba(239,68,68,.11);   color:#b91c1c; }
-    @media(max-width:600px){
+        .rs-tab-content {
+            padding: 16px;
+        }
+
+        .rs-photo-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+
         .rs-ci-detail { width: 100%; }
         .rs-ci-card__actions { flex-direction:column; }
         .rs-ci-btn { justify-content:center; }
     }
 
-    /* ── Contrato de Check-in (sidebar - legado) ── */
-    .rs-contrato-badge {
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: .76rem;
-        font-weight: 700;
-        white-space: nowrap;
+    @media (max-width: 480px) {
+        .rs-photo-grid {
+            grid-template-columns: 1fr;
+        }
     }
-    .rs-contrato-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    .rs-contrato-btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        border: none;
-        border-radius: 10px;
-        padding: 8px 14px;
-        font-size: .82rem;
-        font-weight: 700;
-        cursor: pointer;
-        text-decoration: none;
-        transition: opacity .15s, transform .15s;
-    }
-    .rs-contrato-btn:hover { opacity:.85; transform:translateY(-1px); text-decoration:none; }
-    .rs-contrato-btn--view  { background:rgba(59,130,246,.12);  color:#1d4ed8; }
-    .rs-contrato-btn--sign  { background:rgba(16,185,129,.12);  color:#047857; }
-    .rs-contrato-btn--edit  { background:rgba(245,158,11,.13);  color:#b45309; }
-    .rs-contrato-btn--delete{ background:rgba(239,68,68,.10);   color:#b91c1c; }
-
-    /* ── Histórico ── */
-    .rs-historico-card .rs-card__header { display:flex; align-items:center; gap:10px; user-select:none; }
-    .rs-timeline { padding: 1rem 1.5rem; }
-    .rs-tl-item {
-        display: flex;
-        gap: 14px;
-        padding-bottom: 1.4rem;
-        position: relative;
-    }
-    .rs-tl-item:not(:last-child)::before {
-        content:'';
-        position:absolute;
-        left: 17px;
-        top: 36px;
-        bottom: 0;
-        width: 2px;
-        background: #e2e8f0;
-    }
-    .rs-tl-icon {
-        width: 36px;
-        height: 36px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: .85rem;
-        flex-shrink: 0;
-        color: #fff;
-    }
-    .rs-tl-icon--info    { background: #3b82f6; }
-    .rs-tl-icon--success { background: #10b981; }
-    .rs-tl-icon--warning { background: #f59e0b; }
-    .rs-tl-icon--danger  { background: #ef4444; }
-    .rs-tl-body { flex:1; min-width:0; }
-    .rs-tl-acao {
-        font-size: .88rem;
-        font-weight: 700;
-        color: #1e293b;
-        margin-bottom: 2px;
-    }
-    .rs-tl-meta {
-        font-size: .76rem;
-        color: #64748b;
-        margin-bottom: 4px;
-    }
-    .rs-tl-detalhes {
-        font-size: .78rem;
-        color: #475569;
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 8px;
-        padding: 6px 10px;
-        margin-top: 4px;
-    }
-    .rs-tl-detalhes table { width:100%; border-collapse:collapse; }
-    .rs-tl-detalhes td { padding: 2px 6px 2px 0; vertical-align:top; }
-    .rs-tl-detalhes td:first-child { color:#94a3b8; white-space:nowrap; font-weight:600; width:40%; }
 </style>
 @stop
 
@@ -2227,9 +2811,24 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 
     <script>
     (function () {
-        const RESERVA_ID   = @json($reserva->id);
-        const CSRF_TOKEN   = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const RESERVA_ID    = @json($reserva->id);
+        const CSRF_TOKEN    = document.querySelector('meta[name="csrf-token"]')?.content || '';
         const HISTORICO_URL = "{{ route('reserva.historico', $reserva->id) }}";
+        @if($reserva->contratoCheckin)
+        const VEICULO_ID    = @json($reserva->contratoCheckin->veiculo_id);
+        const DANOS_EXIST_URL    = "{{ route('dano.obterDanosExistentes') }}";
+        const DANOS_DETECT_URL   = "{{ route('dano.obterDanosDetectados') }}";
+        @endif
+
+        /* ── Tab link helper (cross-tab navigation) ── */
+        document.querySelectorAll('.rs-tab-link').forEach(function (el) {
+            el.addEventListener('click', function (e) {
+                e.preventDefault();
+                const tabId = this.dataset.tab;
+                const tabEl = document.getElementById(tabId);
+                if (tabEl) $(tabEl).tab('show');
+            });
+        });
 
         /* ── Ícones por nível ── */
         const nivelIcone = {
@@ -2243,7 +2842,9 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         function renderHistorico(logs) {
             const container = document.getElementById('historicoTimeline');
             const countEl   = document.getElementById('historicoCount');
+            const countPaneEl = document.getElementById('historicoCountPane');
             if (countEl) countEl.textContent = logs.length;
+            if (countPaneEl) countPaneEl.textContent = logs.length;
 
             if (!logs.length) {
                 container.innerHTML = '<p class="text-muted text-center py-3"><i class="fas fa-inbox mr-1"></i>Nenhum registro encontrado.</p>';
@@ -2295,23 +2896,75 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                     renderHistorico(data.logs || []);
                 })
                 .catch(() => {
-                    document.getElementById('historicoLoading').textContent = 'Erro ao carregar histórico.';
+                    const el = document.getElementById('historicoLoading');
+                    if (el) el.textContent = 'Erro ao carregar histórico.';
                 });
         }
 
-        /* ── Toggle histórico ── */
-        const toggleBtn  = document.getElementById('toggleHistorico');
-        const historicoBody = document.getElementById('historicoBody');
-        const toggleIcon = document.getElementById('toggleHistoricoIcon');
-        if (toggleBtn) {
-            toggleBtn.addEventListener('click', function () {
-                const aberto = !historicoBody.classList.contains('d-none');
-                historicoBody.classList.toggle('d-none', aberto);
-                toggleIcon.classList.toggle('fa-chevron-down', aberto);
-                toggleIcon.classList.toggle('fa-chevron-up', !aberto);
-                if (!aberto) carregarHistorico();
+        /* ── Auto-load histórico when tab opened ── */
+        document.getElementById('tab-historico')?.addEventListener('shown.bs.tab', carregarHistorico);
+        // jQuery fallback for AdminLTE Bootstrap 4
+        $('#tab-historico').on('shown.bs.tab', carregarHistorico);
+
+        @if($reserva->contratoCheckin)
+        /* ── Carregar danos (check-in tab) ── */
+        let danosCarregados = false;
+
+        function renderDanos(data, containerId, loadingId) {
+            const loading   = document.getElementById(loadingId);
+            const container = document.getElementById(containerId);
+            if (loading) loading.classList.add('d-none');
+            if (!container) return;
+
+            const items = data.danos || data || [];
+            if (!items.length) {
+                container.innerHTML = '<div class="rs-empty"><i class="fas fa-check-circle" style="color:#10b981"></i><span>Nenhum dano registrado.</span></div>';
+            } else {
+                container.innerHTML = items.map(function (d) {
+                    return `<div class="rs-dano-item">
+                        <div>
+                            <strong>${d.local_dano || d.localizacao_problema || '—'}</strong>
+                            <div class="text-muted small">${d.observacoes || d.tipo_dano || ''}</div>
+                        </div>
+                        <div class="text-right" style="flex-shrink:0">
+                            <strong>R$ ${parseFloat(d.custo_estimado || 0).toFixed(2).replace('.', ',')}</strong>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+            container.classList.remove('d-none');
+        }
+
+        function carregarDanos() {
+            if (danosCarregados) return;
+            danosCarregados = true;
+
+            // Danos existentes
+            fetch(DANOS_EXIST_URL + '?veiculo_id=' + VEICULO_ID + '&reserva_id=' + RESERVA_ID, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF_TOKEN }
+            })
+            .then(r => r.json())
+            .then(data => renderDanos(data, 'danos-existentes-container', 'danos-existentes-loading'))
+            .catch(() => {
+                const el = document.getElementById('danos-existentes-loading');
+                if (el) el.textContent = 'Erro ao carregar danos existentes.';
+            });
+
+            // Danos detectados
+            fetch(DANOS_DETECT_URL + '?reserva_id=' + RESERVA_ID, {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF_TOKEN }
+            })
+            .then(r => r.json())
+            .then(data => renderDanos(data, 'danos-detectados-container', 'danos-detectados-loading'))
+            .catch(() => {
+                const el = document.getElementById('danos-detectados-loading');
+                if (el) el.textContent = 'Erro ao carregar danos detectados.';
             });
         }
+
+        document.getElementById('tab-checkin')?.addEventListener('shown.bs.tab', carregarDanos);
+        $('#tab-checkin').on('shown.bs.tab', carregarDanos);
+        @endif
 
         /* ── Excluir contrato check-in ── */
         document.querySelectorAll('.js-excluir-contrato-checkin').forEach(function (btn) {
@@ -2346,6 +2999,41 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 });
             });
         });
+
+        /* ── Lightbox ── */
+        const lightbox     = document.getElementById('rs-lightbox');
+        const lightboxImg  = document.getElementById('rs-lightbox-img');
+        const lightboxLbl  = document.getElementById('rs-lightbox-label');
+        const lightboxClose = document.getElementById('rs-lightbox-close');
+        const lightboxBack  = document.getElementById('rs-lightbox-backdrop');
+
+        function openLightbox(src, label) {
+            if (!lightbox) return;
+            lightboxImg.src = src;
+            lightboxLbl.textContent = label || '';
+            lightbox.classList.remove('d-none');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            if (!lightbox) return;
+            lightbox.classList.add('d-none');
+            lightboxImg.src = '';
+            document.body.style.overflow = '';
+        }
+
+        document.querySelectorAll('.js-lightbox-trigger').forEach(function (el) {
+            el.addEventListener('click', function () {
+                openLightbox(this.dataset.src, this.dataset.label);
+            });
+        });
+
+        lightboxClose?.addEventListener('click', closeLightbox);
+        lightboxBack?.addEventListener('click', closeLightbox);
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') closeLightbox();
+        });
+
     })();
     </script>
 @stop
