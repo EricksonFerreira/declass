@@ -499,7 +499,30 @@ class SiteReservaController extends Controller
             if (!empty(auth()->user()?->stripe_id)) {
                 $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
                 if ($stripeSecret !== '') {
-                    $metodosPagamento = $this->clienteStripeService->getPaymentMethods(auth()->user()->stripe_id, $stripeSecret);
+                    try {
+                        $metodosPagamento = $this->clienteStripeService->getPaymentMethods(auth()->user()->stripe_id, $stripeSecret);
+                    } catch (\Stripe\Exception\InvalidRequestException $e) {
+                        \Log::warning('Stripe customer invalid or not found for auth user on site payment - attempting reconcile', [
+                            'user_id' => auth()->id(),
+                            'stripe_id' => auth()->user()?->stripe_id ?? null,
+                            'exception' => $e->getMessage(),
+                        ]);
+
+                        try {
+                            $novoStripeId = $this->clienteStripeService->garantirClienteValido(auth()->user()?->stripe_id ?? null, auth()->user()?->email ?? '', auth()->user()?->nome ?? 'Cliente', $stripeSecret);
+                            if (!empty($novoStripeId) && $novoStripeId !== (auth()->user()?->stripe_id ?? '')) {
+                                $this->usuarioService->updateUser(auth()->id(), ['stripe_id' => $novoStripeId]);
+                            }
+
+                            $metodosPagamento = $this->clienteStripeService->getPaymentMethods($novoStripeId ?? auth()->user()?->stripe_id, $stripeSecret);
+                        } catch (\Exception $e2) {
+                            \Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (site)', ['exception' => $e2->getMessage()]);
+                            $metodosPagamento = [];
+                        }
+                    } catch (\Exception $e) {
+                        \Log::error('Erro ao consultar métodos de pagamento Stripe (site)', ['exception' => $e->getMessage()]);
+                        $metodosPagamento = [];
+                    }
                 }
             }
         }

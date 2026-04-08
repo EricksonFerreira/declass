@@ -78,7 +78,7 @@
                     ['name' => 'site_apresentacao_botao_texto','label' => 'Texto do botao de reserva',            'hint' => 'Ex: Reserve agora',                                    'type' => 'text',     'max' => 60],
                     ['name' => 'site_apresentacao_botao_url',  'label' => 'Link do botao de reserva (opcional)',  'hint' => 'Deixe em branco para usar o sistema de reservas',      'type' => 'text',     'max' => 255],
                     ['name' => 'botao_admin_texto',            'label' => 'Botao da area administrativa',         'hint' => 'Ex: Area do Cliente',                                  'type' => 'text',     'max' => 80],
-                    ['name' => 'footer_texto',                 'label' => 'Texto do rodape',                      'hint' => 'Ex: © 2025 Locadora. Todos os direitos reservados.',   'type' => 'text',     'max' => 200],
+                    ['name' => 'footer_texto',                 'label' => 'Texto do rodape',                      'hint' => 'Ex: Todos os direitos reservados.',   'type' => 'text',     'max' => 200],
                 ],
             ],
             [

@@ -88,27 +88,32 @@
 
 @section('js')
 <script>
-    const stripe     = Stripe("{{ env('STRIPE_KEY') }}");
-    const elements   = stripe.elements();
-    const cardElement = elements.create('card');
-    cardElement.mount('#card-element');
+    const stripeKey = @json($stripePublicKey ?? (config('services.stripe.key') ?? env('STRIPE_KEY') ?? null));
+    if (!stripeKey || stripeKey === '') {
+        document.getElementById('card-errors').textContent = 'Chave pública do Stripe não configurada.';
+    } else {
+        const stripe = Stripe(stripeKey);
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
 
-    const form = document.getElementById('formStripe');
-    form.addEventListener('submit', function (event) {
-        event.preventDefault();
+        const form = document.getElementById('formStripe');
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
 
-        stripe.createToken(cardElement).then(function (result) {
-            if (result.error) {
-                document.getElementById('card-errors').textContent = result.error.message;
-            } else {
-                const input = document.createElement('input');
-                input.type  = 'hidden';
-                input.name  = 'stripeToken';
-                input.value = result.token.id;
-                form.appendChild(input);
-                form.submit();
-            }
+            stripe.createToken(cardElement).then(function (result) {
+                if (result.error) {
+                    document.getElementById('card-errors').textContent = result.error.message;
+                } else {
+                    const input = document.createElement('input');
+                    input.type  = 'hidden';
+                    input.name  = 'stripeToken';
+                    input.value = result.token.id;
+                    form.appendChild(input);
+                    form.submit();
+                }
+            });
         });
-    });
+    }
 </script>
 @stop

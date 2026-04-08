@@ -507,7 +507,7 @@
         $v.prop('disabled', true);
 
         $.getJSON(url, { marca_id: marcaId, modelo_id: modeloId })
-            .done(function (data) {
+                .done(function (data) {
                 $v.empty();
                 $v.append(new Option('Selecione um veiculo', '', true, true));
                 $v.find('option:first').prop('disabled', true);
@@ -515,7 +515,13 @@
                     $v.append(new Option('Nenhum veiculo disponivel neste periodo', '', true, true));
                     $v.find('option:last').prop('disabled', true);
                 } else {
-                    data.forEach(row => $v.append(new Option(row.nome, row.id)));
+                    data.forEach(row => {
+                        const opt = new Option(row.nome + (row.placa ? ' — ' + row.placa : ''), row.id);
+                        // attach useful data for JS autofill
+                        if (row.quilometragem_atual !== undefined && row.quilometragem_atual !== null) opt.dataset.quilometragem = String(row.quilometragem_atual);
+                        if (row.nivel_combustivel !== undefined && row.nivel_combustivel !== null) opt.dataset.nivelCombustivel = String(row.nivel_combustivel);
+                        $v.append(opt);
+                    });
                 }
                 $v.prop('disabled', false).val('').trigger('change');
             })
@@ -558,7 +564,73 @@
         $('#veiculo').change(function () {
             obterDanosDetectados();
             obterDanosExistentes();
+
+            // Autofill quilometragem, combustivel e data/hora de saida
+            const sel = document.getElementById('veiculo');
+            const quilEl = document.getElementById('quilometragem');
+            const combEl = document.getElementById('combustivel');
+            const dataEl = document.getElementById('data_saida');
+            const horaEl = document.getElementById('hora_saida');
+
+            const opt = sel && sel.options && sel.options[sel.selectedIndex] ? sel.options[sel.selectedIndex] : null;
+            if (opt) {
+                const km = opt.dataset.quilometragem ?? opt.getAttribute('data-quilometragem') ?? '';
+                if (km !== '') {
+                    // set value and min
+                    if (quilEl) {
+                        quilEl.value = km;
+                        try { quilEl.min = String(km); } catch (e) {}
+                    }
+                }
+
+                const nivel = opt.dataset.nivelCombustivel ?? opt.getAttribute('data-nivel-combustivel') ?? '';
+                if (nivel !== '') {
+                    if (combEl) {
+                        // try to select option by text or value
+                        let found = Array.from(combEl.options).find(o => String(o.value).toLowerCase() === String(nivel).toLowerCase() || String(o.text).toLowerCase() === String(nivel).toLowerCase());
+                        if (found) combEl.value = found.value;
+                    }
+                } else {
+                    // default to Cheio
+                    if (combEl) {
+                        const cheioOpt = Array.from(combEl.options).find(o => o.text.trim().toLowerCase() === 'cheio' || String(o.value).toLowerCase() === 'cheio');
+                        if (cheioOpt) combEl.value = cheioOpt.value;
+                    }
+                }
+            } else {
+                // no option selected: ensure defaults
+                if (combEl) {
+                    const cheioOpt = Array.from(combEl.options).find(o => o.text.trim().toLowerCase() === 'cheio' || String(o.value).toLowerCase() === 'cheio');
+                    if (cheioOpt) combEl.value = cheioOpt.value;
+                }
+            }
+
+            // set date/time to now by default
+            const now = new Date();
+            if (dataEl && !dataEl.value) {
+                const yyyy = now.getFullYear();
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                dataEl.value = `${yyyy}-${mm}-${dd}`;
+            }
+            if (horaEl && !horaEl.value) {
+                const hh = String(now.getHours()).padStart(2, '0');
+                const mi = String(now.getMinutes()).padStart(2, '0');
+                horaEl.value = `${hh}:${mi}`;
+            }
         });
+
+        // Prevent entering smaller quilometragem than min
+        const quilInput = document.getElementById('quilometragem');
+        if (quilInput) {
+            quilInput.addEventListener('input', function () {
+                const min = this.min ? Number(this.min) : null;
+                const val = this.value ? Number(this.value) : null;
+                if (min !== null && val !== null && val < min) {
+                    this.value = String(min);
+                }
+            });
+        }
     });
 
     /* ========================
@@ -656,6 +728,26 @@
             return false;
         }
 
+        // valida quilometragem minima antes de aceitar o passo
+        if (!validarQuilometragemMin()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    // adicional: valida quilometragem minimo
+    function validarQuilometragemMin() {
+        const quil = document.getElementById('quilometragem');
+        if (!quil) return true;
+        const min = quil.min ? Number(quil.min) : null;
+        const val = quil.value ? Number(quil.value) : null;
+        if (min !== null && val !== null && val < min) {
+            quil.classList.add('is-invalid');
+            Swal.fire({ icon: 'error', title: 'Quilometragem inválida', html: `A quilometragem informada não pode ser menor que a atual (${min}).` });
+            return false;
+        }
+        quil.classList.remove('is-invalid');
         return true;
     }
 
@@ -1013,7 +1105,9 @@
                         (item.veiculos ?? []).forEach(v => {
                             const opt = document.createElement('option');
                             opt.value = v.id;
-                            opt.textContent = (v.nome ?? 'Veículo') + (v.placa ? ' - ' + v.placa : '');
+                                opt.textContent = (v.nome ?? 'Veículo') + (v.placa ? ' - ' + v.placa : '');
+                                if (v.quilometragem_atual !== undefined && v.quilometragem_atual !== null) opt.dataset.quilometragem = String(v.quilometragem_atual);
+                                if (v.nivel_combustivel !== undefined && v.nivel_combustivel !== null) opt.dataset.nivelCombustivel = String(v.nivel_combustivel);
                             opt.dataset.upgrade = '1';
                             optGroup.appendChild(opt);
                         });

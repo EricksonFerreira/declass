@@ -248,7 +248,10 @@
 
         if (saveButton) {
             saveButton.addEventListener('click', async () => {
+                const originalHtml = saveButton.innerHTML;
+                // Set loading state
                 saveButton.disabled = true;
+                saveButton.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status" aria-hidden="true"></span>Carregando...';
                 if (cardErrors) {
                     cardErrors.textContent = '';
                 }
@@ -258,7 +261,9 @@
                     if (cardErrors) {
                         cardErrors.textContent = result.error.message || 'Nao foi possivel validar o cartao.';
                     }
+                    // restore
                     saveButton.disabled = false;
+                    saveButton.innerHTML = originalHtml;
                     return;
                 }
 
@@ -297,7 +302,29 @@
                         cardErrors.textContent = error.message;
                     }
                 } finally {
-                    saveButton.disabled = false;
+                    // restore when modal hidden or on error
+                    // if modal is still open, restore immediately
+                    if (!$('#modalMetodoPagamento').hasClass('show')) {
+                        // modal closed
+                        saveButton.disabled = false;
+                        saveButton.innerHTML = originalHtml;
+                    } else {
+                        // ensure we restore when modal hides
+                        $('#modalMetodoPagamento').one('hidden.bs.modal', function () {
+                            saveButton.disabled = false;
+                            saveButton.innerHTML = originalHtml;
+                        });
+                    }
+                }
+            });
+
+            // also restore button when modal is manually closed
+            $('#modalMetodoPagamento').on('hidden.bs.modal', function () {
+                saveButton.disabled = false;
+                // restore default text if spinner present
+                if (saveButton.innerHTML.indexOf('spinner-border') !== -1) {
+                    // attempt to set back to default label localized in blade
+                    saveButton.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar cartao';
                 }
             });
         }
