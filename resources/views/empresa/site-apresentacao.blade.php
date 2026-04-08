@@ -316,39 +316,7 @@
                             </div>
                         </div>
 
-                        {{-- Bloco: Textos padrao --}}
-                        <div class="config-block">
-                            <div class="config-block-label">
-                                <i class="fas fa-pen-alt"></i>
-                                <div>
-                                    <strong>Textos padrao do site</strong>
-                                    <span>Usados quando os textos especificos das secoes nao estiverem preenchidos</span>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <label for="site_apresentacao_titulo">Titulo do site</label>
-                                    <input type="text" class="form-control form-control-sm" id="site_apresentacao_titulo"
-                                        name="site_apresentacao_titulo" maxlength="120"
-                                        placeholder="Ex: Locadora Premium de Veiculos"
-                                        value="{{ old('site_apresentacao_titulo', $empresa->site_apresentacao_titulo ?? '') }}">
-                                </div>
-                                <div class="col-md-6">
-                                    <label for="site_apresentacao_subtitulo">Subtitulo do site</label>
-                                    <input type="text" class="form-control form-control-sm" id="site_apresentacao_subtitulo"
-                                        name="site_apresentacao_subtitulo" maxlength="180"
-                                        placeholder="Ex: Qualidade e conforto para sua viagem"
-                                        value="{{ old('site_apresentacao_subtitulo', $empresa->site_apresentacao_subtitulo ?? '') }}">
-                                </div>
-                                <div class="col-12 mt-2">
-                                    <label for="site_apresentacao_descricao">Descricao do site</label>
-                                    <textarea class="form-control form-control-sm" id="site_apresentacao_descricao"
-                                        name="site_apresentacao_descricao" rows="3" maxlength="2000"
-                                        placeholder="Ex: Somos especializados em aluguel de veiculos...">{{ old('site_apresentacao_descricao', $empresa->site_apresentacao_descricao ?? '') }}</textarea>
-                                </div>
-                            </div>
-                        </div>
-
+                        
                         {{-- Bloco: Modelo de layout --}}
                         <div class="config-block">
                             <div class="config-block-label">

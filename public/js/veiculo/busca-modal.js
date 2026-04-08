@@ -106,6 +106,8 @@
             var displayInputId = config.displayInputId || null;
             var targetSelectId = config.targetSelectId || null;
             var autoFillPlacaSelector = config.autoFillPlacaSelector || null;
+            var autoFillKmsSelector = config.autoFillKmsSelector || null;
+            var autoFillNivelSelector = config.autoFillNivelSelector || null;
             var clearBtnMode = config.clearBtnMode || 'auto'; // auto|always|never
 
             var ids = {
@@ -226,7 +228,7 @@
                                 '<td>' + (escapeAttr(v.estacao) || '—') + '</td>' +
                                 '<td class="text-center">' +
                                 '<button type="button" class="btn btn-sm btn-success js-selecionar-veiculo" ' +
-                                'data-id="' + escapeAttr(v.id) + '" data-label="' + escapeAttr(label) + '" data-placa="' + escapeAttr(v.placa || '') + '">' +
+                                'data-id="' + escapeAttr(v.id) + '" data-label="' + escapeAttr(label) + '" data-placa="' + escapeAttr(v.placa || '') + '" data-kms="' + escapeAttr(v.kms || '') + '" data-nivel="' + escapeAttr(v.nivel_combustivel || '') + '">' +
                                 '<i class="fas fa-check"></i>' +
                                 '</button>' +
                                 '</td>' +
@@ -241,6 +243,8 @@
                                 var id = safeText(this.dataset.id || '');
                                 var label = safeText(this.dataset.label || '');
                                 var placa = safeText(this.dataset.placa || '');
+                                var kms = safeText(this.dataset.kms || '');
+                                var nivel = safeText(this.dataset.nivel || '');
 
                                 if (hiddenInputId || displayInputId) {
                                     setHidden(hiddenInputId, id);
@@ -256,6 +260,27 @@
                                     if (placaInput && !normalize(placaInput.value)) {
                                         placaInput.value = placa;
                                     }
+                                }
+
+                                if (autoFillKmsSelector && kms) {
+                                    var kmsInput = document.querySelector(autoFillKmsSelector);
+                                    if (kmsInput && !normalize(kmsInput.value)) {
+                                        kmsInput.value = kms;
+                                    }
+                                }
+
+                                if (autoFillNivelSelector && nivel) {
+                                    var nivelInput = document.querySelector(autoFillNivelSelector);
+                                    if (nivelInput && !normalize(nivelInput.value)) {
+                                        nivelInput.value = nivel;
+                                    }
+                                }
+
+                                try {
+                                    var ev = new CustomEvent('veiculo:selecionado', { detail: { id: id, label: label, placa: placa, kms: kms, nivel: nivel } });
+                                    document.dispatchEvent(ev);
+                                } catch (e) {
+                                    // ignore
                                 }
 
                                 updateClearButton();
