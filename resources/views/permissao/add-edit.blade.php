@@ -42,7 +42,15 @@
                     <div class="col-lg-6 col-md-12">
                         <div class="form-group form-group-permissao">
                             <x-form-input type="text" class="form-control form-control-sm" id="guard_name" name="guard_name"
-                                label="Nome da Politica de Seguranca" value="{{ old('guard_name', $permissao->guard_name ?? '') }}" required />
+                                label="Guard (política de segurança)" value="{{ old('guard_name', $permissao->guard_name ?? 'web') }}" required />
+                        </div>
+                    </div>
+
+                    <div class="col-12">
+                        <div class="form-group form-group-permissao">
+                            <label for="descricao" class="font-weight-600">Descrição <span class="text-muted small">(O que esta permissão concede acesso)</span></label>
+                            <textarea class="form-control form-control-sm" id="descricao" name="descricao" rows="2"
+                                placeholder="Ex: Permite listar todas as reservas da estação">{{ old('descricao', $permissao->descricao ?? '') }}</textarea>
                         </div>
                     </div>
 

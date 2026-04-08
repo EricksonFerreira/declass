@@ -6,7 +6,15 @@
       "Bash(php c:/Users/Erickson/Dev/laragon/www/xpandCars/artisan route:list --path=reserva --method=POST)",
       "Bash(php -r ':*)",
       "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations -type f -exec grep -l \"reserva_logs\\\\|contrato_checkin\" {} \\\\;)",
-      "Bash(grep -rn \"Schema::create.*contrato\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)"
+      "Bash(grep -rn \"Schema::create.*contrato\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)",
+      "Bash(grep -l \"StatusReserva\\\\|status_reserva\" \"c:\\\\Users\\\\Erickson\\\\Dev\\\\laragon\\\\www\\\\xpandCars\\\\database\\\\seeders\"/*.php)",
+      "Bash(grep -A 30 'private array $tables' 'c:\\\\Users\\\\Erickson\\\\Dev\\\\laragon\\\\www\\\\xpandCars\\\\database\\\\migrations\\\\2026_04_01_173000_ensure_empresa_id_as_tenant_on_used_tables.php')",
+      "Bash(find \"c:\\\\Users\\\\Erickson\\\\Dev\\\\laragon\\\\www\\\\xpandCars\" -type f \\\\\\( -name \"*.php\" -o -name \"*.sql\" \\\\\\) -exec grep -l \"horarios.*estacao_id\\\\|estacao.*horario_diario\" {} \\\\;)",
+      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations -type f -exec grep -l \"create_horarios_table\\\\|estacoes_dias_uteis\" {} \\\\;)",
+      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations -type f -name \"*.php\" -exec grep -l \"horarios.*create\\\\|pivot.*horario\" {} \\\\;)",
+      "Bash(find database/migrations -name \"*.php\" -type f -exec grep -H \"horarios\\\\|estacoes_dias_uteis\" {} \\\\;)",
+      "Bash(grep -n \"}\\)\\(\\);\\\\|}\\);\\\\s*$\" c:/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/reserva/show.blade.php)",
+      "Bash(php -r \"require 'vendor/autoload.php'; echo 'OK';\")"
     ]
   }
 }

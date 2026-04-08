@@ -13,7 +13,8 @@ class Permissao extends Model
     protected $fillable = [
         'name',
         'guard_name',
-        'empresa_id',
+        'descricao',
+        // empresa_id intencionalmente omitido — permissões são globais
     ];
 
     public function regras()

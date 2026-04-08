@@ -200,6 +200,7 @@
 @stop
 
 @section('js')
+<script src="{{ asset('js/sweetAlert.min.js') }}"></script>
 <script>
     (function () {
         window.replicacaoMarcarTodos = function (event) {
@@ -350,6 +351,52 @@
             document.addEventListener('DOMContentLoaded', inicializarTelaReplicacao);
         } else {
             inicializarTelaReplicacao();
+        }
+    })();
+
+    (function () {
+        // Exibe pop-up com resultado da replicacao quando houver dados na sessão
+        try {
+            const flashSuccess = @json(session('success'));
+            const flashError = @json(session('error'));
+            const replicacaoResultado = @json(session('replicacao_resultado'));
+            const validationErrors = @json($errors->all());
+
+            function showSummaryPopup() {
+                if (typeof Swal === 'undefined') {
+                    return;
+                }
+
+                if (flashError) {
+                    Swal.fire({ icon: 'error', title: 'Replicação', text: String(flashError) });
+                    return;
+                }
+
+                if (validationErrors && validationErrors.length) {
+                    Swal.fire({ icon: 'error', title: 'Replicação', html: validationErrors.map(e => `<div>${e}</div>`).join('') });
+                    return;
+                }
+
+                if (replicacaoResultado && replicacaoResultado.length) {
+                    // Monta resumo simples
+                    const lines = replicacaoResultado.map(r => `${r.area || '-'} — ${r.modulo}: inseridos=${r.inseridos} ignorados=${r.ignorados}`);
+                    Swal.fire({ icon: 'success', title: flashSuccess || 'Replicação concluída', html: `<div style="text-align:left">${lines.map(l => `<div>${l}</div>`).join('')}</div>`, width: 700 });
+                    return;
+                }
+
+                if (flashSuccess) {
+                    Swal.fire({ icon: 'success', title: 'Replicação', text: String(flashSuccess) });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', showSummaryPopup);
+            } else {
+                showSummaryPopup();
+            }
+        } catch (e) {
+            // silencia erros de exibição do popup
+            console.warn('Erro ao exibir popup de replicacao', e);
         }
     })();
 </script>

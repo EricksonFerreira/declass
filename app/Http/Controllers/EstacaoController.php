@@ -131,10 +131,11 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             'N' => 'Não Permite'
         ];
 
-        $diasUteis = $this->diaUtilService->getAllAtivos('id', 'dia', 'dia', 'asc');
-        [$metodo, $rota] = $this->getFormMethodAndRoute($estacao);
+        $diasUteis        = $this->diaUtilService->getAllAtivos('id', 'dia', 'dia', 'asc');
+        $horariosDiarios  = $this->horarioDiarioService->getAllAtivos();
+        [$metodo, $rota]  = $this->getFormMethodAndRoute($estacao);
         $diasUteisEstacao = $estacao->diasUteis->pluck('id')->toArray();
-        $paisBrasilId = $this->paisService->getPaisBrasilId();
+        $paisBrasilId     = $this->paisService->getPaisBrasilId();
 
         return view(
             'estacao.add-edit',
@@ -145,8 +146,8 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
                 'checkin',
                 'checkout',
                 'diasUteis',
+                'horariosDiarios',
                 'breadcrumb',
-                'status',
                 'metodo',
                 'rota',
                 'cobrarColeta',

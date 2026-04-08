@@ -27,4 +27,7 @@ class DiaUtilService extends AbstractBaseService
     {
         return $this->model;
     }
+
+    protected function shouldApplyEmpresaScope(): bool { return false; }
+    protected function shouldApplyEstacaoScope(): bool { return false; }
 }

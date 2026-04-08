@@ -48,6 +48,7 @@ class Estacao extends Model
                 'hora_fim_almoco',
                 'hora_inicio_fora_expediente',
                 'hora_fim_fora_expediente',
+                'funciona_24h',
             ]);
     }
 

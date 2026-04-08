@@ -34,6 +34,7 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     // Feature 5: CobranÃ§a por avarias (pÃ³s-checkout)
     Route::get('{id}/avarias/cobranca', [AvariaCobrancaController::class, 'create'])->name('avarias.cobranca');
     Route::post('{id}/avarias/cobranca', [AvariaCobrancaController::class, 'store'])->name('avarias.cobrar');
+    Route::post('{id}/confirmar-pagamento-dinheiro', [ReservaController::class, 'confirmarPagamentoDinheiro'])->name('confirmarPagamentoDinheiro');
     Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');
     Route::post('{id}/adicionarDanoVeiculo', [ReservaController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');
     Route::get('{id}/assinarContratoCheckin', [ReservaController::class, 'assinarContratoCheckin'])->name('assinarContratoCheckin');

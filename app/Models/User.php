@@ -175,12 +175,12 @@ class User extends Authenticatable implements MustVerifyEmail
             return false;
         }
 
+        // Permissões são globais (sem empresa_id); roles pertencem à empresa do usuário
         return DB::table('permissions')
             ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
             ->join('roles', 'roles.id', '=', 'role_has_permissions.role_id')
             ->where('permissions.name', $permissao)
             ->where('permissions.guard_name', 'web')
-            ->where('permissions.empresa_id', $this->empresa_id)
             ->where('roles.id', $this->role_id)
             ->where('roles.empresa_id', $this->empresa_id)
             ->exists();
@@ -200,7 +200,6 @@ class User extends Authenticatable implements MustVerifyEmail
             ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
             ->join('roles', 'roles.id', '=', 'role_has_permissions.role_id')
             ->where('permissions.guard_name', 'web')
-            ->where('permissions.empresa_id', $this->empresa_id)
             ->where('roles.id', $this->role_id)
             ->where('roles.empresa_id', $this->empresa_id)
             ->pluck('permissions.name')

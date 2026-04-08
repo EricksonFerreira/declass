@@ -118,15 +118,34 @@ class EstacaoService extends AbstractBaseService
             // Iterar sobre cada índice do array de horários
             for ($i = 0; $i < count($horarios['hora_abertura']); $i++) {
                 // Filtrar os horários para incluir apenas as chaves desejadas para o índice atual
+                $funciona24h = isset($horarios['funciona_24h'][$i]) ? $horarios['funciona_24h'][$i] : 'N';
+
+                if ($funciona24h === 'S') {
+                    $abertura  = '00:00';
+                    $fechamento= '23:59';
+                    $iniAlmoco = '00:00';
+                    $fimAlmoco = '00:00';
+                    $iniForaEx = '00:00';
+                    $fimForaEx = '00:00';
+                } else {
+                    $abertura  = $horarios["hora_abertura"][$i];
+                    $fechamento= $horarios["hora_fechamento"][$i];
+                    $iniAlmoco = $horarios["hora_inicio_almoco"][$i];
+                    $fimAlmoco = $horarios["hora_fim_almoco"][$i];
+                    $iniForaEx = $horarios["hora_inicio_fora_expediente"][$i];
+                    $fimForaEx = $horarios["hora_fim_fora_expediente"][$i];
+                }
+
                 $horariosFiltrados = [
-                    "estacao_id" => $estacaoId,
-                    "horario_diario_id" => $horarios['horario_diario_id'][$i],
-                    "hora_abertura" => $horarios["hora_abertura"][$i],
-                    "hora_fechamento" => $horarios["hora_fechamento"][$i],
-                    "hora_inicio_almoco" => $horarios["hora_inicio_almoco"][$i],
-                    "hora_fim_almoco" => $horarios["hora_fim_almoco"][$i],
-                    "hora_inicio_fora_expediente" => $horarios["hora_inicio_fora_expediente"][$i],
-                    "hora_fim_fora_expediente" => $horarios["hora_fim_fora_expediente"][$i]
+                    "estacao_id"                  => $estacaoId,
+                    "horario_diario_id"           => $horarios['horario_diario_id'][$i],
+                    "funciona_24h"                => $funciona24h,
+                    "hora_abertura"               => $abertura,
+                    "hora_fechamento"             => $fechamento,
+                    "hora_inicio_almoco"          => $iniAlmoco,
+                    "hora_fim_almoco"             => $fimAlmoco,
+                    "hora_inicio_fora_expediente" => $iniForaEx,
+                    "hora_fim_fora_expediente"    => $fimForaEx,
                 ];
 
                 // Inserir os horários na tabela 'horarios'

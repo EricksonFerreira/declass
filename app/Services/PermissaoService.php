@@ -28,9 +28,29 @@ class PermissaoService extends AbstractBaseService
         return $this->model;
     }
 
+    /**
+     * Permissões são globais — não aplicar escopo de empresa.
+     */
+    protected function shouldApplyEmpresaScope(): bool
+    {
+        return false;
+    }
+
+    protected function shouldApplyEstacaoScope(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Retorna todas as permissões globais, marcando quais estão na regra.
+     */
     public function getAllWithChecked($regraPermissoes)
     {
-        $permissoes = $this->getAll();
+        $permissoes = $this->model->newQuery()
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->get();
+
         $permissoesDaRegra = $regraPermissoes->pluck('id')->toArray();
 
         foreach ($permissoes as $permissao) {
@@ -38,5 +58,18 @@ class PermissaoService extends AbstractBaseService
         }
 
         return $permissoes;
+    }
+
+    /**
+     * Retorna todas as permissões globais web ordenadas.
+     */
+    public function getAll($where = [])
+    {
+        // Mantemos compatibilidade com a assinatura de AbstractBaseService::getAll($where = [])
+        // Ignoramos o filtro $where pois permissões são globais, mas aceitamos o parâmetro.
+        return $this->model->newQuery()
+            ->where('guard_name', 'web')
+            ->orderBy('name')
+            ->get();
     }
 }

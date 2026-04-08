@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Pais;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
-use Illuminate\Support\Facades\Auth;
 
 class PaisService extends AbstractBaseService
 {
@@ -36,21 +35,21 @@ class PaisService extends AbstractBaseService
 
     public function getAllForSelectSigla(): array
     {
-        $query = $this->applyEmpresaScope($this->model->newQuery())
+        $query = $this->model->newQuery()
             ->select('sigla', 'nome')
             ->distinct();
 
-        if (method_exists($this->model, 'getTable') && \Illuminate\Support\Facades\Schema::hasColumn($this->model->getTable(), 'ativo')) {
+        if (\Illuminate\Support\Facades\Schema::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
         }
 
-        $data = $query
-            ->where('empresa_id', Auth::user()->empresa_id)
-            ->orderBy('nome', 'asc')
-            ->get();
+        $data = $query->orderBy('nome', 'asc')->get();
 
         return $this->formatArraySelect($data, 'sigla', 'nome');
     }
+
+    protected function shouldApplyEmpresaScope(): bool { return false; }
+    protected function shouldApplyEstacaoScope(): bool { return false; }
 
     public function getPaisBrasilId(): ?int
     {

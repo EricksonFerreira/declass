@@ -483,6 +483,13 @@
                                             $statusTx = strtolower((string) ($transacao->status ?? ''));
                                             $isEstorno = $valorTx < 0 || in_array($statusTx, $statusPagamentoEstornado, true);
                                         @endphp
+                                        @php
+                                            $metodoPag   = strtolower($transacao->metodo_pagamento ?? '');
+                                            $isDinheiro  = in_array($metodoPag, ['dinheiro','cash','especie','espécie']);
+                                            $isPendente  = in_array($statusTx, ['pending','pendente','aguardando']);
+                                            $jaConfirmado= !empty($transacao->confirmado_em);
+                                            $podeConfirmar = $isDinheiro && $isPendente && !$jaConfirmado;
+                                        @endphp
                                         <div class="rs-tx">
                                             <div class="rs-tx__icon {{ $isEstorno ? 'rs-tx__icon--red' : 'rs-tx__icon--green' }}">
                                                 <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
@@ -490,10 +497,25 @@
                                             <div class="rs-tx__info">
                                                 <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
                                                 <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
+                                                @if($jaConfirmado)
+                                                    <span class="rs-tx__confirmed">
+                                                        <i class="fas fa-check-circle"></i>
+                                                        Confirmado {{ \Carbon\Carbon::parse($transacao->confirmado_em)->format('d/m/Y H:i') }}
+                                                    </span>
+                                                @endif
                                             </div>
                                             <div class="rs-tx__amount {{ $isEstorno ? 'rs-tx__amount--red' : 'rs-tx__amount--green' }}">
                                                 <strong>R$ {{ number_format($valorTx, 2, ',', '.') }}</strong>
                                                 <span>{{ $transacao->status ?? '-' }}</span>
+                                                @if($podeConfirmar)
+                                                    <button type="button"
+                                                        class="btn btn-xs btn-success mt-1 btn-confirmar-dinheiro"
+                                                        data-transacao-id="{{ $transacao->id }}"
+                                                        data-reserva-id="{{ $reserva->id }}"
+                                                        title="Confirmar recebimento em dinheiro">
+                                                        <i class="fas fa-check mr-1"></i>Confirmar recebimento
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
                                     @endforeach
@@ -928,6 +950,13 @@
                                             $statusTx = strtolower((string) ($transacao->status ?? ''));
                                             $isEstorno = $valorTx < 0 || in_array($statusTx, $statusPagamentoEstornado, true);
                                         @endphp
+                                        @php
+                                            $metodoPag   = strtolower($transacao->metodo_pagamento ?? '');
+                                            $isDinheiro  = in_array($metodoPag, ['dinheiro','cash','especie','espécie']);
+                                            $isPendente  = in_array($statusTx, ['pending','pendente','aguardando']);
+                                            $jaConfirmado= !empty($transacao->confirmado_em);
+                                            $podeConfirmar = $isDinheiro && $isPendente && !$jaConfirmado;
+                                        @endphp
                                         <div class="rs-tx">
                                             <div class="rs-tx__icon {{ $isEstorno ? 'rs-tx__icon--red' : 'rs-tx__icon--green' }}">
                                                 <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
@@ -935,10 +964,25 @@
                                             <div class="rs-tx__info">
                                                 <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
                                                 <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
+                                                @if($jaConfirmado)
+                                                    <span class="rs-tx__confirmed">
+                                                        <i class="fas fa-check-circle"></i>
+                                                        Confirmado {{ \Carbon\Carbon::parse($transacao->confirmado_em)->format('d/m/Y H:i') }}
+                                                    </span>
+                                                @endif
                                             </div>
                                             <div class="rs-tx__amount {{ $isEstorno ? 'rs-tx__amount--red' : 'rs-tx__amount--green' }}">
                                                 <strong>R$ {{ number_format($valorTx, 2, ',', '.') }}</strong>
                                                 <span>{{ $transacao->status ?? '-' }}</span>
+                                                @if($podeConfirmar)
+                                                    <button type="button"
+                                                        class="btn btn-xs btn-success mt-1 btn-confirmar-dinheiro"
+                                                        data-transacao-id="{{ $transacao->id }}"
+                                                        data-reserva-id="{{ $reserva->id }}"
+                                                        title="Confirmar recebimento em dinheiro">
+                                                        <i class="fas fa-check mr-1"></i>Confirmar recebimento
+                                                    </button>
+                                                @endif
                                             </div>
                                         </div>
                                     @endforeach
@@ -2247,6 +2291,17 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         color: #94a3b8;
     }
 
+    .rs-tx__confirmed {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 0.68rem;
+        color: #16a34a;
+        font-weight: 600;
+        margin-top: 2px;
+    }
+    .rs-tx__confirmed i { font-size: .72rem; }
+
     /* ═══════════════════════════
        NFS-e
     ═══════════════════════════ */
@@ -3035,5 +3090,54 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         });
 
     })();
+
+    // ── Confirmar pagamento em dinheiro ──
+    document.querySelectorAll('.btn-confirmar-dinheiro').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+            const transacaoId = this.dataset.transacaoId;
+            const reservaId   = this.dataset.reservaId;
+
+            const conf = await Swal.fire({
+                title: 'Confirmar recebimento?',
+                text: 'Confirma que o pagamento em dinheiro foi recebido?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, confirmar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#16a34a',
+            });
+
+            if (!conf.isConfirmed) return;
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                const response = await fetch(`/reserva/${reservaId}/confirmar-pagamento-dinheiro`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    },
+                    body: JSON.stringify({ transacao_id: transacaoId }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    Swal.fire({ title: 'Confirmado!', text: data.message, icon: 'success', timer: 2500, showConfirmButton: false });
+                    setTimeout(() => location.reload(), 2600);
+                } else {
+                    Swal.fire({ title: 'Erro', text: data.error || 'Falha ao confirmar.', icon: 'error' });
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check mr-1"></i>Confirmar recebimento';
+                }
+            } catch(e) {
+                Swal.fire({ title: 'Erro de rede', text: 'Tente novamente.', icon: 'error' });
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check mr-1"></i>Confirmar recebimento';
+            }
+        });
+    });
     </script>
 @stop

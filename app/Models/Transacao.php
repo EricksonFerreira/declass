@@ -23,6 +23,8 @@ class Transacao extends Model
         'tipo_pagamento_id',
         'status',
         'info_pagamento',
+        'confirmado_em',
+        'confirmado_por_user_id',
     ];
 
     protected $casts = [

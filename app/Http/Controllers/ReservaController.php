@@ -2251,4 +2251,32 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return response()->json(['error' => $e->getMessage()], 422);
         }
     }
+
+    // ══════════════════════════════════════════════════════════════
+    // Confirmar pagamento em dinheiro
+    // ══════════════════════════════════════════════════════════════
+
+    public function confirmarPagamentoDinheiro(Request $request, $reserva_id)
+    {
+        $transacaoId = $request->input('transacao_id');
+        $transacao = Transacao::where('reserva_id', $reserva_id)->where('id', $transacaoId)->firstOrFail();
+
+        if ($transacao->confirmado_em) {
+            return response()->json(['error' => 'Pagamento já confirmado.'], 422);
+        }
+
+        $transacao->update([
+            'status'                 => 'approved',
+            'confirmado_em'          => now(),
+            'confirmado_por_user_id' => Auth::id(),
+        ]);
+
+        $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
+            'acao'        => 'Pagamento em dinheiro confirmado',
+            'transacao_id'=> $transacao->id,
+            'valor'       => $transacao->valor,
+        ]), 'success');
+
+        return response()->json(['success' => true, 'message' => 'Pagamento confirmado com sucesso.']);
+    }
 }

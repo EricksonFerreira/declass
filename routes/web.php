@@ -76,6 +76,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'nfse',
         'financeiro',
         'pais',
+        'feriado',
         'estacao',
         'dia_util',
         'horario_diario',

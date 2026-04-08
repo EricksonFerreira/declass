@@ -7,45 +7,23 @@ use Illuminate\Validation\Rule;
 
 class UpdatePermissaoRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
-    public function authorize(): bool
-    {
-        return true;
-    }
+    public function authorize(): bool { return true; }
 
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
-        $empresaId = auth()->user()?->empresa_id;
-
         return [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                Rule::unique('permissions', 'name')
-                    ->ignore($this->route('permissao'))
-                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
-            ],
+            'name'       => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')->ignore($this->route('permissao'))],
             'guard_name' => 'required|string|max:255',
+            'descricao'  => 'nullable|string|max:500',
         ];
     }
 
     public function messages()
     {
         return [
-            'name.required' => 'O campo nome é obrigatório',
-            'name.max' => 'O campo nome deve ter no máximo 255 caracteres',
-            'name.unique' => 'O nome informado já está em uso',
-            'guard_name.required' => 'O campo de política de segurança é obrigatório',
-            'guard_name.max' => 'O campo de política de segurança deve ter no máximo 255 caracteres',
+            'name.required'       => 'O campo nome é obrigatório',
+            'name.unique'         => 'Já existe uma permissão com este nome',
+            'guard_name.required' => 'O guard é obrigatório',
         ];
     }
 }

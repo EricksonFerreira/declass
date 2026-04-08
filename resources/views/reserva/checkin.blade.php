@@ -859,6 +859,19 @@
             return false;
         }
 
+        // Verifica que um veículo foi selecionado (campo hidden `veiculo`)
+        const veiculoHidden = document.getElementById('veiculo');
+        const veiculoDisplay = document.getElementById('veiculo_display');
+        if (!veiculoHidden || !veiculoHidden.value) {
+            if (veiculoDisplay) veiculoDisplay.classList.add('is-invalid');
+            if (showAlert) {
+                Swal.fire({ icon: 'error', title: 'Veículo não selecionado', text: 'Selecione um veículo para prosseguir.' });
+            }
+            return false;
+        } else {
+            if (veiculoDisplay) veiculoDisplay.classList.remove('is-invalid');
+        }
+
         // valida quilometragem minima antes de aceitar o passo
         if (!validarQuilometragemMin()) {
             return false;
@@ -1062,7 +1075,28 @@
     ======================== */
     function rowImagensDano(dano) {
         const imgs = dano.imagens || [];
-        return imgs.map(i => `<img src="{{ asset('storage') }}/${i.imagem}" alt="Dano">`).join(' ');
+        if (!imgs.length) return '<span class="text-muted" style="font-size:.75rem">Sem foto</span>';
+        return imgs.map(i => {
+            const src = `{{ asset('storage') }}/${i.imagem}`;
+            return `<img src="${src}" alt="Dano"
+                style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:2px solid #e2e9f4;cursor:zoom-in;margin:2px"
+                onclick="abrirFotoDano('${src}')"
+                onerror="this.style.display='none'">`;
+        }).join('');
+    }
+
+    function abrirFotoDano(src) {
+        let modal = document.getElementById('lightboxFotoDano');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'lightboxFotoDano';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+            modal.onclick = () => modal.remove();
+            modal.innerHTML = '<img id="lightboxFotoDanoImg" style="max-width:92vw;max-height:90vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6)">';
+            document.body.appendChild(modal);
+        }
+        document.getElementById('lightboxFotoDanoImg').src = src;
+        document.getElementById('lightboxFotoDano').style.display = 'flex';
     }
 
     function obterDanosDetectados() {
