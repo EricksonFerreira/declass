@@ -11,6 +11,7 @@ use App\Http\Controllers\SiteApresentacaoController;
 use App\Http\Controllers\SiteReservaController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\TipoTransacaoController;
+use App\Http\Controllers\MigrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SiteApresentacaoController::class, 'index'])->name('site.apresentacao');
@@ -61,6 +62,12 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::get('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordEdit'])->name('profile.force-password.edit');
         Route::put('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordUpdate'])->name('profile.force-password.update');
+    });
+
+    // Rota segura para executar migrations via web (use apenas em ambientes controlados)
+    // Protegida por middleware auth + can:gerenciar-empresa. Opcional: defina APP_MIGRATION_ROUTE_TOKEN para usar ?token=SECRET
+    Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function () {
+        Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
     });
 
     require __DIR__ . '/auth.php';
