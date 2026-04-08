@@ -49,50 +49,6 @@
                     <span>Efetuar pagamento</span>
                 </a>
             @endif
-{{-- 
-            @if($reserva->podeCriarContrato() || $reserva->podeVerContrato() || $reserva->podeAssinarContrato())
-                <div class="dropdown">
-                    <button type="button" class="action-pill action-pill--sun dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="fas fa-file-signature"></i>
-                        <span>Contrato</span>
-                    </button>
-                    <div class="dropdown-menu reservation-actions-card__menu">
-                        @if($reserva->podeCriarContrato())
-                            <a class="dropdown-item border-bottom" href="{{ route('reserva.checkin', $reserva->id) }}" id="btnCheckInReserva">
-                                <i class="fas fa-plus mr-2"></i> Criar contrato
-                            </a>
-                        @endif
-
-                        @if($reserva->podeVerContrato())
-                            <a class="dropdown-item border-bottom" href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" id="btnVerContratoCheckinReserva" target="_blank" rel="noopener noreferrer">
-                                <i class="fas fa-eye mr-2"></i> Ver contrato
-                            </a>
-                        @endif
-
-                        @if($reserva->podeAssinarContrato())
-                            <a class="dropdown-item border-bottom" href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" id="btnAssinarContratoReserva">
-                                <i class="fas fa-signature mr-2"></i> Assinar contrato
-                            </a>
-                        @endif
-
-                        @if($reserva->contratoCheckin)
-                            @if($reserva->contratoCheckin->assinado !== 'S')
-                                {{-- Não assinado: pode editar diretamente --}}
-                                <a class="dropdown-item border-bottom" href="{{ route('reserva.checkin', $reserva->id) }}">
-                                    <i class="fas fa-edit mr-2"></i> Editar contrato
-                                </a>
-                            @endif
-                            {{-- Sempre pode excluir e recriar --}}
-                            <button type="button" class="dropdown-item text-danger js-excluir-contrato-checkin"
-                                data-url="{{ route('reserva.checkin.excluirContrato', $reserva->id) }}"
-                                data-assinado="{{ $reserva->contratoCheckin->assinado === 'S' ? '1' : '0' }}">
-                                <i class="fas fa-trash mr-2"></i>
-                                {{ $reserva->contratoCheckin->assinado === 'S' ? 'Excluir contrato assinado e recriar' : 'Excluir e recriar contrato' }}
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            @endif --}}
 
             {{-- Calção: disponível após contrato assinado --}}
             @if($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S')
@@ -114,12 +70,6 @@
                 </button>
             @endif
 
-            {{-- @if($reserva->podeFazerCheckout())
-                <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="action-pill action-pill--success" id="btnCheckOutReserva">
-                    <i class="fas fa-undo-alt"></i>
-                    <span>Check-out</span>
-                </a>
-            @endif --}}
         </div>
 
         <div class="reservation-actions-card__side">
