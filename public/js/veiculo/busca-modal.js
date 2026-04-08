@@ -23,6 +23,7 @@
         var el = qs(hiddenInputId);
         if (!el) return;
         el.value = value;
+        try { el.dispatchEvent(new Event('change', { bubbles: true })); } catch (e) { /* ignore */ }
     }
 
     function setDisplay(displayInputId, value) {

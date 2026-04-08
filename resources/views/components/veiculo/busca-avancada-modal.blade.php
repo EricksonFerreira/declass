@@ -8,6 +8,8 @@
     'displayInputId' => null,
     'clearBtnId' => null,
     'autoFillPlacaSelector' => null,
+    'autoFillKmsSelector' => null,
+    'autoFillNivelSelector' => null,
     'filtroMarcas' => [],
     'filtroGrupos' => [],
     'filtroTipos' => [],
@@ -144,17 +146,19 @@
         <script>
             (function () {
                 if (!window.VeiculoBuscaModal) return;
-                window.VeiculoBuscaModal.init({
-                    prefix: @json($prefix),
-                    buscarUrl: @json($buscarUrl),
-                    modalId: @json($modalId),
-                    triggerId: @json($triggerId),
-                    targetSelectId: @json($targetSelectId),
-                    hiddenInputId: @json($hiddenInputId),
-                    displayInputId: @json($displayInputId),
-                    clearBtnId: @json($clearBtnId),
-                    autoFillPlacaSelector: @json($autoFillPlacaSelector),
-                });
+                    window.VeiculoBuscaModal.init({
+                        prefix: @json($prefix),
+                        buscarUrl: @json($buscarUrl),
+                        modalId: @json($modalId),
+                        triggerId: @json($triggerId),
+                        targetSelectId: @json($targetSelectId),
+                        hiddenInputId: @json($hiddenInputId),
+                        displayInputId: @json($displayInputId),
+                        clearBtnId: @json($clearBtnId),
+                        autoFillPlacaSelector: @json($autoFillPlacaSelector),
+                        autoFillKmsSelector: @json($autoFillKmsSelector ?? null),
+                        autoFillNivelSelector: @json($autoFillNivelSelector ?? null),
+                    });
             }());
         </script>
     @endpush

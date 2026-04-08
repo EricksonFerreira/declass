@@ -152,13 +152,86 @@
                                     </select>
                                 </div>
                                 <div class="col-md-4" id="veiculo_col">
-                                    <label for="veiculo">Veiculo <span class="req">*</span></label>
-                                    <select required name="veiculo" id="veiculo" class="form-control form-control-sm select2ci">
-                                        <option value="" selected disabled>Selecione marca e modelo</option>
-                                    </select>
+                                    <label for="veiculo_display">Veiculo <span class="req">*</span></label>
+                                    <div class="input-group">
+                                        <input type="hidden" id="veiculo" name="veiculo" value="{{ old('veiculo', '') }}">
+                                        <input type="text" id="veiculo_display" class="form-control form-control-sm" readonly placeholder="Selecione um veículo" value="{{ old('veiculo_display', '') }}">
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="btnBuscarVeiculoCheckin" title="Buscar veículo"><i class="fas fa-search"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary d-none" id="btnLimparVeiculoCheckin" title="Limpar veículo"><i class="fas fa-times"></i></button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
+                        
+                        {{-- Vehicle search modal (fills #veiculo and #veiculo_display, and can auto-fill kms/nivel) --}}
+                        <x-veiculo.busca-avancada-modal
+                            prefix="checkin"
+                            title="Buscar Veículo"
+                            buscar-url="{{ route('reserva.checkin.veiculosDisponiveis', $reserva->id) }}"
+                            trigger-id="btnBuscarVeiculoCheckin"
+                            hidden-input-id="veiculo"
+                            display-input-id="veiculo_display"
+                            clear-btn-id="btnLimparVeiculoCheckin"
+                            auto-fill-kms-selector="#quilometragem"
+                            auto-fill-nivel-selector="#combustivel"
+                        />
+                        @push('js')
+                            <script>
+                                (function () {
+                                    var btn = document.getElementById('btnBuscarVeiculoCheckin');
+                                    if (btn) {
+                                        btn.addEventListener('click', function () {
+                                            try {
+                                                var marca = document.getElementById('marca')?.value || '';
+                                                var modelo = document.getElementById('modelo')?.value || '';
+                                                var elMarca = document.getElementById('checkin_fv_marca_id');
+                                                if (elMarca) elMarca.value = marca;
+                                                var elModelo = document.getElementById('checkin_fv_modelo');
+                                                if (elModelo) elModelo.value = modelo;
+                                            } catch (e) { /* ignore */ }
+                                        });
+                                    }
+
+                                    document.addEventListener('veiculo:selecionado', function (ev) {
+                                        var d = ev.detail || {};
+                                        var kms = d.kms || '';
+                                        if (kms) {
+                                            var quil = document.getElementById('quilometragem');
+                                            if (quil) {
+                                                try { quil.min = String(kms); } catch (e) {}
+                                                if (!quil.value || Number(quil.value) < Number(kms)) quil.value = kms;
+                                            }
+
+                                            var combEl = document.getElementById('combustivel');
+                                            if (combEl && d.nivel) {
+                                                var found = Array.from(combEl.options).find(o => String(o.value).toLowerCase() === String(d.nivel).toLowerCase() || String(o.text).toLowerCase() === String(d.nivel).toLowerCase());
+                                                if (found) combEl.value = found.value;
+                                            } else if (combEl) {
+                                                var cheioOpt = Array.from(combEl.options).find(o => o.text.trim().toLowerCase() === 'cheio' || String(o.value).toLowerCase() === 'cheio');
+                                                if (cheioOpt) combEl.value = cheioOpt.value;
+                                            }
+
+                                            var dataEl = document.getElementById('data_saida');
+                                            var horaEl = document.getElementById('hora_saida');
+                                            var now = new Date();
+                                            if (dataEl && !dataEl.value) {
+                                                var yyyy = now.getFullYear();
+                                                var mm = String(now.getMonth() + 1).padStart(2, '0');
+                                                var dd = String(now.getDate()).padStart(2, '0');
+                                                dataEl.value = `${yyyy}-${mm}-${dd}`;
+                                            }
+                                            if (horaEl && !horaEl.value) {
+                                                var hh = String(now.getHours()).padStart(2, '0');
+                                                var mi = String(now.getMinutes()).padStart(2, '0');
+                                                horaEl.value = `${hh}:${mi}`;
+                                            }
+                                        }
+                                    });
+                                }());
+                            </script>
+                        @endpush
 
                         {{-- Bloco: Condicao e saida --}}
                         <div class="ci-block">

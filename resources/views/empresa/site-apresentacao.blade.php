@@ -44,21 +44,21 @@
         $modelCards = [
             [
                 'valor'    => 'modelo_1',
-                'titulo'   => 'Modelo 1 — Premium Locadora',
+                'titulo'   => '', // Modelo 1 — Premium Locadora
                 'status'   => 'Disponivel',
                 'icon'     => 'fas fa-star',
                 'descricao' => 'Layout completo com banner, formulario de reserva e secoes configuráveis.',
             ],
             [
                 'valor'    => 'modelo_2',
-                'titulo'   => 'Modelo 2 — Compacto',
+                'titulo'   => '', // Modelo 2 — Compacto
                 'status'   => 'Em breve',
                 'icon'     => 'fas fa-bolt',
                 'descricao' => 'Variacao focada em conversao rapida para campanhas de midia.',
             ],
             [
                 'valor'    => 'modelo_3',
-                'titulo'   => 'Modelo 3 — Corporativo',
+                'titulo'   => '', // Modelo 3 — Corporativo
                 'status'   => 'Em breve',
                 'icon'     => 'fas fa-building',
                 'descricao' => 'Layout institucional para operacoes B2B com blocos corporativos.',
