@@ -162,6 +162,85 @@
     @endif
 
     {{-- ══════════════════════════════════════════
+         CARD: CONTRATO DE CHECK-IN
+    ══════════════════════════════════════════ --}}
+    @if($reserva->contratoCheckin)
+    @php
+        $ci          = $reserva->contratoCheckin;
+        $ciAssinado  = $ci->assinado === 'S';
+        $ciVeiculo   = $ci->veiculo?->nome ?? ('ID ' . $ci->veiculo_id);
+        $ciBorder    = $ciAssinado ? '#10b981' : '#f59e0b';
+        $ciBgFrom    = $ciAssinado ? '#ecfdf5' : '#fffbeb';
+        $ciBgTo      = $ciAssinado ? '#d1fae5' : '#fef3c7';
+        $ciBadgeBg   = $ciAssinado ? 'rgba(16,185,129,.15)' : 'rgba(245,158,11,.18)';
+        $ciBadgeClr  = $ciAssinado ? '#047857' : '#b45309';
+        $ciBadgeTxt  = $ciAssinado ? 'Contrato Assinado' : 'Aguardando Assinatura';
+        $ciBadgeIcon = $ciAssinado ? 'fa-check-circle' : 'fa-clock';
+    @endphp
+    <div class="rs-ci-card" style="border-left:5px solid {{ $ciBorder }};background:linear-gradient(135deg,{{ $ciBgFrom }},{{ $ciBgTo }})">
+        <div class="rs-ci-card__top">
+            <div class="rs-ci-card__icon" style="background:{{ $ciBorder }}">
+                <i class="fas fa-file-signature"></i>
+            </div>
+            <div class="rs-ci-card__info">
+                <div class="rs-ci-card__title">Contrato de Check-in</div>
+                <span class="rs-ci-card__badge" style="background:{{ $ciBadgeBg }};color:{{ $ciBadgeClr }}">
+                    <i class="fas {{ $ciBadgeIcon }} mr-1"></i>{{ $ciBadgeTxt }}
+                </span>
+            </div>
+        </div>
+
+        <div class="rs-ci-card__details">
+            <div class="rs-ci-detail">
+                <span><i class="fas fa-car mr-1"></i>Veículo</span>
+                <strong>{{ $ciVeiculo }}</strong>
+            </div>
+            <div class="rs-ci-detail">
+                <span><i class="fas fa-tachometer-alt mr-1"></i>Quilometragem</span>
+                <strong>{{ number_format((float)($ci->quilometragem_atual ?? 0), 0, ',', '.') }} km</strong>
+            </div>
+            <div class="rs-ci-detail">
+                <span><i class="fas fa-gas-pump mr-1"></i>Combustível</span>
+                <strong>{{ $ci->nivel_combustivel ?? '—' }}</strong>
+            </div>
+            <div class="rs-ci-detail">
+                <span><i class="fas fa-calendar mr-1"></i>Saída</span>
+                <strong>
+                    {{ $ci->data_saida ? \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') : '—' }}
+                    {{ $ci->hora_saida ? substr($ci->hora_saida, 0, 5) : '' }}
+                </strong>
+            </div>
+            @if($ciAssinado && $ci->data_assinatura)
+            <div class="rs-ci-detail">
+                <span><i class="fas fa-pen-nib mr-1"></i>Assinado em</span>
+                <strong>{{ \Carbon\Carbon::parse($ci->data_assinatura)->format('d/m/Y H:i') }}</strong>
+            </div>
+            @endif
+        </div>
+
+        <div class="rs-ci-card__actions">
+            <a href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" target="_blank" class="rs-ci-btn rs-ci-btn--view">
+                <i class="fas fa-eye"></i> Ver contrato
+            </a>
+            @if(!$ciAssinado)
+                <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
+                    <i class="fas fa-signature"></i> Assinar
+                </a>
+                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--edit">
+                    <i class="fas fa-edit"></i> Editar contrato
+                </a>
+            @endif
+            <button type="button" class="rs-ci-btn rs-ci-btn--delete js-excluir-contrato-checkin"
+                    data-url="{{ route('reserva.checkin.excluirContrato', $reserva->id) }}"
+                    data-assinado="{{ $ciAssinado ? '1' : '0' }}">
+                <i class="fas fa-trash"></i>
+                {{ $ciAssinado ? 'Excluir e recriar' : 'Excluir contrato' }}
+            </button>
+        </div>
+    </div>
+    @endif
+
+    {{-- ══════════════════════════════════════════
          GRID PRINCIPAL
     ══════════════════════════════════════════ --}}
     <div class="rs-grid">
@@ -705,6 +784,24 @@
             @endif
 
         </aside>
+    </div>
+
+    {{-- ══════════════════════════════════════════
+         HISTÓRICO / LOG DA RESERVA
+    ══════════════════════════════════════════ --}}
+    <div class="rs-card rs-historico-card mt-4" id="secaoHistorico">
+        <div class="rs-card__header" style="cursor:pointer" id="toggleHistorico">
+            <i class="fas fa-history rs-card__icon"></i>
+            <h2>Histórico da Reserva</h2>
+            <span class="ml-auto badge badge-secondary" id="historicoCount">—</span>
+            <i class="fas fa-chevron-down ml-2 text-muted" id="toggleHistoricoIcon"></i>
+        </div>
+        <div id="historicoBody" class="d-none">
+            <div id="historicoLoading" class="text-center py-4">
+                <i class="fas fa-spinner fa-spin mr-1"></i> Carregando histórico...
+            </div>
+            <div id="historicoTimeline" class="rs-timeline d-none"></div>
+        </div>
     </div>
 
     {{-- ── Modal Captura de Calção ── --}}
@@ -1913,6 +2010,160 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             width: 100%;
         }
     }
+
+    /* ── Card Contrato de Check-in (full-width) ── */
+    .rs-ci-card {
+        border-radius: 18px;
+        border: 1px solid rgba(0,0,0,.07);
+        padding: 20px 24px;
+        margin-bottom: 16px;
+        box-shadow: 0 4px 18px rgba(15,23,42,.07);
+    }
+    .rs-ci-card__top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+    .rs-ci-card__icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+    }
+    .rs-ci-card__title {
+        font-size: 1rem; font-weight: 800; color: #0f172a; margin-bottom: 4px;
+    }
+    .rs-ci-card__badge {
+        display: inline-flex; align-items: center;
+        padding: 4px 12px; border-radius: 999px;
+        font-size: .76rem; font-weight: 700;
+    }
+    .rs-ci-card__details {
+        display: flex; flex-wrap: wrap; gap: 6px 0;
+        margin-bottom: 16px;
+        border-top: 1px solid rgba(0,0,0,.07);
+        padding-top: 14px;
+    }
+    .rs-ci-detail {
+        width: 50%; display: flex; flex-direction: column;
+        padding: 4px 12px 4px 0;
+    }
+    .rs-ci-detail span { font-size: .75rem; color: #64748b; margin-bottom: 2px; }
+    .rs-ci-detail strong { font-size: .88rem; color: #0f172a; }
+    .rs-ci-card__actions {
+        display: flex; flex-wrap: wrap; gap: 8px;
+        border-top: 1px solid rgba(0,0,0,.07);
+        padding-top: 14px;
+    }
+    .rs-ci-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        border: none; border-radius: 10px;
+        padding: 9px 16px; font-size: .83rem; font-weight: 700;
+        cursor: pointer; text-decoration: none;
+        transition: opacity .15s, transform .15s;
+    }
+    .rs-ci-btn:hover { opacity:.82; transform:translateY(-1px); text-decoration:none; }
+    .rs-ci-btn--view   { background:rgba(59,130,246,.13);  color:#1d4ed8; }
+    .rs-ci-btn--sign   { background:rgba(16,185,129,.13);  color:#047857; }
+    .rs-ci-btn--edit   { background:rgba(245,158,11,.14);  color:#92400e; }
+    .rs-ci-btn--delete { background:rgba(239,68,68,.11);   color:#b91c1c; }
+    @media(max-width:600px){
+        .rs-ci-detail { width: 100%; }
+        .rs-ci-card__actions { flex-direction:column; }
+        .rs-ci-btn { justify-content:center; }
+    }
+
+    /* ── Contrato de Check-in (sidebar - legado) ── */
+    .rs-contrato-badge {
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .rs-contrato-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .rs-contrato-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border: none;
+        border-radius: 10px;
+        padding: 8px 14px;
+        font-size: .82rem;
+        font-weight: 700;
+        cursor: pointer;
+        text-decoration: none;
+        transition: opacity .15s, transform .15s;
+    }
+    .rs-contrato-btn:hover { opacity:.85; transform:translateY(-1px); text-decoration:none; }
+    .rs-contrato-btn--view  { background:rgba(59,130,246,.12);  color:#1d4ed8; }
+    .rs-contrato-btn--sign  { background:rgba(16,185,129,.12);  color:#047857; }
+    .rs-contrato-btn--edit  { background:rgba(245,158,11,.13);  color:#b45309; }
+    .rs-contrato-btn--delete{ background:rgba(239,68,68,.10);   color:#b91c1c; }
+
+    /* ── Histórico ── */
+    .rs-historico-card .rs-card__header { display:flex; align-items:center; gap:10px; user-select:none; }
+    .rs-timeline { padding: 1rem 1.5rem; }
+    .rs-tl-item {
+        display: flex;
+        gap: 14px;
+        padding-bottom: 1.4rem;
+        position: relative;
+    }
+    .rs-tl-item:not(:last-child)::before {
+        content:'';
+        position:absolute;
+        left: 17px;
+        top: 36px;
+        bottom: 0;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .rs-tl-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        flex-shrink: 0;
+        color: #fff;
+    }
+    .rs-tl-icon--info    { background: #3b82f6; }
+    .rs-tl-icon--success { background: #10b981; }
+    .rs-tl-icon--warning { background: #f59e0b; }
+    .rs-tl-icon--danger  { background: #ef4444; }
+    .rs-tl-body { flex:1; min-width:0; }
+    .rs-tl-acao {
+        font-size: .88rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+    .rs-tl-meta {
+        font-size: .76rem;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    .rs-tl-detalhes {
+        font-size: .78rem;
+        color: #475569;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-top: 4px;
+    }
+    .rs-tl-detalhes table { width:100%; border-collapse:collapse; }
+    .rs-tl-detalhes td { padding: 2px 6px 2px 0; vertical-align:top; }
+    .rs-tl-detalhes td:first-child { color:#94a3b8; white-space:nowrap; font-weight:600; width:40%; }
 </style>
 @stop
 
@@ -1972,5 +2223,129 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 });
             });
         })();
+    </script>
+
+    <script>
+    (function () {
+        const RESERVA_ID   = @json($reserva->id);
+        const CSRF_TOKEN   = document.querySelector('meta[name="csrf-token"]')?.content || '';
+        const HISTORICO_URL = "{{ route('reserva.historico', $reserva->id) }}";
+
+        /* ── Ícones por nível ── */
+        const nivelIcone = {
+            info:    'fas fa-info-circle',
+            success: 'fas fa-check-circle',
+            warning: 'fas fa-exclamation-circle',
+            danger:  'fas fa-times-circle',
+        };
+
+        /* ── Render timeline ── */
+        function renderHistorico(logs) {
+            const container = document.getElementById('historicoTimeline');
+            const countEl   = document.getElementById('historicoCount');
+            if (countEl) countEl.textContent = logs.length;
+
+            if (!logs.length) {
+                container.innerHTML = '<p class="text-muted text-center py-3"><i class="fas fa-inbox mr-1"></i>Nenhum registro encontrado.</p>';
+                container.classList.remove('d-none');
+                return;
+            }
+
+            container.innerHTML = logs.map(function (log) {
+                const nivel  = log.nivel || 'info';
+                const icon   = nivelIcone[nivel] || nivelIcone.info;
+                const det    = log.detalhes || {};
+                const linhas = Object.entries(det)
+                    .filter(([k]) => k !== 'acao')
+                    .map(([k, v]) => {
+                        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                        const val   = typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : (v ?? '—');
+                        return `<tr><td>${label}:</td><td>${val}</td></tr>`;
+                    }).join('');
+
+                return `
+                <div class="rs-tl-item">
+                    <div class="rs-tl-icon rs-tl-icon--${nivel}"><i class="${icon}"></i></div>
+                    <div class="rs-tl-body">
+                        <div class="rs-tl-acao">${log.acao || 'Ação registrada'}</div>
+                        <div class="rs-tl-meta">
+                            <i class="fas fa-user mr-1"></i>${log.usuario}
+                            &nbsp;&middot;&nbsp;
+                            <i class="fas fa-clock mr-1"></i>${log.data}
+                        </div>
+                        ${linhas ? `<div class="rs-tl-detalhes"><table>${linhas}</table></div>` : ''}
+                    </div>
+                </div>`;
+            }).join('');
+
+            container.classList.remove('d-none');
+        }
+
+        /* ── Carregar histórico ── */
+        let historicoCarregado = false;
+        function carregarHistorico() {
+            if (historicoCarregado) return;
+            historicoCarregado = true;
+            document.getElementById('historicoLoading')?.classList.remove('d-none');
+
+            fetch(HISTORICO_URL, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('historicoLoading')?.classList.add('d-none');
+                    renderHistorico(data.logs || []);
+                })
+                .catch(() => {
+                    document.getElementById('historicoLoading').textContent = 'Erro ao carregar histórico.';
+                });
+        }
+
+        /* ── Toggle histórico ── */
+        const toggleBtn  = document.getElementById('toggleHistorico');
+        const historicoBody = document.getElementById('historicoBody');
+        const toggleIcon = document.getElementById('toggleHistoricoIcon');
+        if (toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                const aberto = !historicoBody.classList.contains('d-none');
+                historicoBody.classList.toggle('d-none', aberto);
+                toggleIcon.classList.toggle('fa-chevron-down', aberto);
+                toggleIcon.classList.toggle('fa-chevron-up', !aberto);
+                if (!aberto) carregarHistorico();
+            });
+        }
+
+        /* ── Excluir contrato check-in ── */
+        document.querySelectorAll('.js-excluir-contrato-checkin').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const url       = this.dataset.url;
+                const assinado  = this.dataset.assinado === '1';
+                const msg = assinado
+                    ? 'Este contrato <strong>já foi assinado</strong>. Ao excluir você perderá a assinatura e precisará assinar novamente. Deseja continuar?'
+                    : 'O contrato de check-in será excluído. Deseja continuar?';
+
+                Swal.fire({
+                    title: 'Excluir contrato de check-in?',
+                    html: msg,
+                    icon: assinado ? 'warning' : 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: 'Sim, excluir',
+                    cancelButtonText: 'Cancelar',
+                }).then(function (result) {
+                    if (!result.isConfirmed) return;
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = `
+                        <input type="hidden" name="_token" value="${CSRF_TOKEN}">
+                        <input type="hidden" name="_method" value="DELETE">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+            });
+        });
+    })();
     </script>
 @stop

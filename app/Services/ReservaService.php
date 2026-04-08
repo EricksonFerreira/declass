@@ -376,12 +376,16 @@ class ReservaService extends AbstractBaseService
 
     }
 
-    public function adicionaLog($reservaId, $userId, $json){
+    public function adicionaLog($reservaId, $userId, $json, string $acao = '', string $nivel = 'info'): void
+    {
         DB::table('reserva_logs')->insert([
             'reserva_id' => $reservaId,
-            'user_id' => $userId,
-            'detalhes' => $json,
-            'created_at' => date('Y-m-d H:i:s'),
+            'user_id'    => $userId,
+            'acao'       => $acao ?: (is_string($json) ? (json_decode($json, true)['acao'] ?? '') : ''),
+            'nivel'      => $nivel,
+            'detalhes'   => is_array($json) ? json_encode($json) : $json,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
     public function processarDadosReserva($reservaData)

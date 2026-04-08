@@ -561,8 +561,8 @@
         display: flex;
         align-items: center;
         gap: 18px;
-        background: linear-gradient(135deg, #f5f4ff 0%, #eef2ff 100%);
-        border: 1px solid #c7d0ff;
+        background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+        border: 1px solid #6ee7b7;
         border-radius: 16px;
         padding: 20px 22px;
         margin-top: 1rem;
@@ -573,14 +573,14 @@
         width: 50px;
         height: 50px;
         border-radius: 14px;
-        background: linear-gradient(135deg, var(--c-indigo), var(--c-sky));
+        background: linear-gradient(135deg, #10b981, #059669);
         color: #fff;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 1.2rem;
         flex-shrink: 0;
-        box-shadow: 0 6px 18px rgba(67,56,202,0.3);
+        box-shadow: 0 6px 18px rgba(16,185,129,0.35);
     }
 
     .ci-summary-card__content {
@@ -607,7 +607,7 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        background: linear-gradient(135deg, var(--c-indigo), var(--c-sky));
+        background: linear-gradient(135deg, #10b981, #059669);
         color: #fff;
         border: none;
         border-radius: 12px;
@@ -616,14 +616,14 @@
         font-weight: 800;
         cursor: pointer;
         transition: all 0.2s;
-        box-shadow: 0 6px 18px rgba(67,56,202,0.3);
+        box-shadow: 0 6px 18px rgba(16,185,129,0.35);
         white-space: nowrap;
         letter-spacing: -0.01em;
     }
 
     .ci-btn-create:hover {
         transform: translateY(-2px);
-        box-shadow: 0 10px 26px rgba(67,56,202,0.4);
+        box-shadow: 0 10px 26px rgba(16,185,129,0.45);
         color: #fff;
     }
 

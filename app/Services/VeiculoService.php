@@ -533,6 +533,89 @@ class VeiculoService extends AbstractBaseService
             ->toArray();
     }
 
+    /**
+     * Busca veículos disponíveis para o período de uma reserva na estação da reserva,
+     * aplicando filtros de texto opcionais (placa, nome, chassi, cor, modelo, etc.).
+     *
+     * @param int   $estacaoId
+     * @param string $dataInicio
+     * @param string $dataFim
+     * @param int   $reservaId  excluir movimentações desta reserva
+     * @param array $filtros    placa|nome|chassi|cor|modelo|marca_id|grupo_frota_id|tipo_frota_id|ativo|ano_de|ano_ate|kms_ate
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function buscarDisponiveisCheckin(int $estacaoId, string $dataInicio, string $dataFim, int $reservaId, array $filtros = [])
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->with(['marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo'])
+            ->where('local_disponibilidade', $estacaoId)
+            ->where(function ($q) use ($dataInicio) {
+                $q->whereNull('data_hora_disponibilidade')
+                  ->orWhere('data_hora_disponibilidade', '<=', $dataInicio);
+            })
+            ->whereDoesntHave('movimentacoes', function ($q) use ($dataInicio, $dataFim, $reservaId) {
+                $q->where('movimentacoes.reserva_id', '!=', $reservaId)
+                  ->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
+                  ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                  ->where('reservas.data_inicio', '<', $dataFim)
+                  ->where('reservas.data_fim', '>', $dataInicio);
+            })
+            ->whereDoesntHave('movimentacoes', function ($q) use ($dataFim) {
+                $q->whereNull('data_chegada_real')
+                  ->where(function ($s) use ($dataFim) {
+                      $s->whereNull('data_saida')->orWhere('data_saida', '<', $dataFim);
+                  });
+                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
+                if (!empty($cancelados)) {
+                    $q->whereNotIn('status_movimentacao_id', $cancelados);
+                }
+            });
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        // Filtros de texto/seleção
+        if (!empty($filtros['placa'])) {
+            $query->where('placa_licenca', 'like', '%' . $filtros['placa'] . '%');
+        }
+        if (!empty($filtros['nome'])) {
+            $query->where('nome', 'like', '%' . $filtros['nome'] . '%');
+        }
+        if (!empty($filtros['chassi'])) {
+            $query->where('chassi', 'like', '%' . $filtros['chassi'] . '%');
+        }
+        if (!empty($filtros['cor'])) {
+            $query->where('cor', 'like', '%' . $filtros['cor'] . '%');
+        }
+        if (!empty($filtros['modelo_id_exato'])) {
+            $query->where('modelo_id', (int) $filtros['modelo_id_exato']);
+        } elseif (!empty($filtros['modelo'])) {
+            $query->whereHas('modelo', fn($q) => $q->where('nome', 'like', '%' . $filtros['modelo'] . '%'));
+        }
+        if (!empty($filtros['marca_id'])) {
+            $query->where('marca_id', (int) $filtros['marca_id']);
+        }
+        if (!empty($filtros['grupo_frota_id'])) {
+            $query->where('grupo_frota_id', (int) $filtros['grupo_frota_id']);
+        }
+        if (!empty($filtros['tipo_frota_id'])) {
+            $query->where('tipo_frota_id', (int) $filtros['tipo_frota_id']);
+        }
+        if (isset($filtros['ativo']) && $filtros['ativo'] !== '') {
+            $query->where('ativo', $filtros['ativo'] === '1' ? 'S' : 'N');
+        }
+        if (!empty($filtros['ano_de'])) {
+            $query->where('ano_modelo', '>=', (int) $filtros['ano_de']);
+        }
+        if (!empty($filtros['ano_ate'])) {
+            $query->where('ano_modelo', '<=', (int) $filtros['ano_ate']);
+        }
+        if (!empty($filtros['kms_ate'])) {
+            $query->where('kms', '<=', (int) $filtros['kms_ate']);
+        }
+
+        return $query->get();
+    }
+
     public function getVeiculosDisponiveisParaCheckin($estacao_id)
     {
         // Falta corrigir essa lógica

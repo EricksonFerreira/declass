@@ -3,7 +3,10 @@
     "allow": [
       "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/components -type f -name x-*.php)",
       "Bash(php artisan:*)",
-      "Bash(php c:/Users/Erickson/Dev/laragon/www/xpandCars/artisan route:list --path=reserva --method=POST)"
+      "Bash(php c:/Users/Erickson/Dev/laragon/www/xpandCars/artisan route:list --path=reserva --method=POST)",
+      "Bash(php -r ':*)",
+      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations -type f -exec grep -l \"reserva_logs\\\\|contrato_checkin\" {} \\\\;)",
+      "Bash(grep -rn \"Schema::create.*contrato\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)"
     ]
   }
 }

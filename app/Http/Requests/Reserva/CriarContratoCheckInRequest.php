@@ -21,23 +21,31 @@ class CriarContratoCheckInRequest extends FormRequest
      */
     public function rules(): array
     {
+        // Verifica se já existe contrato para esta reserva (modo edição)
+        $reservaId = $this->route('id');
+        $contratoJaExiste = \DB::table('contrato_checkin')
+            ->where('reserva_id', $reservaId)
+            ->exists();
+
+        $fotoRule = $contratoJaExiste ? 'nullable|image|max:8192' : 'required|image|max:8192';
+
         return [
             'data_saida' => 'required|date',
             'hora_saida' => 'required|date_format:H:i',
-            'marca_id' => 'required|integer|exists:marcas,id',
-            'modelo_id' => 'required|integer|exists:modelos,id',
+            'marca_id' => 'nullable|integer|exists:marcas,id',
+            'modelo_id' => 'nullable|integer|exists:modelos,id',
             'nivel_combustivel' => 'required|string|in:Reserva,1/8,1/4,3/8,1/2,5/8,3/4,7/8,Cheio',
             'notas_saida' => 'nullable|string|max:255',
             'observacoes_saida' => 'nullable|string|max:255',
             'quilometragem_atual' => 'required|numeric',
             'veiculo_id' => 'required|integer|exists:veiculos,id',
             'motivo_upgrade' => 'nullable|string|max:500',
-            'foto_direita' => 'required|image|max:8192',
-            'foto_esquerda' => 'required|image|max:8192',
-            'foto_frente' => 'required|image|max:8192',
-            'foto_tras' => 'required|image|max:8192',
-            'foto_velocimetro' => 'required|image|max:8192',
-            'foto_combustivel' => 'required|image|max:8192',
+            'foto_direita' => $fotoRule,
+            'foto_esquerda' => $fotoRule,
+            'foto_frente' => $fotoRule,
+            'foto_tras' => $fotoRule,
+            'foto_velocimetro' => $fotoRule,
+            'foto_combustivel' => $fotoRule,
         ];
     }
 

@@ -70,9 +70,25 @@
                         @endif
 
                         @if($reserva->podeAssinarContrato())
-                            <a class="dropdown-item" href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" id="btnAssinarContratoReserva">
+                            <a class="dropdown-item border-bottom" href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" id="btnAssinarContratoReserva">
                                 <i class="fas fa-signature mr-2"></i> Assinar contrato
                             </a>
+                        @endif
+
+                        @if($reserva->contratoCheckin)
+                            @if($reserva->contratoCheckin->assinado !== 'S')
+                                {{-- Não assinado: pode editar diretamente --}}
+                                <a class="dropdown-item border-bottom" href="{{ route('reserva.checkin', $reserva->id) }}">
+                                    <i class="fas fa-edit mr-2"></i> Editar contrato
+                                </a>
+                            @endif
+                            {{-- Sempre pode excluir e recriar --}}
+                            <button type="button" class="dropdown-item text-danger js-excluir-contrato-checkin"
+                                data-url="{{ route('reserva.checkin.excluirContrato', $reserva->id) }}"
+                                data-assinado="{{ $reserva->contratoCheckin->assinado === 'S' ? '1' : '0' }}">
+                                <i class="fas fa-trash mr-2"></i>
+                                {{ $reserva->contratoCheckin->assinado === 'S' ? 'Excluir contrato assinado e recriar' : 'Excluir e recriar contrato' }}
+                            </button>
                         @endif
                     </div>
                 </div>

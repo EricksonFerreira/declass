@@ -13,6 +13,7 @@ class HorarioDiario extends Model
     protected $fillable = [
         'nome',
         'ativo',
+        'empresa_id',
     ];
 
     public function estacoes()

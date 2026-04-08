@@ -307,7 +307,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 $query->with(['user', 'pagoPor'])->orderByDesc('id');
             },
             'contratoCheckin.grupoFrotaOriginal',
-            'contratoCheckin.veiculo',
+            'contratoCheckin.veiculo.marca',
             'contratoCheckin.usuarioUpgrade',
             'calcao',
             'veiculoDano' => fn ($q) => $q->orderByDesc('id')->take(10),
@@ -1305,11 +1305,17 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $veiculos = collect();
 
+        // Contrato existente (edição) — pré-preenche os campos
+        $contratoExistente = $this->contratoCheckinService->getModel()->newQuery()
+            ->with('veiculo')
+            ->where('reserva_id', $reserva_id)
+            ->first();
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
             new BreadCrumbItem('Detalhes da Reserva Nº' . $reserva_id, route('reserva.show', $reserva_id)),
-            new BreadCrumbItem('Check-in')
+            new BreadCrumbItem($contratoExistente ? 'Editar Check-in' : 'Check-in')
         ]);
 
         return view(
@@ -1321,10 +1327,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'veiculos',
                 'breadcrumb',
                 'categoriaDanos',
-                'checkinModelosJson'
+                'checkinModelosJson',
+                'contratoExistente'
             )
         )
-            ->with('titulo', 'Check-in da reserva Nº ' . $reserva->id);
+            ->with('titulo', ($contratoExistente ? 'Editar Check-in' : 'Check-in') . ' da reserva Nº ' . $reserva->id);
     }
 
     /**
@@ -1367,6 +1374,73 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'nome' => $v->nome,
             ])->values()
         );
+    }
+
+    /**
+     * Retorna veículos disponíveis para o checkin via modal de busca avançada.
+     *
+     * Comportamento sem filtros ativos:
+     *  1. Tenta retornar apenas veículos da marca/modelo da reserva.
+     *  2. Se não houver, retorna todos os disponíveis no período/estação.
+     *
+     * Com filtros aplicados pelo usuário: usa apenas os filtros informados.
+     */
+    public function veiculosModalCheckin(Request $request, $reserva_id)
+    {
+        $reserva = $this->reservaService->getById($reserva_id, ['modelos']);
+
+        $dataInicio = Carbon::parse($reserva->data_inicio)->format('Y-m-d H:i:s');
+        $dataFim    = Carbon::parse($reserva->data_fim)->format('Y-m-d H:i:s');
+        $estacaoId  = (int) $reserva->estacao_retirada_id;
+
+        $filtros = $request->only(['placa', 'nome', 'chassi', 'cor', 'modelo', 'marca_id', 'grupo_frota_id', 'tipo_frota_id', 'ativo', 'ano_de', 'ano_ate', 'kms_ate']);
+        $filtrosVazios = collect($filtros)->filter(fn($v) => $v !== null && $v !== '')->isEmpty();
+
+        if ($filtrosVazios) {
+            // Sem filtros: tenta primeiro os da marca/modelo da reserva
+            $filtrosMarcaModelo = [];
+            if (!empty($reserva->modelos?->marca_id)) {
+                $filtrosMarcaModelo['marca_id'] = $reserva->modelos->marca_id;
+            }
+            if (!empty($reserva->modelo_id)) {
+                $filtrosMarcaModelo['modelo_id_exato'] = $reserva->modelo_id;
+            }
+
+            $veiculos = $this->veiculoService->buscarDisponiveisCheckin(
+                $estacaoId, $dataInicio, $dataFim, (int) $reserva_id, $filtrosMarcaModelo
+            );
+
+            // Se não encontrou nenhum, busca todos disponíveis
+            if ($veiculos->isEmpty()) {
+                $veiculos = $this->veiculoService->buscarDisponiveisCheckin(
+                    $estacaoId, $dataInicio, $dataFim, (int) $reserva_id, []
+                );
+            }
+        } else {
+            $veiculos = $this->veiculoService->buscarDisponiveisCheckin(
+                $estacaoId, $dataInicio, $dataFim, (int) $reserva_id, $filtros
+            );
+        }
+
+        $toArray = static fn ($v) => [
+            'id'              => $v->id,
+            'nome'            => $v->nome ?? '',
+            'placa'           => $v->placa_licenca ?? '',
+            'marca'           => $v->marca?->nome ?? '',
+            'modelo'          => $v->modelo?->nome ?? '',
+            'grupo'           => $v->grupoFrota?->nome ?? '',
+            'tipo'            => $v->tipoFrota?->nome ?? '',
+            'status'          => $v->statusVeiculo?->nome ?? '',
+            'ano_fab'         => $v->ano_fabricacao ?? '',
+            'ano_mod'         => $v->ano_modelo ?? '',
+            'cor'             => $v->cor ?? '',
+            'kms'             => $v->kms ?? '',
+            'ativo'           => $v->ativo === 'S' ? 'Sim' : 'Não',
+            'estacao'         => '',
+            'nivel_combustivel' => '',
+        ];
+
+        return response()->json(['veiculos' => $veiculos->map($toArray)->values()]);
     }
 
     public function verContratoCheckin(Request $request, $reserva_id){
@@ -1529,7 +1603,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 $this->contratoCheckinService->assinarDocumento($dados['contrato_id'], $dados['assinatura']);
                 $this->reservaService->checkInRealizado($reserva_id, $contrato->veiculo_id);
                 $this->movimentacaoService->realizarCheckIn($dados['veiculo_id'], $reserva->estacao_retirada_id, $reserva_id);
-                $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode(['acao' => 'Contrato de check-in assinado']));
+                $this->reservaService->adicionaLog(
+                    $reserva_id, Auth::id(),
+                    ['veiculo' => $contrato->veiculo?->nome ?? "ID {$contrato->veiculo_id}"],
+                    'Contrato de check-in assinado', 'success'
+                );
                 
                 return response()->json(['success' => true, 'message' => 'Contrato assinado com sucesso']);
             } catch (\Exception $e) {
@@ -1545,6 +1623,18 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $dados = $request->validated();
         $dados['reserva_id'] = $reserva_id;
 
+        // Deriva marca_id e modelo_id do veículo selecionado quando não enviados pelo formulário
+        if (empty($dados['marca_id']) || empty($dados['modelo_id'])) {
+            $veiculo = $this->veiculoService->getById((int) $dados['veiculo_id']);
+            $dados['marca_id']  = $dados['marca_id']  ?: (int) $veiculo->marca_id;
+            $dados['modelo_id'] = $dados['modelo_id'] ?: (int) $veiculo->modelo_id;
+        }
+
+        // Verifica se já existe contrato para esta reserva (modo edição)
+        $contratoExistente = $this->contratoCheckinService->getModel()->newQuery()
+            ->where('reserva_id', $reserva_id)
+            ->first();
+
         try{
             // Salva as fotos do check-in (passo 2) no storage e registra os paths no contrato.
             $dir = 'checkin/reserva_' . (int) $reserva_id;
@@ -1557,26 +1647,62 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'foto_combustivel' => 'foto_combustivel_path',
             ];
 
+            $destDir = storage_path('app/public/' . $dir);
+            if (!is_dir($destDir)) {
+                mkdir($destDir, 0775, true);
+            }
+
             foreach ($map as $input => $col) {
-                if ($request->hasFile($input)) {
-                    $path = $request->file($input)->storePublicly($dir, 'public');
-                    $dados[$col] = $path;
+                if ($request->hasFile($input) && $request->file($input)->isValid()) {
+                    // Remove foto antiga se existir
+                    if ($contratoExistente && !empty($contratoExistente->$col)) {
+                        $oldPath = storage_path('app/public/' . $contratoExistente->$col);
+                        if (file_exists($oldPath)) {
+                            @unlink($oldPath);
+                        }
+                    }
+                    $file      = $request->file($input);
+                    $extension = $file->getClientOriginalExtension() ?: 'jpg';
+                    $filename  = \Illuminate\Support\Str::random(40) . '.' . $extension;
+                    $file->move($destDir, $filename);
+                    $dados[$col] = $dir . '/' . $filename;
+                } elseif ($contratoExistente) {
+                    // Mantém a foto existente se nenhuma nova foi enviada
+                    $dados[$col] = $contratoExistente->$col;
                 }
             }
 
             // Detecta e registra upgrade de categoria automaticamente
             $this->resolverDadosUpgrade($dados, (int) $reserva_id);
 
-            $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
-                'acao'              => 'Contrato de check-in criado',
-                'houve_upgrade'     => $dados['houve_upgrade_categoria'] ?? false,
-                'motivo_upgrade'    => $dados['motivo_upgrade'] ?? null,
-            ]));
-            $contrato = $this->contratoCheckinService->create($dados);
-            return response()->json($contrato);
+            if ($contratoExistente) {
+                // Atualiza contrato existente
+                $contratoExistente->update($dados);
+                $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
+                    'houve_upgrade'  => $dados['houve_upgrade_categoria'] ?? false,
+                    'motivo_upgrade' => $dados['motivo_upgrade'] ?? null,
+                    'veiculo_id'     => $dados['veiculo_id'] ?? null,
+                ], 'Contrato de check-in editado', 'info');
+                return response()->json($contratoExistente->fresh());
+            } else {
+                // Cria novo contrato
+                $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
+                    'houve_upgrade'  => $dados['houve_upgrade_categoria'] ?? false,
+                    'motivo_upgrade' => $dados['motivo_upgrade'] ?? null,
+                    'veiculo_id'     => $dados['veiculo_id'] ?? null,
+                ], 'Contrato de check-in criado', 'success');
+                $contrato = $this->contratoCheckinService->create($dados);
+                return response()->json($contrato);
+            }
 
         }catch(\Exception $e){
-            throw new \Exception('Erro ao criar contrato de check-in');
+            \Log::error('criarContratoCheckIn falhou', [
+                'reserva_id' => $reserva_id,
+                'message'    => $e->getMessage(),
+                'file'       => $e->getFile(),
+                'line'       => $e->getLine(),
+            ]);
+            return response()->json(['message' => $e->getMessage()], 500);
         }
     }
 
@@ -1713,22 +1839,20 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return;
         }
 
-        // Regras de upgrade/downgrade
-        // Diferente do grupo original: precisa ser upgrade (nunca downgrade)
-        $ehUpgrade = $this->upgradeVeiculoService->veiculoElegivelParaUpgrade($veiculo, $reserva);
-        if (!$ehUpgrade) {
-            throw ValidationException::withMessages([
-                'veiculo_id' => 'Nao e permitido selecionar veiculo de categoria inferior a reservada (downgrade bloqueado).',
-            ]);
+        // Categoria original ainda tem disponibilidade → aplica regras de upgrade/downgrade
+        $categoriaDisponivel = $this->upgradeVeiculoService->categoriaOriginalTemDisponibilidade($reserva);
+
+        if ($categoriaDisponivel) {
+            // Há veículos na categoria original: só permite upgrade (nunca downgrade)
+            $ehUpgrade = $this->upgradeVeiculoService->veiculoElegivelParaUpgrade($veiculo, $reserva);
+            if (!$ehUpgrade) {
+                throw ValidationException::withMessages([
+                    'veiculo_id' => 'Nao e permitido selecionar veiculo de categoria inferior a reservada (downgrade bloqueado).',
+                ]);
+            }
         }
 
-        // Upgrade so e permitido quando nao ha disponibilidade na categoria original
-        if ($this->upgradeVeiculoService->categoriaOriginalTemDisponibilidade($reserva)) {
-            throw ValidationException::withMessages([
-                'veiculo_id' => 'Upgrade permitido apenas quando nao ha veiculo disponivel na categoria original.',
-            ]);
-        }
-
+        // Categoria original sem disponibilidade (ou é upgrade): registra como upgrade
         $motivo = trim((string) ($dados['motivo_upgrade'] ?? ''));
 
         $dados['houve_upgrade_categoria'] = true;
@@ -1739,6 +1863,97 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     // ══════════════════════════════════════════════════════════════
     // FEATURE 2: Editar reserva no show
+    // ══════════════════════════════════════════════════════════════
+
+    /**
+     * Exclui o contrato de check-in e redireciona para recriação.
+     * Se assinado, o fato é registrado no log com nível danger.
+     */
+    public function excluirContratoCheckin(Request $request, $reserva_id)
+    {
+        $reserva  = $this->reservaService->getById($reserva_id, ['contratoCheckin']);
+        $contrato = $reserva->contratoCheckin;
+
+        if (!$contrato) {
+            return redirect()->route('reserva.show', $reserva_id)
+                ->with('warning', 'Nenhum contrato de check-in encontrado.');
+        }
+
+        $foiAssinado = $contrato->assinado === 'S';
+        $veiculoId   = $contrato->veiculo_id;
+        $veiculoNome = $contrato->veiculo?->nome ?? "ID {$veiculoId}";
+
+        // Remove arquivos de fotos do storage
+        $fotoCols = [
+            'foto_direita_path', 'foto_esquerda_path', 'foto_frente_path',
+            'foto_tras_path',    'foto_velocimetro_path', 'foto_combustivel_path',
+        ];
+        foreach ($fotoCols as $col) {
+            if (!empty($contrato->$col)) {
+                \Illuminate\Support\Facades\Storage::disk('public')->delete($contrato->$col);
+            }
+        }
+
+        // Remove arquivo de assinatura
+        if ($foiAssinado && !empty($contrato->assinatura)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->delete($contrato->assinatura);
+        }
+
+        $contrato->delete();
+
+        $this->reservaService->adicionaLog(
+            $reserva_id,
+            Auth::id(),
+            json_encode([
+                'acao'        => 'Contrato de check-in excluído',
+                'foi_assinado' => $foiAssinado,
+                'veiculo'     => $veiculoNome,
+                'excluido_por' => Auth::user()?->name ?? Auth::user()?->nome ?? 'Usuário',
+            ]),
+            'Contrato de check-in excluído' . ($foiAssinado ? ' (estava assinado)' : ''),
+            $foiAssinado ? 'danger' : 'warning'
+        );
+
+        return redirect()->route('reserva.checkin', $reserva_id)
+            ->with('warning', $foiAssinado
+                ? 'Contrato assinado excluído. Crie um novo contrato.'
+                : 'Contrato excluído. Crie um novo contrato.'
+            );
+    }
+
+    /**
+     * Retorna o histórico de logs da reserva em JSON (para carregamento via AJAX).
+     */
+    public function historicoReserva(Request $request, $reserva_id)
+    {
+        $logs = \App\Models\ReservaLog::where('reserva_id', $reserva_id)
+            ->with('usuario:id,name,nome')
+            ->orderByDesc('created_at')
+            ->get()
+            ->map(function ($log) {
+                $detalhes = [];
+                if ($log->detalhes) {
+                    $decoded = json_decode($log->detalhes, true);
+                    $detalhes = is_array($decoded) ? $decoded : ['mensagem' => $log->detalhes];
+                }
+                // Remove chave 'acao' dos detalhes pois já está em $log->acao
+                unset($detalhes['acao']);
+
+                $nomeUsuario = $log->usuario?->name ?? $log->usuario?->nome ?? 'Sistema';
+
+                return [
+                    'id'         => $log->id,
+                    'acao'       => $log->acao ?: ($detalhes['acao'] ?? 'Ação registrada'),
+                    'nivel'      => $log->nivel ?? 'info',
+                    'usuario'    => $nomeUsuario,
+                    'data'       => $log->created_at?->format('d/m/Y H:i:s'),
+                    'detalhes'   => $detalhes,
+                ];
+            });
+
+        return response()->json(['logs' => $logs]);
+    }
+
     // ══════════════════════════════════════════════════════════════
 
     /**

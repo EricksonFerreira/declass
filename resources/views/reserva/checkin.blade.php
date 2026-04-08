@@ -89,6 +89,13 @@
 
                     <form id="form_dados_veiculos">
 
+                        @if($contratoExistente && $contratoExistente->assinado)
+                        <div class="alert alert-danger mb-3" role="alert">
+                            <i class="fas fa-lock mr-2"></i>
+                            <strong>Contrato assinado.</strong> Os campos estão bloqueados para edição. Para modificar, acesse a reserva, exclua o contrato e crie um novo.
+                        </div>
+                        @endif
+
                         {{-- Banner de upgrade de categoria (exibido via JS quando categoria original indisponivel) --}}
                         <div id="upgrade-banner" class="alert alert-warning d-none mb-3" role="alert">
                             <div class="d-flex align-items-start">
@@ -127,49 +134,37 @@
                                 <i class="fas fa-car"></i>
                                 <div>
                                     <strong>Identificacao do Veiculo</strong>
-                                    <span id="identificacao_hint_normal">Marcas e modelos vêm apenas de veículos deste grupo de frota. Depois de escolher os dois, listamos os veículos livres no período desta reserva.</span>
-                                    <span id="identificacao_hint_upgrade" class="d-none">Selecione diretamente um veículo disponível no período. Apenas categorias superiores ficam habilitadas.</span>
+                                    <span>Clique na lupa para buscar os veículos disponíveis no período desta reserva na locadora.</span>
                                 </div>
                             </div>
-                            @if($marcas->isEmpty())
-                                <p class="text-warning small mb-2"><i class="fas fa-exclamation-triangle"></i> Não há veículos cadastrados neste grupo de frota (ou sem modelo). Cadastre veículos antes do check-in.</p>
-                            @endif
+                            @php
+                                $ciVeiculoId  = old('veiculo',         $contratoExistente?->veiculo_id ?? '');
+                                $ciVeiculoTxt = old('veiculo_display',
+                                    $contratoExistente?->veiculo
+                                        ? ($contratoExistente->veiculo->nome . ($contratoExistente->veiculo->placa_licenca ? ' (' . $contratoExistente->veiculo->placa_licenca . ')' : ''))
+                                        : ''
+                                );
+                            @endphp
                             <div class="row">
-                                <div class="col-md-4" id="marca_col">
-                                    <label for="marca">Marca <span class="req">*</span></label>
-                                    <select required name="marca" id="marca" class="form-control form-control-sm select2ci">
-                                        @php $marcaReserva = (int) ($reserva->modelos->marca_id ?? 0); @endphp
-                                        <option value="" disabled {{ $marcaReserva === 0 ? 'selected' : '' }}>Selecione uma marca</option>
-                                        @foreach ($marcas as $marca)
-                                            <option value="{{ $marca->id }}" {{ $marcaReserva === (int) $marca->id ? 'selected' : '' }}>{{ $marca->nome }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                                <div class="col-md-4" id="modelo_col">
-                                    <label for="modelo">Modelo <span class="req">*</span></label>
-                                    <select required name="modelo" id="modelo" class="form-control form-control-sm select2ci">
-                                        <option value="" selected disabled>Selecione a marca</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-4" id="veiculo_col">
+                                <div class="col-md-6" id="veiculo_col">
                                     <label for="veiculo_display">Veiculo <span class="req">*</span></label>
                                     <div class="input-group">
-                                        <input type="hidden" id="veiculo" name="veiculo" value="{{ old('veiculo', '') }}">
-                                        <input type="text" id="veiculo_display" class="form-control form-control-sm" readonly placeholder="Selecione um veículo" value="{{ old('veiculo_display', '') }}">
+                                        <input type="hidden" id="veiculo" name="veiculo" value="{{ $ciVeiculoId }}">
+                                        <input type="text" id="veiculo_display" class="form-control form-control-sm" readonly placeholder="Clique na lupa para selecionar" value="{{ $ciVeiculoTxt }}">
                                         <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-secondary" id="btnBuscarVeiculoCheckin" title="Buscar veículo"><i class="fas fa-search"></i></button>
-                                            <button type="button" class="btn btn-outline-secondary d-none" id="btnLimparVeiculoCheckin" title="Limpar veículo"><i class="fas fa-times"></i></button>
+                                            <button type="button" class="btn btn-outline-secondary" id="btnBuscarVeiculoCheckin" title="Buscar veículo disponível"><i class="fas fa-search"></i></button>
+                                            <button type="button" class="btn btn-outline-danger d-none" id="btnLimparVeiculoCheckin" title="Limpar veículo"><i class="fas fa-times"></i></button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        {{-- Vehicle search modal (fills #veiculo and #veiculo_display, and can auto-fill kms/nivel) --}}
+
+                        {{-- Modal de busca de veículos disponíveis no período da reserva --}}
                         <x-veiculo.busca-avancada-modal
                             prefix="checkin"
-                            title="Buscar Veículo"
-                            buscar-url="{{ route('reserva.checkin.veiculosDisponiveis', $reserva->id) }}"
+                            title="Veículos Disponíveis no Período"
+                            buscar-url="{{ route('reserva.checkin.veiculosModal', $reserva->id) }}"
                             trigger-id="btnBuscarVeiculoCheckin"
                             hidden-input-id="veiculo"
                             display-input-id="veiculo_display"
@@ -180,55 +175,67 @@
                         @push('js')
                             <script>
                                 (function () {
-                                    var btn = document.getElementById('btnBuscarVeiculoCheckin');
-                                    if (btn) {
-                                        btn.addEventListener('click', function () {
-                                            try {
-                                                var marca = document.getElementById('marca')?.value || '';
-                                                var modelo = document.getElementById('modelo')?.value || '';
-                                                var elMarca = document.getElementById('checkin_fv_marca_id');
-                                                if (elMarca) elMarca.value = marca;
-                                                var elModelo = document.getElementById('checkin_fv_modelo');
-                                                if (elModelo) elModelo.value = modelo;
-                                            } catch (e) { /* ignore */ }
+                                    // Auto-search quando o modal abre
+                                    var modalEl = document.getElementById('checkin_modalBuscarVeiculo');
+                                    if (modalEl) {
+                                        modalEl.addEventListener('shown.bs.modal', function () {
+                                            var btnBuscar = document.getElementById('checkin_btnAplicarFiltroVeiculo');
+                                            if (btnBuscar) btnBuscar.click();
                                         });
+                                        // Bootstrap 3/AdminLTE usa jQuery events
+                                        if (window.$) {
+                                            window.$('#checkin_modalBuscarVeiculo').on('shown.bs.modal', function () {
+                                                var btnBuscar = document.getElementById('checkin_btnAplicarFiltroVeiculo');
+                                                if (btnBuscar) btnBuscar.click();
+                                            });
+                                        }
                                     }
 
+                                    // Ao selecionar veículo: preenche kms (min = kms do veículo) e combustível
                                     document.addEventListener('veiculo:selecionado', function (ev) {
                                         var d = ev.detail || {};
                                         var kms = d.kms || '';
-                                        if (kms) {
-                                            var quil = document.getElementById('quilometragem');
-                                            if (quil) {
-                                                try { quil.min = String(kms); } catch (e) {}
-                                                if (!quil.value || Number(quil.value) < Number(kms)) quil.value = kms;
-                                            }
+                                        var quil = document.getElementById('quilometragem');
 
-                                            var combEl = document.getElementById('combustivel');
-                                            if (combEl && d.nivel) {
-                                                var found = Array.from(combEl.options).find(o => String(o.value).toLowerCase() === String(d.nivel).toLowerCase() || String(o.text).toLowerCase() === String(d.nivel).toLowerCase());
-                                                if (found) combEl.value = found.value;
-                                            } else if (combEl) {
-                                                var cheioOpt = Array.from(combEl.options).find(o => o.text.trim().toLowerCase() === 'cheio' || String(o.value).toLowerCase() === 'cheio');
-                                                if (cheioOpt) combEl.value = cheioOpt.value;
-                                            }
+                                        if (kms && quil) {
+                                            var kmsNum = Number(kms);
+                                            quil.min = String(kmsNum);
+                                            quil.value = kmsNum;
+                                        }
 
-                                            var dataEl = document.getElementById('data_saida');
-                                            var horaEl = document.getElementById('hora_saida');
-                                            var now = new Date();
-                                            if (dataEl && !dataEl.value) {
-                                                var yyyy = now.getFullYear();
-                                                var mm = String(now.getMonth() + 1).padStart(2, '0');
-                                                var dd = String(now.getDate()).padStart(2, '0');
-                                                dataEl.value = `${yyyy}-${mm}-${dd}`;
-                                            }
-                                            if (horaEl && !horaEl.value) {
-                                                var hh = String(now.getHours()).padStart(2, '0');
-                                                var mi = String(now.getMinutes()).padStart(2, '0');
-                                                horaEl.value = `${hh}:${mi}`;
-                                            }
+                                        var combEl = document.getElementById('combustivel');
+                                        if (combEl && d.nivel) {
+                                            var found = Array.from(combEl.options).find(function (o) {
+                                                return String(o.value).toLowerCase() === String(d.nivel).toLowerCase()
+                                                    || String(o.text).toLowerCase() === String(d.nivel).toLowerCase();
+                                            });
+                                            if (found) combEl.value = found.value;
+                                        }
+
+                                        var dataEl = document.getElementById('data_saida');
+                                        var horaEl = document.getElementById('hora_saida');
+                                        var now = new Date();
+                                        if (dataEl && !dataEl.value) {
+                                            dataEl.value = now.getFullYear() + '-'
+                                                + String(now.getMonth() + 1).padStart(2, '0') + '-'
+                                                + String(now.getDate()).padStart(2, '0');
+                                        }
+                                        if (horaEl && !horaEl.value) {
+                                            horaEl.value = String(now.getHours()).padStart(2, '0') + ':'
+                                                + String(now.getMinutes()).padStart(2, '0');
                                         }
                                     });
+
+                                    // Impede que o usuário diminua o valor de quilometragem abaixo do mínimo
+                                    var quilEl = document.getElementById('quilometragem');
+                                    if (quilEl) {
+                                        quilEl.addEventListener('input', function () {
+                                            var min = Number(this.min);
+                                            if (min && Number(this.value) < min) {
+                                                this.value = min;
+                                            }
+                                        });
+                                    }
                                 }());
                             </script>
                         @endpush
@@ -242,32 +249,38 @@
                                     <span>Quilometragem atual, nivel de combustivel e data/hora de saida</span>
                                 </div>
                             </div>
+                            @php
+                                $ciKm        = old('quilometragem', $contratoExistente?->quilometragem_atual ?? '');
+                                $ciCombust   = old('combustivel',   $contratoExistente?->nivel_combustivel ?? '');
+                                $ciDataSaida = old('data_saida',    $contratoExistente?->data_saida ?? '');
+                                $ciHoraSaida = old('hora_saida',    $contratoExistente?->hora_saida ? substr($contratoExistente->hora_saida, 0, 5) : '');
+                                $niveis = ['Reserva','1/8','1/4','3/8','1/2','5/8','3/4','7/8','Cheio'];
+                            @endphp
                             <div class="row">
                                 <div class="col-md-3">
                                     <label for="quilometragem">Quilometragem Atual <span class="req">*</span></label>
-                                    <input type="number" required class="form-control form-control-sm" id="quilometragem" name="quilometragem" placeholder="Ex: 45200">
+                                    <input type="number" required class="form-control form-control-sm" id="quilometragem" name="quilometragem"
+                                           placeholder="Ex: 45200"
+                                           value="{{ $ciKm }}"
+                                           min="{{ $ciKm ?: 0 }}">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="combustivel">Nivel de Combustivel <span class="req">*</span></label>
                                     <select class="form-control form-control-sm" id="combustivel" required name="combustivel">
-                                        <option>Reserva</option>
-                                        <option>1/8</option>
-                                        <option>1/4</option>
-                                        <option>3/8</option>
-                                        <option>1/2</option>
-                                        <option>5/8</option>
-                                        <option>3/4</option>
-                                        <option>7/8</option>
-                                        <option>Cheio</option>
+                                        @foreach($niveis as $nivel)
+                                            <option {{ $ciCombust === $nivel ? 'selected' : '' }}>{{ $nivel }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-3">
                                     <label for="data_saida">Data de Saida <span class="req">*</span></label>
-                                    <input type="date" class="form-control form-control-sm" required id="data_saida" name="data_saida" min="{{ date('Y-m-d') }}">
+                                    <input type="date" class="form-control form-control-sm" required id="data_saida" name="data_saida"
+                                           value="{{ $ciDataSaida }}">
                                 </div>
                                 <div class="col-md-3">
                                     <label for="hora_saida">Hora de Saida <span class="req">*</span></label>
-                                    <input type="time" class="form-control form-control-sm" required id="hora_saida" name="hora_saida">
+                                    <input type="time" class="form-control form-control-sm" required id="hora_saida" name="hora_saida"
+                                           value="{{ $ciHoraSaida }}">
                                 </div>
                             </div>
                         </div>
@@ -295,27 +308,45 @@
 
                         @php
                             $fotos = [
-                                ['id' => 'foto_direita',     'label' => 'Direita'],
-                                ['id' => 'foto_esquerda',    'label' => 'Esquerda'],
-                                ['id' => 'foto_frente',      'label' => 'Frente'],
-                                ['id' => 'foto_tras',        'label' => 'Tras'],
-                                ['id' => 'foto_velocimetro', 'label' => 'Velocimetro'],
-                                ['id' => 'foto_combustivel', 'label' => 'Medidor de Combustivel'],
+                                ['id' => 'foto_direita',     'label' => 'Direita',              'col' => 'foto_direita_path'],
+                                ['id' => 'foto_esquerda',    'label' => 'Esquerda',             'col' => 'foto_esquerda_path'],
+                                ['id' => 'foto_frente',      'label' => 'Frente',               'col' => 'foto_frente_path'],
+                                ['id' => 'foto_tras',        'label' => 'Tras',                 'col' => 'foto_tras_path'],
+                                ['id' => 'foto_velocimetro', 'label' => 'Velocimetro',          'col' => 'foto_velocimetro_path'],
+                                ['id' => 'foto_combustivel', 'label' => 'Medidor de Combustivel','col' => 'foto_combustivel_path'],
                             ];
                         @endphp
 
                         <div class="row">
                             @foreach($fotos as $f)
+                                @php
+                                    $fotoExistente = $contratoExistente?->{$f['col']} ?? null;
+                                    $fotoUrl = $fotoExistente ? asset('storage/' . $fotoExistente) : null;
+                                @endphp
                                 <div class="col-md-4">
                                     <div class="ci-photo-card">
-                                        <label for="{{ $f['id'] }}">{{ $f['label'] }} <span class="req">*</span></label>
-                                        <input type="file" class="form-control form-control-sm" id="{{ $f['id'] }}" name="{{ $f['id'] }}" required accept="image/*">
+                                        <label for="{{ $f['id'] }}">
+                                            {{ $f['label'] }}
+                                            @if(!$contratoExistente)<span class="req">*</span>@endif
+                                        </label>
+                                        <input type="file" class="form-control form-control-sm" id="{{ $f['id'] }}" name="{{ $f['id'] }}" accept="image/*"
+                                               @if(!$contratoExistente) required @endif>
                                         <div class="ci-photo-preview" data-preview-for="{{ $f['id'] }}">
-                                            <span class="ci-photo-preview__placeholder">
-                                                <i class="far fa-image mr-1"></i>Sem imagem
-                                            </span>
+                                            @if($fotoUrl)
+                                                <img src="{{ $fotoUrl }}" alt="{{ $f['label'] }}" style="max-width:100%;max-height:160px;border-radius:6px;">
+                                            @else
+                                                <span class="ci-photo-preview__placeholder">
+                                                    <i class="far fa-image mr-1"></i>Sem imagem
+                                                </span>
+                                            @endif
                                         </div>
-                                        <small class="ci-hint">Max 8MB. Formatos: JPG/PNG/WEBP.</small>
+                                        <small class="ci-hint">
+                                            @if($fotoUrl)
+                                                Foto atual exibida. Selecione um novo arquivo para substituir.
+                                            @else
+                                                Max 8MB. Formatos: JPG/PNG/WEBP.
+                                            @endif
+                                        </small>
                                     </div>
                                 </div>
                             @endforeach
@@ -450,31 +481,53 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <label for="notas_saida">Notas na Saida</label>
-                                <textarea class="form-control form-control-sm" id="notas_saida" name="notas_saida" rows="5" placeholder="Ex: Cliente informou arranhao no para-choque traseiro..."></textarea>
+                                <textarea class="form-control form-control-sm" id="notas_saida" name="notas_saida" rows="5" placeholder="Ex: Cliente informou arranhao no para-choque traseiro...">{{ old('notas_saida', $contratoExistente?->notas_saida ?? '') }}</textarea>
                                 <small class="ci-hint">Notas visíveis no contrato gerado.</small>
                             </div>
                             <div class="col-md-6">
                                 <label for="observacoes_saida">Observacoes na Saida</label>
-                                <textarea class="form-control form-control-sm" id="observacoes_saida" name="observacoes_saida" rows="5" placeholder="Ex: Veiculo entregue com tanque cheio..."></textarea>
+                                <textarea class="form-control form-control-sm" id="observacoes_saida" name="observacoes_saida" rows="5" placeholder="Ex: Veiculo entregue com tanque cheio...">{{ old('observacoes_saida', $contratoExistente?->observacoes_saida ?? '') }}</textarea>
                                 <small class="ci-hint">Observacoes internas do operador.</small>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Resumo antes de criar --}}
-                    <div class="ci-summary-card">
-                        <div class="ci-summary-card__icon">
-                            <i class="fas fa-rocket"></i>
+                    {{-- Resumo antes de criar/salvar --}}
+                    @if($contratoExistente && $contratoExistente->assinado)
+                    {{-- Contrato assinado: bloqueia edição --}}
+                    <div class="ci-summary-card" style="background:linear-gradient(135deg,#fff5f5 0%,#fee2e2 100%);border-color:#fca5a5;">
+                        <div class="ci-summary-card__icon" style="background:linear-gradient(135deg,#ef4444,#b91c1c);">
+                            <i class="fas fa-lock"></i>
                         </div>
                         <div class="ci-summary-card__content">
-                            <strong>Pronto para criar o contrato?</strong>
-                            <p>Verifique se todos os dados dos Passos 1 e 2 estao preenchidos. Ao clicar em <em>Criar Contrato</em> o contrato sera gerado e voce sera redirecionado para a reserva.</p>
+                            <strong>Contrato Assinado — Edição Bloqueada</strong>
+                            <p>Este contrato já foi assinado em <em>{{ \Carbon\Carbon::parse($contratoExistente->data_assinatura)->format('d/m/Y H:i') }}</em> e não pode ser alterado. Para criar um novo contrato, acesse a página da reserva, exclua o contrato atual e recrie.</p>
+                        </div>
+                        <a href="{{ route('reserva.show', $reserva->id) }}" class="ci-btn-create" style="background:linear-gradient(135deg,#ef4444,#b91c1c);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                            <i class="fas fa-arrow-left"></i>
+                            Voltar para a Reserva
+                        </a>
+                    </div>
+                    @else
+                    <div class="ci-summary-card">
+                        <div class="ci-summary-card__icon">
+                            <i class="fas fa-{{ $contratoExistente ? 'edit' : 'rocket' }}"></i>
+                        </div>
+                        <div class="ci-summary-card__content">
+                            @if($contratoExistente)
+                                <strong>Salvar alterações no contrato?</strong>
+                                <p>Verifique se todos os dados estão corretos. Ao clicar em <em>Salvar Contrato</em> as alterações serão registradas e você será redirecionado para a reserva.</p>
+                            @else
+                                <strong>Pronto para criar o contrato?</strong>
+                                <p>Verifique se todos os dados dos Passos 1 e 2 estao preenchidos. Ao clicar em <em>Criar Contrato</em> o contrato sera gerado e voce sera redirecionado para a reserva.</p>
+                            @endif
                         </div>
                         <button type="button" class="ci-btn-create" id="btn_criar_contrato">
-                            <i class="fas fa-file-contract"></i>
-                            Criar Contrato
+                            <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }}"></i>
+                            {{ $contratoExistente ? 'Salvar Contrato' : 'Criar Contrato' }}
                         </button>
                     </div>
+                    @endif
                 </section>
 
                 {{-- Acoes do wizard --}}
@@ -486,9 +539,12 @@
                         <button type="button" class="btn-action btn-primary" id="wizardNext">
                             Continuar<i class="fas fa-arrow-right ml-1"></i>
                         </button>
+                        @if(!($contratoExistente && $contratoExistente->assinado))
                         <button type="button" class="btn-action btn-action-success d-none" id="wizardCreateBtn">
-                            <i class="fas fa-file-contract mr-1"></i>Criar Contrato
+                            <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }} mr-1"></i>
+                            {{ $contratoExistente ? 'Salvar Contrato' : 'Criar Contrato' }}
                         </button>
+                        @endif
                     </div>
                 </div>
 
@@ -709,6 +765,8 @@
     /* ========================
        WIZARD STEPS
     ======================== */
+    const contraModoEdicao = {{ $contratoExistente ? 'true' : 'false' }};
+
     const PHOTO_INPUT_IDS = [
         'foto_direita',
         'foto_esquerda',
@@ -825,6 +883,9 @@
     }
 
     function validateStep2Photos(showAlert = true) {
+        // Em modo edição, as fotos já existem — não obriga re-upload
+        if (contraModoEdicao) return true;
+
         const invalidos = [];
 
         PHOTO_INPUT_IDS.forEach(id => {
@@ -962,7 +1023,7 @@
             success: function (data) {
                 Swal.fire({
                     icon: 'success',
-                    title: 'Contrato criado com sucesso!',
+                    title: contraModoEdicao ? 'Contrato atualizado com sucesso!' : 'Contrato criado com sucesso!',
                     showConfirmButton: false,
                     timer: 2500,
                     toast: true,
@@ -1082,6 +1143,34 @@
 
     /* Init */
     showStep(1);
+
+    // Em modo edição, carrega danos do veículo já selecionado
+    @if($contratoExistente && $contratoExistente->veiculo_id)
+    (function() {
+        setTimeout(function() {
+            obterDanosExistentes();
+            obterDanosDetectados();
+        }, 300);
+    })();
+    @endif
+
+    // Contrato assinado: bloqueia todos os campos e botões do wizard
+    @if($contratoExistente && $contratoExistente->assinado)
+    (function() {
+        const form = document.getElementById('form_dados_veiculos');
+        if (form) {
+            form.querySelectorAll('input, select, textarea, button').forEach(function(el) {
+                el.disabled = true;
+            });
+        }
+        // Oculta botões de navegação do wizard (Continuar/Salvar)
+        const nextBtn  = document.getElementById('wizardNext');
+        const prevBtn  = document.getElementById('wizardPrev');
+        const createBtn = document.getElementById('wizardCreateBtn');
+        [nextBtn, createBtn].forEach(function(b) { if (b) b.classList.add('d-none'); });
+        // Mantém o botão Voltar funcional mas apenas para navegar entre steps já preenchidos
+    })();
+    @endif
 
     /* ========================
        UPGRADE DE CATEGORIA
