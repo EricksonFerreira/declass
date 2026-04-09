@@ -84,13 +84,7 @@
                 {{ csrf_field() }}
             </form>
 
-            @php
-                $mostrarSelectEmpresa = Auth::check()
-                    && Auth::user()->isAdministrador()
-                    && \Illuminate\Support\Facades\Schema::hasTable('empresas');
-            @endphp
-
-            @if($mostrarSelectEmpresa)
+            @if(Auth::check() && Auth::user()->isSuperAdmin() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
                 @php
                     $empresasMenu = \App\Models\Empresa::query()->orderBy('nome')->pluck('nome', 'id')->toArray();
                 @endphp

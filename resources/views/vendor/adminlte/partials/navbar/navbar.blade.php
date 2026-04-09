@@ -44,6 +44,11 @@
             if ($empresaIdSessao > 0) {
                 $empresaIdTema = $empresaIdSessao;
             }
+            // Para super admin sem empresa selecionada ("Todas"), tenta usar a empresa própria do usuário
+            // só para exibir o chip (sem alterar o contexto)
+            if ($empresaIdTema === null && Auth::user()->isSuperAdmin() && !empty(Auth::user()->empresa_id)) {
+                $empresaIdTema = (int) Auth::user()->empresa_id;
+            }
         } else {
             $empresaIdTema = (int) (Auth::user()->empresa_id ?? 0);
             $empresaSelecionada = $empresaIdTema;
