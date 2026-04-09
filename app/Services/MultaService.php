@@ -4,6 +4,9 @@ namespace App\Services;
 
 use App\Models\Multa;
 use App\Models\MultaHistorico;
+use App\Models\Reserva;
+use App\Models\Veiculo;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -44,12 +47,51 @@ class MultaService extends AbstractBaseService
         $dados['responsavel_lancamento_id'] = Auth::id();
         $this->injectEmpresaId($dados);
 
+        // Auto-vincular reserva: se não informada mas há veículo e data de infração
+        if (empty($dados['reserva_id']) && !empty($dados['veiculo_id']) && !empty($dados['data_hora_infracao'])) {
+            $reservaDetectada = $this->detectarReserva((int) $dados['veiculo_id'], $dados['data_hora_infracao']);
+            if ($reservaDetectada) {
+                $dados['reserva_id'] = $reservaDetectada->id;
+                // Preencher cliente/condutor da reserva se não vieram no form
+                if (empty($dados['cliente_id'])) {
+                    $dados['cliente_id'] = $reservaDetectada->user_id;
+                }
+            }
+        }
+
         /** @var Multa $multa */
         $multa = $this->model->create($dados);
 
-        $this->registrarHistorico($multa, null, null, null, 'Multa criada.');
+        $msg = 'Multa criada.';
+        if (!empty($dados['reserva_id'])) {
+            $msg .= " Vinculada automaticamente à Reserva #{$dados['reserva_id']}.";
+        }
+        $this->registrarHistorico($multa, null, null, null, $msg);
 
         return $multa;
+    }
+
+    /**
+     * Detecta se há uma reserva ativa para o veículo na data/hora informada.
+     */
+    private function detectarReserva(int $veiculoId, string $dataHora): ?Reserva
+    {
+        $veiculo = Veiculo::find($veiculoId);
+        if (!$veiculo || !$veiculo->modelo_id) {
+            return null;
+        }
+
+        try {
+            $dt = Carbon::parse($dataHora);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return Reserva::where('modelo_id', $veiculo->modelo_id)
+            ->where('data_inicio', '<=', $dt->toDateTimeString())
+            ->where('data_fim', '>=', $dt->toDateString())
+            ->orderByDesc('data_inicio')
+            ->first();
     }
 
     /**

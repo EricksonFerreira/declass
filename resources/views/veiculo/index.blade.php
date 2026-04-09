@@ -21,10 +21,38 @@
                     REGISTROS <span class="badge badge-success">{{ $veiculos->total() }}</span>
                 </h3>
 
-                <div class="align-bottom d-flex flex-row justify-between">
+                <div class="align-bottom d-flex flex-row justify-between" style="gap:6px;flex-wrap:wrap;">
                     <form action="{{ route('veiculo.setPerPage') }}" method="POST">
                         @csrf
                         <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                    </form>
+
+                    {{-- Ordenação --}}
+                    <form action="{{ route('veiculo.setOrdenacao') }}" method="POST" class="d-flex align-items-center" style="gap:4px;">
+                        @csrf
+                        <select name="orderBy" class="form-control form-control-xs" style="height:28px;font-size:.8rem;padding:2px 6px;border-radius:6px;border:1px solid #d0daea;" onchange="this.form.submit()">
+                            @php
+                                $ordens = [
+                                    'id'             => 'ID',
+                                    'nome'           => 'Nome',
+                                    'placa_licenca'  => 'Placa',
+                                    'renavam'        => 'RENAVAM',
+                                    'ano_fabricacao' => 'Ano Fab.',
+                                    'ano_modelo'     => 'Ano Mod.',
+                                    'kms'            => 'Km',
+                                    'created_at'     => 'Cadastro',
+                                ];
+                            @endphp
+                            @foreach($ordens as $val => $label)
+                                <option value="{{ $val }}" {{ ($orderBy ?? 'id') === $val ? 'selected' : '' }}>
+                                    Ord.: {{ $label }}
+                                </option>
+                            @endforeach
+                        </select>
+                        <select name="orderDir" class="form-control form-control-xs" style="height:28px;font-size:.8rem;padding:2px 6px;border-radius:6px;border:1px solid #d0daea;" onchange="this.form.submit()">
+                            <option value="asc"  {{ ($orderDir ?? 'asc') === 'asc'  ? 'selected' : '' }}>↑ Cresc.</option>
+                            <option value="desc" {{ ($orderDir ?? 'asc') === 'desc' ? 'selected' : '' }}>↓ Decresc.</option>
+                        </select>
                     </form>
 
                     <div class="veiculo-disponibilidade-filter" title="Filtrar por disponibilidade (pagina atual)">

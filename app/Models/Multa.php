@@ -34,8 +34,27 @@ class Multa extends Model
         'status_desconto',
         'responsavel_lancamento_id',
         'observacao',
+        'destino_cobranca',
+        'forma_pagamento',
+        'pago_em',
+        'pago_por_user_id',
+        'referencia_pagamento',
         'anexo_comprovante_path',
         'anexo_pdf_path',
+    ];
+
+    const DESTINO_COBRANCA = [
+        'empresa' => 'Empresa (débito interno)',
+        'cliente' => 'Cliente (cobrar na reserva)',
+    ];
+
+    const FORMAS_PAGAMENTO = [
+        'dinheiro'        => 'Dinheiro (cédulas)',
+        'cartao_credito'  => 'Cartão de Crédito',
+        'cartao_debito'   => 'Cartão de Débito',
+        'pix'             => 'PIX',
+        'boleto'          => 'Boleto',
+        'debito_automatico' => 'Débito Automático',
     ];
 
     protected $casts = [
@@ -44,6 +63,7 @@ class Multa extends Model
         'valor_original'       => 'decimal:2',
         'valor_desconto'       => 'decimal:2',
         'valor_final'          => 'decimal:2',
+        'pago_em'              => 'datetime',
     ];
 
     const STATUS_MULTA = [
@@ -83,6 +103,11 @@ class Multa extends Model
     public function condutor()
     {
         return $this->belongsTo(User::class, 'condutor_id');
+    }
+
+    public function pagoPor()
+    {
+        return $this->belongsTo(User::class, 'pago_por_user_id');
     }
 
     public function responsavelLancamento()

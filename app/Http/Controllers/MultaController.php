@@ -8,14 +8,18 @@ use App\Http\Requests\Multa\UpdateMultaRequest;
 use App\Models\Marca;
 use App\Models\Multa;
 use App\Models\GrupoFrota;
+use App\Models\Reserva;
 use App\Models\TipoFrota;
 use App\Models\StatusVeiculo;
+use App\Models\Veiculo;
 use App\Services\BreadcrumbService;
 use App\Services\MultaService;
 use App\Services\ReservaService;
 use App\Services\UsuarioService;
 use App\Services\VeiculoService;
 use App\Support\EmpresaContext;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -121,6 +125,47 @@ class MultaController extends BaseController
         ]));
     }
 
+    public function buscarReservaPorVeiculoData(Request $request): JsonResponse
+    {
+        $veiculoId = $request->query('veiculo_id');
+        $dataHora  = $request->query('data_hora');
+
+        if (!$veiculoId || !$dataHora) {
+            return response()->json(['reserva' => null]);
+        }
+
+        try {
+            $dt = Carbon::parse($dataHora);
+        } catch (\Throwable) {
+            return response()->json(['reserva' => null]);
+        }
+
+        $veiculo = Veiculo::find($veiculoId);
+        if (!$veiculo) {
+            return response()->json(['reserva' => null]);
+        }
+
+        $reserva = Reserva::where('modelo_id', $veiculo->modelo_id)
+            ->where('data_inicio', '<=', $dt->toDateTimeString())
+            ->where('data_fim', '>=', $dt->toDateString())
+            ->with(['usuario'])
+            ->orderByDesc('data_inicio')
+            ->first();
+
+        if (!$reserva) {
+            return response()->json(['reserva' => null]);
+        }
+
+        return response()->json([
+            'reserva' => [
+                'id'          => $reserva->id,
+                'cliente'     => $reserva->usuario?->nome ?? 'Cliente #' . $reserva->user_id,
+                'data_inicio' => $reserva->data_inicio,
+                'data_fim'    => $reserva->data_fim,
+            ],
+        ]);
+    }
+
     public function store(StoreMultaRequest $request)
     {
         $this->authorize('multa.create');
@@ -149,7 +194,7 @@ class MultaController extends BaseController
 
         $multa = $this->multaService->queryScoped()->with([
             'reserva.usuario', 'veiculo', 'cliente', 'condutor',
-            'responsavelLancamento', 'historico.usuario',
+            'responsavelLancamento', 'pagoPor', 'historico.usuario',
         ])->findOrFail($id);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Multas', 'multa.index', 'Detalhes');
@@ -202,6 +247,37 @@ class MultaController extends BaseController
 
         return redirect()->route('multa.show', $multa->id)
             ->with('success', 'Multa atualizada com sucesso.');
+    }
+
+    public function confirmarPagamento(Request $request, int $id): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('multa.edit');
+
+        $multa = $this->multaService->queryScoped()->findOrFail($id);
+
+        if ($multa->pago_em) {
+            return response()->json(['error' => 'Pagamento já registrado.'], 422);
+        }
+
+        $request->validate([
+            'forma_pagamento'      => 'required|in:dinheiro,cartao_credito,cartao_debito,pix,boleto,debito_automatico',
+            'referencia_pagamento' => 'nullable|string|max:100',
+        ]);
+
+        $multa->update([
+            'forma_pagamento'      => $request->input('forma_pagamento'),
+            'referencia_pagamento' => $request->input('referencia_pagamento'),
+            'pago_em'              => now(),
+            'pago_por_user_id'     => Auth::id(),
+            'status_multa'         => 'paga',
+        ]);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Pagamento da multa confirmado com sucesso.',
+            'pago_em'  => $multa->pago_em->format('d/m/Y H:i'),
+            'pago_por' => Auth::user()->nome ?? Auth::user()->name,
+        ]);
     }
 
     public function destroy(int $id)

@@ -48,6 +48,16 @@ class BreadcrumbService
         return $this->prepararBreadcrumb($items);
     }
 
+    public function prepararBreadcrumbShow(string $indexName, string $routeName, string $showName)
+    {
+        $items = $this->buildBreadCrumbItems([
+            ['Home', route('home')],
+            [$indexName, route($routeName)],
+            [$showName, null],
+        ]);
+        return $this->prepararBreadcrumb($items);
+    }
+
     private function buildBreadCrumbItems(array $itemsData)
     {
         $items = [];

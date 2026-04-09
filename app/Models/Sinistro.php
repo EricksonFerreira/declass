@@ -39,6 +39,16 @@ class Sinistro extends Model
         'valor_prejuizo_estimado',
         'valor_aprovado_seguradora',
         'valor_responsabilidade_cliente',
+        'destino_custo',
+        'valor_custo_empresa',
+        'forma_pagamento_empresa',
+        'pago_empresa_em',
+        'pago_empresa_por_user_id',
+        'referencia_pagamento_empresa',
+        'forma_pagamento_cliente',
+        'pago_cliente_em',
+        'pago_cliente_por_user_id',
+        'referencia_pagamento_cliente',
         'status',
         'observacoes',
         'anexo_bo_path',
@@ -56,6 +66,24 @@ class Sinistro extends Model
         'valor_prejuizo_estimado'        => 'decimal:2',
         'valor_aprovado_seguradora'      => 'decimal:2',
         'valor_responsabilidade_cliente' => 'decimal:2',
+        'valor_custo_empresa'            => 'decimal:2',
+        'pago_empresa_em'                => 'datetime',
+        'pago_cliente_em'                => 'datetime',
+    ];
+
+    const FORMAS_PAGAMENTO = [
+        'dinheiro'       => 'Dinheiro (cédulas)',
+        'cartao_credito' => 'Cartão de Crédito',
+        'cartao_debito'  => 'Cartão de Débito',
+        'pix'            => 'PIX',
+        'boleto'         => 'Boleto',
+        'transferencia'  => 'Transferência Bancária',
+    ];
+
+    const DESTINO_CUSTO = [
+        'empresa' => 'Empresa (débito interno)',
+        'cliente' => 'Cliente (cobrar na reserva)',
+        'ambos'   => 'Ambos (empresa + cliente)',
     ];
 
     const TIPOS = [
@@ -107,6 +135,16 @@ class Sinistro extends Model
     public function empresa()
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
+    }
+
+    public function pagoEmpresaPor()
+    {
+        return $this->belongsTo(User::class, 'pago_empresa_por_user_id');
+    }
+
+    public function pagoClientePor()
+    {
+        return $this->belongsTo(User::class, 'pago_cliente_por_user_id');
     }
 
     public function historico()

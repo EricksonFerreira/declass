@@ -39,10 +39,37 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         if (!empty($filters)) {
             foreach ($filters as $field => $value) {
-                if (isset($value['typeWhere']) && $value['typeWhere'] == 'where')
-                    $query->where($field, $value['valor']);
-                else
-                    $query->where($field, 'like', '%' . $value['valor'] . '%');
+                if (!is_array($value) || !array_key_exists('valor', $value)) {
+                    continue;
+                }
+
+                $typeWhere = $value['typeWhere'] ?? 'where';
+                $val = $value['valor'];
+
+                if ($typeWhere === 'between') {
+                    $from = $val['from'] ?? null;
+                    $to = $val['to'] ?? null;
+                    if ($from && $to) {
+                        $query->whereBetween($field, [$from, $to]);
+                    } elseif ($from) {
+                        $query->where($field, '>=', $from);
+                    } elseif ($to) {
+                        $query->where($field, '<=', $to);
+                    }
+                } elseif ($typeWhere === 'where') {
+                    if (is_array($val)) {
+                        $query->whereIn($field, $val);
+                    } else {
+                        $query->where($field, $val);
+                    }
+                } else { // like
+                    if (is_array($val)) {
+                        // fallback: apply like for first element
+                        $query->where($field, 'like', '%' . (string) ($val[0] ?? '') . '%');
+                    } else {
+                        $query->where($field, 'like', '%' . $val . '%');
+                    }
+                }
             }
         }
 
@@ -296,11 +323,22 @@ abstract class AbstractBaseService implements BaseServiceInterface
                 continue;
             }
 
+
             $incoming = $filters[$field];
             $incomingValue = is_array($incoming) ? ($incoming['valor'] ?? null) : $incoming;
 
-            if ($incomingValue !== null && !in_array((int) $incomingValue, $allowedIds, true)) {
-                throw new AccessDeniedHttpException('Filtro de estacao invalido para o usuario autenticado.');
+            if ($incomingValue !== null) {
+                if (is_array($incomingValue)) {
+                    foreach ($incomingValue as $val) {
+                        if (!in_array((int) $val, $allowedIds, true)) {
+                            throw new AccessDeniedHttpException('Filtro de estacao invalido para o usuario autenticado.');
+                        }
+                    }
+                } else {
+                    if (!in_array((int) $incomingValue, $allowedIds, true)) {
+                        throw new AccessDeniedHttpException('Filtro de estacao invalido para o usuario autenticado.');
+                    }
+                }
             }
 
             unset($filters[$field]);

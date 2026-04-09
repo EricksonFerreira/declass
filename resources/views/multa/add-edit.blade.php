@@ -56,14 +56,35 @@
                         </div>
 
                         {{-- STEP: Infração --}}
-                        <div data-multa-step="1">
+                        <div data-multa-step="1" class="">
                             <div class="multa-section-title">Vínculo com Reserva e Veículo</div>
+
+                            <div class="alert alert-info small py-2 px-3 mb-3">
+                                <i class="fas fa-magic mr-1"></i>
+                                <strong>Preenchimento automático:</strong> ao selecionar o veículo e preencher a
+                                <strong>data/hora da infração</strong>, o sistema verifica se havia uma reserva ativa
+                                naquele momento e vincula automaticamente.
+                            </div>
+
                             <div class="form-row">
                                 <div class="col-lg-4 form-group">
                                     <label class="form-label-sm">Reserva</label>
-                                    <input type="number" name="reserva_id" class="form-control form-control-sm"
-                                           value="{{ old('reserva_id', $multa->reserva_id ?? $reserva?->id ?? '') }}"
-                                           placeholder="ID da reserva">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" name="reserva_id" id="multa_reserva_id_input"
+                                               class="form-control form-control-sm"
+                                               value="{{ old('reserva_id', $multa->reserva_id ?? $reserva?->id ?? '') }}"
+                                               placeholder="ID (auto ou manual)">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text px-2" id="multa_reserva_icon" title="">
+                                                <i class="fas fa-link text-muted"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <small id="multa_reserva_info" class="text-muted d-block mt-1" style="font-size:.75rem;">
+                                        @if(!empty($multa->reserva_id ?? $reserva?->id))
+                                            <span class="text-success"><i class="fas fa-check-circle mr-1"></i>Reserva #{{ $multa->reserva_id ?? $reserva?->id }} vinculada.</span>
+                                        @endif
+                                    </small>
                                 </div>
                                 <div class="col-lg-8 form-group">
                                     <label class="form-label-sm">Veículo</label>
@@ -103,14 +124,14 @@
                                            value="{{ old('orgao_autuador', $multa->orgao_autuador ?? '') }}">
                                 </div>
                                 <div class="col-lg-4 form-group">
-                                    <label class="form-label-sm">Data e Hora da Infração</label>
+                                    <label class="form-label-sm">Data e Hora da Infração <span class="text-danger">*</span></label>
                                     <input type="datetime-local" name="data_hora_infracao" class="form-control form-control-sm"
-                                           value="{{ old('data_hora_infracao', $multa?->data_hora_infracao?->format('Y-m-d\TH:i') ?? '') }}">
+                                           value="{{ old('data_hora_infracao', $multa?->data_hora_infracao?->format('Y-m-d\TH:i') ?? '') }}" required>
                                 </div>
                                 <div class="col-lg-4 form-group">
-                                    <label class="form-label-sm">Data de Vencimento</label>
+                                    <label class="form-label-sm">Data de Vencimento <span class="text-danger">*</span></label>
                                     <input type="date" name="data_vencimento" class="form-control form-control-sm"
-                                           value="{{ old('data_vencimento', $multa?->data_vencimento?->format('Y-m-d') ?? '') }}">
+                                           value="{{ old('data_vencimento', $multa?->data_vencimento?->format('Y-m-d') ?? '') }}" required>
                                 </div>
                                 <div class="col-lg-12 form-group">
                                     <label class="form-label-sm">Local da Infração</label>
@@ -125,7 +146,7 @@
                         </div>
 
                         {{-- STEP: Valores e Status --}}
-                        <div data-multa-step="2">
+                        <div data-multa-step="2" class="d-none">
                             <div class="multa-section-title">Valores</div>
                             <div class="form-row">
                                 <div class="col-lg-3 form-group">
@@ -159,6 +180,63 @@
                                 </div>
                             </div>
 
+                            <div class="multa-section-title mt-3">Financeiro — Quem paga esta multa?</div>
+
+                            <div class="alert alert-light border small py-2 px-3 mb-3">
+                                <i class="fas fa-info-circle text-info mr-1"></i>
+                                <strong>Entenda:</strong>
+                                O <strong>Destino de Cobrança</strong> define se o custo da multa fica com a
+                                <strong>Empresa</strong> (débito interno — não cobra ninguém) ou é repassado ao
+                                <strong>Cliente</strong> da reserva (ele precisa pagar).
+                                A <strong>Forma de Pagamento</strong> indica como o valor foi ou será quitado —
+                                pode ser dinheiro em mãos, cartão, PIX ou boleto.
+                                Você pode deixar em branco agora e registrar o pagamento depois na tela de detalhes da multa.
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-lg-6 form-group">
+                                    <label class="form-label-sm">
+                                        Destino de Cobrança
+                                        <span class="text-danger">*</span>
+                                        <i class="fas fa-question-circle text-muted ml-1"
+                                           data-toggle="tooltip"
+                                           title="Empresa = débito interno (a empresa arca com o custo). Cliente = o cliente da reserva será cobrado."></i>
+                                    </label>
+                                    <select name="destino_cobranca" class="form-control form-control-sm" required>
+                                        @foreach(\App\Models\Multa::DESTINO_COBRANCA as $key => $lbl)
+                                            <option value="{{ $key }}"
+                                                {{ old('destino_cobranca', $multa->destino_cobranca ?? 'empresa') === $key ? 'selected' : '' }}>
+                                                {{ $lbl }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-lg-6 form-group">
+                                    <label class="form-label-sm">
+                                        Forma de Pagamento
+                                        <i class="fas fa-question-circle text-muted ml-1"
+                                           data-toggle="tooltip"
+                                           title="Opcional agora. Você pode registrar o pagamento depois, na tela de detalhes da multa."></i>
+                                    </label>
+                                    <select name="forma_pagamento" class="form-control form-control-sm">
+                                        <option value="">— Não informar agora —</option>
+                                        @foreach(\App\Models\Multa::FORMAS_PAGAMENTO as $key => $lbl)
+                                            <option value="{{ $key }}"
+                                                {{ old('forma_pagamento', $multa->forma_pagamento ?? '') === $key ? 'selected' : '' }}>
+                                                {{ $lbl }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-lg-6 form-group">
+                                    <label class="form-label-sm">Referência / Comprovante</label>
+                                    <input type="text" name="referencia_pagamento" class="form-control form-control-sm"
+                                           value="{{ old('referencia_pagamento', $multa->referencia_pagamento ?? '') }}"
+                                           placeholder="NSU do cartão, código PIX, nº do comprovante...">
+                                    <small class="text-muted">Opcional — identifica este pagamento para consulta futura.</small>
+                                </div>
+                            </div>
+
                             <div class="multa-section-title mt-3">Status</div>
                             <div class="form-row">
                                 <div class="col-lg-4 form-group">
@@ -189,7 +267,7 @@
                         </div>
 
                         {{-- STEP: Documentos --}}
-                        <div data-multa-step="3">
+                        <div data-multa-step="3" class="d-none">
                             <div class="multa-section-title">Anexos</div>
                             <div class="form-row">
                                 <div class="col-lg-6 form-group">
@@ -230,11 +308,6 @@
                             </button>
                         </div>
 
-                        <div class="text-center mt-3">
-                            <a href="{{ route('multa.index') }}" class="btn btn-link text-muted">
-                                <i class="fas fa-arrow-left mr-1"></i>Voltar para lista
-                            </a>
-                        </div>
                     </div>
 
                 </form>
@@ -355,6 +428,80 @@
 
 @push('js')
 <script>
+    // ── Tooltips ──
+    $('[data-toggle="tooltip"]').tooltip();
+
+    // ── AJAX: buscar reserva por veículo + data/hora da infração ──────────────
+    const URL_MULTA_BUSCAR_RESERVA = '{{ route("multa.buscarReservaPorVeiculoData") }}';
+    let multaReservaTimer = null;
+
+    function multaBuscarReserva() {
+        const veiculoId  = document.getElementById('veiculo_id_input')?.value;
+        const dataHora   = document.querySelector('[name=data_hora_infracao]')?.value;
+        const infoEl     = document.getElementById('multa_reserva_info');
+        const iconEl     = document.getElementById('multa_reserva_icon');
+        const reservaEl  = document.getElementById('multa_reserva_id_input');
+
+        if (!veiculoId || !dataHora) return;
+        // Não sobrescrever se o usuário já preencheu manualmente
+        if (reservaEl?.value) return;
+
+        if (iconEl) iconEl.innerHTML = '<i class="fas fa-spinner fa-spin text-secondary"></i>';
+
+        clearTimeout(multaReservaTimer);
+        multaReservaTimer = setTimeout(() => {
+            fetch(`${URL_MULTA_BUSCAR_RESERVA}?veiculo_id=${encodeURIComponent(veiculoId)}&data_hora=${encodeURIComponent(dataHora)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (iconEl) iconEl.innerHTML = '<i class="fas fa-link text-muted"></i>';
+                if (data.reserva) {
+                    const r = data.reserva;
+                    if (reservaEl && !reservaEl.value) reservaEl.value = r.id;
+                    if (infoEl) infoEl.innerHTML =
+                        `<span class="text-success"><i class="fas fa-check-circle mr-1"></i>` +
+                        `Reserva <strong>#${r.id}</strong> detectada automaticamente — cliente: ${r.cliente} ` +
+                        `(${r.data_inicio} até ${r.data_fim}).</span>`;
+                } else {
+                    if (infoEl) infoEl.innerHTML =
+                        `<span class="text-warning"><i class="fas fa-exclamation-circle mr-1"></i>` +
+                        `Nenhuma reserva encontrada para este veículo nesta data. Você pode preencher manualmente.</span>`;
+                }
+            })
+            .catch(() => {
+                if (iconEl) iconEl.innerHTML = '<i class="fas fa-link text-muted"></i>';
+            });
+        }, 700);
+    }
+
+    // Dispara quando muda o veículo (polling no hidden input) ou a data da infração
+    (function () {
+        const veiculoHidden  = document.getElementById('veiculo_id_input');
+        const dataHoraInput  = document.querySelector('[name=data_hora_infracao]');
+
+        if (veiculoHidden) {
+            let _prevVal = veiculoHidden.value;
+            setInterval(() => {
+                if (veiculoHidden.value !== _prevVal) {
+                    _prevVal = veiculoHidden.value;
+                    // Limpa reserva anterior se o veículo mudou
+                    const reservaEl = document.getElementById('multa_reserva_id_input');
+                    if (reservaEl) reservaEl.value = '';
+                    const infoEl = document.getElementById('multa_reserva_info');
+                    if (infoEl) infoEl.innerHTML = '';
+                    multaBuscarReserva();
+                }
+            }, 400);
+        }
+        dataHoraInput?.addEventListener('change', multaBuscarReserva);
+
+        // Se já tem veículo na edição mas não tem reserva, tenta buscar
+        if (veiculoHidden?.value && !document.getElementById('multa_reserva_id_input')?.value) {
+            multaBuscarReserva();
+        }
+    })();
+
     // Preenche valor_final automaticamente
     document.querySelectorAll('[name=valor_original],[name=valor_desconto]').forEach(el => {
         el.addEventListener('input', () => {
@@ -364,22 +511,20 @@
         });
     });
 
-    // Wizard/Steps da multa (igual ao admin reserva)
+    // Wizard/Steps da multa
     (function initMultaWizard() {
         const maxStep = 3;
-        const storageKey = 'multaWizardStep';
+        let currentStep = 1;
 
         const prevBtn = document.getElementById('multaWizardPrev');
         const nextBtn = document.getElementById('multaWizardNext');
         const submitBtn = document.getElementById('btnSalvarMulta');
 
-        function getStep() {
-            const saved = Number(localStorage.getItem(storageKey) || '1');
-            return Number.isFinite(saved) && saved >= 1 && saved <= maxStep ? saved : 1;
-        }
+        function getStep() { return currentStep; }
 
-        function setStep(step, persist = true) {
+        function setStep(step) {
             const s = Math.min(maxStep, Math.max(1, Number(step) || 1));
+            currentStep = s;
 
             document.querySelectorAll('[data-multa-step]').forEach(el => {
                 el.classList.toggle('d-none', Number(el.dataset.multaStep) !== s);
@@ -392,29 +537,21 @@
             if (prevBtn) prevBtn.disabled = s <= 1;
             if (nextBtn) nextBtn.classList.toggle('d-none', s >= maxStep);
             if (submitBtn) submitBtn.classList.toggle('d-none', s < maxStep);
-
-            if (persist) localStorage.setItem(storageKey, String(s));
         }
 
         function validateStep(step) {
-            const containers = Array.from(document.querySelectorAll(`[data-multa-step="${step}"]`));
-            const fields = [];
+            const container = document.querySelector(`[data-multa-step="${step}"]`);
+            if (!container) return true;
 
-            containers.forEach(c => fields.push(...c.querySelectorAll('input, select, textarea')));
-
-            const uniqueFields = Array.from(new Set(fields)).filter(f => {
-                if (!f) return false;
-                if (f.disabled) return false;
-                if (f.type === 'hidden') return false;
-                return !!f.willValidate;
+            const fields = Array.from(container.querySelectorAll('input, select, textarea')).filter(f => {
+                return !f.disabled && f.type !== 'hidden' && f.willValidate;
             });
 
-            const invalid = uniqueFields.find(f => !f.checkValidity());
+            const invalid = fields.find(f => !f.checkValidity());
             if (invalid) {
                 invalid.reportValidity();
                 return false;
             }
-
             return true;
         }
 
@@ -443,8 +580,8 @@
             setStep(current + 1);
         });
 
-        window.multaWizardSetStep = (step, persist = true) => setStep(step, persist);
-        setStep(getStep(), false);
+        window.multaWizardSetStep = (step) => setStep(step);
+        setStep(1);
     })();
 
     // Abrir step com erro
@@ -471,136 +608,39 @@
         }
     })();
 
-    // Modal busca de veiculo
+    // Modal busca de veiculo — migrado para o componente `x-veiculo.busca-avancada-modal`.
+    // A lógica JavaScript foi movida para `public/js/veiculo/busca-modal.js` e o componente inicializa a funcionalidade.
+
+    // Validação: `data_vencimento` não pode ser menor que `data_hora_infracao`
     (function () {
-        // Migrado para componente: <x-veiculo.busca-avancada-modal prefix="multa" ... />
-        return;
-        const URL_BUSCAR  = '{{ route("veiculo.buscar") }}';
-        const hiddenInput  = document.getElementById('veiculo_id_input');
-        const displayInput = document.getElementById('veiculo_display');
-        const btnLimpar    = document.getElementById('btnLimparVeiculo');
+        const form = document.getElementById('formMulta');
+        if (!form) return;
+        const infra = form.querySelector('[name=data_hora_infracao]');
+        const venc = form.querySelector('[name=data_vencimento]');
+        if (!infra || !venc) return;
 
-        function atualizarBotaoLimpar() {
-            btnLimpar.classList.toggle('d-none', !hiddenInput.value);
-        }
-        atualizarBotaoLimpar();
-
-        document.getElementById('btnBuscarVeiculo').addEventListener('click', function () {
-            $('#modalBuscarVeiculo').modal('show');
-            setTimeout(() => document.getElementById('fv_placa').focus(), 400);
-            executarBusca();
-        });
-
-        btnLimpar.addEventListener('click', function () {
-            hiddenInput.value  = '';
-            displayInput.value = '';
-            atualizarBotaoLimpar();
-        });
-
-        document.getElementById('btnAplicarFiltroVeiculo').addEventListener('click', executarBusca);
-        document.getElementById('btnLimparFiltroVeiculo').addEventListener('click', function () {
-            ['fv_placa','fv_nome','fv_chassi','fv_cor','fv_modelo','fv_ano_de','fv_ano_ate','fv_kms_ate'].forEach(id => {
-                const el = document.getElementById(id); if (el) el.value = '';
-            });
-            ['fv_marca_id','fv_grupo_frota_id','fv_tipo_frota_id','fv_status_veiculo_id','fv_ativo'].forEach(id => {
-                const el = document.getElementById(id); if (el) el.selectedIndex = 0;
-            });
-            document.getElementById('modalVeiculoResultados').innerHTML = '';
-        });
-
-        document.querySelectorAll('#fv_placa,#fv_nome,#fv_chassi,#fv_cor,#fv_modelo,#fv_ano_de,#fv_ano_ate,#fv_kms_ate').forEach(el => {
-            el.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); executarBusca(); } });
-        });
-
-        function coletarFiltros() {
-            const p = new URLSearchParams();
-            const add = (id, key) => { const v = document.getElementById(id)?.value?.trim(); if (v) p.set(key, v); };
-            add('fv_placa',            'placa');
-            add('fv_nome',             'nome');
-            add('fv_chassi',           'chassi');
-            add('fv_cor',              'cor');
-            add('fv_modelo',           'modelo');
-            add('fv_marca_id',         'marca_id');
-            add('fv_grupo_frota_id',   'grupo_frota_id');
-            add('fv_tipo_frota_id',    'tipo_frota_id');
-            add('fv_status_veiculo_id','status_veiculo_id');
-            add('fv_ativo',            'ativo');
-            add('fv_ano_de',           'ano_de');
-            add('fv_ano_ate',          'ano_ate');
-            add('fv_kms_ate',          'kms_ate');
-            return p.toString();
+        function updateVencMin() {
+            if (infra.value) {
+                venc.min = infra.value.slice(0, 10);
+            } else {
+                venc.removeAttribute('min');
+            }
         }
 
-        function executarBusca() {
-            const loading    = document.getElementById('modalVeiculoLoading');
-            const resultados = document.getElementById('modalVeiculoResultados');
-            loading.classList.remove('d-none');
-            resultados.innerHTML = '';
+        infra.addEventListener('input', updateVencMin);
+        updateVencMin();
 
-            fetch(`${URL_BUSCAR}?${coletarFiltros()}`, {
-                headers: { 'X-Requested-With': 'XMLHttpRequest' }
-            })
-            .then(r => r.json())
-            .then(data => {
-                loading.classList.add('d-none');
-                if (!data.veiculos || data.veiculos.length === 0) {
-                    resultados.innerHTML = '<p class="text-muted text-center py-4"><i class="fas fa-inbox fa-2x d-block mb-2"></i>Nenhum veículo encontrado com os filtros informados.</p>';
-                    return;
-                }
-                const badge = `<span class="badge badge-secondary mb-2">${data.veiculos.length} resultado(s)</span>`;
-                let html = `${badge}<div class="table-responsive"><table class="table table-sm table-hover table-bordered" style="font-size:.82rem">`;
-                html += `<thead class="thead-light"><tr>
-                    <th>Placa</th><th>Nome</th><th>Marca</th><th>Modelo</th>
-                    <th>Grupo</th><th>Tipo</th><th>Status</th>
-                    <th>Ano Fab.</th><th>Ano Mod.</th><th>Cor</th>
-                    <th>KMs</th><th>Ativo</th><th>Estação</th>
-                    <th class="text-center">Ação</th>
-                </tr></thead><tbody>`;
-                data.veiculos.forEach(v => {
-                    const label = `${v.nome}${v.placa ? ' — ' + v.placa : ''}`;
-                    html += `<tr>
-                        <td><strong>${v.placa || '—'}</strong></td>
-                        <td>${v.nome}</td>
-                        <td>${v.marca || '—'}</td>
-                        <td>${v.modelo || '—'}</td>
-                        <td>${v.grupo || '—'}</td>
-                        <td>${v.tipo || '—'}</td>
-                        <td><span class="badge badge-info">${v.status || '—'}</span></td>
-                        <td>${v.ano_fab || '—'}</td>
-                        <td>${v.ano_mod || '—'}</td>
-                        <td>${v.cor || '—'}</td>
-                        <td>${v.kms || '—'}</td>
-                        <td>${v.ativo}</td>
-                        <td>${v.estacao || '—'}</td>
-                        <td class="text-center">
-                            <button type="button" class="btn btn-sm btn-success btn-selecionar-veiculo"
-                                data-id="${v.id}" data-label="${label.replace(/"/g,'&quot;')}" data-placa="${v.placa || ''}">
-                                <i class="fas fa-check"></i>
-                            </button>
-                        </td>
-                    </tr>`;
-                });
-                html += '</tbody></table></div>';
-                resultados.innerHTML = html;
-
-                resultados.querySelectorAll('.btn-selecionar-veiculo').forEach(btn => {
-                    btn.addEventListener('click', function () {
-                        hiddenInput.value  = this.dataset.id;
-                        displayInput.value = this.dataset.label;
-                        const placaInput = document.querySelector('[name=placa_momento]');
-                        if (placaInput && !placaInput.value && this.dataset.placa) {
-                            placaInput.value = this.dataset.placa;
-                        }
-                        atualizarBotaoLimpar();
-                        $('#modalBuscarVeiculo').modal('hide');
-                    });
-                });
-            })
-            .catch(() => {
-                loading.classList.add('d-none');
-                resultados.innerHTML = '<p class="text-danger text-center py-3"><i class="fas fa-exclamation-triangle mr-1"></i>Erro ao buscar veículos.</p>';
-            });
-        }
-    })();
+        form.addEventListener('submit', function (e) {
+            if (!infra.value || !venc.value) return;
+            const infraDatePart = infra.value.slice(0, 10);
+            if (venc.value < infraDatePart) {
+                venc.setCustomValidity('Data de vencimento não pode ser anterior à data da infração.');
+                venc.reportValidity();
+                e.preventDefault();
+                return false;
+            }
+            venc.setCustomValidity('');
+        });
+    }());
 </script>
 @endpush

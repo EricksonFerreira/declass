@@ -194,12 +194,24 @@ class MovimentacaoService extends AbstractBaseService
             }
         }
 
+        $dataHoraCarbon = null;
+        if (!empty($dataHoraDisponibilidade)) {
+            try {
+                $dataHoraCarbon = Carbon::parse($dataHoraDisponibilidade);
+            } catch (\Throwable $e) {
+                $dataHoraCarbon = null;
+            }
+        }
+
         $valor = [
             'veiculo_id' => $veiculo_id,
             'tipo_movimentacao_id' => 1, // adicao de veiculo
             'status_movimentacao_id' => $statusMovimentacao,
             'local_destino_id' => $data['local_disponibilidade'] ?? null,
             'data_registro' => Carbon::now(),
+            'data_saida' => Carbon::now(),
+            'data_chegada_prevista' => $dataHoraCarbon ?? Carbon::now(),
+            'data_chegada_real' => ($statusMovimentacao === 1) ? ($dataHoraCarbon ?? Carbon::now()) : null,
             'observacoes' => $data['observacoes'] ?? 'Cadastro inicial do veiculo',
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
         ];

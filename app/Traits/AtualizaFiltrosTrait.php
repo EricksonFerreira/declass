@@ -17,9 +17,18 @@ trait AtualizaFiltrosTrait
                     }
                 } elseif (isset($filtro['type']) && $filtro['type'] === 'select' && isset($filtro['options'])) {
                     foreach ($filtro['options'] as &$opcao) {
-                        if (isset($opcao['value']) && array_key_exists('valor', $item) && $opcao['value'] == $item['valor']) {
-                            $opcao['selected'] = true;
-                        }
+                            if (isset($opcao['value']) && array_key_exists('valor', $item)) {
+                                $val = $item['valor'];
+                                if (is_array($val)) {
+                                    if (in_array($opcao['value'], $val)) {
+                                        $opcao['selected'] = true;
+                                    }
+                                } else {
+                                    if ($opcao['value'] == $val) {
+                                        $opcao['selected'] = true;
+                                    }
+                                }
+                            }
                     }
                     unset($opcao); // Remove a referencia para evitar problemas potenciais
                 }

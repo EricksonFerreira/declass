@@ -6,15 +6,19 @@ use App\Http\Requests\Sinistro\StoreSinistroRequest;
 use App\Http\Requests\Sinistro\UpdateSinistroRequest;
 use App\Models\GrupoFrota;
 use App\Models\Marca;
+use App\Models\Reserva;
 use App\Models\Sinistro;
 use App\Models\StatusVeiculo;
 use App\Models\TipoFrota;
+use App\Models\Veiculo;
 use App\Services\BreadcrumbService;
 use App\Services\ReservaService;
 use App\Services\SinistroService;
 use App\Services\UsuarioService;
 use App\Services\VeiculoService;
 use App\Support\EmpresaContext;
+use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -142,6 +146,7 @@ class SinistroController extends BaseController
             'veiculo.marca', 'veiculo.modelo',
             'reserva.usuario',
             'cliente', 'condutor', 'responsavel',
+            'pagoEmpresaPor', 'pagoClientePor',
             'historico.usuario',
         ])->findOrFail($id);
 
@@ -194,6 +199,111 @@ class SinistroController extends BaseController
 
         return redirect()->route('sinistro.show', $sinistro->id)
             ->with('success', 'Sinistro atualizado com sucesso.');
+    }
+
+    /**
+     * AJAX: busca a reserva ativa de um veículo em uma data/hora específica.
+     */
+    public function buscarReservaPorVeiculoData(Request $request): JsonResponse
+    {
+        $veiculoId     = $request->query('veiculo_id');
+        $dataHora      = $request->query('data_hora');
+
+        if (!$veiculoId || !$dataHora) {
+            return response()->json(['reserva' => null]);
+        }
+
+        try {
+            $dt = Carbon::parse($dataHora);
+        } catch (\Throwable) {
+            return response()->json(['reserva' => null]);
+        }
+
+        $veiculo = Veiculo::find($veiculoId);
+        if (!$veiculo) {
+            return response()->json(['reserva' => null]);
+        }
+
+        // Busca reserva pelo modelo do veículo que contenha essa data/hora
+        $reserva = Reserva::where('modelo_id', $veiculo->modelo_id)
+            ->where('data_inicio', '<=', $dt->toDateTimeString())
+            ->where('data_fim', '>=', $dt->toDateString())
+            ->with(['usuario'])
+            ->orderByDesc('data_inicio')
+            ->first();
+
+        if (!$reserva) {
+            return response()->json(['reserva' => null]);
+        }
+
+        return response()->json([
+            'reserva' => [
+                'id'          => $reserva->id,
+                'cliente'     => $reserva->usuario?->nome ?? 'Cliente #' . $reserva->user_id,
+                'data_inicio' => $reserva->data_inicio,
+                'data_fim'    => $reserva->data_fim,
+            ],
+        ]);
+    }
+
+    public function confirmarPagamentoEmpresa(Request $request, int $id): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('sinistro.edit');
+
+        $sinistro = $this->sinistroService->queryScoped()->findOrFail($id);
+
+        if ($sinistro->pago_empresa_em) {
+            return response()->json(['error' => 'Pagamento da empresa já registrado.'], 422);
+        }
+
+        $request->validate([
+            'forma_pagamento'      => 'required|in:dinheiro,cartao_credito,cartao_debito,pix,boleto,transferencia',
+            'referencia_pagamento' => 'nullable|string|max:100',
+        ]);
+
+        $sinistro->update([
+            'forma_pagamento_empresa'       => $request->input('forma_pagamento'),
+            'referencia_pagamento_empresa'  => $request->input('referencia_pagamento'),
+            'pago_empresa_em'               => now(),
+            'pago_empresa_por_user_id'      => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Pagamento (empresa) confirmado com sucesso.',
+            'pago_em'  => now()->format('d/m/Y H:i'),
+            'pago_por' => Auth::user()->nome ?? Auth::user()->name,
+        ]);
+    }
+
+    public function confirmarPagamentoCliente(Request $request, int $id): \Illuminate\Http\JsonResponse
+    {
+        $this->authorize('sinistro.edit');
+
+        $sinistro = $this->sinistroService->queryScoped()->findOrFail($id);
+
+        if ($sinistro->pago_cliente_em) {
+            return response()->json(['error' => 'Pagamento do cliente já registrado.'], 422);
+        }
+
+        $request->validate([
+            'forma_pagamento'      => 'required|in:dinheiro,cartao_credito,cartao_debito,pix,boleto',
+            'referencia_pagamento' => 'nullable|string|max:100',
+        ]);
+
+        $sinistro->update([
+            'forma_pagamento_cliente'      => $request->input('forma_pagamento'),
+            'referencia_pagamento_cliente' => $request->input('referencia_pagamento'),
+            'pago_cliente_em'              => now(),
+            'pago_cliente_por_user_id'     => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success'  => true,
+            'message'  => 'Pagamento (cliente) confirmado com sucesso.',
+            'pago_em'  => now()->format('d/m/Y H:i'),
+            'pago_por' => Auth::user()->nome ?? Auth::user()->name,
+        ]);
     }
 
     public function destroy(int $id)

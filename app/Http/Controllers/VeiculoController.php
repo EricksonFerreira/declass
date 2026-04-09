@@ -76,9 +76,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->configurarSessao();
 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
-        $perPage = session()->get("$this->nomeFiltro.perPage", 10);
+        $perPage  = session()->get("$this->nomeFiltro.perPage", 10);
+        $orderBy  = session()->get("$this->nomeFiltro.orderBy", 'id');
+        $orderDir = session()->get("$this->nomeFiltro.orderDir", 'asc');
 
-        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, [], $orderBy, $orderDir);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Veiculos');
         $filters = $this->obterFiltrosPrincipais();
@@ -96,7 +98,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'itensFiltered',
             'additionalFilters',
             'perPages',
-            'perPage'
+            'perPage',
+            'orderBy',
+            'orderDir'
         ))->with('titulo', $this->titulo);
     }
 
@@ -115,6 +119,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $segmentos = $this->segmentoService->getAllAtivos();
         $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
         $estacoes = $this->estacaoService->getAllAtivos();
+        $defaultStatusId = $this->statusVeiculoService->getModel()->newQuery()
+            ->whereRaw('LOWER(nome) = ?', ['ativo'])
+            ->value('id');
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
         return view('veiculo.add-edit', compact(
@@ -125,6 +132,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'estacoes',
             'segmentos',
             'statusVeiculos',
+            'defaultStatusId',
             'breadcrumb',
             'status',
             'metodo',
@@ -364,6 +372,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $segmentos = $this->segmentoService->getAllAtivos();
         $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
         $estacoes = $this->estacaoService->getAllAtivos();
+        $defaultStatusId = $veiculo->status_veiculo_id;
 
         return view('veiculo.add-edit', compact(
             'veiculo',
@@ -374,6 +383,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'modelos',
             'segmentos',
             'statusVeiculos',
+            'defaultStatusId',
             'breadcrumb',
             'status',
             'metodo',
@@ -393,6 +403,39 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
+
+    public function gruposPorTipo(Request $request)
+    {
+        $tipoId = (int) $request->input('tipo_frota_id');
+        $grupos = \App\Models\GrupoFrota::where('ativo', 'S')
+            ->when($tipoId, fn($q) => $q->where('tipo_frota_id', $tipoId))
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+
+        return response()->json($grupos);
+    }
+
+    public function setOrdenacao(Request $request)
+    {
+        $campo  = $request->input('orderBy', 'id');
+        $dir    = $request->input('orderDir', 'asc');
+        $allowed = ['id','nome','placa_licenca','renavam','ano_fabricacao','ano_modelo','kms','created_at'];
+        if (!in_array($campo, $allowed)) $campo = 'id';
+        if (!in_array($dir, ['asc','desc'])) $dir = 'asc';
+        session(['veiculo.orderBy' => $campo, 'veiculo.orderDir' => $dir]);
+        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function modelosPorMarca(Request $request)
+    {
+        $marcaId = (int) $request->input('marca_id');
+        $modelos = \App\Models\Modelo::where('ativo', 'S')
+            ->when($marcaId, fn($q) => $q->where('marca_id', $marcaId))
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+
+        return response()->json($modelos);
+    }
 
     public function buscar(Request $request)
     {

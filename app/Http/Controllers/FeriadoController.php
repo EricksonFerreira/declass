@@ -138,10 +138,14 @@ class FeriadoController extends BaseController
 
     public function obterFiltrosPrincipais()
     {
+        $estacoes = $this->estacaoService->getAllFormatSelect('id', 'nome');
+        $estacaoOptions = self::formatOptions($estacoes, 'Selecione a estação');
+
         return [
-            ['name' => 'data', 'label' => 'Data', 'type' => 'text', 'typeWhere' => 'where'],
+            ['name' => 'data_inicio', 'label' => 'Data início', 'type' => 'date', 'typeWhere' => 'where'],
+            ['name' => 'data_fim', 'label' => 'Data fim', 'type' => 'date', 'typeWhere' => 'where'],
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'estacao_id', 'label' => 'Estação', 'type' => 'select', 'typeWhere' => 'where', 'options' => []],
+            ['name' => 'estacao_id', 'label' => 'Estação', 'type' => 'select', 'typeWhere' => 'where', 'options' => $estacaoOptions, 'multiple' => true],
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'S', 'label' => 'Ativo', 'selected' => false],

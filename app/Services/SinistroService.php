@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Reserva;
 use App\Models\Sinistro;
 use App\Models\SinistroHistorico;
+use App\Models\Veiculo;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
@@ -44,12 +47,50 @@ class SinistroService extends AbstractBaseService
         $dados['responsavel_id'] = Auth::id();
         $this->injectEmpresaId($dados);
 
+        // Auto-vincular reserva: se não informada mas há veículo e data do ocorrido
+        if (empty($dados['reserva_id']) && !empty($dados['veiculo_id']) && !empty($dados['data_hora_ocorrido'])) {
+            $reservaDetectada = $this->detectarReserva((int) $dados['veiculo_id'], $dados['data_hora_ocorrido']);
+            if ($reservaDetectada) {
+                $dados['reserva_id'] = $reservaDetectada->id;
+                if (empty($dados['cliente_id'])) {
+                    $dados['cliente_id'] = $reservaDetectada->user_id;
+                }
+            }
+        }
+
         /** @var Sinistro $sinistro */
         $sinistro = $this->model->create($dados);
 
-        $this->registrarHistorico($sinistro, null, null, null, 'Sinistro registrado.');
+        $msg = 'Sinistro registrado.';
+        if (!empty($dados['reserva_id'])) {
+            $msg .= " Vinculado automaticamente à Reserva #{$dados['reserva_id']}.";
+        }
+        $this->registrarHistorico($sinistro, null, null, null, $msg);
 
         return $sinistro;
+    }
+
+    /**
+     * Detecta reserva ativa para o veículo na data/hora do ocorrido.
+     */
+    private function detectarReserva(int $veiculoId, string $dataHora): ?Reserva
+    {
+        $veiculo = Veiculo::find($veiculoId);
+        if (!$veiculo || !$veiculo->modelo_id) {
+            return null;
+        }
+
+        try {
+            $dt = Carbon::parse($dataHora);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        return Reserva::where('modelo_id', $veiculo->modelo_id)
+            ->where('data_inicio', '<=', $dt->toDateTimeString())
+            ->where('data_fim', '>=', $dt->toDateString())
+            ->orderByDesc('data_inicio')
+            ->first();
     }
 
     /**

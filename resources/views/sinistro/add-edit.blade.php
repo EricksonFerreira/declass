@@ -60,13 +60,29 @@
 
                         {{-- STEP 1: Ocorrido --}}
                         <div data-sn-step="1">
-                            <div class="sn-section-title">Vínculo com Veículo e Reserva</div>
+                            <div class="sn-section-title">Vinculo com Veiculo e Reserva</div>
+
+                            <div class="alert alert-info small py-2 px-3 mb-3">
+                                <i class="fas fa-magic mr-1"></i>
+                                <strong>Preenchimento automatico:</strong> ao selecionar o veiculo e informar a
+                                <strong>data/hora do ocorrido</strong>, o sistema verifica se havia uma reserva ativa
+                                naquele momento e vincula automaticamente — facilitando a cobrança ao cliente certo.
+                            </div>
+
                             <div class="form-row">
                                 <div class="col-lg-4 form-group">
                                     <label class="form-label-sm">Reserva</label>
-                                    <input type="number" name="reserva_id" class="form-control form-control-sm"
-                                           value="{{ old('reserva_id', $sinistro->reserva_id ?? $reserva?->id ?? '') }}"
-                                           placeholder="ID da reserva">
+                                    <div class="input-group input-group-sm">
+                                        <input type="number" name="reserva_id" id="reserva_id_input" class="form-control form-control-sm"
+                                               value="{{ old('reserva_id', $sinistro->reserva_id ?? $reserva?->id ?? '') }}"
+                                               placeholder="ID da reserva">
+                                        <div class="input-group-append">
+                                            <span class="input-group-text" id="reserva_lookup_icon" title="Buscando...">
+                                                <i class="fas fa-link text-muted"></i>
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <small id="reserva_lookup_info" class="text-muted d-block mt-1" style="font-size:.75rem;"></small>
                                 </div>
                                 <div class="col-lg-8 form-group">
                                     <label class="form-label-sm">Veículo</label>
@@ -237,21 +253,21 @@
                                 </div>
                             </div>
 
-                            <div class="sn-section-title mt-3">Valores</div>
+                            <div class="sn-section-title mt-3">Valores do Sinistro</div>
                             <div class="form-row">
                                 <div class="col-lg-4 form-group">
                                     <label class="form-label-sm">Prejuízo Estimado</label>
                                     <div class="input-group input-group-sm">
                                         <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
-                                        <input type="number" step="0.01" min="0" name="valor_prejuizo_estimado" class="form-control form-control-sm"
+                                        <input type="number" step="0.01" min="0" name="valor_prejuizo_estimado" id="sn_prejuizo" class="form-control form-control-sm"
                                                value="{{ old('valor_prejuizo_estimado', $sinistro->valor_prejuizo_estimado ?? '') }}">
                                     </div>
                                 </div>
                                 <div class="col-lg-4 form-group">
-                                    <label class="form-label-sm">Valor Aprovado pela Seguradora</label>
+                                    <label class="form-label-sm">Aprovado pela Seguradora</label>
                                     <div class="input-group input-group-sm">
                                         <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
-                                        <input type="number" step="0.01" min="0" name="valor_aprovado_seguradora" class="form-control form-control-sm"
+                                        <input type="number" step="0.01" min="0" name="valor_aprovado_seguradora" id="sn_aprovado" class="form-control form-control-sm"
                                                value="{{ old('valor_aprovado_seguradora', $sinistro->valor_aprovado_seguradora ?? '') }}">
                                     </div>
                                 </div>
@@ -259,9 +275,50 @@
                                     <label class="form-label-sm">Responsabilidade do Cliente</label>
                                     <div class="input-group input-group-sm">
                                         <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
-                                        <input type="number" step="0.01" min="0" name="valor_responsabilidade_cliente" class="form-control form-control-sm"
+                                        <input type="number" step="0.01" min="0" name="valor_responsabilidade_cliente" id="sn_resp_cliente" class="form-control form-control-sm"
                                                value="{{ old('valor_responsabilidade_cliente', $sinistro->valor_responsabilidade_cliente ?? '') }}">
                                     </div>
+                                </div>
+                            </div>
+
+                            <div class="sn-section-title mt-3">Financeiro — Quem paga o custo restante?</div>
+                            <div class="alert alert-light border small mb-3 py-2 px-3">
+                                <i class="fas fa-info-circle text-info mr-1"></i>
+                                <strong>Como funciona:</strong>
+                                Apos o seguro cobrir sua parte, pode sobrar um <strong>custo residual</strong>
+                                (Prejuizo Estimado menos Aprovado pela Seguradora). Esse valor precisa ser pago por alguem:<br>
+                                &bull; <strong>Empresa</strong> — a empresa arca internamente (ex.: franquia, danos nao cobertos).<br>
+                                &bull; <strong>Cliente</strong> — o valor e cobrado do cliente da reserva.<br>
+                                &bull; <strong>Ambos</strong> — parte fica com a empresa, parte com o cliente.<br>
+                                Voce pode deixar o pagamento para depois e confirma-lo na tela de detalhes do sinistro.
+                            </div>
+                            <div class="form-row">
+                                <div class="col-lg-4 form-group">
+                                    <label class="form-label-sm">Destino do Custo <span class="text-danger">*</span></label>
+                                    <select name="destino_custo" id="sn_destino_custo" class="form-control form-control-sm" required onchange="snAtualizarCustos()">
+                                        @foreach(\App\Models\Sinistro::DESTINO_CUSTO as $key => $label)
+                                            <option value="{{ $key }}" {{ old('destino_custo', $sinistro->destino_custo ?? 'empresa') === $key ? 'selected' : '' }}>
+                                                {{ $label }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-lg-4 form-group" id="sn_grupo_custo_empresa">
+                                    <label class="form-label-sm">Custo para a Empresa</label>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                                        <input type="number" step="0.01" min="0" name="valor_custo_empresa" id="sn_custo_empresa" class="form-control form-control-sm"
+                                               value="{{ old('valor_custo_empresa', $sinistro->valor_custo_empresa ?? '') }}"
+                                               placeholder="0,00">
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 form-group">
+                                    <label class="form-label-sm">Custo Residual (auto)</label>
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                                        <input type="text" id="sn_custo_residual_display" class="form-control form-control-sm bg-light" readonly placeholder="—">
+                                    </div>
+                                    <small class="text-muted" style="font-size:.72rem;">Prejuízo − Seguradora</small>
                                 </div>
                             </div>
                         </div>
@@ -346,11 +403,6 @@
                             </button>
                         </div>
 
-                        <div class="text-center mt-3">
-                            <a href="{{ route('sinistro.index') }}" class="btn btn-link text-muted">
-                                <i class="fas fa-arrow-left mr-1"></i>Voltar para lista
-                            </a>
-                        </div>
                     </div>
                 </form>
             </div>
@@ -473,6 +525,106 @@
     function toggleTerceiros(checked) {
         document.getElementById('dadosTerceiros').classList.toggle('d-none', !checked);
     }
+
+    // ── AJAX: buscar reserva por veículo + data/hora ──────────────────────────
+    const URL_BUSCAR_RESERVA = '{{ route("sinistro.buscarReservaPorVeiculoData") }}';
+    let snReservaTimer = null;
+
+    function snBuscarReserva() {
+        const veiculoId = document.getElementById('veiculo_id_input')?.value;
+        const dataHora  = document.querySelector('[name=data_hora_ocorrido]')?.value;
+        const infoEl    = document.getElementById('reserva_lookup_info');
+        const iconEl    = document.getElementById('reserva_lookup_icon');
+        const reservaEl = document.getElementById('reserva_id_input');
+
+        if (!veiculoId || !dataHora) return;
+
+        if (iconEl) iconEl.innerHTML = '<i class="fas fa-spinner fa-spin text-secondary"></i>';
+
+        clearTimeout(snReservaTimer);
+        snReservaTimer = setTimeout(() => {
+            const url = `${URL_BUSCAR_RESERVA}?veiculo_id=${veiculoId}&data_hora=${encodeURIComponent(dataHora)}`;
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(r => r.json())
+                .then(data => {
+                    if (iconEl) iconEl.innerHTML = '<i class="fas fa-link text-muted"></i>';
+                    if (data.reserva) {
+                        const r = data.reserva;
+                        if (reservaEl && !reservaEl.value) reservaEl.value = r.id;
+                        if (infoEl) infoEl.innerHTML =
+                            `<span class="text-success"><i class="fas fa-check-circle mr-1"></i>Reserva <strong>#${r.id}</strong> — ${r.cliente} (${r.data_inicio} → ${r.data_fim})</span>`;
+                    } else {
+                        if (infoEl) infoEl.innerHTML =
+                            '<span class="text-warning"><i class="fas fa-exclamation-circle mr-1"></i>Nenhuma reserva encontrada para este veículo nesta data.</span>';
+                    }
+                })
+                .catch(() => {
+                    if (iconEl) iconEl.innerHTML = '<i class="fas fa-link text-muted"></i>';
+                });
+        }, 600);
+    }
+
+    // Dispara quando o veículo é selecionado via modal ou quando a data muda
+    document.addEventListener('DOMContentLoaded', function () {
+        const veiculoHidden = document.getElementById('veiculo_id_input');
+        const dataHoraInput = document.querySelector('[name=data_hora_ocorrido]');
+
+        // Polling para detectar mudança no hidden do veículo (o modal altera via JS)
+        if (veiculoHidden) {
+            let _snVehicleVal = veiculoHidden.value;
+            setInterval(() => {
+                if (veiculoHidden.value !== _snVehicleVal) {
+                    _snVehicleVal = veiculoHidden.value;
+                    // Limpa reserva anterior quando troca de veículo
+                    const reservaEl = document.getElementById('reserva_id_input');
+                    if (reservaEl) reservaEl.value = '';
+                    const infoEl = document.getElementById('reserva_lookup_info');
+                    if (infoEl) infoEl.innerHTML = '';
+                    snBuscarReserva();
+                }
+            }, 400);
+        }
+        if (dataHoraInput) {
+            dataHoraInput.addEventListener('change', snBuscarReserva);
+        }
+
+        // Se já tem veículo e data pré-preenchidos (edição), dispara imediatamente
+        if (veiculoHidden?.value && dataHoraInput?.value) {
+            snBuscarReserva();
+        }
+    });
+
+    // ── Controle de Custos ────────────────────────────────────────────────────
+    function snAtualizarCustos() {
+        const destino   = document.getElementById('sn_destino_custo')?.value;
+        const grupoEmp  = document.getElementById('sn_grupo_custo_empresa');
+        const prejuizo  = parseFloat(document.getElementById('sn_prejuizo')?.value) || 0;
+        const aprovado  = parseFloat(document.getElementById('sn_aprovado')?.value) || 0;
+        const residual  = Math.max(0, prejuizo - aprovado);
+        const displayEl = document.getElementById('sn_custo_residual_display');
+        const custoEmpEl = document.getElementById('sn_custo_empresa');
+        const respClienteEl = document.getElementById('sn_resp_cliente');
+
+        if (displayEl) displayEl.value = residual > 0 ? residual.toFixed(2) : '';
+
+        // Mostrar/ocultar campo custo empresa
+        if (grupoEmp) {
+            grupoEmp.classList.toggle('d-none', destino === 'cliente');
+        }
+
+        // Auto-preencher valores conforme destino
+        if (destino === 'empresa') {
+            if (custoEmpEl && !custoEmpEl.value) custoEmpEl.value = residual > 0 ? residual.toFixed(2) : '';
+            if (respClienteEl && !respClienteEl.value) respClienteEl.value = '';
+        } else if (destino === 'cliente') {
+            if (respClienteEl && !respClienteEl.value) respClienteEl.value = residual > 0 ? residual.toFixed(2) : '';
+            if (custoEmpEl) custoEmpEl.value = '';
+        }
+    }
+
+    document.getElementById('sn_prejuizo')?.addEventListener('input', snAtualizarCustos);
+    document.getElementById('sn_aprovado')?.addEventListener('input', snAtualizarCustos);
+    document.addEventListener('DOMContentLoaded', snAtualizarCustos);
 
     // Wizard
     (function initSnWizard() {

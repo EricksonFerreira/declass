@@ -16,21 +16,56 @@ trait FiltroTrait
     private function criarFiltros(Request $request, string $nomeFiltro)
     {
         session()->forget("$nomeFiltro.filtro");
+        $inputs = $request->all();
 
-        $filtros = $request->all();
-        foreach ($filtros as $chave => $valor) {
+        // Detect range inputs like data_inicio / data_fim or campo_from / campo_to
+        $ranges = [];
+        foreach ($inputs as $k => $v) {
+            if (preg_match('/^(.*)_(inicio|fim|from|to)$/i', $k, $m)) {
+                $base = $m[1];
+                $side = strtolower($m[2]);
+                if (!isset($ranges[$base])) {
+                    $ranges[$base] = ['from' => null, 'to' => null];
+                }
+                if (in_array($side, ['inicio', 'from'])) {
+                    $ranges[$base]['from'] = $v;
+                } else {
+                    $ranges[$base]['to'] = $v;
+                }
+                unset($inputs[$k]);
+            }
+        }
+
+        // Process remaining inputs normally
+        foreach ($inputs as $chave => $valor) {
             if ($valor !== null && !in_array($chave, ['nomeFiltro', 'urlPadrao', 'routeRedirect'])) {
                 $nomeExibir = $this->formatarNomeExibir($chave);
-                [$chave, $typeWhere] = $this->determinarTipoFiltro($chave);
+                [$cleanKey, $typeWhere] = $this->determinarTipoFiltro($chave);
 
-                session(["$nomeFiltro.filtro.$chave" => [
-                    'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro . '.urlPadrao')) . '/removerfiltro?' . $chave . '=1',
-                    'name' => $chave,
+                session(["$nomeFiltro.filtro.$cleanKey" => [
+                    'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro . '.urlPadrao')) . '/removerfiltro?' . $cleanKey . '=1',
+                    'name' => $cleanKey,
                     'nomeExibir' => $nomeExibir,
                     'valor' => $valor,
                     'typeWhere' => $typeWhere,
                 ]]);
             }
+        }
+
+        // Store combined range filters
+        foreach ($ranges as $base => $vals) {
+            if ($vals['from'] === null && $vals['to'] === null) {
+                continue;
+            }
+
+            $nomeExibir = $this->formatarNomeExibir($base);
+            session(["$nomeFiltro.filtro.$base" => [
+                'url' => $this->normalizeAdminPath((string) session()->get($nomeFiltro . '.urlPadrao')) . '/removerfiltro?' . $base . '=1',
+                'name' => $base,
+                'nomeExibir' => $nomeExibir,
+                'valor' => ['from' => $vals['from'], 'to' => $vals['to']],
+                'typeWhere' => 'between',
+            ]]);
         }
     }
 
