@@ -91,7 +91,7 @@
                 <div class="empresa-context-select">
                     <label>Empresa em visualizacao</label>
                     <form method="POST" action="{{ route('empresa_context.update') }}" class="mb-0">
-                        @csrf
+                        @csrf 
                         <select
                             name="empresa_id"
                             class="form-control form-control-sm"
