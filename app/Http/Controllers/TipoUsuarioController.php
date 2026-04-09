@@ -8,6 +8,7 @@ use App\Http\Requests\Regra\StoreRegraRequest;
 use App\Http\Requests\Regra\UpdateRegraRequest;
 use App\Services\BreadcrumbService;
 use App\Services\PermissaoService;
+use App\Services\PermissaoSyncService;
 use App\Services\RegraPermissaoService;
 use App\Services\RegraService;
 use App\Traits\AtualizaFiltrosTrait;
@@ -23,12 +24,14 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
     protected $breadcrumbService;
     protected $permissaoService;
     protected $regraPermissaoService;
+    protected $permissaoSyncService;
 
     public function __construct(
         RegraService $regraService,
         PermissaoService $permissaoService,
         RegraPermissaoService $regraPermissaoService,
-        BreadcrumbService $breadcrumbService
+        BreadcrumbService $breadcrumbService,
+        PermissaoSyncService $permissaoSyncService
     ) {
         $this->titulo = 'Tipos de Usuario';
         $this->nomeFiltro = 'tipo_usuario';
@@ -36,6 +39,7 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
         $this->breadcrumbService = $breadcrumbService;
         $this->permissaoService = $permissaoService;
         $this->regraPermissaoService = $regraPermissaoService;
+        $this->permissaoSyncService = $permissaoSyncService;
     }
 
     public function index()
@@ -71,6 +75,7 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
 
     public function create()
     {
+        $this->permissaoSyncService->syncIfNeeded();
         $permissoes = $this->permissaoService->getAll();
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Tipos de Usuario', 'tipo_usuario.index', 'Criar');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
@@ -94,6 +99,7 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
             abort(403, 'Sem acesso a este tipo de usuario.');
         }
 
+        $this->permissaoSyncService->syncIfNeeded();
         $permissoes = $this->permissaoService->getAllWithChecked($tipoUsuario->permissoes);
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Tipos de Usuario', 'tipo_usuario.index', "Editar: $tipoUsuario->name");
         [$metodo, $rota] = $this->getFormMethodAndRoute($tipoUsuario);

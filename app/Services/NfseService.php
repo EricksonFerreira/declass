@@ -3,9 +3,11 @@
 namespace App\Services;
 
 use App\Models\Empresa;
+use App\Models\Estacao;
 use App\Models\Nfse;
 use App\Models\Reserva;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use App\Services\Nfse\Providers\NfephpProvider;
 use App\Services\Nfse\Providers\NfseProviderInterface;
@@ -314,7 +316,15 @@ class NfseService
             $errors[] = 'CNPJ do prestador nao informado.';
         }
 
-        $municipio = $this->onlyDigits($empresa->nfse_municipio_codigo ?? '');
+        // Municipio/IM podem variar por estação (empresa pode operar em mais de um município).
+        $estacaoRetirada = null;
+        if ($reserva->relationLoaded('estacaoRetirada')) {
+            $estacaoRetirada = $reserva->estacaoRetirada;
+        } elseif (!empty($reserva->estacao_retirada_id)) {
+            $estacaoRetirada = Estacao::query()->find((int) $reserva->estacao_retirada_id);
+        }
+
+        $municipio = $this->onlyDigits($estacaoRetirada?->nfse_municipio_codigo ?: ($empresa->nfse_municipio_codigo ?? ''));
         if ($municipio === '') {
             $errors[] = 'Codigo do municipio nao informado.';
         }
@@ -330,6 +340,60 @@ class NfseService
         }
 
         $aliquota = $empresa->nfse_aliquota;
+        $tributacaoIssqn = $empresa->nfse_tributacao_issqn;
+        $inscricaoMunicipal = $estacaoRetirada?->nfse_inscricao_municipal ?: ($empresa->nfse_inscricao_municipal ?: null);
+        $cnae = $empresa->nfse_cnae ?: null;
+
+        // Se houver configuração por município (tributos municipais), ela prevalece.
+        if ($municipio !== '' && Schema::hasTable('tributos_municipais')) {
+            $query = DB::table('tributos_municipais')
+                ->where('empresa_id', (int) $empresa->id)
+                ->where('municipio_codigo', $municipio)
+                ->where('ativo', 'S');
+
+            if ($codigoServico !== '') {
+                $query->where('codigo_servico', $codigoServico);
+            }
+
+            $tributo = $query->orderByDesc('id')->first();
+
+            if (!$tributo && $codigoServico !== '') {
+                $tributo = DB::table('tributos_municipais')
+                    ->where('empresa_id', (int) $empresa->id)
+                    ->where('municipio_codigo', $municipio)
+                    ->where('ativo', 'S')
+                    ->orderByDesc('id')
+                    ->first();
+            }
+
+            if ($tributo) {
+                $codigoServico = trim((string) ($tributo->codigo_servico ?? $codigoServico));
+
+                $descricaoFromTributo = trim((string) ($tributo->descricao_servico ?? ''));
+                if ($descricaoFromTributo !== '') {
+                    $descricaoServico = $descricaoFromTributo;
+                }
+
+                $aliquota = $tributo->aliquota_iss ?? $aliquota;
+                $tributacaoIssqn = $tributo->tributacao_issqn ?? $tributacaoIssqn;
+
+                // IM é do estabelecimento (estação) e não deve ser sobrescrita por tributo municipal.
+                $cnae = $tributo->cnae ?: $cnae;
+            }
+        }
+
+        if (isset($reserva->veiculo)) {
+            $descricaoServico .= "\n\nInformacoes Obrigatorias (NT 005/2025):";
+            $descricaoServico .= "\nVeiculo: " . $reserva->veiculo->marca . " " . $reserva->veiculo->modelo;
+            $descricaoServico .= "\nPlaca: " . $reserva->veiculo->placa;
+            if ($reserva->veiculo->renavam) {
+                $descricaoServico .= "\nRENAVAM: " . $reserva->veiculo->renavam;
+            }
+            if ($reserva->data_inicio && $reserva->data_fim) {
+                $descricaoServico .= "\nPeriodo de Locacao: " . Carbon::parse($reserva->data_inicio)->format('d/m/Y') . " a " . Carbon::parse($reserva->data_fim)->format('d/m/Y');
+            }
+        }
+
         if ($aliquota === null || $aliquota === '') {
             $errors[] = 'Aliquota do ISS nao informada.';
         }
@@ -372,7 +436,7 @@ class NfseService
                 'dCompet' => Carbon::now()->toDateString(),
                 'prest' => array_filter([
                     'CNPJ' => $cnpj,
-                    'IM' => $empresa->nfse_inscricao_municipal ?: null,
+                    'IM' => $inscricaoMunicipal,
                 ]),
                 'toma' => array_filter([
                     'orgaoPublico' => false,
@@ -395,7 +459,7 @@ class NfseService
                     'cLocPrestacao' => $municipio,
                     'cServ' => array_filter([
                         'cTribNac' => $codigoServico,
-                        'CNAE' => $empresa->nfse_cnae ?: null,
+                        'CNAE' => $cnae,
                         'xDescServ' => $descricaoServico,
                     ]),
                     'valores' => [
@@ -404,7 +468,7 @@ class NfseService
                         ],
                         'trib' => [
                             'tribMun' => [
-                                'tribISSQN' => (int) ($empresa->nfse_tributacao_issqn ?: 1),
+                                'tribISSQN' => (int) ($tributacaoIssqn ?: 1),
                                 'cLocIncid' => $municipio,
                                 'pAliq' => (float) $aliquota,
                             ],

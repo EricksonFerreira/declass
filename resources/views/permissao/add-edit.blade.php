@@ -8,7 +8,7 @@
 
 @section('content')
     @if ($errors->any())
-        <div class="alert alert-danger col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12">
+        <div class="alert alert-danger col-xl-8 col-lg-10 col-md-12">
             <ul class="mb-0 pl-3">
                 @foreach (array_unique($errors->all()) as $error)
                     <li>{{ $error }}</li>
@@ -17,48 +17,132 @@
         </div>
     @endif
 
-    <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
-        <div class="card card-permissao shadow-sm border-0">
-            <div class="card-header card-header-permissao border-0">
+    <div class="col-xl-8 col-lg-10 col-md-12 px-0">
+        <div class="pme-card shadow-sm">
+
+            {{-- Header --}}
+            <div class="pme-card__header">
+                <div class="pme-card__icon">
+                    <i class="fas fa-key"></i>
+                </div>
                 <div>
-                    <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Configure os dados da permissao para uso nas regras de acesso.</p>
+                    <h4 class="pme-card__title">{{ isset($permissao) ? 'Editar Permissão' : 'Nova Permissão' }}</h4>
+                    <p class="pme-card__sub">
+                        Permissões controlam o que cada perfil de usuário pode acessar ou fazer no sistema.
+                    </p>
                 </div>
             </div>
 
-            <div class="card-body p-4">
+            {{-- Body --}}
+            <div class="pme-card__body">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
-                    <div class="col-12">
-                        <div class="permissao-section-title">Informacoes Basicas</div>
+
+                    <div class="col-12 mb-3">
+                        <div class="pme-section-title">
+                            <i class="fas fa-info-circle mr-1"></i> Identificação
+                        </div>
+                    </div>
+
+                    {{-- Nome técnico --}}
+                    <div class="col-lg-6 col-md-12">
+                        <div class="form-group">
+                            <label class="pme-label" for="name">
+                                Nome técnico <span class="text-danger">*</span>
+                                <span class="pme-hint">Ex: <code>reserva.index</code>, <code>veiculo.create</code></span>
+                            </label>
+                            <input type="text" id="name" name="name"
+                                class="form-control form-control-sm pme-input"
+                                value="{{ old('name', $permissao->name ?? '') }}"
+                                placeholder="modulo.acao"
+                                required>
+                        </div>
+                    </div>
+
+                    {{-- Guard --}}
+                    <div class="col-lg-6 col-md-12">
+                        <div class="form-group">
+                            <label class="pme-label" for="guard_name">
+                                Guard (política de segurança) <span class="text-danger">*</span>
+                                <span class="pme-hint">Normalmente <code>web</code></span>
+                            </label>
+                            <input type="text" id="guard_name" name="guard_name"
+                                class="form-control form-control-sm pme-input"
+                                value="{{ old('guard_name', $permissao->guard_name ?? 'web') }}"
+                                required>
+                        </div>
+                    </div>
+
+                    {{-- Grupo --}}
+                    <div class="col-12 mb-3">
+                        <div class="pme-section-title">
+                            <i class="fas fa-th-large mr-1"></i> Agrupamento
+                        </div>
                     </div>
 
                     <div class="col-lg-6 col-md-12">
-                        <div class="form-group form-group-permissao">
-                            <x-form-input type="text" class="form-control form-control-sm" id="name" name="name"
-                                label="Nome" value="{{ old('name', $permissao->name ?? '') }}" required />
+                        <div class="form-group">
+                            <label class="pme-label" for="grupo">
+                                Grupo / Módulo
+                                <span class="pme-hint">Usado para organizar permissões na listagem</span>
+                            </label>
+                            <input type="text" id="grupo" name="grupo"
+                                class="form-control form-control-sm pme-input"
+                                list="grupos-list"
+                                value="{{ old('grupo', $permissao->grupo ?? '') }}"
+                                placeholder="Ex: reserva, veiculo, usuario…">
+                            <datalist id="grupos-list">
+                                @foreach($grupos as $g)
+                                    <option value="{{ $g }}">
+                                @endforeach
+                            </datalist>
+                            <small class="text-muted">
+                                <i class="fas fa-lightbulb text-warning mr-1"></i>
+                                Se deixar em branco, o grupo será detectado automaticamente pelo prefixo do nome técnico.
+                            </small>
                         </div>
                     </div>
 
-                    <div class="col-lg-6 col-md-12">
-                        <div class="form-group form-group-permissao">
-                            <x-form-input type="text" class="form-control form-control-sm" id="guard_name" name="guard_name"
-                                label="Guard (política de segurança)" value="{{ old('guard_name', $permissao->guard_name ?? 'web') }}" required />
+                    {{-- Descrição --}}
+                    <div class="col-12 mb-3">
+                        <div class="pme-section-title">
+                            <i class="fas fa-align-left mr-1"></i> Descrição
                         </div>
                     </div>
 
                     <div class="col-12">
-                        <div class="form-group form-group-permissao">
-                            <label for="descricao" class="font-weight-600">Descrição <span class="text-muted small">(O que esta permissão concede acesso)</span></label>
-                            <textarea class="form-control form-control-sm" id="descricao" name="descricao" rows="2"
-                                placeholder="Ex: Permite listar todas as reservas da estação">{{ old('descricao', $permissao->descricao ?? '') }}</textarea>
+                        <div class="form-group">
+                            <label class="pme-label" for="descricao">
+                                O que esta permissão concede
+                                <span class="pme-hint">Explique em linguagem simples o que o usuário poderá fazer</span>
+                            </label>
+                            <textarea id="descricao" name="descricao" rows="3"
+                                class="form-control form-control-sm pme-input"
+                                placeholder="Ex: Permite que o usuário visualize a lista de todas as reservas da empresa.">{{ old('descricao', $permissao->descricao ?? '') }}</textarea>
                         </div>
                     </div>
 
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-save-permissao col-12 mt-2">
-                            Salvar
+                    {{-- Info box --}}
+                    <div class="col-12 mb-3">
+                        <div class="alert alert-light pme-info-box">
+                            <i class="fas fa-info-circle text-primary mr-2"></i>
+                            <div>
+                                <strong>Dica sobre nomes de permissão:</strong>
+                                Use o padrão <code>modulo.acao</code> para que a permissão apareça agrupada corretamente.
+                                Exemplos: <code>reserva.index</code>, <code>veiculo.edit</code>, <code>multa.delete</code>.
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Botões --}}
+                    <div class="col-12 d-flex gap-2 mt-1">
+                        <button type="submit" class="btn btn-primary pme-btn-save flex-fill">
+                            <i class="fas fa-save mr-1"></i> Salvar Permissão
                         </button>
+                        <a href="{{ route('permissao.index') }}" class="btn btn-outline-secondary pme-btn-cancel">
+                            <i class="fas fa-arrow-left mr-1"></i> Voltar
+                        </a>
                     </div>
+
                 </x-form>
             </div>
         </div>
@@ -67,107 +151,87 @@
 
 @section('css')
 <style>
-    .card-permissao {
-        border-radius: 14px;
-        overflow: hidden;
-    }
+.pme-card {
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid #e5eaf2;
+    background: #fff;
+}
+.pme-card__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(120deg, #f0f4ff 0%, #e8f0fe 100%);
+    padding: 1.2rem 1.5rem;
+}
+.pme-card__icon {
+    width: 48px; height: 48px;
+    border-radius: 12px;
+    background: #4b80ff20;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; color: #4b80ff;
+    flex-shrink: 0;
+}
+.pme-card__title { font-size: 1.1rem; font-weight: 700; color: #0f2740; margin: 0 0 .2rem; }
+.pme-card__sub   { font-size: .82rem; color: #6c757d; margin: 0; }
+.pme-card__body  { padding: 1.5rem; }
 
-    .card-header-permissao {
-        background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
-        padding: 1.1rem 1.5rem;
-    }
-
-    .card-header-permissao h4 {
-        color: #0f2740;
-        font-weight: 700;
-    }
-
-    .permissao-section-title {
-        font-size: .96rem;
-        font-weight: 700;
-        color: #21364f;
-        letter-spacing: .02em;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e5eaf2;
-        margin-bottom: 10px;
-    }
-
-    .form-group-permissao {
-        margin-bottom: 1rem;
-    }
-
-    .card-permissao .form-control,
-    .card-permissao .form-select {
-        border-radius: 10px;
-        border-color: #d8e1ec;
-        min-height: 38px;
-    }
-
-    .card-permissao .form-control:focus,
-    .card-permissao .form-select:focus {
-        border-color: #4b80ff;
-        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
-    }
-
-    .btn-save-permissao {
-        border-radius: 10px;
-        font-weight: 600;
-        padding-top: .58rem;
-        padding-bottom: .58rem;
-    }
-
-    @media (max-width: 991.98px) {
-        .card-header-permissao {
-            padding: .95rem 1rem;
-        }
-
-        .card-body {
-            padding: 1rem !important;
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .col-xl-10.col-lg-11.col-md-12.col-sm-12.col-xs-12.px-0 {
-            padding-left: .5rem !important;
-            padding-right: .5rem !important;
-        }
-
-        .card-header-permissao h4 {
-            font-size: 1.1rem;
-            line-height: 1.35;
-        }
-
-        .card-header-permissao p {
-            font-size: .85rem;
-        }
-
-        .permissao-section-title {
-            font-size: .9rem;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .card-header-permissao {
-            padding: .85rem .85rem;
-        }
-
-        .card-body {
-            padding: .85rem !important;
-        }
-
-        .form-group-permissao {
-            margin-bottom: .8rem;
-        }
-
-        .card-permissao .form-control,
-        .card-permissao .form-select {
-            min-height: 36px;
-            font-size: 13px;
-        }
-    }
+.pme-section-title {
+    font-size: .88rem;
+    font-weight: 700;
+    color: #21364f;
+    letter-spacing: .02em;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e8f0fe;
+    margin-bottom: 1rem;
+}
+.pme-label {
+    font-weight: 600;
+    font-size: .84rem;
+    color: #2c4a6e;
+    display: block;
+    margin-bottom: .35rem;
+}
+.pme-hint {
+    font-weight: 400;
+    font-size: .76rem;
+    color: #9aacbf;
+    margin-left: .3rem;
+}
+.pme-input {
+    border-radius: 8px;
+    border-color: #d8e1ec;
+    min-height: 36px;
+}
+.pme-input:focus {
+    border-color: #4b80ff;
+    box-shadow: 0 0 0 .15rem rgba(75,128,255,.18);
+}
+.pme-info-box {
+    border: 1px solid #d0e3ff;
+    border-radius: 10px;
+    background: #f4f8ff;
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    font-size: .82rem;
+}
+.pme-btn-save   { border-radius: 10px; font-weight: 600; }
+.pme-btn-cancel { border-radius: 10px; }
+.gap-2 { gap: .5rem; }
 </style>
 @stop
 
 @section('js')
-    <script></script>
+<script>
+// Auto-fill grupo from name prefix as user types
+document.getElementById('name')?.addEventListener('input', function () {
+    const grupoField = document.getElementById('grupo');
+    if (!grupoField || grupoField.value.trim() !== '') return; // don't overwrite if already set
+    const name = this.value.trim();
+    if (name.includes('.')) {
+        grupoField.placeholder = name.split('.')[0];
+    }
+});
+</script>
 @stop

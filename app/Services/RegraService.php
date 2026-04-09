@@ -10,6 +10,19 @@ class RegraService extends AbstractBaseService
 {
     protected Model $model;
 
+    /**
+     * Regras/roles são defaults globais — não aplicar escopo de empresa.
+     */
+    protected function shouldApplyEmpresaScope(): bool
+    {
+        return false;
+    }
+
+    protected function shouldApplyEstacaoScope(): bool
+    {
+        return false;
+    }
+
     public function __construct(Regra $regra)
     {
         $this->model = $regra;
@@ -29,7 +42,7 @@ class RegraService extends AbstractBaseService
     }
 
     public function getAllTiposUsuarios(){
-        $data = $this->applyEmpresaScope($this->model->newQuery())
+        $data = $this->model->newQuery()
             ->select('id', 'name')
             ->distinct()
             ->get();
@@ -38,7 +51,7 @@ class RegraService extends AbstractBaseService
 
     public function getClienteRoleId(): ?int
     {
-        return $this->applyEmpresaScope($this->model->newQuery())
+        return $this->model->newQuery()
             ->whereRaw('LOWER(name) = ?', ['cliente'])
             ->value('id');
     }

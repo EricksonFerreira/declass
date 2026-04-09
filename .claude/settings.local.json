@@ -14,7 +14,8 @@
       "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations -type f -name \"*.php\" -exec grep -l \"horarios.*create\\\\|pivot.*horario\" {} \\\\;)",
       "Bash(find database/migrations -name \"*.php\" -type f -exec grep -H \"horarios\\\\|estacoes_dias_uteis\" {} \\\\;)",
       "Bash(grep -n \"}\\)\\(\\);\\\\|}\\);\\\\s*$\" c:/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/reserva/show.blade.php)",
-      "Bash(php -r \"require 'vendor/autoload.php'; echo 'OK';\")"
+      "Bash(php -r \"require 'vendor/autoload.php'; echo 'OK';\")",
+      "WebFetch(domain:www.7carros.com.br)"
     ]
   }
 }

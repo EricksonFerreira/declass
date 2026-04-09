@@ -11,6 +11,19 @@
         $isAllStations = (bool) old('acesso_todas_estacoes', $acessoTodasEstacoes ?? true);
         $selectedStations = array_map('strval', (array) old('estacoes', $estacoesSelecionadas ?? []));
         $isCreate = !isset($usuario);
+
+        $step2Fields = ['telefone', 'celular', 'pais_sigla', 'zip_code', 'cidade', 'endereco'];
+        $step3Fields = ['role_id', 'acesso_todas_estacoes', 'estacoes'];
+        $step4Fields = ['numero_carta_conducao', 'local_emissao_carta_conducao', 'pais_emissao_carta_conducao', 'data_emissao_carta_conducao', 'data_validade_carta_conducao'];
+        $step5Fields = ['password', 'confirmacao_senha'];
+
+        $startStep = 1;
+        if ($errors->any()) {
+            foreach ($step2Fields as $f) { if ($errors->has($f) || $errors->has($f.'.*')) { $startStep = 2; break; } }
+            if ($startStep === 1) { foreach ($step3Fields as $f) { if ($errors->has($f) || $errors->has($f.'.*')) { $startStep = 3; break; } } }
+            if ($startStep === 1) { foreach ($step4Fields as $f) { if ($errors->has($f) || $errors->has($f.'.*')) { $startStep = 4; break; } } }
+            if ($startStep === 1 && $isCreate) { foreach ($step5Fields as $f) { if ($errors->has($f) || $errors->has($f.'.*')) { $startStep = 5; break; } } }
+        }
     @endphp
 
     @if ($errors->any())
@@ -33,9 +46,33 @@
             </div>
 
             <div class="card-body p-4">
+                {{-- Wizard semelhante ao cadastro de estações --}}
+                <div class="ec-wizard-steps mb-4" id="wizardSteps" data-start-step="{{ $startStep }}">
+                    @php
+                        $steps = [
+                            1 => ['icon' => 'fa-user',        'label' => 'Dados'],
+                            2 => ['icon' => 'fa-phone',       'label' => 'Contato'],
+                            3 => ['icon' => 'fa-shield-alt',  'label' => 'Acesso'],
+                            4 => ['icon' => 'fa-id-card',     'label' => 'Carta'],
+                        ];
+                        if ($isCreate) {
+                            $steps[5] = ['icon' => 'fa-lock', 'label' => 'Segurança'];
+                        }
+                    @endphp
+                    @foreach($steps as $n => $s)
+                        <button type="button" class="ec-step-btn" data-step="{{ $n }}">
+                            <span class="ec-step-circle"><i class="fas {{ $s['icon'] }}"></i></span>
+                            <span class="ec-step-label">{{ $s['label'] }}</span>
+                        </button>
+                        @if($n < count($steps))
+                            <div class="ec-step-line"></div>
+                        @endif
+                    @endforeach
+                </div>
+
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" id="form" rowClass="row">
                     <div class="col-12">
-                        <ul class="nav nav-pills nav-usuario mb-3" id="usuario-tab" role="tablist">
+                        <ul class="nav nav-pills nav-usuario mb-3 d-none" id="usuario-tab" role="tablist">
                             <li class="nav-item">
                                 <a class="nav-link active" id="tab-geral-link" data-toggle="pill" href="#tab-geral" role="tab" aria-controls="tab-geral" aria-selected="true">
                                     <i class="fa fa-user mr-1"></i> Dados Pessoais
@@ -192,6 +229,7 @@
                                                     Acesso a todas as estacoes
                                                 </label>
                                             </div>
+                                            <small class="text-muted d-block" id="estacoes-limit-hint"></small>
                                         </div>
                                     </div>
 
@@ -337,6 +375,64 @@
     .card-header-usuario h4 {
         color: #0f2740;
         font-weight: 700;
+    }
+
+    /* Wizard Steps (mesmo padrão de Estações) */
+    .ec-wizard-steps {
+        display: flex;
+        align-items: center;
+        gap: 0;
+        overflow-x: auto;
+        padding-bottom: 4px;
+    }
+    .ec-step-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        padding: 0 8px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .ec-step-circle {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 2px solid #d0daea;
+        background: #f8fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        color: #94a3b8;
+        transition: all .2s;
+    }
+    .ec-step-btn.active .ec-step-circle {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+    .ec-step-btn.done .ec-step-circle {
+        background: #ecfdf5;
+        border-color: #10b981;
+        color: #10b981;
+    }
+    .ec-step-label {
+        font-size: .72rem;
+        font-weight: 600;
+        color: #94a3b8;
+        white-space: nowrap;
+    }
+    .ec-step-btn.active .ec-step-label { color: #2563eb; }
+    .ec-step-btn.done .ec-step-label { color: #10b981; }
+    .ec-step-line {
+        flex: 1;
+        height: 2px;
+        background: #e5eaf2;
+        min-width: 16px;
+        margin-bottom: 18px;
     }
 
     .nav-usuario .nav-link {
@@ -498,6 +594,84 @@
     <script src="{{ asset('js/alertConfirmPequena.js') }}"></script>
     <script>
         const isCreateUsuario = @json($isCreate);
+        const usuarioWizardStartStep = Number(document.getElementById('wizardSteps')?.dataset?.startStep || '1');
+
+        function usuarioTabs() {
+            return {
+                1: '#tab-geral-link',
+                2: '#tab-contato-link',
+                3: '#tab-acesso-link',
+                4: '#tab-carta-link',
+                5: '#tab-seguranca-link',
+            };
+        }
+
+        function setWizardStep(step) {
+            const tabs = usuarioTabs();
+            const linkSel = tabs[step] || tabs[1];
+
+            // Bootstrap tab
+            try {
+                $(linkSel).tab('show');
+            } catch (e) {}
+
+            // Step visuals
+            $('.ec-step-btn').each(function () {
+                const n = Number($(this).data('step') || 1);
+                $(this).toggleClass('active', n === step);
+                $(this).toggleClass('done', n < step);
+            });
+        }
+
+        function applyRoleStationUiRules() {
+            const roleSel = document.querySelector('select[name="role_id"]');
+            const hint = document.getElementById('estacoes-limit-hint');
+            if (!roleSel) return;
+
+            const roleName = (roleSel.options[roleSel.selectedIndex]?.text || '').trim().toLowerCase();
+            const switchEl = document.getElementById('acesso_todas_estacoes');
+            const wrap = document.getElementById('estacoes-permitidas-wrap');
+            const boxes = Array.from(document.querySelectorAll('input[name="estacoes[]"]'));
+
+            let max = null;
+            let forceAll = false;
+            let forceNone = false;
+
+            if (roleName === 'gerente') {
+                forceAll = true;
+            } else if (roleName === 'colaborador administrativo' || roleName === 'colaborador_administrativo') {
+                max = 1;
+            } else if (roleName === 'colaborador chefe' || roleName === 'colaborador_chefe') {
+                max = 3;
+            } else if (roleName === 'cliente') {
+                forceNone = true;
+                max = 0;
+            }
+
+            if (switchEl) {
+                if (forceAll) switchEl.checked = true;
+                if (forceNone) switchEl.checked = false;
+            }
+
+            toggleEstacoesPermitidas();
+
+            const selected = boxes.filter(b => b.checked).length;
+            if (hint) {
+                if (forceAll) hint.textContent = 'Perfil Gerente: acesso a todas as estações.';
+                else if (forceNone) hint.textContent = 'Perfil Cliente: sem acesso por estação.';
+                else if (max !== null) hint.textContent = `Limite de estações: ${max}. Selecionadas: ${selected}.`;
+                else hint.textContent = '';
+            }
+
+            if (max !== null) {
+                boxes.forEach(function (b) {
+                    if (b.checked) return;
+                    b.disabled = selected >= max;
+                });
+            } else {
+                boxes.forEach(b => b.disabled = false);
+            }
+        }
 
         function toggleEstacoesPermitidas() {
             if ($('#acesso_todas_estacoes').is(':checked')) {
@@ -552,6 +726,29 @@
 
             return valid;
         }
+
+        // Wizard + regras de estação por perfil
+        $(document).ready(function () {
+            setWizardStep(Number.isFinite(usuarioWizardStartStep) && usuarioWizardStartStep > 0 ? usuarioWizardStartStep : 1);
+            $('.ec-step-btn').on('click', function () {
+                setWizardStep(Number($(this).data('step') || 1));
+            });
+
+            $('#acesso_todas_estacoes').on('change', function () {
+                toggleEstacoesPermitidas();
+                applyRoleStationUiRules();
+            });
+
+            $(document).on('change', 'select[name="role_id"]', function () {
+                applyRoleStationUiRules();
+            });
+
+            $(document).on('change', 'input[name="estacoes[]"]', function () {
+                applyRoleStationUiRules();
+            });
+
+            applyRoleStationUiRules();
+        });
 
         function abrirAbaComErro() {
             const firstInvalid = document.querySelector('.is-invalid');

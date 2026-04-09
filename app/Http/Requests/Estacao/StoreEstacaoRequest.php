@@ -25,6 +25,8 @@ class StoreEstacaoRequest extends FormRequest
             ],
             'pais_id' => 'required|integer|exists:paises,id',
             'cidade' => 'required|string|max:255',
+            'nfse_municipio_codigo' => 'nullable|string|max:10',
+            'nfse_inscricao_municipal' => 'nullable|string|max:30',
             'endereco' => 'required|string|max:255',
             'numero' => 'required|string',
             'zip_code' => 'required|string|max:255',

@@ -108,6 +108,11 @@ class AppServiceProvider extends ServiceProvider
                 continue;
             }
 
+            // Tabelas globais do sistema (não devem ser tenant-scoped, nem auto-preencher empresa_id).
+            if (in_array($table, ['permissions', 'roles'], true)) {
+                continue;
+            }
+
             $class::addGlobalScope('empresa', function (Builder $builder) use ($table) {
                 $empresaId = app(EmpresaContext::class)->empresaId();
 

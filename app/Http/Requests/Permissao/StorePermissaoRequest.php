@@ -15,6 +15,7 @@ class StorePermissaoRequest extends FormRequest
             'name'       => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')],
             'guard_name' => 'required|string|max:255',
             'descricao'  => 'nullable|string|max:500',
+            'grupo'      => 'nullable|string|max:80',
         ];
     }
 

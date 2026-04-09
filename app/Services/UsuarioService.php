@@ -7,6 +7,7 @@ use App\Models\Estacao;
 use App\Support\EmpresaContext;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class UsuarioService extends AbstractBaseService
@@ -65,6 +66,7 @@ class UsuarioService extends AbstractBaseService
     public function createUser($data)
     {
         $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data);
+        [$acessoTodasEstacoes, $data] = $this->enforceRoleStationDefaults($data, $acessoTodasEstacoes);
 
         if (Schema::hasColumn($this->model->getTable(), 'empresa_id')) {
             $empresaId = app(EmpresaContext::class)->empresaId();
@@ -111,6 +113,7 @@ class UsuarioService extends AbstractBaseService
         }
 
         $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data, $user);
+        [$acessoTodasEstacoes, $data] = $this->enforceRoleStationDefaults($data, $acessoTodasEstacoes, $user);
 
         if (Schema::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
             $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
@@ -120,6 +123,53 @@ class UsuarioService extends AbstractBaseService
         $this->syncEstacoesPermitidas($user, $data, $acessoTodasEstacoes);
 
         return $user;
+    }
+
+    /**
+     * Aplica defaults de acesso por estação conforme o perfil (role).
+     *
+     * - gerente: sempre acesso total
+     * - colaborador_administrativo: sempre por estação
+     * - colaborador_chefe: sempre por estação
+     * - cliente: sem acesso por estação (lista vazia)
+     *
+     * @return array{0: bool, 1: array}
+     */
+    private function enforceRoleStationDefaults(array $data, bool $acessoTodasEstacoes, ?User $user = null): array
+    {
+        if (!Schema::hasColumn($this->model->getTable(), 'role_id')) {
+            return [$acessoTodasEstacoes, $data];
+        }
+
+        $roleId = (int) ($data['role_id'] ?? ($user?->role_id ?? 0));
+        if ($roleId <= 0 || !Schema::hasTable('roles')) {
+            return [$acessoTodasEstacoes, $data];
+        }
+
+        $roleName = (string) (DB::table('roles')->where('id', $roleId)->value('name') ?? '');
+        $roleKey = mb_strtolower(trim($roleName));
+
+        if ($roleKey === 'gerente') {
+            $acessoTodasEstacoes = true;
+            $data['acesso_todas_estacoes'] = true;
+            unset($data['estacoes']);
+            return [$acessoTodasEstacoes, $data];
+        }
+
+        if (in_array($roleKey, ['colaborador_administrativo', 'colaborador administrativo', 'colaborador_chefe', 'colaborador chefe'], true)) {
+            $acessoTodasEstacoes = false;
+            $data['acesso_todas_estacoes'] = false;
+            return [$acessoTodasEstacoes, $data];
+        }
+
+        if ($roleKey === 'cliente') {
+            $acessoTodasEstacoes = false;
+            $data['acesso_todas_estacoes'] = false;
+            $data['estacoes'] = [];
+            return [$acessoTodasEstacoes, $data];
+        }
+
+        return [$acessoTodasEstacoes, $data];
     }
 
     private function syncEstacoesPermitidas(User $user, array $data, bool $acessoTodasEstacoes): void

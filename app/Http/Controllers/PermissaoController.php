@@ -8,6 +8,7 @@ use App\Http\Requests\Permissao\StorePermissaoRequest;
 use App\Http\Requests\Permissao\UpdatePermissaoRequest;
 use App\Services\BreadcrumbService;
 use App\Services\PermissaoService;
+use App\Services\PermissaoSyncService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
@@ -18,58 +19,72 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
     use AtualizaFiltrosTrait;
     protected $permissaoService;
     protected $breadcrumbService;
+    protected $permissaoSyncService;
 
-    public function __construct(PermissaoService $permissaoService, BreadcrumbService $breadcrumbService)
+    public function __construct(PermissaoService $permissaoService, BreadcrumbService $breadcrumbService, PermissaoSyncService $permissaoSyncService)
     {
         $this->titulo = "Permissões";
         $this->nomeFiltro = 'permissao';
         $this->permissaoService = $permissaoService;
         $this->breadcrumbService = $breadcrumbService;
+        $this->permissaoSyncService = $permissaoSyncService;
     }
 
     public function index()
     {
         $this->configurarSessao();
-
-        $itensFiltered = session("$this->nomeFiltro.filtro", []);
-        $perPage = session()->get("$this->nomeFiltro.perPage", 10);
-
-        $permissaos = $this->permissaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $this->permissaoSyncService->syncIfNeeded();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Permissaos');
-        $filters = $this->obterFiltrosPrincipais();
-        $additionalFilters = $this->obterFiltrosSecundarios();
 
-        $this->atualizarFiltros($itensFiltered, $filters);
-        $this->atualizarFiltros($itensFiltered, $additionalFilters);
+        $busca = request('busca', '');
 
-        $perPages = [5, 10, 15, 25, 50, 100];
+        $query = \App\Models\Permissao::query()
+            ->where('guard_name', 'web')
+            ->orderBy('grupo')
+            ->orderBy('name');
+
+        if ($busca !== '') {
+            $query->where(function ($q) use ($busca) {
+                $q->where('name', 'like', "%{$busca}%")
+                  ->orWhere('descricao', 'like', "%{$busca}%")
+                  ->orWhere('grupo', 'like', "%{$busca}%");
+            });
+        }
+
+        $permissaos = $query->get()->groupBy(fn ($p) => $p->grupo_efetivo ?: '_outros');
+
+        $totalPermissoes = \App\Models\Permissao::where('guard_name', 'web')->count();
+        $totalGrupos     = \App\Models\Permissao::where('guard_name', 'web')
+            ->selectRaw('COALESCE(grupo, SUBSTRING_INDEX(name, ".", 1)) as g')
+            ->distinct()
+            ->count();
 
         return view('permissao.index', compact(
             'permissaos',
             'breadcrumb',
-            'filters',
-            'itensFiltered',
-            'additionalFilters',
-            'perPages',
-            'perPage'
+            'busca',
+            'totalPermissoes',
+            'totalGrupos'
         ))->with('titulo', $this->titulo);
     }
 
     public function create(){
-        $status = [
-            'S' => 'Ativo',
-            'N' => 'Inativo'
-        ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Permissaos','permissao.index','Criar');
+        $grupos = $this->getGruposDisponiveis();
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('permissao.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('permissao.add-edit', compact('breadcrumb','metodo','rota','grupos'))->with('titulo', $this->titulo);
     }
 
     public function store(StorePermissaoRequest $request)
     {
-        $this->permissaoService->create($request->all());
+        $data = $request->all();
+        if (empty($data['grupo']) && !empty($data['name'])) {
+            $name = $data['name'];
+            $data['grupo'] = str_contains($name, '.') ? explode('.', $name)[0] : $name;
+        }
+        $this->permissaoService->create($data);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -80,14 +95,11 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
         if (!$permissao) {
             abort(403, 'Sem acesso a esta permissao.');
         }
-        $status = [
-            'S' => 'Ativo',
-            'N' => 'Inativo'
-        ];
+        $grupos = $this->getGruposDisponiveis();
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Permissaos','permissao.index',"Editar: $permissao->name");
         [$metodo,$rota] = $this->getFormMethodAndRoute($permissao);
 
-        return view('permissao.add-edit', compact('permissao','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('permissao.add-edit', compact('permissao','breadcrumb','metodo','rota','grupos'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdatePermissaoRequest $request, $id)
@@ -146,9 +158,18 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
 
     public function obterFiltrosSecundarios()
     {
-        return [
-            // Adicione filtros secundários aqui, se necessário
-        ];
+        return [];
+    }
+
+    private function getGruposDisponiveis(): array
+    {
+        return \App\Models\Permissao::where('guard_name', 'web')
+            ->whereNotNull('grupo')
+            ->where('grupo', '!=', '')
+            ->distinct()
+            ->orderBy('grupo')
+            ->pluck('grupo')
+            ->toArray();
     }
 
     /**

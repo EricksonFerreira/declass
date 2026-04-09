@@ -135,6 +135,18 @@
         .submit-loading .spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid rgba(248,250,252,0.35); border-top-color: #22c55e; margin: 0 auto 10px auto; animation: spin 0.9s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .form-submitting { pointer-events: none; }
+        /* Sem disponibilidade */
+        .grupo-card.sem-disponibilidade { border-color: #fca5a5 !important; background: #fff8f8; opacity: .75; }
+        .grupo-card.sem-disponibilidade .grupo-action { background: #fee2e2; color: #991b1b; border-color: #fca5a5; cursor: not-allowed; }
+        .alert-sem-disp {
+            display: flex; align-items: flex-start; gap: 10px;
+            background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px;
+            padding: 12px 14px; margin-bottom: 12px; font-size: 13px; color: #991b1b;
+        }
+        .alert-sem-disp.hidden { display: none; }
+        .alert-sem-disp__icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+        .alert-sem-disp strong { display: block; font-size: 14px; margin-bottom: 4px; }
+        .alert-sem-disp p { margin: 0; color: #b91c1c; font-size: 12px; }
         .sum-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
         .sum-list li { border: 1px solid var(--line); border-radius: 8px; background: #f8fbff; padding: 6px 8px; font-size: 12px; color: #334155; }
         @media (max-width: 1020px) { .layout { grid-template-columns: 1fr; } .summary { position: static; } }
@@ -158,7 +170,7 @@
         <section class="card">
             <div class="head">
                 <h1>Reserva em passos</h1>
-                <p>Preencha viagem, escolha veiculo, informe seus dados e finalize.</p>
+                <p>Preencha a viagem, escolha o veículo, informe seus dados e finalize.</p>
             </div>
 
             <div class="alerts">
@@ -185,7 +197,7 @@
 
             <div class="steps" id="stepsHeader">
                 <div class="step-pill active" data-step="1"><span class="num">1</span><span>Viagem</span></div>
-                <div class="step-pill" data-step="2"><span class="num">2</span><span>Veiculo</span></div>
+                <div class="step-pill" data-step="2"><span class="num">2</span><span>Veículo</span></div>
                 <div class="step-pill" data-step="3"><span class="num">3</span><span>Opcionais</span></div>
                 <div class="step-pill" data-step="4"><span class="num">4</span><span>Cliente</span></div>
                 <div class="step-pill disabled" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
@@ -200,44 +212,50 @@
 
                 <section class="panel active" data-panel="1">
                     <h2 class="title">Onde e quando?</h2>
-                    <p class="subtitle">Defina retirada, devolucao e datas.</p>
+                    <p class="subtitle">Defina o local de retirada, devolução e as datas da viagem.</p>
                     <div class="grid">
                         <div class="field">
-                            <label for="estacao_retirada_id">Estacao de retirada</label>
+                            <label for="estacao_retirada_id">📍 Estação de retirada</label>
                             <select id="estacao_retirada_id" name="estacao_retirada_id" required>
-                                <option value="">Selecione...</option>
+                                <option value="">Selecione a estação...</option>
                                 @foreach($estacoes as $estacao)
                                     <option value="{{ $estacao['id'] }}" {{ (string) old('estacao_retirada_id', $prefill['estacao_retirada_id'] ?? '') === (string) $estacao['id'] ? 'selected' : '' }}>
-                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' - ' . $estacao['cidade'] : '' }}
+                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' — ' . $estacao['cidade'] : '' }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="field">
-                            <label for="estacao_devolucao_id">Estacao de devolucao</label>
+                            <label for="estacao_devolucao_id">🏁 Estação de devolução</label>
                             <select id="estacao_devolucao_id" name="estacao_devolucao_id" required>
-                                <option value="">Selecione...</option>
+                                <option value="">Selecione a estação...</option>
                                 @foreach($estacoes as $estacao)
                                     <option value="{{ $estacao['id'] }}" {{ (string) old('estacao_devolucao_id', $prefill['estacao_devolucao_id'] ?? '') === (string) $estacao['id'] ? 'selected' : '' }}>
-                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' - ' . $estacao['cidade'] : '' }}
+                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' — ' . $estacao['cidade'] : '' }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="field">
-                            <label for="data_inicio">Data e hora de retirada</label>
-                            <input id="data_inicio" type="datetime-local" name="data_inicio" value="{{ old('data_inicio', $prefill['data_inicio'] ?? '') }}" required>
+                            <label for="data_inicio">📅 Data e hora de retirada</label>
+                            <input id="data_inicio" type="datetime-local" name="data_inicio"
+                                value="{{ old('data_inicio', $prefill['data_inicio'] ?? '') }}"
+                                data-prefill="{{ old('data_inicio', $prefill['data_inicio'] ?? '') }}"
+                                required>
                         </div>
                         <div class="field">
-                            <label for="data_fim">Data e hora de devolucao</label>
-                            <input id="data_fim" type="datetime-local" name="data_fim" value="{{ old('data_fim', $prefill['data_fim'] ?? '') }}" required>
+                            <label for="data_fim">📅 Data e hora de devolução</label>
+                            <input id="data_fim" type="datetime-local" name="data_fim"
+                                value="{{ old('data_fim', $prefill['data_fim'] ?? '') }}"
+                                data-prefill="{{ old('data_fim', $prefill['data_fim'] ?? '') }}"
+                                required>
                         </div>
                     </div>
-                    <div class="feedback" id="step1Feedback">Preencha os dados para continuar.</div>
+                    <div class="feedback" id="step1Feedback">Selecione as estações e as datas para continuar.</div>
                 </section>
 
                 <section class="panel" data-panel="2">
-                    <h2 class="title">Escolha o veiculo</h2>
+                    <h2 class="title">Escolha o veículo</h2>
                     <p class="subtitle">
                         @if(!empty($reservaSelecionarModelo))
                             Selecione um grupo e um modelo pelos cards.
@@ -320,7 +338,7 @@
                         </div>
                         <div id="modelosGrid" class="modelos-grid"></div>
                     </div>
-                    <div class="feedback" id="disponibilidadeFeedback">Informe o grupo para carregar disponibilidade.</div>
+                    <div class="feedback" id="disponibilidadeFeedback">Selecione um grupo para ver a disponibilidade de veículos.</div>
                 </section>
                 <section class="panel" data-panel="3">
                     <h2 class="title">Opcionais</h2>
@@ -332,16 +350,16 @@
                     <h2 class="title">Dados do cliente</h2>
                     <p class="subtitle">
                         @if(!empty($isAuth) && $isAuth)
-                            Voce ja esta logado. Deseja pagar com este usuario ou cadastrar outro?
+                            Você já está logado. Deseja continuar com este usuário ou cadastrar outro?
                         @else
-                            Faca login ou cadastre-se para seguir ao pagamento.
+                            Faça login ou cadastre-se para seguir ao pagamento.
                         @endif
                     </p>
 
                     <div class="client-tabs">
                         @if(!empty($isAuth) && $isAuth)
-                            <button type="button" class="client-tab active" data-client-tab="login">Usar usuario logado</button>
-                            <button type="button" class="client-tab" data-client-tab="cadastro">Cadastrar outro usuario</button>
+                            <button type="button" class="client-tab active" data-client-tab="login">Usar usuário logado</button>
+                            <button type="button" class="client-tab" data-client-tab="cadastro">Cadastrar outro usuário</button>
                         @else
                             <button type="button" class="client-tab active" data-client-tab="cadastro">Cadastrar</button>
                             <button type="button" class="client-tab" data-client-tab="login">Ja tenho conta</button>
@@ -350,8 +368,8 @@
 
                     <div id="clientLoginPanel" class="client-panel hidden">
                         @if(!empty($isAuth) && $isAuth)
-                            <p class="client-note">Voce esta logado como {{ $authUserName ?: 'usuario' }}.</p>
-                            <p class="client-note">Se quiser usar outro cliente, escolha a opcao "Cadastrar outro usuario".</p>
+                            <p class="client-note">Você está logado como <strong>{{ $authUserName ?: 'usuário' }}</strong>.</p>
+                            <p class="client-note">Se quiser usar outro cliente, escolha a opção "Cadastrar outro usuário".</p>
                         @else
                             <p class="client-note">Para continuar com o pagamento, faca login na sua conta.</p>
                             @if(!empty($loginRedirectUrl))
@@ -385,7 +403,7 @@
                         </div>
                     </div>
                     <div class="feedback" id="clientFeedback">
-                        {{ !empty($isAuth) && $isAuth ? 'Escolha usar o usuario logado ou cadastrar outro.' : 'Escolha uma opcao para continuar.' }}
+                        {{ !empty($isAuth) && $isAuth ? 'Escolha usar o usuário logado ou cadastrar outro.' : 'Escolha uma opção para continuar.' }}
                     </div>
                     <div class="feedback" style="margin-top: 10px;">Ao finalizar, voce sera direcionado para o pagamento.</div>
                 </section>
@@ -631,7 +649,7 @@
                 const hasAny = Boolean(eRet.value || eDev.value || dataInicio.value || dataFim.value);
                 prefillBox.style.display = hasAny ? 'block' : 'none';
                 document.getElementById('prefRet').textContent = `Retirada: ${eRet.options[eRet.selectedIndex]?.text || '-'}`;
-                document.getElementById('prefDev').textContent = `Devolucao: ${eDev.options[eDev.selectedIndex]?.text || '-'}`;
+                document.getElementById('prefDev').textContent = `Devolução: ${eDev.options[eDev.selectedIndex]?.text || '-'}`;
                 document.getElementById('prefDatas').textContent = `Datas: ${dateLabel(dataInicio.value)} ate ${dateLabel(dataFim.value)}`;
             }
             function renderStep() {
@@ -678,33 +696,33 @@
             }
             function validStep1(show) {
                 if (!document.getElementById('estacao_retirada_id').value || !document.getElementById('estacao_devolucao_id').value || !dataInicio.value || !dataFim.value) {
-                    if (show) feedback('step1Feedback', 'Preencha estacoes e datas.', 'warn');
+                    if (show) feedback('step1Feedback', 'Preencha as estações e as datas para continuar.', 'warn');
                     return false;
                 }
                 const now = new Date();
                 now.setSeconds(0, 0);
                 const retirada = new Date(dataInicio.value);
                 if (!Number.isNaN(retirada.getTime()) && retirada < now) {
-                    if (show) feedback('step1Feedback', 'A retirada nao pode ser antes de agora.', 'warn');
+                    if (show) feedback('step1Feedback', 'A data de retirada não pode ser no passado. Selecione uma data a partir de agora.', 'warn');
                     return false;
                 }
                 if (dias() <= 0) {
-                    if (show) feedback('step1Feedback', 'A devolucao deve ser ao menos 1 dia depois da retirada.', 'warn');
+                    if (show) feedback('step1Feedback', 'A devolução deve ser ao menos 1 dia após a retirada.', 'warn');
                     return false;
                 }
-                if (show) feedback('step1Feedback', 'Passo valido.', 'ok');
+                if (show) feedback('step1Feedback', '✅ Tudo certo! Clique em Continuar para escolher o veículo.', 'ok');
                 return true;
             }
             function validStep2(show) {
-                if (!grupo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um grupo.', 'warn'); return false; }
+                if (!grupo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um grupo de veículos.', 'warn'); return false; }
                 if (reservaSelecionarModelo) {
-                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um modelo.', 'warn'); return false; }
+                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um modelo de veículo.', 'warn'); return false; }
                     if (modelosDisponiveis[Number(modelo.value)] === false) {
-                        if (show) feedback('disponibilidadeFeedback', 'Este modelo nao esta disponivel para o periodo selecionado.', 'warn');
+                        if (show) feedback('disponibilidadeFeedback', 'Este modelo não está disponível para o período selecionado.', 'warn');
                         return false;
                     }
                 } else {
-                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Nenhum modelo disponivel para este grupo.', 'warn'); return false; }
+                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Nenhum modelo disponível para este grupo no período selecionado.', 'warn'); return false; }
                 }
                 return true;
             }
@@ -718,7 +736,7 @@
 
                 if (clientMode === 'login') {
                     if (clientFeedback) {
-                        feedback('clientFeedback', 'Faca login para continuar.', 'warn');
+                        feedback('clientFeedback', 'Faça login para continuar.', 'warn');
                     }
                     return false;
                 }
@@ -765,7 +783,7 @@
                 if (!disponiveis.length) {
                     modelo.value = '';
                     setModelosDisponiveis([]);
-                    updateModeloAutoNote('Nenhum modelo disponivel para este grupo no periodo selecionado.', 'warn');
+                    updateModeloAutoNote('Nenhum modelo disponível para este grupo no período selecionado.', 'warn');
                     return false;
                 }
                 const escolhido = disponiveis.find(m => String(m.id) === String(modelo.value)) || disponiveis[0];
@@ -783,7 +801,7 @@
                     modelo.value = '';
                     setModelosDisponiveis([]);
                     if (modelosGrid) {
-                        modelosGrid.innerHTML = '<div class="feedback">Nenhum modelo encontrado para este grupo.</div>';
+                        modelosGrid.innerHTML = '<div class="feedback warn">Nenhum modelo encontrado para este grupo no período selecionado.</div>';
                     }
                     return;
                 }
@@ -800,7 +818,7 @@
                         const img = m.imagem_url ? `<img src="${m.imagem_url}" alt="${m.nome}">` : '<span>Sem imagem</span>';
                         const active = String(m.id) === String(modelo.value);
                         const badgeClass = disponivel ? 'ok' : 'no';
-                        const badgeLabel = disponivel ? 'Disponivel' : 'Indisponivel';
+                        const badgeLabel = disponivel ? 'Disponível' : 'Indisponível';
                         return `
                             <div class="modelo-card ${disponivel ? '' : 'disabled'} ${active ? 'active' : ''}" data-modelo-id="${m.id}" data-modelo-nome="${m.nome}" data-disponivel="${disponivel ? '1' : '0'}">
                                 <span class="modelo-badge ${badgeClass}">${badgeLabel}</span>
@@ -808,7 +826,7 @@
                                 <div class="modelo-title">${m.nome}</div>
                                 <div class="modelo-meta">
                                     <span class="modelo-chip">${disponivel ? 'Reserva imediata' : 'Sem disponibilidade'}</span>
-                                    <span>${disponivel ? 'Clique para escolher' : 'Indisponivel'}</span>
+                                    <span>${disponivel ? 'Clique para escolher' : 'Indisponível'}</span>
                                 </div>
                             </div>
                         `;
@@ -863,6 +881,7 @@
                     state.tarifa = Number(data.grupo_frota?.valor_diario || 0);
                     const modelosDisponiveisList = Array.isArray(data.modelos) ? data.modelos : [];
                     const modelosVinculadosList = Array.isArray(data.modelos_vinculados) ? data.modelos_vinculados : [];
+                    const temDisponivel = modelosDisponiveisList.some(m => m.disponivel !== false);
                     if (reservaSelecionarModelo) {
                         const listaModelos = modelosDisponiveisList.length ? modelosDisponiveisList : modelosVinculadosList;
                         renderModelos(listaModelos);
@@ -878,8 +897,23 @@
                         }
                     }
                     renderOpc(data.tipo_opcional || []);
-                    if (data.aviso_modelos) feedback('disponibilidadeFeedback', data.aviso_modelos, 'warn');
-                    else feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veiculos na estacao: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
+                    // Marca visualmente o card do grupo como sem disponibilidade
+                    const grupoCardAtivo = document.querySelector(`.grupo-card[data-grupo-id="${grupo.value}"]`);
+                    if (grupoCardAtivo) {
+                        grupoCardAtivo.classList.toggle('sem-disponibilidade', !temDisponivel);
+                    }
+                    if (!temDisponivel) {
+                        const nomeGrupo = grupoCardAtivo?.querySelector('.grupo-title')?.textContent?.trim() || 'este grupo';
+                        feedback('disponibilidadeFeedback',
+                            `⚠️ Nenhum veículo disponível para "${nomeGrupo}" no período selecionado. Escolha outro grupo ou altere as datas.`,
+                            'warn');
+                        // Banner prominente acima dos grupos
+                        showAlertSemDisponibilidade(nomeGrupo);
+                    } else {
+                        hideAlertSemDisponibilidade();
+                        if (data.aviso_modelos) feedback('disponibilidadeFeedback', data.aviso_modelos, 'warn');
+                        else feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veículos na estação: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
+                    }
                 } catch (e) {
                     feedback('disponibilidadeFeedback', e.message || 'Erro ao carregar disponibilidade.', 'warn');
                     modelo.value = '';
@@ -895,6 +929,29 @@
                     refresh();
                 }
             }
+            function showAlertSemDisponibilidade(nomeGrupo) {
+                let el = document.getElementById('alertSemDisponibilidade');
+                if (!el) {
+                    el = document.createElement('div');
+                    el.id = 'alertSemDisponibilidade';
+                    el.className = 'alert-sem-disp';
+                    const gruposSection = document.querySelector('[data-panel="2"]');
+                    if (gruposSection) gruposSection.insertBefore(el, gruposSection.firstChild);
+                }
+                el.innerHTML = `
+                    <span class="alert-sem-disp__icon">&#9888;</span>
+                    <div>
+                        <strong>Sem disponibilidade para "${nomeGrupo}"</strong>
+                        <p>Não há veículos disponíveis para este grupo no período escolhido.
+                        Tente selecionar outro grupo de veículos ou altere as datas da viagem.</p>
+                    </div>`;
+                el.classList.remove('hidden');
+            }
+            function hideAlertSemDisponibilidade() {
+                const el = document.getElementById('alertSemDisponibilidade');
+                if (el) el.classList.add('hidden');
+                document.querySelectorAll('.grupo-card.sem-disponibilidade').forEach(c => c.classList.remove('sem-disponibilidade'));
+            }
             async function applyCupom() {
                 const code = cupomInput.value.trim();
                 if (!code) { state.cupom = null; feedback('cupomFeedback', 'Nenhum cupom aplicado.', null); refresh(); return; }
@@ -903,7 +960,7 @@
                     const res = await fetch(cupomUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, Accept: 'application/json' }, body: JSON.stringify({ cupom: code }) });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.message || 'Falha ao validar cupom.');
-                    if (!data.cupom) { state.cupom = null; feedback('cupomFeedback', 'Cupom nao encontrado ou inativo.', 'warn'); refresh(); return; }
+                    if (!data.cupom) { state.cupom = null; feedback('cupomFeedback', 'Cupom não encontrado ou inativo.', 'warn'); refresh(); return; }
                     state.cupom = data.cupom;
                     feedback('cupomFeedback', `Cupom aplicado: ${data.cupom.codigo} (${data.cupom.valor}% de desconto).`, 'ok');
                     refresh();
@@ -1061,14 +1118,14 @@
                     const mode = btn.dataset.clientTab || 'cadastro';
                     setClientMode(mode);
                     if (clientFeedback) {
-                        feedback('clientFeedback', mode === 'login' ? 'Faca login para continuar.' : 'Preencha seus dados para seguir.', null);
+                        feedback('clientFeedback', mode === 'login' ? 'Faça login para continuar.' : 'Preencha seus dados para seguir.', null);
                     }
                 });
             });
             if (isAuth) {
                 setClientMode('login');
                 if (clientFeedback) {
-                    feedback('clientFeedback', 'Escolha usar o usuario logado ou cadastrar outro.', 'ok');
+                    feedback('clientFeedback', 'Escolha usar o usuário logado ou cadastrar outro.', 'ok');
                 }
             } else {
                 setClientMode('cadastro');
@@ -1080,27 +1137,57 @@
                     const id = card.getAttribute('data-grupo-id');
                     if (!id) return;
                     grupo.value = id;
+                    hideAlertSemDisponibilidade();
                     highlightGrupo();
                     const changeEvent = new Event('change', { bubbles: true });
                     grupo.dispatchEvent(changeEvent);
                 });
             }
             maskCelular();
-            const now = new Date();
-            if (dataInicio) {
-                const minInicio = new Date(now.getTime());
-                dataInicio.setAttribute('min', minInicio.toISOString().slice(0, 16));
-            }
-            if (dataFim && dataInicio.value) {
-                const i = new Date(dataInicio.value);
-                if (!Number.isNaN(i.getTime())) {
-                    dataFim.setAttribute('min', new Date(i.getTime() + 86400000).toISOString().slice(0, 16));
+            // ── Inicializar datas com valores padrão sensatos ──────────────────────
+            (function initDatas() {
+                const now = new Date();
+                now.setSeconds(0, 0);
+
+                // Amanhã às 08:00 (horário padrão de abertura)
+                const amanha = new Date(now);
+                amanha.setDate(amanha.getDate() + 1);
+                amanha.setHours(8, 0, 0, 0);
+
+                // Daqui a 3 dias às 08:00 (mínimo de 1 diária + margem confortável)
+                const volta = new Date(amanha);
+                volta.setDate(volta.getDate() + 2);
+
+                function toLocal(d) {
+                    return d.getFullYear() + '-'
+                        + String(d.getMonth() + 1).padStart(2, '0') + '-'
+                        + String(d.getDate()).padStart(2, '0') + 'T'
+                        + String(d.getHours()).padStart(2, '0') + ':'
+                        + String(d.getMinutes()).padStart(2, '0');
                 }
-            }
+
+                if (dataInicio) {
+                    dataInicio.setAttribute('min', toLocal(now));
+                    // Se o valor atual está vazio ou no passado → substituir pelo padrão
+                    const valAtual = dataInicio.value ? new Date(dataInicio.value) : null;
+                    if (!valAtual || isNaN(valAtual.getTime()) || valAtual < now) {
+                        dataInicio.value = toLocal(amanha);
+                    }
+                }
+                if (dataFim) {
+                    const refInicio = dataInicio?.value ? new Date(dataInicio.value) : amanha;
+                    const minFim = new Date(refInicio.getTime() + 86400000);
+                    dataFim.setAttribute('min', toLocal(minFim));
+                    const valFimAtual = dataFim.value ? new Date(dataFim.value) : null;
+                    if (!valFimAtual || isNaN(valFimAtual.getTime()) || valFimAtual <= refInicio) {
+                        dataFim.value = toLocal(volta);
+                    }
+                }
+            })();
             renderStep();
             enforceStep1Gate(false);
             if (!reservaSelecionarModelo) {
-                updateModeloAutoNote('Selecione um grupo para escolher o modelo automaticamente.', null);
+                updateModeloAutoNote('Selecione um grupo para escolher o modelo automaticamente.', null); // kept as-is (accented)
             }
             refresh();
             updatePrefill();

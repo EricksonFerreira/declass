@@ -165,24 +165,32 @@ class User extends Authenticatable implements MustVerifyEmail
         return $roleId === 1 || $tipoUsuarioIdRaw === 1;
     }
 
+    /**
+     * Super admin do sistema (global): tipo_usuario_id = 1.
+     * Possui acesso total, independente da empresa.
+     */
+    public function isSuperAdmin(): bool
+    {
+        return (int) ($this->getRawOriginal('tipo_usuario_id') ?? 0) === 1;
+    }
+
     public function hasPermissao(string $permissao): bool
     {
         if ($this->isAdministrador()) {
             return true;
         }
 
-        if (!$this->empresa_id || !$this->role_id || $permissao === '') {
+        if (!$this->role_id || $permissao === '') {
             return false;
         }
 
-        // Permissões são globais (sem empresa_id); roles pertencem à empresa do usuário
+        // Permissões e roles são defaults globais do sistema (sem empresa_id).
         return DB::table('permissions')
             ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
             ->join('roles', 'roles.id', '=', 'role_has_permissions.role_id')
             ->where('permissions.name', $permissao)
             ->where('permissions.guard_name', 'web')
             ->where('roles.id', $this->role_id)
-            ->where('roles.empresa_id', $this->empresa_id)
             ->exists();
     }
 
@@ -192,7 +200,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return 'home';
         }
 
-        if (!$this->empresa_id || !$this->role_id) {
+        if (!$this->role_id) {
             return null;
         }
 
@@ -201,7 +209,6 @@ class User extends Authenticatable implements MustVerifyEmail
             ->join('roles', 'roles.id', '=', 'role_has_permissions.role_id')
             ->where('permissions.guard_name', 'web')
             ->where('roles.id', $this->role_id)
-            ->where('roles.empresa_id', $this->empresa_id)
             ->pluck('permissions.name')
             ->map(fn ($name) => (string) $name)
             ->unique()

@@ -15,6 +15,7 @@ class UpdatePermissaoRequest extends FormRequest
             'name'       => ['required', 'string', 'max:255', Rule::unique('permissions', 'name')->ignore($this->route('permissao'))],
             'guard_name' => 'required|string|max:255',
             'descricao'  => 'nullable|string|max:500',
+            'grupo'      => 'nullable|string|max:80',
         ];
     }
 

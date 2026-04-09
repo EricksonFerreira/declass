@@ -18,6 +18,8 @@ class Estacao extends Model
         'telefone',
         'celular',
         'cidade',
+        'nfse_municipio_codigo',
+        'nfse_inscricao_municipal',
         'numero',
         'zip_code',
         'latitude',

@@ -196,7 +196,13 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         $empresaId = $this->currentEmpresaId();
         if ($empresaId === null) {
-            if (Auth::user()?->isAdministrador()) {
+            $user = Auth::user();
+            if ($user?->isSuperAdmin()) {
+                // Super admin (tipo_usuario_id=1): acesso global, sem escopo por empresa.
+                return $query;
+            }
+
+            if ($user?->isAdministrador()) {
                 // Permite listar empresas mesmo sem contexto, para que o admin consiga escolher.
                 if ($this->model->getTable() === 'empresas') {
                     return $query;
@@ -220,6 +226,14 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         $empresaId = $this->currentEmpresaId();
         if ($empresaId === null) {
+            if (Auth::user()?->isSuperAdmin()) {
+                // Super admin: exige empresa_id explícita quando não há contexto selecionado.
+                if (!isset($data['empresa_id']) || $data['empresa_id'] === null || $data['empresa_id'] === '') {
+                    throw new AccessDeniedHttpException('Informe o empresa_id para esta operacao (super admin).');
+                }
+                return;
+            }
+
             throw new AccessDeniedHttpException('Empresa nao identificada para a operacao.');
         }
 

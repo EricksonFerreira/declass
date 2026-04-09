@@ -13,7 +13,7 @@ class Regra extends Model
     protected $fillable = [
         'name',
         'guard_name',
-        'empresa_id',
+        // empresa_id intencionalmente omitido — roles são defaults globais do sistema
     ];
     public function permissoes()
     {
