@@ -209,9 +209,18 @@
                         </span>
                     </div>
 
-                    <span class="pm-group-header__chevron">
-                        <i class="fas fa-chevron-down"></i>
-                    </span>
+                    <div class="pm-group-header__right">
+                        <a href="{{ route('permissao.create') }}?grupo={{ urlencode($grupo) }}"
+                           class="btn btn-xs pm-btn-add-group"
+                           style="border-color:{{ $hex }}40; color:{{ $hex }}"
+                           title="Nova permissão neste grupo"
+                           onclick="event.stopPropagation()">
+                            <i class="fas fa-plus"></i>
+                        </a>
+                        <span class="pm-group-header__chevron">
+                            <i class="fas fa-chevron-down"></i>
+                        </span>
+                    </div>
                 </div>
 
                 {{-- Group body --}}
@@ -240,12 +249,31 @@
                                         <td>
                                             <code class="pm-perm-name">{{ $permissao->name }}</code>
                                         </td>
-                                        <td>
-                                            @if($permissao->descricao)
-                                                <span class="pm-perm-desc">{{ $permissao->descricao }}</span>
-                                            @else
-                                                <span class="pm-perm-desc--empty">Sem descrição — <a href="{{ route('permissao.edit', $permissao->id) }}">adicionar</a></span>
-                                            @endif
+                                        <td class="pm-desc-cell" data-id="{{ $permissao->id }}">
+                                            <div class="pm-desc-view">
+                                                @if($permissao->descricao)
+                                                    <span class="pm-perm-desc">{{ $permissao->descricao }}</span>
+                                                @else
+                                                    <span class="pm-perm-desc--empty">Sem descrição</span>
+                                                @endif
+                                                <button type="button" class="pm-btn-edit-desc" title="Editar descrição">
+                                                    <i class="fas fa-pen"></i>
+                                                </button>
+                                            </div>
+                                            <div class="pm-desc-edit" style="display:none">
+                                                <form method="POST" action="{{ route('permissao.update', $permissao->id) }}" class="pm-inline-form">
+                                                    @csrf @method('PUT')
+                                                    <input type="hidden" name="name"       value="{{ $permissao->name }}">
+                                                    <input type="hidden" name="guard_name" value="{{ $permissao->guard_name }}">
+                                                    <input type="hidden" name="grupo"      value="{{ $permissao->grupo }}">
+                                                    <textarea name="descricao" class="form-control form-control-sm pm-inline-textarea"
+                                                        rows="2" placeholder="Descreva o que esta permissão concede…">{{ $permissao->descricao }}</textarea>
+                                                    <div class="pm-inline-actions">
+                                                        <button type="submit" class="btn btn-xs btn-success"><i class="fas fa-check"></i> Salvar</button>
+                                                        <button type="button" class="btn btn-xs btn-outline-secondary pm-btn-cancel-desc"><i class="fas fa-times"></i></button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </td>
                                         <td>
                                             <a href="{{ route('permissao.edit', $permissao->id) }}"
@@ -317,7 +345,7 @@
 /* ── Group header ── */
 .pm-group-header {
     display: flex; align-items: center; justify-content: space-between;
-    padding: .75rem 1rem;
+    padding: .65rem 1rem;
     cursor: pointer;
     background: #fafbfd;
     user-select: none;
@@ -325,15 +353,27 @@
     gap: .5rem;
 }
 .pm-group-header:hover { background: #f0f4ff; }
-.pm-group-header__left { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
-.pm-group-header__dot  {
-    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
-}
+.pm-group-header__left  { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+.pm-group-header__right { display: flex; align-items: center; gap: .4rem; flex-shrink: 0; }
+.pm-group-header__dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
 .pm-group-header__icon { font-size: 1rem; width: 18px; text-align: center; flex-shrink: 0; }
 .pm-group-header__name { font-weight: 600; font-size: .9rem; color: #21364f; }
 .pm-group-header__count { font-size: .72rem; font-weight: 600; }
 .pm-group-header__chevron { color: #aab5c4; font-size: .75rem; transition: transform .2s; }
 .pm-group-header:not(.collapsed) .pm-group-header__chevron { transform: rotate(180deg); }
+
+/* "+ Nova permissão no grupo" button */
+.pm-btn-add-group {
+    border-radius: 6px;
+    border: 1.5px solid;
+    background: transparent;
+    padding: .15rem .4rem;
+    font-size: .75rem;
+    line-height: 1.4;
+    opacity: 0;
+    transition: opacity .15s;
+}
+.pm-group-header:hover .pm-btn-add-group { opacity: 1; }
 
 /* ── Group body ── */
 .pm-group-body { overflow-x: auto; }
@@ -353,7 +393,19 @@
 
 .pm-perm-name { font-family: 'SFMono-Regular', Consolas, monospace; font-size: .78rem; color: #2c4a6e; background: #f0f4ff; padding: .1rem .35rem; border-radius: 4px; }
 .pm-perm-desc { color: #495057; font-size: .82rem; }
-.pm-perm-desc--empty { color: #aab5c4; font-size: .78rem; font-style: italic; }
+.pm-perm-desc--empty { color: #bbc5d0; font-size: .78rem; font-style: italic; }
+
+/* ── Inline description edit ── */
+.pm-desc-cell { position: relative; min-width: 180px; }
+.pm-desc-view { display: flex; align-items: flex-start; gap: .3rem; }
+.pm-btn-edit-desc {
+    background: none; border: none; padding: 0 .2rem;
+    color: #aab5c4; font-size: .7rem; cursor: pointer;
+    opacity: 0; transition: opacity .1s; flex-shrink: 0; margin-top: .05rem;
+}
+.pm-perm-row:hover .pm-btn-edit-desc { opacity: 1; }
+.pm-inline-textarea { font-size: .8rem; border-radius: 6px; resize: vertical; margin-top: .3rem; }
+.pm-inline-actions { display: flex; gap: .25rem; margin-top: .3rem; }
 
 /* ── Hidden by search ── */
 .pm-perm-row.pm-hidden { display: none; }
@@ -400,14 +452,28 @@ function filterPermissoes(val) {
 // Sync search input with JS filter on page load (for back-button)
 document.addEventListener('DOMContentLoaded', function () {
     const input = document.querySelector('[name="busca"]');
-    if (input && input.value) {
-        filterPermissoes(input.value);
-    }
+    if (input && input.value) filterPermissoes(input.value);
+    if (input) input.addEventListener('input', function () { filterPermissoes(this.value); });
 
-    // Live filter on typing (no submit needed)
-    if (input) {
-        input.addEventListener('input', function () { filterPermissoes(this.value); });
-    }
+    // ── Inline description edit ──
+    document.querySelectorAll('.pm-btn-edit-desc').forEach(function (btn) {
+        btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            const cell = btn.closest('.pm-desc-cell');
+            cell.querySelector('.pm-desc-view').style.display = 'none';
+            const editDiv = cell.querySelector('.pm-desc-edit');
+            editDiv.style.display = '';
+            editDiv.querySelector('textarea').focus();
+        });
+    });
+
+    document.querySelectorAll('.pm-btn-cancel-desc').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const cell = btn.closest('.pm-desc-cell');
+            cell.querySelector('.pm-desc-edit').style.display = 'none';
+            cell.querySelector('.pm-desc-view').style.display = '';
+        });
+    });
 });
 </script>
 @stop

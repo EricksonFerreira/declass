@@ -7,279 +7,528 @@
 @stop
 
 @section('content')
-    @php
-        $oldPermissions = old('permissions');
-    @endphp
+@php
+    $oldPermissions = old('permissions');
 
-    @if ($errors->any())
-        <div class="alert alert-danger col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12">
-            <ul class="mb-0 pl-3">
-                @foreach (array_unique($errors->all()) as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
+    // Mapa grupo → label + ícone (mesmo do index de permissões)
+    $grupoMeta = [
+        'reserva'                         => ['label' => 'Reservas',                  'icon' => 'fas fa-calendar-check',      'color' => '#4b80ff'],
+        'veiculo'                         => ['label' => 'Veículos',                  'icon' => 'fas fa-car',                 'color' => '#28a745'],
+        'usuario'                         => ['label' => 'Usuários',                  'icon' => 'fas fa-users',               'color' => '#17a2b8'],
+        'permissao'                       => ['label' => 'Permissões',                'icon' => 'fas fa-key',                 'color' => '#e0a800'],
+        'regra'                           => ['label' => 'Regras de Acesso',          'icon' => 'fas fa-shield-alt',          'color' => '#e0a800'],
+        'multa'                           => ['label' => 'Multas',                    'icon' => 'fas fa-file-invoice-dollar', 'color' => '#dc3545'],
+        'sinistro'                        => ['label' => 'Sinistros',                 'icon' => 'fas fa-car-crash',           'color' => '#dc3545'],
+        'movimentacao'                    => ['label' => 'Movimentações',             'icon' => 'fas fa-exchange-alt',        'color' => '#6c757d'],
+        'financeiro'                      => ['label' => 'Financeiro',                'icon' => 'fas fa-dollar-sign',         'color' => '#28a745'],
+        'calcao'                          => ['label' => 'Caução',                    'icon' => 'fas fa-hand-holding-usd',   'color' => '#28a745'],
+        'empresa'                         => ['label' => 'Empresa',                   'icon' => 'fas fa-building',            'color' => '#343a40'],
+        'empresa_context'                 => ['label' => 'Contexto de Empresa',       'icon' => 'fas fa-building',            'color' => '#343a40'],
+        'estacao'                         => ['label' => 'Estações',                  'icon' => 'fas fa-map-marker-alt',      'color' => '#17a2b8'],
+        'modelo'                          => ['label' => 'Modelos de Veículo',        'icon' => 'fas fa-car-side',            'color' => '#6c757d'],
+        'marca'                           => ['label' => 'Marcas',                    'icon' => 'fas fa-tag',                 'color' => '#6c757d'],
+        'grupo_frota'                     => ['label' => 'Grupos de Frota',           'icon' => 'fas fa-layer-group',         'color' => '#4b80ff'],
+        'frota'                           => ['label' => 'Frota',                     'icon' => 'fas fa-truck',               'color' => '#4b80ff'],
+        'dano'                            => ['label' => 'Danos',                     'icon' => 'fas fa-exclamation-triangle','color' => '#e0a800'],
+        'checklist'                       => ['label' => 'Checklists',                'icon' => 'fas fa-tasks',               'color' => '#17a2b8'],
+        'ordem-servico'                   => ['label' => 'Ordens de Serviço',         'icon' => 'fas fa-tools',               'color' => '#6c757d'],
+        'nfse'                            => ['label' => 'NFS-e',                     'icon' => 'fas fa-file-alt',            'color' => '#343a40'],
+        'site'                            => ['label' => 'Site de Apresentação',      'icon' => 'fas fa-globe',               'color' => '#4b80ff'],
+        'dashboard'                       => ['label' => 'Dashboard',                 'icon' => 'fas fa-chart-bar',           'color' => '#17a2b8'],
+        'home'                            => ['label' => 'Início',                    'icon' => 'fas fa-home',                'color' => '#17a2b8'],
+        'profile'                         => ['label' => 'Perfil',                    'icon' => 'fas fa-user-circle',         'color' => '#17a2b8'],
+        'segmento'                        => ['label' => 'Segmentos',                 'icon' => 'fas fa-th-large',            'color' => '#6c757d'],
+        'opcional'                        => ['label' => 'Opcionais',                 'icon' => 'fas fa-plus-circle',         'color' => '#6c757d'],
+        'opcional_grupo_veiculo'          => ['label' => 'Opcionais por Grupo',       'icon' => 'fas fa-list-ul',             'color' => '#6c757d'],
+        'cupom_desconto'                  => ['label' => 'Cupons de Desconto',        'icon' => 'fas fa-ticket-alt',          'color' => '#28a745'],
+        'feriado'                         => ['label' => 'Feriados',                  'icon' => 'fas fa-calendar-times',      'color' => '#6c757d'],
+        'dia_util'                        => ['label' => 'Dias Úteis',                'icon' => 'fas fa-calendar-day',        'color' => '#6c757d'],
+        'horario_diario'                  => ['label' => 'Horários Diários',          'icon' => 'fas fa-clock',               'color' => '#6c757d'],
+        'pagamento'                       => ['label' => 'Pagamento',                 'icon' => 'fas fa-credit-card',         'color' => '#28a745'],
+        'stripe'                          => ['label' => 'Stripe',                    'icon' => 'fab fa-stripe-s',            'color' => '#28a745'],
+        'cashier'                         => ['label' => 'Cashier / Assinatura',      'icon' => 'fas fa-file-invoice',        'color' => '#28a745'],
+        'nfse'                            => ['label' => 'NFS-e',                     'icon' => 'fas fa-file-alt',            'color' => '#343a40'],
+        'powerbi'                         => ['label' => 'Power BI',                  'icon' => 'fas fa-chart-pie',           'color' => '#17a2b8'],
+        'tipo_usuario'                    => ['label' => 'Tipos de Usuário',          'icon' => 'fas fa-user-tag',            'color' => '#6c757d'],
+        'tipo_frota'                      => ['label' => 'Tipos de Frota',            'icon' => 'fas fa-car-alt',             'color' => '#6c757d'],
+        'tipo_movimentacao'               => ['label' => 'Tipos de Movimentação',     'icon' => 'fas fa-arrows-alt',          'color' => '#6c757d'],
+        'tipo_opcional'                   => ['label' => 'Tipos de Opcional',         'icon' => 'fas fa-sliders-h',           'color' => '#6c757d'],
+        'tipo_checklist'                  => ['label' => 'Tipos de Checklist',        'icon' => 'fas fa-clipboard-list',      'color' => '#6c757d'],
+        'status_reserva'                  => ['label' => 'Status de Reserva',         'icon' => 'fas fa-toggle-on',           'color' => '#6c757d'],
+        'status_veiculo'                  => ['label' => 'Status de Veículo',         'icon' => 'fas fa-toggle-on',           'color' => '#6c757d'],
+        'status_movimentacao'             => ['label' => 'Status de Movimentação',    'icon' => 'fas fa-toggle-on',           'color' => '#6c757d'],
+        'status_item_checklist'           => ['label' => 'Status Item Checklist',     'icon' => 'fas fa-toggle-on',           'color' => '#6c757d'],
+        'categoria_dano'                  => ['label' => 'Categorias de Dano',        'icon' => 'fas fa-folder',              'color' => '#6c757d'],
+        'item_checklist'                  => ['label' => 'Itens de Checklist',        'icon' => 'fas fa-check-square',        'color' => '#6c757d'],
+        'configuracao-checklist'          => ['label' => 'Config. de Checklist',      'icon' => 'fas fa-cog',                 'color' => '#6c757d'],
+        'configuracao_checklist'          => ['label' => 'Config. de Checklist',      'icon' => 'fas fa-cog',                 'color' => '#6c757d'],
+        'caracteristica_frota'            => ['label' => 'Caract. de Frota',          'icon' => 'fas fa-list-alt',            'color' => '#6c757d'],
+        'caracteristica_grupo_frota'      => ['label' => 'Caract. Grupo Frota',       'icon' => 'fas fa-list-alt',            'color' => '#6c757d'],
+        'caracteristica_grupo'            => ['label' => 'Caract. de Grupo',          'icon' => 'fas fa-list-alt',            'color' => '#6c757d'],
+        'frota_caracteristica'            => ['label' => 'Caract. de Frota',          'icon' => 'fas fa-list-alt',            'color' => '#6c757d'],
+        'tipo_valor_caracteristica_frota' => ['label' => 'Valores de Caract.',        'icon' => 'fas fa-sliders-h',           'color' => '#6c757d'],
+        'veiculo-dano'                    => ['label' => 'Veículo — Danos',           'icon' => 'fas fa-car-crash',           'color' => '#e0a800'],
+        'avaria'                          => ['label' => 'Avarias',                   'icon' => 'fas fa-exclamation-circle',  'color' => '#e0a800'],
+        'pais'                            => ['label' => 'Países',                    'icon' => 'fas fa-globe-americas',      'color' => '#6c757d'],
+        'countries'                       => ['label' => 'Countries',                 'icon' => 'fas fa-globe',               'color' => '#6c757d'],
+        'termo_consentimento'             => ['label' => 'Termos de Consentimento',   'icon' => 'fas fa-file-signature',      'color' => '#6c757d'],
+        'tempo_entre_entacao'             => ['label' => 'Tempo entre Estações',      'icon' => 'fas fa-route',               'color' => '#6c757d'],
+        'replicacao_base'                 => ['label' => 'Replicação de Base',        'icon' => 'fas fa-database',            'color' => '#343a40'],
+        'migrations'                      => ['label' => 'Migrações',                 'icon' => 'fas fa-database',            'color' => '#343a40'],
+        'tipotransacao'                   => ['label' => 'Tipos de Transação',        'icon' => 'fas fa-receipt',             'color' => '#6c757d'],
+        '_outros'                         => ['label' => 'Outros',                    'icon' => 'fas fa-ellipsis-h',          'color' => '#6c757d'],
+    ];
+
+    // Agrupa permissões pelo grupo efetivo
+    $permissoesAgrupadas = $permissoes->groupBy(fn ($p) => $p->grupo_efetivo ?: '_outros');
+    $totalSelecionado = $permissoes->filter(fn ($p) => is_array($oldPermissions)
+        ? in_array($p->id, $oldPermissions)
+        : !empty($p->checked)
+    )->count();
+@endphp
+
+@if ($errors->any())
+    <div class="alert alert-danger col-xl-11 col-lg-12 col-md-12">
+        <ul class="mb-0 pl-3">
+            @foreach (array_unique($errors->all()) as $error)
+                <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
+@endif
+
+<div class="col-xl-11 col-lg-12 col-md-12 px-0">
+    <div class="re-card shadow-sm">
+
+        {{-- Header --}}
+        <div class="re-card__header">
+            <div class="re-card__icon"><i class="fas fa-shield-alt"></i></div>
+            <div>
+                <h4 class="re-card__title">{{ isset($regra) ? 'Editar Regra de Acesso' : 'Nova Regra de Acesso' }}</h4>
+                <p class="re-card__sub">Configure o nome e selecione exatamente quais permissões esta regra terá.</p>
+            </div>
         </div>
-    @endif
 
-    <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
-        <div class="card card-regra shadow-sm border-0">
-            <div class="card-header card-header-regra border-0">
-                <div>
-                    <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Configure nome, politica de seguranca e permissoes da regra.</p>
+        <div class="re-card__body">
+            <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
+
+                {{-- Dados básicos --}}
+                <div class="col-12 mb-2">
+                    <div class="re-section-title"><i class="fas fa-info-circle mr-1"></i> Identificação</div>
                 </div>
-            </div>
-
-            <div class="card-body p-4">
-                <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
-                    <div class="col-12">
-                        <div class="regra-section-title">Informacoes Basicas</div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="form-group">
+                        <x-form-input type="text" class="form-control form-control-sm re-input"
+                            id="nome" name="name" label="Nome da Regra"
+                            value="{{ old('name', $regra->name ?? '') }}" required />
                     </div>
-
-                    <div class="col-lg-6 col-md-12">
-                        <div class="form-group form-group-regra">
-                            <x-form-input type="text" class="form-control form-control-sm" id="nome" name="name"
-                                label="Nome" value="{{ old('name', $regra->name ?? '') }}" required />
-                        </div>
+                </div>
+                <div class="col-lg-6 col-md-12">
+                    <div class="form-group">
+                        <x-form-input type="text" class="form-control form-control-sm re-input"
+                            id="guard_name" name="guard_name" label="Guard (política de segurança)"
+                            value="{{ old('guard_name', $regra->guard_name ?? 'web') }}" required />
                     </div>
+                </div>
 
-                    <div class="col-lg-6 col-md-12">
-                        <div class="form-group form-group-regra">
-                            <x-form-input type="text" class="form-control form-control-sm" id="guard_name" name="guard_name"
-                                label="Nome da Politica de Seguranca" value="{{ old('guard_name', $regra->guard_name ?? '') }}" required />
-                        </div>
-                    </div>
+                {{-- Permissões --}}
+                <div class="col-12 mt-2 mb-2">
+                    <div class="re-section-title"><i class="fas fa-key mr-1"></i> Permissões</div>
+                </div>
 
-                    <div class="col-12">
-                        <div class="regra-section-title">Permissoes</div>
-                    </div>
-
-                    <div class="col-12">
-                        <div class="permissoes-wrap">
-                            <div class="permissoes-head">
-                                <span><i class="fa fa-shield-alt mr-1"></i> Selecione as permissoes da regra</span>
-                                <small class="text-muted">
-                                    <span id="permissoes-selecionadas">0</span> selecionada(s)
-                                </small>
+                <div class="col-12">
+                    {{-- Toolbar de permissões --}}
+                    <div class="re-perm-toolbar">
+                        <div class="re-perm-toolbar__left">
+                            <div class="re-perm-search-wrap">
+                                <i class="fas fa-search re-perm-search-icon"></i>
+                                <input type="text" id="reBusca" class="re-perm-search"
+                                    placeholder="Buscar permissão…" autocomplete="off">
                             </div>
-
-                            <div class="permissoes-grid">
-                                @foreach ($permissoes as $permissao)
-                                    @php
-                                        $checked = is_array($oldPermissions)
-                                            ? in_array($permissao->id, $oldPermissions)
-                                            : !empty($permissao->checked);
-                                    @endphp
-                                    <label class="permissao-item" for="permission-{{ $permissao->id }}">
-                                        <input class="permissao-item__input" type="checkbox" name="permissions[]"
-                                            value="{{ $permissao->id }}" id="permission-{{ $permissao->id }}"
-                                            {{ $checked ? 'checked' : '' }}>
-                                        <span class="permissao-item__label">{{ $permissao->name }}</span>
-                                    </label>
-                                @endforeach
-                            </div>
-                            <x-form-errors name="permissions" />
+                        </div>
+                        <div class="re-perm-toolbar__right">
+                            <span class="re-counter">
+                                <span id="reContador">{{ $totalSelecionado }}</span>
+                                de {{ $permissoes->count() }} selecionada(s)
+                            </span>
+                            <button type="button" class="re-btn-sm re-btn-check" id="reSelecionarTodos">
+                                <i class="fas fa-check-double mr-1"></i> Selecionar todos
+                            </button>
+                            <button type="button" class="re-btn-sm re-btn-uncheck" id="reDesmarcarTodos">
+                                <i class="fas fa-times mr-1"></i> Desmarcar todos
+                            </button>
                         </div>
                     </div>
 
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-save-regra col-12 mt-2">
-                            Salvar
+                    {{-- Accordion de grupos --}}
+                    <div id="reAccordion" class="re-accordion">
+                        @foreach ($permissoesAgrupadas as $grupo => $itens)
+                            @php
+                                $meta = $grupoMeta[$grupo] ?? $grupoMeta['_outros'];
+                                $accordionId = 'reg_' . preg_replace('/[^a-z0-9]/', '_', strtolower($grupo));
+                                $qtdChecked = $itens->filter(fn ($p) => is_array($oldPermissions)
+                                    ? in_array($p->id, $oldPermissions)
+                                    : !empty($p->checked)
+                                )->count();
+                            @endphp
+
+                            <div class="re-group" data-grupo="{{ strtolower($grupo) }}">
+                                {{-- Group header --}}
+                                <div class="re-group__header collapsed"
+                                     data-toggle="collapse"
+                                     data-target="#{{ $accordionId }}"
+                                     aria-expanded="false">
+                                    <div class="re-group__left">
+                                        <span class="re-group__dot" style="background:{{ $meta['color'] }}"></span>
+                                        <span class="re-group__icon" style="color:{{ $meta['color'] }}">
+                                            <i class="{{ $meta['icon'] }}"></i>
+                                        </span>
+                                        <span class="re-group__name">{{ $meta['label'] }}</span>
+                                        <span class="re-group__badge re-group__badge--total">
+                                            {{ $itens->count() }}
+                                        </span>
+                                        <span class="re-group__badge re-group__badge--checked"
+                                              id="badge-{{ $accordionId }}"
+                                              style="{{ $qtdChecked > 0 ? '' : 'display:none' }}"
+                                              data-color="{{ $meta['color'] }}">
+                                            {{ $qtdChecked }} ativa{{ $qtdChecked !== 1 ? 's' : '' }}
+                                        </span>
+                                    </div>
+                                    <div class="re-group__actions">
+                                        <button type="button" class="re-btn-group-all"
+                                                data-group="{{ $accordionId }}"
+                                                title="Selecionar todas do grupo"
+                                                onclick="event.stopPropagation()">
+                                            <i class="fas fa-check-double"></i>
+                                        </button>
+                                        <button type="button" class="re-btn-group-none"
+                                                data-group="{{ $accordionId }}"
+                                                title="Desmarcar todas do grupo"
+                                                onclick="event.stopPropagation()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                        <i class="fas fa-chevron-down re-group__chevron"></i>
+                                    </div>
+                                </div>
+
+                                {{-- Group body --}}
+                                <div id="{{ $accordionId }}" class="collapse">
+                                    <div class="re-group__body">
+                                        <div class="re-perm-grid" data-grid="{{ $accordionId }}">
+                                            @foreach ($itens as $permissao)
+                                                @php
+                                                    $checked = is_array($oldPermissions)
+                                                        ? in_array($permissao->id, $oldPermissions)
+                                                        : !empty($permissao->checked);
+                                                    // derive action label from name suffix
+                                                    $acao = str_contains($permissao->name, '.') ? substr($permissao->name, strrpos($permissao->name, '.') + 1) : $permissao->name;
+                                                    $acaoClasses = [
+                                                        'index' => 'badge-primary', 'show' => 'badge-info',
+                                                        'create' => 'badge-success', 'store' => 'badge-success',
+                                                        'edit' => 'badge-warning', 'update' => 'badge-warning',
+                                                        'destroy' => 'badge-danger', 'delete' => 'badge-danger',
+                                                        'export' => 'badge-dark',
+                                                    ];
+                                                    $badgeCls = $acaoClasses[$acao] ?? 'badge-secondary';
+                                                @endphp
+                                                <label class="re-perm-item {{ $checked ? 're-perm-item--checked' : '' }}"
+                                                       for="perm-{{ $permissao->id }}"
+                                                       data-name="{{ strtolower($permissao->name) }}"
+                                                       data-desc="{{ strtolower($permissao->descricao ?? '') }}">
+                                                    <input class="re-perm-item__chk" type="checkbox"
+                                                        name="permissions[]"
+                                                        value="{{ $permissao->id }}"
+                                                        id="perm-{{ $permissao->id }}"
+                                                        {{ $checked ? 'checked' : '' }}>
+                                                    <span class="re-perm-item__body">
+                                                        <span class="badge {{ $badgeCls }} badge-sm re-perm-item__badge">{{ $acao }}</span>
+                                                        <code class="re-perm-item__name">{{ $permissao->name }}</code>
+                                                        @if($permissao->descricao)
+                                                            <span class="re-perm-item__desc">{{ $permissao->descricao }}</span>
+                                                        @endif
+                                                    </span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <x-form-errors name="permissions" />
+                </div>
+
+                {{-- Salvar --}}
+                <div class="col-12 mt-3">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary re-btn-save flex-fill">
+                            <i class="fas fa-save mr-1"></i> Salvar Regra
                         </button>
+                        <a href="{{ route('regra.index') }}" class="btn btn-outline-secondary re-btn-cancel">
+                            <i class="fas fa-arrow-left mr-1"></i> Voltar
+                        </a>
                     </div>
-                </x-form>
-            </div>
+                </div>
+
+            </x-form>
         </div>
     </div>
+</div>
 @stop
 
 @section('css')
 <style>
-    .card-regra {
-        border-radius: 14px;
-        overflow: hidden;
-    }
+/* ── Card ── */
+.re-card { border: 1px solid #e5eaf2; border-radius: 14px; overflow: hidden; background: #fff; }
+.re-card__header {
+    display: flex; align-items: center; gap: 1rem;
+    background: linear-gradient(120deg, #f0f4ff 0%, #e8f0fe 100%);
+    padding: 1.2rem 1.5rem;
+}
+.re-card__icon {
+    width: 48px; height: 48px; border-radius: 12px;
+    background: #4b80ff20; display: flex; align-items: center; justify-content: center;
+    font-size: 1.3rem; color: #4b80ff; flex-shrink: 0;
+}
+.re-card__title { font-size: 1.1rem; font-weight: 700; color: #0f2740; margin: 0 0 .2rem; }
+.re-card__sub   { font-size: .82rem; color: #6c757d; margin: 0; }
+.re-card__body  { padding: 1.5rem; }
 
-    .card-header-regra {
-        background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
-        padding: 1.1rem 1.5rem;
-    }
+.re-section-title {
+    font-size: .88rem; font-weight: 700; color: #21364f;
+    border-bottom: 2px solid #e8f0fe; padding-bottom: 6px; margin-bottom: 1rem;
+}
+.re-input { border-radius: 8px; border-color: #d8e1ec; }
+.re-btn-save   { border-radius: 10px; font-weight: 600; }
+.re-btn-cancel { border-radius: 10px; }
+.gap-2 { gap: .5rem; }
 
-    .card-header-regra h4 {
-        color: #0f2740;
-        font-weight: 700;
-    }
+/* ── Toolbar ── */
+.re-perm-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: .6rem;
+    background: #f8faff; border: 1px solid #e5eaf2; border-radius: 10px 10px 0 0;
+    padding: .6rem .9rem; margin-bottom: 0;
+}
+.re-perm-toolbar__left { display: flex; align-items: center; gap: .6rem; flex: 1; min-width: 200px; }
+.re-perm-toolbar__right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.re-perm-search-wrap { position: relative; width: 100%; max-width: 300px; }
+.re-perm-search-icon { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #9aacbf; font-size: .78rem; }
+.re-perm-search {
+    width: 100%; padding: .3rem .6rem .3rem 2rem;
+    border: 1px solid #d8e1ec; border-radius: 8px;
+    font-size: .82rem; background: #fff; color: #21364f;
+}
+.re-perm-search:focus { outline: none; border-color: #4b80ff; box-shadow: 0 0 0 .12rem rgba(75,128,255,.18); }
+.re-counter { font-size: .78rem; color: #6c757d; white-space: nowrap; }
+.re-btn-sm {
+    font-size: .75rem; font-weight: 600; padding: .25rem .65rem;
+    border-radius: 7px; border: 1px solid; cursor: pointer; white-space: nowrap;
+}
+.re-btn-check   { background: #e8f5e9; border-color: #c3e6cb; color: #155724; }
+.re-btn-uncheck { background: #fef3f3; border-color: #f5c6cb; color: #721c24; }
 
-    .regra-section-title {
-        font-size: .96rem;
-        font-weight: 700;
-        color: #21364f;
-        letter-spacing: .02em;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e5eaf2;
-        margin-bottom: 10px;
-    }
+/* ── Accordion ── */
+.re-accordion { border: 1px solid #e5eaf2; border-top: none; border-radius: 0 0 12px 12px; overflow: hidden; }
+.re-group     { border-bottom: 1px solid #eef1f7; }
+.re-group:last-child { border-bottom: none; }
+.re-group.re-hidden { display: none; }
 
-    .form-group-regra {
-        margin-bottom: 1rem;
-    }
+.re-group__header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: .65rem 1rem; cursor: pointer; background: #fafbfd;
+    user-select: none; transition: background .15s; gap: .5rem;
+}
+.re-group__header:hover { background: #f0f4ff; }
+.re-group__left  { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
+.re-group__dot   { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+.re-group__icon  { font-size: .9rem; width: 16px; text-align: center; flex-shrink: 0; }
+.re-group__name  { font-weight: 600; font-size: .85rem; color: #21364f; }
+.re-group__badge { font-size: .68rem; font-weight: 700; padding: .1rem .45rem; border-radius: 999px; }
+.re-group__badge--total   { background: #f0f3f8; color: #6c757d; border: 1px solid #e5eaf2; }
+.re-group__badge--checked { border: 1px solid; }
 
-    .card-regra .form-control,
-    .card-regra .form-select {
-        border-radius: 10px;
-        border-color: #d8e1ec;
-        min-height: 38px;
-    }
+.re-group__actions { display: flex; align-items: center; gap: .4rem; }
+.re-btn-group-all, .re-btn-group-none {
+    width: 22px; height: 22px; border: 1px solid #d8e1ec; border-radius: 6px;
+    background: #fff; cursor: pointer; font-size: .7rem; color: #6c757d;
+    display: flex; align-items: center; justify-content: center; padding: 0;
+    transition: all .12s;
+}
+.re-btn-group-all:hover  { background: #e8f5e9; border-color: #28a745; color: #28a745; }
+.re-btn-group-none:hover { background: #fef3f3; border-color: #dc3545; color: #dc3545; }
+.re-group__chevron { font-size: .7rem; color: #aab5c4; transition: transform .2s; margin-left: .2rem; }
+.re-group__header:not(.collapsed) .re-group__chevron { transform: rotate(180deg); }
 
-    .card-regra .form-control:focus,
-    .card-regra .form-select:focus {
-        border-color: #4b80ff;
-        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
-    }
+/* ── Group body + grid ── */
+.re-group__body { background: #fff; padding: .8rem; }
+.re-perm-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+}
 
-    .permissoes-wrap {
-        border: 1px solid #dbe6f3;
-        border-radius: 12px;
-        overflow: hidden;
-        background: #fff;
-    }
+/* ── Permission item ── */
+.re-perm-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    border: 1px solid #e5eaf2; border-radius: 9px; padding: 8px 10px;
+    cursor: pointer; background: #fff; transition: all .12s;
+    margin: 0;
+}
+.re-perm-item:hover { border-color: #b9c9e0; background: #f8fbff; }
+.re-perm-item--checked { border-color: #4b80ff; background: #f4f8ff; }
+.re-perm-item__chk { flex: 0 0 auto; margin-top: 3px; }
+.re-perm-item__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.re-perm-item__badge { font-size: .65rem; width: fit-content; }
+.re-perm-item__name {
+    font-family: 'SFMono-Regular', Consolas, monospace;
+    font-size: .72rem; color: #2c4a6e;
+    background: #f0f4ff; padding: .05rem .3rem; border-radius: 4px;
+    word-break: break-all; line-height: 1.4;
+}
+.re-perm-item--checked .re-perm-item__name { background: #dce9ff; }
+.re-perm-item__desc { font-size: .7rem; color: #6c757d; line-height: 1.3; }
 
-    .permissoes-head {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 10px;
-        flex-wrap: wrap;
-        padding: 10px 12px;
-        border-bottom: 1px solid #e5edf7;
-        background: #f9fbfe;
-        font-size: 12px;
-        font-weight: 700;
-        color: #334155;
-    }
+/* Hidden by search */
+.re-perm-item.re-hidden { display: none; }
 
-    .permissoes-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 8px;
-        padding: 12px;
-        max-height: 380px;
-        overflow-y: auto;
-    }
-
-    .permissao-item {
-        margin: 0;
-        border: 1px solid #d8e1ec;
-        border-radius: 10px;
-        padding: 8px 10px;
-        display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        cursor: pointer;
-        background: #fff;
-        transition: all .15s ease;
-    }
-
-    .permissao-item:hover {
-        border-color: #b9c9e0;
-        background: #f8fbff;
-    }
-
-    .permissao-item__input {
-        margin-top: 2px;
-        flex: 0 0 auto;
-    }
-
-    .permissao-item__label {
-        font-size: 12px;
-        font-weight: 600;
-        color: #1f2937;
-        line-height: 1.3;
-        word-break: break-word;
-    }
-
-    .btn-save-regra {
-        border-radius: 10px;
-        font-weight: 600;
-        padding-top: .58rem;
-        padding-bottom: .58rem;
-    }
-
-    @media (max-width: 1199.98px) {
-        .permissoes-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-    }
-
-    @media (max-width: 991.98px) {
-        .card-header-regra {
-            padding: .95rem 1rem;
-        }
-
-        .card-body {
-            padding: 1rem !important;
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .col-xl-10.col-lg-11.col-md-12.col-sm-12.col-xs-12.px-0 {
-            padding-left: .5rem !important;
-            padding-right: .5rem !important;
-        }
-
-        .card-header-regra h4 {
-            font-size: 1.1rem;
-            line-height: 1.35;
-        }
-
-        .card-header-regra p {
-            font-size: .85rem;
-        }
-
-        .regra-section-title {
-            font-size: .9rem;
-        }
-
-        .permissoes-grid {
-            grid-template-columns: 1fr;
-            max-height: 320px;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .card-header-regra {
-            padding: .85rem .85rem;
-        }
-
-        .card-body {
-            padding: .85rem !important;
-        }
-
-        .form-group-regra {
-            margin-bottom: .8rem;
-        }
-
-        .card-regra .form-control,
-        .card-regra .form-select {
-            min-height: 36px;
-            font-size: 13px;
-        }
-    }
+/* ── Responsive ── */
+@media (max-width: 1199px) { .re-perm-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 767px)  { .re-perm-grid { grid-template-columns: 1fr; } .re-perm-toolbar { flex-direction: column; align-items: stretch; } .re-perm-toolbar__right { justify-content: flex-end; } }
 </style>
 @stop
 
 @section('js')
-    <script>
-        $(function () {
-            const $checkboxes = $('input[name="permissions[]"]');
-            const $counter = $('#permissoes-selecionadas');
+<script>
+$(function () {
+    const $all    = $('input[name="permissions[]"]');
+    const $counter = $('#reContador');
+    const $busca   = $('#reBusca');
 
-            function atualizarQuantidade() {
-                $counter.text($checkboxes.filter(':checked').length);
-            }
+    // ── Contador e visual checked ──────────────────────────────────────────
+    function atualizarContador() {
+        const n = $all.filter(':checked').length;
+        $counter.text(n);
+    }
 
-            $checkboxes.on('change', atualizarQuantidade);
-            atualizarQuantidade();
+    function atualizarVisual($chk) {
+        $chk.each(function () {
+            $(this).closest('.re-perm-item').toggleClass('re-perm-item--checked', this.checked);
         });
-    </script>
+    }
+
+    function atualizarBadgeGrupo(accordionId) {
+        const $grids  = $(`[data-grid="${accordionId}"]`);
+        const total   = $grids.find('input[name="permissions[]"]:checked').length;
+        const $badge  = $(`#badge-${accordionId}`);
+        if (total > 0) {
+            const color = $badge.data('color') || '#4b80ff';
+            $badge.css({ background: color + '20', color: color, borderColor: color + '60' });
+            $badge.text(total + (total === 1 ? ' ativa' : ' ativas')).show();
+        } else {
+            $badge.hide();
+        }
+    }
+
+    function atualizarTodosBadges() {
+        $('[data-grid]').each(function () {
+            atualizarBadgeGrupo($(this).data('grid'));
+        });
+    }
+
+    $all.on('change', function () {
+        atualizarVisual($(this));
+        atualizarContador();
+        const grid = $(this).closest('[data-grid]').data('grid');
+        if (grid) atualizarBadgeGrupo(grid);
+    });
+
+    // Init
+    atualizarVisual($all);
+    atualizarContador();
+    atualizarTodosBadges();
+
+    // ── Selecionar / desmarcar todos ──────────────────────────────────────
+    $('#reSelecionarTodos').on('click', function () {
+        const $visible = $all.filter(function () {
+            return $(this).closest('.re-perm-item').not('.re-hidden').length > 0;
+        });
+        $visible.prop('checked', true);
+        atualizarVisual($visible);
+        atualizarContador();
+        atualizarTodosBadges();
+    });
+
+    $('#reDesmarcarTodos').on('click', function () {
+        const $visible = $all.filter(function () {
+            return $(this).closest('.re-perm-item').not('.re-hidden').length > 0;
+        });
+        $visible.prop('checked', false);
+        atualizarVisual($visible);
+        atualizarContador();
+        atualizarTodosBadges();
+    });
+
+    // ── Selecionar / desmarcar por grupo ──────────────────────────────────
+    $(document).on('click', '.re-btn-group-all', function () {
+        const gid = $(this).data('group');
+        const $chks = $(`[data-grid="${gid}"]`).find('input[name="permissions[]"]').filter(function () {
+            return $(this).closest('.re-perm-item').not('.re-hidden').length > 0;
+        });
+        $chks.prop('checked', true);
+        atualizarVisual($chks);
+        atualizarContador();
+        atualizarBadgeGrupo(gid);
+        // Abrir o grupo se estiver fechado
+        const $body = $(`#${gid}`);
+        if (!$body.hasClass('show')) $body.collapse('show');
+    });
+
+    $(document).on('click', '.re-btn-group-none', function () {
+        const gid = $(this).data('group');
+        const $chks = $(`[data-grid="${gid}"]`).find('input[name="permissions[]"]');
+        $chks.prop('checked', false);
+        atualizarVisual($chks);
+        atualizarContador();
+        atualizarBadgeGrupo(gid);
+    });
+
+    // ── Busca ao vivo ──────────────────────────────────────────────────────
+    $busca.on('input', function () {
+        const q = $(this).val().toLowerCase().trim();
+
+        $('.re-group').each(function () {
+            const $group = $(this);
+            const grupo  = ($group.data('grupo') || '').toLowerCase();
+            let grupoVisivel = false;
+
+            $group.find('.re-perm-item').each(function () {
+                const name = $(this).data('name') || '';
+                const desc = $(this).data('desc') || '';
+                const match = !q || name.includes(q) || desc.includes(q) || grupo.includes(q);
+                $(this).toggleClass('re-hidden', !match);
+                if (match) grupoVisivel = true;
+            });
+
+            $group.toggleClass('re-hidden', !grupoVisivel);
+
+            // Auto-expandir grupos com resultado
+            if (q && grupoVisivel) {
+                const $body = $group.find('.collapse');
+                if (!$body.hasClass('show')) $body.collapse('show');
+            }
+        });
+    });
+
+    // ── Auto-expandir grupos com permissões ativas ─────────────────────────
+    $('[data-grid]').each(function () {
+        const gid  = $(this).data('grid');
+        const qtd  = $(this).find('input:checked').length;
+        if (qtd > 0) {
+            $(`#${gid}`).collapse('show');
+        }
+    });
+});
+</script>
 @stop

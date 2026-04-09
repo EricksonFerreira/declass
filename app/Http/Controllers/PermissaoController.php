@@ -72,9 +72,10 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
     public function create(){
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Permissaos','permissao.index','Criar');
         $grupos = $this->getGruposDisponiveis();
+        $grupoPreSelecionado = request('grupo', '');
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('permissao.add-edit', compact('breadcrumb','metodo','rota','grupos'))->with('titulo', $this->titulo);
+        return view('permissao.add-edit', compact('breadcrumb','metodo','rota','grupos','grupoPreSelecionado'))->with('titulo', $this->titulo);
     }
 
     public function store(StorePermissaoRequest $request)
@@ -99,7 +100,8 @@ class PermissaoController extends BaseController implements FiltroInterface, Res
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Permissaos','permissao.index',"Editar: $permissao->name");
         [$metodo,$rota] = $this->getFormMethodAndRoute($permissao);
 
-        return view('permissao.add-edit', compact('permissao','breadcrumb','metodo','rota','grupos'))->with('titulo', $this->titulo);
+        $grupoPreSelecionado = '';
+        return view('permissao.add-edit', compact('permissao','breadcrumb','metodo','rota','grupos','grupoPreSelecionado'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdatePermissaoRequest $request, $id)
