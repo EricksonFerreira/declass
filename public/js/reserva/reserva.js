@@ -196,28 +196,36 @@ function setEstacaoDevolucao(id, nome){
 function calcularValorTotal() {
     let valorTotal = 0;
     let valorTotalOpcionais = 0;
-    const quantidadeDias = getQuantidadeDias();
-
-
+    const quantidadeDias = Number(getQuantidadeDias() || 0);
 
     getOpcionaisReserva().forEach(opcional => {
-        if(opcional.tipo_cobranca == "por_dia"){
-            valorTotalOpcionais += opcional.preco_por_dia * quantidadeDias * opcional.quantidade;
-        }else{
-            valorTotalOpcionais += opcional.preco_integral * opcional.quantidade;
+        const quantidade = Math.max(0, Number((opcional && opcional.quantidade) || 0));
+        if (!quantidade) {
+            return;
+        }
+
+        const precoDia = Number(opcional && opcional.preco_por_dia !== undefined && opcional.preco_por_dia !== null ? opcional.preco_por_dia : 0);
+        const precoIntegral = Number(opcional && opcional.preco_integral !== undefined && opcional.preco_integral !== null ? opcional.preco_integral : 0);
+        const tipo = String((opcional && opcional.tipo_cobranca) || '');
+
+        const ehPorDia = tipo === 'por_dia' || (!tipo && precoDia > 0 && precoIntegral <= 0);
+        if (ehPorDia) {
+            valorTotalOpcionais += precoDia * quantidadeDias * quantidade;
+        } else {
+            valorTotalOpcionais += precoIntegral * quantidade;
         }
     });
 
-    valorTotal = (getTarifaBase() * quantidadeDias) + valorTotalOpcionais;
+    valorTotal = (Number(getTarifaBase() || 0) * quantidadeDias) + valorTotalOpcionais;
 
-
-    const valorCupomDesconto = getCupomDescontoValor();
+    const valorCupomDesconto = Number(getCupomDescontoValor() || 0);
     let valorDesconto = 0;
     if (valorCupomDesconto > 0) {
-        valorDesconto = (valorTotal * valorCupomDesconto  / 100);
+        valorDesconto = (valorTotal * valorCupomDesconto / 100);
     }
 
-    return (valorTotal - valorDesconto).toFixed(2);
+    const final = valorTotal - valorDesconto;
+    return Number.isFinite(final) ? final : 0;
 }
 
 // Função para calcular o valor total da reserva
@@ -247,7 +255,8 @@ function calcularValorTotal() {
 
 // Atualizar a função getValorTotal para usar o novo cálculo
 function getValorTotal() {
-    return calcularValorTotal() == NaN ? 0 : calcularValorTotal();
+    const v = Number(calcularValorTotal());
+    return Number.isFinite(v) ? v : 0;
 }
 
 // Atualizar a função getValorDiario
@@ -255,8 +264,12 @@ function getValorDiario() {
     const valorTotal = parseFloat(getValorTotal());
     const quantidadeDias = getQuantidadeDias();
 
-    const valorDiario = (valorTotal / quantidadeDias).toFixed(2);
-    return isNaN(valorDiario) ? 0 : valorDiario;
+    if (!quantidadeDias || quantidadeDias <= 0) {
+        return 0;
+    }
+
+    const valorDiario = (valorTotal / quantidadeDias);
+    return Number.isFinite(valorDiario) ? valorDiario : 0;
 }
 
 // Atualizar a função atualizarMinhaReserva para usar a formatação de moeda
@@ -417,9 +430,18 @@ function atualizarMinhaReserva() {
     $('#minhaReserva_opcionals_ul').empty();
 
     getOpcionaisReserva().forEach(opcional => {
-        if(opcional && opcional.quantidade > 0){
-            const valor = opcional.tipo_cobranca == "por_dia" ? opcional.preco_por_dia : opcional.preco_integral;
-            adicionarOpcionalNoHtmlDaMinhaReserva(opcional.nome, opcional.quantidade, valor);
+        if (opcional && Number(opcional.quantidade || 0) > 0) {
+            const quantidade = Number(opcional.quantidade || 0);
+            const precoDia = Number(opcional.preco_por_dia !== undefined && opcional.preco_por_dia !== null ? opcional.preco_por_dia : 0);
+            const precoIntegral = Number(opcional.preco_integral !== undefined && opcional.preco_integral !== null ? opcional.preco_integral : 0);
+            const tipo = String(opcional.tipo_cobranca || '');
+            const ehPorDia = tipo === 'por_dia' || (!tipo && precoDia > 0 && precoIntegral <= 0);
+
+            const totalOpcional = ehPorDia
+                ? precoDia * getQuantidadeDias() * quantidade
+                : precoIntegral * quantidade;
+
+            adicionarOpcionalNoHtmlDaMinhaReserva(opcional.nome, quantidade, totalOpcional);
         }
     });
 

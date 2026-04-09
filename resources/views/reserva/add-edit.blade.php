@@ -1972,6 +1972,105 @@
             atualizarMinhaReserva();
         });
 
+        // Ao selecionar a estacao de retirada, pre-seleciona a estacao de devolucao (se o usuario ainda nao alterou manualmente).
+        let estacaoDevolucaoAlterada = false;
+        $('#estacao_devolucao_id').on('change', function() {
+            estacaoDevolucaoAlterada = true;
+        });
+        $('#estacao_retirada_id').on('change', function() {
+            const retirada = $(this).val();
+            const devolucaoAtual = $('#estacao_devolucao_id').val();
+            if (!retirada) return;
+
+            if (!estacaoDevolucaoAlterada || !devolucaoAtual) {
+                $('#estacao_devolucao_id').val(retirada);
+                if ($('#estacao_devolucao_id').hasClass('js-selectpicker')) {
+                    $('#estacao_devolucao_id').selectpicker('refresh');
+                }
+                $('#estacao_devolucao_id').trigger('change');
+            }
+        });
+
+        // dispara no load (edit com valores preenchidos)
+        setTimeout(function () {
+            try { atualizarEstacoesDisponiveis(); } catch (e) {}
+        }, 0);
+
+        const VALIDAR_FUNC_URL = @json(route('reserva.validarFuncionamentoEstacao'));
+        const ESTACOES_DISP_URL = @json(route('reserva.estacoesDisponiveisNoPeriodo'));
+        function validarFuncionamento(estacaoId, dataHora, tipo, campoSelector) {
+            if (!estacaoId || !dataHora) return;
+            fetch(VALIDAR_FUNC_URL + '?estacao_id=' + encodeURIComponent(estacaoId) + '&data_hora=' + encodeURIComponent(dataHora) + '&tipo=' + encodeURIComponent(tipo), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': @json(csrf_token()) }
+            })
+            .then(r => r.json())
+            .then(d => {
+                if (d && d.ok === false) {
+                    alert(d.message || 'Data/horario invalido para a estacao selecionada.');
+                    if (campoSelector) {
+                        $(campoSelector).val('');
+                    }
+                }
+            })
+            .catch(() => {});
+        }
+
+        $('#estacao_retirada_id, #data_inicio').on('change', function() {
+            validarFuncionamento($('#estacao_retirada_id').val(), $('#data_inicio').val(), 'retirada', '#data_inicio');
+        });
+        $('#estacao_devolucao_id, #data_fim').on('change', function() {
+            validarFuncionamento($('#estacao_devolucao_id').val(), $('#data_fim').val(), 'devolucao', '#data_fim');
+        });
+
+        function aplicarEstacoesDisponiveis(ids) {
+            const allowed = new Set((ids || []).map(String));
+            ['#estacao_retirada_id', '#estacao_devolucao_id'].forEach(function (sel) {
+                const $s = $(sel);
+                const atual = $s.val();
+                    $s.find('option').each(function () {
+                        const v = $(this).attr('value');
+                        if (!v) return; // placeholder
+                        const enable = allowed.has(String(v));
+                        $(this).prop('disabled', !enable);
+                    });
+
+                if (atual && !allowed.has(String(atual))) {
+                    $s.val('');
+                }
+
+                if ($s.hasClass('js-selectpicker')) {
+                    $s.selectpicker('refresh');
+                }
+            });
+        }
+
+        function atualizarEstacoesDisponiveis() {
+            const dataInicio = $('#data_inicio').val();
+            const dataFim = $('#data_fim').val();
+            if (!dataInicio || !dataFim) return;
+
+            const grupoId = $('#grupo_frota_id').val() || null;
+            const modeloId = $('#modelo_id').val() || null;
+            const reservaId = $('#reserva_id').val() || null;
+
+            const params = new URLSearchParams({
+                data_inicio: dataInicio,
+                data_fim: dataFim,
+            });
+            if (grupoId) params.set('grupo_frota_id', grupoId);
+            if (modeloId) params.set('modelo_id', modeloId);
+            if (reservaId) params.set('reserva_id', reservaId);
+
+            fetch(ESTACOES_DISP_URL + '?' + params.toString(), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(d => aplicarEstacoesDisponiveis(d.estacao_ids || []))
+            .catch(() => {});
+        }
+
+        $('#data_inicio, #data_fim, #grupo_frota_id, #modelo_id').on('change input', atualizarEstacoesDisponiveis);
+
         function validarDatas() {
             let dataInicio = $('#data_inicio').val();
             let dataFim = $('#data_fim').val();

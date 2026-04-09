@@ -10,8 +10,12 @@ use App\Models\Reserva;
 use App\Models\Sinistro;
 use App\Models\StatusVeiculo;
 use App\Models\TipoFrota;
+use App\Models\Transacao;
 use App\Models\Veiculo;
 use App\Services\BreadcrumbService;
+use App\Services\ClienteStripeService;
+use App\Services\Pagamentos\GatewayEmpresaConfigService;
+use App\Services\Pagamentos\GerenciadorDePagamentos;
 use App\Services\ReservaService;
 use App\Services\SinistroService;
 use App\Services\UsuarioService;
@@ -21,6 +25,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class SinistroController extends BaseController
 {
@@ -30,6 +35,9 @@ class SinistroController extends BaseController
         private readonly ReservaService    $reservaService,
         private readonly UsuarioService    $usuarioService,
         private readonly VeiculoService    $veiculoService,
+        private readonly GatewayEmpresaConfigService $gatewayEmpresaConfigService,
+        private readonly GerenciadorDePagamentos $gerenciadorDePagamentos,
+        private readonly ClienteStripeService $clienteStripeService,
     ) {
         $this->titulo = 'Sinistros';
     }
@@ -126,6 +134,16 @@ class SinistroController extends BaseController
 
         $sinistro = $this->sinistroService->criar($dados);
 
+        if (!empty($sinistro->reserva_id)) {
+            $this->reservaService->adicionaLog((int) $sinistro->reserva_id, Auth::id(), json_encode([
+                'acao' => 'Sinistro criado',
+                'sinistro_id' => $sinistro->id,
+                'tipo' => $sinistro->tipo_sinistro,
+                'valor_responsabilidade_cliente' => $sinistro->valor_responsabilidade_cliente,
+                'status' => $sinistro->status,
+            ]));
+        }
+
         foreach (['bo', 'foto1', 'foto2', 'foto3', 'laudo'] as $tipo) {
             $campo = "anexo_{$tipo}";
             if ($request->hasFile($campo)) {
@@ -152,7 +170,20 @@ class SinistroController extends BaseController
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Sinistros', 'sinistro.index', 'Detalhes');
 
-        return view('sinistro.show', compact('sinistro', 'breadcrumb'))
+        $metodosPagamento = [];
+        $empresaId = (int) ($sinistro->empresa_id ?? $sinistro->reserva?->empresa_id ?? 0);
+        $empresa = $empresaId ? $this->gatewayEmpresaConfigService->empresaPorId($empresaId) : null;
+        $gateway = $empresa ? $this->gatewayEmpresaConfigService->gateway($empresa) : null;
+        $stripeIdCliente = (string) ($sinistro->reserva?->usuario?->stripe_id ?? $sinistro->cliente?->stripe_id ?? '');
+        if ($empresa && $gateway === 'stripe' && !empty($empresa->stripe_secret) && $stripeIdCliente !== '') {
+            try {
+                $metodosPagamento = $this->clienteStripeService->getPaymentMethods($stripeIdCliente, (string) $empresa->stripe_secret);
+            } catch (\Throwable $e) {
+                $metodosPagamento = [];
+            }
+        }
+
+        return view('sinistro.show', compact('sinistro', 'breadcrumb', 'metodosPagamento'))
             ->with('titulo', 'Sinistro #' . $sinistro->id);
     }
 
@@ -289,14 +320,120 @@ class SinistroController extends BaseController
         $request->validate([
             'forma_pagamento'      => 'required|in:dinheiro,cartao_credito,cartao_debito,pix,boleto',
             'referencia_pagamento' => 'nullable|string|max:100',
+            'payment_method'       => 'nullable|string|max:255',
         ]);
 
+        $forma = (string) $request->input('forma_pagamento');
+        $referencia = $request->input('referencia_pagamento');
+
+        if ($forma === 'cartao_credito') {
+            $reserva = $sinistro->reserva_id ? $this->reservaService->getById((int) $sinistro->reserva_id, ['usuario']) : null;
+            $empresaId = (int) ($sinistro->empresa_id ?? $reserva?->empresa_id ?? 0);
+            $empresa = $empresaId ? $this->gatewayEmpresaConfigService->empresaPorId($empresaId) : null;
+            if (!$empresa) {
+                return response()->json(['error' => 'Empresa nao encontrada para processar pagamento.'], 422);
+            }
+
+            $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
+            if ($gateway !== 'stripe') {
+                return response()->json(['error' => 'Pagamento por cartao de credito esta disponivel apenas no Stripe.'], 422);
+            }
+
+            $user = $reserva?->usuario ?? $sinistro->cliente;
+            if (!$user || empty($user->stripe_id)) {
+                return response()->json(['error' => 'Cliente nao possui cadastro/cartao no Stripe.'], 422);
+            }
+
+            $paymentMethod = (string) ($request->input('payment_method') ?? '');
+            if ($paymentMethod === '') {
+                return response()->json(['error' => 'Selecione um cartao do cliente para cobrar.'], 422);
+            }
+
+            $valor = (float) ($sinistro->valor_responsabilidade_cliente ?? 0);
+            if ($valor <= 0) {
+                return response()->json(['error' => 'Valor invalido para cobranca do cliente.'], 422);
+            }
+
+            $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
+            $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
+
+            $payload = array_merge([
+                'valor' => $valor,
+                'currency' => $currency,
+                'payment_method' => $paymentMethod,
+                'customer_id' => (string) $user->stripe_id,
+                'descricao' => 'Pagamento de sinistro #' . $sinistro->id . ' (cliente)',
+                'payer_email' => (string) ($user->email ?? ''),
+            ], $credenciais);
+
+            try {
+                $resultado = $this->gerenciadorDePagamentos->resolver($gateway)->cobrarPagamento($payload);
+            } catch (\Throwable $e) {
+                return response()->json(['error' => 'Falha ao cobrar no Stripe: ' . $e->getMessage()], 500);
+            }
+
+            if (($resultado['status'] ?? 'error') !== 'success') {
+                return response()->json(['error' => $resultado['message'] ?? 'Pagamento nao efetuado.'], 422);
+            }
+
+            $referencia = $resultado['transaction_id'] ?? $resultado['id'] ?? $referencia;
+
+            if (Schema::hasTable('transacoes')) {
+                Transacao::create([
+                    'user_id' => $user->id,
+                    'pago_por_user_id' => Auth::id(),
+                    'reserva_id' => $reserva?->id ?? $sinistro->reserva_id,
+                    'valor' => $valor,
+                    'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency ?? 'BRL')),
+                    'metodo_pagamento' => 'stripe',
+                    'gateway_transaction_id' => $resultado['transaction_id'] ?? null,
+                    'status' => $resultado['raw_status'] ?? 'success',
+                    'info_pagamento' => $resultado,
+                ]);
+            }
+        } else {
+            if (Schema::hasTable('transacoes')) {
+                $valor = (float) ($sinistro->valor_responsabilidade_cliente ?? 0);
+                if ($valor > 0) {
+                    $userId = $sinistro->cliente_id;
+                    if (!$userId && $sinistro->reserva_id) {
+                        $userId = $this->reservaService->getById((int) $sinistro->reserva_id)?->user_id;
+                    }
+                    $userId = $userId ?: Auth::id();
+
+                    Transacao::create([
+                        'user_id' => $userId,
+                        'pago_por_user_id' => Auth::id(),
+                        'reserva_id' => $sinistro->reserva_id,
+                        'valor' => $valor,
+                        'moeda' => 'BRL',
+                        'metodo_pagamento' => $forma,
+                        'status' => 'approved',
+                        'info_pagamento' => [
+                            'tipo' => 'sinistro_cliente',
+                            'sinistro_id' => $sinistro->id,
+                        ],
+                    ]);
+                }
+            }
+        }
+
         $sinistro->update([
-            'forma_pagamento_cliente'      => $request->input('forma_pagamento'),
-            'referencia_pagamento_cliente' => $request->input('referencia_pagamento'),
+            'forma_pagamento_cliente'      => $forma,
+            'referencia_pagamento_cliente' => $referencia,
             'pago_cliente_em'              => now(),
             'pago_cliente_por_user_id'     => Auth::id(),
         ]);
+
+        if (!empty($sinistro->reserva_id)) {
+            $this->reservaService->adicionaLog((int) $sinistro->reserva_id, Auth::id(), json_encode([
+                'acao' => 'Pagamento de sinistro (cliente) confirmado',
+                'sinistro_id' => $sinistro->id,
+                'valor' => (float) ($sinistro->valor_responsabilidade_cliente ?? 0),
+                'forma_pagamento' => $forma,
+                'referencia' => $referencia,
+            ]));
+        }
 
         return response()->json([
             'success'  => true,

@@ -549,6 +549,22 @@
                         @endforeach
                     </select>
                 </div>
+                @if(!empty($metodosPagamento))
+                <div class="form-group d-none" id="pc_cartao_group">
+                    <label class="font-weight-bold">Cartão do Cliente (Reserva)</label>
+                    <select id="pc_payment_method" class="form-control">
+                        <option value="">Selecione...</option>
+                        @foreach($metodosPagamento as $pm)
+                            @php($card = $pm['card'] ?? null)
+                            <option value="{{ $pm['id'] }}">
+                                {{ strtoupper($card->brand ?? 'CARD') }} **** {{ $card->last4 ?? '' }}
+                                ({{ $card->exp_month ?? '' }}/{{ $card->exp_year ?? '' }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">Se a forma for cartão de crédito, o sistema cobra pelo Stripe usando o cartão do cliente.</small>
+                </div>
+                @endif
                 <div class="form-group">
                     <label class="font-weight-bold">Referência / Comprovante</label>
                     <input type="text" id="pe_referencia" class="form-control" placeholder="Nº da transferência, comprovante, etc.">
@@ -655,7 +671,7 @@
 @push('js')
 <script>
 (function () {
-    function postPagamento(url, forma, referencia, btnEl, successCb) {
+    function postPagamento(url, forma, referencia, paymentMethod, btnEl, successCb) {
         btnEl.disabled = true;
         btnEl.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Aguarde...';
         fetch(url, {
@@ -665,7 +681,7 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content,
                 'X-Requested-With': 'XMLHttpRequest',
             },
-            body: JSON.stringify({ forma_pagamento: forma, referencia_pagamento: referencia }),
+            body: JSON.stringify({ forma_pagamento: forma, referencia_pagamento: referencia, payment_method: paymentMethod }),
         })
         .then(r => r.json())
         .then(data => {
@@ -694,6 +710,7 @@
             '{{ route("sinistro.pagarEmpresa", $sinistro->id) }}',
             forma,
             document.getElementById('pe_referencia').value,
+            null,
             this,
             () => { $('#modalPagarEmpresa').modal('hide'); location.reload(); }
         );
@@ -702,13 +719,27 @@
     document.getElementById('btnSalvarPagarCliente')?.addEventListener('click', function () {
         const forma = document.getElementById('pc_forma').value;
         if (!forma) { alert('Selecione a forma de pagamento.'); return; }
+        const pmSel = document.getElementById('pc_payment_method');
+        const paymentMethod = pmSel ? pmSel.value : null;
+        if (forma === 'cartao_credito' && pmSel && !paymentMethod) {
+            alert('Selecione um cartao do cliente para cobrar.');
+            return;
+        }
         postPagamento(
             '{{ route("sinistro.pagarCliente", $sinistro->id) }}',
             forma,
             document.getElementById('pc_referencia').value,
+            paymentMethod,
             this,
             () => { $('#modalPagarCliente').modal('hide'); location.reload(); }
         );
+    });
+
+    document.getElementById('pc_forma')?.addEventListener('change', function () {
+        const group = document.getElementById('pc_cartao_group');
+        if (!group) return;
+        if (this.value === 'cartao_credito') group.classList.remove('d-none');
+        else group.classList.add('d-none');
     });
 })();
 </script>

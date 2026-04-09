@@ -431,6 +431,7 @@
         (function () {
             const moeda = @json($moedaEmpresa);
             const disponibilidadeUrl = @json(route('site.reserva.disponibilidade'));
+            const estacoesDisponiveisUrl = @json(route('site.reserva.estacoesDisponiveis'));
             const cupomUrl = @json(route('site.reserva.verificarCupom'));
             const oldModelId = @json(old('modelo_id', ''));
             const oldOpcionaisPayload = @json(old('opcionais_payload', ''));
@@ -468,6 +469,7 @@
             const usarUsuarioLogadoInput = document.getElementById('usar_usuario_logado');
             let clientMode = isAuth ? 'login' : 'cadastro';
             let modelosDisponiveis = {};
+            let estacaoDevolucaoAlterada = false;
 
             function money(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: moeda || 'BRL' }).format(Number(v || 0)); }
             function dateLabel(v) { const d = new Date(v); if (Number.isNaN(d.getTime())) return '-'; return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(d); }
@@ -515,6 +517,44 @@
                 document.getElementById('rCliente').textContent = `${nomeCliente} - ${emailCliente}`;
                 const itens = Object.values(state.opcionais).filter(op => Number(op.quantidade || 0) > 0).map(op => `${op.nome} (${op.quantidade}x)`);
                 document.getElementById('rOpcionais').textContent = itens.length ? itens.join(', ') : 'Sem opcionais.';
+            }
+
+            function aplicarEstacoesDisponiveis(ids) {
+                const allowed = new Set((ids || []).map(String));
+                const eRet = document.getElementById('estacao_retirada_id');
+                const eDev = document.getElementById('estacao_devolucao_id');
+
+                [eRet, eDev].forEach(function (sel) {
+                    if (!sel) return;
+                    const atual = sel.value;
+                    [...sel.options].forEach(function (opt) {
+                        if (!opt.value) return;
+                        opt.disabled = !allowed.has(String(opt.value));
+                    });
+                    if (atual && !allowed.has(String(atual))) {
+                        sel.value = '';
+                    }
+                });
+            }
+
+            function atualizarEstacoesDisponiveis() {
+                if (!dataInicio.value || !dataFim.value) return;
+                const params = new URLSearchParams({
+                    data_inicio: dataInicio.value,
+                    data_fim: dataFim.value,
+                });
+                if (grupo.value) params.set('grupo_frota_id', grupo.value);
+                if (modelo.value) params.set('modelo_id', modelo.value);
+
+                fetch(estacoesDisponiveisUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(d => {
+                        aplicarEstacoesDisponiveis(d.estacao_ids || []);
+                        refresh();
+                        enforceStep1Gate(false);
+                        updatePrefill();
+                    })
+                    .catch(() => {});
             }
             function selectedGrupoCard() {
                 if (!gruposGrid) return null;
@@ -782,7 +822,20 @@
             }
             function normalizeOpc(tipo) {
                 const all = [];
-                (tipo || []).forEach(function (g) { (g.opcionais || []).forEach(function (o) { all.push({ id: Number(o.id), nome: o.nome || '', tipo_cobranca: o.tipo_cobranca || '', preco_por_dia: Number(o.preco_por_dia || 0), preco_integral: Number(o.preco_integral || 0) }); }); });
+                const grupos = Array.isArray(tipo) ? tipo : Object.values(tipo || {});
+                grupos.forEach(function (g) {
+                    const lista = g && g.opcionais ? g.opcionais : [];
+                    const opcionais = Array.isArray(lista) ? lista : Object.values(lista || {});
+                    opcionais.forEach(function (o) {
+                        all.push({
+                            id: Number(o.id),
+                            nome: o.nome || '',
+                            tipo_cobranca: o.tipo_cobranca || '',
+                            preco_por_dia: Number(o.preco_por_dia || 0),
+                            preco_integral: Number(o.preco_integral || 0),
+                        });
+                    });
+                });
                 return all;
             }
             function renderOpc(tipo) {
@@ -934,11 +987,22 @@
                 refresh();
                 enforceStep1Gate(false);
                 updatePrefill();
+                atualizarEstacoesDisponiveis();
                 if (grupo.value) loadDisponibilidade();
             });
-            dataFim.addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
-            document.getElementById('estacao_retirada_id').addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
+            dataFim.addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); atualizarEstacoesDisponiveis(); if (grupo.value) loadDisponibilidade(); });
+            document.getElementById('estacao_retirada_id').addEventListener('change', function () {
+                const devolucao = document.getElementById('estacao_devolucao_id');
+                if ((!estacaoDevolucaoAlterada || !devolucao.value) && this.value) {
+                    devolucao.value = this.value;
+                }
+                refresh();
+                enforceStep1Gate(false);
+                updatePrefill();
+                if (grupo.value) loadDisponibilidade();
+            });
             document.getElementById('estacao_devolucao_id').addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
+            document.getElementById('estacao_devolucao_id').addEventListener('change', function () { estacaoDevolucaoAlterada = true; });
             grupo.addEventListener('change', function () {
                 const card = selectedGrupoCard();
                 state.tarifa = Number(card?.getAttribute('data-tarifa') || 0);
@@ -953,6 +1017,7 @@
                 opcionaisGrid.innerHTML = '';
                 highlightGrupo();
                 refresh();
+                atualizarEstacoesDisponiveis();
                 loadDisponibilidade();
             });
             modelo.addEventListener('change', function () {
@@ -961,6 +1026,7 @@
                     state.modeloNome = card.getAttribute('data-modelo-nome') || null;
                 }
                 refresh();
+                atualizarEstacoesDisponiveis();
             });
             document.getElementById('btnCupom').addEventListener('click', applyCupom);
             opcionaisGrid.addEventListener('click', function (ev) { const t = ev.target; if (!(t instanceof HTMLElement)) return; const id = Number(t.dataset.id || 0); if (!id || !state.opcionais[id]) return; if (t.dataset.a === 'p') state.opcionais[id].quantidade = Math.max(0, Number(state.opcionais[id].quantidade || 0) + 1); if (t.dataset.a === 'm') state.opcionais[id].quantidade = Math.max(0, Number(state.opcionais[id].quantidade || 0) - 1); const span = document.getElementById(`q-${id}`); if (span) span.textContent = String(state.opcionais[id].quantidade); refresh(); });
@@ -978,6 +1044,7 @@
                     state.modeloNome = card.getAttribute('data-modelo-nome') || null;
                     highlightModelo();
                     refresh();
+                    atualizarEstacoesDisponiveis();
                     if (state.step === 2 && validStep2(false)) {
                         state.step = 3;
                         renderStep();
@@ -1040,8 +1107,10 @@
             highlightGrupo();
             highlightModelo();
             (async function initOld() {
+                atualizarEstacoesDisponiveis();
                 if (grupo.value) {
                     await loadDisponibilidade();
+                    atualizarEstacoesDisponiveis();
                     if (oldOpcionaisPayload) {
                         try {
                             const arr = JSON.parse(oldOpcionaisPayload);

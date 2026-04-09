@@ -415,6 +415,73 @@ class VeiculoService extends AbstractBaseService
         return (int) $query->count();
     }
 
+    /**
+     * Retorna os IDs de estações que possuem ao menos 1 veículo disponível no período.
+     * Pode filtrar por grupo_frota_id e/ou modelo_id (quando informados).
+     *
+     * @return array<int, int>
+     */
+    public function getEstacaoIdsComVeiculosDisponiveisNoPeriodo(
+        string $dataInicio,
+        string $dataFim,
+        ?int $grupoFrotaId = null,
+        ?int $modeloId = null,
+        ?int $reservaId = null
+    ): array {
+        if (trim($dataInicio) === '' || trim($dataFim) === '') {
+            return [];
+        }
+
+        $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($dataInicio);
+
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->whereNotNull('local_disponibilidade')
+            ->where(function ($subQuery) use ($dataInicio) {
+                $subQuery->whereNull('data_hora_disponibilidade')
+                    ->orWhere('data_hora_disponibilidade', '<=', $dataInicio);
+            });
+
+        if ($grupoFrotaId) {
+            $query->where('grupo_frota_id', (int) $grupoFrotaId);
+        }
+        if ($modeloId) {
+            $query->where('modelo_id', (int) $modeloId);
+        }
+
+        $query->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicioComFolga, $dataFim, $reservaId) {
+            if ($reservaId) {
+                $subQuery->where('movimentacoes.reserva_id', '!=', $reservaId);
+            }
+
+            $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
+                ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                ->where('reservas.data_inicio', '<', $dataFim)
+                ->where('reservas.data_fim', '>', $dataInicioComFolga);
+        });
+
+        $query->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataFim) {
+            $subQuery->whereNull('data_chegada_real')
+                ->where(function ($sub) use ($dataFim) {
+                    $sub->whereNull('data_saida')->orWhere('data_saida', '<', $dataFim);
+                });
+
+            $cancelados = $this->getStatusMovimentacaoCanceladoIds();
+            if (!empty($cancelados)) {
+                $subQuery->whereNotIn('status_movimentacao_id', $cancelados);
+            }
+        });
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return $query->select('local_disponibilidade')
+            ->distinct()
+            ->pluck('local_disponibilidade')
+            ->map(fn ($v) => (int) $v)
+            ->filter()
+            ->values()
+            ->all();
+    }
+
     private function getStatusMovimentacaoCanceladoIds(): array
     {
         if ($this->statusMovimentacaoCanceladoIds !== null) {

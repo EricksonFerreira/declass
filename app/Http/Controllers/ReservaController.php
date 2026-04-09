@@ -310,7 +310,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'contratoCheckin.veiculo.marca',
             'contratoCheckin.usuarioUpgrade',
             'calcao',
-            'veiculoDano' => fn ($q) => $q->orderByDesc('id')->take(10),
+            'veiculoDano' => fn ($q) => $q->with('imagem')->orderByDesc('id')->take(10),
             'avariaCobrancas' => fn ($q) => $q->orderByDesc('id')->take(10),
             'multas' => fn ($q) => $q->orderByDesc('id')->take(5),
         ]);
@@ -540,6 +540,28 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return $redirect;
         }
 
+        $reservaAntes = $this->reservaService->getById((int) $id, ['opcionais']);
+        $antes = $reservaAntes ? $reservaAntes->only([
+            'user_id',
+            'modelo_id',
+            'estacao_retirada_id',
+            'estacao_devolucao_id',
+            'data_inicio',
+            'data_fim',
+            'observacoes',
+            'grupo_frota_id',
+            'tarifa_base',
+            'quantidade_dias',
+            'valor_total_final',
+        ]) : [];
+        if ($reservaAntes) {
+            $antes['opcionais'] = $reservaAntes->opcionais->map(fn ($o) => [
+                'id' => (int) $o->id,
+                'quantidade' => (int) ($o->pivot->quantidade ?? 0),
+                'preco_total' => (float) ($o->pivot->preco_total ?? 0),
+            ])->values()->all();
+        }
+
         // Recebe os dados da reserva em formato JSON
         $reservaData = json_decode($request->reservaHidden);
 
@@ -549,10 +571,34 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         // Atualiza a reserva com os dados processados
         $this->reservaService->update($id, $data);
 
+        $reservaDepois = $this->reservaService->getById((int) $id, ['opcionais']);
+        $depois = $reservaDepois ? $reservaDepois->only([
+            'user_id',
+            'modelo_id',
+            'estacao_retirada_id',
+            'estacao_devolucao_id',
+            'data_inicio',
+            'data_fim',
+            'observacoes',
+            'grupo_frota_id',
+            'tarifa_base',
+            'quantidade_dias',
+            'valor_total_final',
+        ]) : [];
+        if ($reservaDepois) {
+            $depois['opcionais'] = $reservaDepois->opcionais->map(fn ($o) => [
+                'id' => (int) $o->id,
+                'quantidade' => (int) ($o->pivot->quantidade ?? 0),
+                'preco_total' => (float) ($o->pivot->preco_total ?? 0),
+            ])->values()->all();
+        }
+
         // Adiciona um log da ação realizada
         $json = json_encode([
             'acao' => 'Reserva atualizada',
-            'data' => $data,
+            'antes' => $antes,
+            'depois' => $depois,
+            'payload' => $data,
         ]);
         $this->reservaService->adicionaLog($id, auth()->user()->id, json: $json);
 
@@ -572,12 +618,18 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
      */
     public function checkoutVistoria(Request $request, $reserva_id)
     {
-        $reserva = $this->reservaService->getById($reserva_id, ['modelos', 'usuario', 'veiculo', 'contratoCheckin']);
+        $reserva = $this->reservaService->getById($reserva_id, ['modelos', 'usuario', 'veiculo', 'contratoCheckin', 'calcao']);
 
         if (!$reserva->podeFazerCheckout()) {
             return redirect()
                 ->route('reserva.show', $reserva_id)
                 ->with('warning', 'Check-out com vistoria não está disponível para esta reserva.');
+        }
+
+        if ($mensagemCalcao = $this->validarCalcaoParaCheckout($reserva)) {
+            return redirect()
+                ->route('reserva.show', $reserva_id)
+                ->with('error', $mensagemCalcao);
         }
 
         if (!$reserva->veiculo_id) {
@@ -601,10 +653,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function finalizarCheckoutVistoria(FinalizarCheckoutVistoriaRequest $request, $reserva_id)
     {
-        $reserva = $this->reservaService->getById($reserva_id, ['veiculo']);
+        $reserva = $this->reservaService->getById($reserva_id, ['veiculo', 'calcao', 'contratoCheckin']);
 
         if (!$reserva->podeFazerCheckout()) {
             return response()->json(['success' => false, 'message' => 'Reserva não está em status válido para check-out.'], 422);
+        }
+
+        if ($mensagemCalcao = $this->validarCalcaoParaCheckout($reserva)) {
+            return response()->json(['success' => false, 'message' => $mensagemCalcao], 422);
         }
 
         if (ContratoCheckout::where('reserva_id', $reserva_id)->exists()) {
@@ -616,6 +672,18 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         $dados = $request->validated();
+
+        // Quilometragem: devolucao deve ser >= quilometragem inicial (check-in)
+        $kmInicial = $reserva->contratoCheckin?->quilometragem_atual;
+        if ($kmInicial !== null) {
+            $kmDevolucao = (float) ($dados['quilometragem_devolucao'] ?? 0);
+            if ($kmDevolucao < (float) $kmInicial) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A quilometragem na devolucao deve ser maior ou igual a quilometragem inicial do check-in (KM ' . $kmInicial . ').',
+                ], 422);
+            }
+        }
 
         try {
             DB::beginTransaction();
@@ -663,8 +731,36 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
     }
 
+    private function validarCalcaoParaCheckout(Reserva $reserva): ?string
+    {
+        $calculo = $this->calcaoService->calcularValor($reserva);
+        $valorCalculado = (float) ($calculo['valor_calculado'] ?? 0);
+
+        if ($valorCalculado <= 0) {
+            return null; // não exige calção
+        }
+
+        $calcao = $reserva->calcao;
+        if (!$calcao) {
+            return 'Para fazer o checkout é obrigatório registrar o pagamento do calção primeiro.';
+        }
+
+        $ok = [
+            Calcao::STATUS_AUTORIZADO,
+            Calcao::STATUS_CAPTURADO,
+            Calcao::STATUS_PARCIALMENTE_CAPTURADO,
+        ];
+
+        if (in_array((string) $calcao->status, $ok, true)) {
+            return null;
+        }
+
+        return 'Para fazer o checkout é obrigatório registrar o calção. Status atual do calção: ' . (string) ($calcao->label_status ?? $calcao->status);
+    }
+
     public function cancelar($id)
     {
+        $reservaAntes = $this->reservaService->getById((int) $id);
         $this->reservaService->cancelar($id);
         $reserva = $this->reservaService->getById($id);
         if ($reserva) {
@@ -675,6 +771,20 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         if ($reserva) {
             $cancelamentoMensagem = $this->cancelarTransacaoGateway($reserva);
             $this->registrarCancelamentoTransacao($reserva);
+
+            $this->reservaService->adicionaLog((int) $id, Auth::id(), json_encode([
+                'acao' => 'Reserva cancelada',
+                'antes' => [
+                    'status_reserva_id' => $reservaAntes?->status_reserva_id,
+                    'veiculo_id' => $reservaAntes?->veiculo_id,
+                    'data_cancelamento' => $reservaAntes?->data_cancelamento ?? null,
+                ],
+                'depois' => [
+                    'status_reserva_id' => $reserva->status_reserva_id,
+                    'veiculo_id' => $reserva->veiculo_id,
+                    'data_cancelamento' => $reserva->data_cancelamento ?? null,
+                ],
+            ]));
         }
 
         $redirect = redirect()->route('reserva.index');
@@ -1112,6 +1222,54 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'qtd_veiculos_estacao' => $qtdVeiculosEstacao,
         ]);
     }
+
+    /**
+     * Retorna estacoes com veiculos disponiveis no periodo (opcionalmente filtrado por grupo/modelo).
+     */
+    public function estacoesDisponiveisNoPeriodo(Request $request)
+    {
+        $request->validate([
+            'data_inicio' => 'required|date',
+            'data_fim' => 'required|date|after:data_inicio',
+            'grupo_frota_id' => 'nullable|integer',
+            'modelo_id' => 'nullable|integer',
+            'reserva_id' => 'nullable|integer',
+        ]);
+
+        $ids = $this->veiculoService->getEstacaoIdsComVeiculosDisponiveisNoPeriodo(
+            (string) $request->input('data_inicio'),
+            (string) $request->input('data_fim'),
+            $request->filled('grupo_frota_id') ? (int) $request->input('grupo_frota_id') : null,
+            $request->filled('modelo_id') ? (int) $request->input('modelo_id') : null,
+            $request->filled('reserva_id') ? (int) $request->input('reserva_id') : null,
+        );
+
+        return response()->json([
+            'estacao_ids' => $ids,
+        ]);
+    }
+
+    public function validarFuncionamentoEstacao(Request $request)
+    {
+        $request->validate([
+            'estacao_id' => 'required|integer|exists:estacoes,id',
+            'data_hora'  => 'required|date',
+            'tipo'       => 'nullable|string|max:20',
+        ]);
+
+        $tipo = (string) ($request->input('tipo') ?: 'retirada');
+        $msg = $this->reservaService->validarFuncionamentoEstacaoParaApi(
+            (int) $request->input('estacao_id'),
+            (string) $request->input('data_hora'),
+            $tipo
+        );
+
+        return response()->json([
+            'ok' => $msg === null,
+            'message' => $msg,
+        ]);
+    }
+
     public function efetuarPagamento($id)
     {
 
@@ -1717,13 +1875,47 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $dados = $request->validated();
         $dados['reserva_id'] = $reserva_id;
 
-        if(isset($dados['fotos'])){
-            $fotos = $dados['fotos'];
-            unset($dados['fotos']);
-        }
+        $fotos = $request->file('fotos', []);
+        unset($dados['fotos']);
 
-        $dano = $this->veiculoDanoService->create($dados);
-        return response()->json($dano);
+        try {
+            DB::beginTransaction();
+
+            $dano = $this->veiculoDanoService->create($dados);
+
+            if ($dano && !empty($fotos)) {
+                $dir = 'danos/reserva_' . (int) $reserva_id . '/dano_' . (int) $dano->id;
+
+                foreach ($fotos as $foto) {
+                    if (!$foto || !$foto->isValid()) {
+                        continue;
+                    }
+
+                    $path = $foto->store($dir, 'public');
+                    $dano->imagem()->create([
+                        'caminho_imagem' => $path,
+                        'nome_imagem'    => basename((string) $path),
+                    ]);
+                }
+            }
+
+            $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
+                'acao'        => 'Dano de veiculo adicionado',
+                'dano_id'     => $dano?->id,
+                'veiculo_id'  => $dados['veiculo_id'] ?? null,
+                'categoria_id'=> $dados['categoria_id'] ?? null,
+                'local_dano'  => $dados['local_dano'] ?? null,
+                'tipo_dano'   => $dados['tipo_dano'] ?? null,
+                'fotos'       => is_array($fotos) ? count($fotos) : 0,
+            ]));
+
+            DB::commit();
+
+            return response()->json($dano?->load('imagem'));
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Erro ao salvar dano: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
@@ -1907,14 +2099,29 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $contrato->delete();
 
-        // Volta o status da reserva para "Confirmada" (da empresa correspondente)
-        $statusConfirmada = \App\Models\StatusReserva::where('nome', 'Confirmada')
+        // Cancela movimentacoes vinculadas (check-in/checkout) para liberar disponibilidade do veiculo
+        $movimentacoesCanceladas = $this->movimentacaoService->liberarBloqueioDeDisponibilidadePorReserva(
+            (int) $reserva_id,
+            [2, 3],
+            'Cancelada por exclusao do contrato de check-in'
+        );
+
+        // Volta o status da reserva para "Confirmada" (empresa) e remove vinculo do veiculo para bloquear checkout.
+        $statusConfirmada = \App\Models\StatusReserva::query()
             ->where('empresa_id', $reserva->empresa_id)
+            ->where(function ($q) {
+                $q->where('nome', 'Confirmada')
+                  ->orWhere('nome', 'like', 'Confirmad%');
+            })
             ->first();
 
-        if ($statusConfirmada) {
-            $reserva->update(['status_reserva_id' => $statusConfirmada->id]);
+        $updates = [
+            'status_reserva_id' => $statusConfirmada?->id ?? 2,
+        ];
+        if (Schema::hasColumn('reservas', 'veiculo_id')) {
+            $updates['veiculo_id'] = null;
         }
+        $reserva->update($updates);
 
         $this->reservaService->adicionaLog(
             $reserva_id,
@@ -1923,6 +2130,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'acao'         => 'Contrato de check-in excluído',
                 'foi_assinado' => $foiAssinado,
                 'veiculo'      => $veiculoNome,
+                'movimentacoes_canceladas' => $movimentacoesCanceladas ?? 0,
                 'excluido_por' => Auth::user()?->name ?? Auth::user()?->nome ?? 'Usuário',
                 'status_alterado_para' => $statusConfirmada?->nome ?? 'não alterado',
             ]),
@@ -1943,7 +2151,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     public function historicoReserva(Request $request, $reserva_id)
     {
         $logs = \App\Models\ReservaLog::where('reserva_id', $reserva_id)
-            ->with('usuario:id,name,nome')
+            ->with('usuario:id,nome')
             ->orderByDesc('created_at')
             ->get()
             ->map(function ($log) {
@@ -2249,6 +2457,191 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return response()->json(['success' => true, 'message' => 'Calcao liberado com sucesso.']);
         } catch (\RuntimeException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    /**
+     * Registra calção pago presencialmente (dinheiro/pix/transferência), sem Stripe.
+     * Cria registro em `calcoes` e uma `transacao` financeira positiva vinculada à reserva.
+     */
+    public function registrarCalcaoPresencial(Request $request, $reserva_id)
+    {
+        $this->authorize('calcao.autorizar');
+
+        $request->validate([
+            'metodo' => 'required|string|max:50',
+            'valor'  => 'nullable|numeric|min:0.01',
+            'observacao' => 'nullable|string|max:500',
+        ]);
+
+        $reserva = $this->reservaService->getById((int) $reserva_id, ['contratoCheckin', 'usuario', 'calcao']);
+        if (!$reserva || !$reserva->contratoCheckin || $reserva->contratoCheckin->assinado !== 'S') {
+            return response()->json(['error' => 'O contrato de check-in deve estar assinado antes do calção.'], 422);
+        }
+
+        if ($reserva->calcao) {
+            return response()->json(['error' => 'Já existe um calção registrado para esta reserva.'], 422);
+        }
+
+        $calculo = $this->calcaoService->calcularValor($reserva);
+        $valorCalculado = (float) ($calculo['valor_calculado'] ?? 0);
+        if ($valorCalculado <= 0) {
+            return response()->json(['error' => 'Esta reserva não requer calção.'], 422);
+        }
+
+        $valorPago = (float) ($request->input('valor') ?: $valorCalculado);
+        $metodo = trim((string) $request->input('metodo'));
+        $observacao = trim((string) $request->input('observacao', ''));
+
+        DB::beginTransaction();
+        try {
+            $calcao = Calcao::create([
+                'empresa_id' => $reserva->empresa_id ?? null,
+                'reserva_id' => (int) $reserva_id,
+                'contrato_checkin_id' => $reserva->contratoCheckin->id,
+                'cliente_id' => $reserva->user_id,
+                'valor_calculado' => $valorCalculado,
+                'valor_capturado' => $valorPago,
+                'status' => Calcao::STATUS_CAPTURADO,
+                'data_hora_captura' => now(),
+                'usuario_responsavel_id' => Auth::id(),
+                'observacao' => $observacao !== '' ? $observacao : ('Calção pago presencialmente via ' . $metodo),
+                'tipo_regra_aplicada' => $calculo['tipo_regra_aplicada'] ?? null,
+                'origem_regra_aplicada' => $calculo['origem_regra_aplicada'] ?? null,
+                'configuracao_calcao_id' => $calculo['configuracao_calcao_id'] ?? null,
+                'stripe_response' => [
+                    'origem' => 'presencial',
+                    'metodo' => $metodo,
+                ],
+            ]);
+
+            // Registra movimentação financeira em `transacoes`
+            $transacaoPayload = [
+                'user_id' => $reserva->user_id,
+                'pago_por_user_id' => Auth::id(),
+                'reserva_id' => $reserva->id,
+                'valor' => $valorPago,
+                'moeda' => 'BRL',
+                'metodo_pagamento' => $metodo,
+                'status' => 'approved',
+                'info_pagamento' => [
+                    'tipo' => 'calcao',
+                    'acao' => 'recebido_presencial',
+                    'calcao_id' => $calcao->id,
+                ],
+            ];
+            if (Schema::hasColumn('transacoes', 'confirmado_em')) {
+                $transacaoPayload['confirmado_em'] = now();
+            }
+            if (Schema::hasColumn('transacoes', 'confirmado_por_user_id')) {
+                $transacaoPayload['confirmado_por_user_id'] = Auth::id();
+            }
+            if (Schema::hasColumn('transacoes', 'empresa_id')) {
+                $transacaoPayload['empresa_id'] = $reserva->empresa_id ?? null;
+            }
+
+            Transacao::create($transacaoPayload);
+
+            $this->reservaService->adicionaLog((int) $reserva_id, Auth::id(), json_encode([
+                'acao' => 'Calção presencial registrado',
+                'calcao_id' => $calcao->id,
+                'metodo' => $metodo,
+                'valor' => $valorPago,
+            ]));
+
+            DB::commit();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Calção presencial registrado com sucesso.',
+                'calcao' => $calcao->only(['id', 'status', 'valor_calculado', 'valor_capturado']),
+            ]);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Falha ao registrar calção presencial: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Devolve calção presencial (estorno/saída de caixa) e registra transação negativa.
+     */
+    public function devolverCalcaoPresencial(Request $request, $reserva_id)
+    {
+        $this->authorize('calcao.cancelar');
+
+        $request->validate([
+            'observacao' => 'nullable|string|max:500',
+        ]);
+
+        $reserva = $this->reservaService->getById((int) $reserva_id, ['calcao']);
+        $calcao = $reserva?->calcao;
+
+        if (!$reserva || !$calcao) {
+            return response()->json(['error' => 'Calção não encontrado para esta reserva.'], 404);
+        }
+
+        // Somente calção presencial (sem PaymentIntent) pode ser devolvido por aqui.
+        if (!empty($calcao->payment_intent_id)) {
+            return response()->json(['error' => 'Este calção foi registrado via Stripe. Use "Liberar Hold" ou fluxo de captura/liberação.'], 422);
+        }
+
+        if ($calcao->status === Calcao::STATUS_CANCELADO) {
+            return response()->json(['error' => 'Calção já devolvido.'], 422);
+        }
+
+        $valor = (float) ($calcao->valor_capturado ?: $calcao->valor_autorizado ?: $calcao->valor_calculado ?: 0);
+        if ($valor <= 0) {
+            return response()->json(['error' => 'Valor inválido para devolução.'], 422);
+        }
+
+        $observacao = trim((string) $request->input('observacao', 'Devolução do calção presencial no checkout'));
+        $metodo = (string) (($calcao->stripe_response['metodo'] ?? null) ?: 'presencial');
+
+        DB::beginTransaction();
+        try {
+            $calcao->update([
+                'status' => Calcao::STATUS_CANCELADO,
+                'data_hora_cancelamento' => now(),
+                'usuario_responsavel_id' => Auth::id(),
+                'observacao' => $observacao,
+            ]);
+
+            $payload = [
+                'user_id' => $reserva->user_id,
+                'pago_por_user_id' => Auth::id(),
+                'reserva_id' => $reserva->id,
+                'valor' => -1 * abs($valor),
+                'moeda' => 'BRL',
+                'metodo_pagamento' => $metodo,
+                'status' => 'refunded',
+                'info_pagamento' => [
+                    'tipo' => 'calcao',
+                    'acao' => 'devolvido_presencial',
+                    'calcao_id' => $calcao->id,
+                ],
+            ];
+            if (Schema::hasColumn('transacoes', 'confirmado_em')) {
+                $payload['confirmado_em'] = now();
+            }
+            if (Schema::hasColumn('transacoes', 'confirmado_por_user_id')) {
+                $payload['confirmado_por_user_id'] = Auth::id();
+            }
+            if (Schema::hasColumn('transacoes', 'empresa_id')) {
+                $payload['empresa_id'] = $reserva->empresa_id ?? null;
+            }
+            Transacao::create($payload);
+
+            $this->reservaService->adicionaLog((int) $reserva_id, Auth::id(), json_encode([
+                'acao' => 'Calção presencial devolvido',
+                'calcao_id' => $calcao->id,
+                'valor' => $valor,
+            ]));
+
+            DB::commit();
+            return response()->json(['success' => true, 'message' => 'Calção devolvido com sucesso.']);
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => 'Falha ao devolver calção: ' . $e->getMessage()], 500);
         }
     }
 

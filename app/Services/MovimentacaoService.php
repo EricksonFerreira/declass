@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class MovimentacaoService extends AbstractBaseService
@@ -444,6 +445,112 @@ class MovimentacaoService extends AbstractBaseService
 
         if (!empty($updates)) {
             $veiculo->update($updates);
+        }
+    }
+
+    /**
+     * Cancela movimentações vinculadas a uma reserva (ex.: check-in) para não bloquear disponibilidade do veículo.
+     * Retorna quantidade de registros afetados.
+     */
+    public function cancelarMovimentacoesReserva(int $reservaId, ?array $tipoMovimentacaoIds = null, ?string $observacao = null): int
+    {
+        if ($reservaId <= 0) {
+            return 0;
+        }
+
+        if (!Schema::hasTable('movimentacoes') || !Schema::hasColumn('movimentacoes', 'reserva_id')) {
+            return 0;
+        }
+
+        $cancelStatusId = 3;
+        $table = null;
+        if (Schema::hasTable('status_movimentacao')) {
+            $table = 'status_movimentacao';
+        } elseif (Schema::hasTable('status_movimentacaos')) {
+            $table = 'status_movimentacaos';
+        }
+
+        if ($table && Schema::hasColumn($table, 'nome')) {
+            $cancelStatusId = (int) (DB::table($table)
+                ->whereRaw('LOWER(COALESCE(nome, \"\")) LIKE ?', ['%cancel%'])
+                ->value('id') ?? 3);
+        }
+
+        $query = DB::table('movimentacoes')->where('reserva_id', $reservaId);
+
+        if (!empty($tipoMovimentacaoIds) && Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+            $query->whereIn('tipo_movimentacao_id', array_map('intval', $tipoMovimentacaoIds));
+        }
+
+        if (Schema::hasColumn('movimentacoes', 'status_movimentacao_id')) {
+            $query->where(function ($sub) use ($cancelStatusId) {
+                $sub->whereNull('status_movimentacao_id')->orWhere('status_movimentacao_id', '!=', $cancelStatusId);
+            });
+        }
+
+        $updates = [];
+        if (Schema::hasColumn('movimentacoes', 'status_movimentacao_id')) {
+            $updates['status_movimentacao_id'] = $cancelStatusId;
+        }
+        if (Schema::hasColumn('movimentacoes', 'data_chegada_real')) {
+            $updates['data_chegada_real'] = now();
+        }
+        if ($observacao && Schema::hasColumn('movimentacoes', 'observacoes')) {
+            // sobrescreve observação apenas quando ainda vazia, para evitar apagar histórico importante
+            $updates['observacoes'] = $observacao;
+        }
+        if (Schema::hasColumn('movimentacoes', 'updated_at')) {
+            $updates['updated_at'] = now();
+        }
+
+        if (empty($updates)) {
+            return 0;
+        }
+
+        return (int) $query->update($updates);
+    }
+
+    /**
+     * Usado quando um check-in/contrato é removido e a reserva volta ao estado "Confirmada":
+     * cancela e tenta desvincular (ou remover) movimentações para não manter o veículo bloqueado
+     * na lógica de disponibilidade que cruza movimentações x reservas.
+     */
+    public function liberarBloqueioDeDisponibilidadePorReserva(int $reservaId, array $tipoMovimentacaoIds = [2, 3], ?string $observacao = null): int
+    {
+        $afetados = $this->cancelarMovimentacoesReserva($reservaId, $tipoMovimentacaoIds, $observacao);
+
+        if (!Schema::hasTable('movimentacoes') || !Schema::hasColumn('movimentacoes', 'reserva_id')) {
+            return $afetados;
+        }
+
+        // Primeiro tenta desvincular reserva_id para não participar do join com reservas na disponibilidade.
+        try {
+            $q = DB::table('movimentacoes')->where('reserva_id', $reservaId);
+            if (Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+                $q->whereIn('tipo_movimentacao_id', array_map('intval', $tipoMovimentacaoIds));
+            }
+
+            $update = ['reserva_id' => null];
+            if (Schema::hasColumn('movimentacoes', 'updated_at')) {
+                $update['updated_at'] = now();
+            }
+
+            $afetados += (int) $q->update($update);
+
+            return $afetados;
+        } catch (\Throwable $e) {
+            // Fallback: remove registros (somente quando não for possível desvincular)
+            try {
+                $q = DB::table('movimentacoes')->where('reserva_id', $reservaId);
+                if (Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+                    $q->whereIn('tipo_movimentacao_id', array_map('intval', $tipoMovimentacaoIds));
+                }
+                $afetados += (int) $q->delete();
+            } catch (\Throwable $e2) {
+                // ignora: cancelamento já foi aplicado
+            }
+
+            return $afetados;
         }
     }
 

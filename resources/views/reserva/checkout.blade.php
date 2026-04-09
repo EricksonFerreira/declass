@@ -109,8 +109,13 @@
                             </div>
                             <div class="row">
                                 <div class="col-md-6 col-lg-3">
-                                    <label for="quilometragem_devolucao">Quilometragem na devolução <span class="req">*</span></label>
-                                    <input type="number" required class="form-control form-control-sm" id="quilometragem_devolucao" name="quilometragem_devolucao" placeholder="Ex: 45800">
+                                    <label for="quilometragem_devolucao">
+                                        Quilometragem na devolução <span class="req">*</span>
+                                        @if($reserva->contratoCheckin && $reserva->contratoCheckin->quilometragem_atual !== null)
+                                            <small class="text-muted">(KM inicial: {{ $reserva->contratoCheckin->quilometragem_atual }})</small>
+                                        @endif
+                                    </label>
+                                    <input type="number" required class="form-control form-control-sm" id="quilometragem_devolucao" name="quilometragem_devolucao" placeholder="Ex: 45800" min="{{ (float) ($reserva->contratoCheckin->quilometragem_atual ?? 0) }}">
                                 </div>
                                 <div class="col-md-6 col-lg-3">
                                     <label for="combustivel_devolucao">Nível de combustível <span class="req">*</span></label>
@@ -393,6 +398,22 @@
     document.getElementById('form_dados_devolucao').addEventListener('submit', function (event) {
         event.preventDefault();
 
+        const kmInicialRaw = @json($reserva->contratoCheckin?->quilometragem_atual);
+        const kmInicial = kmInicialRaw === null ? null : Number(kmInicialRaw);
+        const kmDevolucao = Number(document.getElementById('quilometragem_devolucao')?.value || 0);
+        if (kmInicial !== null && !Number.isNaN(kmInicial) && (Number.isNaN(kmDevolucao) || kmDevolucao < kmInicial)) {
+            const campoKm = document.getElementById('quilometragem_devolucao');
+            if (campoKm) campoKm.classList.add('is-invalid');
+            Swal.fire({
+                icon: 'error',
+                title: 'Quilometragem invÃ¡lida',
+                text: `A quilometragem na devoluÃ§Ã£o deve ser maior ou igual ao KM inicial do check-in (${kmInicial}).`,
+                confirmButtonColor: '#4338ca',
+            });
+            showStep(1);
+            return;
+        }
+
         const campos = document.querySelectorAll('#form_dados_devolucao input:required, #form_dados_devolucao select:required');
         const camposInvalidos = [];
         campos.forEach(campo => {
@@ -469,7 +490,11 @@
 
     function rowImagens(dano) {
         const imgs = dano.imagens || [];
-        return imgs.map(i => `<img src="{{ asset('storage') }}/${i.imagem}" alt="Dano">`).join(' ');
+        return imgs.map(function (i) {
+            const url = i.url || (i.path ? `{{ asset('storage') }}/${i.path}` : (i.imagem ? `{{ asset('storage') }}/${i.imagem}` : null));
+            if (!url) return '';
+            return `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="Dano" style="width:44px;height:44px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;margin-right:6px;"></a>`;
+        }).filter(Boolean).join(' ');
     }
 
     function obterDanosDetectados() {

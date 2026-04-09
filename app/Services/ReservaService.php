@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use DB;
+use Illuminate\Support\Facades\Schema;
 
 class ReservaService extends AbstractBaseService
 {
@@ -153,8 +154,35 @@ class ReservaService extends AbstractBaseService
     public function cancelar($id)
     {
         $reserva = $this->model->find($id);
-        $reserva->status_reserva_id = 3; // Cancelada
-        $reserva->save();
+        if (!$reserva) {
+            return;
+        }
+
+        DB::beginTransaction();
+        try {
+            $reserva->status_reserva_id = 3; // Cancelada
+
+            if (Schema::hasColumn($this->model->getTable(), 'data_cancelamento')) {
+                $reserva->data_cancelamento = now();
+            }
+
+            // Cancela reserva e libera vínculo do veículo (quando aplicável)
+            if (Schema::hasColumn($this->model->getTable(), 'veiculo_id')) {
+                $reserva->veiculo_id = null;
+            }
+
+            $reserva->save();
+
+            // Cancela movimentações vinculadas para não bloquear disponibilidade
+            if (isset($this->movimentacaoService)) {
+                $this->movimentacaoService->cancelarMovimentacoesReserva((int) $id, null, 'Cancelada por cancelamento de reserva');
+            }
+
+            DB::commit();
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
 
@@ -366,6 +394,16 @@ class ReservaService extends AbstractBaseService
             return 'Data de fim não pode ser menor que a data atual';
         }
 
+        // Validar funcionamento da estacao (dias uteis/feriados/horarios) para retirada e devolucao
+        $msg = $this->validarFuncionamentoEstacao((int) $data['estacao_retirada_id'], (string) $data['data_inicio'], 'retirada');
+        if ($msg) {
+            return $msg;
+        }
+        $msg = $this->validarFuncionamentoEstacao((int) $data['estacao_devolucao_id'], (string) $data['data_fim'], 'devolucao');
+        if ($msg) {
+            return $msg;
+        }
+
         // Verificar se existe raealmente alguem veiculo disponivel para a reserva
         $veiculoDisponivel = $this->veiculoService->getVeiculosDisponiveisPorModeloEEstacaoEIntervaloDatas($data['modelo_id'], $data['estacao_retirada_id'], $data['data_inicio'], $data['data_fim'],$reservaId);
         // dd($veiculoDisponivel);
@@ -374,6 +412,111 @@ class ReservaService extends AbstractBaseService
             return 'Não existe veículo disponível para a reserva';
         }
 
+    }
+
+    private function validarFuncionamentoEstacao(int $estacaoId, string $dataHora, string $tipo): ?string
+    {
+        if ($estacaoId <= 0 || trim($dataHora) === '') {
+            return null;
+        }
+
+        try {
+            $dt = Carbon::parse($dataHora);
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $data = $dt->toDateString();
+        $hora = $dt->format('H:i');
+
+        // Feriados
+        if (Schema::hasTable('feriados') && Schema::hasColumn('feriados', 'data')) {
+            $feriado = DB::table('feriados')
+                ->whereDate('data', $data)
+                ->when(Schema::hasColumn('feriados', 'estacao_id'), function ($q) use ($estacaoId) {
+                    $q->where(function ($sub) use ($estacaoId) {
+                        $sub->where('estacao_id', $estacaoId)->orWhereNull('estacao_id');
+                    });
+                })
+                ->when(Schema::hasColumn('feriados', 'ativo'), function ($q) {
+                    $q->where(function ($sub) {
+                        $sub->where('ativo', 'S')->orWhere('ativo', 1);
+                    });
+                })
+                ->first();
+
+            if ($feriado) {
+                $nome = $feriado->nome ?? 'Feriado';
+                return "A data/hora de {$tipo} cai em feriado ({$nome}) para a estacao selecionada.";
+            }
+        }
+
+        // Dias uteis (se configurado)
+        if (Schema::hasTable('estacoes_dias_uteis') && Schema::hasTable('dias_uteis')) {
+            $dias = DB::table('estacoes_dias_uteis')
+                ->join('dias_uteis', 'dias_uteis.id', '=', 'estacoes_dias_uteis.dia_util_id')
+                ->where('estacoes_dias_uteis.estacao_id', $estacaoId)
+                ->pluck('dias_uteis.dia')
+                ->map(fn ($v) => (int) $v)
+                ->unique()
+                ->values()
+                ->all();
+
+            if (!empty($dias)) {
+                $dow = (int) $dt->dayOfWeekIso; // 1=Mon..7=Sun
+                if (!in_array($dow, $dias, true)) {
+                    return "A estacao selecionada nao funciona no dia escolhido para {$tipo}.";
+                }
+            }
+        }
+
+        // Horarios
+        if (Schema::hasTable('horarios') && Schema::hasColumn('horarios', 'estacao_id') && Schema::hasColumn('horarios', 'horario_diario_id')) {
+            $dow = (int) $dt->dayOfWeekIso;
+            $hor = DB::table('horarios')
+                ->where('estacao_id', $estacaoId)
+                ->where('horario_diario_id', $dow)
+                ->first();
+
+            if ($hor) {
+                $funciona24h = false;
+                if (property_exists($hor, 'funciona_24h')) {
+                    $funciona24h = in_array((string) $hor->funciona_24h, ['S', '1', 'true', 'TRUE'], true);
+                }
+                if ($funciona24h) {
+                    return null;
+                }
+
+                $abertura = $hor->hora_abertura ?? null;
+                $fechamento = $hor->hora_fechamento ?? null;
+                if ($abertura && $fechamento) {
+                    $a = substr((string) $abertura, 0, 5);
+                    $f = substr((string) $fechamento, 0, 5);
+                    if ($hora < $a || $hora > $f) {
+                        return "Horario de {$tipo} fora do funcionamento da estacao ({$abertura} - {$fechamento}).";
+                    }
+                }
+
+                $almocoIni = $hor->hora_inicio_almoco ?? null;
+                $almocoFim = $hor->hora_fim_almoco ?? null;
+                if ($almocoIni && $almocoFim) {
+                    $ai = substr((string) $almocoIni, 0, 5);
+                    $af = substr((string) $almocoFim, 0, 5);
+                    if ($ai !== '00:00' || $af !== '00:00') {
+                        if ($hora >= $ai && $hora <= $af) {
+                            return "Horario de {$tipo} cai no intervalo de almoco da estacao ({$almocoIni} - {$almocoFim}).";
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public function validarFuncionamentoEstacaoParaApi(int $estacaoId, string $dataHora, string $tipo): ?string
+    {
+        return $this->validarFuncionamentoEstacao($estacaoId, $dataHora, $tipo);
     }
 
     public function adicionaLog($reservaId, $userId, $json, string $acao = '', string $nivel = 'info'): void

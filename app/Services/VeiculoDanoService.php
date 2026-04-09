@@ -8,6 +8,7 @@ use App\Models\Veiculo;
 use App\Models\VeiculoDanos;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
+use Illuminate\Support\Facades\Storage;
 
 class VeiculoDanoService extends AbstractBaseService
 {
@@ -64,7 +65,23 @@ class VeiculoDanoService extends AbstractBaseService
     private function mapearDanoParaJson(VeiculoDanos $d): array
     {
         $loc = $d->local_dano === 'atras' ? 'ATRÁS' : strtoupper((string) $d->local_dano);
-        $imagens = $d->imagem->map(fn ($img) => ['imagem' => $img->nome_imagem])->values()->all();
+        $imagens = $d->imagem->map(function ($img) {
+            $path = $img->caminho_imagem ?: $img->nome_imagem;
+            $url = null;
+            if (!empty($path)) {
+                try {
+                    $url = Storage::disk('public')->url($path);
+                } catch (\Throwable $e) {
+                    $url = null;
+                }
+            }
+
+            return [
+                'nome' => $img->nome_imagem,
+                'path' => $img->caminho_imagem,
+                'url'  => $url,
+            ];
+        })->values()->all();
 
         return [
             'id' => $d->id,

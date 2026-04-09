@@ -201,6 +201,38 @@ class SiteReservaController extends Controller
         ]);
     }
 
+    public function estacoesDisponiveis(Request $request): JsonResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return response()->json(['message' => 'Empresa nao encontrada para este dominio.'], 404);
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $validated = Validator::make($request->all(), [
+            'data_inicio' => ['required', 'date'],
+            'data_fim' => ['required', 'date', 'after:data_inicio'],
+            'grupo_frota_id' => ['nullable', 'integer'],
+            'modelo_id' => ['nullable', 'integer'],
+        ])->validate();
+
+        $ids = $this->veiculoService->getEstacaoIdsComVeiculosDisponiveisNoPeriodo(
+            (string) $validated['data_inicio'],
+            (string) $validated['data_fim'],
+            !empty($validated['grupo_frota_id']) ? (int) $validated['grupo_frota_id'] : null,
+            !empty($validated['modelo_id']) ? (int) $validated['modelo_id'] : null,
+        );
+
+        // Intersect com estacoes ativas da empresa, para evitar retornar estacoes de outro contexto
+        $estacoesAtivas = collect($this->estacoesForEmpresa())->pluck('id')->map(fn ($v) => (int) $v)->all();
+        $allow = array_values(array_intersect($ids, $estacoesAtivas));
+
+        return response()->json([
+            'estacao_ids' => $allow,
+        ]);
+    }
+
     public function verificarCupom(Request $request): JsonResponse
     {
         $empresa = $this->resolveEmpresaAtivaByHost($request);

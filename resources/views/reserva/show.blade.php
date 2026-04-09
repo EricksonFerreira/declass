@@ -775,12 +775,26 @@
                             </div>
                             @endcan
                             @endif
+                            @if(empty($calcao->payment_intent_id) && ($calcao->status ?? '') !== 'cancelado')
+                            @can('calcao.cancelar')
+                            <div class="mt-1">
+                                <button type="button" class="btn btn-sm btn-outline-success w-100" data-toggle="modal" data-target="#modalDevolverCalcaoPresencial">
+                                    <i class="fas fa-hand-holding-heart mr-1"></i> Devolver Calção Presencial
+                                </button>
+                            </div>
+                            @endcan
+                            @endif
                         @else
                             @can('calcao.autorizar')
                             <div class="text-center py-2">
                                 <a href="{{ route('reserva.calcao', $reserva->id) }}" class="btn btn-sm btn-outline-primary w-100">
                                     <i class="fas fa-lock mr-1"></i> Registrar Calcao
                                 </a>
+                            </div>
+                            <div class="text-center pb-2">
+                                <button type="button" class="btn btn-sm btn-outline-success w-100" data-toggle="modal" data-target="#modalCalcaoPresencial">
+                                    <i class="fas fa-cash-register mr-1"></i> Marcar Calção como Pago (Presencial)
+                                </button>
                             </div>
                             @endcan
                         @endif
@@ -1220,6 +1234,77 @@
     </div>
     @endif
 
+    {{-- Modal Calcao Presencial --}}
+    @can('calcao.autorizar')
+    <div class="modal fade" id="modalCalcaoPresencial" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-cash-register mr-1"></i> Calcao Presencial</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Metodo <span class="text-danger">*</span></label>
+                        <select id="calcao_presencial_metodo" class="form-control">
+                            <option value="dinheiro">Dinheiro</option>
+                            <option value="pix">Pix</option>
+                            <option value="transferencia">Transferencia</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor (opcional)</label>
+                        <input type="number" step="0.01" min="0.01" id="calcao_presencial_valor" class="form-control" placeholder="Deixe vazio para usar o valor calculado">
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>Observacao (opcional)</label>
+                        <textarea id="calcao_presencial_obs" class="form-control" rows="3" placeholder="Ex.: Recebido no balcao"></textarea>
+                    </div>
+                    <div id="calcao-presencial-status" class="small mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btn-salvar-calcao-presencial">
+                        <i class="fas fa-check mr-1"></i> Confirmar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcan
+
+    {{-- Modal Devolver Calcao Presencial --}}
+    @if(isset($calcao) && empty($calcao->payment_intent_id) && ($calcao->status ?? '') !== 'cancelado')
+    @can('calcao.cancelar')
+    <div class="modal fade" id="modalDevolverCalcaoPresencial" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-hand-holding-heart mr-1"></i> Devolver Calcao Presencial</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning mb-2">
+                        Confirma a devolucao do calcao presencial? Esta acao registra uma transacao negativa.
+                    </div>
+                    <div class="form-group mb-0">
+                        <label>Observacao (opcional)</label>
+                        <textarea id="calcao_devolver_obs" class="form-control" rows="3" placeholder="Ex.: Devolvido no checkout"></textarea>
+                    </div>
+                    <div id="calcao-devolver-status" class="small mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" id="btn-devolver-calcao-presencial">
+                        <i class="fas fa-check mr-1"></i> Devolver
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endcan
+    @endif
+
     {{-- Lightbox overlay --}}
     <div id="rs-lightbox" class="rs-lightbox d-none" role="dialog" aria-modal="true">
         <div class="rs-lightbox__backdrop" id="rs-lightbox-backdrop"></div>
@@ -1256,6 +1341,51 @@ function liberarCalcao(calcaoId) {
 }
 
 // ── Capturar calção ──
+// -- Calcao presencial --
+document.getElementById('btn-salvar-calcao-presencial')?.addEventListener('click', function () {
+    const metodo = document.getElementById('calcao_presencial_metodo')?.value;
+    const valor  = document.getElementById('calcao_presencial_valor')?.value;
+    const obs    = document.getElementById('calcao_presencial_obs')?.value;
+    const statusEl = document.getElementById('calcao-presencial-status');
+
+    if (!metodo) {
+        if (statusEl) statusEl.textContent = 'Selecione um metodo.';
+        return;
+    }
+
+    if (statusEl) statusEl.textContent = 'Registrando...';
+
+    fetch(@json(route('reserva.calcao.presencial', $reserva->id)), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        body: JSON.stringify({ metodo, valor: valor || null, observacao: obs || null })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) location.reload();
+        else if (statusEl) statusEl.textContent = d.error ?? 'Erro ao registrar.';
+    })
+    .catch(() => { if (statusEl) statusEl.textContent = 'Erro ao registrar.'; });
+});
+
+document.getElementById('btn-devolver-calcao-presencial')?.addEventListener('click', function () {
+    const obs = document.getElementById('calcao_devolver_obs')?.value;
+    const statusEl = document.getElementById('calcao-devolver-status');
+    if (statusEl) statusEl.textContent = 'Processando...';
+
+    fetch(@json(route('reserva.calcao.presencial.devolver', $reserva->id)), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+        body: JSON.stringify({ observacao: obs || null })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) location.reload();
+        else if (statusEl) statusEl.textContent = d.error ?? 'Erro ao devolver.';
+    })
+    .catch(() => { if (statusEl) statusEl.textContent = 'Erro ao devolver.'; });
+});
+
 document.getElementById('btn-confirmar-captura')?.addEventListener('click', function () {
     const valor = document.getElementById('valor_captura_input')?.value;
     const just  = document.getElementById('justificativa_captura_input')?.value;
@@ -2605,6 +2735,22 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 
     .rs-dano-item:last-child { margin-bottom: 0; }
 
+    .rs-dano-thumbs {
+        margin-top: 8px;
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+
+    .rs-dano-thumbs img {
+        width: 54px;
+        height: 54px;
+        object-fit: cover;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+    }
+
     /* ── Histórico ── */
     .rs-historico-card .rs-card__header { display:flex; align-items:center; gap:10px; user-select:none; }
     .rs-timeline { padding: 1rem 1.5rem; }
@@ -2976,13 +3122,31 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 container.innerHTML = '<div class="rs-empty"><i class="fas fa-check-circle" style="color:#10b981"></i><span>Nenhum dano registrado.</span></div>';
             } else {
                 container.innerHTML = items.map(function (d) {
+                    const imagens = Array.isArray(d.imagens) ? d.imagens : [];
+                    const thumbs = imagens
+                        .map(function (img) {
+                            const url = img.url || (img.path ? ('/storage/' + img.path) : null);
+                            if (!url) return '';
+                            return `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="dano"></a>`;
+                        })
+                        .filter(Boolean)
+                        .join('');
+
+                    const thumbsHtml = thumbs ? `<div class="rs-dano-thumbs">${thumbs}</div>` : '';
+                    const titulo = d.localizacao || d.local_dano || d.localizacao_problema || '—';
+                    const desc = d.descricao || d.observacoes || d.tipo_dano || '';
+                    const custo = d.custo_estimado !== undefined && d.custo_estimado !== null
+                        ? `<strong>R$ ${parseFloat(d.custo_estimado || 0).toFixed(2).replace('.', ',')}</strong>`
+                        : '';
+
                     return `<div class="rs-dano-item">
                         <div>
-                            <strong>${d.local_dano || d.localizacao_problema || '—'}</strong>
-                            <div class="text-muted small">${d.observacoes || d.tipo_dano || ''}</div>
+                            <strong>${titulo}</strong>
+                            <div class="text-muted small">${desc}</div>
+                            ${thumbsHtml}
                         </div>
                         <div class="text-right" style="flex-shrink:0">
-                            <strong>R$ ${parseFloat(d.custo_estimado || 0).toFixed(2).replace('.', ',')}</strong>
+                            ${custo}
                         </div>
                     </div>`;
                 }).join('');
@@ -3006,7 +3170,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             });
 
             // Danos detectados
-            fetch(DANOS_DETECT_URL + '?reserva_id=' + RESERVA_ID, {
+            fetch(DANOS_DETECT_URL + '?veiculo_id=' + VEICULO_ID + '&reserva_id=' + RESERVA_ID, {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF_TOKEN }
             })
             .then(r => r.json())

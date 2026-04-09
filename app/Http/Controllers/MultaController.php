@@ -9,11 +9,15 @@ use App\Models\Marca;
 use App\Models\Multa;
 use App\Models\GrupoFrota;
 use App\Models\Reserva;
+use App\Models\Transacao;
 use App\Models\TipoFrota;
 use App\Models\StatusVeiculo;
 use App\Models\Veiculo;
 use App\Services\BreadcrumbService;
+use App\Services\ClienteStripeService;
 use App\Services\MultaService;
+use App\Services\Pagamentos\GatewayEmpresaConfigService;
+use App\Services\Pagamentos\GerenciadorDePagamentos;
 use App\Services\ReservaService;
 use App\Services\UsuarioService;
 use App\Services\VeiculoService;
@@ -22,6 +26,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class MultaController extends BaseController
 {
@@ -31,6 +36,9 @@ class MultaController extends BaseController
         private readonly ReservaService    $reservaService,
         private readonly UsuarioService    $usuarioService,
         private readonly VeiculoService    $veiculoService,
+        private readonly GatewayEmpresaConfigService $gatewayEmpresaConfigService,
+        private readonly GerenciadorDePagamentos $gerenciadorDePagamentos,
+        private readonly ClienteStripeService $clienteStripeService,
     ) {
         $this->titulo = 'Multas';
     }
@@ -174,6 +182,15 @@ class MultaController extends BaseController
 
         $multa = $this->multaService->criar($dados);
 
+        if (!empty($multa->reserva_id)) {
+            $this->reservaService->adicionaLog((int) $multa->reserva_id, Auth::id(), json_encode([
+                'acao' => 'Multa criada',
+                'multa_id' => $multa->id,
+                'valor_final' => $multa->valor_final,
+                'status_multa' => $multa->status_multa,
+            ]));
+        }
+
         if ($request->hasFile('anexo_comprovante')) {
             $path = $this->multaService->salvarAnexo($request->file('anexo_comprovante'), $multa->id);
             $multa->update(['anexo_comprovante_path' => $path]);
@@ -199,7 +216,22 @@ class MultaController extends BaseController
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Multas', 'multa.index', 'Detalhes');
 
-        return view('multa.show', compact('multa', 'breadcrumb'))
+        $metodosPagamento = [];
+        $empresaId = (int) ($multa->empresa_id ?? $multa->reserva?->empresa_id ?? 0);
+        $empresa = $empresaId ? $this->gatewayEmpresaConfigService->empresaPorId($empresaId) : null;
+        $gateway = $empresa ? $this->gatewayEmpresaConfigService->gateway($empresa) : null;
+        if ($empresa && $gateway === 'stripe' && !empty($empresa->stripe_secret) && !empty($multa->reserva?->usuario?->stripe_id)) {
+            try {
+                $metodosPagamento = $this->clienteStripeService->getPaymentMethods(
+                    (string) $multa->reserva->usuario->stripe_id,
+                    (string) $empresa->stripe_secret
+                );
+            } catch (\Throwable $e) {
+                $metodosPagamento = [];
+            }
+        }
+
+        return view('multa.show', compact('multa', 'breadcrumb', 'metodosPagamento'))
             ->with('titulo', 'Multa #' . $multa->id);
     }
 
@@ -262,15 +294,124 @@ class MultaController extends BaseController
         $request->validate([
             'forma_pagamento'      => 'required|in:dinheiro,cartao_credito,cartao_debito,pix,boleto,debito_automatico',
             'referencia_pagamento' => 'nullable|string|max:100',
+            'payment_method'       => 'nullable|string|max:255',
         ]);
 
+        $forma = (string) $request->input('forma_pagamento');
+        $referencia = $request->input('referencia_pagamento');
+
+        // Se cartao de credito, tenta cobrar no Stripe usando o cartao do autor da reserva.
+        if ($forma === 'cartao_credito') {
+            $reserva = $multa->reserva_id ? $this->reservaService->getById((int) $multa->reserva_id, ['usuario']) : null;
+            $empresaId = (int) ($multa->empresa_id ?? $reserva?->empresa_id ?? 0);
+            $empresa = $empresaId ? $this->gatewayEmpresaConfigService->empresaPorId($empresaId) : null;
+            if (!$empresa) {
+                return response()->json(['error' => 'Empresa nao encontrada para processar pagamento.'], 422);
+            }
+
+            $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
+            if ($gateway !== 'stripe') {
+                return response()->json(['error' => 'Pagamento por cartao de credito esta disponivel apenas no Stripe.'], 422);
+            }
+
+            $user = $reserva?->usuario;
+            if (!$user || empty($user->stripe_id)) {
+                return response()->json(['error' => 'Cliente da reserva nao possui cadastro/cartao no Stripe.'], 422);
+            }
+
+            $paymentMethod = (string) ($request->input('payment_method') ?? '');
+            if ($paymentMethod === '') {
+                return response()->json(['error' => 'Selecione um cartao do cliente para cobrar.'], 422);
+            }
+
+            $valor = (float) ($multa->valor_final ?? $multa->valor_original ?? 0);
+            if ($valor <= 0) {
+                return response()->json(['error' => 'Valor invalido para cobranca.'], 422);
+            }
+
+            $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
+            $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
+
+            $payload = array_merge([
+                'valor' => $valor,
+                'currency' => $currency,
+                'payment_method' => $paymentMethod,
+                'customer_id' => (string) $user->stripe_id,
+                'descricao' => 'Pagamento de multa #' . $multa->id,
+                'payer_email' => (string) ($user->email ?? ''),
+            ], $credenciais);
+
+            try {
+                $resultado = $this->gerenciadorDePagamentos->resolver($gateway)->cobrarPagamento($payload);
+            } catch (\Throwable $e) {
+                return response()->json(['error' => 'Falha ao cobrar no Stripe: ' . $e->getMessage()], 500);
+            }
+
+            if (($resultado['status'] ?? 'error') !== 'success') {
+                return response()->json(['error' => $resultado['message'] ?? 'Pagamento nao efetuado.'], 422);
+            }
+
+            $referencia = $resultado['transaction_id'] ?? $resultado['id'] ?? $referencia;
+
+            if (Schema::hasTable('transacoes')) {
+                Transacao::create([
+                    'user_id' => $user->id,
+                    'pago_por_user_id' => Auth::id(),
+                    'reserva_id' => $reserva?->id ?? $multa->reserva_id,
+                    'valor' => $valor,
+                    'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency ?? 'BRL')),
+                    'metodo_pagamento' => 'stripe',
+                    'gateway_transaction_id' => $resultado['transaction_id'] ?? null,
+                    'status' => $resultado['raw_status'] ?? 'success',
+                    'info_pagamento' => $resultado,
+                ]);
+            }
+        } else {
+            // Outras formas: apenas registra confirmacao (acao de funcionario)
+            if (Schema::hasTable('transacoes')) {
+                $valor = (float) ($multa->valor_final ?? $multa->valor_original ?? 0);
+                if ($valor > 0) {
+                    $userId = $multa->cliente_id;
+                    if (!$userId && $multa->reserva_id) {
+                        $userId = $this->reservaService->getById((int) $multa->reserva_id)?->user_id;
+                    }
+                    $userId = $userId ?: Auth::id();
+
+                    $payload = [
+                        'user_id' => $userId,
+                        'pago_por_user_id' => Auth::id(),
+                        'reserva_id' => $multa->reserva_id,
+                        'valor' => $valor,
+                        'moeda' => 'BRL',
+                        'metodo_pagamento' => $forma,
+                        'status' => 'approved',
+                        'info_pagamento' => [
+                            'tipo' => 'multa',
+                            'multa_id' => $multa->id,
+                        ],
+                    ];
+                    Transacao::create($payload);
+                }
+            }
+        }
+
         $multa->update([
-            'forma_pagamento'      => $request->input('forma_pagamento'),
-            'referencia_pagamento' => $request->input('referencia_pagamento'),
+            'forma_pagamento'      => $forma,
+            'referencia_pagamento' => $referencia,
             'pago_em'              => now(),
             'pago_por_user_id'     => Auth::id(),
             'status_multa'         => 'paga',
         ]);
+
+        if (!empty($multa->reserva_id)) {
+            $this->reservaService->adicionaLog((int) $multa->reserva_id, Auth::id(), json_encode([
+                'acao' => 'Pagamento de multa confirmado',
+                'multa_id' => $multa->id,
+                'valor' => (float) ($multa->valor_final ?? $multa->valor_original ?? 0),
+                'forma_pagamento' => $forma,
+                'referencia' => $referencia,
+            ]));
+        }
 
         return response()->json([
             'success'  => true,

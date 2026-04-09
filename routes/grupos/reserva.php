@@ -6,6 +6,8 @@ use App\Http\Controllers\AvariaCobrancaController;
 Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('obterOpcionais', [ReservaController::class, 'obterOpcionais'])->name('obterOpcionais');
     Route::get('veiculosDisponiveis', [ReservaController::class, 'veiculosDisponiveis'])->name('veiculosDisponiveis');
+    Route::get('estacoes-disponiveis', [ReservaController::class, 'estacoesDisponiveisNoPeriodo'])->name('estacoesDisponiveisNoPeriodo');
+    Route::get('validar-funcionamento', [ReservaController::class, 'validarFuncionamentoEstacao'])->name('validarFuncionamentoEstacao');
     Route::post('setperpage', [ReservaController::class, 'setPerPage'])->name('setPerPage');
     Route::get('removerfiltro', [ReservaController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [ReservaController::class, 'filtro'])->name('filtro');
@@ -31,6 +33,8 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/calcao/autorizar', [ReservaController::class, 'autorizarCalcao'])->name('calcao.autorizar');
     Route::post('{id}/calcao/capturar', [ReservaController::class, 'capturarCalcao'])->name('calcao.capturar');
     Route::post('{id}/calcao/liberar', [ReservaController::class, 'liberarCalcao'])->name('calcao.liberar');
+    Route::post('{id}/calcao/presencial', [ReservaController::class, 'registrarCalcaoPresencial'])->name('calcao.presencial');
+    Route::post('{id}/calcao/presencial/devolver', [ReservaController::class, 'devolverCalcaoPresencial'])->name('calcao.presencial.devolver');
     // Feature 5: CobranÃ§a por avarias (pÃ³s-checkout)
     Route::get('{id}/avarias/cobranca', [AvariaCobrancaController::class, 'create'])->name('avarias.cobranca');
     Route::post('{id}/avarias/cobranca', [AvariaCobrancaController::class, 'store'])->name('avarias.cobrar');

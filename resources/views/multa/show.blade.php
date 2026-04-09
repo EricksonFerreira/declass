@@ -436,6 +436,23 @@
                         @endforeach
                     </select>
                 </div>
+
+                @if(!empty($metodosPagamento))
+                <div class="form-group d-none" id="mp_cartao_group">
+                    <label class="font-weight-bold">Cartao do Cliente (Reserva)</label>
+                    <select id="mp_payment_method" class="form-control">
+                        <option value="">Selecione...</option>
+                        @foreach($metodosPagamento as $pm)
+                            @php($card = $pm['card'] ?? null)
+                            <option value="{{ $pm['id'] }}">
+                                {{ strtoupper($card->brand ?? 'CARD') }} **** {{ $card->last4 ?? '' }}
+                                ({{ $card->exp_month ?? '' }}/{{ $card->exp_year ?? '' }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <small class="text-muted">Se a forma for cartao de credito, o sistema cobra pelo Stripe usando o cartao do autor da reserva.</small>
+                </div>
+                @endif
                 <div class="form-group">
                     <label class="font-weight-bold">Referência / Comprovante</label>
                     <input type="text" id="mp_referencia" class="form-control" placeholder="Nº do comprovante, NSU, código PIX...">
@@ -515,9 +532,16 @@
     document.getElementById('btnSalvarPagamentoMulta')?.addEventListener('click', function () {
         const forma = document.getElementById('mp_forma').value;
         const ref   = document.getElementById('mp_referencia').value;
+        const pmSel = document.getElementById('mp_payment_method');
+        const paymentMethod = pmSel ? pmSel.value : null;
 
         if (!forma) {
             alert('Selecione a forma de pagamento.');
+            return;
+        }
+
+        if (forma === 'cartao_credito' && pmSel && !paymentMethod) {
+            alert('Selecione um cartao do cliente para cobrar.');
             return;
         }
 
@@ -532,7 +556,7 @@
                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content,
                 'X-Requested-With': 'XMLHttpRequest',
             },
-            body: JSON.stringify({ forma_pagamento: forma, referencia_pagamento: ref }),
+            body: JSON.stringify({ forma_pagamento: forma, referencia_pagamento: ref, payment_method: paymentMethod }),
         })
         .then(r => r.json())
         .then(data => {
@@ -550,6 +574,13 @@
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-check mr-1"></i>Confirmar Pagamento';
         });
+    });
+
+    document.getElementById('mp_forma')?.addEventListener('change', function () {
+        const group = document.getElementById('mp_cartao_group');
+        if (!group) return;
+        if (this.value === 'cartao_credito') group.classList.remove('d-none');
+        else group.classList.add('d-none');
     });
 })();
 </script>

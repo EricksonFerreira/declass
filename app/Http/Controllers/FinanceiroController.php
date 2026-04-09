@@ -12,12 +12,12 @@ use Illuminate\Support\Facades\Schema;
 class FinanceiroController extends Controller
 {
     private const STATUS_APROVADOS = ['completa', 'aprovado', 'approved', 'succeeded', 'success'];
+
     private const STATUS_PENDENTES = ['pendente', 'pending', 'aguardando', 'processando', 'processing'];
+
     private const STATUS_CANCELADOS = ['cancelado', 'cancelada', 'cancelled', 'canceled', 'refunded', 'reembolsado', 'reembolsada'];
 
-    public function __construct(private readonly BreadcrumbService $breadcrumbService)
-    {
-    }
+    public function __construct(private readonly BreadcrumbService $breadcrumbService) {}
 
     public function index(Request $request)
     {
@@ -165,7 +165,7 @@ class FinanceiroController extends Controller
             }
 
             if ($statusTable) {
-                $movimentacoesCanceladas->join($statusTable, 'movimentacoes.status_movimentacao_id', '=', $statusTable . '.id');
+                $movimentacoesCanceladas->join($statusTable, 'movimentacoes.status_movimentacao_id', '=', $statusTable.'.id');
             }
 
             $movimentacoesCanceladas->where('movimentacoes.tipo_movimentacao_id', 10);
@@ -248,6 +248,21 @@ class FinanceiroController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        // ── Busca os detalhes das transacoes referentes as reservas paginadas ──
+        $reservaIds = collect($faturamentoPorReserva->items())->pluck('reserva_id')->filter()->unique()->toArray();
+        $detalhes = collect();
+        if (!empty($reservaIds)) {
+            $detalhes = \App\Models\Transacao::with(['user', 'pagoPor'])
+                ->whereIn('reserva_id', $reservaIds)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->groupBy('reserva_id');
+        }
+
+        $statusCancelados = ['canceled', 'cancelled', 'refunded', 'chargeback', 'voided', 'failed', 'refused', 'denied', 'cancelada'];
+        $statusAprovados = ['paid', 'approved', 'authorized', 'success', 'succeeded', 'pago', 'aprovada', 'concluido'];
+        $statusPendentes = ['pending', 'processing', 'in_process', 'waiting', 'pendente', 'aguardando'];
+
         $totalFaturado = (float) (clone $baseFaturamento)->sum('transacoes.valor');
         $qtdReservasFaturadas = (int) (clone $baseFaturamento)->distinct()->count('transacoes.reserva_id');
         $ticketMedioPorReserva = $qtdReservasFaturadas > 0 ? $totalFaturado / $qtdReservasFaturadas : 0.0;
@@ -265,7 +280,11 @@ class FinanceiroController extends Controller
             'moedaEmpresa',
             'breadcrumb',
             'titulo',
-            'perPage'
+            'perPage',
+            'detalhes',
+            'statusCancelados',
+            'statusAprovados',
+            'statusPendentes'
         ));
     }
 
@@ -277,28 +296,51 @@ class FinanceiroController extends Controller
             'metodo_pagamento' => $request->input('metodo_pagamento'),
             'data_inicio' => $request->input('data_inicio'),
             'data_fim' => $request->input('data_fim'),
+            'canal' => $request->input('canal'),
+            'cliente' => $request->input('cliente'),
         ];
     }
 
     private function applyFilters($query, array $filters)
     {
-        if (!empty($filters['reserva_id'])) {
+        if (! empty($filters['reserva_id'])) {
             $query->where('transacoes.reserva_id', (int) $filters['reserva_id']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('transacoes.status', $filters['status']);
         }
 
-        if (!empty($filters['metodo_pagamento'])) {
+        if (! empty($filters['metodo_pagamento'])) {
             $query->where('transacoes.metodo_pagamento', $filters['metodo_pagamento']);
         }
+        
+        if (! empty($filters['canal'])) {
+            if ($filters['canal'] === 'reserva') {
+                $query->where(function($q) {
+                    $q->where('transacoes.info_pagamento->tipo', 'reserva')
+                      ->orWhereNull('transacoes.info_pagamento->tipo');
+                });
+            } else {
+                $query->where('transacoes.info_pagamento->tipo', $filters['canal']);
+            }
+        }
 
-        if (!empty($filters['data_inicio'])) {
+        if (! empty($filters['cliente'])) {
+            $clienteText = '%' . $filters['cliente'] . '%';
+            $query->where(function($q) use ($clienteText) {
+                // As the query uses leftJoins for users as u (reserva client) and users as up (payer)
+                // in the index action, we check if either name matches.
+                $q->where('u.nome', 'like', $clienteText)
+                  ->orWhere('up.nome', 'like', $clienteText);
+            });
+        }
+
+        if (! empty($filters['data_inicio'])) {
             $query->whereDate('transacoes.created_at', '>=', $filters['data_inicio']);
         }
 
-        if (!empty($filters['data_fim'])) {
+        if (! empty($filters['data_fim'])) {
             $query->whereDate('transacoes.created_at', '<=', $filters['data_fim']);
         }
 
@@ -352,7 +394,7 @@ class FinanceiroController extends Controller
 
     private function applyEmpresaScope($query, string $table)
     {
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'empresa_id')) {
+        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'empresa_id')) {
             return $query;
         }
 
@@ -361,17 +403,17 @@ class FinanceiroController extends Controller
             return $query;
         }
 
-        return $query->where($table . '.empresa_id', $empresaId);
+        return $query->where($table.'.empresa_id', $empresaId);
     }
 
     private function empresaIdParaConsulta(): ?int
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
-        if (!$user->isAdministrador()) {
+        if (! $user->isAdministrador()) {
             return $user->empresa_id ? (int) $user->empresa_id : null;
         }
 
@@ -384,7 +426,7 @@ class FinanceiroController extends Controller
     {
         $empresaId = $this->empresaIdParaConsulta();
 
-        if ($empresaId === null || !Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'moeda_pagamento')) {
+        if ($empresaId === null || ! Schema::hasTable('empresas') || ! Schema::hasColumn('empresas', 'moeda_pagamento')) {
             return 'BRL';
         }
 
