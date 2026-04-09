@@ -53,7 +53,7 @@
                                         </span>
                                     </a>
                                 @else
-                                    <span class="badge badge-secondary" >
+                                    <span class="badge badge-secondary">
                                         {{ count($regra->permissoes) }} Permissões
                                     </span>
                                 @endif
@@ -65,15 +65,38 @@
                             </td>
                         </tr>
                         <tr class="collapse" id="collapsePermissoes{{ $regra->id }}">
-                            <td colspan="2">
-                                    <p class="mb-1 pl-1">
-                                        <strong>PERMISSÕES:</strong>
+                            <td colspan="4" class="p-0">
+                                <div class="p-3 bg-light border-bottom">
+                                    <p class="mb-3 text-bold text-muted text-uppercase text-sm">
+                                        <i class="fas fa-shield-alt mr-1"></i> Permissões atribuídas a {{ $regra->name }}:
                                     </p>
-                                    <ul class="list-group d-flex align-self-start">
-                                        @foreach ($regra->permissoes as $permissao)
-                                            <li class="list-group-item py-0">{{ $permissao->name }}</li>
+                                    @php
+                                        $groupedPerms = $regra->permissoes->groupBy(
+                                            fn($p) => $p->grupo_efetivo ?: explode('.', $p->name)[0],
+                                        );
+                                    @endphp
+                                    <div class="row">
+                                        @foreach ($groupedPerms as $grupoName => $perms)
+                                            <div class="col-md-3 col-sm-6 mb-3">
+                                                <div class="card shadow-none border mb-0 h-100">
+                                                    <div class="card-header py-1 bg-white border-bottom">
+                                                        <span
+                                                            class="text-sm text-bold text-uppercase text-primary">{{ $grupoName }}</span>
+                                                    </div>
+                                                    <ul class="list-group list-group-flush text-sm">
+                                                        @foreach ($perms as $p)
+                                                            <li class="list-group-item py-1 px-2 border-0"
+                                                                title="{{ $p->descricao ?? $p->name }}">
+                                                                <i class="fas fa-check-circle text-success mr-1"></i>
+                                                                {{ $p->descricao ?? (str_contains($p->name, '.') ? explode('.', $p->name)[1] : $p->name) }}
+                                                            </li>
+                                                        @endforeach
+                                                    </ul>
+                                                </div>
+                                            </div>
                                         @endforeach
-                                    </ul>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     @endforeach
