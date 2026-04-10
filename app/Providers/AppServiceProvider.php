@@ -12,8 +12,8 @@ use App\Support\EmpresaContext;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Pagination\Paginator;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Cashier\Cashier;
@@ -46,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::before(function (User $user, mixed $ability) {
-            if (!is_string($ability)) {
+            if (! is_string($ability)) {
                 return null;
             }
 
@@ -85,18 +85,18 @@ class AppServiceProvider extends ServiceProvider
 
     private function bootEmpresaScope(): void
     {
-        if (!Schema::hasTable('empresas')) {
+        if (! Schema::hasTable('empresas')) {
             return;
         }
 
         foreach (File::allFiles(app_path('Models')) as $file) {
-            $class = 'App\\Models\\' . str_replace(
+            $class = 'App\\Models\\'.str_replace(
                 ['/', '\\', '.php'],
                 ['\\', '\\', ''],
                 $file->getRelativePathname()
             );
 
-            if (!class_exists($class) || !is_subclass_of($class, EloquentModel::class)) {
+            if (! class_exists($class) || ! is_subclass_of($class, EloquentModel::class)) {
                 continue;
             }
 
@@ -104,12 +104,12 @@ class AppServiceProvider extends ServiceProvider
             $model = app($class);
             $table = $model->getTable();
 
-            if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'empresa_id')) {
+            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'empresa_id')) {
                 continue;
             }
 
             // Tabelas globais do sistema (não devem ser tenant-scoped, nem auto-preencher empresa_id).
-            if (in_array($table, ['permissions', 'roles'], true)) {
+            if (in_array($table, ['permissions', 'roles', 'empresas'], true)) {
                 continue;
             }
 
@@ -117,7 +117,7 @@ class AppServiceProvider extends ServiceProvider
                 $empresaId = app(EmpresaContext::class)->empresaId();
 
                 if ($empresaId !== null) {
-                    $builder->where($table . '.empresa_id', $empresaId);
+                    $builder->where($table.'.empresa_id', $empresaId);
                 }
             });
 

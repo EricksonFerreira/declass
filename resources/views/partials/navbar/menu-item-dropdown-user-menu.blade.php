@@ -18,7 +18,7 @@
 
     {{-- User menu toggler --}}
     <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
-        <i class="fas fa-user-circle mr-1"></i>
+        {{-- <i class="fas fa-user-circle mr-1"></i> --}}
         @if(config('adminlte.usermenu_image'))
             <img src="{{ Auth::user()->adminlte_image() }}"
                  class="user-image img-circle elevation-2"
@@ -82,7 +82,7 @@
                 {{ csrf_field() }}
             </form>
 
-            @if(Auth::check() && Auth::user()->isAdministrador() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
+            @if(Auth::check() && Auth::user()->isSuperAdmin() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
                 @php
                     $empresasMenu = \App\Models\Empresa::query()->orderBy('nome')->pluck('nome', 'id')->toArray();
                 @endphp

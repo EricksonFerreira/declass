@@ -86,12 +86,14 @@
 
             @if(Auth::check() && Auth::user()->isSuperAdmin() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
                 @php
-                    $empresasMenu = \App\Models\Empresa::query()->orderBy('nome')->pluck('nome', 'id')->toArray();
+                    // Busca sem qualquer escopo de tenant para sempre listar todas as empresas
+                    $empresasMenu = \Illuminate\Support\Facades\DB::table('empresas')->orderBy('nome')->pluck('nome', 'id')->toArray();
                 @endphp
+
                 <div class="empresa-context-select">
                     <label>Empresa em visualizacao</label>
                     <form method="POST" action="{{ route('empresa_context.update') }}" class="mb-0">
-                        @csrf 
+                        @csrf
                         <select
                             name="empresa_id"
                             class="form-control form-control-sm"

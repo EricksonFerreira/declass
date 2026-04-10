@@ -5,15 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Empresa\StoreEmpresaRequest;
-use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaRequest;
+use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
 use App\Models\Empresa;
 use App\Services\BreadcrumbService;
 use App\Services\EmpresaService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -21,8 +21,8 @@ use Illuminate\Support\Str;
 
 class EmpresaController extends BaseController implements FiltroInterface, ResourceInterface
 {
-    use FiltroTrait;
     use AtualizaFiltrosTrait;
+    use FiltroTrait;
 
     private const SITE_TEXTO_KEYS = [
         'hero_tag',
@@ -117,6 +117,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     ];
 
     protected $empresaService;
+
     protected $breadcrumbService;
 
     public function __construct(EmpresaService $empresaService, BreadcrumbService $breadcrumbService)
@@ -131,7 +132,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function index()
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
@@ -167,7 +168,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function create()
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
@@ -185,7 +186,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function store(StoreEmpresaRequest $request)
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
@@ -206,13 +207,13 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function edit($id)
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
 
         $empresa = $this->empresaService->getById($id);
-        if (!$empresa) {
+        if (! $empresa) {
             abort(403, 'Sem acesso a esta empresa.');
         }
 
@@ -229,7 +230,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function update(UpdateEmpresaRequest $request, $id)
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
@@ -237,19 +238,19 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $data = $request->validated();
 
         $empresaAtual = $this->empresaService->getById($id);
-        if (!$empresaAtual) {
+        if (! $empresaAtual) {
             abort(403, 'Sem acesso para editar esta empresa.');
         }
 
         foreach (['stripe_secret', 'mercado_livre_access_token', 'paypal_client_secret', 'nfse_client_secret'] as $secretField) {
-            if (!array_key_exists($secretField, $data) || $data[$secretField] === null || $data[$secretField] === '') {
+            if (! array_key_exists($secretField, $data) || $data[$secretField] === null || $data[$secretField] === '') {
                 unset($data[$secretField]);
             }
         }
 
         $data = $this->handleLogoUpload($request, $data, $empresaAtual);
         $updated = $this->empresaService->update($id, $data);
-        if (!$updated) {
+        if (! $updated) {
             abort(403, 'Sem acesso para editar esta empresa.');
         }
 
@@ -258,13 +259,13 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function editSiteApresentacao($id)
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
 
         $empresa = $this->empresaService->getById($id);
-        if (!$empresa) {
+        if (! $empresa) {
             abort(403, 'Sem acesso a esta empresa.');
         }
 
@@ -308,13 +309,13 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function updateSiteApresentacao(UpdateEmpresaSiteApresentacaoRequest $request, $id)
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
 
         $empresaAtual = $this->empresaService->getById($id);
-        if (!$empresaAtual) {
+        if (! $empresaAtual) {
             abort(403, 'Sem acesso para editar esta empresa.');
         }
 
@@ -342,7 +343,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $updated = $this->empresaService->update($id, $data);
-        if (!$updated) {
+        if (! $updated) {
             abort(403, 'Sem acesso para editar esta empresa.');
         }
 
@@ -353,21 +354,23 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function destroy($id)
     {
-        if (!$this->empresaTableExists()) {
+        if (! $this->empresaTableExists()) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }
 
         $deleted = $this->empresaService->delete($id);
-        if (!$deleted) {
+        if (! $deleted) {
             abort(403, 'Sem acesso para excluir esta empresa.');
         }
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function filtro(Request $request)
     {
         $this->criarFiltros($request, $this->nomeFiltro);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -375,12 +378,14 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     {
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function setPerPage(Request $request)
     {
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -432,23 +437,23 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     private function handleLogoUpload(Request $request, array $data, ?Empresa $empresaAtual = null): array
     {
-        if (!$request->hasFile('logo')) {
+        if (! $request->hasFile('logo')) {
             return $data;
         }
 
         $file = $request->file('logo');
 
-        if (!$file instanceof UploadedFile || !$file->isValid()) {
+        if (! $file instanceof UploadedFile || ! $file->isValid()) {
             return $data;
         }
 
         try {
             $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-            $fileName = Str::uuid()->toString() . '.' . $extension;
-            $path = 'empresas/logos/' . $fileName;
+            $fileName = Str::uuid()->toString().'.'.$extension;
+            $path = 'empresas/logos/'.$fileName;
 
             $stored = Storage::disk('public')->put($path, $file->getContent());
-            if (!$stored) {
+            if (! $stored) {
                 return $data;
             }
         } catch (\Throwable $e) {
@@ -461,13 +466,13 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return $data;
         }
 
-        if (!is_string($path) || $path === '') {
+        if (! is_string($path) || $path === '') {
             return $data;
         }
 
         $data['logo_path'] = $path;
 
-        if ($empresaAtual && !empty($empresaAtual->logo_path) && Storage::disk('public')->exists($empresaAtual->logo_path)) {
+        if ($empresaAtual && ! empty($empresaAtual->logo_path) && Storage::disk('public')->exists($empresaAtual->logo_path)) {
             Storage::disk('public')->delete($empresaAtual->logo_path);
         }
 
@@ -487,15 +492,15 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $data['site_apresentacao_textos'] = $textos;
 
-        if (!empty($textos['hero_titulo'])) {
+        if (! empty($textos['hero_titulo'])) {
             $data['site_apresentacao_titulo'] = $textos['hero_titulo'];
         }
 
-        if (!empty($textos['hero_subtitulo'])) {
+        if (! empty($textos['hero_subtitulo'])) {
             $data['site_apresentacao_subtitulo'] = $textos['hero_subtitulo'];
         }
 
-        if (!empty($textos['hero_descricao'])) {
+        if (! empty($textos['hero_descricao'])) {
             $data['site_apresentacao_descricao'] = $textos['hero_descricao'];
         }
 
@@ -507,19 +512,20 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $cores = is_array($empresaAtual->site_apresentacao_cores) ? $empresaAtual->site_apresentacao_cores : [];
 
         foreach (self::SITE_COR_FIELDS as $inputName => $colorKey) {
-            if (!$request->has($inputName)) {
+            if (! $request->has($inputName)) {
                 continue;
             }
 
             $value = trim((string) $request->input($inputName, ''));
             if ($value === '') {
                 $cores[$colorKey] = null;
+
                 continue;
             }
 
             $value = strtoupper($value);
-            if (!str_starts_with($value, '#')) {
-                $value = '#' . $value;
+            if (! str_starts_with($value, '#')) {
+                $value = '#'.$value;
             }
 
             $cores[$colorKey] = $value;
@@ -535,7 +541,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $config = is_array($empresaAtual->site_apresentacao_imagens_config) ? $empresaAtual->site_apresentacao_imagens_config : [];
 
         foreach (self::SITE_IMAGEM_VISIBILIDADE_FIELDS as $inputName => $imageKey) {
-            if (!$request->has($inputName)) {
+            if (! $request->has($inputName)) {
                 continue;
             }
 
@@ -552,23 +558,23 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $imagens = is_array($empresaAtual->site_apresentacao_imagens) ? $empresaAtual->site_apresentacao_imagens : [];
 
         foreach (self::SITE_IMAGEM_FIELDS as $inputName => $imageKey) {
-            if (!$request->hasFile($inputName)) {
+            if (! $request->hasFile($inputName)) {
                 continue;
             }
 
             $file = $request->file($inputName);
-            if (!$file instanceof UploadedFile || !$file->isValid()) {
+            if (! $file instanceof UploadedFile || ! $file->isValid()) {
                 continue;
             }
 
             try {
                 $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-                $fileName = Str::uuid()->toString() . '.' . $extension;
-                $path = 'empresas/site_apresentacao/' . $empresaAtual->id . '/' . $imageKey . '/' . $fileName;
+                $fileName = Str::uuid()->toString().'.'.$extension;
+                $path = 'empresas/site_apresentacao/'.$empresaAtual->id.'/'.$imageKey.'/'.$fileName;
 
                 $stored = Storage::disk('public')->put($path, $file->getContent());
-                if (!$stored || !is_string($path) || $path === '') {
-                    continue;
+                if (! $stored || ! is_string($path) || $path === '') {
+
                 }
 
                 $oldPath = $imagens[$imageKey] ?? null;

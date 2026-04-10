@@ -36,7 +36,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
         $filters = $this->sanitizeEmpresaFilter($filters);
         $filters = $this->sanitizeEstacaoFilter($filters);
         $filters = $this->sanitizeInvalidColumnFilters($filters);
-
+ 
         if (!empty($filters)) {
             foreach ($filters as $field => $value) {
                 if (!is_array($value) || !array_key_exists('valor', $value)) {
@@ -194,21 +194,19 @@ abstract class AbstractBaseService implements BaseServiceInterface
             return $query;
         }
 
+        // Tabela 'empresas' nunca deve ser filtrada por empresa_id — mostra todas sempre.
+        if ($this->model->getTable() === 'empresas') {
+            return $query;
+        }
+
         $empresaId = $this->currentEmpresaId();
         if ($empresaId === null) {
             $user = Auth::user();
             if ($user?->isSuperAdmin()) {
-                // Super admin (tipo_usuario_id=1): acesso global, sem escopo por empresa.
                 return $query;
             }
 
             if ($user?->isAdministrador()) {
-                // Permite listar empresas mesmo sem contexto, para que o admin consiga escolher.
-                if ($this->model->getTable() === 'empresas') {
-                    return $query;
-                }
-
-                // Para os demais mÃ³dulos, sempre exige empresa selecionada para evitar vazamento entre empresas.
                 throw new AccessDeniedHttpException('Selecione uma empresa para visualizar estes registros.');
             }
 
@@ -293,20 +291,22 @@ abstract class AbstractBaseService implements BaseServiceInterface
             return $query;
         }
 
+        $table = $this->model->getTable();
+        $estacaoColumns = $this->estacaoScopeColumns($table);
+
+        // Se a tabela NÃO é 'estacoes' e NÃO possui nenhuma coluna de vinculo com estacao,
+        // esse scope não deve aplicar nenhum filtro restritivo.
+        if ($table !== 'estacoes' && empty($estacaoColumns)) {
+            return $query;
+        }
+
         $allowedIds = $this->allowedEstacaoIdsForUser();
         if (empty($allowedIds)) {
             return $query->whereRaw('1 = 0');
         }
 
-        $table = $this->model->getTable();
-        $estacaoColumns = $this->estacaoScopeColumns($table);
-
         if ($table === 'estacoes') {
             return $query->whereIn($table . '.id', $allowedIds);
-        }
-
-        if (empty($estacaoColumns)) {
-            return $query;
         }
 
         if (count($estacaoColumns) === 1) {

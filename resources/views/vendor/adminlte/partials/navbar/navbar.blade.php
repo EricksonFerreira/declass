@@ -36,28 +36,25 @@
     };
 
     if (Auth::check() && \Illuminate\Support\Facades\Schema::hasTable('empresas')) {
-        $empresaIdTema = null;
+        $user = Auth::user();
 
-        if (Auth::user()->isAdministrador()) {
-            $empresaIdSessao = (int) session('empresa_context_id', 0);
-            $empresaSelecionada = $empresaIdSessao;
-            if ($empresaIdSessao > 0) {
-                $empresaIdTema = $empresaIdSessao;
-            }
-            // Para super admin sem empresa selecionada ("Todas"), tenta usar a empresa própria do usuário
-            // só para exibir o chip (sem alterar o contexto)
-            if ($empresaIdTema === null && Auth::user()->isSuperAdmin() && !empty(Auth::user()->empresa_id)) {
-                $empresaIdTema = (int) Auth::user()->empresa_id;
-            }
+        if ($user->isSuperAdmin()) {
+            // Empresa da sessão tem prioridade; fallback = empresa do próprio usuário
+            $empresaSelecionada = (int) session('empresa_context_id', 0);
+            $empresaIdTema = $empresaSelecionada > 0
+                ? $empresaSelecionada
+                : (int) ($user->empresa_id ?? 0);
         } else {
-            $empresaIdTema = (int) (Auth::user()->empresa_id ?? 0);
+            // Demais usuários: sempre a empresa própria
+            $empresaIdTema = (int) ($user->empresa_id ?? 0);
             $empresaSelecionada = $empresaIdTema;
         }
 
-        if ($empresaIdTema) {
-            $empresaTemaAtual = \App\Models\Empresa::query()
+        if ($empresaIdTema > 0) {
+            $empresaTemaAtual = (object) \Illuminate\Support\Facades\DB::table('empresas')
                 ->select(['id', 'nome', 'logo_path', 'cor_primaria', 'cor_secundaria', 'cor_terciaria'])
-                ->find($empresaIdTema);
+                ->where('id', $empresaIdTema)
+                ->first();
         }
     }
 @endphp
@@ -249,7 +246,6 @@
         {{-- Custom left links --}}
         @yield('content_top_nav_left')
     </ul>
-
     {{-- Navbar right links --}}
     <ul class="navbar-nav ml-auto">
         @if($empresaTemaAtual)
@@ -259,13 +255,16 @@
                     : '';
             @endphp
             <li class="nav-item d-flex align-items-center mr-2">
-                <span class="empresa-context-chip" title="Empresa ativa">
+                <span class="empresa-context-chip" title="{{ $empresaTemaAtual->nome }}">
                     @if($empresaLogoPath !== '' && \Illuminate\Support\Facades\Storage::disk('public')->exists($empresaLogoPath))
                         <img src="{{ \Illuminate\Support\Facades\Storage::url($empresaLogoPath) }}" alt="Logo empresa">
                     @else
-                        <span class="empresa-chip-inicial">{{ strtoupper(mb_substr($empresaTemaAtual->nome ?? 'E', 0, 1)) }}</span>
+                        <span class="empresa-chip-inicial">{{ strtoupper(mb_substr($empresaTemaAtual->nome, 0, 1)) }}</span>
                     @endif
                     <span class="text-truncate">{{ $empresaTemaAtual->nome }}</span>
+                    @if(Auth::user()->isSuperAdmin() && $empresaSelecionada === 0)
+                        <small style="opacity:.65;font-size:.75em;margin-left:2px">(Todas)</small>
+                    @endif
                 </span>
             </li>
         @endif
