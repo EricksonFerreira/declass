@@ -192,6 +192,27 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ))->with('titulo', $this->titulo);
     }
 
+    public function minhas()
+    {
+        $user = Auth::user();
+
+        $query = Reserva::query()
+            ->with(['estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos', 'statusReserva', 'nfseAtual'])
+            ->where('user_id', $user->id)
+            ->orderBy('id', 'desc');
+
+        if (Schema::hasColumn('reservas', 'empresa_id') && $user->empresa_id) {
+            $query->where('empresa_id', $user->empresa_id);
+        }
+
+        $reservas = $query->paginate(10);
+
+        return view('reserva.index-cliente', [
+            'reservas' => $reservas,
+            'titulo'   => 'Minhas Reservas',
+        ]);
+    }
+
     private function isCliente($user): bool
     {
         $roleName = strtolower(trim((string) ($user?->tipoUsuario?->name ?? '')));

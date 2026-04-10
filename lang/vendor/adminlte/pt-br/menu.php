@@ -31,6 +31,7 @@ return [
 
     // Operação / Reservas
     'sidebar.reserva'                      => 'Reservas',
+    'sidebar.minhas_reservas'              => 'Minhas Reservas',
     'sidebar.status_reserva'               => 'Status das Reservas',
     'sidebar.movimentacoes'                => 'Movimentações',
     'sidebar.movimentacoes_lista'          => 'Listagem',

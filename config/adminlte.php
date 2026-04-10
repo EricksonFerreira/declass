@@ -326,6 +326,12 @@ return [
             'icon' => 'fas fa-calendar-check',
         ],
         [
+            'text' => 'sidebar.minhas_reservas',
+            'url'  => 'reserva/minhas',
+            'icon' => 'fas fa-bookmark',
+            'can'  => 'reserva.minhas',
+        ],
+        [
             'text' => 'Multas',
             'url'  => 'multa',
             'icon' => 'fas fa-exclamation-triangle',
@@ -640,6 +646,7 @@ return [
     'filters' => [
         App\Menu\Filters\AutoPermissionFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\GateFilter::class,
+        App\Menu\Filters\RemoveEmptySubmenuFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\HrefFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\SearchFilter::class,
         JeroenNoten\LaravelAdminLte\Menu\Filters\ActiveFilter::class,

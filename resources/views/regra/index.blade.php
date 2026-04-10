@@ -60,25 +60,36 @@
         <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
     @endif
 
-    {{-- Stats + controles --}}
-    <div class="d-flex align-items-center justify-content-between mb-3 flex-wrap" style="gap:.5rem">
-        <div class="rg-stat">
-            <i class="fas fa-shield-alt rg-stat__icon"></i>
-            <div>
-                <div class="rg-stat__val">{{ $regras->total() }}</div>
-                <div class="rg-stat__lbl">Regras cadastradas</div>
+    {{-- Painel principal --}}
+    <div class="card p-2">
+        <div class="card-header px-0 pt-0 pb-1">
+            <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem">
+                <h3 class="card-title text-sm text-bold mb-0">
+                    REGISTROS <span class="badge badge-success">{{ $regras->total() }}</span>
+                </h3>
+                <div class="d-flex align-items-center flex-wrap" style="gap:6px">
+                    <form action="{{ route('regra.setPerPage') }}" method="POST">
+                        @csrf
+                        <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                    </form>
+                    <div class="rg-view-toggle">
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
+                            <i class="fas fa-th-large mr-1"></i> Cards
+                        </button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="table">
+                            <i class="fas fa-table mr-1"></i> Tabela
+                        </button>
+                    </div>
+                    <div class="d-flex align-items-end">
+                        {{ $regras->links() }}
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="d-flex align-items-center" style="gap:.5rem">
-            <form action="{{ route('regra.setPerPage') }}" method="POST">
-                @csrf
-                <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
-            </form>
-            {{ $regras->links() }}
-        </div>
-    </div>
 
-    {{-- Cards de regras --}}
+        <div class="card-body px-0 pt-0 pb-1 rg-index-body" data-view="cards">
+
+    {{-- Vazio --}}
     @if($regras->isEmpty())
         <div class="alert alert-light text-center py-5">
             <i class="fas fa-shield-alt fa-3x text-muted mb-3 d-block"></i>
@@ -182,12 +193,52 @@
             @endforeach
         </div>
 
-        <div class="d-flex justify-content-end mt-3">
+        {{-- Table view --}}
+        <div class="rg-table table-responsive">
+            <table class="table table-striped table-bordered table-sm">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nome</th>
+                        <th>Guard</th>
+                        <th>Permissões</th>
+                        <th>Módulos</th>
+                        <th style="width:120px">Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($regras as $regra)
+                        @php
+                            $totalPerms = count($regra->permissoes);
+                            $totalGrupos = $regra->permissoes->groupBy(fn($p) => $p->grupo_efetivo ?: '_outros')->count();
+                        @endphp
+                        <tr>
+                            <td>{{ $regra->id }}</td>
+                            <td><strong>{{ $regra->name }}</strong></td>
+                            <td><span class="badge badge-secondary">{{ $regra->guard_name }}</span></td>
+                            <td><span class="badge badge-primary">{{ $totalPerms }}</span></td>
+                            <td><span class="badge badge-info">{{ $totalGrupos }}</span></td>
+                            <td>
+                                <a href="{{ route('regra.edit', $regra->id) }}" class="btn btn-xs btn-warning">
+                                    <i class="fa fa-edit"></i> Editar
+                                </a>
+                                <x-delete-button :action="route('regra.destroy', $regra->id)" />
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        <div class="d-flex justify-content-end mt-2">
             {{ $regras->links() }}
         </div>
     @endif
 
-</div>
+        </div>{{-- card-body --}}
+    </div>{{-- card --}}
+
+</div>{{-- rg-page --}}
 @stop
 
 @section('css')
@@ -302,6 +353,22 @@
 }
 .rg-perm-item__desc { color: #495057; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+/* ── View toggle ── */
+.rg-view-toggle { display: flex; gap: 5px; }
+.rg-view-toggle .btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+.rg-index-body[data-view="table"] .rg-grid  { display: none; }
+.rg-index-body[data-view="cards"] .rg-table { display: none; }
+
+.rg-index-body[data-view="table"] .rg-table {
+    max-height: calc(100vh - 360px);
+    overflow: auto;
+    border-radius: 6px;
+}
+.rg-index-body[data-view="table"] .rg-table thead th {
+    position: sticky; top: 0; z-index: 2; background: #f8fafc;
+}
+
 @media (max-width: 576px) {
     .rg-hero { flex-direction: column; align-items: flex-start; }
     .rg-hero__btn { align-self: stretch; text-align: center; }
@@ -312,13 +379,30 @@
 
 @section('js')
 <script>
-$(document).ready(function () {
-    // Atualiza label do botão ao colapsar/expandir
-    $('[data-target]').on('click', function () {
-        var lbl = $(this).find('.rg-btn-expand__lbl');
-        var expanded = $(this).attr('aria-expanded') === 'true';
-        lbl.text(expanded ? 'Ver permissões' : 'Ocultar permissões');
+(function () {
+    const body = document.querySelector('.rg-index-body');
+    const buttons = document.querySelectorAll('.rg-view-toggle [data-view]');
+    if (!body || !buttons.length) return;
+
+    function setView(view) {
+        body.setAttribute('data-view', view);
+        localStorage.setItem('regraIndexView', view);
+        buttons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+    }
+
+    const saved = localStorage.getItem('regraIndexView') || 'cards';
+    setView(saved);
+    buttons.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+
+    // Expand/collapse label
+    document.querySelectorAll('[data-target]').forEach(function (el) {
+        el.addEventListener('click', function () {
+            const lbl = this.querySelector('.rg-btn-expand__lbl');
+            if (!lbl) return;
+            const expanded = this.getAttribute('aria-expanded') === 'true';
+            lbl.textContent = expanded ? 'Ver permissões' : 'Ocultar permissões';
+        });
     });
-});
+})();
 </script>
 @stop

@@ -131,55 +131,52 @@
         </a>
     </div>
 
-    {{-- ── Stats bar ── --}}
-    <div class="row mb-3">
-        <div class="col-sm-4 col-6 mb-2">
-            <div class="pm-stat pm-stat--blue">
-                <i class="fas fa-key pm-stat__icon"></i>
-                <div>
-                    <div class="pm-stat__val">{{ $totalPermissoes }}</div>
-                    <div class="pm-stat__lbl">Permissões no sistema</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-4 col-6 mb-2">
-            <div class="pm-stat pm-stat--green">
-                <i class="fas fa-th-large pm-stat__icon"></i>
-                <div>
-                    <div class="pm-stat__val">{{ $totalGrupos }}</div>
-                    <div class="pm-stat__lbl">Grupos / módulos</div>
-                </div>
-            </div>
-        </div>
-        <div class="col-sm-4 col-12 mb-2">
-            <div class="pm-stat pm-stat--gray">
-                <i class="fas fa-filter pm-stat__icon"></i>
-                <div class="w-100">
-                    <form method="GET" action="{{ route('permissao.index') }}" class="d-flex">
+    {{-- ── Painel principal ── --}}
+    <div class="card p-2">
+        <div class="card-header px-0 pt-0 pb-1">
+            <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem">
+                <h3 class="card-title text-sm text-bold mb-0">
+                    REGISTROS
+                    <span class="badge badge-success">{{ $totalPermissoes }}</span>
+                    <span class="badge badge-info ml-1">{{ $totalGrupos }} grupos</span>
+                </h3>
+                <div class="d-flex align-items-center flex-wrap" style="gap:6px">
+                    <form method="GET" action="{{ route('permissao.index') }}" class="d-flex align-items-center" style="gap:4px">
                         <input type="text" name="busca" value="{{ $busca }}"
-                            placeholder="Buscar por nome, grupo ou descrição..."
-                            class="form-control form-control-sm pm-search-input"
+                            placeholder="Buscar..."
+                            class="form-control form-control-xs pm-search-input"
+                            style="height:28px;font-size:.8rem;border-radius:6px;border:1px solid #d0daea;"
                             oninput="filterPermissoes(this.value)">
                         @if($busca)
-                            <a href="{{ route('permissao.index') }}" class="btn btn-sm btn-outline-secondary ml-1" title="Limpar">
+                            <a href="{{ route('permissao.index') }}" class="btn btn-xs btn-outline-secondary" title="Limpar">
                                 <i class="fas fa-times"></i>
                             </a>
                         @endif
                     </form>
+                    <div class="pm-view-toggle">
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
+                            <i class="fas fa-layer-group mr-1"></i> Grupos
+                        </button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="table">
+                            <i class="fas fa-table mr-1"></i> Tabela
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+
+        <div class="card-body px-0 pt-0 pb-1 pm-index-body" data-view="cards">
 
     @if($permissaos->isEmpty())
-        <div class="alert alert-warning">
-            <i class="fas fa-search mr-1"></i> Nenhuma permissão encontrada para "<strong>{{ $busca }}</strong>".
+        <div class="alert alert-warning m-2">
+            <i class="fas fa-search mr-1"></i> Nenhuma permissão encontrada
+            @if($busca) para "<strong>{{ $busca }}</strong>" @endif.
             <a href="{{ route('permissao.index') }}" class="ml-2">Limpar busca</a>
         </div>
     @endif
 
-    {{-- ── Accordion de grupos ── --}}
-    <div id="pm-accordion">
+    {{-- ── Card view: Accordion de grupos ── --}}
+    <div class="pm-cards-view" id="pm-accordion">
         @foreach($permissaos as $grupo => $itens)
             @php
                 $meta  = $grupoMeta[$grupo] ?? $grupoMeta['_outros'];
@@ -290,9 +287,76 @@
                 </div>
             </div>
         @endforeach
-    </div>
+    </div>{{-- pm-cards-view --}}
 
-</div>
+    {{-- ── Table view: flat list ── --}}
+    <div class="pm-table-view table-responsive" style="max-height:calc(100vh - 320px);overflow:auto">
+        <table class="table table-striped table-bordered table-sm pm-flat-table">
+            <thead>
+                <tr>
+                    <th>Grupo</th>
+                    <th>Ação</th>
+                    <th>Nome técnico</th>
+                    <th>Descrição</th>
+                    <th style="width:110px">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($permissaos as $grupo => $itens)
+                    @php $meta = $grupoMeta[$grupo] ?? $grupoMeta['_outros']; $hex = $colorBadge[$meta['color']] ?? '#6c757d'; @endphp
+                    @foreach($itens as $permissao)
+                        @php [$acaoLabel, $acaoCls] = getAcaoBadge($permissao->name, $acaoBadge); @endphp
+                        <tr class="pm-perm-row"
+                            data-perm="{{ strtolower($permissao->name) }}"
+                            data-desc="{{ strtolower($permissao->descricao ?? '') }}"
+                            data-grupo="{{ strtolower($grupo) }}">
+                            <td>
+                                <span style="color:{{ $hex }};font-size:.75rem;font-weight:600">
+                                    <i class="{{ $meta['icon'] }} mr-1"></i>{{ $meta['label'] }}
+                                </span>
+                            </td>
+                            <td><span class="badge {{ $acaoCls }} badge-sm">{{ $acaoLabel }}</span></td>
+                            <td><code class="pm-perm-name">{{ $permissao->name }}</code></td>
+                            <td class="pm-desc-cell" data-id="{{ $permissao->id }}">
+                                <div class="pm-desc-view">
+                                    @if($permissao->descricao)
+                                        <span class="pm-perm-desc">{{ $permissao->descricao }}</span>
+                                    @else
+                                        <span class="pm-perm-desc--empty">—</span>
+                                    @endif
+                                    <button type="button" class="pm-btn-edit-desc" title="Editar">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                </div>
+                                <div class="pm-desc-edit" style="display:none">
+                                    <form method="POST" action="{{ route('permissao.update', $permissao->id) }}" class="pm-inline-form">
+                                        @csrf @method('PUT')
+                                        <input type="hidden" name="name"       value="{{ $permissao->name }}">
+                                        <input type="hidden" name="guard_name" value="{{ $permissao->guard_name }}">
+                                        <input type="hidden" name="grupo"      value="{{ $permissao->grupo }}">
+                                        <textarea name="descricao" class="form-control form-control-sm pm-inline-textarea" rows="2">{{ $permissao->descricao }}</textarea>
+                                        <div class="pm-inline-actions">
+                                            <button type="submit" class="btn btn-xs btn-success"><i class="fas fa-check"></i> Salvar</button>
+                                            <button type="button" class="btn btn-xs btn-outline-secondary pm-btn-cancel-desc"><i class="fas fa-times"></i></button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </td>
+                            <td>
+                                <a href="{{ route('permissao.edit', $permissao->id) }}" class="btn btn-xs btn-outline-warning"><i class="fas fa-pen"></i></a>
+                                <x-delete-button :action="route('permissao.destroy', $permissao->id)" />
+                            </td>
+                        </tr>
+                    @endforeach
+                @endforeach
+            </tbody>
+        </table>
+    </div>{{-- pm-table-view --}}
+
+        </div>{{-- card-body --}}
+    </div>{{-- card --}}
+
+</div>{{-- pm-page --}}
 @stop
 
 @section('css')
@@ -411,6 +475,19 @@
 .pm-perm-row.pm-hidden { display: none; }
 .pm-group-card.pm-group-hidden { display: none; }
 
+/* ── View toggle ── */
+.pm-view-toggle { display: flex; gap: 5px; }
+.pm-view-toggle .btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+
+.pm-index-body[data-view="cards"] .pm-table-view { display: none; }
+.pm-index-body[data-view="table"] .pm-cards-view { display: none; }
+
+.pm-index-body[data-view="table"] .pm-table-view thead th {
+    position: sticky; top: 0; z-index: 2; background: #f8fafc;
+}
+
+.pm-flat-table { font-size: .82rem; }
+
 /* ── Responsive ── */
 @media (max-width: 767px) {
     .pm-hero { flex-direction: column; align-items: flex-start; }
@@ -422,13 +499,29 @@
 
 @section('js')
 <script>
-// JS live search across all groups
+// ── View toggle ──
+(function () {
+    const body = document.querySelector('.pm-index-body');
+    const buttons = document.querySelectorAll('.pm-view-toggle [data-view]');
+    if (!body || !buttons.length) return;
+    function setView(view) {
+        body.setAttribute('data-view', view);
+        localStorage.setItem('permissaoIndexView', view);
+        buttons.forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+    }
+    const saved = localStorage.getItem('permissaoIndexView') || 'cards';
+    setView(saved);
+    buttons.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+})();
+
+// JS live search across all groups + table
 function filterPermissoes(val) {
     const q = val.toLowerCase().trim();
+
+    // Card view: filter within accordion groups
     document.querySelectorAll('.pm-group-card').forEach(function (card) {
         const grupo = card.dataset.grupo || '';
         let grupoVisible = false;
-
         card.querySelectorAll('.pm-perm-row').forEach(function (row) {
             const perm = row.dataset.perm || '';
             const desc = row.dataset.desc || '';
@@ -436,16 +529,22 @@ function filterPermissoes(val) {
             row.classList.toggle('pm-hidden', !match);
             if (match) grupoVisible = true;
         });
-
         card.classList.toggle('pm-group-hidden', !grupoVisible);
-
-        // Auto-expand groups that have matching results when searching
         if (q && grupoVisible) {
-            const body = card.querySelector('.collapse');
-            if (body && !body.classList.contains('show')) {
-                $(body).collapse('show');
+            const collapse = card.querySelector('.collapse');
+            if (collapse && !collapse.classList.contains('show')) {
+                $(collapse).collapse('show');
             }
         }
+    });
+
+    // Table view: filter flat rows
+    document.querySelectorAll('.pm-flat-table .pm-perm-row').forEach(function (row) {
+        const perm = row.dataset.perm || '';
+        const desc = row.dataset.desc || '';
+        const grupo = row.dataset.grupo || '';
+        const match = !q || perm.includes(q) || desc.includes(q) || grupo.includes(q);
+        row.classList.toggle('pm-hidden', !match);
     });
 }
 
