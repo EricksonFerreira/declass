@@ -80,7 +80,7 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" id="tab-contato-link" data-toggle="pill" href="#tab-contato" role="tab" aria-controls="tab-contato" aria-selected="false">
-                                    <i class="fa fa-phone mr-1"></i> Contato e Endereco
+                                    <i class="fa fa-phone mr-1"></i> Contato e Endereço
                                 </a>
                             </li>
                             <li class="nav-item">
@@ -90,13 +90,13 @@
                             </li>
                             <li class="nav-item">
                                 <a class="nav-link" id="tab-carta-link" data-toggle="pill" href="#tab-carta" role="tab" aria-controls="tab-carta" aria-selected="false">
-                                    <i class="fa fa-id-card mr-1"></i> Carta de Conducao
+                                    <i class="fa fa-id-card mr-1"></i> Carta de Condução
                                 </a>
                             </li>
                             @if ($isCreate)
                                 <li class="nav-item">
                                     <a class="nav-link" id="tab-seguranca-link" data-toggle="pill" href="#tab-seguranca" role="tab" aria-controls="tab-seguranca" aria-selected="false">
-                                        <i class="fa fa-lock mr-1"></i> Seguranca
+                                        <i class="fa fa-lock mr-1"></i> Segurança
                                     </a>
                                 </li>
                             @endif
@@ -106,7 +106,7 @@
                     <div class="col-12">
                         <div class="tab-content" id="usuario-tab-content">
                             <div class="tab-pane fade show active" id="tab-geral" role="tabpanel" aria-labelledby="tab-geral-link">
-                                <div class="usuario-section-title">Informacoes Pessoais</div>
+                                <div class="usuario-section-title">Informações Pessoais</div>
                                 <div class="form-row">
                                     <div class="col-lg-6 col-md-12">
                                         <div class="form-group form-group-usuario">
@@ -149,11 +149,11 @@
                             </div>
 
                             <div class="tab-pane fade" id="tab-contato" role="tabpanel" aria-labelledby="tab-contato-link">
-                                <div class="usuario-section-title">Contato e Endereco</div>
+                                <div class="usuario-section-title">Contato e Endereço</div>
                                 <div class="form-row">
                                     <div class="col-lg-4 col-md-6">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-input required type="text" class="form-control-sm" id="telefone" name="telefone"
+                                            <x-form-input type="text" class="form-control-sm" id="telefone" name="telefone"
                                                 label="Telefone" value="{{ old('telefone', $usuario->telefone ?? '') }}" />
                                         </div>
                                     </div>
@@ -168,16 +168,18 @@
 
                                     <div class="col-lg-4 col-md-12">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-select name="pais_sigla" label="Pais" :options="$paises" placeholder="Selecione um valor"
-                                                :selected="old('pais_sigla', isset($usuario->pais_sigla) ? $usuario->pais_sigla : null)"
+                                            <x-form-select name="pais_sigla" label="País" :options="$paises" placeholder="Selecione um valor"
+                                                :selected="old('pais_sigla', isset($usuario->pais_sigla) ? $usuario->pais_sigla : 'BR')"
                                                 id="pais_sigla" class="form-control form-control-sm" required />
                                         </div>
                                     </div>
 
                                     <div class="col-lg-3 col-md-4">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-input required type="text" class="form-control-sm" id="cep" name="zip_code"
-                                                label="Zip Code" value="{{ old('zip_code', $usuario->zip_code ?? '') }}" />
+                                            <label class="mb-1" style="font-size:.85rem;font-weight:600">CPF <small class="text-muted font-weight-normal">(zip code)</small> <span class="text-danger">*</span></label>
+                                            <input required type="text" class="form-control form-control-sm" id="cep" name="zip_code"
+                                                value="{{ old('zip_code', $usuario->zip_code ?? '') }}"
+                                                placeholder="000.000.000-00" maxlength="14" />
                                         </div>
                                     </div>
 
@@ -191,7 +193,7 @@
                                     <div class="col-lg-5 col-md-12">
                                         <div class="form-group form-group-usuario">
                                             <x-form-input required type="text" class="form-control-sm" id="endereco" name="endereco"
-                                                label="Endereco" value="{{ old('endereco', $usuario->endereco ?? '') }}" />
+                                                label="Endereço" value="{{ old('endereco', $usuario->endereco ?? '') }}" />
                                         </div>
                                     </div>
                                 </div>
@@ -203,14 +205,14 @@
                                     <div class="col-lg-4 col-md-6">
                                         <div class="form-group form-group-usuario">
                                             <x-form-input required type="text" class="form-control-sm" id="numero_identificacao"
-                                                name="numero_identificacao" label="Numero de Identificacao"
+                                                name="numero_identificacao" label="Número de Identificação"
                                                 value="{{ old('numero_identificacao', $usuario->numero_identificacao ?? '') }}" />
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4 col-md-6">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-select name="role_id" label="Regra de Usuario" :options="$tiposUsuario"
+                                            <x-form-select name="role_id" label="Regra de Usuário" :options="$tiposUsuario"
                                                 placeholder="Selecione um valor"
                                                 :selected="old('role_id', isset($usuario->role_id) ? $usuario->role_id : null)"
                                                 class="form-control form-control-sm" required />
@@ -219,14 +221,14 @@
 
                                     <div class="col-lg-4 col-md-12">
                                         <div class="form-group form-group-usuario mb-1">
-                                            <label class="mb-2">Acesso por Estacao</label>
+                                            <label class="mb-2">Acesso por Estação</label>
                                             <input type="hidden" name="acesso_todas_estacoes" value="0">
 
                                             <div class="custom-control custom-switch mb-2">
                                                 <input type="checkbox" class="custom-control-input" id="acesso_todas_estacoes"
                                                     name="acesso_todas_estacoes" value="1" {{ $isAllStations ? 'checked' : '' }}>
                                                 <label class="custom-control-label" for="acesso_todas_estacoes">
-                                                    Acesso a todas as estacoes
+                                                    Acesso a todas as estações
                                                 </label>
                                             </div>
                                             <small class="text-muted d-block" id="estacoes-limit-hint"></small>
@@ -235,7 +237,7 @@
 
                                     <div class="col-12" id="estacoes-permitidas-wrap" style="{{ $isAllStations ? 'display:none;' : '' }}">
                                         <div class="estacoes-wrap">
-                                            <label class="mb-1 d-block">Estacoes permitidas</label>
+                                            <label class="mb-1 d-block">Estações permitidas</label>
                                             <div class="estacoes-checkbox-grid">
                                                 @forelse ($estacoes ?? [] as $estacaoId => $estacaoNome)
                                                     <label class="estacao-checkbox-item">
@@ -248,11 +250,11 @@
                                                         <span>{{ $estacaoNome }}</span>
                                                     </label>
                                                 @empty
-                                                    <div class="text-muted small">Nenhuma estacao disponivel.</div>
+                                                    <div class="text-muted small">Nenhuma estação disponível.</div>
                                                 @endforelse
                                             </div>
                                             <small class="text-muted d-block mt-1">
-                                                Quando desmarcado, o usuario so acessa dados das estacoes selecionadas.
+                                                Quando desmarcado, o usuário só acessa dados das estações selecionadas.
                                             </small>
                                         </div>
                                     </div>
@@ -260,40 +262,40 @@
                             </div>
 
                             <div class="tab-pane fade" id="tab-carta" role="tabpanel" aria-labelledby="tab-carta-link">
-                                <div class="usuario-section-title">Carta de Conducao</div>
+                                <div class="usuario-section-title">Carta de Condução <small class="text-muted font-weight-normal" style="font-size:.8rem">(opcional)</small></div>
                                 <div class="form-row">
                                     <div class="col-lg-4 col-md-6">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-input required type="text" class="form-control-sm" id="numero_carta_conducao"
-                                                name="numero_carta_conducao" label="Numero Carta de Conducao"
+                                            <x-form-input type="text" class="form-control-sm" id="numero_carta_conducao"
+                                                name="numero_carta_conducao" label="Número da Carta de Condução"
                                                 value="{{ old('numero_carta_conducao', $usuario->numero_carta_conducao ?? '') }}" />
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4 col-md-6">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-input required type="text" class="form-control-sm" id="local_emissao_carta_conducao"
-                                                name="local_emissao_carta_conducao" label="Local de Emissao"
+                                            <x-form-input type="text" class="form-control-sm" id="local_emissao_carta_conducao"
+                                                name="local_emissao_carta_conducao" label="Local de Emissão"
                                                 value="{{ old('local_emissao_carta_conducao', $usuario->local_emissao_carta_conducao ?? '') }}" />
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4 col-md-12">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-select name="pais_emissao_carta_conducao" label="Pais de Emissao" :options="$paises"
+                                            <x-form-select name="pais_emissao_carta_conducao" label="País de Emissão" :options="$paises"
                                                 placeholder="Selecione um valor"
                                                 :selected="old(
                                                     'pais_emissao_carta_conducao',
-                                                    isset($usuario->pais_emissao_carta_conducao) ? $usuario->pais_emissao_carta_conducao : null,
+                                                    isset($usuario->pais_emissao_carta_conducao) ? $usuario->pais_emissao_carta_conducao : 'BR',
                                                 )"
-                                                class="form-control form-control-sm" required />
+                                                class="form-control form-control-sm" />
                                         </div>
                                     </div>
 
                                     <div class="col-lg-4 col-md-6">
                                         <div class="form-group form-group-usuario">
-                                            <x-form-input required type="date" class="form-control-sm" id="data_emissao_carta_conducao"
-                                                name="data_emissao_carta_conducao" label="Data de Emissao"
+                                            <x-form-input type="date" class="form-control-sm" id="data_emissao_carta_conducao"
+                                                name="data_emissao_carta_conducao" label="Data de Emissão"
                                                 value="{{ old('data_emissao_carta_conducao', $usuario->data_emissao_carta_conducao ?? '') }}" />
                                         </div>
                                     </div>
@@ -310,7 +312,7 @@
 
                             @if ($isCreate)
                                 <div class="tab-pane fade" id="tab-seguranca" role="tabpanel" aria-labelledby="tab-seguranca-link">
-                                    <div class="usuario-section-title">Informacoes Privadas</div>
+                                    <div class="usuario-section-title">Informações Privadas</div>
                                     <div class="form-row">
                                         <div class="col-lg-5 col-md-6">
                                             <div class="form-group form-group-usuario">
@@ -331,9 +333,9 @@
                                             <div id="passwordValidation" class="alert alert-danger d-none" role="alert">
                                                 <ul class="mb-0 pl-3">
                                                     <li id="length" class="d-none">A senha deve ter pelo menos 8 caracteres.</li>
-                                                    <li id="uppercase" class="d-none">A senha deve conter pelo menos uma letra maiuscula.</li>
-                                                    <li id="lowercase" class="d-none">A senha deve conter pelo menos uma letra minuscula.</li>
-                                                    <li id="number" class="d-none">A senha deve conter pelo menos um numero.</li>
+                                                    <li id="uppercase" class="d-none">A senha deve conter pelo menos uma letra maiúscula.</li>
+                                                    <li id="lowercase" class="d-none">A senha deve conter pelo menos uma letra minúscula.</li>
+                                                    <li id="number" class="d-none">A senha deve conter pelo menos um número.</li>
                                                     <li id="special" class="d-none">A senha deve conter pelo menos um caractere especial.</li>
                                                     <li id="match" class="d-none">As senhas devem ser iguais.</li>
                                                 </ul>
@@ -663,6 +665,7 @@
                 else hint.textContent = '';
             }
 
+
             if (max !== null) {
                 boxes.forEach(function (b) {
                     if (b.checked) return;
@@ -767,19 +770,69 @@
             }
         }
 
+        // Data de emissão deve ser anterior a hoje
         document.getElementById("data_emissao_carta_conducao")?.addEventListener("change", function() {
             const dataEmissao = new Date(this.value);
             const hoje = new Date();
-
             if (dataEmissao >= hoje) {
-                alertConfirmPequena("Aviso", "A data de emissao deve ser anterior a data atual", "error");
+                alertConfirmPequena("Aviso", "A data de emissão deve ser anterior à data atual.", "error");
                 this.value = '';
             }
+            // Revalida data de validade
+            validarDataValidade();
         });
+
+        // Data de validade deve ser posterior à data de emissão
+        document.getElementById("data_validade_carta_conducao")?.addEventListener("change", validarDataValidade);
+
+        function validarDataValidade() {
+            const emissaoEl  = document.getElementById("data_emissao_carta_conducao");
+            const validadeEl = document.getElementById("data_validade_carta_conducao");
+            if (!emissaoEl || !validadeEl || !emissaoEl.value || !validadeEl.value) return;
+            if (new Date(validadeEl.value) <= new Date(emissaoEl.value)) {
+                alertConfirmPequena("Aviso", "A data de validade deve ser posterior à data de emissão.", "error");
+                validadeEl.value = '';
+            }
+        }
 
         $(document).ready(function() {
             $('#celular').mask('(00) 00000-0000');
             $('#telefone').mask('(00) 00000-0000');
+
+            // Máscara de CPF no campo zip_code (quando país = BR)
+            function aplicarMascaraCep() {
+                const pais = $('#pais_sigla').val();
+                if (pais === 'BR') {
+                    $('#cep').mask('000.000.000-00', { placeholder: '000.000.000-00' });
+                } else {
+                    $('#cep').unmask();
+                }
+            }
+            aplicarMascaraCep();
+            $('#pais_sigla').on('change', aplicarMascaraCep);
+
+            // Auto-preenchimento de cidade e endereço via CEP (apenas Brasil)
+            $('#cep').on('blur', function() {
+                const pais = $('#pais_sigla').val();
+                if (pais !== 'BR') return;
+
+                // Remove formatação para obter só dígitos
+                const cepDigitos = $(this).val().replace(/\D/g, '');
+                if (cepDigitos.length !== 8) return;
+
+                $.getJSON('https://viacep.com.br/ws/' + cepDigitos + '/json/', function(data) {
+                    if (data.erro) return;
+                    if (!$('#cidade').val()) {
+                        $('#cidade').val(data.localidade || '').addClass('auto-filled');
+                    }
+                    if (!$('#endereco').val()) {
+                        const logradouro = [data.logradouro, data.bairro].filter(Boolean).join(', ');
+                        $('#endereco').val(logradouro || '').addClass('auto-filled');
+                    }
+                }).fail(function() {
+                    // Silencioso — CEP pode ser válido mas a API pode estar indisponível
+                });
+            });
 
             $('#celular').on("blur", function() {
                 const celular = $(this).val();

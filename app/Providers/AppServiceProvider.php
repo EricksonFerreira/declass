@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Menu\CustomAdminLte;
 use App\Models\Movimentacao;
 use App\Models\User;
 use App\Models\Veiculo;
@@ -16,6 +17,7 @@ use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use JeroenNoten\LaravelAdminLte\AdminLte;
 use Laravel\Cashier\Cashier;
 
 class AppServiceProvider extends ServiceProvider
@@ -27,6 +29,7 @@ class AppServiceProvider extends ServiceProvider
     {
         Paginator::useBootstrapFour();
         $this->app->scoped(EmpresaContext::class, fn () => new EmpresaContext());
+
 
         $this->app->singleton(VeiculoService::class, function ($app) {
             return new VeiculoService(
@@ -81,6 +84,13 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Cashier::useCustomerModel(User::class);
+
+        // Replace the AdminLTE singleton with our custom version that hides
+        // orphan section headers (OPERAÇÃO, FROTA, etc.) when the user has
+        // no visible items under them.
+        $this->app->extend(AdminLte::class, function () {
+            return new CustomAdminLte(config('adminlte.filters', []));
+        });
     }
 
     private function bootEmpresaScope(): void

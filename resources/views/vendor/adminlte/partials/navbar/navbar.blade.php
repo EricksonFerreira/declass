@@ -201,9 +201,10 @@
             max-width: 260px;
             padding: .3rem .6rem;
             border-radius: 999px;
-            background: color-mix(in srgb, var(--empresa-cor-terciaria) 35%, #0f172a 65%);
-            color: var(--empresa-cor-terciaria-contraste, #fff);
+            background: color-mix(in srgb, var(--empresa-cor-primaria) 75%, #000 25%);
+            color: var(--empresa-cor-primaria-contraste, #fff);
             font-size: 12px;
+            font-weight: 600;
             line-height: 1;
         }
 

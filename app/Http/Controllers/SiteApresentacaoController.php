@@ -17,7 +17,7 @@ class SiteApresentacaoController extends Controller
 {
     private const MODELO_1 = 'modelo_1';
 
-    public function index(Request $request): View|RedirectResponse
+    public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
@@ -366,17 +366,9 @@ class SiteApresentacaoController extends Controller
         return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $digits) ?: $rawCnpj;
     }
 
-    private function defaultResponse(): RedirectResponse
+    private function defaultResponse(): \Illuminate\Http\Response|RedirectResponse
     {
-        if (auth()->check()) {
-            return redirect()->route('home');
-        }
-
-        if (Route::has('login')) {
-            return redirect()->route('login');
-        }
-
-        return redirect($this->adminHomeFallbackUrl());
+        return response()->view('welcome');
     }
 
     private function adminLoginFallbackUrl(): string

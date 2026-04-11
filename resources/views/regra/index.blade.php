@@ -109,7 +109,7 @@
                     $totalGrupos = $groupedPerms->count();
                     $cardId = 'rg-card-' . $regra->id;
                 @endphp
-                <div class="rg-card">
+                <div class="rg-card" onclick="window.location='{{ route('regra.show', $regra->id) }}';" style="cursor:pointer">
 
                     {{-- Card header --}}
                     <div class="rg-card__header">
@@ -122,7 +122,10 @@
                                 <span class="rg-card__guard"><i class="fas fa-lock mr-1" style="font-size:.7rem"></i>{{ $regra->guard_name }}</span>
                             </div>
                         </div>
-                        <div class="rg-card__actions">
+                        <div class="rg-card__actions" onclick="event.stopPropagation()">
+                            <a href="{{ route('regra.show', $regra->id) }}" class="btn btn-xs btn-outline-info" title="Ver">
+                                <i class="fas fa-eye"></i>
+                            </a>
                             <a href="{{ route('regra.edit', $regra->id) }}" class="btn btn-xs btn-outline-warning" title="Editar">
                                 <i class="fas fa-pen"></i>
                             </a>
@@ -212,13 +215,16 @@
                             $totalPerms = count($regra->permissoes);
                             $totalGrupos = $regra->permissoes->groupBy(fn($p) => $p->grupo_efetivo ?: '_outros')->count();
                         @endphp
-                        <tr>
+                        <tr onclick="window.location='{{ route('regra.show', $regra->id) }}';" style="cursor:pointer">
                             <td>{{ $regra->id }}</td>
                             <td><strong>{{ $regra->name }}</strong></td>
                             <td><span class="badge badge-secondary">{{ $regra->guard_name }}</span></td>
                             <td><span class="badge badge-primary">{{ $totalPerms }}</span></td>
                             <td><span class="badge badge-info">{{ $totalGrupos }}</span></td>
-                            <td>
+                            <td onclick="event.stopPropagation()">
+                                <a href="{{ route('regra.show', $regra->id) }}" class="btn btn-xs btn-info">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
                                 <a href="{{ route('regra.edit', $regra->id) }}" class="btn btn-xs btn-warning">
                                     <i class="fa fa-edit"></i> Editar
                                 </a>

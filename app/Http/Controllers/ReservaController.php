@@ -194,10 +194,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function minhas()
     {
-        $user = Auth::user();
+        $user    = Auth::user();
+        $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         $query = Reserva::query()
-            ->with(['estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos', 'statusReserva', 'nfseAtual'])
+            ->with(['opcionais', 'cupomDesconto', 'usuario', 'estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos', 'statusReserva', 'nfseAtual'])
             ->where('user_id', $user->id)
             ->orderBy('id', 'desc');
 
@@ -205,12 +206,23 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $query->where('empresa_id', $user->empresa_id);
         }
 
-        $reservas = $query->paginate(10);
+        $reservas = $query->paginate($perPage);
 
-        return view('reserva.index-cliente', [
-            'reservas' => $reservas,
-            'titulo'   => 'Minhas Reservas',
-        ]);
+        $breadcrumb        = $this->breadcrumbService->prepararBreadcrumbIndex('Minhas Reservas');
+        $perPages          = [5, 10, 15, 25, 50, 100];
+        $filters           = [];
+        $additionalFilters = [];
+        $itensFiltered     = [];
+
+        return view('reserva.index', compact(
+            'reservas',
+            'breadcrumb',
+            'filters',
+            'itensFiltered',
+            'additionalFilters',
+            'perPages',
+            'perPage'
+        ))->with('titulo', 'Minhas Reservas');
     }
 
     private function isCliente($user): bool

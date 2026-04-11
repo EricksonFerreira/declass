@@ -15,7 +15,18 @@
       "Bash(find database/migrations -name \"*.php\" -type f -exec grep -H \"horarios\\\\|estacoes_dias_uteis\" {} \\\\;)",
       "Bash(grep -n \"}\\)\\(\\);\\\\|}\\);\\\\s*$\" c:/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/reserva/show.blade.php)",
       "Bash(php -r \"require 'vendor/autoload.php'; echo 'OK';\")",
-      "WebFetch(domain:www.7carros.com.br)"
+      "WebFetch(domain:www.7carros.com.br)",
+      "Bash(php -l app/Http/Controllers/RegraController.php)",
+      "Bash(php -l app/Http/Controllers/SiteApresentacaoController.php)",
+      "WebFetch(domain:www.plataformagestrix.com.br)",
+      "WebFetch(domain:loca-fy.com)",
+      "WebFetch(domain:frotego.com)",
+      "WebFetch(domain:locagestor.com.br)",
+      "WebFetch(domain:luminuslanding.lovable.app)",
+      "WebFetch(domain:adago.com.br)",
+      "WebFetch(domain:www.omnilink.com.br)",
+      "Bash(grep -l \"create_sinistros_table\\\\|create_multas_table\\\\|create_ordens_servico\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(c['name']\\) for t in d.get\\('tables',[]\\) if t['name']=='veiculos' for c in t.get\\('columns',[]\\)]\")"
     ]
   }
 }

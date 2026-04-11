@@ -84,6 +84,18 @@ class RegraController extends BaseController implements FiltroInterface, Resourc
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
+    public function show($id)
+    {
+        $regra = $this->regraService->getById($id);
+        if (!$regra) {
+            abort(404, 'Regra não encontrada.');
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Regras', 'regra.index', $regra->name);
+
+        return view('regra.show', compact('regra', 'breadcrumb'))->with('titulo', $regra->name);
+    }
+
     public function edit($id)
     {
         $regra = $this->regraService->getById($id);

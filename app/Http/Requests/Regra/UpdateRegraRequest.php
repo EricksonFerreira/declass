@@ -38,8 +38,7 @@ class UpdateRegraRequest extends FormRequest
             'guard_name' => 'required|string|max:255',
             'permissions' => 'array',
             'permissions.*' => [
-                Rule::exists('permissions', 'id')
-                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+                Rule::exists('permissions', 'id'),
             ],
 
         ];
