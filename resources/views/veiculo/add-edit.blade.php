@@ -37,7 +37,7 @@
         }
         if ($mostrarAbaDisponibilidade && $qtdEstacoes === 0) {
             $faltasPreRequisitosVeiculo[] =
-                'Cadastre pelo menos uma estaÃ§Ã£o ativa para definir a disponibilidade inicial.';
+                'Cadastre pelo menos uma estação ativa para definir a disponibilidade inicial.';
         }
 
         $acoesPreRequisitosVeiculo = [];
@@ -63,7 +63,7 @@
             ];
         }
         if ($mostrarAbaDisponibilidade && $qtdEstacoes === 0 && Route::has('estacao.create')) {
-            $acoesPreRequisitosVeiculo[] = ['label' => 'Cadastrar estaÃ§Ã£o', 'url' => route('estacao.create')];
+            $acoesPreRequisitosVeiculo[] = ['label' => 'Cadastrar estação', 'url' => route('estacao.create')];
         }
 
         $podeCriarVeiculo = empty($faltasPreRequisitosVeiculo);
@@ -109,7 +109,7 @@
 
 
     <div class="col-xl-11 col-12 px-0">
-        <x-pre-requisitos-alerta title="PrÃ©-requisitos pendentes para adicionar veículo" :chips="[
+        <x-pre-requisitos-alerta title="Pré-requisitos pendentes para adicionar veículo" :chips="[
             ['label' => 'Tipos de Frota', 'value' => $qtdTiposFrota],
             ['label' => 'Grupos de Frota', 'value' => $qtdGruposFrota],
             ['label' => 'Marcas', 'value' => $qtdMarcas],
@@ -130,12 +130,12 @@
 
             <div class="card-body p-4">
 
-                {{-- â”€â”€ WIZARD STEPS â”€â”€ --}}
+                {{-- ── WIZARD STEPS ── --}}
                 <div class="vc-wizard-steps mb-4">
                     @php
                         $steps = [
                             1 => ['icon' => 'fa-car', 'label' => 'Geral'],
-                            2 => ['icon' => 'fa-id-card', 'label' => 'identificação'],
+                            2 => ['icon' => 'fa-id-card', 'label' => 'Identificação'],
                             3 => ['icon' => 'fa-calendar-alt', 'label' => 'Datas e Km'],
                             4 => ['icon' => 'fa-map-marker-alt', 'label' => 'Disponibilidade'],
                         ];
@@ -268,14 +268,14 @@
                         </div>
                     </div>
 
-                    {{-- â”€â”€ STEP 2: IDENTIFICAÃ‡ÃƒO â”€â”€ --}}
+                    {{-- ── STEP 2: IDENTIFICAÇÃO ── --}}
                     <div class="vc-step-pane d-none" data-pane="2">
-                        <div class="veiculo-section-title"><i class="fas fa-id-card mr-1"></i>identificação do Veículo</div>
+                        <div class="veiculo-section-title"><i class="fas fa-id-card mr-1"></i>Identificação do Veículo</div>
                         <div class="form-row">
                             <div class="col-lg-3 col-md-4">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm" id="ano_fabricacao"
-                                        name="ano_fabricacao" label="Ano de FabricaÃ§Ã£o" min="1900"
+                                        name="ano_fabricacao" label="Ano de Fabricação" min="1900"
                                         value="{{ old('ano_fabricacao', $veiculo->ano_fabricacao ?? date('Y')) }}"
                                         required />
                                 </div>
@@ -318,7 +318,7 @@
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="numero_motor"
-                                        name="numero_motor" label="NÃºmero do Motor"
+                                        name="numero_motor" label="Número do Motor"
                                         value="{{ old('numero_motor', $veiculo->numero_motor ?? '') }}" required />
                                 </div>
                             </div>
@@ -327,10 +327,10 @@
 
                     {{-- â”€â”€ STEP 3: DATAS E KM â”€â”€ --}}
                     <div class="vc-step-pane d-none" data-pane="3">
-                        <div class="veiculo-section-title"><i class="fas fa-coins mr-1"></i>Financeiro do Veiculo</div>
+                        <div class="veiculo-section-title"><i class="fas fa-coins mr-1"></i>Financeiro do Veículo</div>
                         <div class="veiculo-info-tip">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Consulte a tabela FIPE para preencher os dados base do veiculo e acompanhar a depreciacao.
+                            Consulte a tabela FIPE para preencher os dados base do veículo e acompanhar a depreciação.
                         </div>
                         <div class="form-row">
                             <div class="col-lg-3 col-md-6">
@@ -366,14 +366,14 @@
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="codigo_fipe"
-                                        name="codigo_fipe" label="Codigo FIPE"
+                                        name="codigo_fipe" label="Código FIPE"
                                         value="{{ old('codigo_fipe', $veiculo->codigo_fipe ?? '') }}" readonly />
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="referencia_fipe"
-                                        name="referencia_fipe" label="Referencia FIPE"
+                                        name="referencia_fipe" label="Referência FIPE"
                                         value="{{ old('referencia_fipe', $veiculo->referencia_fipe ?? '') }}" readonly />
                                 </div>
                             </div>
@@ -392,7 +392,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_placa_licenca" name="data_placa_licenca"
-                                        label="EmissÃ£o da Placa/LicenÃ§a"
+                                        label="Emissão da Placa/Licença"
                                         value="{{ old('data_placa_licenca', $veiculo->data_placa_licenca ?? '') }}"
                                         required />
                                 </div>
@@ -407,7 +407,7 @@
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm" id="data_validade"
-                                        name="data_validade" label="Validade da DocumentaÃ§Ã£o/LicenÃ§a"
+                                        name="data_validade" label="Validade da Documentação/Licença"
                                         value="{{ old('data_validade', $veiculo->data_validade ?? '') }}" required />
                                 </div>
                             </div>
@@ -415,7 +415,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_proxima_manutencao" name="data_proxima_manutencao"
-                                        label="PrÃ³xima ManutenÃ§Ã£o"
+                                        label="Próxima Manutenção"
                                         value="{{ old('data_proxima_manutencao', $veiculo->data_proxima_manutencao ?? '') }}"
                                         required />
                                 </div>
@@ -423,14 +423,14 @@
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm"
-                                        id="data_proxima_inspecao" name="data_proxima_inspecao" label="PrÃ³xima InspeÃ§Ã£o"
+                                        id="data_proxima_inspecao" name="data_proxima_inspecao" label="Próxima Inspeção"
                                         value="{{ old('data_proxima_inspecao', $veiculo->data_proxima_inspecao ?? '') }}"
                                         required />
                                 </div>
                             </div>
                         </div>
 
-                        <div class="veiculo-section-title"><i class="fas fa-tachometer-alt mr-1"></i>MÃ©tricas e Limites de
+                        <div class="veiculo-section-title"><i class="fas fa-tachometer-alt mr-1"></i>Métricas e Limites de
                             Km</div>
                         <div class="form-row">
                             <div class="col-lg-3 col-md-6">
@@ -451,7 +451,7 @@
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm"
-                                        id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da PrÃ³xima RevisÃ£o"
+                                        id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da Próxima Revisão"
                                         value="{{ old('proxima_revisao_kms', $veiculo->proxima_revisao_kms ?? '') }}"
                                         min="0" required />
                                 </div>
@@ -460,7 +460,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm"
                                         id="proxima_manutencao_kms" name="proxima_manutencao_kms"
-                                        label="Km da PrÃ³xima ManutenÃ§Ã£o"
+                                        label="Km da Próxima Manutenção"
                                         value="{{ old('proxima_manutencao_kms', $veiculo->proxima_manutencao_kms ?? '') }}"
                                         min="0" required />
                                 </div>
@@ -475,12 +475,12 @@
                                 Inicial</div>
                             <div class="veiculo-info-tip">
                                 <i class="fas fa-info-circle mr-1"></i>
-                                Defina em qual estaÃ§Ã£o o veículo inicia e a data/hora inicial de disponibilidade.
+                                Defina em qual estação o veículo inicia e a data/hora inicial de disponibilidade.
                             </div>
                             <div class="form-row mt-2">
                                 <div class="col-lg-5 col-md-6">
                                     <div class="form-group form-group-veiculo">
-                                        <x-form-select name="local_disponibilidade" label="EstaÃ§Ã£o de origem"
+                                        <x-form-select name="local_disponibilidade" label="Estação de origem"
                                             :options="$estacoes" placeholder="Selecione um valor" :selected="old(
                                                 'local_disponibilidade',
                                                 $veiculo->local_disponibilidade ?? null,
@@ -516,7 +516,7 @@
                     </div>
                     @if ($bloquearSalvarVeiculo)
                         <small class="text-danger d-block mt-2 text-center font-weight-semibold">
-                            Cadastre os itens obrigatÃ³rios acima para liberar a criaÃ§Ã£o do veículo.
+                            Cadastre os itens obrigatórios acima para liberar a criação do veículo.
                         </small>
                     @endif
                 </form>
@@ -1038,22 +1038,22 @@
                 const today = new Date().toISOString().slice(0, 10);
 
                 const dataEmissaoPlaca = document.getElementById(
-                'data_placa_licenca'); // EmissÃ£o da Placa/LicenÃ§a
+                'data_placa_licenca'); // Emissão da Placa/Licença
                 const dataValidade = document.getElementById(
-                'data_validade'); // Validade da DocumentaÃ§Ã£o/LicenÃ§a
+                'data_validade'); // Validade da Documentação/Licença
                 const dataManutencao = document.getElementById('data_proxima_manutencao');
                 const dataInspecao = document.getElementById('data_proxima_inspecao');
                 const kmsAtual = document.getElementById('kms');
                 const proxRevisaoKms = document.getElementById('proxima_revisao_kms');
                 const proxManutKms = document.getElementById('proxima_manutencao_kms');
 
-                // Validade da DocumentaÃ§Ã£o/LicenÃ§a > EmissÃ£o da Placa
+                // Validade da Documentação/Licença > Emissão da Placa
                 function validarValidade() {
                     if (!dataValidade || !dataEmissaoPlaca) return;
                     if (dataValidade.value && dataEmissaoPlaca.value && dataValidade.value <= dataEmissaoPlaca
                         .value) {
                         dataValidade.setCustomValidity(
-                            'A Validade da DocumentaÃ§Ã£o/LicenÃ§a deve ser posterior Ã  EmissÃ£o da Placa (' +
+                            'A Validade da Documentação/Licença deve ser posterior à Emissão da Placa (' +
                             formatarData(dataEmissaoPlaca.value) + ').'
                         );
                     } else {
@@ -1064,36 +1064,36 @@
                 dataValidade?.addEventListener('change', validarValidade);
                 dataEmissaoPlaca?.addEventListener('change', validarValidade);
 
-                // PrÃ³xima ManutenÃ§Ã£o â‰¥ hoje
+                // Próxima Manutenção >= hoje
                 dataManutencao?.addEventListener('change', function() {
                     if (this.value && this.value < today) {
                         this.setCustomValidity(
-                            'A PrÃ³xima ManutenÃ§Ã£o deve ser hoje ou uma data futura (hoje = ' +
+                            'A Próxima Manutenção deve ser hoje ou uma data futura (hoje = ' +
                             formatarData(today) + ').');
                     } else {
                         this.setCustomValidity('');
                     }
                 });
 
-                // PrÃ³xima InspeÃ§Ã£o â‰¥ hoje
+                // Próxima Inspeção >= hoje
                 dataInspecao?.addEventListener('change', function() {
                     if (this.value && this.value < today) {
                         this.setCustomValidity(
-                            'A PrÃ³xima InspeÃ§Ã£o deve ser hoje ou uma data futura (hoje = ' +
+                            'A Próxima Inspeção deve ser hoje ou uma data futura (hoje = ' +
                             formatarData(today) + ').');
                     } else {
                         this.setCustomValidity('');
                     }
                 });
 
-                // Km da PrÃ³xima RevisÃ£o â‰¥ Km Atual
+                // Km da Próxima Revisão >= Km Atual
                 function validarKmRevisao() {
                     if (!proxRevisaoKms || !kmsAtual) return;
                     const km = parseFloat(kmsAtual.value) || 0;
                     const pr = parseFloat(proxRevisaoKms.value);
                     if (proxRevisaoKms.value !== '' && pr < km) {
                         proxRevisaoKms.setCustomValidity(
-                            'O Km da PrÃ³xima RevisÃ£o (' + pr.toLocaleString('pt-BR') +
+                            'O Km da Próxima Revisão (' + pr.toLocaleString('pt-BR') +
                             ' km) deve ser maior ou igual ao Km Atual (' + km.toLocaleString('pt-BR') +
                             ' km).'
                         );
@@ -1104,14 +1104,14 @@
                 proxRevisaoKms?.addEventListener('change', validarKmRevisao);
                 kmsAtual?.addEventListener('change', validarKmRevisao);
 
-                // Km da PrÃ³xima ManutenÃ§Ã£o â‰¥ Km Atual
+                // Km da Próxima Manutenção >= Km Atual
                 function validarKmManut() {
                     if (!proxManutKms || !kmsAtual) return;
                     const km = parseFloat(kmsAtual.value) || 0;
                     const pm = parseFloat(proxManutKms.value);
                     if (proxManutKms.value !== '' && pm < km) {
                         proxManutKms.setCustomValidity(
-                            'O Km da PrÃ³xima ManutenÃ§Ã£o (' + pm.toLocaleString('pt-BR') +
+                            'O Km da Próxima Manutenção (' + pm.toLocaleString('pt-BR') +
                             ' km) deve ser maior ou igual ao Km Atual (' + km.toLocaleString('pt-BR') +
                             ' km).'
                         );
@@ -1122,7 +1122,7 @@
                 proxManutKms?.addEventListener('change', validarKmManut);
                 kmsAtual?.addEventListener('change', validarKmManut);
 
-                // Rodar validações no load para pegar valores jÃ¡ preenchidos (ediÃ§Ã£o)
+                // Rodar validações no load para pegar valores já preenchidos (edição)
                 validarValidade();
                 validarKmRevisao();
                 validarKmManut();
@@ -1158,7 +1158,7 @@
             });
             configDataVendido(isVendido($status.val()) || ($inputDataVendido.val() || '').trim() !== '');
 
-            // â”€â”€ ValidaÃ§Ã£o e ExibiÃ§Ã£o de Erros (Swal) â”€â”€
+                // ── Validação e Exibição de Erros (Swal) ──
             @if ($errors->any())
                 let backendErrors = '<ul class="mb-0 pl-3 text-left" style="font-size:14px;">';
                 @foreach (array_unique($errors->all()) as $error)
@@ -1192,19 +1192,19 @@
                             goToStep(parseInt(pane));
                         }
 
-                        // Destaca todos os campos invÃ¡lidos no bootstrap
+                            // Destaca todos os campos inválidos no bootstrap
                         form.classList.add('was-validated');
                         firstInvalid.focus();
 
-                        // Usa a mensagem customizada caso tenha, senÃ£o fallback
+                            // Usa a mensagem customizada caso tenha, senão fallback
                         const errorMsg = firstInvalid[0].validationMessage ||
-                            'Por favor, preencha corretamente os campos obrigatÃ³rios marcados em vermelho.';
+                            'Por favor, preencha corretamente os campos obrigatórios marcados em vermelho.';
 
                         fireSwal({
                             toast: true,
                             position: 'top-end',
                             icon: 'warning',
-                            title: 'AtenÃ§Ã£o',
+                            title: 'Atenção',
                             text: errorMsg,
                             showConfirmButton: false,
                             timer: 5000
@@ -1216,5 +1216,3 @@
         });
     </script>
 @stop
-
-

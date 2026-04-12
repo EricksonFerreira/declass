@@ -174,7 +174,7 @@
                                     </select>
                                     <button type="button" id="openMetodoModal"
                                         class="btn btn-sm btn-outline-primary"
-                                        {{ empty($stripePublicKey) ? 'disabled' : '' }}>
+                                        >
                                         <i class="fas fa-plus"></i> Novo
                                     </button>
                                 </div>
@@ -299,6 +299,11 @@
                     Insira os dados do cartão de crédito ou débito. As informações são transmitidas
                     com segurança diretamente ao Stripe e <strong>não ficam armazenadas</strong> em nossos servidores.
                 </p>
+                @if(empty($stripePublicKey))
+                    <div class="alert alert-warning small mb-3">
+                        O botão permanece disponível, mas é necessário configurar a chave pública do Stripe para salvar um novo método de pagamento.
+                    </div>
+                @endif
                 <div class="form-group">
                     <label class="pg-form-label">Dados do cartão</label>
                     <div id="card-element" class="form-control" style="padding-top:10px; border-radius:8px;"></div>
@@ -504,6 +509,9 @@
                 saveBtn.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar Cartão';
             }
         });
+    } else if (saveBtn) {
+        saveBtn.disabled = true;
+        saveBtn.title = 'Configure a chave pública do Stripe para habilitar este recurso.';
     }
 })();
 </script>

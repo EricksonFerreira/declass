@@ -242,7 +242,13 @@
                     <div class="col-md-8" data-reserva-step="2">
                         <div class="form-group">
                             <div class="form-group">
-                                <label for="grupo_frota_id">Grupo de Veiculos</label>
+                                <label for="grupo_frota_id" class="d-flex align-items-center justify-content-between mb-1">
+                                    <span>Grupo de Veiculos</span>
+                                    <button type="button" class="btn btn-xs btn-outline-secondary" id="btn_buscar_grupo"
+                                        data-toggle="modal" data-target="#modalPesquisaGrupo" title="Buscar grupo de veículos">
+                                        <i class="fas fa-search"></i> Buscar
+                                    </button>
+                                </label>
                                 <select name="grupo_frota_id" id="grupo_frota_id"
                                     class="form-control form-control-sm js-selectpicker"
                                     data-live-search="true"
@@ -275,6 +281,7 @@
                             Pesquisar
                         </a>
                     </div> --}}
+                    @if(!empty($reservaSelecionarModelo))
                     <div class="col-md-4 pb-2" data-reserva-step="2">
                         @if (isset($reserva))
                             <x-form-select name="modelo_id" label="Modelo" :options="$modelos" :selected="old('modelo_id', isset($reserva->modelos) ? $reserva->modelos->id : null)"
@@ -292,7 +299,7 @@
                         <small id="modelo_disponibilidade_feedback" class="text-warning d-block mt-1 d-none"></small>
                     </div>
                     <div class="col-md-4" data-reserva-step="2">
-                            <x-form-input type="text" class="form-control form-control-sm" disabled id="marca"
+                        <x-form-input type="text" class="form-control form-control-sm" disabled id="marca"
                             name="marca" label="Marca"
                             value="{{ old('marca', isset($marcas) && isset($marcas->nome) ? $marcas->nome : '') }}" />
                     </div>
@@ -301,6 +308,13 @@
                             name="segmento" label="Segmento"
                             value="{{ old('segmento', isset($segmentos) && isset($segmentos->nome) ? $segmentos->nome : '') }} " />
                     </div>
+                    @else
+                    {{-- Sem seleção de modelo: campos ocultos para manter compatibilidade de submissão --}}
+                    <input type="hidden" name="modelo_id" id="modelo" value="{{ old('modelo_id', isset($reserva) ? ($reserva->modelos?->id ?? '') : '') }}">
+                    <input type="hidden" name="marca" id="marca" value="{{ old('marca', '') }}">
+                    <input type="hidden" name="segmento" id="segmento" value="{{ old('segmento', '') }}">
+                    <small id="modelo_disponibilidade_feedback" class="text-warning d-block mt-1 d-none col-12" style="padding:0 15px"></small>
+                    @endif
 
 
                     <div class="col-12" data-reserva-step="3">
@@ -2263,6 +2277,8 @@
             if (!data) {
                 $('#data_inicio').val('');
                 setDataInicio('');
+                setQuantidadeDias(0);
+                atualizarMinhaReserva();
                 $('#data_inicio').trigger('change');
                 return;
             }
@@ -2274,7 +2290,9 @@
                 return;
             }
 
-            setDataInicio(`${data}T${hora}`);
+            const valor = `${data}T${hora}`;
+            setDataInicio(valor);
+            recalcularDiasEAtualizar();
             $('#data_inicio').trigger('change');
         }
 
@@ -2901,6 +2919,19 @@
 
         });
 
+        // ── Recalcula dias e atualiza resumo quando ambas as datas estão completas ──
+        function recalcularDiasEAtualizar() {
+            const ini = getDataInicio();
+            const fim = getDataFim();
+            if (ini && fim && ini.length > 10 && fim.length > 10) {
+                const dias = calculaQuantidadeDias(ini, fim);
+                setQuantidadeDias(Number.isFinite(dias) && dias > 0 ? dias : 0);
+            } else {
+                setQuantidadeDias(0);
+            }
+            atualizarMinhaReserva();
+        }
+
         // ── Devolução: hora select ──────────────────────────────────────────────
         function atualizarDataFimDevolucao() {
             const data = $('#data_fim_data').val() || '';
@@ -2908,6 +2939,8 @@
             if (!data) {
                 $('#data_fim').val('');
                 setDataFim('');
+                setQuantidadeDias(0);
+                atualizarMinhaReserva();
                 $('#data_fim').trigger('change');
                 return;
             }
@@ -2920,6 +2953,7 @@
             const valor = `${data}T${hora}`;
             $('#data_fim').val(valor);
             setDataFim(valor);
+            recalcularDiasEAtualizar();
             $('#data_fim').trigger('change');
         }
 
@@ -3008,10 +3042,12 @@
                     .catch(() => []);
             }
 
-            function criarPicker(selectorInput, disponiveis, onDateSelected) {
+            function criarPicker(selectorInput, disponiveis, onDateSelected, minDate) {
                 const disponiveisSet = new Set((disponiveis || []).map(function(item) { return item.data; }));
                 return flatpickr(selectorInput, {
-                    locale: ptLocale, dateFormat: 'd/m/Y', minDate: 'today', disableMobile: true,
+                    locale: ptLocale, dateFormat: 'd/m/Y',
+                    minDate: minDate || 'today',
+                    disableMobile: true,
                     disable: [function(date) {
                         const isoStr = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
                         return !disponiveisSet.has(isoStr);
@@ -3023,6 +3059,22 @@
                         onDateSelected(isoStr, d.getDay());
                     }
                 });
+            }
+
+            // Retorna a data de retirada selecionada como objeto Date ou null
+            function getDataRetiradaSelecionada() {
+                const v = $('#data_inicio_data').val();
+                if (!v) return null;
+                const d = new Date(v + 'T00:00:00');
+                return isNaN(d.getTime()) ? null : d;
+            }
+
+            // Retorna a data mínima permitida para devolução (dia seguinte à retirada)
+            function getMinDateDevolucao() {
+                const ret = getDataRetiradaSelecionada();
+                if (!ret) return null;
+                const min = new Date(ret.getTime() + 86400000);
+                return min;
             }
 
             function recarregarPickerRetirada(estacaoId) {
@@ -3042,13 +3094,15 @@
                     $('#data_inicio_flatpickr').prop('disabled', false).attr('placeholder', 'Clique para selecionar');
                     _pickerDataRetirada = criarPicker('#data_inicio_flatpickr', disponiveis, function(isoStr) {
                         buscarHorariosAoSelecionarData('retirada', isoStr);
+                        // Atualiza minDate do picker de devolução ao selecionar retirada
+                        atualizarMinDateDevolucao();
                     });
                 }).catch(function() {
                     $('#data_inicio_dias_feedback').text('Não foi possível verificar a disponibilidade.');
                 });
             }
 
-            function recarregarPickerDevolucao(estacaoId) {
+            function recarregarPickerDevolucao(estacaoId, minDate) {
                 if (_pickerDataDevolucao) { _pickerDataDevolucao.destroy(); _pickerDataDevolucao = null; }
                 $('#data_fim_hora_fp').empty().append('<option value="">Selecione a data</option>').prop('disabled', true);
                 $('#data_fim_hora_feedback').text('Escolha uma data.');
@@ -3058,6 +3112,16 @@
                     $('#data_fim_dias_feedback').text('Selecione a estação para ver os dias disponíveis.');
                     return;
                 }
+
+                // Exige data de retirada válida antes de habilitar devolução
+                const minDev = minDate || getMinDateDevolucao();
+                if (!minDev) {
+                    $('#data_fim_dias_feedback').text('Selecione primeiro a data de retirada.');
+                    $('#data_fim_flatpickr').prop('disabled', true).attr('placeholder', 'Selecione a data de retirada primeiro');
+                    _ultimaEstacaoDevolucaoId = estacaoId; // guarda para recriar depois
+                    return;
+                }
+
                 $('#data_fim_dias_feedback').text('Verificando disponibilidade...');
 
                 fetchDiasDisponiveis(estacaoId, 'devolucao').then(function(disponiveis) {
@@ -3065,27 +3129,64 @@
                     $('#data_fim_flatpickr').prop('disabled', false).attr('placeholder', 'Clique para selecionar');
                     _pickerDataDevolucao = criarPicker('#data_fim_flatpickr', disponiveis, function(isoStr) {
                         buscarHorariosAoSelecionarData('devolucao', isoStr);
-                    });
+                    }, minDev);
                 }).catch(function() {
                     $('#data_fim_dias_feedback').text('Não foi possível verificar a disponibilidade.');
                 });
             }
 
+            // Atualiza (ou cria) o picker de devolução com o novo minDate após retirada ser selecionada
+            function atualizarMinDateDevolucao() {
+                const minDev = getMinDateDevolucao();
+                if (!minDev) return;
+
+                const estacaoDevId = $('#estacao_devolucao_id').val() || _ultimaEstacaoDevolucaoId;
+                if (!estacaoDevId) return;
+
+                // Se já existe picker criado, só atualiza minDate e limpa se necessário
+                if (_pickerDataDevolucao) {
+                    _pickerDataDevolucao.set('minDate', minDev);
+                    // Se data atual de devolução é antes do novo mínimo, limpar
+                    const selDev = _pickerDataDevolucao.selectedDates[0];
+                    if (selDev && selDev <= minDev) {
+                        _pickerDataDevolucao.clear();
+                        $('#data_fim_data').val('');
+                        $('#data_fim_hora_fp').val('').prop('disabled', true);
+                        $('#data_fim').val('').trigger('change');
+                        $('#data_fim_dias_feedback').text('Data de devolução resetada. Selecione uma nova data.');
+                    }
+                    return;
+                }
+
+                // Picker ainda não criado (estação selecionada mas retirada não tinha sido escolhida)
+                recarregarPickerDevolucao(estacaoDevId, minDev);
+            }
+
+            let _ultimaEstacaoDevolucaoId = null;
+
             $('#estacao_retirada_id').on('change.fpRetirada', function() {
                 $('#data_inicio_data').val('');
                 $('#data_inicio').val('').trigger('change');
                 recarregarPickerRetirada($(this).val());
+                // Resetar devolução ao trocar estação de retirada
+                if (_pickerDataDevolucao) { _pickerDataDevolucao.clear(); }
+                $('#data_fim_data').val('');
+                $('#data_fim_hora_fp').val('').prop('disabled', true);
+                $('#data_fim').val('').trigger('change');
+                atualizarMinDateDevolucao();
             });
 
             $('#estacao_devolucao_id').on('change.fpDevolucao', function() {
+                _ultimaEstacaoDevolucaoId = $(this).val();
                 $('#data_fim_data').val('');
-                $('#data_fim_hora_fp').val('');
+                $('#data_fim_hora_fp').val('').prop('disabled', true);
                 $('#data_fim').val('').trigger('change');
                 recarregarPickerDevolucao($(this).val());
             });
 
             const estacaoRetiradaInicial = $('#estacao_retirada_id').val();
             const estacaoDevolucaoInicial = $('#estacao_devolucao_id').val();
+            _ultimaEstacaoDevolucaoId = estacaoDevolucaoInicial || null;
             if (estacaoRetiradaInicial) recarregarPickerRetirada(estacaoRetiradaInicial);
             else $('#data_inicio_flatpickr').prop('disabled', true);
             if (estacaoDevolucaoInicial) recarregarPickerDevolucao(estacaoDevolucaoInicial);
@@ -3205,11 +3306,12 @@
                 .addClass('text-muted');
 
             if (faltaPreencherEstacoesEDatas()) {
-                mostrarErroReserva('Atencao!', 'Por favor, preencha as estacoes e as datas.');
+                mostrarErroReserva('Atencao!', 'Por favor, preencha as estacoes e as datas antes de selecionar o grupo.');
                 $('#grupo_frota_id').val('');
                 if ($('#grupo_frota_id').hasClass('js-selectpicker')) {
                     $('#grupo_frota_id').selectpicker('refresh');
                 }
+                return;
             }
 
             setGrupoFrota(id, nome);
@@ -3219,10 +3321,10 @@
                 type: 'GET',
                 data: {
                     grupo_frota_id: id,
-                    estacao_retirada_id: estacao_retirada_id,
-                    data_inicio: data_inicio,
-                    estacao_devolucao_id: estacao_devolucao_id,
-                    data_fim: data_fim,
+                    estacao_retirada_id: getEstacaoRetirada(),
+                    data_inicio: getDataInicio(),
+                    estacao_devolucao_id: getEstacaoDevolucao(),
+                    data_fim: getDataFim(),
                 },
                 success: function(data) {
                     handleSuccess(data);
@@ -3252,10 +3354,19 @@
         function populeModelosSelect(modelos, selectId) {
             var modeloSelect = $('#' + selectId);
             const listaModelos = Array.isArray(modelos) ? modelos : [];
-            modeloSelect.empty(); // Limpa as opcoes existentes
-            modeloSelect.append('<option value="">Selecione um modelo</option>'); // Adiciona a opcao padrao
 
-            // Itera sobre o array de modelos e adiciona cada um como uma opcao
+            // Se for hidden input (sem seleção de modelo), apenas auto-seleciona o primeiro disponível
+            if (modeloSelect.attr('type') === 'hidden') {
+                if (listaModelos.length > 0 && !modeloSelect.val()) {
+                    modeloSelect.val(listaModelos[0].id);
+                    setModelo(listaModelos[0].id, listaModelos[0].nome);
+                }
+                return;
+            }
+
+            modeloSelect.empty();
+            modeloSelect.append('<option value="">Selecione um modelo</option>');
+
             $.each(listaModelos, function(index, modelo) {
                 modeloSelect.append('<option value="' + modelo.id + '">' + modelo.nome + '</option>');
             });
@@ -3428,6 +3539,182 @@
             $('#minhaReserva_opcionals_ul').append(html.trim());
 
         }
+
+        // ── Modal Pesquisa de Grupo de Veículos ─────────────────────────────
+        (function() {
+            const PESQUISAR_URL = @json(route('reserva.pesquisarGruposVeiculos'));
+            let _pgfPage = 1;
+
+            function pgfParams(page) {
+                page = page || 1;
+                const params = {
+                    grupo:     $('#pgf_grupo').val().trim(),
+                    modelo:    $('#pgf_modelo').val().trim(),
+                    marca:     $('#pgf_marca').val().trim(),
+                    segmento:  $('#pgf_segmento').val().trim(),
+                    valor_min: $('#pgf_valor_min').val().trim(),
+                    valor_max: $('#pgf_valor_max').val().trim(),
+                    por_pagina: 10,
+                    page: page,
+                };
+                // Include period for availability check — read live from DOM
+                const _estRet = $('#estacao_retirada_id').val();
+                const _dtIni  = $('#data_inicio').val();
+                const _dtFim  = $('#data_fim').val();
+                if (_estRet) params.estacao_retirada_id = _estRet;
+                if (_dtIni)  params.data_inicio = _dtIni;
+                if (_dtFim)  params.data_fim    = _dtFim;
+                return new URLSearchParams(params).toString();
+            }
+
+            function pgfFormatarMoeda(v) {
+                return 'R$ ' + Number(v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function pgfRenderPaginacao(meta) {
+                const $p = $('#pgf_paginacao').empty();
+                if (meta.last_page <= 1) return;
+
+                const mkBtn = (label, page, disabled, active) => {
+                    const $b = $(`<button type="button" class="btn btn-xs ${active ? 'btn-primary' : 'btn-outline-secondary'}">${label}</button>`);
+                    if (disabled) $b.prop('disabled', true);
+                    else $b.on('click', () => pgfBuscar(page));
+                    return $b;
+                };
+
+                $p.append(mkBtn('<i class="fas fa-chevron-left"></i>', meta.current_page - 1, meta.current_page <= 1, false));
+                const start = Math.max(1, meta.current_page - 2);
+                const end   = Math.min(meta.last_page, meta.current_page + 2);
+                for (let i = start; i <= end; i++) {
+                    $p.append(mkBtn(i, i, false, i === meta.current_page));
+                }
+                $p.append(mkBtn('<i class="fas fa-chevron-right"></i>', meta.current_page + 1, meta.current_page >= meta.last_page, false));
+            }
+
+            function pgfRenderLinhas(grupos) {
+                const $tbody = $('#pgf_tbody').empty();
+                const temPeriodo = !!($('#estacao_retirada_id').val() && $('#data_inicio').val() && $('#data_fim').val());
+                grupos.forEach(function(g) {
+                    const img = g.imagem_url
+                        ? `<img src="${g.imagem_url}" style="width:40px;height:28px;object-fit:cover;border-radius:4px">`
+                        : `<span class="text-muted"><i class="fas fa-car fa-lg"></i></span>`;
+
+                    const modelos   = (g.modelos || []).map(m => `<span class="badge badge-light border mr-1">${m.nome}</span>`).join('') || '<span class="text-muted">—</span>';
+                    const marcas    = (g.marcas   || []).join(', ') || '—';
+                    const segmentos = (g.segmentos || []).join(', ') || '—';
+
+                    let dispBadge = '';
+                    let btnSelecionar = '';
+                    if (!temPeriodo) {
+                        // Período não preenchido — exibe botão normalmente sem verificação
+                        dispBadge = '<span class="badge badge-secondary">Período não informado</span>';
+                        btnSelecionar = `<button type="button" class="btn btn-sm btn-primary pgf-selecionar"
+                            data-id="${g.id}" data-nome="${g.nome}" data-valor="${g.valor_diario}">
+                            <i class="fas fa-check mr-1"></i>Selecionar
+                        </button>`;
+                    } else if (g.disponivel === true) {
+                        dispBadge = `<span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i>${g.qtd_modelos_disponiveis} modelo(s) disponível(is)</span>`;
+                        btnSelecionar = `<button type="button" class="btn btn-sm btn-success pgf-selecionar"
+                            data-id="${g.id}" data-nome="${g.nome}" data-valor="${g.valor_diario}">
+                            <i class="fas fa-check mr-1"></i>Selecionar
+                        </button>`;
+                    } else {
+                        dispBadge = '<span class="badge badge-danger"><i class="fas fa-times-circle mr-1"></i>Sem disponibilidade</span>';
+                        btnSelecionar = `<button type="button" class="btn btn-sm btn-outline-secondary" disabled title="Sem veículos disponíveis para o período">
+                            <i class="fas fa-ban mr-1"></i>Indisponível
+                        </button>`;
+                    }
+
+                    const $tr = $(`
+                        <tr>
+                            <td class="text-center align-middle">${img}</td>
+                            <td class="align-middle">
+                                <div class="font-weight-bold">${g.nome}</div>
+                                <div class="mt-1">${dispBadge}</div>
+                            </td>
+                            <td class="align-middle" style="max-width:220px">${modelos}</td>
+                            <td class="align-middle">${marcas}</td>
+                            <td class="align-middle">${segmentos}</td>
+                            <td class="align-middle text-right text-success font-weight-bold">${pgfFormatarMoeda(g.valor_diario)}</td>
+                            <td class="align-middle text-center">${btnSelecionar}</td>
+                        </tr>
+                    `);
+                    $tbody.append($tr);
+                });
+            }
+
+            function pgfBuscar(page) {
+                _pgfPage = page || 1;
+                $('#pgf_loading').removeClass('d-none');
+                $('#pgf_empty').addClass('d-none');
+                $('#pgf_results').addClass('d-none');
+
+                fetch(PESQUISAR_URL + '?' + pgfParams(_pgfPage), { headers: { 'Accept': 'application/json' } })
+                    .then(r => r.json())
+                    .then(function(resp) {
+                        $('#pgf_loading').addClass('d-none');
+                        if (!resp.data || !resp.data.length) {
+                            $('#pgf_empty').removeClass('d-none');
+                            return;
+                        }
+                        $('#pgf_total_label').text(resp.total + ' grupo(s) encontrado(s)');
+                        pgfRenderLinhas(resp.data);
+                        pgfRenderPaginacao(resp);
+                        $('#pgf_results').removeClass('d-none');
+                    })
+                    .catch(function() {
+                        $('#pgf_loading').addClass('d-none');
+                        $('#pgf_empty').removeClass('d-none').find('p').text('Erro ao buscar. Tente novamente.');
+                    });
+            }
+
+            // Buscar ao abrir o modal
+            $('#modalPesquisaGrupo').on('shown.bs.modal', function() {
+                if (!$('#pgf_tbody').children().length) {
+                    pgfBuscar(1);
+                }
+            });
+
+            $('#pgf_btn_buscar').on('click', function() { pgfBuscar(1); });
+
+            $('#pgf_grupo, #pgf_modelo, #pgf_marca, #pgf_segmento, #pgf_valor_min, #pgf_valor_max').on('keypress', function(e) {
+                if (e.which === 13) pgfBuscar(1);
+            });
+
+            $('#pgf_btn_limpar').on('click', function() {
+                $('#pgf_grupo, #pgf_modelo, #pgf_marca, #pgf_segmento, #pgf_valor_min, #pgf_valor_max').val('');
+                pgfBuscar(1);
+            });
+
+            // Selecionar grupo
+            $(document).on('click', '.pgf-selecionar', function() {
+                const grupoId   = $(this).data('id');
+                const grupoNome = $(this).data('nome');
+                const grupoValor = $(this).data('valor');
+
+                // Atualizar o select de grupo
+                const $sel = $('#grupo_frota_id');
+                if ($sel.find('option[value="' + grupoId + '"]').length) {
+                    $sel.val(grupoId);
+                } else {
+                    $sel.append(new Option(grupoNome, grupoId, true, true));
+                }
+
+                if ($sel.hasClass('js-selectpicker')) {
+                    $sel.selectpicker('refresh');
+                }
+
+                // Fechar modal e disparar change para carregar modelos/opcionais
+                $('#modalPesquisaGrupo').modal('hide');
+
+                setTarifaBase(grupoValor);
+                setGrupoFrota(grupoId, grupoNome);
+                atualizarMinhaReserva();
+
+                // Carregar modelos e opcionais como se tivesse mudado o select
+                obterModelosComVeiculosDisponiveis(document.getElementById('grupo_frota_id'));
+            });
+        }());
 
     </script>
 @stop

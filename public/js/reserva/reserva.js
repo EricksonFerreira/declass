@@ -134,6 +134,14 @@ function setDataFim(data) {
     if (display) {
         display.value = formatarDataHoraReserva(data);
     }
+    // Atualiza o hidden #data_fim (mesmo padrão de setDataInicio)
+    const hidden = document.getElementById('data_fim');
+    if (hidden) {
+        const texto = data ? String(data) : '';
+        const dataParte = texto.includes('T') ? texto.split('T')[0] : texto.split(' ')[0];
+        const horaParte = formatarHoraReserva(data);
+        hidden.value = dataParte && horaParte ? `${dataParte}T${horaParte}` : '';
+    }
 }
 
 function setTarifaBase(tarifa) {

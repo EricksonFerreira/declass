@@ -213,6 +213,48 @@ class GrupoFrotaService extends AbstractBaseService
         return array_values(array_unique($result));
     }
 
+    public function pesquisarComFiltros(array $filtros, int $porPagina = 12): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->where('grupos_frota.ativo', 'S')
+            ->with(['modelos' => function ($q) {
+                $q->with(['marcas:id,nome', 'segmentos:id,nome'])->select('modelos.id', 'modelos.nome', 'modelos.marca_id', 'modelos.segmento_id', 'modelos.imagem');
+            }])
+            ->select('grupos_frota.id', 'grupos_frota.nome', 'grupos_frota.valor_diario', 'grupos_frota.imagem');
+
+        if (!empty($filtros['grupo'])) {
+            $query->where('grupos_frota.nome', 'like', '%' . $filtros['grupo'] . '%');
+        }
+
+        if (!empty($filtros['valor_min'])) {
+            $query->where('grupos_frota.valor_diario', '>=', (float) $filtros['valor_min']);
+        }
+
+        if (!empty($filtros['valor_max'])) {
+            $query->where('grupos_frota.valor_diario', '<=', (float) $filtros['valor_max']);
+        }
+
+        if (!empty($filtros['modelo']) || !empty($filtros['marca']) || !empty($filtros['segmento'])) {
+            $query->whereHas('modelos', function ($q) use ($filtros) {
+                if (!empty($filtros['modelo'])) {
+                    $q->where('modelos.nome', 'like', '%' . $filtros['modelo'] . '%');
+                }
+                if (!empty($filtros['marca'])) {
+                    $q->whereHas('marcas', function ($m) use ($filtros) {
+                        $m->where('marcas.nome', 'like', '%' . $filtros['marca'] . '%');
+                    });
+                }
+                if (!empty($filtros['segmento'])) {
+                    $q->whereHas('segmentos', function ($s) use ($filtros) {
+                        $s->where('segmentos.nome', 'like', '%' . $filtros['segmento'] . '%');
+                    });
+                }
+            });
+        }
+
+        return $query->orderBy('grupos_frota.nome')->paginate($porPagina);
+    }
+
     public function getModelosPorGrupoFrota($grupoFrotaId)
     {
         $grupoFrota = $this->model->find($grupoFrotaId);

@@ -39,7 +39,8 @@
       "Bash(xargs ls:*)",
       "Bash(grep -n \"use App\\\\\\\\Http\\\\\\\\Controllers\" /c/Users/Erickson/Dev/laragon/www/xpandCars/routes/web.php)",
       "Bash(node -e ':*)",
-      "Bash(php -l \"resources/views/veiculo/add-edit.blade.php\")"
+      "Bash(php -l \"resources/views/veiculo/add-edit.blade.php\")",
+      "Bash(php -l \"c:\\\\Users\\\\Erickson\\\\Dev\\\\laragon\\\\www\\\\xpandCars\\\\app\\\\Services\\\\GrupoFrotaService.php\")"
     ]
   }
 }

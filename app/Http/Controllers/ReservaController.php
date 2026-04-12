@@ -327,6 +327,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
         $resetWizardStep = Auth::user()?->isAdministrador() ? true : false;
+        $reservaSelecionarModelo = ($empresaAtual?->reserva_selecionar_modelo ?? 'N') === 'S';
 
         return view('reserva.add-edit', compact(
             'breadcrumb',
@@ -343,7 +344,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'tiposOpcionais',
             'tiposUsuario',
             'paises',
-            'resetWizardStep'
+            'resetWizardStep',
+            'reservaSelecionarModelo'
         ))
             ->with('titulo', $tituloFormulario);
     }
@@ -496,9 +498,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $marcas = $reserva->modelos->marcas ?? [];
         $segmentos = $reserva->modelos->segmentos ?? [];
 
-
         $opcionaisSelecionados = $reserva->opcionais?->pluck('id')->toArray() ?? [];
-        // dd($reserva);
+        $reservaSelecionarModelo = ($empresaAtual?->reserva_selecionar_modelo ?? 'N') === 'S';
 
         return view('reserva.add-edit', compact(
             'opcionaisSelecionados',
@@ -519,7 +520,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'breadcrumb',
             'status',
             'metodo',
-            'rota'
+            'rota',
+            'reservaSelecionarModelo'
         ))->with('titulo', $tituloFormulario);
     }
 
@@ -1303,6 +1305,17 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     public function veiculosDisponiveis(Request $request)
     {
+        if (empty($request->data_inicio) || empty($request->data_fim) || empty($request->grupo_frota_id)) {
+            return response()->json([
+                'grupo_frota'         => null,
+                'modelos'             => [],
+                'modelos_vinculados'  => [],
+                'tipo_opcional'       => [],
+                'qtd_veiculos_estacao'=> 0,
+                'aviso_modelos'       => 'Preencha as datas e estacoes para verificar disponibilidade.',
+            ]);
+        }
+
         $grupoFrota = $this->grupoFrotaService->getById($request->grupo_frota_id);
         $qtdVeiculosEstacao = $this->veiculoService->getQuantidadeVeiculosDisponiveisPorEstacaoEPeriodo(
             (int) $request->estacao_retirada_id,
@@ -1436,6 +1449,76 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
      *  3. Se a estação não trabalha em feriados, pré-carregar feriados do período e bloqueá-los.
      *  4. Para dias em que a estação opera, bloquear os que tiverem 0 veículos disponíveis.
      */
+    public function pesquisarGruposVeiculos(Request $request)
+    {
+        $request->validate([
+            'grupo'               => 'nullable|string|max:100',
+            'modelo'              => 'nullable|string|max:100',
+            'marca'               => 'nullable|string|max:100',
+            'segmento'            => 'nullable|string|max:100',
+            'valor_min'           => 'nullable|numeric|min:0',
+            'valor_max'           => 'nullable|numeric|min:0',
+            'por_pagina'          => 'nullable|integer|min:1|max:50',
+            'estacao_retirada_id' => 'nullable|integer|exists:estacoes,id',
+            'data_inicio'         => 'nullable|string',
+            'data_fim'            => 'nullable|string',
+        ]);
+
+        $filtros   = $request->only(['grupo', 'modelo', 'marca', 'segmento', 'valor_min', 'valor_max']);
+        $porPagina = (int) ($request->input('por_pagina') ?: 12);
+
+        $estacaoId  = $request->input('estacao_retirada_id');
+        $dataInicio = $request->input('data_inicio');
+        $dataFim    = $request->input('data_fim');
+        $verificarDisponibilidade = $estacaoId && $dataInicio && $dataFim;
+
+        $paginator = $this->grupoFrotaService->pesquisarComFiltros($filtros, $porPagina);
+
+        $items = $paginator->getCollection()->map(function ($grupo) use ($verificarDisponibilidade, $estacaoId, $dataInicio, $dataFim) {
+            $modelos = $grupo->modelos->map(fn($m) => [
+                'id'       => $m->id,
+                'nome'     => $m->nome,
+                'marca'    => $m->marcas?->nome,
+                'segmento' => $m->segmentos?->nome,
+                'imagem'   => $m->imagem_url,
+            ]);
+
+            $disponivel         = null;
+            $qtdModelosDisponiveis = null;
+
+            if ($verificarDisponibilidade) {
+                $modelosDisponiveis = $this->veiculoService->getModelosComVeiculosDisponiveis(
+                    (int) $grupo->id,
+                    (int) $estacaoId,
+                    (string) $dataInicio,
+                    (string) $dataFim
+                );
+                $qtdModelosDisponiveis = $modelosDisponiveis->count();
+                $disponivel = $qtdModelosDisponiveis > 0;
+            }
+
+            return [
+                'id'                     => $grupo->id,
+                'nome'                   => $grupo->nome,
+                'valor_diario'           => (float) $grupo->valor_diario,
+                'imagem_url'             => $grupo->imagem_url,
+                'modelos'                => $modelos,
+                'marcas'                 => $modelos->pluck('marca')->filter()->unique()->values(),
+                'segmentos'              => $modelos->pluck('segmento')->filter()->unique()->values(),
+                'disponivel'             => $disponivel,
+                'qtd_modelos_disponiveis'=> $qtdModelosDisponiveis,
+            ];
+        });
+
+        return response()->json([
+            'data'          => $items,
+            'total'         => $paginator->total(),
+            'per_page'      => $paginator->perPage(),
+            'current_page'  => $paginator->currentPage(),
+            'last_page'     => $paginator->lastPage(),
+        ]);
+    }
+
     public function diasSemDisponibilidade(Request $request)
 {
     $request->validate([

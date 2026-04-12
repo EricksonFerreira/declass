@@ -12,6 +12,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Reserva online | {{ $empresa->nome }}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <style>
+        .flatpickr-calendar { font-size: 13px; }
+        .taxa-aviso { display: none; font-size: 11px; color: #b45309; background: #fffbeb; border: 1px solid #fde68a; border-radius: 6px; padding: 4px 8px; margin-top: 4px; }
+        .taxa-aviso.visible { display: block; }
+        /* Search modal */
+        .site-modal-backdrop { display:none; position:fixed; inset:0; background:rgba(15,23,42,.55); z-index:9000; align-items:center; justify-content:center; }
+        .site-modal-backdrop.open { display:flex; }
+        .site-modal { background:#fff; border-radius:16px; width:min(960px,calc(100vw - 24px)); max-height:90vh; display:flex; flex-direction:column; box-shadow:0 24px 48px rgba(15,23,42,.22); overflow:hidden; }
+        .site-modal-header { padding:14px 18px; background:linear-gradient(120deg,#0f172a,#1e293b); color:#fff; display:flex; align-items:center; justify-content:space-between; }
+        .site-modal-header h2 { margin:0; font-size:16px; }
+        .site-modal-close { background:none; border:none; color:#fff; font-size:22px; cursor:pointer; line-height:1; }
+        .site-modal-body { padding:14px 18px; overflow-y:auto; flex:1; }
+        .site-modal-footer { padding:10px 18px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; }
+        .pgf-filters { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:8px; margin-bottom:12px; }
+        .pgf-filters input { min-height:34px; font-size:13px; }
+        .pgf-filter-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:6px; }
+        .pgf-table { width:100%; border-collapse:collapse; font-size:13px; }
+        .pgf-table th { background:#f1f5f9; padding:6px 8px; text-align:left; border-bottom:1px solid #e2e8f0; }
+        .pgf-table td { padding:6px 8px; border-bottom:1px solid #e2e8f0; vertical-align:middle; }
+        .pgf-table tr:hover td { background:#f8fbff; }
+        .pgf-thumb { width:48px; height:36px; object-fit:cover; border-radius:6px; border:1px solid #e2e8f0; }
+        .pgf-badge { display:inline-block; background:#e2e8f0; border-radius:999px; padding:2px 7px; font-size:10px; font-weight:700; margin:1px; color:#334155; }
+        .pgf-pagination { display:flex; gap:4px; margin-top:10px; justify-content:flex-end; }
+        .pgf-pagination button { min-height:30px; padding:4px 10px; font-size:12px; }
+    </style>
     <style>
         :root { --p: {{ $corPrimaria }}; --s: {{ $corSecundaria }}; --line: #dbe4ee; --ink: #0f172a; --muted: #64748b; }
         * { box-sizing: border-box; }
@@ -135,18 +161,6 @@
         .submit-loading .spinner { width: 36px; height: 36px; border-radius: 50%; border: 3px solid rgba(248,250,252,0.35); border-top-color: #22c55e; margin: 0 auto 10px auto; animation: spin 0.9s linear infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .form-submitting { pointer-events: none; }
-        /* Sem disponibilidade */
-        .grupo-card.sem-disponibilidade { border-color: #fca5a5 !important; background: #fff8f8; opacity: .75; }
-        .grupo-card.sem-disponibilidade .grupo-action { background: #fee2e2; color: #991b1b; border-color: #fca5a5; cursor: not-allowed; }
-        .alert-sem-disp {
-            display: flex; align-items: flex-start; gap: 10px;
-            background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px;
-            padding: 12px 14px; margin-bottom: 12px; font-size: 13px; color: #991b1b;
-        }
-        .alert-sem-disp.hidden { display: none; }
-        .alert-sem-disp__icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
-        .alert-sem-disp strong { display: block; font-size: 14px; margin-bottom: 4px; }
-        .alert-sem-disp p { margin: 0; color: #b91c1c; font-size: 12px; }
         .sum-list { list-style: none; margin: 8px 0 0; padding: 0; display: grid; gap: 6px; }
         .sum-list li { border: 1px solid var(--line); border-radius: 8px; background: #f8fbff; padding: 6px 8px; font-size: 12px; color: #334155; }
         @media (max-width: 1020px) { .layout { grid-template-columns: 1fr; } .summary { position: static; } }
@@ -170,7 +184,7 @@
         <section class="card">
             <div class="head">
                 <h1>Reserva em passos</h1>
-                <p>Preencha a viagem, escolha o veículo, informe seus dados e finalize.</p>
+                <p>Preencha viagem, escolha veiculo, informe seus dados e finalize.</p>
             </div>
 
             <div class="alerts">
@@ -197,7 +211,7 @@
 
             <div class="steps" id="stepsHeader">
                 <div class="step-pill active" data-step="1"><span class="num">1</span><span>Viagem</span></div>
-                <div class="step-pill" data-step="2"><span class="num">2</span><span>Veículo</span></div>
+                <div class="step-pill" data-step="2"><span class="num">2</span><span>Veiculo</span></div>
                 <div class="step-pill" data-step="3"><span class="num">3</span><span>Opcionais</span></div>
                 <div class="step-pill" data-step="4"><span class="num">4</span><span>Cliente</span></div>
                 <div class="step-pill disabled" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
@@ -212,50 +226,57 @@
 
                 <section class="panel active" data-panel="1">
                     <h2 class="title">Onde e quando?</h2>
-                    <p class="subtitle">Defina o local de retirada, devolução e as datas da viagem.</p>
+                    <p class="subtitle">Defina retirada, devolucao e datas.</p>
                     <div class="grid">
                         <div class="field">
-                            <label for="estacao_retirada_id">📍 Estação de retirada</label>
+                            <label for="estacao_retirada_id">Estacao de retirada</label>
                             <select id="estacao_retirada_id" name="estacao_retirada_id" required>
-                                <option value="">Selecione a estação...</option>
+                                <option value="">Selecione...</option>
                                 @foreach($estacoes as $estacao)
                                     <option value="{{ $estacao['id'] }}" {{ (string) old('estacao_retirada_id', $prefill['estacao_retirada_id'] ?? '') === (string) $estacao['id'] ? 'selected' : '' }}>
-                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' — ' . $estacao['cidade'] : '' }}
+                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' - ' . $estacao['cidade'] : '' }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="field">
-                            <label for="estacao_devolucao_id">🏁 Estação de devolução</label>
+                            <label for="estacao_devolucao_id">Estacao de devolucao</label>
                             <select id="estacao_devolucao_id" name="estacao_devolucao_id" required>
-                                <option value="">Selecione a estação...</option>
+                                <option value="">Selecione...</option>
                                 @foreach($estacoes as $estacao)
                                     <option value="{{ $estacao['id'] }}" {{ (string) old('estacao_devolucao_id', $prefill['estacao_devolucao_id'] ?? '') === (string) $estacao['id'] ? 'selected' : '' }}>
-                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' — ' . $estacao['cidade'] : '' }}
+                                        {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' - ' . $estacao['cidade'] : '' }}
                                     </option>
                                 @endforeach
                             </select>
                         </div>
                         <div class="field">
-                            <label for="data_inicio">📅 Data e hora de retirada</label>
-                            <input id="data_inicio" type="datetime-local" name="data_inicio"
-                                value="{{ old('data_inicio', $prefill['data_inicio'] ?? '') }}"
-                                data-prefill="{{ old('data_inicio', $prefill['data_inicio'] ?? '') }}"
-                                required>
+                            <label for="picker_data_inicio">Data de retirada</label>
+                            <input id="picker_data_inicio" type="text" placeholder="Selecione a data..." autocomplete="off" readonly>
+                            <select id="hora_inicio" style="margin-top:6px;display:none">
+                                <option value="">Selecione o horario...</option>
+                            </select>
+                            <div class="taxa-aviso" id="taxa_aviso_inicio">&#9888; Horario fora do expediente. Taxa adicional aplicavel.</div>
+                            <input type="hidden" id="data_inicio" name="data_inicio" value="{{ old('data_inicio', $prefill['data_inicio'] ?? '') }}">
                         </div>
                         <div class="field">
-                            <label for="data_fim">📅 Data e hora de devolução</label>
-                            <input id="data_fim" type="datetime-local" name="data_fim"
-                                value="{{ old('data_fim', $prefill['data_fim'] ?? '') }}"
-                                data-prefill="{{ old('data_fim', $prefill['data_fim'] ?? '') }}"
-                                required>
+                            <label for="picker_data_fim">Data de devolucao</label>
+                            <input id="picker_data_fim" type="text" placeholder="Selecione a data..." autocomplete="off" readonly>
+                            <select id="hora_fim" style="margin-top:6px;display:none">
+                                <option value="">Selecione o horario...</option>
+                            </select>
+                            <div class="taxa-aviso" id="taxa_aviso_fim">&#9888; Horario fora do expediente. Taxa adicional aplicavel.</div>
+                            <input type="hidden" id="data_fim" name="data_fim" value="{{ old('data_fim', $prefill['data_fim'] ?? '') }}">
                         </div>
                     </div>
-                    <div class="feedback" id="step1Feedback">Selecione as estações e as datas para continuar.</div>
+                    <div class="feedback" id="step1Feedback">Preencha os dados para continuar.</div>
                 </section>
 
                 <section class="panel" data-panel="2">
-                    <h2 class="title">Escolha o veículo</h2>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
+                        <h2 class="title" style="margin:0">Escolha o veiculo</h2>
+                        <button type="button" class="btn btn-secondary" id="btnBuscarGrupo" style="min-height:34px;font-size:12px;border-radius:999px">&#128269; Buscar grupo</button>
+                    </div>
                     <p class="subtitle">
                         @if(!empty($reservaSelecionarModelo))
                             Selecione um grupo e um modelo pelos cards.
@@ -338,7 +359,7 @@
                         </div>
                         <div id="modelosGrid" class="modelos-grid"></div>
                     </div>
-                    <div class="feedback" id="disponibilidadeFeedback">Selecione um grupo para ver a disponibilidade de veículos.</div>
+                    <div class="feedback" id="disponibilidadeFeedback">Informe o grupo para carregar disponibilidade.</div>
                 </section>
                 <section class="panel" data-panel="3">
                     <h2 class="title">Opcionais</h2>
@@ -350,16 +371,16 @@
                     <h2 class="title">Dados do cliente</h2>
                     <p class="subtitle">
                         @if(!empty($isAuth) && $isAuth)
-                            Você já está logado. Deseja continuar com este usuário ou cadastrar outro?
+                            Voce ja esta logado. Deseja pagar com este usuario ou cadastrar outro?
                         @else
-                            Faça login ou cadastre-se para seguir ao pagamento.
+                            Faca login ou cadastre-se para seguir ao pagamento.
                         @endif
                     </p>
 
                     <div class="client-tabs">
                         @if(!empty($isAuth) && $isAuth)
-                            <button type="button" class="client-tab active" data-client-tab="login">Usar usuário logado</button>
-                            <button type="button" class="client-tab" data-client-tab="cadastro">Cadastrar outro usuário</button>
+                            <button type="button" class="client-tab active" data-client-tab="login">Usar usuario logado</button>
+                            <button type="button" class="client-tab" data-client-tab="cadastro">Cadastrar outro usuario</button>
                         @else
                             <button type="button" class="client-tab active" data-client-tab="cadastro">Cadastrar</button>
                             <button type="button" class="client-tab" data-client-tab="login">Ja tenho conta</button>
@@ -368,8 +389,8 @@
 
                     <div id="clientLoginPanel" class="client-panel hidden">
                         @if(!empty($isAuth) && $isAuth)
-                            <p class="client-note">Você está logado como <strong>{{ $authUserName ?: 'usuário' }}</strong>.</p>
-                            <p class="client-note">Se quiser usar outro cliente, escolha a opção "Cadastrar outro usuário".</p>
+                            <p class="client-note">Voce esta logado como {{ $authUserName ?: 'usuario' }}.</p>
+                            <p class="client-note">Se quiser usar outro cliente, escolha a opcao "Cadastrar outro usuario".</p>
                         @else
                             <p class="client-note">Para continuar com o pagamento, faca login na sua conta.</p>
                             @if(!empty($loginRedirectUrl))
@@ -403,7 +424,7 @@
                         </div>
                     </div>
                     <div class="feedback" id="clientFeedback">
-                        {{ !empty($isAuth) && $isAuth ? 'Escolha usar o usuário logado ou cadastrar outro.' : 'Escolha uma opção para continuar.' }}
+                        {{ !empty($isAuth) && $isAuth ? 'Escolha usar o usuario logado ou cadastrar outro.' : 'Escolha uma opcao para continuar.' }}
                     </div>
                     <div class="feedback" style="margin-top: 10px;">Ao finalizar, voce sera direcionado para o pagamento.</div>
                 </section>
@@ -424,6 +445,8 @@
             <div class="sum"><span>Tarifa base</span><strong id="sTarifa">{{ $simboloMoedaEmpresa }} 0,00</strong></div>
             <div class="sum"><span>Opcionais</span><strong id="sOpc">{{ $simboloMoedaEmpresa }} 0,00</strong></div>
             <div class="sum"><span>Desconto</span><strong id="sDesc">0%</strong></div>
+            <div class="sum" id="sTaxaColetaRow" style="display:none;color:#b45309"><span>Taxa coleta fora exp.</span><strong id="sTaxaColeta">{{ $simboloMoedaEmpresa }} 0,00</strong></div>
+            <div class="sum" id="sTaxaEntregaRow" style="display:none;color:#b45309"><span>Taxa entrega fora exp.</span><strong id="sTaxaEntrega">{{ $simboloMoedaEmpresa }} 0,00</strong></div>
             <div class="sum total"><span>Total</span><strong id="sTotal">{{ $simboloMoedaEmpresa }} 0,00</strong></div>
             <div id="cupomSummary" class="cupom-box hidden">
                 <label for="cupom_codigo">Cupom de desconto</label>
@@ -437,6 +460,47 @@
         </aside>
     </main>
 
+    {{-- Modal busca grupo --}}
+    <div class="site-modal-backdrop" id="modalBuscarGrupo">
+        <div class="site-modal">
+            <div class="site-modal-header">
+                <h2>&#128269; Buscar Grupo de Veiculos</h2>
+                <button class="site-modal-close" id="modalBuscarGrupoClose">&times;</button>
+            </div>
+            <div class="site-modal-body">
+                <div class="pgf-filters">
+                    <div><label style="font-size:12px;font-weight:700">Grupo</label><input type="text" id="pgf_grupo" placeholder="Nome do grupo..."></div>
+                    <div><label style="font-size:12px;font-weight:700">Modelo</label><input type="text" id="pgf_modelo" placeholder="Nome do modelo..."></div>
+                    <div><label style="font-size:12px;font-weight:700">Marca</label><input type="text" id="pgf_marca" placeholder="Ex: Toyota..."></div>
+                    <div><label style="font-size:12px;font-weight:700">Segmento</label><input type="text" id="pgf_segmento" placeholder="Ex: SUV..."></div>
+                    <div><label style="font-size:12px;font-weight:700">Valor/dia min.</label><input type="number" id="pgf_valor_min" placeholder="0,00" step="0.01" min="0"></div>
+                    <div><label style="font-size:12px;font-weight:700">Valor/dia max.</label><input type="number" id="pgf_valor_max" placeholder="9999,00" step="0.01" min="0"></div>
+                </div>
+                <div class="pgf-filter-actions">
+                    <button type="button" class="btn btn-secondary" id="pgf_limpar" style="min-height:34px;font-size:12px">Limpar</button>
+                    <button type="button" class="btn btn-primary" id="pgf_buscar" style="min-height:34px;font-size:12px">Buscar</button>
+                </div>
+                <div id="pgf_loading" style="display:none;text-align:center;padding:20px;color:#64748b">Buscando...</div>
+                <div id="pgf_empty" style="display:none;text-align:center;padding:20px;color:#64748b">Nenhum grupo encontrado.</div>
+                <div id="pgf_results" style="display:none">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+                        <small style="color:#64748b" id="pgf_total_label"></small>
+                        <div id="pgf_paginacao" class="pgf-pagination"></div>
+                    </div>
+                    <div style="overflow-x:auto">
+                        <table class="pgf-table">
+                            <thead><tr><th style="width:56px"></th><th>Grupo</th><th>Modelos/Marcas</th><th>Segmentos</th><th style="text-align:right">Valor/dia</th><th style="width:100px"></th></tr></thead>
+                            <tbody id="pgf_tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="site-modal-footer">
+                <button type="button" class="btn btn-secondary" id="modalBuscarGrupoFechar">Fechar</button>
+            </div>
+        </div>
+    </div>
+
     <div id="submitLoading" class="submit-loading hidden">
         <div class="box">
             <div class="spinner"></div>
@@ -445,12 +509,23 @@
         </div>
     </div>
 
+    @php
+        $estacaoIds = array_column($estacoes, 'id');
+        $estacoesTaxasMap = \App\Models\Estacao::whereIn('id', $estacaoIds)
+            ->get(['id', 'cobrar_na_coleta', 'valor_taxa_coleta', 'cobrar_na_entrega', 'valor_taxa_entrega'])
+            ->keyBy('id');
+    @endphp
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script>
         (function () {
             const moeda = @json($moedaEmpresa);
             const disponibilidadeUrl = @json(route('site.reserva.disponibilidade'));
-            const estacoesDisponiveisUrl = @json(route('site.reserva.estacoesDisponiveis'));
             const cupomUrl = @json(route('site.reserva.verificarCupom'));
+            const diasDisponiveisUrl = @json(route('reserva.diasSemDisponibilidade'));
+            const agendaUrl = @json(route('reserva.agendaDisponivelPorEstacao'));
+            const pesquisarGruposUrl = @json(route('reserva.pesquisarGruposVeiculos'));
+            const ESTACOES_TAXAS = @json($estacoesTaxasMap);
             const oldModelId = @json(old('modelo_id', ''));
             const oldOpcionaisPayload = @json(old('opcionais_payload', ''));
             const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
@@ -464,7 +539,7 @@
             const initialStep = !Number.isNaN(stepFromUrl) && stepFromUrl >= 1 && stepFromUrl <= 4
                 ? stepFromUrl
                 : (!Number.isNaN(initialStepServer) && initialStepServer >= 1 && initialStepServer <= 4 ? initialStepServer : 2);
-            const state = { step: initialStep, tarifa: 0, dias: 0, cupom: null, opcionais: {}, modeloNome: null };
+            const state = { step: initialStep, tarifa: 0, dias: 0, cupom: null, opcionais: {}, modeloNome: null, taxaColeta: 0, taxaEntrega: 0 };
             const panels = [...document.querySelectorAll('[data-panel]')];
             const pills = [...document.querySelectorAll('[data-step]')];
             const form = document.getElementById('reservaForm');
@@ -487,7 +562,6 @@
             const usarUsuarioLogadoInput = document.getElementById('usar_usuario_logado');
             let clientMode = isAuth ? 'login' : 'cadastro';
             let modelosDisponiveis = {};
-            let estacaoDevolucaoAlterada = false;
 
             function money(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: moeda || 'BRL' }).format(Number(v || 0)); }
             function dateLabel(v) { const d = new Date(v); if (Number.isNaN(d.getTime())) return '-'; return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(d); }
@@ -506,7 +580,7 @@
                 const subtotal = base + opcTotal();
                 const descontoPercent = Number(state.cupom?.valor || 0);
                 const desconto = subtotal * (descontoPercent / 100);
-                return Math.max(0, subtotal - desconto);
+                return Math.max(0, subtotal - desconto + state.taxaColeta + state.taxaEntrega);
             }
             function feedback(id, msg, tone) { const el = document.getElementById(id); el.textContent = msg; el.classList.remove('ok', 'warn'); if (tone) el.classList.add(tone); }
             function refresh() {
@@ -515,6 +589,10 @@
                 document.getElementById('sTarifa').textContent = money(state.tarifa * state.dias);
                 document.getElementById('sOpc').textContent = money(opcTotal());
                 document.getElementById('sDesc').textContent = `${Number(state.cupom?.valor || 0)}%`;
+                const tcRow = document.getElementById('sTaxaColetaRow');
+                const teRow = document.getElementById('sTaxaEntregaRow');
+                if (state.taxaColeta > 0) { tcRow.style.display = ''; document.getElementById('sTaxaColeta').textContent = money(state.taxaColeta); } else { tcRow.style.display = 'none'; }
+                if (state.taxaEntrega > 0) { teRow.style.display = ''; document.getElementById('sTaxaEntrega').textContent = money(state.taxaEntrega); } else { teRow.style.display = 'none'; }
                 document.getElementById('sTotal').textContent = money(total());
                 const list = document.getElementById('sLista');
                 const itens = Object.values(state.opcionais).filter(op => Number(op.quantidade || 0) > 0);
@@ -535,44 +613,6 @@
                 document.getElementById('rCliente').textContent = `${nomeCliente} - ${emailCliente}`;
                 const itens = Object.values(state.opcionais).filter(op => Number(op.quantidade || 0) > 0).map(op => `${op.nome} (${op.quantidade}x)`);
                 document.getElementById('rOpcionais').textContent = itens.length ? itens.join(', ') : 'Sem opcionais.';
-            }
-
-            function aplicarEstacoesDisponiveis(ids) {
-                const allowed = new Set((ids || []).map(String));
-                const eRet = document.getElementById('estacao_retirada_id');
-                const eDev = document.getElementById('estacao_devolucao_id');
-
-                [eRet, eDev].forEach(function (sel) {
-                    if (!sel) return;
-                    const atual = sel.value;
-                    [...sel.options].forEach(function (opt) {
-                        if (!opt.value) return;
-                        opt.disabled = !allowed.has(String(opt.value));
-                    });
-                    if (atual && !allowed.has(String(atual))) {
-                        sel.value = '';
-                    }
-                });
-            }
-
-            function atualizarEstacoesDisponiveis() {
-                if (!dataInicio.value || !dataFim.value) return;
-                const params = new URLSearchParams({
-                    data_inicio: dataInicio.value,
-                    data_fim: dataFim.value,
-                });
-                if (grupo.value) params.set('grupo_frota_id', grupo.value);
-                if (modelo.value) params.set('modelo_id', modelo.value);
-
-                fetch(estacoesDisponiveisUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-                    .then(r => r.json())
-                    .then(d => {
-                        aplicarEstacoesDisponiveis(d.estacao_ids || []);
-                        refresh();
-                        enforceStep1Gate(false);
-                        updatePrefill();
-                    })
-                    .catch(() => {});
             }
             function selectedGrupoCard() {
                 if (!gruposGrid) return null;
@@ -649,7 +689,7 @@
                 const hasAny = Boolean(eRet.value || eDev.value || dataInicio.value || dataFim.value);
                 prefillBox.style.display = hasAny ? 'block' : 'none';
                 document.getElementById('prefRet').textContent = `Retirada: ${eRet.options[eRet.selectedIndex]?.text || '-'}`;
-                document.getElementById('prefDev').textContent = `Devolução: ${eDev.options[eDev.selectedIndex]?.text || '-'}`;
+                document.getElementById('prefDev').textContent = `Devolucao: ${eDev.options[eDev.selectedIndex]?.text || '-'}`;
                 document.getElementById('prefDatas').textContent = `Datas: ${dateLabel(dataInicio.value)} ate ${dateLabel(dataFim.value)}`;
             }
             function renderStep() {
@@ -696,33 +736,33 @@
             }
             function validStep1(show) {
                 if (!document.getElementById('estacao_retirada_id').value || !document.getElementById('estacao_devolucao_id').value || !dataInicio.value || !dataFim.value) {
-                    if (show) feedback('step1Feedback', 'Preencha as estações e as datas para continuar.', 'warn');
+                    if (show) feedback('step1Feedback', 'Preencha estacoes e datas.', 'warn');
                     return false;
                 }
                 const now = new Date();
                 now.setSeconds(0, 0);
                 const retirada = new Date(dataInicio.value);
                 if (!Number.isNaN(retirada.getTime()) && retirada < now) {
-                    if (show) feedback('step1Feedback', 'A data de retirada não pode ser no passado. Selecione uma data a partir de agora.', 'warn');
+                    if (show) feedback('step1Feedback', 'A retirada nao pode ser antes de agora.', 'warn');
                     return false;
                 }
                 if (dias() <= 0) {
-                    if (show) feedback('step1Feedback', 'A devolução deve ser ao menos 1 dia após a retirada.', 'warn');
+                    if (show) feedback('step1Feedback', 'A devolucao deve ser ao menos 1 dia depois da retirada.', 'warn');
                     return false;
                 }
-                if (show) feedback('step1Feedback', '✅ Tudo certo! Clique em Continuar para escolher o veículo.', 'ok');
+                if (show) feedback('step1Feedback', 'Passo valido.', 'ok');
                 return true;
             }
             function validStep2(show) {
-                if (!grupo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um grupo de veículos.', 'warn'); return false; }
+                if (!grupo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um grupo.', 'warn'); return false; }
                 if (reservaSelecionarModelo) {
-                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um modelo de veículo.', 'warn'); return false; }
+                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Selecione um modelo.', 'warn'); return false; }
                     if (modelosDisponiveis[Number(modelo.value)] === false) {
-                        if (show) feedback('disponibilidadeFeedback', 'Este modelo não está disponível para o período selecionado.', 'warn');
+                        if (show) feedback('disponibilidadeFeedback', 'Este modelo nao esta disponivel para o periodo selecionado.', 'warn');
                         return false;
                     }
                 } else {
-                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Nenhum modelo disponível para este grupo no período selecionado.', 'warn'); return false; }
+                    if (!modelo.value) { if (show) feedback('disponibilidadeFeedback', 'Nenhum modelo disponivel para este grupo.', 'warn'); return false; }
                 }
                 return true;
             }
@@ -736,7 +776,7 @@
 
                 if (clientMode === 'login') {
                     if (clientFeedback) {
-                        feedback('clientFeedback', 'Faça login para continuar.', 'warn');
+                        feedback('clientFeedback', 'Faca login para continuar.', 'warn');
                     }
                     return false;
                 }
@@ -781,9 +821,9 @@
             function autoSelectModelo(list) {
                 const disponiveis = Array.isArray(list) ? list.filter(m => m.disponivel !== false) : [];
                 if (!disponiveis.length) {
-                    modelo.value = '';
+                    modelo.valpue = '';
                     setModelosDisponiveis([]);
-                    updateModeloAutoNote('Nenhum modelo disponível para este grupo no período selecionado.', 'warn');
+                    updateModeloAutoNote('Nenhum modelo disponivel para este grupo no periodo selecionado.', 'warn');
                     return false;
                 }
                 const escolhido = disponiveis.find(m => String(m.id) === String(modelo.value)) || disponiveis[0];
@@ -801,7 +841,7 @@
                     modelo.value = '';
                     setModelosDisponiveis([]);
                     if (modelosGrid) {
-                        modelosGrid.innerHTML = '<div class="feedback warn">Nenhum modelo encontrado para este grupo no período selecionado.</div>';
+                        modelosGrid.innerHTML = '<div class="feedback">Nenhum modelo encontrado para este grupo.</div>';
                     }
                     return;
                 }
@@ -818,7 +858,7 @@
                         const img = m.imagem_url ? `<img src="${m.imagem_url}" alt="${m.nome}">` : '<span>Sem imagem</span>';
                         const active = String(m.id) === String(modelo.value);
                         const badgeClass = disponivel ? 'ok' : 'no';
-                        const badgeLabel = disponivel ? 'Disponível' : 'Indisponível';
+                        const badgeLabel = disponivel ? 'Disponivel' : 'Indisponivel';
                         return `
                             <div class="modelo-card ${disponivel ? '' : 'disabled'} ${active ? 'active' : ''}" data-modelo-id="${m.id}" data-modelo-nome="${m.nome}" data-disponivel="${disponivel ? '1' : '0'}">
                                 <span class="modelo-badge ${badgeClass}">${badgeLabel}</span>
@@ -826,7 +866,7 @@
                                 <div class="modelo-title">${m.nome}</div>
                                 <div class="modelo-meta">
                                     <span class="modelo-chip">${disponivel ? 'Reserva imediata' : 'Sem disponibilidade'}</span>
-                                    <span>${disponivel ? 'Clique para escolher' : 'Indisponível'}</span>
+                                    <span>${disponivel ? 'Clique para escolher' : 'Indisponivel'}</span>
                                 </div>
                             </div>
                         `;
@@ -840,20 +880,7 @@
             }
             function normalizeOpc(tipo) {
                 const all = [];
-                const grupos = Array.isArray(tipo) ? tipo : Object.values(tipo || {});
-                grupos.forEach(function (g) {
-                    const lista = g && g.opcionais ? g.opcionais : [];
-                    const opcionais = Array.isArray(lista) ? lista : Object.values(lista || {});
-                    opcionais.forEach(function (o) {
-                        all.push({
-                            id: Number(o.id),
-                            nome: o.nome || '',
-                            tipo_cobranca: o.tipo_cobranca || '',
-                            preco_por_dia: Number(o.preco_por_dia || 0),
-                            preco_integral: Number(o.preco_integral || 0),
-                        });
-                    });
-                });
+                (tipo || []).forEach(function (g) { (g.opcionais || []).forEach(function (o) { all.push({ id: Number(o.id), nome: o.nome || '', tipo_cobranca: o.tipo_cobranca || '', preco_por_dia: Number(o.preco_por_dia || 0), preco_integral: Number(o.preco_integral || 0) }); }); });
                 return all;
             }
             function renderOpc(tipo) {
@@ -881,7 +908,6 @@
                     state.tarifa = Number(data.grupo_frota?.valor_diario || 0);
                     const modelosDisponiveisList = Array.isArray(data.modelos) ? data.modelos : [];
                     const modelosVinculadosList = Array.isArray(data.modelos_vinculados) ? data.modelos_vinculados : [];
-                    const temDisponivel = modelosDisponiveisList.some(m => m.disponivel !== false);
                     if (reservaSelecionarModelo) {
                         const listaModelos = modelosDisponiveisList.length ? modelosDisponiveisList : modelosVinculadosList;
                         renderModelos(listaModelos);
@@ -897,23 +923,8 @@
                         }
                     }
                     renderOpc(data.tipo_opcional || []);
-                    // Marca visualmente o card do grupo como sem disponibilidade
-                    const grupoCardAtivo = document.querySelector(`.grupo-card[data-grupo-id="${grupo.value}"]`);
-                    if (grupoCardAtivo) {
-                        grupoCardAtivo.classList.toggle('sem-disponibilidade', !temDisponivel);
-                    }
-                    if (!temDisponivel) {
-                        const nomeGrupo = grupoCardAtivo?.querySelector('.grupo-title')?.textContent?.trim() || 'este grupo';
-                        feedback('disponibilidadeFeedback',
-                            `⚠️ Nenhum veículo disponível para "${nomeGrupo}" no período selecionado. Escolha outro grupo ou altere as datas.`,
-                            'warn');
-                        // Banner prominente acima dos grupos
-                        showAlertSemDisponibilidade(nomeGrupo);
-                    } else {
-                        hideAlertSemDisponibilidade();
-                        if (data.aviso_modelos) feedback('disponibilidadeFeedback', data.aviso_modelos, 'warn');
-                        else feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veículos na estação: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
-                    }
+                    if (data.aviso_modelos) feedback('disponibilidadeFeedback', data.aviso_modelos, 'warn');
+                    else feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veiculos na estacao: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
                 } catch (e) {
                     feedback('disponibilidadeFeedback', e.message || 'Erro ao carregar disponibilidade.', 'warn');
                     modelo.value = '';
@@ -929,29 +940,6 @@
                     refresh();
                 }
             }
-            function showAlertSemDisponibilidade(nomeGrupo) {
-                let el = document.getElementById('alertSemDisponibilidade');
-                if (!el) {
-                    el = document.createElement('div');
-                    el.id = 'alertSemDisponibilidade';
-                    el.className = 'alert-sem-disp';
-                    const gruposSection = document.querySelector('[data-panel="2"]');
-                    if (gruposSection) gruposSection.insertBefore(el, gruposSection.firstChild);
-                }
-                el.innerHTML = `
-                    <span class="alert-sem-disp__icon">&#9888;</span>
-                    <div>
-                        <strong>Sem disponibilidade para "${nomeGrupo}"</strong>
-                        <p>Não há veículos disponíveis para este grupo no período escolhido.
-                        Tente selecionar outro grupo de veículos ou altere as datas da viagem.</p>
-                    </div>`;
-                el.classList.remove('hidden');
-            }
-            function hideAlertSemDisponibilidade() {
-                const el = document.getElementById('alertSemDisponibilidade');
-                if (el) el.classList.add('hidden');
-                document.querySelectorAll('.grupo-card.sem-disponibilidade').forEach(c => c.classList.remove('sem-disponibilidade'));
-            }
             async function applyCupom() {
                 const code = cupomInput.value.trim();
                 if (!code) { state.cupom = null; feedback('cupomFeedback', 'Nenhum cupom aplicado.', null); refresh(); return; }
@@ -960,7 +948,7 @@
                     const res = await fetch(cupomUrl, { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, Accept: 'application/json' }, body: JSON.stringify({ cupom: code }) });
                     const data = await res.json();
                     if (!res.ok) throw new Error(data.message || 'Falha ao validar cupom.');
-                    if (!data.cupom) { state.cupom = null; feedback('cupomFeedback', 'Cupom não encontrado ou inativo.', 'warn'); refresh(); return; }
+                    if (!data.cupom) { state.cupom = null; feedback('cupomFeedback', 'Cupom nao encontrado ou inativo.', 'warn'); refresh(); return; }
                     state.cupom = data.cupom;
                     feedback('cupomFeedback', `Cupom aplicado: ${data.cupom.codigo} (${data.cupom.valor}% de desconto).`, 'ok');
                     refresh();
@@ -1036,46 +1024,215 @@
                 }
                 form.classList.add('form-submitting');
             });
-            dataInicio.addEventListener('change', function () {
-                const i = new Date(dataInicio.value);
-                if (!Number.isNaN(i.getTime())) {
-                    dataFim.setAttribute('min', new Date(i.getTime() + 86400000).toISOString().slice(0, 16));
-                }
+            // ---- Flatpickr + hora logic ----
+            const _toHHmm = function(v) { return String(v).includes('T') ? String(v).split('T')[1].slice(0,5) : String(v).slice(0,5); };
+
+            function combineDateHour(dateStr, hourStr) {
+                if (!dateStr || !hourStr) return '';
+                return dateStr + 'T' + hourStr;
+            }
+
+            function syncHiddenInicio() {
+                const d = pickerInicio ? pickerInicio.input._flatpickrSelectedDate : null;
+                const dateStr = d ? flatpickr.formatDate(d, 'Y-m-d') : '';
+                const hourStr = document.getElementById('hora_inicio').value;
+                dataInicio.value = combineDateHour(dateStr, hourStr);
+            }
+
+            function syncHiddenFim() {
+                const d = pickerFim ? pickerFim.input._flatpickrSelectedDate : null;
+                const dateStr = d ? flatpickr.formatDate(d, 'Y-m-d') : '';
+                const hourStr = document.getElementById('hora_fim').value;
+                dataFim.value = combineDateHour(dateStr, hourStr);
+            }
+
+            function onDateHoraChanged() {
                 refresh();
                 enforceStep1Gate(false);
                 updatePrefill();
-                atualizarEstacoesDisponiveis();
                 if (grupo.value) loadDisponibilidade();
+            }
+
+            let pickerInicio = null, pickerFim = null;
+            let diasIndisponiveisInicio = [], diasIndisponiveisFim = [];
+
+            function criarPickerInicio(estacaoId) {
+                fetch(`${diasDisponiveisUrl}?estacao_id=${estacaoId}&dias=90&tipo=retirada`)
+                    .then(r => r.json()).then(function(data) {
+                        const dispSet = new Set((data.dias_disponiveis || []).map(x => x.data || x));
+                        const disable = [function(date) {
+                            const s = flatpickr.formatDate(date, 'Y-m-d');
+                            return !dispSet.has(s);
+                        }];
+                        if (pickerInicio) pickerInicio.destroy();
+                        pickerInicio = flatpickr('#picker_data_inicio', {
+                            locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today',
+                            disable: disable,
+                            onChange: function(sel, dateStr) {
+                                pickerInicio.input._flatpickrSelectedDate = sel[0] || null;
+                                syncHiddenInicio();
+                                if (sel[0]) carregarHorariosInicio(estacaoId, flatpickr.formatDate(sel[0], 'Y-m-d'));
+                                if (pickerFim) pickerFim.set('minDate', sel[0] ? new Date(sel[0].getTime() + 86400000) : 'today');
+                                onDateHoraChanged();
+                            }
+                        });
+                    }).catch(function() {
+                        if (pickerInicio) pickerInicio.destroy();
+                        pickerInicio = flatpickr('#picker_data_inicio', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today',
+                            onChange: function(sel) { pickerInicio.input._flatpickrSelectedDate = sel[0]||null; syncHiddenInicio(); if(sel[0]) carregarHorariosInicio(estacaoId, flatpickr.formatDate(sel[0],'Y-m-d')); onDateHoraChanged(); }
+                        });
+                    });
+            }
+
+            function criarPickerFim(estacaoId) {
+                fetch(`${diasDisponiveisUrl}?estacao_id=${estacaoId}&dias=90&tipo=devolucao`)
+                    .then(r => r.json()).then(function(data) {
+                        const dispSet = new Set((data.dias_disponiveis || []).map(x => x.data || x));
+                        const disable = [function(date) {
+                            const s = flatpickr.formatDate(date, 'Y-m-d');
+                            return !dispSet.has(s);
+                        }];
+                        if (pickerFim) pickerFim.destroy();
+                        pickerFim = flatpickr('#picker_data_fim', {
+                            locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today',
+                            disable: disable,
+                            onChange: function(sel) {
+                                pickerFim.input._flatpickrSelectedDate = sel[0] || null;
+                                syncHiddenFim();
+                                if (sel[0]) carregarHorariosFim(estacaoId, flatpickr.formatDate(sel[0], 'Y-m-d'));
+                                onDateHoraChanged();
+                            }
+                        });
+                    }).catch(function() {
+                        if (pickerFim) pickerFim.destroy();
+                        pickerFim = flatpickr('#picker_data_fim', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today',
+                            onChange: function(sel) { pickerFim.input._flatpickrSelectedDate = sel[0]||null; syncHiddenFim(); if(sel[0]) carregarHorariosFim(estacaoId, flatpickr.formatDate(sel[0],'Y-m-d')); onDateHoraChanged(); }
+                        });
+                    });
+            }
+
+            function carregarHorariosInicio(estacaoId, data) {
+                const sel = document.getElementById('hora_inicio');
+                sel.innerHTML = '<option value="">Carregando...</option>';
+                fetch(`${agendaUrl}?estacao_id=${estacaoId}&data=${data}&limite=1`)
+                    .then(r => r.json()).then(function(d) {
+                        const slots = d.slots || d.horarios || [];
+                        sel.innerHTML = '<option value="">Selecione o horario...</option>';
+                        if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return; }
+                        slots.forEach(function(s) {
+                            const val = _toHHmm(s.value);
+                            const label = s.taxa_extra ? `${s.label} • Taxa extra` : s.label;
+                            const opt = document.createElement('option');
+                            opt.value = val; opt.textContent = label;
+                            opt.dataset.taxaExtra = s.taxa_extra ? '1' : '0';
+                            sel.appendChild(opt);
+                        });
+                        // auto-select first
+                        if (slots.length === 1) sel.value = _toHHmm(slots[0].value);
+                        sel.style.display = '';
+                        syncHiddenInicio();
+                        updateTaxaInicio();
+                        onDateHoraChanged();
+                    }).catch(function() { sel.innerHTML = '<option value="">Erro ao carregar</option>'; sel.style.display=''; });
+            }
+
+            function carregarHorariosFim(estacaoId, data) {
+                const sel = document.getElementById('hora_fim');
+                sel.innerHTML = '<option value="">Carregando...</option>';
+                fetch(`${agendaUrl}?estacao_id=${estacaoId}&data=${data}&limite=1`)
+                    .then(r => r.json()).then(function(d) {
+                        const slots = d.slots || d.horarios || [];
+                        sel.innerHTML = '<option value="">Selecione o horario...</option>';
+                        if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return; }
+                        slots.forEach(function(s) {
+                            const val = _toHHmm(s.value);
+                            const label = s.taxa_extra ? `${s.label} • Taxa extra` : s.label;
+                            const opt = document.createElement('option');
+                            opt.value = val; opt.textContent = label;
+                            opt.dataset.taxaExtra = s.taxa_extra ? '1' : '0';
+                            sel.appendChild(opt);
+                        });
+                        if (slots.length === 1) sel.value = _toHHmm(slots[0].value);
+                        sel.style.display = '';
+                        syncHiddenFim();
+                        updateTaxaFim();
+                        onDateHoraChanged();
+                    }).catch(function() { sel.innerHTML = '<option value="">Erro ao carregar</option>'; sel.style.display=''; });
+            }
+
+            function updateTaxaInicio() {
+                const sel = document.getElementById('hora_inicio');
+                const opt = sel.options[sel.selectedIndex];
+                const isTaxa = opt && opt.dataset.taxaExtra === '1';
+                const estId = document.getElementById('estacao_retirada_id').value;
+                const taxa = isTaxa ? Number(ESTACOES_TAXAS[estId]?.valor_taxa_coleta || 0) : 0;
+                state.taxaColeta = taxa;
+                document.getElementById('taxa_aviso_inicio').classList.toggle('visible', isTaxa);
+                refresh();
+            }
+
+            function updateTaxaFim() {
+                const sel = document.getElementById('hora_fim');
+                const opt = sel.options[sel.selectedIndex];
+                const isTaxa = opt && opt.dataset.taxaExtra === '1';
+                const estId = document.getElementById('estacao_devolucao_id').value;
+                const taxa = isTaxa ? Number(ESTACOES_TAXAS[estId]?.valor_taxa_entrega || 0) : 0;
+                state.taxaEntrega = taxa;
+                document.getElementById('taxa_aviso_fim').classList.toggle('visible', isTaxa);
+                refresh();
+            }
+
+            document.getElementById('hora_inicio').addEventListener('change', function() {
+                syncHiddenInicio();
+                updateTaxaInicio();
+                onDateHoraChanged();
             });
-            dataFim.addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); atualizarEstacoesDisponiveis(); if (grupo.value) loadDisponibilidade(); });
+            document.getElementById('hora_fim').addEventListener('change', function() {
+                syncHiddenFim();
+                updateTaxaFim();
+                onDateHoraChanged();
+            });
+
             document.getElementById('estacao_retirada_id').addEventListener('change', function () {
-                const devolucao = document.getElementById('estacao_devolucao_id');
-                if ((!estacaoDevolucaoAlterada || !devolucao.value) && this.value) {
-                    devolucao.value = this.value;
-                }
-                refresh();
-                enforceStep1Gate(false);
-                updatePrefill();
-                if (grupo.value) loadDisponibilidade();
+                const estId = this.value;
+                state.taxaColeta = 0;
+                document.getElementById('taxa_aviso_inicio').classList.remove('visible');
+                document.getElementById('hora_inicio').style.display = 'none';
+                document.getElementById('hora_inicio').innerHTML = '<option value="">Selecione o horario...</option>';
+                dataInicio.value = '';
+                if (pickerInicio) { pickerInicio.clear(); }
+                if (estId) criarPickerInicio(estId);
+                refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade();
             });
-            document.getElementById('estacao_devolucao_id').addEventListener('change', function () { refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade(); });
-            document.getElementById('estacao_devolucao_id').addEventListener('change', function () { estacaoDevolucaoAlterada = true; });
+            document.getElementById('estacao_devolucao_id').addEventListener('change', function () {
+                const estId = this.value;
+                state.taxaEntrega = 0;
+                document.getElementById('taxa_aviso_fim').classList.remove('visible');
+                document.getElementById('hora_fim').style.display = 'none';
+                document.getElementById('hora_fim').innerHTML = '<option value="">Selecione o horario...</option>';
+                dataFim.value = '';
+                if (pickerFim) { pickerFim.clear(); }
+                if (estId) criarPickerFim(estId);
+                refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade();
+            });
             grupo.addEventListener('change', function () {
                 const card = selectedGrupoCard();
-                state.tarifa = Number(card?.getAttribute('data-tarifa') || 0);
+                // Only update tarifa from card if found; if selected from modal, state.tarifa is already set
+                if (card) state.tarifa = Number(card.getAttribute('data-tarifa') || 0);
                 state.opcionais = {};
                 modelo.value = '';
                 state.modeloNome = null;
                 modelosDisponiveis = {};
-                if (modelosGrid) {
-                    modelosGrid.innerHTML = '';
-                }
+                if (modelosGrid) modelosGrid.innerHTML = '';
                 updateModeloAutoNote('', null);
                 opcionaisGrid.innerHTML = '';
                 highlightGrupo();
                 refresh();
-                atualizarEstacoesDisponiveis();
-                loadDisponibilidade();
+                if (validStep1(false)) {
+                    loadDisponibilidade();
+                } else {
+                    feedback('disponibilidadeFeedback', 'Preencha as datas e estacoes no passo 1 para ver disponibilidade.', 'warn');
+                }
             });
             modelo.addEventListener('change', function () {
                 const card = selectedModeloCard();
@@ -1083,7 +1240,6 @@
                     state.modeloNome = card.getAttribute('data-modelo-nome') || null;
                 }
                 refresh();
-                atualizarEstacoesDisponiveis();
             });
             document.getElementById('btnCupom').addEventListener('click', applyCupom);
             opcionaisGrid.addEventListener('click', function (ev) { const t = ev.target; if (!(t instanceof HTMLElement)) return; const id = Number(t.dataset.id || 0); if (!id || !state.opcionais[id]) return; if (t.dataset.a === 'p') state.opcionais[id].quantidade = Math.max(0, Number(state.opcionais[id].quantidade || 0) + 1); if (t.dataset.a === 'm') state.opcionais[id].quantidade = Math.max(0, Number(state.opcionais[id].quantidade || 0) - 1); const span = document.getElementById(`q-${id}`); if (span) span.textContent = String(state.opcionais[id].quantidade); refresh(); });
@@ -1101,7 +1257,6 @@
                     state.modeloNome = card.getAttribute('data-modelo-nome') || null;
                     highlightModelo();
                     refresh();
-                    atualizarEstacoesDisponiveis();
                     if (state.step === 2 && validStep2(false)) {
                         state.step = 3;
                         renderStep();
@@ -1118,14 +1273,14 @@
                     const mode = btn.dataset.clientTab || 'cadastro';
                     setClientMode(mode);
                     if (clientFeedback) {
-                        feedback('clientFeedback', mode === 'login' ? 'Faça login para continuar.' : 'Preencha seus dados para seguir.', null);
+                        feedback('clientFeedback', mode === 'login' ? 'Faca login para continuar.' : 'Preencha seus dados para seguir.', null);
                     }
                 });
             });
             if (isAuth) {
                 setClientMode('login');
                 if (clientFeedback) {
-                    feedback('clientFeedback', 'Escolha usar o usuário logado ou cadastrar outro.', 'ok');
+                    feedback('clientFeedback', 'Escolha usar o usuario logado ou cadastrar outro.', 'ok');
                 }
             } else {
                 setClientMode('cadastro');
@@ -1137,67 +1292,150 @@
                     const id = card.getAttribute('data-grupo-id');
                     if (!id) return;
                     grupo.value = id;
-                    hideAlertSemDisponibilidade();
                     highlightGrupo();
                     const changeEvent = new Event('change', { bubbles: true });
                     grupo.dispatchEvent(changeEvent);
                 });
             }
             maskCelular();
-            // ── Inicializar datas com valores padrão sensatos ──────────────────────
-            (function initDatas() {
-                const now = new Date();
-                now.setSeconds(0, 0);
-
-                // Amanhã às 08:00 (horário padrão de abertura)
-                const amanha = new Date(now);
-                amanha.setDate(amanha.getDate() + 1);
-                amanha.setHours(8, 0, 0, 0);
-
-                // Daqui a 3 dias às 08:00 (mínimo de 1 diária + margem confortável)
-                const volta = new Date(amanha);
-                volta.setDate(volta.getDate() + 2);
-
-                function toLocal(d) {
-                    return d.getFullYear() + '-'
-                        + String(d.getMonth() + 1).padStart(2, '0') + '-'
-                        + String(d.getDate()).padStart(2, '0') + 'T'
-                        + String(d.getHours()).padStart(2, '0') + ':'
-                        + String(d.getMinutes()).padStart(2, '0');
+            // Init pickers for pre-selected stations
+            (function() {
+                const estRet = document.getElementById('estacao_retirada_id').value;
+                const estDev = document.getElementById('estacao_devolucao_id').value;
+                if (estRet) criarPickerInicio(estRet);
+                else { pickerInicio = flatpickr('#picker_data_inicio', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0]||null; syncHiddenInicio(); onDateHoraChanged(); } }); }
+                if (estDev) criarPickerFim(estDev);
+                else { pickerFim = flatpickr('#picker_data_fim', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0]||null; syncHiddenFim(); onDateHoraChanged(); } }); }
+                // Restore from old() values if present
+                const oldInicio = dataInicio.value;
+                const oldFim = dataFim.value;
+                if (oldInicio && oldInicio.includes('T')) {
+                    const [datePart, timePart] = oldInicio.split('T');
+                    setTimeout(function() {
+                        if (pickerInicio) pickerInicio.setDate(datePart.replace(/-/g,'/'), true, 'Y/m/d');
+                        const sel = document.getElementById('hora_inicio');
+                        if (sel && timePart) { if (estRet) carregarHorariosInicio(estRet, datePart); }
+                    }, 500);
                 }
-
-                if (dataInicio) {
-                    dataInicio.setAttribute('min', toLocal(now));
-                    // Se o valor atual está vazio ou no passado → substituir pelo padrão
-                    const valAtual = dataInicio.value ? new Date(dataInicio.value) : null;
-                    if (!valAtual || isNaN(valAtual.getTime()) || valAtual < now) {
-                        dataInicio.value = toLocal(amanha);
-                    }
-                }
-                if (dataFim) {
-                    const refInicio = dataInicio?.value ? new Date(dataInicio.value) : amanha;
-                    const minFim = new Date(refInicio.getTime() + 86400000);
-                    dataFim.setAttribute('min', toLocal(minFim));
-                    const valFimAtual = dataFim.value ? new Date(dataFim.value) : null;
-                    if (!valFimAtual || isNaN(valFimAtual.getTime()) || valFimAtual <= refInicio) {
-                        dataFim.value = toLocal(volta);
-                    }
+                if (oldFim && oldFim.includes('T')) {
+                    const [datePart, timePart] = oldFim.split('T');
+                    setTimeout(function() {
+                        if (pickerFim) pickerFim.setDate(datePart.replace(/-/g,'/'), true, 'Y/m/d');
+                        if (estDev) carregarHorariosFim(estDev, datePart);
+                    }, 500);
                 }
             })();
+
+            // ---- Search modal ----
+            (function() {
+                let pgfPage = 1;
+                const modal = document.getElementById('modalBuscarGrupo');
+                const btnOpen = document.getElementById('btnBuscarGrupo');
+                const btnClose = document.getElementById('modalBuscarGrupoClose');
+                const btnFechar = document.getElementById('modalBuscarGrupoFechar');
+                if (btnOpen) btnOpen.addEventListener('click', function() { modal.classList.add('open'); pgfBuscar(1); });
+                if (btnClose) btnClose.addEventListener('click', function() { modal.classList.remove('open'); });
+                if (btnFechar) btnFechar.addEventListener('click', function() { modal.classList.remove('open'); });
+                modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.remove('open'); });
+
+                document.getElementById('pgf_buscar').addEventListener('click', function() { pgfBuscar(1); });
+                document.getElementById('pgf_limpar').addEventListener('click', function() {
+                    ['pgf_grupo','pgf_modelo','pgf_marca','pgf_segmento','pgf_valor_min','pgf_valor_max'].forEach(function(id) { document.getElementById(id).value = ''; });
+                    pgfBuscar(1);
+                });
+
+                function pgfBuscar(page) {
+                    pgfPage = page || 1;
+                    const params = new URLSearchParams({ por_pagina: 10, page: pgfPage });
+                    const grupo_v = document.getElementById('pgf_grupo').value.trim();
+                    const modelo_v = document.getElementById('pgf_modelo').value.trim();
+                    const marca_v = document.getElementById('pgf_marca').value.trim();
+                    const seg_v = document.getElementById('pgf_segmento').value.trim();
+                    const vmin = document.getElementById('pgf_valor_min').value.trim();
+                    const vmax = document.getElementById('pgf_valor_max').value.trim();
+                    if (grupo_v) params.set('grupo', grupo_v);
+                    if (modelo_v) params.set('modelo', modelo_v);
+                    if (marca_v) params.set('marca', marca_v);
+                    if (seg_v) params.set('segmento', seg_v);
+                    if (vmin) params.set('valor_min', vmin);
+                    if (vmax) params.set('valor_max', vmax);
+                    document.getElementById('pgf_loading').style.display = '';
+                    document.getElementById('pgf_empty').style.display = 'none';
+                    document.getElementById('pgf_results').style.display = 'none';
+                    fetch(`${pesquisarGruposUrl}?${params.toString()}`, { headers: { Accept: 'application/json' } })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            document.getElementById('pgf_loading').style.display = 'none';
+                            const items = data.data || [];
+                            if (!items.length) { document.getElementById('pgf_empty').style.display = ''; return; }
+                            document.getElementById('pgf_total_label').textContent = `${data.total} grupos encontrados`;
+                            const tbody = document.getElementById('pgf_tbody');
+                            tbody.innerHTML = items.map(function(g) {
+                                const img = g.imagem_url ? `<img src="${g.imagem_url}" class="pgf-thumb" alt="${g.nome}">` : '<span style="font-size:11px;color:#94a3b8">Sem img</span>';
+                                const marcas = (g.marcas||[]).map(function(m){ return `<span class="pgf-badge">${m}</span>`; }).join('');
+                                const segs = (g.segmentos||[]).map(function(s){ return `<span class="pgf-badge">${s}</span>`; }).join('');
+                                const modelos = (g.modelos||[]).slice(0,3).map(function(m){ return `<span class="pgf-badge">${m.nome}</span>`; }).join('');
+                                return `<tr>
+                                    <td>${img}</td>
+                                    <td><strong style="font-size:13px">${g.nome}</strong>${marcas ? '<br>'+marcas : ''}</td>
+                                    <td>${modelos}</td>
+                                    <td>${segs}</td>
+                                    <td style="text-align:right;font-weight:700">${money(g.valor_diario)}</td>
+                                    <td><button type="button" class="btn btn-primary pgf-selecionar" data-grupo-id="${g.id}" data-grupo-nome="${g.nome}" data-tarifa="${g.valor_diario}" style="min-height:30px;font-size:12px;padding:4px 10px">Selecionar</button></td>
+                                </tr>`;
+                            }).join('');
+                            // pagination
+                            const pag = document.getElementById('pgf_paginacao');
+                            pag.innerHTML = '';
+                            for (let p = 1; p <= data.last_page; p++) {
+                                const btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.textContent = p;
+                                btn.className = 'btn ' + (p === pgfPage ? 'btn-primary' : 'btn-secondary');
+                                btn.style.cssText = 'min-height:28px;padding:2px 10px;font-size:12px';
+                                btn.addEventListener('click', function() { pgfBuscar(p); });
+                                pag.appendChild(btn);
+                            }
+                            document.getElementById('pgf_results').style.display = '';
+                        }).catch(function() {
+                            document.getElementById('pgf_loading').style.display = 'none';
+                            document.getElementById('pgf_empty').style.display = '';
+                            document.getElementById('pgf_empty').textContent = 'Erro ao buscar grupos.';
+                        });
+                }
+
+                document.getElementById('pgf_tbody').addEventListener('click', function(e) {
+                    const btn = e.target instanceof HTMLElement ? e.target.closest('.pgf-selecionar') : null;
+                    if (!btn) return;
+                    const id = btn.dataset.grupoId;
+                    const tarifa = btn.dataset.tarifa;
+                    if (!id) return;
+                    modal.classList.remove('open');
+                    // Set tarifa BEFORE dispatching change (handler will keep it if no card found)
+                    grupo.value = id;
+                    state.tarifa = Number(tarifa || 0);
+                    // Navigate to step 2 so the user sees the result
+                    if (state.step !== 2) {
+                        state.step = 2;
+                        renderStep();
+                    }
+                    const changeEvent = new Event('change', { bubbles: true });
+                    grupo.dispatchEvent(changeEvent);
+                });
+            })();
+
             renderStep();
             enforceStep1Gate(false);
             if (!reservaSelecionarModelo) {
-                updateModeloAutoNote('Selecione um grupo para escolher o modelo automaticamente.', null); // kept as-is (accented)
+                updateModeloAutoNote('Selecione um grupo para escolher o modelo automaticamente.', null);
             }
             refresh();
             updatePrefill();
             highlightGrupo();
             highlightModelo();
             (async function initOld() {
-                atualizarEstacoesDisponiveis();
                 if (grupo.value) {
                     await loadDisponibilidade();
-                    atualizarEstacoesDisponiveis();
                     if (oldOpcionaisPayload) {
                         try {
                             const arr = JSON.parse(oldOpcionaisPayload);
