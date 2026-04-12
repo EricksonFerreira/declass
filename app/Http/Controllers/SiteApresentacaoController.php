@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Empresa;
 use App\Models\Estacao;
 use App\Services\EstacaoService;
+use App\Support\EmpresaContext;
 use App\Support\DomainNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -33,6 +34,8 @@ class SiteApresentacaoController extends Controller
         if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
             return $this->defaultResponse();
         }
+
+        $this->activateEmpresaContext($empresa);
 
         $modelo = $this->resolveModelo((string) ($empresa->site_apresentacao_modelo ?? self::MODELO_1));
         $textos = is_array($empresa->site_apresentacao_textos) ? $empresa->site_apresentacao_textos : [];
@@ -305,6 +308,11 @@ class SiteApresentacaoController extends Controller
                 ];
             })
             ->all();
+    }
+
+    private function activateEmpresaContext(Empresa $empresa): void
+    {
+        app(EmpresaContext::class)->setEmpresaId((int) $empresa->id);
     }
 
     private function resolveModelo(string $modelo): string
