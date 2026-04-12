@@ -836,6 +836,16 @@
                 }).format(numero);
             }
 
+            function fireSwal(options) {
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    return window.Swal.fire(options);
+                }
+
+                const title = options?.title || options?.text || 'Aviso';
+                const text = options?.text && options.text !== title ? `\n${options.text}` : '';
+                window.alert(`${title}${text}`);
+            }
+
             const $tipoFrota = $('#tipo_frota_id');
             const $marca = $('#marca_id');
             const $modelo = $('#modelo_id');
@@ -1052,6 +1062,9 @@
 
                     ultimaFalhaFipe = null;
                     limparStatusFipe();
+                    $fipeLookupStatus.removeClass('d-none alert-danger').addClass('alert-success').html(
+                        `<strong>FIPE consultada:</strong> ${resp.valor_fipe ? formatarMoedaBR(resp.valor_fipe) : 'Dados atualizados.'}`
+                    );
                     fireSwal({
                         toast: true,
                         position: 'top-end',
