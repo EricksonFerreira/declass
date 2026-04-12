@@ -335,14 +335,14 @@
                         <div class="form-row">
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" step="0.01" min="0" class="form-control form-control-sm"
+                                    <x-form-input type="text" inputmode="decimal" autocomplete="off" data-money-field="1" class="form-control form-control-sm"
                                         id="valor_compra" name="valor_compra" label="Valor de Compra"
                                         value="{{ old('valor_compra', $veiculo->valor_compra ?? '') }}" />
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" step="0.01" min="0" class="form-control form-control-sm"
+                                    <x-form-input type="text" inputmode="decimal" autocomplete="off" data-money-field="1" class="form-control form-control-sm"
                                         id="valor_fipe" name="valor_fipe" label="Valor FIPE"
                                         value="{{ old('valor_fipe', $veiculo->valor_fipe ?? '') }}" />
                                 </div>
@@ -836,6 +836,70 @@
                 }).format(numero);
             }
 
+            function parseMoedaBR(valor) {
+                if (valor === null || valor === undefined) {
+                    return '';
+                }
+
+                const texto = String(valor).trim();
+                if (texto === '') {
+                    return '';
+                }
+
+                const somenteNumeros = texto.replace(/[^\d,.-]/g, '');
+                if (somenteNumeros === '') {
+                    return '';
+                }
+
+                if (somenteNumeros.includes(',')) {
+                    return somenteNumeros.replace(/\./g, '').replace(',', '.');
+                }
+
+                return somenteNumeros.replace(/\./g, '');
+            }
+
+            function formatarCamposMoeda() {
+                $('[data-money-field="1"]').each(function() {
+                    const valorNormalizado = parseMoedaBR($(this).val());
+                    if (valorNormalizado === '') {
+                        $(this).val('');
+                        return;
+                    }
+
+                    const numero = Number(valorNormalizado);
+                    if (!Number.isNaN(numero)) {
+                        $(this).val(formatarMoedaBR(numero));
+                    }
+                });
+            }
+
+            function desformatarCamposMoedaParaEnvio() {
+                $('[data-money-field="1"]').each(function() {
+                    const valorNormalizado = parseMoedaBR($(this).val());
+                    $(this).val(valorNormalizado);
+                });
+            }
+
+            $(document).on('focus', '[data-money-field="1"]', function() {
+                const valorNormalizado = parseMoedaBR($(this).val());
+                if (valorNormalizado !== '') {
+                    $(this).val(valorNormalizado);
+                }
+            });
+
+            $(document).on('blur', '[data-money-field="1"]', function() {
+                const valorNormalizado = parseMoedaBR($(this).val());
+                if (valorNormalizado === '') {
+                    $(this).val('');
+                    return;
+                }
+
+                const numero = Number(valorNormalizado);
+                if (!Number.isNaN(numero)) {
+                    $(this).val(formatarMoedaBR(numero));
+                }
+            });
+
             function fireSwal(options) {
                 if (window.Swal && typeof window.Swal.fire === 'function') {
                     return window.Swal.fire(options);
@@ -874,6 +938,8 @@
                 ultimaFalhaFipe = null;
                 limparStatusFipe();
             }
+
+            formatarCamposMoeda();
 
             $('#marca_id, #modelo_id, #ano_modelo').on('change input', function() {
                 limparCacheFalhaFipe();
@@ -1045,7 +1111,7 @@
                     }
 
                     if (resp.valor_fipe !== null && resp.valor_fipe !== undefined) {
-                        $valorFipe.val(resp.valor_fipe);
+                        $valorFipe.val(formatarMoedaBR(resp.valor_fipe));
                     }
                     if (resp.codigo_fipe) {
                         $codigoFipe.val(resp.codigo_fipe);
@@ -1062,9 +1128,6 @@
 
                     ultimaFalhaFipe = null;
                     limparStatusFipe();
-                    $fipeLookupStatus.removeClass('d-none alert-danger').addClass('alert-success').html(
-                        `<strong>FIPE consultada:</strong> ${resp.valor_fipe ? formatarMoedaBR(resp.valor_fipe) : 'Dados atualizados.'}`
-                    );
                     fireSwal({
                         toast: true,
                         position: 'top-end',
@@ -1097,6 +1160,9 @@
             }
 
             $btnConsultarFipe.on('click', consultarFipe);
+            $('#formulario').on('submit', function() {
+                desformatarCamposMoedaParaEnvio();
+            });
 
             // â”€â”€ Validações de datas e km â”€â”€
             (function() {

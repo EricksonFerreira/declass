@@ -517,12 +517,12 @@ return [
             'icon'    => 'fas fa-car',
             'submenu' => [
                 [
-                    'text' => 'Listagem de VeÃƒÆ’Ã‚Â­culos',
+                    'text' => 'Listagem de Veículos',
                     'route' => 'veiculo.index',
                     'icon' => 'fas fa-car-side',
                 ],
                 [
-                    'text' => 'Novo VeÃƒÆ’Ã‚Â­culo',
+                    'text' => 'Novo Veículo',
                     'route' => 'veiculo.create',
                     'icon' => 'fas fa-plus-circle',
                 ],
