@@ -16,6 +16,9 @@ use App\Http\Requests\Reserva\StoreReservaRequest;
 use App\Http\Requests\Reserva\UpdateReservaRequest;
 use App\Models\Calcao;
 use App\Models\ContratoCheckout;
+use App\Models\Estacao;
+use App\Models\Feriado;
+use App\Models\Multa;
 use App\Models\Transacao;
 use App\Services\CalcaoService;
 use App\Services\UpgradeVeiculoService;
@@ -44,6 +47,7 @@ use App\Services\VeiculoService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\LogTrait;
 use App\Models\Reserva;
+use App\Models\Veiculo;
 use DB;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
@@ -154,9 +158,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             }
 
             $reservas = $query->paginate(10);
+            $multas = $this->multasDoCliente($user);
+            $multasPendentesCount = $this->multasPendentesCount($user);
 
             return view('reserva.index-cliente', [
                 'reservas' => $reservas,
+                'multas' => $multas,
+                'multasPendentesCount' => $multasPendentesCount,
                 'titulo' => 'Minhas reservas',
             ]);
         }
@@ -207,6 +215,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         $reservas = $query->paginate($perPage);
+        $multas   = $this->multasDoCliente($user);
+        $multasPendentesCount = $this->multasPendentesCount($user);
 
         $breadcrumb        = $this->breadcrumbService->prepararBreadcrumbIndex('Minhas Reservas');
         $perPages          = [5, 10, 15, 25, 50, 100];
@@ -221,7 +231,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'itensFiltered',
             'additionalFilters',
             'perPages',
-            'perPage'
+            'perPage',
+            'multasPendentesCount'
         ))->with('titulo', 'Minhas Reservas');
     }
 
@@ -229,6 +240,55 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     {
         $roleName = strtolower(trim((string) ($user?->tipoUsuario?->name ?? '')));
         return $roleName === 'cliente';
+    }
+
+    private function multasDoCliente($user)
+    {
+        if (!$user) {
+            return collect();
+        }
+
+        $query = Multa::query()
+            ->with(['reserva.usuario', 'veiculo.modelo', 'cliente'])
+            ->whereNull('pago_em')
+            ->orderByRaw('CASE WHEN data_vencimento IS NULL THEN 1 ELSE 0 END')
+            ->orderBy('data_vencimento')
+            ->orderByDesc('id');
+
+        if (Schema::hasColumn('multas', 'empresa_id') && !empty($user->empresa_id)) {
+            $query->where('empresa_id', (int) $user->empresa_id);
+        }
+
+        $query->where(function ($subQuery) use ($user): void {
+            $subQuery->where('cliente_id', $user->id)
+                ->orWhereHas('reserva', function ($reservaQuery) use ($user): void {
+                    $reservaQuery->where('user_id', $user->id);
+                });
+        });
+
+        return $query->limit(12)->get();
+    }
+
+    private function multasPendentesCount($user): int
+    {
+        if (!$user) {
+            return 0;
+        }
+
+        $query = Multa::query()->whereNull('pago_em');
+
+        if (Schema::hasColumn('multas', 'empresa_id') && !empty($user->empresa_id)) {
+            $query->where('empresa_id', (int) $user->empresa_id);
+        }
+
+        $query->where(function ($subQuery) use ($user): void {
+            $subQuery->where('cliente_id', $user->id)
+                ->orWhereHas('reserva', function ($reservaQuery) use ($user): void {
+                    $reservaQuery->where('user_id', $user->id);
+                });
+        });
+
+        return (int) $query->count();
     }
 
     public function create()
@@ -242,9 +302,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         // Consultando as variáveis necessárias
         $users = $this->userService->getAllForReservaSelect();
-        $estacoes = $this->estacaoService->getAllAtivos();
+        $estacoesRetirada = $this->estacaoService->getEstacoesParaRetiradaSelect();
+        $estacoesDevolucao = $this->estacaoService->getEstacoesParaDevolucaoSelect();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
         $modelosAtivos = $this->modeloService->getAllAtivos();
+        $estacoes = $this->unirEstacoesReserva($estacoesRetirada, $estacoesDevolucao);
         $resumoVeiculosEstacoes = $this->montarResumoVeiculosPorEstacao($estacoes);
         $preRequisitosReserva = $this->montarPreRequisitosReserva(
             $estacoes,
@@ -273,7 +335,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'rota',
             'users',
             'gruposVeiculo',
-            'estacoes',
+            'estacoesRetirada',
+            'estacoesDevolucao',
             'preRequisitosReserva',
             'moedaEmpresa',
             'simboloMoedaEmpresa',
@@ -335,6 +398,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         $reserva->load([
+            'criadoPor',
             'nfseAtual',
             'transacoes' => function ($query) {
                 $query->with(['user', 'pagoPor'])->orderByDesc('id');
@@ -405,9 +469,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         // Consultando as variáveis necessárias
         $users = $this->userService->getAllForReservaSelect();
-        $estacoes = $this->estacaoService->getAllAtivos();
+        $estacoesRetirada = $this->estacaoService->getEstacoesParaRetiradaSelect();
+        $estacoesDevolucao = $this->estacaoService->getEstacoesParaDevolucaoSelect();
         $gruposVeiculo = $this->grupoFrotaService->getAllAtivosForSelectSubText('id', 'nome', 'valor_diario', null, 'asc');
         $modelosAtivos = $this->modeloService->getAllAtivos();
+        $estacoes = $this->unirEstacoesReserva($estacoesRetirada, $estacoesDevolucao);
         $resumoVeiculosEstacoes = $this->montarResumoVeiculosPorEstacao($estacoes);
         $preRequisitosReserva = $this->montarPreRequisitosReserva(
             $estacoes,
@@ -437,7 +503,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         return view('reserva.add-edit', compact(
             'opcionaisSelecionados',
             'users',
-            'estacoes',
+            'estacoesRetirada',
+            'estacoesDevolucao',
             'gruposVeiculo',
             'preRequisitosReserva',
             'moedaEmpresa',
@@ -528,6 +595,19 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         return empty($itens) ? 0 : 1;
+    }
+
+    private function unirEstacoesReserva(array $estacoesRetirada, array $estacoesDevolucao): array
+    {
+        $unificadas = [];
+
+        foreach ([$estacoesRetirada, $estacoesDevolucao] as $lista) {
+            foreach ($lista as $id => $nome) {
+                $unificadas[(int) $id] = (string) $nome;
+            }
+        }
+
+        return $unificadas;
     }
 
     private function montarResumoVeiculosPorEstacao($estacoes): array
@@ -1267,6 +1347,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'grupo_frota_id' => 'nullable|integer',
             'modelo_id' => 'nullable|integer',
             'reserva_id' => 'nullable|integer',
+            'tipo' => 'nullable|string|max:20',
         ]);
 
         $ids = $this->veiculoService->getEstacaoIdsComVeiculosDisponiveisNoPeriodo(
@@ -1279,6 +1360,222 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         return response()->json([
             'estacao_ids' => $ids,
+        ]);
+    }
+
+    public function estacoesDisponiveisNaDataHora(Request $request)
+    {
+        $request->validate([
+            'data_hora' => 'required|date',
+            'tipo' => 'nullable|string|max:20',
+            'grupo_frota_id' => 'nullable|integer',
+            'modelo_id' => 'nullable|integer',
+            'reserva_id' => 'nullable|integer',
+        ]);
+
+        $dataHora = (string) $request->input('data_hora');
+        $tipo = (string) ($request->input('tipo') ?: 'retirada');
+        $dataFimApoio = Carbon::parse($dataHora)->addMinute()->format('Y-m-d\TH:i');
+
+        $ids = $this->veiculoService->getEstacaoIdsComVeiculosDisponiveisNoPeriodo(
+            $dataHora,
+            $dataFimApoio,
+            $request->filled('grupo_frota_id') ? (int) $request->input('grupo_frota_id') : null,
+            $request->filled('modelo_id') ? (int) $request->input('modelo_id') : null,
+            $request->filled('reserva_id') ? (int) $request->input('reserva_id') : null,
+        );
+
+        $idsFiltrados = [];
+        foreach ($ids as $estacaoId) {
+            $msg = $this->reservaService->validarFuncionamentoEstacaoParaApi((int) $estacaoId, $dataHora, $tipo);
+            if ($msg === null) {
+                $idsFiltrados[] = (int) $estacaoId;
+            }
+        }
+
+        if ($tipo === 'retirada') {
+            $estacoesRetirada = array_keys($this->estacaoService->getEstacoesParaRetiradaSelect());
+            $quantidadesAtivas = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao($estacoesRetirada);
+
+            foreach ($quantidadesAtivas as $estacaoId => $totalAtivos) {
+                if ((int) $totalAtivos <= 0 && !in_array((int) $estacaoId, $idsFiltrados, true)) {
+                    $idsFiltrados[] = (int) $estacaoId;
+                }
+            }
+        }
+
+        return response()->json([
+            'estacao_ids' => $idsFiltrados,
+        ]);
+    }
+
+    public function datasRetiradaDisponiveisPorEstacao(Request $request)
+    {
+        $request->validate([
+            'estacao_id' => 'required|integer|exists:estacoes,id',
+            'data_base' => 'nullable|date',
+            'limite' => 'nullable|integer|min:1|max:60',
+        ]);
+
+        $datas = $this->reservaService->obterDatasRetiradaDisponiveisParaEstacao(
+            (int) $request->input('estacao_id'),
+            $request->filled('data_base') ? (string) $request->input('data_base') : null,
+            $request->filled('limite') ? (int) $request->input('limite') : 14,
+        );
+
+        return response()->json([
+            'datas' => $datas,
+        ]);
+    }
+
+    /**
+     * Retorna datas (YYYY-MM-DD) nos próximos N dias onde a estação está fechada OU sem veículos.
+     * Lógica:
+     *  1. Carregar tipos de dia (Dias da Semana, Sábado, Domingo, Feriados) da empresa via horarios_diarios.
+     *  2. Verificar quais tipos o horario da estação tem funciona=S.
+     *  3. Se a estação não trabalha em feriados, pré-carregar feriados do período e bloqueá-los.
+     *  4. Para dias em que a estação opera, bloquear os que tiverem 0 veículos disponíveis.
+     */
+    public function diasSemDisponibilidade(Request $request)
+{
+    $request->validate([
+        'estacao_id' => 'required|integer|exists:estacoes,id',
+        'dias'       => 'nullable|integer|min:1|max:180',
+        'tipo'       => 'nullable|string|max:20',
+    ]);
+
+    $estacaoId     = (int) $request->input('estacao_id');
+    $dias          = (int) ($request->input('dias') ?: 90);
+    $tipo          = strtolower(trim((string) ($request->input('tipo') ?: 'retirada')));
+    $isDevolucao   = $tipo === 'devolucao';
+    $hoje          = Carbon::today();
+
+    $estacao = Estacao::with(['diasUteis'])->findOrFail($estacaoId);
+
+    // Para retirada: só mostra dias se há veículos ativos na estação
+    if (!$isDevolucao) {
+        $quantidadeVeiculosAtivos = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao([$estacaoId]);
+        if ((int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) <= 0) {
+            return response()->json([
+                'estacao_id'      => $estacao->id,
+                'dias_disponiveis' => [],
+            ]);
+        }
+    }
+
+    // 1. dias em que a estação funciona (baseado no horário/escala)
+    $proximosDias = $estacao->proximosDiasFuncionamento($dias, $hoje);
+
+    // 2. remover feriados, caso não opere em feriado
+    $proximosDias = $this->removerFeriados(
+        $proximosDias,
+        $estacao->id,
+        $estacao->opera_feriado
+    );
+
+    // 3. para retirada: filtrar apenas dias com veículo disponível
+    //    para devolução: todos os dias de funcionamento são válidos
+    $diasDisponiveis = $isDevolucao
+        ? $proximosDias
+        : $estacao->filtrarDiasComVeiculoDisponivel($proximosDias);
+
+    return response()->json([
+        'estacao_id'      => $estacao->id,
+        'dias_disponiveis' => $diasDisponiveis,
+    ]);
+}
+
+    /**
+     * Sinalize que precisa fazer!!!
+     * Aqui seria o local para remover os feriados do array de proximos dias, caso a estação não opere em feriados.
+     * 
+     * @param array $dados Array de dias com ['data' => 'YYYY-MM-DD', 'dia_semana' => 0..6]
+     * @return array Mesmos dados, mas com os feriados removidos (caso a estação não opere em feriados).
+     */
+    private function removerFeriados($dados,$estacao_id,$operaFeriado)
+    {
+        if ($operaFeriado) {
+            return $dados;
+        }
+
+        if (empty($dados)) {
+            return $dados;
+        }
+
+        $dataInicial = $dados[0]['data'];
+        $dataFinal = end($dados)['data'];
+
+        $feriados = Feriado::where('estacao_id', $estacao_id)
+            ->whereBetween('data', [
+                $dataInicial,
+                $dataFinal
+            ])
+            ->where('ativo','S')
+            ->pluck('data')
+            ->map(fn ($data) => Carbon::parse($data)->toDateString())
+            ->flip()
+            ->all();
+
+        $dados = array_values(array_filter($dados, fn ($d) => !isset($feriados[$d['data']])));
+        
+        return $dados;
+    }
+
+private function montarDiasSemanaFlags($diasUteis): array
+{
+    $diasPadrao = [
+        '0' => false,
+        '1' => false,
+        '2'   => false,
+        '3'  => false,
+        '4'  => false,
+        '5'  => false,
+        '6'  => false,
+    ];
+
+    $mapa = [
+        1 => '0',
+        2 => '1',
+        3 => '2',
+        4 => '3',
+        5 => '4',
+        6 => '5',
+        7 => '6',
+    ];
+
+    foreach ($diasUteis as $diaUtil) {
+        $numeroDia = (int) $diaUtil->dia;
+
+        if (isset($mapa[$numeroDia])) {
+            $diasPadrao[$mapa[$numeroDia]] = true;
+        }
+    }
+
+    return $diasPadrao;
+}
+
+
+
+    public function agendaDisponivelPorEstacao(Request $request)
+    {
+        $request->validate([
+            'estacao_id' => 'required|integer|exists:estacoes,id',
+            'tipo' => 'nullable|string|max:20',
+            'data_base' => 'nullable|date',
+            'limite' => 'nullable|integer|min:1|max:60',
+            'reserva_id' => 'nullable|integer',
+        ]);
+
+        $agenda = $this->reservaService->obterAgendaDisponivelPorEstacao(
+            (int) $request->input('estacao_id'),
+            (string) ($request->input('tipo') ?: 'retirada'),
+            $request->filled('data_base') ? (string) $request->input('data_base') : null,
+            $request->filled('limite') ? (int) $request->input('limite') : 14,
+            $request->filled('reserva_id') ? (int) $request->input('reserva_id') : null,
+        );
+
+        return response()->json([
+            'agenda' => $agenda,
         ]);
     }
 

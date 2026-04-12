@@ -17,6 +17,7 @@ class ReplicacaoBaseService
             'paises' => ['label' => 'Paises', 'area' => 'Cadastros Basicos', 'tables' => ['paises']],
             'segmentos' => ['label' => 'Segmentos', 'area' => 'Cadastros Basicos', 'tables' => ['segmentos']],
             'marcas' => ['label' => 'Marcas', 'area' => 'Cadastros Basicos', 'tables' => ['marcas']],
+            'modelos' => ['label' => 'Modelos', 'area' => 'Cadastros Basicos', 'tables' => ['modelos']],
             'dias_uteis' => ['label' => 'Dias Uteis', 'area' => 'Cadastros Basicos', 'tables' => ['dias_uteis']],
             'horarios_diarios' => ['label' => 'Horarios Diarios', 'area' => 'Cadastros Basicos', 'tables' => ['horarios_diarios']],
             'tipo_valor_caracteristica_frota' => ['label' => 'Tipos de Valor da Caracteristica de Frota', 'area' => 'Frota', 'tables' => ['tipo_valor_caracteristica_frota']],
@@ -299,6 +300,10 @@ class ReplicacaoBaseService
         if (in_array('tipo_frota', $result, true)) {
             $result[] = 'tipo_valor_caracteristica_frota';
             $result[] = 'caracteristicas_frotas';
+        }
+
+        if (in_array('modelos', $result, true)) {
+            $result[] = 'marcas';
         }
 
         // Grupo de frota depende de tipo de frota (e consequentemente das caracteristicas).

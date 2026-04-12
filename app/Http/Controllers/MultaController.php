@@ -13,6 +13,7 @@ use App\Models\Transacao;
 use App\Models\TipoFrota;
 use App\Models\StatusVeiculo;
 use App\Models\Veiculo;
+use App\Notifications\AvisoSistemaNotification;
 use App\Services\BreadcrumbService;
 use App\Services\ClienteStripeService;
 use App\Services\MultaService;
@@ -26,7 +27,9 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Models\User;
 
 class MultaController extends BaseController
 {
@@ -181,6 +184,8 @@ class MultaController extends BaseController
         $dados = $request->except(['anexo_comprovante', 'anexo_pdf']);
 
         $multa = $this->multaService->criar($dados);
+
+        $this->notificarLocatarioMultaCriada($multa);
 
         if (!empty($multa->reserva_id)) {
             $this->reservaService->adicionaLog((int) $multa->reserva_id, Auth::id(), json_encode([
@@ -419,6 +424,43 @@ class MultaController extends BaseController
             'pago_em'  => $multa->pago_em->format('d/m/Y H:i'),
             'pago_por' => Auth::user()->nome ?? Auth::user()->name,
         ]);
+    }
+
+    private function notificarLocatarioMultaCriada(Multa $multa): void
+    {
+        $multa->loadMissing(['reserva.usuario', 'cliente']);
+        $usuario = $multa->reserva?->usuario ?? $multa->cliente;
+
+        if (!$usuario || empty($usuario->id)) {
+            return;
+        }
+
+        $chave = 'multa:' . (int) $multa->id . ':criacao';
+        $titulo = 'Nova multa registrada';
+        $mensagem = sprintf(
+            'Foi registrada uma multa para sua locação. Valor: %s. Vencimento: %s.',
+            number_format((float) ($multa->valor_final ?? $multa->valor_original ?? 0), 2, ',', '.'),
+            $multa->data_vencimento?->format('d/m/Y') ?? 'sem data'
+        );
+
+        if (DB::table('notifications')
+            ->where('notifiable_type', User::class)
+            ->where('notifiable_id', $usuario->id)
+            ->where('type', AvisoSistemaNotification::class)
+            ->where('data->chave', $chave)
+            ->exists()) {
+            return;
+        }
+
+        $usuario->notify(new AvisoSistemaNotification(
+            $titulo,
+            $mensagem,
+            route('site.multa.pagamento', ['multa' => $multa->id]),
+            'fas fa-exclamation-triangle',
+            'warning',
+            $chave,
+            'multa_registrada'
+        ));
     }
 
     public function destroy(int $id)

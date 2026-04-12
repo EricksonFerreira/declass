@@ -89,11 +89,7 @@
 
 /* Banner usando cor primária da empresa */
 .pf-banner {
-    height: 120px;
-    background:
-        radial-gradient(circle at 15% 30%, rgba(255,255,255,.18), transparent 40%),
-        radial-gradient(circle at 80% 70%, rgba(0,0,0,.12), transparent 40%),
-        var(--empresa-cor-primaria, #1F2937);
+    height: 55px;
     position: relative;
     display: flex;
     align-items: flex-start;

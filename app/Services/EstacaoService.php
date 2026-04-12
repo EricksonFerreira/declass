@@ -119,8 +119,19 @@ class EstacaoService extends AbstractBaseService
             for ($i = 0; $i < count($horarios['hora_abertura']); $i++) {
                 // Filtrar os horários para incluir apenas as chaves desejadas para o índice atual
                 $funciona24h = isset($horarios['funciona_24h'][$i]) ? $horarios['funciona_24h'][$i] : 'N';
+                $funciona = isset($horarios['funciona'][$i]) ? $horarios['funciona'][$i] : 'S';
+                $temIntervaloAlmoco = isset($horarios['tem_intervalo_almoco'][$i]) ? $horarios['tem_intervalo_almoco'][$i] : 'S';
 
-                if ($funciona24h === 'S') {
+                if ($funciona === 'N') {
+                    $abertura  = '00:00';
+                    $fechamento= '00:00';
+                    $iniAlmoco = '00:00';
+                    $fimAlmoco = '00:00';
+                    $iniForaEx = '00:00';
+                    $fimForaEx = '00:00';
+                    $funciona24h = 'N';
+                    $temIntervaloAlmoco = 'N';
+                } elseif ($funciona24h === 'S') {
                     $abertura  = '00:00';
                     $fechamento= '23:59';
                     $iniAlmoco = '00:00';
@@ -130,8 +141,8 @@ class EstacaoService extends AbstractBaseService
                 } else {
                     $abertura  = $horarios["hora_abertura"][$i];
                     $fechamento= $horarios["hora_fechamento"][$i];
-                    $iniAlmoco = $horarios["hora_inicio_almoco"][$i];
-                    $fimAlmoco = $horarios["hora_fim_almoco"][$i];
+                    $iniAlmoco = $temIntervaloAlmoco === 'S' ? $horarios["hora_inicio_almoco"][$i] : '00:00';
+                    $fimAlmoco = $temIntervaloAlmoco === 'S' ? $horarios["hora_fim_almoco"][$i] : '00:00';
                     $iniForaEx = $horarios["hora_inicio_fora_expediente"][$i];
                     $fimForaEx = $horarios["hora_fim_fora_expediente"][$i];
                 }
@@ -140,6 +151,8 @@ class EstacaoService extends AbstractBaseService
                     "estacao_id"                  => $estacaoId,
                     "horario_diario_id"           => $horarios['horario_diario_id'][$i],
                     "funciona_24h"                => $funciona24h,
+                    "funciona"                    => $funciona,
+                    "tem_intervalo_almoco"        => $temIntervaloAlmoco,
                     "hora_abertura"               => $abertura,
                     "hora_fechamento"             => $fechamento,
                     "hora_inicio_almoco"          => $iniAlmoco,
@@ -162,6 +175,42 @@ class EstacaoService extends AbstractBaseService
     {
         $estacoes = $this->model->where('id', '!=', $estacaoOrigem)->get();
         return $estacoes;
+    }
+
+    public function getEstacoesParaRetiradaSelect(): array
+    {
+        return $this->getEstacoesPorFlagOperacao('checkin');
+    }
+
+    public function getEstacoesParaDevolucaoSelect(): array
+    {
+        return $this->getEstacoesPorFlagOperacao('checkout');
+    }
+
+    private function getEstacoesPorFlagOperacao(string $flag): array
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->select(['id', 'nome'])
+            ->distinct();
+
+        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+            $query->where('ativo', 'S');
+        }
+
+        if (Schema::hasColumn($this->model->getTable(), $flag)) {
+            $query->where($flag, 'S');
+        }
+
+        $query->orderBy('nome', 'asc');
+
+        $empresaId = $this->currentEmpresaId();
+        if ($empresaId === null) {
+            return [];
+        }
+
+        $data = $query->where('empresa_id', $empresaId)->get();
+
+        return $this->formatArraySelect($data, 'id', 'nome');
     }
 
     /**

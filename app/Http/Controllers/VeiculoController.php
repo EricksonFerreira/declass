@@ -18,6 +18,7 @@ use App\Services\TipoFrotaService;
 use App\Services\VeiculoService;
 use App\Support\EmpresaContext;
 use App\Traits\AtualizaFiltrosTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
 use App\Models\TipoFrota;
@@ -30,7 +31,10 @@ use App\Models\StatusVeiculo;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class VeiculoController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -147,6 +151,122 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
+    public function consultarFipe(Request $request): JsonResponse
+    {
+        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+
+        $marcaExists = Rule::exists('marcas', 'id');
+        $modeloExists = Rule::exists('modelos', 'id');
+
+        if ($empresaId !== null) {
+            $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+        }
+
+        $dados = $request->validate([
+            'marca_id' => ['required', 'integer', $marcaExists],
+            'modelo_id' => ['required', 'integer', $modeloExists],
+            'ano_modelo' => 'required|integer|min:1900|max:' . ((int) date('Y') + 1),
+        ]);
+
+        $marca = Marca::query()->find($dados['marca_id']);
+        $modelo = Modelo::query()->find($dados['modelo_id']);
+
+        if (!$marca || !$modelo) {
+            return response()->json(['message' => 'Marca ou modelo nao encontrado no cadastro local.'], 422);
+        }
+
+        $baseUrl = rtrim((string) config('services.fipe.base_url', 'https://fipe.parallelum.com.br/api/v2'), '/');
+        $vehicleType = (string) config('services.fipe.vehicle_type', 'cars');
+
+        try {
+            $urlMarcas = $baseUrl . '/' . $vehicleType . '/brands';
+            $marcas = Http::acceptJson()->timeout(15)->get($urlMarcas)->throw()->json();
+            $marcaApi = collect($marcas)->first(function (array $item) use ($marca) {
+                $nomeApi = $this->normalizarTextoFipe((string) ($item['name'] ?? $item['nome'] ?? ''));
+                $nomeSistema = $this->normalizarTextoFipe((string) ($marca->nome_fipe ?? $marca->nome ?? ''));
+                $codigoLocal = (string) ($marca->codigo_fipe ?? '');
+                $codigoApi = (string) ($item['code'] ?? $item['codigo'] ?? '');
+
+                return ($codigoLocal !== '' && $codigoApi !== '' && $codigoLocal === $codigoApi)
+                    || $nomeApi === $nomeSistema
+                    || str_contains($nomeApi, $nomeSistema)
+                    || str_contains($nomeSistema, $nomeApi);
+            });
+
+            if (!$marcaApi) {
+                return response()->json(['message' => 'Nao foi possivel localizar a marca na FIPE.'], 422);
+            }
+
+            $codigoMarcaApi = (string) ($marcaApi['code'] ?? $marcaApi['codigo'] ?? '');
+            $urlMarcaModelos = $baseUrl . '/' . $vehicleType . '/brands/' . $codigoMarcaApi . '/models';
+            $modelosResponse = Http::acceptJson()
+                ->timeout(15)
+                ->get($urlMarcaModelos)
+                ->throw()
+                ->json();
+
+            $modelosApi = collect($modelosResponse);
+            $modeloApi = $modelosApi->first(function (array $item) use ($modelo) {
+                $nomeApi = $this->normalizarTextoFipe((string) ($item['name'] ?? $item['nome'] ?? ''));
+                $nomeSistema = $this->normalizarTextoFipe((string) ($modelo->nome_fipe ?? $modelo->nome ?? ''));
+                $codigoLocal = (string) ($modelo->codigo_fipe ?? '');
+                $codigoApi = (string) ($item['code'] ?? $item['codigo'] ?? '');
+
+                return ($codigoLocal !== '' && $codigoApi !== '' && $codigoLocal === $codigoApi)
+                    || $nomeApi === $nomeSistema
+                    || str_contains($nomeApi, $nomeSistema)
+                    || str_contains($nomeSistema, $nomeApi);
+            });
+
+            if (!$modeloApi) {
+                return response()->json(['message' => 'Nao foi possivel localizar o modelo na FIPE.'], 422);
+            }
+
+            $codigoModeloApi = (string) ($modeloApi['code'] ?? $modeloApi['codigo'] ?? '');
+            $urlMarcaModeloAnos = $baseUrl . '/' . $vehicleType . '/brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years';
+            $anosResponse = Http::acceptJson()
+                ->timeout(15)
+                ->get($urlMarcaModeloAnos)
+                ->throw()
+                ->json();
+
+            $anoModelo = (int) $dados['ano_modelo'];
+            $anoApi = collect($anosResponse)->first(function (array $item) use ($anoModelo) {
+                return Str::contains((string) ($item['name'] ?? $item['nome'] ?? ''), (string) $anoModelo);
+            });
+
+            if (!$anoApi) {
+                return response()->json(['message' => 'Nao foi possivel localizar o ano/modelo na FIPE.'], 422);
+            }
+
+
+            $urlDetalhe = $baseUrl . '/' . $vehicleType . '/brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years/' . $anoApi['code'];
+            $detalhe = Http::acceptJson()
+                ->timeout(15)
+                ->get($urlDetalhe)
+                ->throw()
+                ->json();
+
+            return response()->json([
+                'marca' => $marcaApi['name'] ?? $marcaApi['nome'] ?? $marca->nome,
+                'modelo' => $modeloApi['name'] ?? $modeloApi['nome'] ?? $modelo->nome,
+                'ano_modelo' => $anoModelo,
+                'codigo_fipe' => $detalhe['code'] ?? $detalhe['CodigoFipe'] ?? null,
+                'referencia_fipe' => $detalhe['reference'] ?? $detalhe['MesReferencia'] ?? null,
+                'valor_fipe' => $this->normalizarValorFipe($detalhe['price'] ?? $detalhe['Valor'] ?? null),
+                'valor_fipe_formatado' => $detalhe['price'] ?? $detalhe['Valor'] ?? null,
+                'combustivel' => $detalhe['fuel'] ?? $detalhe['Combustivel'] ?? null,
+                'ano_fipe' => $detalhe['modelYear'] ?? $detalhe['AnoModelo'] ?? null,
+                'data_consulta_fipe' => now()->format('Y-m-d'),
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Falha ao consultar a FIPE. Tente novamente.',
+            ], 500);
+        }
+    }
+
     public function show($id)
     {
         $dispMes = (int) request()->query('disp_mes', date('n'));
@@ -187,10 +307,14 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     'localOrigem:id,nome',
                     'localDestino:id,nome',
                     'reserva:id',
-                    'ordemServico:id,numero,status',
-                ])->orderByDesc('id');
+                'ordemServico:id,numero,status',
+            ])->orderByDesc('id');
             },
         ]);
+
+        if (!$veiculo) {
+            abort(404, 'Veiculo nao encontrado.');
+        }
 
         $reservaBloqueioHoras = 0;
         $empresaId = null;
@@ -328,6 +452,26 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         $dispEstacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc');
 
+        // --- Financeiro ---
+        $finReceita      = (float) $veiculo->reservas->sum('valor_total_final');
+        $finCustoMultas  = (float) $veiculo->multas->where('destino_cobranca', 'empresa')->sum('valor_final');
+        $finCustoSinistros = (float) $veiculo->sinistros->sum('valor_custo_empresa');
+        $finLucroLiquido = $finReceita - $finCustoMultas - $finCustoSinistros;
+
+        $finValorCompra  = (float) ($veiculo->valor_compra ?? 0);
+        $finRentabilidade = ($finValorCompra > 0) ? ($finLucroLiquido / $finValorCompra * 100) : null;
+
+        // Payback: meses desde a compra e receita líquida média mensal
+        $finPaybackMeses = null;
+        if ($finValorCompra > 0 && !empty($veiculo->data_compra)) {
+            $mesesUso = (int) Carbon::parse($veiculo->data_compra)->diffInMonths(Carbon::now());
+            if ($mesesUso > 0 && $finLucroLiquido > 0) {
+                $receitaMediaMensal = $finLucroLiquido / $mesesUso;
+                $finPaybackMeses = (int) ceil($finValorCompra / $receitaMediaMensal);
+            }
+        }
+        // ---
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Veiculos', route('veiculo.index')),
@@ -350,7 +494,14 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'dispReservas',
             'dispMovimentacoes',
             'reservaBloqueioHoras',
-            'dispEstacoes'
+            'dispEstacoes',
+            'finReceita',
+            'finCustoMultas',
+            'finCustoSinistros',
+            'finLucroLiquido',
+            'finValorCompra',
+            'finRentabilidade',
+            'finPaybackMeses'
         ));
     }
 
@@ -413,6 +564,158 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             ->get(['id', 'nome']);
 
         return response()->json($grupos);
+    }
+
+    public function buscarGruposModal(Request $request): JsonResponse
+    {
+        $queryTexto = trim((string) $request->input('q', ''));
+        $tipoFrotaId = (int) $request->input('tipo_frota_id', 0);
+
+        $query = $this->grupoFrotaService->getModel()->newQuery()
+            ->from('grupos_frota')
+            ->leftJoin('tipo_frotas', 'tipo_frotas.id', '=', 'grupos_frota.tipo_frota_id')
+            ->select([
+                'grupos_frota.id',
+                'grupos_frota.nome',
+                'grupos_frota.valor_diario',
+                'tipo_frotas.nome as tipo_frota_nome',
+            ])
+            ->where('grupos_frota.ativo', 'S');
+
+        if ($tipoFrotaId > 0) {
+            $query->where('grupos_frota.tipo_frota_id', $tipoFrotaId);
+        }
+
+        if ($queryTexto !== '') {
+            $query->where('grupos_frota.nome', 'like', '%' . $queryTexto . '%');
+        }
+
+        $items = $query
+            ->orderBy('grupos_frota.nome')
+            ->limit(50)
+            ->get()
+            ->map(function ($grupo) {
+                $partes = [];
+                if (!empty($grupo->tipo_frota_nome)) {
+                    $partes[] = 'Tipo: ' . $grupo->tipo_frota_nome;
+                }
+                if ($grupo->valor_diario !== null) {
+                    $partes[] = 'Diária: ' . number_format((float) $grupo->valor_diario, 2, ',', '.');
+                }
+
+                return [
+                    'id' => $grupo->id,
+                    'nome' => $grupo->nome,
+                    'extra' => implode(' • ', $partes),
+                ];
+            })
+            ->values();
+
+        return response()->json(['items' => $items]);
+    }
+
+    public function buscarMarcasModal(Request $request): JsonResponse
+    {
+        $queryTexto = trim((string) $request->input('q', ''));
+
+        $query = $this->marcaService->getModel()->newQuery()
+            ->from('marcas')
+            ->select(['id', 'nome', 'nome_fipe', 'codigo_fipe'])
+            ->where('ativo', 'S');
+
+        if ($queryTexto !== '') {
+            $query->where(function ($sub) use ($queryTexto) {
+                $sub->where('marcas.nome', 'like', '%' . $queryTexto . '%')
+                    ->orWhere('marcas.nome_fipe', 'like', '%' . $queryTexto . '%')
+                    ->orWhere('marcas.codigo_fipe', 'like', '%' . $queryTexto . '%');
+            });
+        }
+
+        $items = $query
+            ->orderBy('marcas.nome')
+            ->limit(50)
+            ->get()
+            ->map(function ($marca) {
+                $partes = [];
+                if (!empty($marca->codigo_fipe)) {
+                    $partes[] = 'Código FIPE: ' . $marca->codigo_fipe;
+                }
+                if (!empty($marca->nome_fipe) && $marca->nome_fipe !== $marca->nome) {
+                    $partes[] = 'FIPE: ' . $marca->nome_fipe;
+                }
+
+                return [
+                    'id' => $marca->id,
+                    'nome' => $marca->nome,
+                    'extra' => implode(' • ', $partes),
+                ];
+            })
+            ->values();
+
+        return response()->json(['items' => $items]);
+    }
+
+    public function buscarModelosModal(Request $request): JsonResponse
+    {
+        $queryTexto = trim((string) $request->input('q', ''));
+        $marcaId = (int) $request->input('marca_id', 0);
+
+        $query = $this->modeloService->getModel()->newQuery()
+            ->from('modelos')
+            ->leftJoin('marcas as marcas_modelo', 'marcas_modelo.id', '=', 'modelos.marca_id')
+            ->leftJoin('segmentos', 'segmentos.id', '=', 'modelos.segmento_id')
+            ->select([
+                'modelos.id',
+                'modelos.nome',
+                'modelos.codigo_fipe',
+                'modelos.nome_fipe',
+                'modelos.marca_id',
+                'marcas_modelo.nome as marca_nome',
+                'segmentos.nome as segmento_nome',
+            ])
+            ->where('modelos.ativo', 'S');
+
+        if ($marcaId > 0) {
+            $query->where('modelos.marca_id', $marcaId);
+        }
+
+        if ($queryTexto !== '') {
+            $query->where(function ($sub) use ($queryTexto) {
+                $sub->where('modelos.nome', 'like', '%' . $queryTexto . '%')
+                    ->orWhere('marcas_modelo.nome', 'like', '%' . $queryTexto . '%')
+                    ->orWhere('segmentos.nome', 'like', '%' . $queryTexto . '%')
+                    ->orWhere('modelos.codigo_fipe', 'like', '%' . $queryTexto . '%')
+                    ->orWhere('modelos.nome_fipe', 'like', '%' . $queryTexto . '%');
+            });
+        }
+
+        $items = $query
+            ->orderBy('modelos.nome')
+            ->limit(50)
+            ->get()
+            ->map(function ($modelo) {
+                $partes = [];
+                if (!empty($modelo->marca_nome)) {
+                    $partes[] = 'Marca: ' . $modelo->marca_nome;
+                }
+                if (!empty($modelo->segmento_nome)) {
+                    $partes[] = 'Segmento: ' . $modelo->segmento_nome;
+                }
+                if (!empty($modelo->codigo_fipe)) {
+                    $partes[] = 'Código FIPE: ' . $modelo->codigo_fipe;
+                }
+
+                return [
+                    'id' => $modelo->id,
+                    'nome' => $modelo->nome,
+                    'marca_id' => $modelo->marca_id,
+                    'marca_nome' => $modelo->marca_nome,
+                    'extra' => implode(' • ', $partes),
+                ];
+            })
+            ->values();
+
+        return response()->json(['items' => $items]);
     }
 
     public function setOrdenacao(Request $request)
@@ -840,5 +1143,23 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'POST',
             route('veiculo.store'),
         ];
+    }
+
+    private function normalizarTextoFipe(string $valor): string
+    {
+        return Str::slug(trim($valor), '');
+    }
+
+    private function normalizarValorFipe(mixed $valor): ?float
+    {
+        if (!is_string($valor) || trim($valor) === '') {
+            return null;
+        }
+
+        $limpo = trim(str_replace(['R$', ' '], '', $valor));
+        $limpo = str_replace('.', '', $limpo);
+        $limpo = str_replace(',', '.', $limpo);
+
+        return is_numeric($limpo) ? round((float) $limpo, 2) : null;
     }
 }

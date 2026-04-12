@@ -276,4 +276,51 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             route('estacao.store'),
         ];
     }
+
+    /**
+     * Retorna os horários disponíveis de uma estação em JSON,
+     * para uso no date/time picker do formulário de movimentação.
+     */
+    public function disponibilidadeHorarios($id)
+    {
+        $estacao = Estacao::with('horarios')->findOrFail($id);
+
+        // Mapeia nome do HorarioDiario → números de dia da semana (JS: 0=Dom, 6=Sáb)
+        $schedule = [];
+
+        foreach ($estacao->horarios as $hd) {
+            $pivot = $hd->pivot;
+            $nome  = mb_strtolower(trim($hd->nome));
+
+            if (str_contains($nome, 'semana')) {
+                $days = [1, 2, 3, 4, 5]; // Seg-Sex
+            } elseif (str_contains($nome, 'sábado') || str_contains($nome, 'sabado')) {
+                $days = [6];
+            } elseif (str_contains($nome, 'domingo')) {
+                $days = [0];
+            } else {
+                continue; // feriados e outros: ignora por ora
+            }
+
+            $info = [
+                'funciona'           => $pivot->funciona === 'S',
+                'funciona_24h'       => $pivot->funciona_24h === 'S',
+                'hora_abertura'      => substr($pivot->hora_abertura ?? '00:00:00', 0, 5),
+                'hora_fechamento'    => substr($pivot->hora_fechamento ?? '23:59:00', 0, 5),
+                'tem_almoco'         => $pivot->tem_intervalo_almoco === 'S',
+                'hora_inicio_almoco' => substr($pivot->hora_inicio_almoco ?? '00:00:00', 0, 5),
+                'hora_fim_almoco'    => substr($pivot->hora_fim_almoco ?? '00:00:00', 0, 5),
+            ];
+
+            foreach ($days as $day) {
+                $schedule[$day] = $info;
+            }
+        }
+
+        return response()->json([
+            'estacao_id'   => $estacao->id,
+            'estacao_nome' => $estacao->nome,
+            'schedule'     => $schedule, // indexed by JS weekday number
+        ]);
+    }
 }

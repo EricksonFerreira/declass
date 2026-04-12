@@ -10,7 +10,18 @@
 @section('content')
     <div class="toast-wrap" id="toastWrap"></div>
 
-    <div class="card p-2">
+    <div class="portal-tabs mb-3">
+        <button type="button" class="btn btn-outline-primary active" data-portal-tab="reservas">
+            <i class="fas fa-car mr-1"></i> Reservas
+        </button>
+        <button type="button" class="btn btn-outline-danger" data-portal-tab="multas">
+            <i class="fas fa-exclamation-triangle mr-1"></i> Multas
+            <span class="badge badge-light ml-1">{{ $multasPendentesCount ?? $multas->count() }}</span>
+        </button>
+    </div>
+
+    <div class="portal-panel" data-portal-panel="reservas">
+        <div class="card p-2">
         <div class="card-header px-0 pt-0 pb-1">
             <div class="d-flex justify-content-between align-items-center">
                 <h3 class="card-title text-sm text-bold">
@@ -207,7 +218,86 @@
             </div>
 
         </div>{{-- card-body --}}
-    </div>{{-- card --}}
+        </div>{{-- card --}}
+    </div>{{-- portal-panel reservas --}}
+
+    <div class="portal-panel d-none" data-portal-panel="multas">
+        <div class="card p-2">
+            <div class="card-header px-0 pt-0 pb-1">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title text-sm text-bold">
+                        MULTAS PENDENTES <span class="badge badge-danger">{{ $multasPendentesCount ?? $multas->count() }}</span>
+                    </h3>
+                </div>
+            </div>
+
+            <div class="card-body px-0 pt-0 pb-1">
+                @if($multas->isEmpty())
+                    <div class="alert alert-success m-3">Nenhuma multa pendente no momento.</div>
+                @else
+                    <div class="multa-cards">
+                        @foreach($multas as $multa)
+                            @php
+                                $valorMulta = (float) ($multa->valor_final ?? $multa->valor_original ?? 0);
+                                $vencimento = $multa->data_vencimento ? \Carbon\Carbon::parse($multa->data_vencimento) : null;
+                                $diasParaVencer = $vencimento ? now()->startOfDay()->diffInDays($vencimento->copy()->startOfDay(), false) : null;
+                                $badgeClass = 'badge-info';
+                                $badgeLabel = 'Em aberto';
+                                if ($vencimento && $vencimento->lt(now()->startOfDay())) {
+                                    $badgeClass = 'badge-danger';
+                                    $badgeLabel = 'Vencida';
+                                } elseif ($vencimento && $diasParaVencer !== null && $diasParaVencer <= 3) {
+                                    $badgeClass = 'badge-warning';
+                                    $badgeLabel = 'Vencimento próximo';
+                                }
+                            @endphp
+                            <article class="multa-card">
+                                <div class="multa-card__head">
+                                    <div>
+                                        <div class="multa-card__eyebrow">Multa #{{ $multa->id }}</div>
+                                        <div class="multa-card__title">{{ $multa->descricao ?? 'Multa de trânsito' }}</div>
+                                    </div>
+                                    <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
+                                </div>
+                                <div class="multa-card__body">
+                                    <div class="multa-card__row">
+                                        <span>Reserva</span>
+                                        <strong>#{{ $multa->reserva?->id ?? '-' }}</strong>
+                                    </div>
+                                    <div class="multa-card__row">
+                                        <span>Veículo</span>
+                                        <strong>{{ $multa->veiculo?->placa ?? $multa->placa_momento ?? '-' }}</strong>
+                                    </div>
+                                    <div class="multa-card__row">
+                                        <span>Vencimento</span>
+                                        <strong>{{ $vencimento?->format('d/m/Y') ?? '-' }}</strong>
+                                    </div>
+                                    <div class="multa-card__row">
+                                        <span>Valor</span>
+                                        <strong>R$ {{ number_format($valorMulta, 2, ',', '.') }}</strong>
+                                    </div>
+                                </div>
+                                <div class="multa-card__foot">
+                                    <div class="multa-card__meta">
+                                        @if($diasParaVencer !== null && $diasParaVencer < 0)
+                                            Vencida há {{ abs($diasParaVencer) }} dia(s)
+                                        @elseif($diasParaVencer !== null && $diasParaVencer <= 3)
+                                            Vence em breve
+                                        @else
+                                            Aguardando pagamento
+                                        @endif
+                                    </div>
+                                    <a href="{{ route('site.multa.pagamento', ['multa' => $multa->id]) }}" class="btn btn-sm btn-danger">
+                                        Pagar multa
+                                    </a>
+                                </div>
+                            </article>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <div class="d-flex justify-content-end mt-2">
         {{ $reservas->links() }}
@@ -218,6 +308,25 @@
     <script>
         (function () {
             // ── View toggle ──
+            const portalTabs = document.querySelectorAll('[data-portal-tab]');
+            const portalPanels = document.querySelectorAll('[data-portal-panel]');
+            const savedPortalTab = localStorage.getItem('minhasReservasPortalTab') || 'reservas';
+
+            function activatePortal(tab) {
+                portalTabs.forEach((button) => {
+                    button.classList.toggle('active', button.dataset.portalTab === tab);
+                });
+                portalPanels.forEach((panel) => {
+                    panel.classList.toggle('d-none', panel.dataset.portalPanel !== tab);
+                });
+                localStorage.setItem('minhasReservasPortalTab', tab);
+            }
+
+            if (portalTabs.length && portalPanels.length) {
+                activatePortal(savedPortalTab);
+                portalTabs.forEach((button) => button.addEventListener('click', () => activatePortal(button.dataset.portalTab)));
+            }
+
             const body    = document.querySelector('.reserva-index-body');
             const buttons = document.querySelectorAll('.reserva-view-toggle [data-view]');
             if (body && buttons.length) {
@@ -257,6 +366,9 @@
     .toast { min-width: 260px; max-width: 360px; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700; box-shadow: 0 18px 30px rgba(15,23,42,.18); border: 1px solid #e2e8f0; background: #fff; }
     .toast.ok  { border-color: #bbf7d0; background: #f0fdf4; color: #166534; }
     .toast.err { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+    .portal-tabs { display: flex; gap: 8px; flex-wrap: wrap; }
+    .portal-tabs .btn.active { color: #fff; }
+    .portal-panel.d-none { display: none !important; }
 
     /* ── toggle view ── */
     .reserva-view-toggle { display: flex; gap: 5px; margin-left: 12px; }
@@ -355,12 +467,39 @@
     .rc__total span   { font-size: .72rem; font-weight: 700; color: #64748b; }
     .rc__total strong { font-size: 1rem; font-weight: 800; color: #0f172a; letter-spacing: -.01em; }
 
+    .multa-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+        padding: 10px 8px 16px;
+    }
+    .multa-card {
+        background: #fff;
+        border: 1px solid #e2e9f4;
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 2px 10px rgba(11,18,32,.06);
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+    .multa-card__head { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+    .multa-card__eyebrow { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #94a3b8; }
+    .multa-card__title { font-size: .95rem; font-weight: 800; color: #0f172a; margin-top: 3px; }
+    .multa-card__body { display: grid; gap: 8px; }
+    .multa-card__row { display: flex; justify-content: space-between; gap: 12px; font-size: .82rem; }
+    .multa-card__row span { color: #64748b; font-weight: 700; }
+    .multa-card__row strong { color: #0f172a; font-weight: 800; text-align: right; }
+    .multa-card__foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-top: 4px; border-top: 1px dashed #e2e8f0; }
+    .multa-card__meta { font-size: .72rem; color: #64748b; font-weight: 700; }
+
     /* responsive */
     @media (max-width: 768px) {
         .reserva-view-toggle { display: none; }
         .reserva-cards { grid-template-columns: 1fr; padding: 6px 4px 12px; }
         .reserva-index-body[data-view="table"] .reserva-cards { display: grid; }
         .reserva-index-body[data-view="table"] .reserva-table { display: none; }
+        .multa-cards { grid-template-columns: 1fr; }
     }
 </style>
 @stop

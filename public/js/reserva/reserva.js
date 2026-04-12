@@ -16,9 +16,62 @@ window.reserva = {
     user_id: null,
     user_nome: null,
     opcionais: [],
-    cupom_desconto: null
+    cupom_desconto: null,
+    taxa_coleta: 0,
+    taxa_entrega: 0,
 };
 window.opcionais = [];
+
+function formatarDataHoraReserva(valor) {
+    if (!valor) {
+        return '';
+    }
+
+    const data = new Date(valor);
+    if (Number.isNaN(data.getTime())) {
+        return String(valor);
+    }
+
+    return data.toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+    }).replace(',', '');
+}
+
+function formatarDataReserva(valor) {
+    if (!valor) {
+        return '';
+    }
+
+    const texto = String(valor);
+    const dataParte = texto.includes('T') ? texto.split('T')[0] : texto.split(' ')[0];
+    const partes = dataParte.split('-');
+
+    if (partes.length !== 3) {
+        return texto;
+    }
+
+    const [ano, mes, dia] = partes;
+    return `${dia}/${mes}/${ano}`;
+}
+
+function formatarHoraReserva(valor) {
+    if (!valor) {
+        return '';
+    }
+
+    const texto = String(valor);
+    const horaParte = texto.includes('T') ? texto.split('T')[1] : texto.split(' ')[1];
+
+    if (!horaParte) {
+        return '';
+    }
+
+    return horaParte.slice(0, 5);
+}
 
 function getOpcionais(){
     return window.opcionais;
@@ -43,10 +96,44 @@ function getDataFim(){
 
 function setDataInicio(data) {
     window.reserva.data_inicio = data;
+    const display = document.getElementById('data_inicio_display');
+    const dataHidden = document.getElementById('data_inicio_data');
+    const horaSelect = document.getElementById('data_inicio_hora');
+    const hidden = document.getElementById('data_inicio');
+
+    if (display) {
+        display.value = formatarDataReserva(data);
+    }
+
+    if (dataHidden) {
+        const texto = data ? String(data) : '';
+        const dataParte = texto.includes('T') ? texto.split('T')[0] : texto.split(' ')[0];
+        dataHidden.value = dataParte || '';
+    }
+
+    if (horaSelect) {
+        const horaParte = formatarHoraReserva(data);
+        if (horaParte) {
+            horaSelect.value = horaParte;
+        } else {
+            horaSelect.value = '';
+        }
+    }
+
+    if (hidden) {
+        const texto = data ? String(data) : '';
+        const dataParte = texto.includes('T') ? texto.split('T')[0] : texto.split(' ')[0];
+        const horaParte = formatarHoraReserva(data);
+        hidden.value = dataParte && horaParte ? `${dataParte}T${horaParte}` : '';
+    }
 }
 
 function setDataFim(data) {
     window.reserva.data_fim = data;
+    const display = document.getElementById('data_fim_display');
+    if (display) {
+        display.value = formatarDataHoraReserva(data);
+    }
 }
 
 function setTarifaBase(tarifa) {
@@ -179,18 +266,28 @@ function getCupomDescontoValor() {
     return window.reserva.cupom_desconto ? window.reserva.cupom_desconto.valor : 0;
 }
 
+function setTaxaColeta(valor) {
+    window.reserva.taxa_coleta = Number(valor) || 0;
+}
+
+function setTaxaEntrega(valor) {
+    window.reserva.taxa_entrega = Number(valor) || 0;
+}
+
+function getTaxaColeta() {
+    return Number(window.reserva.taxa_coleta) || 0;
+}
+
+function getTaxaEntrega() {
+    return Number(window.reserva.taxa_entrega) || 0;
+}
+
 function getEstacaoRetirada(){
     return window.reserva.estacao_retirada_id;
 }
 
 function getEstacaoDevolucao(){
     return window.reserva.estacao_devolucao_id;
-}
-
-
-function setEstacaoDevolucao(id, nome){
-    window.reserva.estacao_devolucao_id = id;
-    window.reserva.estacao_devolucao_nome = nome;
 }
 
 function calcularValorTotal() {
@@ -216,7 +313,8 @@ function calcularValorTotal() {
         }
     });
 
-    valorTotal = (Number(getTarifaBase() || 0) * quantidadeDias) + valorTotalOpcionais;
+    valorTotal = (Number(getTarifaBase() || 0) * quantidadeDias) + valorTotalOpcionais
+        + getTaxaColeta() + getTaxaEntrega();
 
     const valorCupomDesconto = Number(getCupomDescontoValor() || 0);
     let valorDesconto = 0;
@@ -284,6 +382,23 @@ function atualizarMinhaReserva() {
         const valorOpcional = opcional.tipo_cobranca === "por_dia" ? opcional.preco_por_dia : opcional.preco_integral;
         adicionarOpcionalNoHtmlDaMinhaReserva(opcional.nome, opcional.quantidade, formatarMoeda(valorOpcional));
     });
+
+    const taxaColeta = getTaxaColeta();
+    const taxaEntrega = getTaxaEntrega();
+    const $liColeta = $('#minhaReserva_taxa_coleta_li');
+    const $liEntrega = $('#minhaReserva_taxa_entrega_li');
+    if (taxaColeta > 0) {
+        $('#minhaReserva_taxa_coleta_val').text(formatarMoeda(taxaColeta));
+        $liColeta.removeClass('d-none');
+    } else {
+        $liColeta.addClass('d-none');
+    }
+    if (taxaEntrega > 0) {
+        $('#minhaReserva_taxa_entrega_val').text(formatarMoeda(taxaEntrega));
+        $liEntrega.removeClass('d-none');
+    } else {
+        $liEntrega.addClass('d-none');
+    }
 
     $('#valor_total_reserva').text(formatarMoeda(getValorTotal()));
     $('#quantidade_dias').text(`/ ${getQuantidadeDias()} dias`);
@@ -395,60 +510,6 @@ function atualizarQuantidadeOpcionalInterface(opcionalId, quantidade) {
     }
 }
 
-// Função para incrementar a quantidade de um opcional
-function incrementarOpcional(opcionalId) {
-    const opcionais = getOpcionaisReserva();
-    const opcional = opcionais.find(op => op.id === opcionalId);
-
-    if (opcional) {
-        const novaQuantidade = (opcional.quantidade || 0) + 1;
-        atualizarQuantidadeOpcional(opcionalId, novaQuantidade);
-        atualizarQuantidadeOpcionalInterface(opcionalId, novaQuantidade);
-        atualizarMinhaReserva();
-    }
-}
-
-// Atualizar a função decrementarOpcional
-function decrementarOpcional(opcionalId) {
-    const opcionais = getOpcionaisReserva();
-    const opcional = opcionais.find(op => op.id === opcionalId);
-
-    if (opcional && opcional.quantidade > 0) {
-        const novaQuantidade = opcional.quantidade - 1;
-        atualizarQuantidadeOpcional(opcionalId, novaQuantidade);
-        atualizarQuantidadeOpcionalInterface(opcionalId, novaQuantidade);
-        atualizarMinhaReserva();
-    }
-}
-
-// Atualizar a função atualizarMinhaReserva para usar a formatação de moeda
-function atualizarMinhaReserva() {
-    $('#tarifa_base').text(formatarMoeda(getTarifaBase()));
-    $('#desconto').text(getCupomDescontoValor() + "%");
-    $('#quantidade_dias').text(getQuantidadeDias());
-
-    $('#minhaReserva_opcionals_ul').empty();
-
-    getOpcionaisReserva().forEach(opcional => {
-        if (opcional && Number(opcional.quantidade || 0) > 0) {
-            const quantidade = Number(opcional.quantidade || 0);
-            const precoDia = Number(opcional.preco_por_dia !== undefined && opcional.preco_por_dia !== null ? opcional.preco_por_dia : 0);
-            const precoIntegral = Number(opcional.preco_integral !== undefined && opcional.preco_integral !== null ? opcional.preco_integral : 0);
-            const tipo = String(opcional.tipo_cobranca || '');
-            const ehPorDia = tipo === 'por_dia' || (!tipo && precoDia > 0 && precoIntegral <= 0);
-
-            const totalOpcional = ehPorDia
-                ? precoDia * getQuantidadeDias() * quantidade
-                : precoIntegral * quantidade;
-
-            adicionarOpcionalNoHtmlDaMinhaReserva(opcional.nome, quantidade, totalOpcional);
-        }
-    });
-
-    $('#valor_total_reserva').text(formatarMoeda(getValorTotal()));
-    $('#quantidade_dias').text(`/ ${getQuantidadeDias()} dias`);
-    $('#valor_diario_reserva').text(formatarMoeda(getValorDiario()));
-}
 function faltaPreencherEstacoesEDatas(){
     return window.reserva.estacao_retirada_id == null || window.reserva.estacao_devolucao_id == null || window.reserva.data_inicio == null || window.reserva.data_fim == null;
 }

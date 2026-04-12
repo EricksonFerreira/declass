@@ -17,6 +17,8 @@ class Horario extends Model
         'hora_inicio_fora_expediente',
         'hora_fim_fora_expediente',
         'funciona_24h',
+        'funciona',
+        'tem_intervalo_almoco',
     ];
 
     // Relacionamento com Estacao

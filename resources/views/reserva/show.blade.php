@@ -113,6 +113,13 @@
                 <div class="rs-hero__meta">
                     <span><i class="fas fa-building"></i>{{ $reserva->empresa->nome ?? 'Empresa' }}</span>
                     <span><i class="fas fa-calendar-plus"></i>Criada em {{ $createdAt }}</span>
+                    <span><i class="fas fa-user-tie"></i>
+                        @if($reserva->origem_cadastro === 'site')
+                            Site
+                        @else
+                            {{ $reserva->criadoPor?->nome ?? $reserva->criadoPor?->name ?? 'Colaborador' }}
+                        @endif
+                    </span>
                 </div>
             </div>
             <div class="rs-hero__right">

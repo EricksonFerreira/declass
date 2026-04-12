@@ -40,6 +40,8 @@ class UpdateEmpresaRequest extends FormRequest
             'slug' => $slugRules,
             'ativo' => ['nullable', 'in:S,N'],
             'reserva_selecionar_modelo' => ['nullable', 'in:S,N'],
+            'adicionar_novas_marcas_automaticamente' => ['nullable', 'in:S,N'],
+            'adicionar_novos_modelos_automaticamente' => ['nullable', 'in:S,N'],
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],

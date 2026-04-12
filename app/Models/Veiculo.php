@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Veiculo extends Model
 {
@@ -41,6 +43,19 @@ class Veiculo extends Model
         'data_proxima_inspecao',
         'local_disponibilidade',
         'data_hora_disponibilidade',
+        'valor_compra',
+        'valor_fipe',
+        'codigo_fipe',
+        'referencia_fipe',
+        'data_consulta_fipe',
+        'taxa_depreciacao_anual',
+    ];
+
+    protected $casts = [
+        'valor_compra' => 'decimal:2',
+        'valor_fipe' => 'decimal:2',
+        'data_consulta_fipe' => 'date',
+        'taxa_depreciacao_anual' => 'decimal:2',
     ];
 
     public function movimentacoes()
@@ -118,15 +133,113 @@ class Veiculo extends Model
                 $query->where('data_chegada_real', '>=', $dia)
                       ->orWhereNull('data_chegada_real');
             })
-            ->whereIn('status_movimentacao_id', [1, 2, 5, 6, 7]) // IDs dos status que indicam indisponibilidade
+            ->whereIn('status_movimentacao_id', $this->getStatusMovimentacaoIndisponiveisIds()) // Status por trecho de nome
             ->first();
 
         return $movimentacao == null;
     }
 
+    private function getStatusMovimentacaoIndisponiveisIds(): array
+    {
+        static $cache = null;
+
+        if ($cache !== null) {
+            return $cache;
+        }
+
+        if (!Schema::hasTable('status_movimentacao')) {
+            return $cache = [];
+        }
+
+        try {
+            $ids = DB::table('status_movimentacao')
+                ->where(function ($query) {
+                    $query->whereRaw('LOWER(nome) LIKE ?', ['%conclu%'])
+                        ->orWhereRaw('LOWER(nome) LIKE ?', ['%indispon%'])
+                        ->orWhereRaw('LOWER(nome) LIKE ?', ['%transit%'])
+                        ->orWhereRaw('LOWER(nome) LIKE ?', ['%manuten%'])
+                        ->orWhereRaw('LOWER(nome) LIKE ?', ['%espera%']);
+                })
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            return $cache = $ids;
+        } catch (\Throwable $e) {
+            return $cache = [];
+        }
+    }
+
     public function getDisponibilidade($dia)
     {
         return $this->reservas->where('data_reserva', $dia)->first();
+    }
+
+    public function getDiferencaFipeCompraAttribute(): ?float
+    {
+        if ($this->valor_compra === null && $this->valor_fipe === null) {
+            return null;
+        }
+
+        return round(((float) ($this->valor_fipe ?? 0) - (float) ($this->valor_compra ?? 0)), 2);
+    }
+
+    public function getPercentualDepreciacaoAcumuladaAttribute(): ?float
+    {
+        if (empty($this->data_compra) || $this->taxa_depreciacao_anual === null) {
+            return null;
+        }
+
+        $dataCompra = Carbon::parse($this->data_compra);
+        $mesesEmUso = $dataCompra->diffInMonths(now());
+        $percentual = ($mesesEmUso / 12) * (float) $this->taxa_depreciacao_anual;
+
+        return round(min(100, max(0, $percentual)), 2);
+    }
+
+    public function getValorDepreciacaoAcumuladaAttribute(): ?float
+    {
+        $base = $this->valor_fipe ?? $this->valor_compra;
+        $percentual = $this->percentual_depreciacao_acumulada;
+
+        if ($base === null || $percentual === null) {
+            return null;
+        }
+
+        return round(((float) $base * (float) $percentual) / 100, 2);
+    }
+
+    public function getValorAtualEstimadoAttribute(): ?float
+    {
+        $base = $this->valor_fipe ?? $this->valor_compra;
+        if ($base === null) {
+            return null;
+        }
+
+        $valorDepreciado = $this->valor_depreciacao_acumulada ?? 0;
+
+        return round(max(0, (float) $base - (float) $valorDepreciado), 2);
+    }
+
+    public function getTemProtecaoDepreciacaoAttribute(): bool
+    {
+        if ($this->valor_compra === null || $this->valor_fipe === null) {
+            return false;
+        }
+
+        return (float) $this->valor_compra < (float) $this->valor_fipe;
+    }
+
+    public function getValorProtegidoDepreciacaoAttribute(): ?float
+    {
+        if (!$this->tem_protecao_depreciacao) {
+            return null;
+        }
+
+        return round((float) $this->valor_compra, 2);
     }
 
 }

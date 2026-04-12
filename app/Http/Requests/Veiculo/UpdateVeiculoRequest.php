@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Veiculo;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateVeiculoRequest extends FormRequest
 {
@@ -22,8 +25,20 @@ class UpdateVeiculoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+
+        $marcaExists = Rule::exists('marcas', 'id');
+        $modeloExists = Rule::exists('modelos', 'id');
+
+        if ($empresaId !== null) {
+            $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+        }
+
         return [
             'status_veiculo_id' => 'required|string|max:2',
+            'marca_id' => ['required', 'integer', $marcaExists],
+            'modelo_id' => ['required', 'integer', $modeloExists],
             'ano_fabricacao' => 'required|integer|min:1900|max:' . date('Y'),
             'ano_modelo' => 'required|integer|min:1900|max:' . (date('Y') + 1),
             'placa_licenca' => 'required|string|max:10',
@@ -33,6 +48,12 @@ class UpdateVeiculoRequest extends FormRequest
             'numero_motor' => 'required|string|max:50',
             'data_placa_licenca' => 'required|date',
             'data_compra' => 'required|date',
+            'valor_compra' => 'nullable|numeric|min:0',
+            'valor_fipe' => 'nullable|numeric|min:0',
+            'codigo_fipe' => 'nullable|string|max:20',
+            'referencia_fipe' => 'nullable|string|max:20',
+            'data_consulta_fipe' => 'nullable|date',
+            'taxa_depreciacao_anual' => 'nullable|numeric|min:0|max:100',
             'data_validade' => 'required|date',
             'data_proxima_manutencao' => 'required|date',
             'data_proxima_inspecao' => 'required|date',

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -37,7 +37,7 @@
         }
         if ($mostrarAbaDisponibilidade && $qtdEstacoes === 0) {
             $faltasPreRequisitosVeiculo[] =
-                'Cadastre pelo menos uma estação ativa para definir a disponibilidade inicial.';
+                'Cadastre pelo menos uma estaÃ§Ã£o ativa para definir a disponibilidade inicial.';
         }
 
         $acoesPreRequisitosVeiculo = [];
@@ -63,7 +63,7 @@
             ];
         }
         if ($mostrarAbaDisponibilidade && $qtdEstacoes === 0 && Route::has('estacao.create')) {
-            $acoesPreRequisitosVeiculo[] = ['label' => 'Cadastrar estação', 'url' => route('estacao.create')];
+            $acoesPreRequisitosVeiculo[] = ['label' => 'Cadastrar estaÃ§Ã£o', 'url' => route('estacao.create')];
         }
 
         $podeCriarVeiculo = empty($faltasPreRequisitosVeiculo);
@@ -72,6 +72,12 @@
         // Determine start step from validation errors
         $errosIdent = ['ano_fabricacao', 'ano_modelo', 'placa_licenca', 'chassi', 'cor', 'numero_motor', 'renavam'];
         $errosDatas = [
+            'valor_compra',
+            'valor_fipe',
+            'codigo_fipe',
+            'referencia_fipe',
+            'data_consulta_fipe',
+            'taxa_depreciacao_anual',
             'data_placa_licenca',
             'data_compra',
             'data_validade',
@@ -91,12 +97,19 @@
         } elseif (count(array_intersect($chavesErro, $errosDisp))) {
             $startStep = 4;
         }
+
+        $grupoFrotaSelecionadoId = old('grupo_frota_id', $veiculo->grupo_frota_id ?? null);
+        $marcaSelecionadaId = old('marca_id', $veiculo->marca_id ?? null);
+        $modeloSelecionadoId = old('modelo_id', $veiculo->modelo_id ?? null);
+        $grupoFrotaSelecionadoNome = $grupoFrotas[$grupoFrotaSelecionadoId] ?? '';
+        $marcaSelecionadaNome = $marcas[$marcaSelecionadaId] ?? '';
+        $modeloSelecionadoNome = $modelos[$modeloSelecionadoId] ?? '';
     @endphp
 
 
 
     <div class="col-xl-11 col-12 px-0">
-        <x-pre-requisitos-alerta title="Pré-requisitos pendentes para adicionar veículo" :chips="[
+        <x-pre-requisitos-alerta title="PrÃ©-requisitos pendentes para adicionar veículo" :chips="[
             ['label' => 'Tipos de Frota', 'value' => $qtdTiposFrota],
             ['label' => 'Grupos de Frota', 'value' => $qtdGruposFrota],
             ['label' => 'Marcas', 'value' => $qtdMarcas],
@@ -117,12 +130,12 @@
 
             <div class="card-body p-4">
 
-                {{-- ── WIZARD STEPS ── --}}
+                {{-- â”€â”€ WIZARD STEPS â”€â”€ --}}
                 <div class="vc-wizard-steps mb-4">
                     @php
                         $steps = [
                             1 => ['icon' => 'fa-car', 'label' => 'Geral'],
-                            2 => ['icon' => 'fa-id-card', 'label' => 'Identificação'],
+                            2 => ['icon' => 'fa-id-card', 'label' => 'identificação'],
                             3 => ['icon' => 'fa-calendar-alt', 'label' => 'Datas e Km'],
                             4 => ['icon' => 'fa-map-marker-alt', 'label' => 'Disponibilidade'],
                         ];
@@ -147,7 +160,7 @@
                     @endif
                     @csrf
 
-                    {{-- ── STEP 1: GERAL ── --}}
+                    {{-- â”€â”€ STEP 1: GERAL â”€â”€ --}}
                     <div class="vc-step-pane" data-pane="1">
                         <div class="veiculo-section-title"><i class="fas fa-car mr-1"></i>Informações Gerais</div>
                         <div class="form-row">
@@ -169,23 +182,68 @@
                             </div>
                             <div class="col-lg-5 col-md-12">
                                 <div class="form-group form-group-veiculo">
-                                    <x-form-select name="grupo_frota_id" label="Grupo de Frota" :options="$grupoFrotas"
-                                        placeholder="Selecione um valor" :selected="old('grupo_frota_id', $veiculo->grupo_frota_id ?? null)"
-                                        class="form-control form-control-sm" required />
+                                    <label for="grupo_frota_display">Grupo de Frota</label>
+                                    <div class="input-group input-group-sm vc-search-lookup-group">
+                                        <input type="text" id="grupo_frota_display" class="form-control form-control-sm vc-lookup-display" value="{{ $grupoFrotaSelecionadoNome }}" placeholder="Clique na lupa para pesquisar o grupo" readonly>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary vc-select-search-btn" id="btnBuscarGrupoFrota" title="Pesquisa avançada">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <select name="grupo_frota_id" id="grupo_frota_id" class="d-none" required>
+                                        <option value="">Selecione um valor</option>
+                                        @foreach($grupoFrotas as $key => $value)
+                                            <option value="{{ $key }}" {{ (string) $grupoFrotaSelecionadoId === (string) $key ? 'selected' : '' }}>
+                                                {{ $value }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="veiculo-lookup-help">Clique na lupa para abrir a pesquisa avançada de grupos.</small>
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <x-form-select name="marca_id" label="Marca" :options="$marcas"
-                                        placeholder="Selecione um valor" :selected="old('marca_id', $veiculo->marca_id ?? null)"
-                                        class="form-control form-control-sm" required />
+                                    <label for="marca_display">Marca</label>
+                                    <div class="input-group input-group-sm vc-search-lookup-group">
+                                        <input type="text" id="marca_display" class="form-control form-control-sm vc-lookup-display" value="{{ $marcaSelecionadaNome }}" placeholder="Clique na lupa para pesquisar a marca" readonly>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary vc-select-search-btn" id="btnBuscarMarca" title="Pesquisa avançada">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <select name="marca_id" id="marca_id" class="d-none" required>
+                                        <option value="">Selecione um valor</option>
+                                        @foreach($marcas as $key => $value)
+                                            <option value="{{ $key }}" {{ (string) $marcaSelecionadaId === (string) $key ? 'selected' : '' }}>
+                                                {{ $value }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="veiculo-lookup-help">Abra a lupa para localizar a marca com mais rapidez.</small>
                                 </div>
                             </div>
                             <div class="col-lg-5 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <x-form-select name="modelo_id" label="Modelo" :options="$modelos"
-                                        placeholder="Selecione um valor" :selected="old('modelo_id', $veiculo->modelo_id ?? null)"
-                                        class="form-control form-control-sm" required />
+                                    <label for="modelo_display">Modelo</label>
+                                    <div class="input-group input-group-sm vc-search-lookup-group">
+                                        <input type="text" id="modelo_display" class="form-control form-control-sm vc-lookup-display" value="{{ $modeloSelecionadoNome }}" placeholder="Clique na lupa para pesquisar o modelo" readonly>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary vc-select-search-btn" id="btnBuscarModelo" title="Pesquisa avançada">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <select name="modelo_id" id="modelo_id" class="d-none" required>
+                                        <option value="">Selecione um valor</option>
+                                        @foreach($modelos as $key => $value)
+                                            <option value="{{ $key }}" {{ (string) $modeloSelecionadoId === (string) $key ? 'selected' : '' }}>
+                                                {{ $value }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <small class="veiculo-lookup-help">Use a lupa para encontrar o modelo por nome ou marca.</small>
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
@@ -210,14 +268,14 @@
                         </div>
                     </div>
 
-                    {{-- ── STEP 2: IDENTIFICAÇÃO ── --}}
+                    {{-- â”€â”€ STEP 2: IDENTIFICAÃ‡ÃƒO â”€â”€ --}}
                     <div class="vc-step-pane d-none" data-pane="2">
-                        <div class="veiculo-section-title"><i class="fas fa-id-card mr-1"></i>Identificação do Veículo</div>
+                        <div class="veiculo-section-title"><i class="fas fa-id-card mr-1"></i>identificação do Veículo</div>
                         <div class="form-row">
                             <div class="col-lg-3 col-md-4">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm" id="ano_fabricacao"
-                                        name="ano_fabricacao" label="Ano de Fabricação" min="1900"
+                                        name="ano_fabricacao" label="Ano de FabricaÃ§Ã£o" min="1900"
                                         value="{{ old('ano_fabricacao', $veiculo->ano_fabricacao ?? date('Y')) }}"
                                         required />
                                 </div>
@@ -260,22 +318,81 @@
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="numero_motor"
-                                        name="numero_motor" label="Número do Motor"
+                                        name="numero_motor" label="NÃºmero do Motor"
                                         value="{{ old('numero_motor', $veiculo->numero_motor ?? '') }}" required />
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- ── STEP 3: DATAS E KM ── --}}
+                    {{-- â”€â”€ STEP 3: DATAS E KM â”€â”€ --}}
                     <div class="vc-step-pane d-none" data-pane="3">
+                        <div class="veiculo-section-title"><i class="fas fa-coins mr-1"></i>Financeiro do Veiculo</div>
+                        <div class="veiculo-info-tip">
+                            <i class="fas fa-info-circle mr-1"></i>
+                            Consulte a tabela FIPE para preencher os dados base do veiculo e acompanhar a depreciacao.
+                        </div>
+                        <div class="form-row">
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-group form-group-veiculo">
+                                    <x-form-input type="number" step="0.01" min="0" class="form-control form-control-sm"
+                                        id="valor_compra" name="valor_compra" label="Valor de Compra"
+                                        value="{{ old('valor_compra', $veiculo->valor_compra ?? '') }}" />
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-group form-group-veiculo">
+                                    <x-form-input type="number" step="0.01" min="0" class="form-control form-control-sm"
+                                        id="valor_fipe" name="valor_fipe" label="Valor FIPE"
+                                        value="{{ old('valor_fipe', $veiculo->valor_fipe ?? '') }}" />
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-group form-group-veiculo">
+                                    <x-form-input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm"
+                                        id="taxa_depreciacao_anual" name="taxa_depreciacao_anual"
+                                        label="Taxa de Depreciacao Anual (%)"
+                                        value="{{ old('taxa_depreciacao_anual', $veiculo->taxa_depreciacao_anual ?? 15) }}" />
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6 d-flex align-items-end">
+                                <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-3"
+                                    id="btnConsultarFipe">
+                                    <i class="fas fa-search-dollar mr-1"></i>Consultar FIPE
+                                </button>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-group form-group-veiculo">
+                                    <x-form-input type="text" class="form-control form-control-sm" id="codigo_fipe"
+                                        name="codigo_fipe" label="Codigo FIPE"
+                                        value="{{ old('codigo_fipe', $veiculo->codigo_fipe ?? '') }}" readonly />
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-group form-group-veiculo">
+                                    <x-form-input type="text" class="form-control form-control-sm" id="referencia_fipe"
+                                        name="referencia_fipe" label="Referencia FIPE"
+                                        value="{{ old('referencia_fipe', $veiculo->referencia_fipe ?? '') }}" readonly />
+                                </div>
+                            </div>
+                            <div class="col-lg-3 col-md-6">
+                                <div class="form-group form-group-veiculo">
+                                    <x-form-input type="date" class="form-control form-control-sm"
+                                        id="data_consulta_fipe" name="data_consulta_fipe" label="Data da Consulta"
+                                        value="{{ old('data_consulta_fipe', isset($veiculo->data_consulta_fipe) ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('Y-m-d') : '') }}" readonly />
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="veiculo-section-title"><i class="fas fa-calendar-alt mr-1"></i>Datas Importantes</div>
                         <div class="form-row">
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_placa_licenca" name="data_placa_licenca"
-                                        label="Emissão da Placa/Licença"
+                                        label="EmissÃ£o da Placa/LicenÃ§a"
                                         value="{{ old('data_placa_licenca', $veiculo->data_placa_licenca ?? '') }}"
                                         required />
                                 </div>
@@ -290,7 +407,7 @@
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm" id="data_validade"
-                                        name="data_validade" label="Validade da Documentação/Licença"
+                                        name="data_validade" label="Validade da DocumentaÃ§Ã£o/LicenÃ§a"
                                         value="{{ old('data_validade', $veiculo->data_validade ?? '') }}" required />
                                 </div>
                             </div>
@@ -298,7 +415,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_proxima_manutencao" name="data_proxima_manutencao"
-                                        label="Próxima Manutenção"
+                                        label="PrÃ³xima ManutenÃ§Ã£o"
                                         value="{{ old('data_proxima_manutencao', $veiculo->data_proxima_manutencao ?? '') }}"
                                         required />
                                 </div>
@@ -306,14 +423,14 @@
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm"
-                                        id="data_proxima_inspecao" name="data_proxima_inspecao" label="Próxima Inspeção"
+                                        id="data_proxima_inspecao" name="data_proxima_inspecao" label="PrÃ³xima InspeÃ§Ã£o"
                                         value="{{ old('data_proxima_inspecao', $veiculo->data_proxima_inspecao ?? '') }}"
                                         required />
                                 </div>
                             </div>
                         </div>
 
-                        <div class="veiculo-section-title"><i class="fas fa-tachometer-alt mr-1"></i>Métricas e Limites de
+                        <div class="veiculo-section-title"><i class="fas fa-tachometer-alt mr-1"></i>MÃ©tricas e Limites de
                             Km</div>
                         <div class="form-row">
                             <div class="col-lg-3 col-md-6">
@@ -334,7 +451,7 @@
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm"
-                                        id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da Próxima Revisão"
+                                        id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da PrÃ³xima RevisÃ£o"
                                         value="{{ old('proxima_revisao_kms', $veiculo->proxima_revisao_kms ?? '') }}"
                                         min="0" required />
                                 </div>
@@ -343,7 +460,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm"
                                         id="proxima_manutencao_kms" name="proxima_manutencao_kms"
-                                        label="Km da Próxima Manutenção"
+                                        label="Km da PrÃ³xima ManutenÃ§Ã£o"
                                         value="{{ old('proxima_manutencao_kms', $veiculo->proxima_manutencao_kms ?? '') }}"
                                         min="0" required />
                                 </div>
@@ -351,19 +468,19 @@
                         </div>
                     </div>
 
-                    {{-- ── STEP 4: DISPONIBILIDADE ── --}}
+                    {{-- â”€â”€ STEP 4: DISPONIBILIDADE â”€â”€ --}}
                     @if ($mostrarAbaDisponibilidade)
                         <div class="vc-step-pane d-none" data-pane="4">
                             <div class="veiculo-section-title"><i class="fas fa-map-marker-alt mr-1"></i>Disponibilidade
                                 Inicial</div>
                             <div class="veiculo-info-tip">
                                 <i class="fas fa-info-circle mr-1"></i>
-                                Defina em qual estação o veículo inicia e a data/hora inicial de disponibilidade.
+                                Defina em qual estaÃ§Ã£o o veículo inicia e a data/hora inicial de disponibilidade.
                             </div>
                             <div class="form-row mt-2">
                                 <div class="col-lg-5 col-md-6">
                                     <div class="form-group form-group-veiculo">
-                                        <x-form-select name="local_disponibilidade" label="Estação de origem"
+                                        <x-form-select name="local_disponibilidade" label="EstaÃ§Ã£o de origem"
                                             :options="$estacoes" placeholder="Selecione um valor" :selected="old(
                                                 'local_disponibilidade',
                                                 $veiculo->local_disponibilidade ?? null,
@@ -384,10 +501,9 @@
                         </div>
                     @endif
 
-                    {{-- ── NAV BUTTONS ── --}}
+                    {{-- â”€â”€ NAV BUTTONS â”€â”€ --}}
                     <div class="vc-wizard-nav mt-4 d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4" id="btnPrev"
-                            style="display:none!important;">
+                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 d-none" id="btnPrev">
                             <i class="fas fa-chevron-left mr-1"></i> Anterior
                         </button>
                         <button type="button" class="btn btn-primary btn-sm px-4" id="btnNext">
@@ -400,10 +516,44 @@
                     </div>
                     @if ($bloquearSalvarVeiculo)
                         <small class="text-danger d-block mt-2 text-center font-weight-semibold">
-                            Cadastre os itens obrigatórios acima para liberar a criação do veículo.
+                            Cadastre os itens obrigatÃ³rios acima para liberar a criaÃ§Ã£o do veículo.
                         </small>
                     @endif
                 </form>
+
+                <x-veiculo.busca-entidade-modal
+                    modal-id="modalBuscarGrupoFrotaVeiculo"
+                    title="Pesquisar grupo de frota"
+                    buscar-url="{{ route('veiculo.buscarGruposModal') }}"
+                    trigger-id="btnBuscarGrupoFrota"
+                    target-select-id="grupo_frota_id"
+                    target-display-id="grupo_frota_display"
+                    placeholder="Digite o nome do grupo"
+                    :extra-params="[
+                        ['name' => 'tipo_frota_id', 'selector' => '#tipo_frota_id']
+                    ]" />
+
+                <x-veiculo.busca-entidade-modal
+                    modal-id="modalBuscarMarcaVeiculo"
+                    title="Pesquisar marca"
+                    buscar-url="{{ route('veiculo.buscarMarcasModal') }}"
+                    trigger-id="btnBuscarMarca"
+                    target-select-id="marca_id"
+                    target-display-id="marca_display"
+                    placeholder="Digite o nome da marca" />
+
+                <x-veiculo.busca-entidade-modal
+                    modal-id="modalBuscarModeloVeiculo"
+                    title="Pesquisar modelo"
+                    buscar-url="{{ route('veiculo.buscarModelosModal') }}"
+                    trigger-id="btnBuscarModelo"
+                    target-select-id="modelo_id"
+                    target-display-id="modelo_display"
+                    placeholder="Digite o nome do modelo"
+                    :extra-params="[
+                        ['name' => 'marca_id', 'selector' => '#marca_id']
+                    ]"
+                    after-select="veiculoModeloSelecionadoFromModal" />
             </div>
         </div>
     </div>
@@ -411,6 +561,28 @@
 
 @section('css')
     <style>
+        .vc-select-search-btn {
+            border-top-left-radius: 0;
+            border-bottom-left-radius: 0;
+        }
+
+        .vc-search-lookup-group .form-control[readonly] {
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .vc-lookup-display {
+            border-top-right-radius: 0;
+            border-bottom-right-radius: 0;
+        }
+
+        .veiculo-lookup-help {
+            display: block;
+            margin-top: .35rem;
+            font-size: .75rem;
+            color: #6b7280;
+        }
+
         .card-veiculo {
             border-radius: 14px;
             overflow: hidden;
@@ -426,7 +598,7 @@
             font-weight: 700;
         }
 
-        /* ── Wizard ── */
+        /* â”€â”€ Wizard â”€â”€ */
         .vc-wizard-steps {
             display: flex;
             align-items: center;
@@ -496,7 +668,7 @@
             margin-bottom: 18px;
         }
 
-        /* ── Form ── */
+        /* â”€â”€ Form â”€â”€ */
         .veiculo-section-title {
             font-size: .96rem;
             font-weight: 700;
@@ -554,122 +726,334 @@
 @section('js')
     <script>
         $(function() {
-            // ── Wizard ──
-            const TOTAL_STEPS = {{ $mostrarAbaDisponibilidade ? 4 : 3 }};
+
+            // ── Wizard Steps ──────────────────────────────────────────────────
+            const $panes   = $('.vc-step-pane');
+            const $stepBtns = $('.vc-step-btn');
+            const $btnPrev = $('#btnPrev');
+            const $btnNext = $('#btnNext');
+            const $btnSalvar = $('#btnSalvar');
+            const totalSteps = $panes.length;
             let currentStep = {{ $startStep }};
 
-            function goToStep(n) {
-                n = Math.max(1, Math.min(TOTAL_STEPS, n));
-                currentStep = n;
-                $('.vc-step-pane').addClass('d-none');
-                $(`.vc-step-pane[data-pane="${n}"]`).removeClass('d-none');
-                $('.vc-step-btn').each(function() {
+            function goToStep(step) {
+                if (step < 1 || step > totalSteps) return;
+                currentStep = step;
+
+                // Mostra/oculta panes
+                $panes.each(function() {
+                    const p = parseInt($(this).data('pane'));
+                    $(this).toggleClass('d-none', p !== step);
+                });
+
+                // Atualiza visual dos step buttons
+                $stepBtns.each(function() {
                     const s = parseInt($(this).data('step'));
                     $(this).removeClass('active done');
-                    if (s === n) $(this).addClass('active');
-                    if (s < n) $(this).addClass('done');
+                    if (s === step)  $(this).addClass('active');
+                    if (s < step)   $(this).addClass('done');
                 });
-                $('#btnPrev').css('display', n > 1 ? 'inline-flex' : 'none');
-                if (n < TOTAL_STEPS) {
-                    $('#btnNext').removeClass('d-none');
-                    $('#btnSalvar').addClass('d-none');
+
+                // Botões de navegação
+                $btnPrev.toggleClass('d-none', step <= 1);
+                if (step === totalSteps) {
+                    $btnNext.addClass('d-none');
+                    $btnSalvar.removeClass('d-none');
                 } else {
-                    $('#btnNext').addClass('d-none');
-                    $('#btnSalvar').removeClass('d-none');
+                    $btnNext.removeClass('d-none');
+                    $btnSalvar.addClass('d-none');
                 }
+
+                // Scroll para o topo do card
+                $('html, body').animate({ scrollTop: $('.card-veiculo').offset().top - 20 }, 150);
             }
 
-            goToStep(currentStep);
-            $('#btnNext').on('click', function() {
+            // Clique direto nos step buttons
+            $stepBtns.on('click', function() {
+                const target = parseInt($(this).data('step'));
+                // Permite ir para steps anteriores livremente; para avançar, valida o atual
+                if (target <= currentStep) {
+                    goToStep(target);
+                } else {
+                    // Avança um de cada vez validando
+                    for (let s = currentStep; s < target; s++) {
+                        const $pane = $panes.filter('[data-pane="' + s + '"]').removeClass('d-none');
+                        const invalids = $pane.find(':invalid').length;
+                        $pane.addClass('d-none');
+                        if (invalids > 0) {
+                            goToStep(s);
+                            return;
+                        }
+                    }
+                    goToStep(target);
+                }
+            });
+
+            $btnNext.on('click', function() {
+                // Valida campos do pane atual antes de avançar
+                const $pane = $panes.filter('[data-pane="' + currentStep + '"]');
+                const invalids = $pane.find(':invalid');
+                if (invalids.length > 0) {
+                    $('#formulario').addClass('was-validated');
+                    invalids.first().focus();
+                    fireSwal({
+                        toast: true, position: 'top-end', icon: 'warning',
+                        title: 'Preencha os campos obrigatórios antes de continuar.',
+                        showConfirmButton: false, timer: 4000
+                    });
+                    return;
+                }
+                $('#formulario').removeClass('was-validated');
                 goToStep(currentStep + 1);
             });
-            $('#btnPrev').on('click', function() {
+
+            $btnPrev.on('click', function() {
                 goToStep(currentStep - 1);
             });
-            $('.vc-step-btn').on('click', function() {
-                goToStep(parseInt($(this).data('step')));
-            });
 
-            // ── Grupos por Tipo de Frota ──
-            const $tipoFrota = $('[name="tipo_frota_id"]');
-            const $grupoFrota = $('[name="grupo_frota_id"]');
-            const selectedGrupo =
-                {{ old('grupo_frota_id', isset($veiculo->grupo_frota_id) ? $veiculo->grupo_frota_id : 'null') }};
+            // Inicializa no step correto
+            goToStep(currentStep);
+            // ─────────────────────────────────────────────────────────────────
 
-            function carregarGrupos(tipoId, selectValor) {
+            function syncLookupDisplay(selectSelector, displaySelector) {
+                const $select = $(selectSelector);
+                const $display = $(displaySelector);
+                if (!$select.length || !$display.length) {
+                    return;
+                }
+
+                const selectedOption = $select.find('option:selected');
+                const value = $select.val();
+                $display.val(value ? (selectedOption.text() || '') : '');
+            }
+
+            function formatarMoedaBR(valor) {
+                const numero = Number(valor || 0);
+                return new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(numero);
+            }
+
+            const $tipoFrota = $('#tipo_frota_id');
+            const $marca = $('#marca_id');
+            const $modelo = $('#modelo_id');
+            const $btnConsultarFipe = $('#btnConsultarFipe');
+            const $valorFipe = $('#valor_fipe');
+            const $codigoFipe = $('#codigo_fipe');
+            const $referenciaFipe = $('#referencia_fipe');
+            const $dataConsultaFipe = $('#data_consulta_fipe');
+            const $taxaDepreciacao = $('#taxa_depreciacao_anual');
+            const fipeUrl = '{{ route('veiculo.consultarFipe') }}';
+
+            window.carregarGruposVeiculo = function(tipoId, selectValor) {
+                const $grupoFrota = $('#grupo_frota_id');
+                const textoAtual = $('#grupo_frota_display').val();
+
                 $grupoFrota.prop('disabled', true).html('<option value="">Carregando...</option>');
+
                 $.get('{{ route('veiculo.gruposPorTipo') }}', {
                     tipo_frota_id: tipoId
                 }, function(grupos) {
                     let html = '<option value="">Selecione um valor</option>';
                     grupos.forEach(function(g) {
-                        const sel = selectValor && parseInt(selectValor) === g.id ? ' selected' :
-                        '';
+                        const sel = selectValor && String(selectValor) === String(g.id) ? ' selected' : '';
                         html += `<option value="${g.id}"${sel}>${g.nome}</option>`;
                     });
+
                     $grupoFrota.html(html).prop('disabled', false);
+                    syncLookupDisplay('#grupo_frota_id', '#grupo_frota_display');
+                    if (!selectValor && !grupos.length) {
+                        $('#grupo_frota_display').val('');
+                    }
                 }).fail(function() {
-                    $grupoFrota.html('<option value="">Selecione um valor</option>').prop('disabled',
-                    false);
+                    $grupoFrota.html('<option value="">Selecione um valor</option>').prop('disabled', false);
+                    if (!selectValor) {
+                        $('#grupo_frota_display').val('');
+                    } else if (textoAtual) {
+                        $('#grupo_frota_display').val(textoAtual);
+                    }
                 });
-            }
+            };
 
-            $tipoFrota.on('change', function() {
-                carregarGrupos($(this).val(), null);
-            });
-            const tipoInicial = $tipoFrota.val();
-            if (tipoInicial) carregarGrupos(tipoInicial, selectedGrupo);
+            window.carregarModelosVeiculo = function(marcaId, selectValor, selectTexto) {
+                const $modeloLocal = $('#modelo_id');
+                const textoAtual = $('#modelo_display').val();
 
-            // ── Modelos por Marca ──
-            const $marca = $('[name="marca_id"]');
-            const $modelo = $('[name="modelo_id"]');
-            const selectedModelo =
-                {{ old('modelo_id', isset($veiculo->modelo_id) ? $veiculo->modelo_id : 'null') }};
+                $modeloLocal.prop('disabled', true).html('<option value="">Carregando...</option>');
 
-            function carregarModelos(marcaId, selectValor) {
-                $modelo.prop('disabled', true).html('<option value="">Carregando...</option>');
                 $.get('{{ route('veiculo.modelosPorMarca') }}', {
                     marca_id: marcaId
                 }, function(modelos) {
                     let html = '<option value="">Selecione um valor</option>';
                     modelos.forEach(function(m) {
-                        const sel = selectValor && parseInt(selectValor) === m.id ? ' selected' :
-                        '';
+                        const sel = selectValor && String(selectValor) === String(m.id) ? ' selected' : '';
                         html += `<option value="${m.id}"${sel}>${m.nome}</option>`;
                     });
-                    $modelo.html(html).prop('disabled', false);
+
+                    $modeloLocal.html(html).prop('disabled', false);
+                    if (selectValor) {
+                        $modeloLocal.val(String(selectValor));
+                    }
+                    syncLookupDisplay('#modelo_id', '#modelo_display');
+                    if (selectTexto) {
+                        $('#modelo_display').val(selectTexto);
+                    }
                 }).fail(function() {
-                    $modelo.html('<option value="">Selecione um valor</option>').prop('disabled', false);
+                    $modeloLocal.html('<option value="">Selecione um valor</option>').prop('disabled', false);
+                    if (!selectValor) {
+                        $('#modelo_display').val('');
+                    } else if (textoAtual) {
+                        $('#modelo_display').val(textoAtual);
+                    }
+                });
+            };
+
+            window.veiculoModeloSelecionadoFromModal = function(item) {
+                if (!item) {
+                    return;
+                }
+
+                if (item.marca_id) {
+                    $('#marca_id').val(String(item.marca_id));
+                    syncLookupDisplay('#marca_id', '#marca_display');
+                }
+
+                window.carregarModelosVeiculo(item.marca_id || $marca.val(), item.id, item.nome);
+            };
+
+            $('#grupo_frota_id').on('change', function() {
+                syncLookupDisplay('#grupo_frota_id', '#grupo_frota_display');
+            });
+
+            $('#marca_id').on('change', function() {
+                syncLookupDisplay('#marca_id', '#marca_display');
+                window.carregarModelosVeiculo($(this).val(), null);
+            });
+
+            $('#modelo_id').on('change', function() {
+                syncLookupDisplay('#modelo_id', '#modelo_display');
+            });
+
+            $('#tipo_frota_id').on('change', function() {
+                window.carregarGruposVeiculo($(this).val(), $('#grupo_frota_id').val() || null);
+            });
+
+            syncLookupDisplay('#grupo_frota_id', '#grupo_frota_display');
+            syncLookupDisplay('#marca_id', '#marca_display');
+            syncLookupDisplay('#modelo_id', '#modelo_display');
+
+            const tipoInicial = $tipoFrota.val();
+            const marcaInicial = $marca.val();
+            const modeloInicial = $modelo.val();
+            if (tipoInicial) {
+                window.carregarGruposVeiculo(tipoInicial, $('#grupo_frota_id').val() || null);
+            }
+            if (marcaInicial) {
+                window.carregarModelosVeiculo(marcaInicial, modeloInicial || null, $('#modelo_display').val() || null);
+            }
+
+            function consultarFipe() {
+                const marcaId = $marca.val();
+                const modeloId = $modelo.val();
+                const anoModelo = $('#ano_modelo').val();
+
+                if (!marcaId || !modeloId || !anoModelo) {
+                    fireSwal({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: 'Selecione marca, modelo e ano do modelo antes de consultar a FIPE.',
+                        showConfirmButton: false,
+                        timer: 5000
+                    });
+                    return;
+                }
+
+                const originalButton = $btnConsultarFipe.html();
+                $btnConsultarFipe.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Consultando...');
+
+                $.get(fipeUrl, {
+                    marca_id: marcaId,
+                    modelo_id: modeloId,
+                    ano_modelo: anoModelo
+                }).done(function(resp) {
+                    // Resposta com mensagem de erro (HTTP 200 mas sem dados)
+                    if (resp.message && !resp.valor_fipe && resp.valor_fipe !== 0) {
+                        fireSwal({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'warning',
+                            title: resp.message,
+                            showConfirmButton: false,
+                            timer: 5000
+                        });
+                        return;
+                    }
+
+                    if (resp.valor_fipe !== null && resp.valor_fipe !== undefined) {
+                        $valorFipe.val(resp.valor_fipe);
+                    }
+                    if (resp.codigo_fipe) {
+                        $codigoFipe.val(resp.codigo_fipe);
+                    }
+                    if (resp.referencia_fipe) {
+                        $referenciaFipe.val(resp.referencia_fipe);
+                    }
+                    if (resp.data_consulta_fipe) {
+                        $dataConsultaFipe.val(resp.data_consulta_fipe);
+                    }
+                    if (!$taxaDepreciacao.val()) {
+                        $taxaDepreciacao.val(15);
+                    }
+
+                    fireSwal({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'success',
+                        title: 'FIPE consultada com sucesso',
+                        text: resp.valor_fipe ? 'Valor: ' + formatarMoedaBR(resp.valor_fipe) : 'Dados atualizados.',
+                        showConfirmButton: false,
+                        timer: 4000
+                    });
+                }).fail(function(xhr) {
+                    const message = xhr.responseJSON?.message || 'Não foi possível consultar a FIPE.';
+                    fireSwal({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: message,
+                        showConfirmButton: false,
+                        timer: 5000
+                    });
+                }).always(function() {
+                    $btnConsultarFipe.prop('disabled', false).html(originalButton);
                 });
             }
 
-            $marca.on('change', function() {
-                carregarModelos($(this).val(), null);
-            });
-            const marcaInicial = $marca.val();
-            if (marcaInicial) carregarModelos(marcaInicial, selectedModelo);
+            $btnConsultarFipe.on('click', consultarFipe);
 
-            // ── Validações de datas e km ──
+            // â”€â”€ Validações de datas e km â”€â”€
             (function() {
                 const today = new Date().toISOString().slice(0, 10);
 
                 const dataEmissaoPlaca = document.getElementById(
-                'data_placa_licenca'); // Emissão da Placa/Licença
+                'data_placa_licenca'); // EmissÃ£o da Placa/LicenÃ§a
                 const dataValidade = document.getElementById(
-                'data_validade'); // Validade da Documentação/Licença
+                'data_validade'); // Validade da DocumentaÃ§Ã£o/LicenÃ§a
                 const dataManutencao = document.getElementById('data_proxima_manutencao');
                 const dataInspecao = document.getElementById('data_proxima_inspecao');
                 const kmsAtual = document.getElementById('kms');
                 const proxRevisaoKms = document.getElementById('proxima_revisao_kms');
                 const proxManutKms = document.getElementById('proxima_manutencao_kms');
 
-                // Validade da Documentação/Licença > Emissão da Placa
+                // Validade da DocumentaÃ§Ã£o/LicenÃ§a > EmissÃ£o da Placa
                 function validarValidade() {
                     if (!dataValidade || !dataEmissaoPlaca) return;
                     if (dataValidade.value && dataEmissaoPlaca.value && dataValidade.value <= dataEmissaoPlaca
                         .value) {
                         dataValidade.setCustomValidity(
-                            'A Validade da Documentação/Licença deve ser posterior à Emissão da Placa (' +
+                            'A Validade da DocumentaÃ§Ã£o/LicenÃ§a deve ser posterior Ã  EmissÃ£o da Placa (' +
                             formatarData(dataEmissaoPlaca.value) + ').'
                         );
                     } else {
@@ -680,36 +1064,36 @@
                 dataValidade?.addEventListener('change', validarValidade);
                 dataEmissaoPlaca?.addEventListener('change', validarValidade);
 
-                // Próxima Manutenção ≥ hoje
+                // PrÃ³xima ManutenÃ§Ã£o â‰¥ hoje
                 dataManutencao?.addEventListener('change', function() {
                     if (this.value && this.value < today) {
                         this.setCustomValidity(
-                            'A Próxima Manutenção deve ser hoje ou uma data futura (hoje = ' +
+                            'A PrÃ³xima ManutenÃ§Ã£o deve ser hoje ou uma data futura (hoje = ' +
                             formatarData(today) + ').');
                     } else {
                         this.setCustomValidity('');
                     }
                 });
 
-                // Próxima Inspeção ≥ hoje
+                // PrÃ³xima InspeÃ§Ã£o â‰¥ hoje
                 dataInspecao?.addEventListener('change', function() {
                     if (this.value && this.value < today) {
                         this.setCustomValidity(
-                            'A Próxima Inspeção deve ser hoje ou uma data futura (hoje = ' +
+                            'A PrÃ³xima InspeÃ§Ã£o deve ser hoje ou uma data futura (hoje = ' +
                             formatarData(today) + ').');
                     } else {
                         this.setCustomValidity('');
                     }
                 });
 
-                // Km da Próxima Revisão ≥ Km Atual
+                // Km da PrÃ³xima RevisÃ£o â‰¥ Km Atual
                 function validarKmRevisao() {
                     if (!proxRevisaoKms || !kmsAtual) return;
                     const km = parseFloat(kmsAtual.value) || 0;
                     const pr = parseFloat(proxRevisaoKms.value);
                     if (proxRevisaoKms.value !== '' && pr < km) {
                         proxRevisaoKms.setCustomValidity(
-                            'O Km da Próxima Revisão (' + pr.toLocaleString('pt-BR') +
+                            'O Km da PrÃ³xima RevisÃ£o (' + pr.toLocaleString('pt-BR') +
                             ' km) deve ser maior ou igual ao Km Atual (' + km.toLocaleString('pt-BR') +
                             ' km).'
                         );
@@ -720,14 +1104,14 @@
                 proxRevisaoKms?.addEventListener('change', validarKmRevisao);
                 kmsAtual?.addEventListener('change', validarKmRevisao);
 
-                // Km da Próxima Manutenção ≥ Km Atual
+                // Km da PrÃ³xima ManutenÃ§Ã£o â‰¥ Km Atual
                 function validarKmManut() {
                     if (!proxManutKms || !kmsAtual) return;
                     const km = parseFloat(kmsAtual.value) || 0;
                     const pm = parseFloat(proxManutKms.value);
                     if (proxManutKms.value !== '' && pm < km) {
                         proxManutKms.setCustomValidity(
-                            'O Km da Próxima Manutenção (' + pm.toLocaleString('pt-BR') +
+                            'O Km da PrÃ³xima ManutenÃ§Ã£o (' + pm.toLocaleString('pt-BR') +
                             ' km) deve ser maior ou igual ao Km Atual (' + km.toLocaleString('pt-BR') +
                             ' km).'
                         );
@@ -738,7 +1122,7 @@
                 proxManutKms?.addEventListener('change', validarKmManut);
                 kmsAtual?.addEventListener('change', validarKmManut);
 
-                // Rodar validações no load para pegar valores já preenchidos (edição)
+                // Rodar validações no load para pegar valores jÃ¡ preenchidos (ediÃ§Ã£o)
                 validarValidade();
                 validarKmRevisao();
                 validarKmManut();
@@ -750,7 +1134,7 @@
                 }
             })();
 
-            // ── Status Vendido ──
+            // â”€â”€ Status Vendido â”€â”€
             const $status = $('[name="status_veiculo_id"]');
             const $divDataVendido = $('#div_data_vendido');
             const $inputDataVendido = $('#data_vendido');
@@ -774,14 +1158,14 @@
             });
             configDataVendido(isVendido($status.val()) || ($inputDataVendido.val() || '').trim() !== '');
 
-            // ── Validação e Exibição de Erros (Swal) ──
+            // â”€â”€ ValidaÃ§Ã£o e ExibiÃ§Ã£o de Erros (Swal) â”€â”€
             @if ($errors->any())
                 let backendErrors = '<ul class="mb-0 pl-3 text-left" style="font-size:14px;">';
                 @foreach (array_unique($errors->all()) as $error)
                     backendErrors += '<li>{{ $error }}</li>';
                 @endforeach
                 backendErrors += '</ul>';
-                Swal.fire({
+                fireSwal({
                     toast: true,
                     position: 'top-end',
                     icon: 'error',
@@ -808,19 +1192,19 @@
                             goToStep(parseInt(pane));
                         }
 
-                        // Destaca todos os campos inválidos no bootstrap
+                        // Destaca todos os campos invÃ¡lidos no bootstrap
                         form.classList.add('was-validated');
                         firstInvalid.focus();
 
-                        // Usa a mensagem customizada caso tenha, senão fallback
+                        // Usa a mensagem customizada caso tenha, senÃ£o fallback
                         const errorMsg = firstInvalid[0].validationMessage ||
-                            'Por favor, preencha corretamente os campos obrigatórios marcados em vermelho.';
+                            'Por favor, preencha corretamente os campos obrigatÃ³rios marcados em vermelho.';
 
-                        Swal.fire({
+                        fireSwal({
                             toast: true,
                             position: 'top-end',
                             icon: 'warning',
-                            title: 'Atenção',
+                            title: 'AtenÃ§Ã£o',
                             text: errorMsg,
                             showConfirmButton: false,
                             timer: 5000
@@ -832,3 +1216,5 @@
         });
     </script>
 @stop
+
+

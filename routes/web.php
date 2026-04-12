@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\EmpresaContextController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\IndicadoresController;
+use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\PowerBIController;
@@ -25,9 +27,13 @@ Route::get('/reserva/disponibilidade', [SiteReservaController::class, 'disponibi
 Route::get('/reserva/estacoes-disponiveis', [SiteReservaController::class, 'estacoesDisponiveis'])->name('site.reserva.estacoesDisponiveis');
 Route::post('/reserva/verificar-cupom', [SiteReservaController::class, 'verificarCupom'])->name('site.reserva.verificarCupom');
 Route::get('/reserva/{reserva}/sucesso', [SiteReservaController::class, 'success'])->name('site.reserva.success');
+Route::post('/reserva/{reserva}/satisfacao', [SiteReservaController::class, 'salvarSatisfacao'])->name('site.reserva.satisfacao.store');
 Route::get('/reserva/{reserva}/pagamento', [SiteReservaController::class, 'pagamento'])->name('site.reserva.pagamento');
 Route::post('/reserva/{reserva}/pagamento', [SiteReservaController::class, 'processarPagamento'])->name('site.reserva.processarPagamento');
 Route::post('/reserva/{reserva}/pagamento/metodo', [SiteReservaController::class, 'adicionarMetodoPagamento'])->name('site.reserva.pagamento.metodo');
+Route::get('/multa/{multa}/pagamento', [SiteReservaController::class, 'pagamentoMulta'])->name('site.multa.pagamento');
+Route::post('/multa/{multa}/pagamento', [SiteReservaController::class, 'processarPagamentoMulta'])->name('site.multa.processarPagamento');
+Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'adicionarMetodoPagamentoMulta'])->name('site.multa.pagamento.metodo');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::get('/cadastro/sucesso', function () {
@@ -36,6 +42,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
 
     Route::get('home', [HomeController::class, 'home'])->middleware(['auth', 'verified'])->name('home');
     Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth', 'verified'])->name('home.chart-data');
+    Route::get('indicadores', [IndicadoresController::class, 'index'])->middleware(['auth', 'verified'])->name('indicadores.index');
+    Route::get('indicadores/{slug}', [IndicadoresController::class, 'show'])->middleware(['auth', 'verified'])->name('indicadores.show');
     Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::post('tipotransacao/setperpage', [TipoTransacaoController::class, 'setPerPage'])->name('tipotransacao.setPerPage');
@@ -63,6 +71,10 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::put('/profile/senha', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
         Route::get('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordEdit'])->name('profile.force-password.edit');
         Route::put('/profile/primeiro-acesso/senha', [ProfileController::class, 'forcePasswordUpdate'])->name('profile.force-password.update');
+        Route::get('/notificacoes', [NotificacaoController::class, 'index'])->name('notificacoes.index');
+        Route::get('/notificacoes/navbar', [NotificacaoController::class, 'navbar'])->name('notificacoes.navbar');
+        Route::patch('/notificacoes/{notification}/lida', [NotificacaoController::class, 'marcarLida'])->name('notificacoes.marcarLida');
+        Route::patch('/notificacoes/lidas', [NotificacaoController::class, 'marcarTodasComoLidas'])->name('notificacoes.marcarTodasComoLidas');
     });
 
     // Rota segura para executar migrations via web (use apenas em ambientes controlados)

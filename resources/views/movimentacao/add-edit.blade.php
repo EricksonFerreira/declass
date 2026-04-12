@@ -356,35 +356,131 @@
 
                 {{-- ════ STEP 4: Datas & Observações ════ --}}
                 <div class="mv-panel d-none" data-mv-panel="4">
-                    <div class="mv-section-title">Datas</div>
+
+                    {{-- Aviso de disponibilidade da estação --}}
+                    <div id="mv_horario_aviso" class="mv-horario-aviso d-none">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span id="mv_horario_aviso_txt"></span>
+                    </div>
+
+                    <div class="mv-section-title">Datas e Horários</div>
+
+                    {{-- Data de Registro --}}
                     <div class="form-row">
-                        <div class="col-lg-3 form-group">
-                            <label class="mv-label">Data de Registro <span class="text-danger">*</span></label>
-                            <input type="datetime-local" name="data_registro" id="mv_data_registro" class="form-control form-control-sm"
-                                   value="{{ $dataRegistro }}" required>
+                        <div class="col-lg-6 col-md-6 form-group">
+                            <label class="mv-label">
+                                Data de Registro <span class="text-danger">*</span>
+                            </label>
+                            {{-- hidden fields que vão pro backend --}}
+                            <input type="hidden" name="data_registro" id="mv_data_registro_hidden"
+                                   value="{{ $dataRegistro }}">
+                            <div class="mv-dt-group">
+                                <div class="mv-dt-field">
+                                    <i class="fas fa-calendar-alt mv-dt-icon"></i>
+                                    <input type="text" id="mv_data_registro_date"
+                                           class="form-control form-control-sm mv-datepicker"
+                                           placeholder="dd/mm/aaaa" autocomplete="off" required>
+                                </div>
+                                <div class="mv-dt-sep">às</div>
+                                <div class="mv-dt-field mv-dt-field--time">
+                                    <i class="fas fa-clock mv-dt-icon"></i>
+                                    <select id="mv_data_registro_time" class="form-control form-control-sm mv-time-select">
+                                        <option value="">Hora</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-lg-3 form-group">
-                            <label class="mv-label">Data de Saída</label>
-                            <input type="datetime-local" name="data_saida" id="mv_data_saida" class="form-control form-control-sm"
-                                   value="{{ $dataSaida }}"
-                                   oninput="validarDatas()">
+                    </div>
+
+                    {{-- Data de Saída (usa horário da estação de ORIGEM) --}}
+                    <div class="form-row">
+                        <div class="col-lg-6 col-md-6 form-group">
+                            <label class="mv-label">
+                                <i class="fas fa-arrow-up mv-dt-label-icon" style="color:#0891b2"></i>
+                                Data de Saída
+                                <span class="mv-dt-label-hint" id="mv_saida_origem_hint"></span>
+                            </label>
+                            <input type="hidden" name="data_saida" id="mv_data_saida_hidden"
+                                   value="{{ $dataSaida }}">
+                            <div class="mv-dt-group">
+                                <div class="mv-dt-field">
+                                    <i class="fas fa-calendar-alt mv-dt-icon"></i>
+                                    <input type="text" id="mv_data_saida_date"
+                                           class="form-control form-control-sm mv-datepicker"
+                                           data-slot="saida"
+                                           placeholder="dd/mm/aaaa" autocomplete="off">
+                                </div>
+                                <div class="mv-dt-sep">às</div>
+                                <div class="mv-dt-field mv-dt-field--time">
+                                    <i class="fas fa-clock mv-dt-icon"></i>
+                                    <select id="mv_data_saida_time" class="form-control form-control-sm mv-time-select"
+                                            data-slot="saida">
+                                        <option value="">Hora</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-lg-3 form-group">
-                            <label class="mv-label">Chegada Prevista</label>
-                            <input type="datetime-local" name="data_chegada_prevista" id="mv_data_chegada_prevista"
-                                   class="form-control form-control-sm"
-                                   value="{{ $dataChegadaPrevista }}"
-                                   oninput="validarDatas()">
+
+                        {{-- Chegada Prevista (usa horário da estação de DESTINO) --}}
+                        <div class="col-lg-6 col-md-6 form-group">
+                            <label class="mv-label">
+                                <i class="fas fa-arrow-down mv-dt-label-icon" style="color:#059669"></i>
+                                Chegada Prevista
+                                <span class="mv-dt-label-hint" id="mv_chegada_destino_hint"></span>
+                            </label>
+                            <input type="hidden" name="data_chegada_prevista" id="mv_data_chegada_prevista_hidden"
+                                   value="{{ $dataChegadaPrevista }}">
+                            <div class="mv-dt-group">
+                                <div class="mv-dt-field">
+                                    <i class="fas fa-calendar-alt mv-dt-icon"></i>
+                                    <input type="text" id="mv_data_chegada_prevista_date"
+                                           class="form-control form-control-sm mv-datepicker"
+                                           data-slot="chegada_prevista"
+                                           placeholder="dd/mm/aaaa" autocomplete="off">
+                                </div>
+                                <div class="mv-dt-sep">às</div>
+                                <div class="mv-dt-field mv-dt-field--time">
+                                    <i class="fas fa-clock mv-dt-icon"></i>
+                                    <select id="mv_data_chegada_prevista_time"
+                                            class="form-control form-control-sm mv-time-select"
+                                            data-slot="chegada_prevista">
+                                        <option value="">Hora</option>
+                                    </select>
+                                </div>
+                            </div>
                             <small class="text-danger" id="mv_erro_chegada_prevista" style="display:none">
                                 <i class="fas fa-exclamation-triangle mr-1"></i>Deve ser posterior à data de saída.
                             </small>
                         </div>
-                        <div class="col-lg-3 form-group">
-                            <label class="mv-label">Chegada Real</label>
-                            <input type="datetime-local" name="data_chegada_real" id="mv_data_chegada_real"
-                                   class="form-control form-control-sm"
-                                   value="{{ $dataChegadaReal }}"
-                                   oninput="validarDatas()">
+                    </div>
+
+                    {{-- Chegada Real --}}
+                    <div class="form-row">
+                        <div class="col-lg-6 col-md-6 form-group">
+                            <label class="mv-label">
+                                <i class="fas fa-flag-checkered mv-dt-label-icon" style="color:#7c3aed"></i>
+                                Chegada Real
+                            </label>
+                            <input type="hidden" name="data_chegada_real" id="mv_data_chegada_real_hidden"
+                                   value="{{ $dataChegadaReal }}">
+                            <div class="mv-dt-group">
+                                <div class="mv-dt-field">
+                                    <i class="fas fa-calendar-alt mv-dt-icon"></i>
+                                    <input type="text" id="mv_data_chegada_real_date"
+                                           class="form-control form-control-sm mv-datepicker"
+                                           data-slot="chegada_real"
+                                           placeholder="dd/mm/aaaa" autocomplete="off">
+                                </div>
+                                <div class="mv-dt-sep">às</div>
+                                <div class="mv-dt-field mv-dt-field--time">
+                                    <i class="fas fa-clock mv-dt-icon"></i>
+                                    <select id="mv_data_chegada_real_time"
+                                            class="form-control form-control-sm mv-time-select"
+                                            data-slot="chegada_real">
+                                        <option value="">Hora</option>
+                                    </select>
+                                </div>
+                            </div>
                             <small class="text-danger" id="mv_erro_chegada_real" style="display:none">
                                 <i class="fas fa-exclamation-triangle mr-1"></i>Deve ser posterior à data de saída.
                             </small>
@@ -714,6 +810,74 @@
 .mv-historico-user { font-size: .74rem; color: #475569; }
 .mv-historico-data { font-size: .72rem; color: #94a3b8; }
 .mv-historico-obs { font-size: .78rem; color: #64748b; line-height: 1.4; }
+
+/* ══ Date-Time Picker custom ══ */
+.mv-dt-group {
+    display: flex; align-items: center; gap: 8px; flex-wrap: nowrap;
+}
+.mv-dt-field {
+    position: relative; flex: 1;
+}
+.mv-dt-field--time { flex: 0 0 140px; }
+.mv-dt-icon {
+    position: absolute; left: 9px; top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8; font-size: .72rem; pointer-events: none; z-index: 1;
+}
+.mv-dt-field input.form-control,
+.mv-dt-field select.form-control {
+    padding-left: 26px !important;
+}
+.mv-dt-sep {
+    font-size: .78rem; font-weight: 600; color: #94a3b8;
+    flex-shrink: 0; white-space: nowrap;
+}
+.mv-dt-label-icon { font-size: .7rem; }
+.mv-dt-label-hint {
+    font-size: .68rem; font-weight: 600; color: #0891b2;
+    background: #e0f5fa; padding: 1px 7px;
+    border-radius: 999px; margin-left: 4px;
+}
+.mv-time-select { appearance: none; -webkit-appearance: none; }
+.mv-time-select option[disabled] { color: #cbd5e1; }
+
+/* Aviso de horário da estação */
+.mv-horario-aviso {
+    background: #f0f9ff; border: 1px solid #bae6fd;
+    border-radius: 10px; padding: 8px 14px;
+    font-size: .8rem; color: #0369a1;
+    margin-bottom: 14px; font-weight: 500;
+}
+
+/* Flatpickr overrides para combinar com AdminLTE */
+.flatpickr-calendar {
+    border-radius: 12px !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08) !important;
+    border: 1px solid #e2e9f4 !important;
+    font-family: inherit !important;
+}
+.flatpickr-day.selected,
+.flatpickr-day.selected:hover {
+    background: #1a2848 !important;
+    border-color: #1a2848 !important;
+}
+.flatpickr-day:hover:not(.disabled):not(.selected) {
+    background: #eef2ff !important;
+}
+.flatpickr-day.disabled,
+.flatpickr-day.disabled:hover {
+    color: #e2e9f4 !important;
+    background: transparent !important;
+    cursor: not-allowed !important;
+    text-decoration: line-through !important;
+}
+.flatpickr-day.today { border-color: #1a2848 !important; }
+.flatpickr-months .flatpickr-month { background: #1a2848 !important; }
+.flatpickr-current-month .flatpickr-monthDropdown-months { color: #fff !important; }
+.flatpickr-current-month input.cur-year { color: #fff !important; }
+.flatpickr-weekdays { background: #f8fafd !important; }
+.flatpickr-weekday { color: #64748b !important; font-weight: 700 !important; }
+.numInputWrapper:hover { background: rgba(255,255,255,.1) !important; }
 </style>
 @stop
 
@@ -1002,40 +1166,439 @@ document.getElementById('btnLimparOsMov')?.addEventListener('click', function() 
 
 // ── Validação de datas ────────────────────────────────────
 window.validarDatas = function() {
-    var saida    = document.getElementById('mv_data_saida')?.value;
-    var prevista = document.getElementById('mv_data_chegada_prevista');
-    var real     = document.getElementById('mv_data_chegada_real');
+    var saida    = document.getElementById('mv_data_saida_hidden')?.value;
+    var prevista = document.getElementById('mv_data_chegada_prevista_hidden');
+    var real     = document.getElementById('mv_data_chegada_real_hidden');
     var erroPrev = document.getElementById('mv_erro_chegada_prevista');
     var erroReal = document.getElementById('mv_erro_chegada_real');
 
     if (prevista && erroPrev) {
         var invalido = saida && prevista.value && prevista.value <= saida;
         erroPrev.style.display = invalido ? '' : 'none';
-        prevista.classList.toggle('is-invalid', !!invalido);
     }
     if (real && erroReal) {
         var invalido2 = saida && real.value && real.value <= saida;
         erroReal.style.display = invalido2 ? '' : 'none';
-        real.classList.toggle('is-invalid', !!invalido2);
     }
 };
 
 // Bloqueia submit se datas inválidas
 document.getElementById('formMov')?.addEventListener('submit', function(e) {
     validarDatas();
-    var prevista = document.getElementById('mv_data_chegada_prevista');
-    var real     = document.getElementById('mv_data_chegada_real');
-    if ((prevista && prevista.classList.contains('is-invalid')) ||
-        (real     && real.classList.contains('is-invalid'))) {
+    var erroPrev = document.getElementById('mv_erro_chegada_prevista');
+    var erroReal = document.getElementById('mv_erro_chegada_real');
+    if ((erroPrev && erroPrev.style.display !== 'none') ||
+        (erroReal && erroReal.style.display !== 'none')) {
         e.preventDefault();
         setStep(4);
+    }
+}, true);
+
+})();
+</script>
+
+{{-- ══ Flatpickr + lógica de horários da estação ══ --}}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://npmcdn.com/flatpickr/dist/l10n/pt.js"></script>
+<script>
+(function () {
+'use strict';
+
+const URL_HORARIOS = '/admin/estacao/{id}/disponibilidade-horarios';
+
+// ──────────────────────────────────────────────────────────────
+// Helpers
+// ──────────────────────────────────────────────────────────────
+
+/** Converte "HH:MM" → minutos desde meia-noite */
+function toMin(hhmm) {
+    if (!hhmm) return 0;
+    const [h, m] = hhmm.split(':').map(Number);
+    return h * 60 + (m || 0);
+}
+
+/** Gera um array de strings "HH:MM" de 30 em 30 minutos entre abertura e fechamento,
+    excluindo o intervalo de almoço quando aplicável. */
+function gerarHorarios(info) {
+    if (!info || !info.funciona) return [];
+    if (info.funciona_24h) {
+        // 00:00 → 23:30
+        return gerarSlots('00:00', '23:30', null, null);
+    }
+    return gerarSlots(info.hora_abertura, info.hora_fechamento,
+                      info.tem_almoco ? info.hora_inicio_almoco : null,
+                      info.tem_almoco ? info.hora_fim_almoco    : null);
+}
+
+function gerarSlots(abertura, fechamento, almocoIni, almocoFim) {
+    const inicio = toMin(abertura);
+    const fim    = toMin(fechamento);
+    const aIni   = almocoIni ? toMin(almocoIni) : null;
+    const aFim   = almocoFim ? toMin(almocoFim) : null;
+    const slots  = [];
+
+    for (let m = inicio; m <= fim; m += 30) {
+        if (aIni !== null && m >= aIni && m < aFim) continue; // intervalo almoço
+        const hh = String(Math.floor(m / 60)).padStart(2, '0');
+        const mm = String(m % 60).padStart(2, '0');
+        slots.push(`${hh}:${mm}`);
+    }
+    return slots;
+}
+
+/** Preenche um <select> com as horas disponíveis */
+function preencherSelect(selectEl, slots, valorAtual) {
+    if (!selectEl) return;
+    const prevVal = valorAtual || selectEl.value || '';
+    selectEl.innerHTML = '<option value="">Hora</option>';
+    slots.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        if (s === prevVal) opt.selected = true;
+        selectEl.appendChild(opt);
+    });
+    if (!slots.length) {
+        const opt = document.createElement('option');
+        opt.value = ''; opt.disabled = true;
+        opt.textContent = 'Estação fechada neste dia';
+        selectEl.appendChild(opt);
+    }
+}
+
+/** Atualiza o hidden field "YYYY-MM-DDTHH:mm" */
+function syncHidden(hiddenId, dateStr, timeStr) {
+    const hidden = document.getElementById(hiddenId);
+    if (!hidden) return;
+    if (dateStr && timeStr) {
+        // dateStr vem como "DD/MM/AAAA" do flatpickr
+        const [d, mo, y] = dateStr.split('/');
+        hidden.value = `${y}-${mo}-${d}T${timeStr}`;
+    } else {
+        hidden.value = '';
+    }
+    validarDatas();
+}
+
+/** Converte "YYYY-MM-DDTHH:mm" → { date: "DD/MM/AAAA", time: "HH:MM" } */
+function parseHidden(val) {
+    if (!val) return { date: '', time: '' };
+    const [datePart, timePart] = val.split('T');
+    if (!datePart) return { date: '', time: timePart || '' };
+    const [y, mo, d] = datePart.split('-');
+    return { date: `${d}/${mo}/${y}`, time: (timePart || '').slice(0, 5) };
+}
+
+// ──────────────────────────────────────────────────────────────
+// Cache de horários por estação
+// ──────────────────────────────────────────────────────────────
+const scheduleCache = {};
+
+async function fetchSchedule(estacaoId) {
+    if (!estacaoId) return null;
+    if (scheduleCache[estacaoId]) return scheduleCache[estacaoId];
+    try {
+        const url = URL_HORARIOS.replace('{id}', estacaoId);
+        const r = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!r.ok) return null;
+        const data = await r.json();
+        scheduleCache[estacaoId] = data.schedule || {};
+        return scheduleCache[estacaoId];
+    } catch (_) { return null; }
+}
+
+// ──────────────────────────────────────────────────────────────
+// Flatpickr instances
+// ──────────────────────────────────────────────────────────────
+const pickers = {};
+
+function criarPicker(inputId, opts = {}) {
+    const el = document.getElementById(inputId);
+    if (!el) return null;
+    return flatpickr(el, {
+        locale: 'pt',
+        dateFormat: 'd/m/Y',
+        allowInput: false,
+        disableMobile: true,
+        ...opts,
+    });
+}
+
+/** Reconstrói o picker com dias desabilitados baseados no schedule */
+function reconstruirPicker(inputId, schedule, onChangeCallback) {
+    if (pickers[inputId]) { pickers[inputId].destroy(); }
+
+    const disabledDays = [];
+    for (let d = 0; d <= 6; d++) {
+        const info = schedule[d];
+        if (!info || !info.funciona) disabledDays.push(d);
+    }
+
+    pickers[inputId] = criarPicker(inputId, {
+        disable: [
+            function(date) {
+                return disabledDays.includes(date.getDay());
+            }
+        ],
+        onChange: function(selectedDates, dateStr) {
+            if (onChangeCallback) onChangeCallback(selectedDates[0], dateStr);
+        },
+    });
+
+    return pickers[inputId];
+}
+
+// ──────────────────────────────────────────────────────────────
+// Slots de horário por dia selecionado
+// ──────────────────────────────────────────────────────────────
+
+function atualizarSelectHorario(selectId, schedule, dateObj, valorAtual) {
+    const selectEl = document.getElementById(selectId);
+    if (!selectEl) return;
+
+    if (!dateObj || !schedule) {
+        selectEl.innerHTML = '<option value="">Selecione uma data primeiro</option>';
         return;
     }
-}, true); // capture para rodar antes do listener KM
 
-// Validação inline no step 4
-var _origValidate = validateCurrentStep;
-// (já coberta pela validação de submit acima)
+    const info  = schedule[dateObj.getDay()];
+    const slots = gerarHorarios(info);
+    preencherSelect(selectEl, slots, valorAtual);
+}
+
+// ──────────────────────────────────────────────────────────────
+// Inicialização principal
+// ──────────────────────────────────────────────────────────────
+
+// Slots padrão (sem restrição de estação) — usado para Registro e campos sem origem/destino
+const slotsLivres = gerarSlots('00:00', '23:30', null, null);
+
+// ── Data de Registro (sem restrição de estação) ──
+(function() {
+    const hiddenId  = 'mv_data_registro_hidden';
+    const dateId    = 'mv_data_registro_date';
+    const timeId    = 'mv_data_registro_time';
+    const initial   = parseHidden(document.getElementById(hiddenId)?.value);
+
+    preencherSelect(document.getElementById(timeId), slotsLivres, initial.time);
+
+    pickers[dateId] = criarPicker(dateId, {
+        defaultDate: initial.date || null,
+        onChange: function(_, dateStr) {
+            syncHidden(hiddenId, dateStr, document.getElementById(timeId).value);
+        },
+    });
+    if (initial.date) document.getElementById(dateId).value = initial.date;
+
+    document.getElementById(timeId)?.addEventListener('change', function() {
+        syncHidden(hiddenId, document.getElementById(dateId).value, this.value);
+    });
+})();
+
+// ── Data de Saída (horário da estação de ORIGEM) ──
+async function inicializarSaida(estacaoId) {
+    const schedule = (await fetchSchedule(estacaoId)) || {};
+    const hiddenId = 'mv_data_saida_hidden';
+    const dateId   = 'mv_data_saida_date';
+    const timeId   = 'mv_data_saida_time';
+    const initial  = parseHidden(document.getElementById(hiddenId)?.value);
+
+    reconstruirPicker(dateId, schedule, function(dateObj, dateStr) {
+        atualizarSelectHorario(timeId, schedule, dateObj, '');
+        syncHidden(hiddenId, dateStr, document.getElementById(timeId).value);
+    });
+
+    if (initial.date) {
+        pickers[dateId]?.setDate(initial.date, true, 'd/m/Y');
+        const [d, mo, y] = initial.date.split('/');
+        const dt = new Date(+y, +mo - 1, +d);
+        atualizarSelectHorario(timeId, schedule, dt, initial.time);
+    } else {
+        document.getElementById(timeId).innerHTML = '<option value="">Selecione uma data primeiro</option>';
+    }
+
+    document.getElementById(timeId)?.addEventListener('change', function() {
+        syncHidden(hiddenId, document.getElementById(dateId).value, this.value);
+    });
+
+    // Aviso de horários da estação
+    mostrarAviso(schedule, 'saida');
+    atualizarHintOrigem(schedule, estacaoId);
+}
+
+// ── Chegada Prevista e Chegada Real (horário da estação de DESTINO) ──
+async function inicializarChegadas(estacaoId) {
+    const schedule = (await fetchSchedule(estacaoId)) || {};
+
+    ['chegada_prevista', 'chegada_real'].forEach(slot => {
+        const hiddenId = `mv_data_${slot}_hidden`;
+        const dateId   = `mv_data_${slot}_date`;
+        const timeId   = `mv_data_${slot}_time`;
+        const initial  = parseHidden(document.getElementById(hiddenId)?.value);
+
+        reconstruirPicker(dateId, schedule, function(dateObj, dateStr) {
+            atualizarSelectHorario(timeId, schedule, dateObj, '');
+            syncHidden(hiddenId, dateStr, document.getElementById(timeId).value);
+            validarDatas();
+        });
+
+        if (initial.date) {
+            pickers[dateId]?.setDate(initial.date, true, 'd/m/Y');
+            const [d, mo, y] = initial.date.split('/');
+            const dt = new Date(+y, +mo - 1, +d);
+            atualizarSelectHorario(timeId, schedule, dt, initial.time);
+        } else {
+            document.getElementById(timeId).innerHTML = '<option value="">Selecione uma data primeiro</option>';
+        }
+
+        document.getElementById(timeId)?.addEventListener('change', function() {
+            syncHidden(hiddenId, document.getElementById(dateId).value, this.value);
+            validarDatas();
+        });
+    });
+
+    atualizarHintDestino(schedule, estacaoId);
+}
+
+// ── Sem estação selecionada: pickers livres ──
+function inicializarSemEstacao(slot) {
+    const slots    = slotsLivres;
+    const hiddenId = `mv_data_${slot}_hidden`;
+    const dateId   = `mv_data_${slot}_date`;
+    const timeId   = `mv_data_${slot}_time`;
+    const initial  = parseHidden(document.getElementById(hiddenId)?.value);
+
+    if (pickers[dateId]) pickers[dateId].destroy();
+    pickers[dateId] = criarPicker(dateId, {
+        defaultDate: initial.date || null,
+        onChange: function(_, dateStr) {
+            preencherSelect(document.getElementById(timeId), slots, document.getElementById(timeId).value);
+            syncHidden(hiddenId, dateStr, document.getElementById(timeId).value);
+        },
+    });
+    if (initial.date) document.getElementById(dateId).value = initial.date;
+
+    preencherSelect(document.getElementById(timeId), slots, initial.time);
+
+    document.getElementById(timeId)?.addEventListener('change', function() {
+        syncHidden(hiddenId, document.getElementById(dateId).value, this.value);
+    });
+}
+
+// ──────────────────────────────────────────────────────────────
+// Aviso e hints de horário
+// ──────────────────────────────────────────────────────────────
+
+function mostrarAviso(schedule, _ctx) {
+    const aviso = document.getElementById('mv_horario_aviso');
+    const txt   = document.getElementById('mv_horario_aviso_txt');
+    if (!aviso || !txt || !Object.keys(schedule).length) {
+        aviso?.classList.add('d-none');
+        return;
+    }
+    // Pega info do primeiro dia útil (Seg = 1)
+    const info = schedule[1] || schedule[6] || schedule[0] || Object.values(schedule)[0];
+    if (!info || !info.funciona) { aviso.classList.add('d-none'); return; }
+
+    let msg = info.funciona_24h
+        ? `Estação disponível 24h.`
+        : `Horário de funcionamento: ${info.hora_abertura} às ${info.hora_fechamento}`;
+    if (info.tem_almoco && !info.funciona_24h) {
+        msg += ` (almoço: ${info.hora_inicio_almoco}–${info.hora_fim_almoco})`;
+    }
+    txt.textContent = msg;
+    aviso.classList.remove('d-none');
+}
+
+function atualizarHintOrigem(schedule, estacaoId) {
+    const hint = document.getElementById('mv_saida_origem_hint');
+    if (!hint) return;
+    if (!estacaoId || !Object.keys(schedule).length) { hint.textContent = ''; return; }
+    const diasOk = [0,1,2,3,4,5,6].filter(d => schedule[d]?.funciona).length;
+    hint.textContent = `${diasOk} dias/semana`;
+}
+
+function atualizarHintDestino(schedule, estacaoId) {
+    const hint = document.getElementById('mv_chegada_destino_hint');
+    if (!hint) return;
+    if (!estacaoId || !Object.keys(schedule).length) { hint.textContent = ''; return; }
+    const diasOk = [0,1,2,3,4,5,6].filter(d => schedule[d]?.funciona).length;
+    hint.textContent = `${diasOk} dias/semana`;
+}
+
+// ──────────────────────────────────────────────────────────────
+// Observa mudança de estação de origem e destino
+// ──────────────────────────────────────────────────────────────
+
+function getOrigemId()  { return document.getElementById('mv_origem_id')?.value || ''; }
+function getDestinoId() { return document.getElementById('mv_destino_id')?.value || ''; }
+
+async function aoMudarOrigem() {
+    const id = getOrigemId();
+    if (id) {
+        await inicializarSaida(id);
+    } else {
+        inicializarSemEstacao('saida');
+        document.getElementById('mv_horario_aviso')?.classList.add('d-none');
+        const hint = document.getElementById('mv_saida_origem_hint');
+        if (hint) hint.textContent = '';
+    }
+}
+
+async function aoMudarDestino() {
+    const id = getDestinoId();
+    if (id) {
+        await inicializarChegadas(id);
+    } else {
+        inicializarSemEstacao('chegada_prevista');
+        inicializarSemEstacao('chegada_real');
+        const hint = document.getElementById('mv_chegada_destino_hint');
+        if (hint) hint.textContent = '';
+    }
+}
+
+// Observa o hidden field de origem/destino com MutationObserver
+function observarHidden(elementId, callback) {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    let lastVal = el.value;
+    const obs = new MutationObserver(() => {
+        if (el.value !== lastVal) { lastVal = el.value; callback(); }
+    });
+    obs.observe(el, { attributes: true, attributeFilter: ['value'] });
+
+    // Também observa via polling leve (para quando JS seta .value diretamente)
+    setInterval(() => {
+        if (el.value !== lastVal) { lastVal = el.value; callback(); }
+    }, 400);
+}
+
+observarHidden('mv_origem_id',  aoMudarOrigem);
+observarHidden('mv_destino_id', aoMudarDestino);
+
+// ── Init imediato com valores já preenchidos ──
+document.addEventListener('DOMContentLoaded', function() {
+    // Registro (sem estação)
+    // (já inicializado no IIFE acima)
+
+    // Saída
+    const origemId = getOrigemId();
+    if (origemId) {
+        inicializarSaida(origemId);
+    } else {
+        inicializarSemEstacao('saida');
+    }
+
+    // Chegadas
+    const destinoId = getDestinoId();
+    if (destinoId) {
+        inicializarChegadas(destinoId);
+    } else {
+        inicializarSemEstacao('chegada_prevista');
+        inicializarSemEstacao('chegada_real');
+    }
+});
 
 })();
 </script>

@@ -9,5 +9,6 @@ Route::prefix('estacao')->name('estacao.')->group(function () {
     Route::get('filtro', [EstacaoController::class, 'filtro'])->name('filtro');
     Route::get('{id}/horariosdiarios', [EstacaoController::class, 'horarios_diarios'])->name('horarios_diarios');
     Route::post('{id}/horariosdiarios', [EstacaoController::class, 'salvar_horarios_diarios'])->name('salvar_horarios_diarios');
+    Route::get('{id}/disponibilidade-horarios', [EstacaoController::class, 'disponibilidadeHorarios'])->name('disponibilidadeHorarios');
 });
 Route::resource('estacao', EstacaoController::class);

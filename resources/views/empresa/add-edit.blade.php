@@ -165,6 +165,28 @@
                         >
                         <small class="text-muted d-block mt-1">Usado como "folga" para limpeza/revisao: o veiculo so fica disponivel para nova reserva apos o fim + X horas.</small>
                     </div>
+                    <div class="form-group form-group-empresa">
+                        <label for="adicionar_novas_marcas_automaticamente">Adicionar novas marcas automaticamente</label>
+                        @php
+                            $adicionarMarcasAutomaticamente = old('adicionar_novas_marcas_automaticamente', $empresa->adicionar_novas_marcas_automaticamente ?? 'S');
+                        @endphp
+                        <select class="form-control form-control-sm" id="adicionar_novas_marcas_automaticamente" name="adicionar_novas_marcas_automaticamente">
+                            <option value="S" {{ $adicionarMarcasAutomaticamente === 'S' ? 'selected' : '' }}>Sim</option>
+                            <option value="N" {{ $adicionarMarcasAutomaticamente === 'N' ? 'selected' : '' }}>Nao</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">Quando ativo, a sincronizacao FIPE replica novas marcas para esta empresa.</small>
+                    </div>
+                    <div class="form-group form-group-empresa">
+                        <label for="adicionar_novos_modelos_automaticamente">Adicionar novos modelos automaticamente</label>
+                        @php
+                            $adicionarModelosAutomaticamente = old('adicionar_novos_modelos_automaticamente', $empresa->adicionar_novos_modelos_automaticamente ?? 'S');
+                        @endphp
+                        <select class="form-control form-control-sm" id="adicionar_novos_modelos_automaticamente" name="adicionar_novos_modelos_automaticamente">
+                            <option value="S" {{ $adicionarModelosAutomaticamente === 'S' ? 'selected' : '' }}>Sim</option>
+                            <option value="N" {{ $adicionarModelosAutomaticamente === 'N' ? 'selected' : '' }}>Nao</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">Quando ativo, a sincronizacao FIPE replica novos modelos para esta empresa.</small>
+                    </div>
                 </div>
 
                 <div class="col-12 mt-2" data-empresa-step="4">
@@ -847,6 +869,7 @@
                     nome: 1, ativo: 1, slug: 1, cnpj: 1,
                     email: 2, telefone: 2,
                     dominio: 3, reserva_selecionar_modelo: 3, reserva_atraso_max_minutos: 3, reserva_bloqueio_pos_reserva_horas: 3,
+                    adicionar_novas_marcas_automaticamente: 3, adicionar_novos_modelos_automaticamente: 3,
                     logo: 4, cor_primaria: 4, cor_secundaria: 4, cor_terciaria: 4,
                     gateway_pagamento: 5, moeda_pagamento: 5,
                     stripe_public_key: 6, stripe_secret: 6,

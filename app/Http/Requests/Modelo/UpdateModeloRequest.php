@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Modelo;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateModeloRequest extends FormRequest
 {
@@ -22,9 +25,16 @@ class UpdateModeloRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+        $marcaExists = Rule::exists('marcas', 'id');
+
+        if ($empresaId !== null) {
+            $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+        }
+
         return [
             'nome' => 'required|string|max:255|unique:tipo_transacoes,nome,' . $this->route('modelo'),
-            'marca_id' => 'required|integer|exists:marcas,id',
+            'marca_id' => ['required', 'integer', $marcaExists],
             'segmento_id' => 'required|integer|exists:segmentos,id',
             'ativo' => 'required|string|max:1',
             'imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',

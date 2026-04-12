@@ -11,7 +11,10 @@ class Marca extends Model
 
     protected $table = 'marcas';
     protected $fillable = [
+        'empresa_id',
         'nome',
+        'nome_fipe',
+        'codigo_fipe',
         'ativo',
     ];
 }

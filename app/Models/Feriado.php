@@ -19,8 +19,8 @@ class Feriado extends Model
         'ativo',
     ];
 
-    protected $dates = [
-        'data',
+    protected $casts = [
+        'data' => 'date',
     ];
 
     public function estacao()

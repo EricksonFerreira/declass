@@ -35,6 +35,8 @@ class StoreEstacaoRequest extends FormRequest
             'ativo' => 'required|string|max:1|in:S,N',
             'checkin' => 'required|string|max:1|in:S,N',
             'checkout' => 'required|string|max:1|in:S,N',
+            'tem_intervalo_almoco' => 'required|array',
+            'tem_intervalo_almoco.*' => ['required', 'in:S,N'],
             'hora_abertura' => 'required|array',
             'hora_abertura.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'hora_fechamento' => 'required|array',
@@ -48,7 +50,9 @@ class StoreEstacaoRequest extends FormRequest
             'hora_fim_fora_expediente' => 'required|array',
             'hora_fim_fora_expediente.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'cobrar_na_coleta' => 'required|string|max:1|in:S,N',
+            'valor_taxa_coleta' => 'nullable|numeric|min:0',
             'cobrar_na_entrega' => 'required|string|max:1|in:S,N',
+            'valor_taxa_entrega' => 'nullable|numeric|min:0',
             'valido_no_intervalo' => 'required|string|max:1|in:S,N',
             'diasUteis' => 'array|min:1',
             'diasUteis.*' => 'integer|exists:dias_uteis,id',
@@ -71,6 +75,7 @@ class StoreEstacaoRequest extends FormRequest
             'hora_fim_almoco.*.regex' => 'Informe horarios diarios validos no formato 24h.',
             'hora_inicio_fora_expediente.*.regex' => 'Informe horarios diarios validos no formato 24h.',
             'hora_fim_fora_expediente.*.regex' => 'Informe horarios diarios validos no formato 24h.',
+            'tem_intervalo_almoco.*.in' => 'Informe se o dia possui intervalo para almoco.',
             'hora_abertura.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
             'hora_fechamento.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
             'hora_inicio_almoco.*.not_in' => 'Preencha os horarios diarios na aba Horarios para criar a estacao.',
@@ -90,6 +95,8 @@ class StoreEstacaoRequest extends FormRequest
             $inicioAlmocos = $this->input('hora_inicio_almoco', []);
             $fimAlmocos = $this->input('hora_fim_almoco', []);
             $funciona24h = $this->input('funciona_24h', []);
+            $funciona = $this->input('funciona', []);
+            $temIntervaloAlmoco = $this->input('tem_intervalo_almoco', []);
 
             $toMinutes = function ($value): ?int {
                 if (!is_string($value) || trim($value) === '' || $value === '00:00') {
@@ -104,7 +111,14 @@ class StoreEstacaoRequest extends FormRequest
                 return ((int) $h * 60) + (int) $m;
             };
 
-            $total = max(count($aberturas), count($fechamentos), count($inicioAlmocos), count($fimAlmocos), count($funciona24h));
+            $total = max(
+                count($aberturas),
+                count($fechamentos),
+                count($inicioAlmocos),
+                count($fimAlmocos),
+                count($funciona24h),
+                count($temIntervaloAlmoco)
+            );
 
             for ($i = 0; $i < $total; $i++) {
                 $abertura = $toMinutes($aberturas[$i] ?? null);
@@ -112,10 +126,21 @@ class StoreEstacaoRequest extends FormRequest
                 $inicioAlmoco = $toMinutes($inicioAlmocos[$i] ?? null);
                 $fimAlmoco = $toMinutes($fimAlmocos[$i] ?? null);
 
+                $temAlmoco = isset($temIntervaloAlmoco[$i]) ? (string) $temIntervaloAlmoco[$i] : 'S';
                 $is24h = isset($funciona24h[$i]) && $funciona24h[$i] === 'S';
+                $naoFunciona = isset($funciona[$i]) && $funciona[$i] === 'N';
+
+                if ($naoFunciona) {
+                    // Tipo de dia desativado (ex: Feriados com funciona=N): ignora todas as validações
+                    continue;
+                }
 
                 if ($is24h) {
                     // Skip validations for 24h entries
+                    continue;
+                }
+
+                if ($temAlmoco === 'N') {
                     continue;
                 }
 
@@ -126,15 +151,15 @@ class StoreEstacaoRequest extends FormRequest
                     continue;
                 }
 
-                if ($inicioAlmoco !== null && ($inicioAlmoco < $abertura || $inicioAlmoco > $fechamento)) {
+                if ($temAlmoco === 'S' && $inicioAlmoco !== null && ($inicioAlmoco < $abertura || $inicioAlmoco > $fechamento)) {
                     $validator->errors()->add("hora_inicio_almoco.$i", 'Horario de almoco deve estar dentro do horario de abertura e fechamento.');
                 }
 
-                if ($fimAlmoco !== null && ($fimAlmoco < $abertura || $fimAlmoco > $fechamento)) {
+                if ($temAlmoco === 'S' && $fimAlmoco !== null && ($fimAlmoco < $abertura || $fimAlmoco > $fechamento)) {
                     $validator->errors()->add("hora_fim_almoco.$i", 'Horario de almoco deve estar dentro do horario de abertura e fechamento.');
                 }
 
-                if ($inicioAlmoco !== null && $fimAlmoco !== null && $inicioAlmoco >= $fimAlmoco) {
+                if ($temAlmoco === 'S' && $inicioAlmoco !== null && $fimAlmoco !== null && $inicioAlmoco >= $fimAlmoco) {
                     $validator->errors()->add("hora_fim_almoco.$i", 'Fim do almoco deve ser maior que o inicio do almoco.');
                 }
             }

@@ -141,6 +141,7 @@
         <tr>
             <th class="text-center">#</th>
             <th>Cliente</th>
+            <th>Origem</th>
             <th>Veiculo</th>
             <th>Retirada</th>
             <th>Devolucao</th>
@@ -171,6 +172,12 @@
                 <td>
                     <strong>{{ $reserva->usuario?->nome ?? 'Sem cliente' }}</strong><br>
                     <small>{{ $reserva->usuario?->email ?? '-' }}</small>
+                </td>
+                <td>
+                    <span class="badge badge-xs {{ ($reserva->origem_cadastro ?? '') === 'site' ? 'badge-info' : 'badge-primary' }}">
+                        {{ $reserva->label_origem_cadastro ?? 'Sem origem' }}
+                    </span><br>
+                    <small>{{ ($reserva->origem_cadastro ?? '') === 'site' ? 'Portal do cliente' : 'Colaborador interno' }}</small>
                 </td>
                 <td>
                     <strong>{{ $reserva->grupoFrota?->nome ?? '-' }}</strong><br>

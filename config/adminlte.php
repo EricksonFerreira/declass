@@ -295,6 +295,22 @@ return [
 
     'menu' => [
         [
+            'type' => 'navbar-notification',
+            'id' => 'navbar-notificacoes',
+            'icon' => 'far fa-bell',
+            'icon_color' => 'secondary',
+            'label' => 0,
+            'label_color' => 'warning',
+            'route' => 'notificacoes.index',
+            'topnav_right' => true,
+            'dropdown_mode' => true,
+            'dropdown_flabel' => 'Ver todas',
+            'update_cfg' => [
+                'route' => 'notificacoes.navbar',
+                'period' => 60,
+            ],
+        ],
+        [
             'type'         => 'navbar-search',
             'text'         => 'search',
             'topnav_right' => false,
@@ -314,6 +330,11 @@ return [
             'url'  => 'home',
             'icon' => 'fas fa-tachometer-alt',
         ],
+        [
+            'text'  => 'Indicadores',
+            'route' => 'indicadores.index',
+            'icon'  => 'fas fa-chart-bar',
+        ],
 
         // OPERAÇÃO
         [
@@ -321,15 +342,33 @@ return [
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
         [
-            'text' => 'sidebar.reserva',
-            'url'  => 'reserva',
-            'icon' => 'fas fa-calendar-check',
+            'text'    => 'sidebar.reservas_atendimento',
+            'icon'    => 'fas fa-calendar-check',
+            'submenu' => [
+                [
+                    'text' => 'sidebar.reserva',
+                    'url'  => 'reserva',
+                    'icon' => 'fas fa-list',
+                    'can'  => 'reserva.index',
+                ],
+                [
+                    'text' => 'sidebar.nova_reserva',
+                    'route' => 'reserva.create',
+                    'icon' => 'fas fa-plus-circle',
+                    'can'  => 'reserva.create',
+                ],
+                [
+                    'text' => 'sidebar.minhas_reservas',
+                    'url'  => 'reserva/minhas',
+                    'icon' => 'fas fa-bookmark',
+                    'can'  => 'reserva.minhas',
+                ],
+            ],
         ],
         [
-            'text' => 'sidebar.minhas_reservas',
-            'url'  => 'reserva/minhas',
-            'icon' => 'fas fa-bookmark',
-            'can'  => 'reserva.minhas',
+            'text' => 'sidebar.notificacoes',
+            'route' => 'notificacoes.index',
+            'icon' => 'far fa-bell',
         ],
         [
             'text' => 'Multas',

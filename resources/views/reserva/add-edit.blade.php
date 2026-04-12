@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -23,7 +23,7 @@
             'pode_reservar' => true,
         ];
         $moedaEmpresa = strtoupper($moedaEmpresa ?? 'BRL');
-        $simboloMoedaEmpresa = $simboloMoedaEmpresa ?? ($moedaEmpresa === 'USD' ? '$' : ($moedaEmpresa === 'EUR' ? '€' : 'R$'));
+        $simboloMoedaEmpresa = $simboloMoedaEmpresa ?? ($moedaEmpresa === 'USD' ? '$' : ($moedaEmpresa === 'EUR' ? 'â‚¬' : 'R$'));
         $qtdEstacoes = (int) ($preRequisitosReserva['qtd_estacoes'] ?? 0);
         $qtdGrupos = (int) ($preRequisitosReserva['qtd_grupos'] ?? 0);
         $qtdModelos = (int) ($preRequisitosReserva['qtd_modelos'] ?? 0);
@@ -34,23 +34,12 @@
         $linkCadastroGrupo = \Illuminate\Support\Facades\Route::has('grupo_frota.create') ? route('grupo_frota.create') : null;
         $linkCadastroModelo = \Illuminate\Support\Facades\Route::has('modelo.create') ? route('modelo.create') : null;
         $linkCadastroVeiculo = \Illuminate\Support\Facades\Route::has('veiculo.create') ? route('veiculo.create') : null;
+        $dataInicioSelecionada = old('data_inicio', $reserva->data_inicio ?? '');
+        $dataFimSelecionada = old('data_fim', $reserva->data_fim ?? '');
+        $dataInicioDataExibicao = $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('d/m/Y') : '';
+        $dataInicioHoraSelecionada = $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('H:i') : '';
+        $dataFimExibicao = $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('d/m/Y H:i') : '';
     @endphp
-    @if ($errors->any())
-        <div class="alert alert-danger alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h5><i class="icon fas fa-ban"></i> Atencao!</h5>
-            @foreach ($errors->all() as $error)
-                <span>{{ $error }}</span>
-            @endforeach
-        </div>
-    @endif
-    @if (session('error'))
-        <div class="alert alert-danger alert-dismissible">
-            <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
-            <h5><i class="icon fas fa-ban"></i> Atencao!</h5>
-            <span>{{ session('error') }}</span>
-        </div>
-    @endif
     @if (session('success'))
         <div class="alert alert-success alert-dismissible">
             <button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button>
@@ -158,10 +147,10 @@
                     </div>
 
                     <!-- Estações e Datas -->
-                    <div class="col-md-8" data-reserva-step="1">
+                    <div class="col-md-6" data-reserva-step="1">
                         <div class="form-group">
-                            <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estacao de Retirada"
-                                :options="$estacoes" placeholder="Selecione uma estacao" :selected="old(
+                                <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estacao de Retirada"
+                                :options="$estacoesRetirada" placeholder="Selecione uma estacao" :selected="old(
                                     'estacao_retirada_id',
                                     isset($reserva->estacao_retirada_id) ? $reserva->estacao_retirada_id : null,
                                 )"
@@ -174,19 +163,37 @@
                             </small>
                         </div>
                     </div>
-                    <div class="col-md-4" data-reserva-step="1">
-                        <div class="form-group">
-                                <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
-                                id="data_inicio" name="data_inicio" label="Data Retirada"
-                                value="{{ old('data_inicio', $reserva->data_inicio ?? '') }}" required
-                                onchange="validarDatas()"
-                                min="{{ isset($reserva) ? '' : date('Y-m-d\TH:i') }}" />
+                    <div class="col-md-6" data-reserva-step="1">
+                        <div class="form-group mb-0">
+                            <label class="mb-1">Data e Hora de Retirada <span class="text-danger">*</span></label>
+                            <div class="d-flex">
+                                <div class="flex-grow-1 mr-2">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                        </div>
+                                        <input type="text" id="data_inicio_flatpickr" class="form-control form-control-sm"
+                                            placeholder="Selecione a estação" readonly
+                                            value="{{ $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('d/m/Y') : '' }}">
+                                    </div>
+                                    <small id="data_inicio_dias_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Selecione a estação para ver os dias.</small>
+                                </div>
+                                <div style="min-width:130px">
+                                    <select id="data_inicio_hora" class="form-control form-control-sm" disabled>
+                                        <option value="">Selecione a data</option>
+                                    </select>
+                                    <small id="data_inicio_hora_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Escolha uma data.</small>
+                                    <small id="data_inicio_taxa_aviso" class="d-none text-warning d-block mt-1" style="font-size:0.75rem"><i class="fas fa-exclamation-triangle mr-1"></i>Horário fora do expediente. Taxa adicional aplicável.</small>
+                                </div>
+                            </div>
+                            <input type="hidden" id="data_inicio_data" value="{{ $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('Y-m-d') : '' }}">
+                            <input type="hidden" id="data_inicio" name="data_inicio" value="{{ $dataInicioSelecionada }}">
                         </div>
                     </div>
-                    <div class="col-md-8" data-reserva-step="1">
+                    <div class="col-md-6" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-select id="estacao_devolucao_id" name="estacao_devolucao_id"
-                                label="Estacao de Devolucao" :options="$estacoes" placeholder="Selecione uma estacao"
+                                label="Estacao de Devolucao" :options="$estacoesDevolucao" placeholder="Selecione uma estacao"
                                 :selected="old(
                                     'estacao_devolucao_id',
                                     isset($reserva->estacao_devolucao_id) ? $reserva->estacao_devolucao_id : null,
@@ -196,12 +203,34 @@
                             @endif
                         </div>
                     </div>
-                    <div class="col-md-4" data-reserva-step="1">
-                        <div class="form-group">
-                            <x-form-input type="datetime-local" class="handleGetGrupoVeiculos form-control form-control-sm"
-                                id="data_fim" name="data_fim" label="Data Devolucao" value="{{ old('data_fim', $reserva->data_fim ?? '') }}"
-                                required onchange="validarDatas()"
-                                />
+                    <div class="col-md-6" data-reserva-step="1">
+                        <div class="form-group mb-0">
+                            <label class="mb-1">Data e Hora de Devolução <span class="text-danger">*</span></label>
+                            <div class="d-flex">
+                                <div class="flex-grow-1 mr-2">
+                                    <div class="input-group input-group-sm">
+                                        <div class="input-group-prepend">
+                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                        </div>
+                                        <input type="text" id="data_fim_flatpickr" class="form-control form-control-sm"
+                                            placeholder="Selecione a estação" readonly
+                                            value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('d/m/Y') : '' }}">
+                                    </div>
+                                    <small id="data_fim_dias_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Selecione a estação para ver os dias.</small>
+                                </div>
+                                <div style="min-width:130px">
+                                    <select id="data_fim_hora_fp" class="form-control form-control-sm" disabled>
+                                        <option value="">Selecione a data</option>
+                                    </select>
+                                    <small id="data_fim_hora_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Escolha uma data.</small>
+                                    <small id="data_fim_taxa_aviso" class="d-none text-warning d-block mt-1" style="font-size:0.75rem"><i class="fas fa-exclamation-triangle mr-1"></i>Horário fora do expediente. Taxa adicional aplicável.</small>
+                                </div>
+                            </div>
+                            <input type="hidden" id="data_fim_data" value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('Y-m-d') : '' }}">
+                            <input type="hidden" id="data_fim_hora" value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('H:i') : '' }}">
+                            {{-- mantido para compatibilidade com reserva.js --}}
+                            <input type="hidden" id="data_fim_display" value="{{ $dataFimExibicao ?? '' }}">
+                            <input type="hidden" id="data_fim" name="data_fim" value="{{ $dataFimSelecionada }}">
                         </div>
                     </div>
 
@@ -415,6 +444,59 @@
         </div>
     </div>
     </div>
+    <div class="modal fade" id="modalAgendaReserva" tabindex="-1" role="dialog" aria-labelledby="modalAgendaReservaLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title font-weight-bold" id="modalAgendaReservaLabel">
+                        <i class="fas fa-calendar-alt mr-2"></i>Selecionar data e horário
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info d-flex align-items-center">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <span>Escolha um dia e depois um horário dentro do expediente configurado para a estação.</span>
+                    </div>
+                    <input type="hidden" id="agenda_tipo">
+                    <input type="hidden" id="agenda_estacao_id">
+                    <input type="hidden" id="agenda_valor_selecionado">
+                    <div id="agenda_status" class="text-muted mb-3"></div>
+                    <div class="row">
+                        <div class="col-lg-5 mb-3 mb-lg-0" id="agenda_dias_card">
+                            <div class="card h-100">
+                                <div class="card-header bg-light py-2">
+                                    <strong>Dias disponíveis</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div id="agenda_dias" class="list-group"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-7" id="agenda_horarios_card">
+                            <div class="card h-100">
+                                <div class="card-header bg-light py-2">
+                                    <strong>Horários disponíveis</strong>
+                                </div>
+                                <div class="card-body">
+                                    <div id="agenda_horarios" class="d-flex flex-wrap"></div>
+                                    <div id="agenda_horarios_vazio" class="text-muted d-none">
+                                        Selecione um dia para visualizar os horários.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnConfirmarAgenda" disabled>Confirmar</button>
+                </div>
+            </div>
+        </div>
+    </div>
     @component('reserva.components.modal-pesquisa')
     @endcomponent
 
@@ -474,7 +556,7 @@
                                     <input type="date" id="fu_nascimento_de" class="form-control form-control-sm">
                                 </div>
                                 <div class="col-md-2 form-group mb-2">
-                                    <label class="small mb-1">Nasc. até</label>
+                                    <label class="small mb-1">Nasc. atÃ©</label>
                                     <input type="date" id="fu_nascimento_ate" class="form-control form-control-sm">
                                 </div>
                                 <div class="col-md-2 form-group mb-2">
@@ -482,7 +564,7 @@
                                     <input type="date" id="fu_cadastro_de" class="form-control form-control-sm">
                                 </div>
                                 <div class="col-md-2 form-group mb-2">
-                                    <label class="small mb-1">Cadastro até</label>
+                                    <label class="small mb-1">Cadastro atÃ©</label>
                                     <input type="date" id="fu_cadastro_ate" class="form-control form-control-sm">
                                 </div>
                                 <div class="col-md-2 d-flex align-items-end form-group mb-2">
@@ -663,7 +745,18 @@
 @stop
 
 @section('css')
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
+        /* Flatpickr overrides */
+        .flatpickr-calendar { font-family: inherit; box-shadow: 0 4px 20px rgba(0,0,0,.15); border-radius: 8px; }
+        .flatpickr-day.selected, .flatpickr-day.selected:hover { background: var(--empresa-cor-primaria, #0f172a); border-color: var(--empresa-cor-primaria, #0f172a); }
+        .flatpickr-day.flatpickr-disabled { color: #ccc !important; background: #f8f9fa; text-decoration: line-through; }
+        #data_inicio_flatpickr, #data_fim_flatpickr,
+        #data_inicio_hora, #data_fim_hora_fp { background: #fff; cursor: pointer; }
+        #data_inicio_hora[disabled], #data_fim_hora_fp[disabled] { cursor: not-allowed; background: #f4f6f9; }
+        #data_inicio_flatpickr.is-invalid, #data_fim_flatpickr.is-invalid { border-color: #dc3545; }
+
         .reserva-page {
             --reserva-border: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 35%, #dbe3ef 65%);
             --reserva-title: var(--empresa-cor-primaria, #0f172a);
@@ -1336,10 +1429,23 @@
 
     <!-- Select2 / SelectPicker -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
+    <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
     <script src="{{ asset('js/select2.min.js') }}"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.18/dist/js/bootstrap-select.min.js"></script>
     <script src="{{ asset('js/reserva/reserva.js') }}"></script>
     <script>
+        if (window.jQuery && jQuery.fn.selectpicker && jQuery.fn.selectpicker.Constructor) {
+            jQuery.fn.selectpicker.Constructor.BootstrapVersion = '4';
+        }
+
+        @php
+            $errosReservaHtml = '<ul class="text-left mb-0">';
+            foreach ($errors->all() as $erro) {
+                $errosReservaHtml .= '<li>' . e($erro) . '</li>';
+            }
+            $errosReservaHtml .= '</ul>';
+        @endphp
+
         window.reservaCurrency = @json($moedaEmpresa);
         window.reservaCurrencySymbol = @json($simboloMoedaEmpresa);
         const podeReservar = @json((bool) ($preRequisitosReserva['pode_reservar'] ?? true));
@@ -1370,6 +1476,32 @@
             data_emissao_carta_conducao: '#tab-carta-conducao-tab',
             data_validade_carta_conducao: '#tab-carta-conducao-tab',
         };
+
+        function mostrarErroReserva(titulo, mensagem) {
+            const tituloFinal = titulo || 'Atencao!';
+            const mensagemFinal = mensagem || 'Nao foi possivel concluir a acao.';
+
+            if (window.Swal && typeof Swal.fire === 'function') {
+                Swal.fire({
+                    icon: 'error',
+                    title: tituloFinal,
+                    html: mensagemFinal,
+                    confirmButtonText: 'OK',
+                });
+                return;
+            }
+
+            const textoFallback = String(mensagemFinal).replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+            alert(textoFallback ? `${tituloFinal}\n\n${textoFallback}` : tituloFinal);
+        }
+
+        @if ($errors->any())
+            mostrarErroReserva('Erros de validacao', @json($errosReservaHtml));
+        @endif
+
+        @if (session('error'))
+            mostrarErroReserva('Atencao!', @json(session('error')));
+        @endif
 
         function abrirPrimeiraAbaNovoUsuario() {
             $('#tab-dados-pessoais-tab').tab('show');
@@ -1455,20 +1587,20 @@
         }
 
         function atualizarUsuariosSelectReserva() {
-            // mantido por compatibilidade — nao ha mais select de usuarios
+            // mantido por compatibilidade â€” nao ha mais select de usuarios
             return $.Deferred().resolve().promise();
         }
 
         $('#formularioReserva').on('submit', function(e) {
             if (!podeReservar) {
                 e.preventDefault();
-                alert(mensagemPreRequisitos);
+                mostrarErroReserva('Atencao!', mensagemPreRequisitos);
                 return false;
             }
 
-            if (!handleGetGrupoVeiculos()) {
+            if (!handleGetGrupoVeiculos('submit')) {
                 e.preventDefault();
-                alert('Preencha estacoes e datas validas para continuar.');
+                mostrarErroReserva('Atencao!', 'Preencha estacoes e datas validas para continuar.');
                 return false;
             }
 
@@ -1476,7 +1608,7 @@
             // quero que formate os opcionais para eu levar para o servidor em input hidden
             try {
                 const reservaObj = getMinhaReserva() || {};
-                // garantir que o user_id do campo hidden seja incluído na reservaHidden
+                // garantir que o user_id do campo hidden seja incluÃ­do na reservaHidden
                 const userIdHidden = document.getElementById('user_id') ? document.getElementById('user_id').value : null;
                 if (userIdHidden) {
                     reservaObj.user_id = Number(userIdHidden);
@@ -1595,6 +1727,25 @@
                         return false;
                     }
 
+                    if (Number(step) === 1) {
+                        const dataInicio = document.getElementById('data_inicio');
+                        const dataFim = document.getElementById('data_fim');
+                        const fpRetirada = document.getElementById('data_inicio_flatpickr');
+                        const fpDevolucao = document.getElementById('data_fim_flatpickr');
+
+                        if (!dataInicio?.value) {
+                            if (fpRetirada) fpRetirada.classList.add('is-invalid');
+                            return false;
+                        }
+                        if (fpRetirada) fpRetirada.classList.remove('is-invalid');
+
+                        if (!dataFim?.value) {
+                            if (fpDevolucao) fpDevolucao.classList.add('is-invalid');
+                            return false;
+                        }
+                        if (fpDevolucao) fpDevolucao.classList.remove('is-invalid');
+                    }
+
                     return true;
                 }
 
@@ -1696,6 +1847,15 @@
 
             initSelectPickers(document);
             $('.js-selectpicker').selectpicker('refresh');
+
+            if (typeof reserva !== 'undefined' && reserva && reserva.data_inicio) {
+                const dataInicialRetirada = String(reserva.data_inicio).split(/[ T]/)[0] || '';
+                const horaInicialRetirada = String(reserva.data_inicio).includes('T')
+                    ? String(reserva.data_inicio).split('T')[1].slice(0, 5)
+                    : (String(reserva.data_inicio).split(' ')[1] || '').slice(0, 5);
+
+                // slots are loaded in inicializarDatePickers IIFE using schedule cache
+            }
 
             $('#novo_usuario_telefone').mask('(00) 00000-0000');
             $('#novo_usuario_celular').mask('(00) 00000-0000');
@@ -1831,18 +1991,18 @@
                                 <th>Perfil</th>
                                 <th>Nascimento</th>
                                 <th>Cadastro</th>
-                                <th class="text-center">Ação</th>
+                                <th class="text-center">AÃ§Ã£o</th>
                             </tr>
                         </thead><tbody>`;
                         data.usuarios.forEach(u => {
                             html += `<tr>
                                 <td><strong>${u.nome}</strong></td>
-                                <td>${u.email || '—'}</td>
-                                <td>${u.documento || '—'}</td>
-                                <td>${u.telefone || '—'}</td>
-                                <td><span class="badge badge-info">${u.perfil || '—'}</span></td>
-                                <td>${u.nascimento || '—'}</td>
-                                <td>${u.cadastro || '—'}</td>
+                                <td>${u.email || 'â€”'}</td>
+                                <td>${u.documento || 'â€”'}</td>
+                                <td>${u.telefone || 'â€”'}</td>
+                                <td><span class="badge badge-info">${u.perfil || 'â€”'}</span></td>
+                                <td>${u.nascimento || 'â€”'}</td>
+                                <td>${u.cadastro || 'â€”'}</td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-success btn-selecionar-usuario"
                                         data-id="${u.id}" data-nome="${u.nome.replace(/"/g,'&quot;')}">
@@ -1936,36 +2096,50 @@
                     atualizarMinhaReserva();
                 },
                 error: function() {
-                    alert('Erro ao verificar o cupom. Por favor, tente novamente.');
+                    mostrarErroReserva('Atencao!', 'Erro ao verificar o cupom. Por favor, tente novamente.');
                 }
             });
         });
 
-        $('#data_inicio').on('change', function() {
-            var dataInicio = new Date($(this).val());
-            dataInicio.setDate(dataInicio.getDate() + 1); // Adiciona 1 dia a data de inicio
-            var dataMinima = dataInicio.toISOString().split('T')[0] + 'T' + dataInicio.toTimeString().slice(0,5);
-            $('#data_fim').attr('min', dataMinima);
+        function validarPeriodoReserva() {
+            const inicioTexto = $('#data_inicio').val();
+            const fimTexto = $('#data_fim').val();
 
-            // Verifica se a data fim atual e menor que a nova data minima
-            var dataFimAtual = new Date($('#data_fim').val());
-            if (dataFimAtual < dataInicio) {
-                $('#data_fim').val(dataMinima);
+            if (!inicioTexto || !fimTexto) {
+                return;
+            }
+
+            const inicioObjReserva = new Date(inicioTexto);
+            const fimObjReserva = new Date(fimTexto);
+            if (fimObjReserva < inicioObjReserva) {
+                mostrarErroReserva('Periodo invalido', 'A data de devolucao nao pode ser anterior a data de retirada.');
+                $('#data_fim').val('');
+                $('#data_fim').removeClass('is-invalid');
+                return;
+            }
+
+            Promise.all([
+                validarFuncionamento($('#estacao_retirada_id').val(), inicioTexto, 'retirada', '#data_inicio'),
+                validarFuncionamento($('#estacao_devolucao_id').val(), fimTexto, 'devolucao', '#data_fim'),
+            ]).then(function(resultados) {
+                const mensagem = resultados.find(function(item) {
+                    return !!item;
+                });
+
+                if (mensagem) {
+                    mostrarErroReserva('Atencao!', mensagem);
+                    $('#data_fim').val('');
+                    $('#data_fim').removeClass('is-invalid');
+                }
+            }).catch(function() {});
+        }
+
+        $('#estacao_retirada_id, #estacao_devolucao_id, #data_inicio, #data_fim').on('change', function() {
+            this.setCustomValidity('');
+            if ($('#data_inicio').val() && $('#data_fim').val()) {
+                validarPeriodoReserva();
             }
         });
-
-            $('#data_fim').on('change', function() {
-                var dataFim = new Date($(this).val());
-                var dataInicio = new Date($('#data_inicio').val());
-                if (dataFim < dataInicio) {
-                    alert('A data de devolucao nao pode ser anterior a data de retirada.');
-                    $(this).val($('#data_inicio').val());
-                }
-            });
-
-            $('#estacao_retirada_id, #estacao_devolucao_id, #data_inicio, #data_fim').on('change input', function() {
-                this.setCustomValidity('');
-            });
 
         $('#user_id').on('change', function() {
             setUser($(this).val(),  $(this).find('option:selected').text().trim());
@@ -1976,55 +2150,566 @@
         let estacaoDevolucaoAlterada = false;
         $('#estacao_devolucao_id').on('change', function() {
             estacaoDevolucaoAlterada = true;
+            limparAgendaSelecionada('devolucao', false);
+            if (typeof setTaxaEntrega === 'function') { setTaxaEntrega(0); atualizarMinhaReserva(); }
         });
         $('#estacao_retirada_id').on('change', function() {
             const retirada = $(this).val();
             const devolucaoAtual = $('#estacao_devolucao_id').val();
+            limparAgendaSelecionada('retirada', false);
+            if (typeof setTaxaColeta === 'function') { setTaxaColeta(0); atualizarMinhaReserva(); }
             if (!retirada) return;
 
-            if (!estacaoDevolucaoAlterada || !devolucaoAtual) {
+            if (estacaoPodeSerDevolucao(retirada) && (!estacaoDevolucaoAlterada || !devolucaoAtual)) {
                 $('#estacao_devolucao_id').val(retirada);
                 if ($('#estacao_devolucao_id').hasClass('js-selectpicker')) {
                     $('#estacao_devolucao_id').selectpicker('refresh');
                 }
                 $('#estacao_devolucao_id').trigger('change');
             }
+
         });
 
         // dispara no load (edit com valores preenchidos)
         setTimeout(function () {
-            try { atualizarEstacoesDisponiveis(); } catch (e) {}
+            try {
+                atualizarEstacoesDisponiveis();
+            } catch (e) {}
         }, 0);
+
+        @php
+            $estacoesTaxasMap = \App\Models\Estacao::whereIn('id', array_keys($estacoesRetirada + $estacoesDevolucao))
+                ->get(['id', 'cobrar_na_coleta', 'valor_taxa_coleta', 'cobrar_na_entrega', 'valor_taxa_entrega'])
+                ->keyBy('id');
+        @endphp
+        const ESTACOES_TAXAS = @json($estacoesTaxasMap);
 
         const VALIDAR_FUNC_URL = @json(route('reserva.validarFuncionamentoEstacao'));
         const ESTACOES_DISP_URL = @json(route('reserva.estacoesDisponiveisNoPeriodo'));
+        const ESTACOES_DISP_DIA_URL = @json(route('reserva.estacoesDisponiveisNaDataHora'));
+        const DATAS_RETIRADA_URL = @json(route('reserva.datasRetiradaDisponiveisPorEstacao'));
+        const AGENDA_DISP_URL = @json(route('reserva.agendaDisponivelPorEstacao'));
+
+        let agendaReservaDados = [];
+        let agendaReservaDiaSelecionado = null;
+        let agendaReservaSlotSelecionado = null;
+        let retiradaDataSelecionada = null;
+
+        function obterTipoAgendaAtual() {
+            return $('#agenda_tipo').val() || 'retirada';
+        }
+
+        function obterDataBaseAgenda(tipo) {
+            const valorAtual = tipo === 'devolucao' ? $('#data_fim').val() : $('#data_inicio').val();
+            if (valorAtual) {
+                return String(valorAtual).slice(0, 10);
+            }
+
+            const agora = new Date();
+            const ano = agora.getFullYear();
+            const mes = String(agora.getMonth() + 1).padStart(2, '0');
+            const dia = String(agora.getDate()).padStart(2, '0');
+            return `${ano}-${mes}-${dia}`;
+        }
+
+        function definirAgendaSelecionada(tipo, valor, dispararChange = true) {
+            const campoValor = tipo === 'devolucao' ? '#data_fim' : '#data_inicio';
+            const campoDisplay = tipo === 'devolucao' ? '#data_fim_display' : '#data_inicio_display';
+
+            if (tipo === 'devolucao') {
+                setDataFim(valor || '');
+            } else {
+                setDataInicio(valor || '');
+                if (valor) {
+                    const partes = String(valor).split(/[ T]/);
+                    const dataParte = partes[0] || '';
+                    $('#data_inicio_data').val(dataParte);
+                } else {
+                    $('#data_inicio_data').val('');
+                    $('#data_inicio_hora').val('');
+                    $('#data_inicio_hora').prop('disabled', true);
+                    if ($('#data_inicio_hora').hasClass('js-selectpicker')) {
+                        $('#data_inicio_hora').selectpicker('refresh');
+                    }
+                }
+            }
+
+            $(campoValor).val(valor || '');
+            $(campoDisplay).val(valor ? formatarDataHoraReserva(valor) : '');
+            $(campoDisplay).toggleClass('is-invalid', !valor);
+
+            if (dispararChange) {
+                $(campoValor).trigger('change');
+            }
+        }
+
+        function limparAgendaSelecionada(tipo, dispararChange = false) {
+            definirAgendaSelecionada(tipo, '', dispararChange);
+        }
+
+        function obterEstacaoAgenda(tipo) {
+            return tipo === 'devolucao' ? $('#estacao_devolucao_id').val() : $('#estacao_retirada_id').val();
+        }
+
+        function obterNomeEstacaoAgenda(tipo) {
+            const seletor = tipo === 'devolucao' ? '#estacao_devolucao_id' : '#estacao_retirada_id';
+            return $(seletor).find('option:selected').text().trim();
+        }
+
+        function atualizarDataInicioRetirada() {
+            const data = $('#data_inicio_data').val() || '';
+            const hora = $('#data_inicio_hora').val() || '';
+
+            if (!data) {
+                $('#data_inicio').val('');
+                setDataInicio('');
+                $('#data_inicio').trigger('change');
+                return;
+            }
+
+            if (!hora) {
+                $('#data_inicio').val('');
+                setDataInicio(data);
+                $('#data_inicio').trigger('change');
+                return;
+            }
+
+            setDataInicio(`${data}T${hora}`);
+            $('#data_inicio').trigger('change');
+        }
+
+        const ptLocale = {
+            weekdays: { shorthand: ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'], longhand: ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'] },
+            months: { shorthand: ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'], longhand: ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'] },
+            firstDayOfWeek: 0, ordinal: function() { return 'º'; }, rangeSeparator: ' até ', time_24hr: true
+        };
+
+        let _pickerDataRetirada = null;
+        let _pickerDataDevolucao = null;
+
+        // Gera todos os slots de 30 em 30 minutos do dia (00:00 – 23:30)
+        function gerarSlotsDia() {
+            const slots = [];
+            for (let h = 0; h < 24; h++) {
+                slots.push(String(h).padStart(2,'0') + ':00');
+                slots.push(String(h).padStart(2,'0') + ':30');
+            }
+            return slots;
+        }
+
+        function normalizarSlotHorario(slot) {
+            if (slot && typeof slot === 'object') {
+                const value = String(slot.value || slot.hora || slot.time || '').trim();
+                const label = String(slot.label || slot.text || value).trim();
+                if (!value) {
+                    return null;
+                }
+                return {
+                    value: value,
+                    label: label || value,
+                    taxa_extra: Boolean(slot.taxa_extra || slot.status === 'taxa_extra'),
+                    status: slot.status || (slot.taxa_extra ? 'taxa_extra' : 'normal'),
+                };
+            }
+
+            const value = String(slot || '').trim();
+            if (!value) {
+                return null;
+            }
+
+            return {
+                value: value,
+                label: value,
+                taxa_extra: false,
+                status: 'normal',
+            };
+        }
+
+        function preencherHorariosRetirada(slots, horaPreferida = null) {
+            const $sel = $('#data_inicio_hora');
+            const $fb  = $('#data_inicio_hora_feedback');
+            const lista = Array.isArray(slots)
+                ? slots.map(normalizarSlotHorario).filter(Boolean)
+                : [];
+
+            $sel.empty().prop('disabled', true);
+
+            if (!lista.length) {
+                $sel.append('<option value="">Sem horários</option>');
+                $fb.text('Sem horários disponíveis para esta data.');
+                $('#data_inicio_data').val('');
+                setDataInicio('');
+                return [];
+            }
+
+            $sel.append('<option value="">Selecione a hora</option>');
+            lista.forEach(function(slot) {
+                const optVal = slot.value.includes('T') ? slot.value.split('T')[1].slice(0, 5) : String(slot.value).slice(0, 5);
+                const texto = slot.taxa_extra ? `${slot.label} • Taxa extra` : slot.label;
+                $sel.append(`<option value="${optVal}" data-taxa-extra="${slot.taxa_extra ? '1' : '0'}">${texto}</option>`);
+            });
+            $sel.prop('disabled', false);
+
+            const _toTime = function(v) { return String(v).includes('T') ? String(v).split('T')[1].slice(0, 5) : String(v).slice(0, 5); };
+            const horaNorm = horaPreferida ? _toTime(horaPreferida) : (lista.length === 1 ? _toTime(lista[0].value) : '');
+            if (horaNorm && $sel.find(`option[value="${horaNorm}"]`).length) {
+                $sel.val(horaNorm);
+            }
+            $('#data_inicio_taxa_aviso').toggleClass('d-none', $sel.find('option:selected').data('taxa-extra') != '1');
+            $fb.text('Escolha a hora de retirada.');
+            atualizarDataInicioRetirada();
+            return lista;
+        }
+
+        function carregarHorariosRetiradaDisponiveis(dataBase, horaPreferida = null) {
+            return carregarHorariosAgendaPorData('retirada', dataBase, horaPreferida);
+        }
+
+        function carregarHorariosDevolucaoDisponiveis(dataBase, horaPreferida = null) {
+            return carregarHorariosAgendaPorData('devolucao', dataBase, horaPreferida);
+        }
+
+        function carregarHorariosAgendaPorData(tipo, dataBase, horaPreferida = null) {
+            const tipoAgenda = tipo || 'retirada';
+            const estacaoAtual = obterEstacaoAgenda(tipoAgenda);
+            if (!estacaoAtual || !dataBase) {
+                return Promise.resolve([]);
+            }
+
+            const params = new URLSearchParams({
+                estacao_id: estacaoAtual,
+                tipo: tipoAgenda,
+                data_base: dataBase,
+                limite: 1,
+            });
+
+            const reservaId = $('#reserva_id').val() || null;
+            if (reservaId) {
+                params.set('reserva_id', reservaId);
+            }
+
+            const seletorHora = tipoAgenda === 'devolucao' ? '#data_fim_hora_fp' : '#data_inicio_hora';
+            const seletorFeedback = tipoAgenda === 'devolucao' ? '#data_fim_hora_feedback' : '#data_inicio_hora_feedback';
+
+            $(seletorFeedback).text('Carregando horarios disponiveis...');
+            $(seletorHora).prop('disabled', true);
+
+            return fetch(AGENDA_DISP_URL + '?' + params.toString(), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(d => {
+                const agenda = Array.isArray(d.agenda) ? d.agenda : [];
+                const dia = agenda.find(item => String(item.date) === String(dataBase)) || agenda[0] || null;
+                const slots = Array.isArray(dia?.slots) ? dia.slots : [];
+
+                if (!slots.length) {
+                    if (tipoAgenda === 'devolucao') {
+                        preencherHorariosDevolucao([], null);
+                    } else {
+                        preencherHorariosRetirada([], null);
+                    }
+                    mostrarErroReserva('Sem horario', tipoAgenda === 'devolucao'
+                        ? 'Nao ha horarios de devolucao disponiveis para a data selecionada.'
+                        : 'Nao ha horarios de retirada disponiveis para a data selecionada.');
+                    return [];
+                }
+
+                return tipoAgenda === 'devolucao'
+                    ? preencherHorariosDevolucao(slots, horaPreferida)
+                    : preencherHorariosRetirada(slots, horaPreferida);
+            })
+            .catch(() => {
+                if (tipoAgenda === 'devolucao') {
+                    preencherHorariosDevolucao([], null);
+                } else {
+                    preencherHorariosRetirada([], null);
+                }
+                mostrarErroReserva('Sem horario', tipoAgenda === 'devolucao'
+                    ? 'Nao foi possivel carregar os horarios da devolucao.'
+                    : 'Nao foi possivel carregar os horarios da retirada.');
+                return [];
+            });
+        }
+
+        function buscarHorariosAoSelecionarData(tipo, dataBase, horaPreferida = null) {
+            if (!dataBase) {
+                return Promise.resolve([]);
+            }
+
+            if (tipo === 'devolucao') {
+                $('#data_fim_data').val(dataBase);
+                return carregarHorariosDevolucaoDisponiveis(dataBase, horaPreferida || $('#data_fim_hora_fp').val() || null);
+            }
+
+            $('#data_inicio_data').val(dataBase);
+            return carregarHorariosRetiradaDisponiveis(dataBase, horaPreferida || $('#data_inicio_hora').val() || null);
+        }
+
+        function selecionarDataRetirada(dataSelecionada, horaPreferida = null) {
+            if (!dataSelecionada) {
+                return;
+            }
+
+            retiradaDataSelecionada = dataSelecionada;
+            $('#agenda_dias').children().removeClass('active');
+            $('#agenda_dias').children().filter(function() {
+                return String($(this).attr('data-date') || '') === String(dataSelecionada);
+            }).addClass('active');
+
+            definirAgendaSelecionada('retirada', dataSelecionada, false);
+            carregarHorariosRetiradaDisponiveis(dataSelecionada, horaPreferida || $('#data_inicio_hora').val()).then(function(slots) {
+                if (Array.isArray(slots) && slots.length > 0) {
+                    $('#modalAgendaReserva').modal('hide');
+                }
+            });
+        }
+
+        function renderizarAgendaDias() {
+            const $dias = $('#agenda_dias');
+            const $horarios = $('#agenda_horarios');
+            const $vazio = $('#agenda_horarios_vazio');
+            const tipo = obterTipoAgendaAtual();
+            const valorAtual = tipo === 'devolucao' ? $('#data_fim').val() : $('#data_inicio').val();
+
+            $dias.empty();
+            $horarios.empty();
+            $vazio.addClass('d-none');
+            $('#btnConfirmarAgenda').prop('disabled', true);
+            agendaReservaDiaSelecionado = null;
+            agendaReservaSlotSelecionado = null;
+            $('#agenda_valor_selecionado').val('');
+
+            if (tipo === 'retirada') {
+                $('#agenda_horarios_card').addClass('d-none');
+                $('#btnConfirmarAgenda').addClass('d-none');
+            } else {
+                $('#agenda_horarios_card').removeClass('d-none');
+                $('#btnConfirmarAgenda').removeClass('d-none');
+            }
+
+            if (!Array.isArray(agendaReservaDados) || agendaReservaDados.length === 0) {
+                $('#agenda_status').html('<span class="text-danger">Nenhum dia com expediente disponível para a estação selecionada.</span>');
+                $vazio.removeClass('d-none').text('Nenhum horário disponível.');
+                return;
+            }
+
+            $('#modalAgendaReservaLabel').html(
+                '<i class="fas fa-calendar-alt mr-2"></i>Selecionar data e horário de ' + (tipo === 'devolucao' ? 'devolução' : 'retirada')
+            );
+
+            $('#agenda_status').html(
+                '<strong>Estação:</strong> ' + $('<div>').text(obterNomeEstacaoAgenda(tipo) || '---').html()
+            );
+
+            agendaReservaDados.forEach(function(dia, indice) {
+                const qtdSlots = Array.isArray(dia.slots) ? dia.slots.length : 0;
+                const temTaxaExtra = Array.isArray(dia.slots) && dia.slots.some(function(slot) {
+                    return !!slot.taxa_extra;
+                });
+                const $btn = $('<button type="button" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"></button>');
+                $btn.append(`<span>${dia.label || ''}</span>`);
+                const $badges = $('<span class="d-flex align-items-center"></span>');
+                $badges.append(`<span class="badge badge-primary badge-pill mr-1">${qtdSlots}</span>`);
+                if (temTaxaExtra) {
+                    $badges.append('<span class="badge badge-warning text-dark badge-pill">Taxa extra</span>');
+                }
+                $btn.append($badges);
+                $btn.on('click', function() {
+                    if (tipo === 'retirada') {
+                        selecionarDataRetirada(dia.date || '');
+                        return;
+                    }
+                    selecionarAgendaDia(indice);
+                });
+                $btn.attr('data-date', dia.date || '');
+                $dias.append($btn);
+            });
+
+            if (valorAtual) {
+                const valorNormalizado = String(valorAtual);
+                let indiceEncontrado = -1;
+                let slotEncontrado = null;
+                const horaAtual = valorNormalizado.includes('T')
+                    ? valorNormalizado.split('T')[1].slice(0, 5)
+                    : (valorNormalizado.split(' ')[1] || '').slice(0, 5);
+
+                agendaReservaDados.forEach(function(dia, indice) {
+                    (dia.slots || []).forEach(function(slot) {
+                        if (String(slot.value) === valorNormalizado) {
+                            indiceEncontrado = indice;
+                            slotEncontrado = slot.value;
+                        }
+                    });
+                });
+
+                if (indiceEncontrado !== -1) {
+                    if (tipo === 'retirada') {
+                        $dias.children().removeClass('active');
+                        $dias.children().eq(indiceEncontrado).addClass('active');
+                        retiradaDataSelecionada = agendaReservaDados[indiceEncontrado]?.date || '';
+                        return;
+                    } else {
+                        selecionarAgendaDia(indiceEncontrado, slotEncontrado);
+                    }
+                    return;
+                }
+            }
+
+            if (tipo !== 'retirada') {
+                selecionarAgendaDia(0);
+            }
+        }
+
+        function selecionarAgendaDia(indice, slotPreferido = null) {
+            const dia = agendaReservaDados[indice];
+            const $horarios = $('#agenda_horarios');
+            const $vazio = $('#agenda_horarios_vazio');
+            const $dias = $('#agenda_dias');
+
+            if (!dia) {
+                $horarios.empty();
+                $vazio.removeClass('d-none').text('Nenhum horário disponível.');
+                $('#btnConfirmarAgenda').prop('disabled', true);
+                agendaReservaDiaSelecionado = null;
+                agendaReservaSlotSelecionado = null;
+                $('#agenda_valor_selecionado').val('');
+                return;
+            }
+
+            agendaReservaDiaSelecionado = indice;
+            agendaReservaSlotSelecionado = null;
+            $('#agenda_valor_selecionado').val('');
+            $dias.children().removeClass('active');
+            $dias.children().eq(indice).addClass('active');
+            $horarios.empty();
+
+            const slots = Array.isArray(dia.slots) ? dia.slots : [];
+            if (!slots.length) {
+                $vazio.removeClass('d-none').text('Nenhum horário disponível para este dia.');
+                $('#btnConfirmarAgenda').prop('disabled', true);
+                return;
+            }
+
+            $vazio.addClass('d-none');
+            slots.forEach(function(slot) {
+                const ativo = slotPreferido && String(slot.value) === String(slotPreferido);
+                const $btn = $('<button type="button" class="btn btn-outline-primary btn-sm mr-2 mb-2"></button>');
+                $btn.text(slot.label || slot.value);
+                if (slot.taxa_extra) {
+                    $btn.append(' ');
+                    $btn.append('<span class="badge badge-warning text-dark ml-1">Taxa extra</span>');
+                }
+                if (ativo) {
+                    $btn.addClass('active');
+                    agendaReservaSlotSelecionado = slot.value;
+                    $('#agenda_valor_selecionado').val(slot.value);
+                    $('#btnConfirmarAgenda').prop('disabled', false);
+                }
+                $btn.on('click', function() {
+                    $horarios.find('button').removeClass('active');
+                    $(this).addClass('active');
+                    agendaReservaSlotSelecionado = slot.value;
+                    $('#agenda_valor_selecionado').val(slot.value);
+                    $('#btnConfirmarAgenda').prop('disabled', false);
+                });
+                $horarios.append($btn);
+            });
+
+            if (!slotPreferido) {
+                const primeiroSlot = slots[0];
+                agendaReservaSlotSelecionado = primeiroSlot.value;
+                $('#agenda_valor_selecionado').val(primeiroSlot.value);
+                $horarios.find('button').first().addClass('active');
+                $('#btnConfirmarAgenda').prop('disabled', false);
+            }
+        }
+
+        function carregarAgendaEstacao(tipo) {
+            const estacaoId = obterEstacaoAgenda(tipo);
+            if (!estacaoId) {
+                mostrarErroReserva('Atencao!', 'Selecione a estacao antes de abrir a agenda.');
+                return;
+            }
+
+            $('#agenda_tipo').val(tipo || 'retirada');
+            $('#agenda_estacao_id').val(estacaoId);
+            $('#agenda_status').text('Carregando agenda...');
+            $('#agenda_dias').empty();
+            $('#agenda_horarios').empty();
+            $('#agenda_horarios_vazio').removeClass('d-none').text('Carregando horarios...');
+            $('#btnConfirmarAgenda').prop('disabled', true);
+            agendaReservaDados = [];
+            agendaReservaDiaSelecionado = null;
+            agendaReservaSlotSelecionado = null;
+            $('#agenda_valor_selecionado').val('');
+            $('#modalAgendaReserva').modal('show');
+
+            if ((tipo || 'retirada') === 'retirada') {
+                $('#agenda_horarios_card').addClass('d-none');
+                $('#btnConfirmarAgenda').addClass('d-none');
+            } else {
+                $('#agenda_horarios_card').removeClass('d-none');
+                $('#btnConfirmarAgenda').removeClass('d-none');
+            }
+
+            const params = new URLSearchParams({
+                estacao_id: estacaoId,
+                tipo: tipo || 'retirada',
+                data_base: obterDataBaseAgenda(tipo || 'retirada'),
+                limite: 21,
+            });
+
+            fetch(AGENDA_DISP_URL + '?' + params.toString(), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(d => {
+                agendaReservaDados = Array.isArray(d.agenda) ? d.agenda : [];
+                renderizarAgendaDias();
+            })
+            .catch(() => {
+                agendaReservaDados = [];
+                $('#agenda_status').html('<span class="text-danger">Nao foi possivel carregar a agenda desta estacao.</span>');
+                $('#agenda_horarios_vazio').removeClass('d-none').text('Nao foi possivel carregar os horarios.');
+            });
+        }
+
+        function confirmarAgendaSelecionada() {
+            const tipo = $('#agenda_tipo').val() || 'retirada';
+            if (tipo === 'retirada') {
+                return;
+            }
+            const valor = $('#agenda_valor_selecionado').val();
+
+            if (!valor) {
+                mostrarErroReserva('Atencao!', 'Selecione um horario para continuar.');
+                return;
+            }
+
+            definirAgendaSelecionada(tipo, valor, true);
+            $('#modalAgendaReserva').modal('hide');
+        }
         function validarFuncionamento(estacaoId, dataHora, tipo, campoSelector) {
-            if (!estacaoId || !dataHora) return;
-            fetch(VALIDAR_FUNC_URL + '?estacao_id=' + encodeURIComponent(estacaoId) + '&data_hora=' + encodeURIComponent(dataHora) + '&tipo=' + encodeURIComponent(tipo), {
+            if (!estacaoId || !dataHora) return Promise.resolve(null);
+            return fetch(VALIDAR_FUNC_URL + '?estacao_id=' + encodeURIComponent(estacaoId) + '&data_hora=' + encodeURIComponent(dataHora) + '&tipo=' + encodeURIComponent(tipo), {
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': @json(csrf_token()) }
             })
             .then(r => r.json())
             .then(d => {
                 if (d && d.ok === false) {
-                    alert(d.message || 'Data/horario invalido para a estacao selecionada.');
-                    if (campoSelector) {
-                        $(campoSelector).val('');
-                    }
+                    return d.message || 'Data/horário inválido para a estação selecionada.';
                 }
+                return null;
             })
-            .catch(() => {});
+            .catch(() => null);
         }
 
-        $('#estacao_retirada_id, #data_inicio').on('change', function() {
-            validarFuncionamento($('#estacao_retirada_id').val(), $('#data_inicio').val(), 'retirada', '#data_inicio');
-        });
-        $('#estacao_devolucao_id, #data_fim').on('change', function() {
-            validarFuncionamento($('#estacao_devolucao_id').val(), $('#data_fim').val(), 'devolucao', '#data_fim');
-        });
-
-        function aplicarEstacoesDisponiveis(ids) {
+        function aplicarEstacoesDisponiveis(ids, seletor = null) {
             const allowed = new Set((ids || []).map(String));
-            ['#estacao_retirada_id', '#estacao_devolucao_id'].forEach(function (sel) {
+            const seletores = seletor ? [seletor] : ['#estacao_retirada_id', '#estacao_devolucao_id'];
+
+            seletores.forEach(function (sel) {
                 const $s = $(sel);
                 const atual = $s.val();
                     $s.find('option').each(function () {
@@ -2042,6 +2727,107 @@
                     $s.selectpicker('refresh');
                 }
             });
+        }
+
+        function estacaoPodeSerDevolucao(estacaoId) {
+            if (!estacaoId) {
+                return false;
+            }
+
+            return $('#estacao_devolucao_id option[value="' + estacaoId + '"]').length > 0;
+        }
+
+        function atualizarEstacoesDisponiveisPorDataHora(tipo, dataHora) {
+            if (!dataHora) {
+                return Promise.resolve([]);
+            }
+
+            const grupoId = $('#grupo_frota_id').val() || null;
+            const modeloId = $('#modelo_id').val() || null;
+            const reservaId = $('#reserva_id').val() || null;
+
+            const params = new URLSearchParams({
+                data_hora: dataHora,
+                tipo: tipo || 'retirada',
+            });
+            if (grupoId) params.set('grupo_frota_id', grupoId);
+            if (modeloId) params.set('modelo_id', modeloId);
+            if (reservaId) params.set('reserva_id', reservaId);
+
+            const seletor = tipo === 'devolucao' ? '#estacao_devolucao_id' : '#estacao_retirada_id';
+
+            return fetch(ESTACOES_DISP_DIA_URL + '?' + params.toString(), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(d => {
+                const ids = Array.isArray(d.estacao_ids) ? d.estacao_ids : [];
+                aplicarEstacoesDisponiveis(ids, seletor);
+
+                if (tipo === 'retirada' && !ids.length) {
+                    $('#estacao_retirada_id').val('');
+                    if ($('#estacao_retirada_id').hasClass('js-selectpicker')) {
+                        $('#estacao_retirada_id').selectpicker('refresh');
+                    }
+                    mostrarErroReserva('Sem disponibilidade', 'Nao ha nenhuma estacao com veiculos disponiveis para essa data de retirada.');
+                }
+
+                return ids;
+            })
+            .catch(() => []);
+        }
+
+        function renderDatasRetiradaSugeridas(datas) {
+            const $container = $('#datas_retirada_sugeridas');
+            const $lista = $('#datas_retirada_sugeridas_lista');
+            if (!$container.length || !$lista.length) {
+                return;
+            }
+
+            $lista.empty();
+
+            if (!Array.isArray(datas) || datas.length === 0) {
+                $container.addClass('d-none');
+                return;
+            }
+
+            datas.forEach(function(item) {
+                if (!item || !item.value || !item.label) {
+                    return;
+                }
+
+                const $btn = $('<button type="button" class="btn btn-outline-primary btn-sm mr-2 mb-2"></button>');
+                $btn.text(item.label);
+                $btn.on('click', function() {
+                    $('#data_inicio').val(item.value).trigger('change');
+                });
+                $lista.append($btn);
+            });
+
+            $container.removeClass('d-none');
+        }
+
+        function carregarDatasRetiradaDisponiveis() {
+            const estacaoId = $('#estacao_retirada_id').val();
+            if (!estacaoId) {
+                renderDatasRetiradaSugeridas([]);
+                return;
+            }
+
+            const dataBase = $('#data_inicio').val() || null;
+            const params = new URLSearchParams({
+                estacao_id: estacaoId,
+            });
+            if (dataBase) {
+                params.set('data_base', dataBase);
+            }
+
+            fetch(DATAS_RETIRADA_URL + '?' + params.toString(), {
+                headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(d => renderDatasRetiradaSugeridas(d.datas || []))
+            .catch(() => renderDatasRetiradaSugeridas([]));
         }
 
         function atualizarEstacoesDisponiveis() {
@@ -2069,26 +2855,33 @@
             .catch(() => {});
         }
 
-        $('#data_inicio, #data_fim, #grupo_frota_id, #modelo_id').on('change input', atualizarEstacoesDisponiveis);
+        $('#grupo_frota_id, #modelo_id').on('change', atualizarEstacoesDisponiveis);
+
+        $('#btnConfirmarAgenda').on('click', function() {
+            confirmarAgendaSelecionada();
+        });
+
+        $('#modalAgendaReserva').on('hidden.bs.modal', function() {
+            $('#agenda_status').text('');
+            $('#agenda_dias').empty();
+            $('#agenda_horarios').empty();
+            $('#agenda_horarios_vazio').removeClass('d-none').text('Selecione um dia para visualizar os horarios.');
+            $('#agenda_valor_selecionado').val('');
+            $('#btnConfirmarAgenda').prop('disabled', true);
+            $('#agenda_horarios_card').removeClass('d-none');
+            $('#btnConfirmarAgenda').removeClass('d-none');
+            agendaReservaDados = [];
+            agendaReservaDiaSelecionado = null;
+            agendaReservaSlotSelecionado = null;
+        });
 
         function validarDatas() {
-            let dataInicio = $('#data_inicio').val();
-            let dataFim = $('#data_fim').val();
-
-            if (dataInicio && dataFim) {
-                let dataInicioObj = new Date(dataInicio);
-                let dataFimObj = new Date(dataFim);
-
-                if (dataInicioObj > dataFimObj) {
-                    alert('A data de inicio nao pode ser maior que a data de fim.');
-                    $('#data_fim').val('');
-                }
-            }
+            validarPeriodoReserva();
         }
 
-        $('.handleGetGrupoVeiculos').on('change input', function() {
+        $('.handleGetGrupoVeiculos').on('change', function() {
 
-            datasEstacoesValidas = handleGetGrupoVeiculos();
+            datasEstacoesValidas = handleGetGrupoVeiculos('change');
 
             estacao_retirada_id = $('#estacao_retirada_id').val();
             estacao_retirada_nome = $('#estacao_retirada_id').find('option:selected').text();
@@ -2106,43 +2899,240 @@
 
             atualizarMinhaReserva();
 
-            if (datasEstacoesValidas) {
-                $.ajax({
-                    url: "{{ route('grupo_frota.getGrupoFrotaDisponiveis') }}",
-                    type: 'GET',
-                    data: {
-                        estacao_retirada_id: estacao_retirada_id,
-                        data_inicio: data_inicio,
-                        estacao_devolucao_id: estacao_devolucao_id,
-                        data_fim: data_fim,
-                    },
-                    success: function(data) {
-                        // console.log(1)
-                        // $('#marca').val(data.marca);
-                        // $('#segmento').val(data.segmento);
+        });
+
+        // ── Devolução: hora select ──────────────────────────────────────────────
+        function atualizarDataFimDevolucao() {
+            const data = $('#data_fim_data').val() || '';
+            const hora = $('#data_fim_hora_fp').val() || '';
+            if (!data) {
+                $('#data_fim').val('');
+                setDataFim('');
+                $('#data_fim').trigger('change');
+                return;
+            }
+            if (!hora) {
+                $('#data_fim').val('');
+                setDataFim(data);
+                $('#data_fim').trigger('change');
+                return;
+            }
+            const valor = `${data}T${hora}`;
+            $('#data_fim').val(valor);
+            setDataFim(valor);
+            $('#data_fim').trigger('change');
+        }
+
+        function preencherHorariosDevolucao(slots, horaPreferida = null) {
+            const $sel = $('#data_fim_hora_fp');
+            const $fb  = $('#data_fim_hora_feedback');
+            const lista = Array.isArray(slots)
+                ? slots.map(normalizarSlotHorario).filter(Boolean)
+                : [];
+
+            $sel.empty().prop('disabled', true);
+
+            if (!lista.length) {
+                $sel.append('<option value="">Sem horários</option>');
+                $fb.text('Sem horários disponíveis para esta data.');
+                $('#data_fim_data').val('');
+                setDataFim('');
+                return [];
+            }
+
+            $sel.append('<option value="">Selecione a hora</option>');
+            lista.forEach(function(slot) {
+                const optVal = slot.value.includes('T') ? slot.value.split('T')[1].slice(0, 5) : String(slot.value).slice(0, 5);
+                const texto = slot.taxa_extra ? `${slot.label} • Taxa extra` : slot.label;
+                $sel.append(`<option value="${optVal}" data-taxa-extra="${slot.taxa_extra ? '1' : '0'}">${texto}</option>`);
+            });
+            $sel.prop('disabled', false);
+
+            const _toTimeDev = function(v) { return String(v).includes('T') ? String(v).split('T')[1].slice(0, 5) : String(v).slice(0, 5); };
+            const horaNorm = horaPreferida ? _toTimeDev(horaPreferida) : (lista.length === 1 ? _toTimeDev(lista[0].value) : '');
+            if (horaNorm && $sel.find(`option[value="${horaNorm}"]`).length) {
+                $sel.val(horaNorm);
+            }
+            $('#data_fim_taxa_aviso').toggleClass('d-none', $sel.find('option:selected').data('taxa-extra') != '1');
+            $fb.text('Escolha a hora de devolução.');
+            atualizarDataFimDevolucao();
+            return lista;
+        }
+
+        $('#data_fim_hora_fp').on('change', function() {
+            const temTaxa = $(this).find('option:selected').data('taxa-extra') == '1';
+            $('#data_fim_taxa_aviso').toggleClass('d-none', !temTaxa);
+            if (typeof setTaxaEntrega === 'function') {
+                const estacaoId = $('#estacao_devolucao_id').val();
+                const info = ESTACOES_TAXAS[estacaoId];
+                const valor = (temTaxa && info && info.cobrar_na_entrega === 'S') ? parseFloat(info.valor_taxa_entrega || 0) : 0;
+                setTaxaEntrega(valor);
+                atualizarMinhaReserva();
+            }
+            atualizarDataFimDevolucao();
+        });
+        $('#data_inicio_hora').on('change', function() {
+            const temTaxa = $(this).find('option:selected').data('taxa-extra') == '1';
+            $('#data_inicio_taxa_aviso').toggleClass('d-none', !temTaxa);
+            if (typeof setTaxaColeta === 'function') {
+                const estacaoId = $('#estacao_retirada_id').val();
+                const info = ESTACOES_TAXAS[estacaoId];
+                const valor = (temTaxa && info && info.cobrar_na_coleta === 'S') ? parseFloat(info.valor_taxa_coleta || 0) : 0;
+                setTaxaColeta(valor);
+                atualizarMinhaReserva();
+            }
+            atualizarDataInicioRetirada();
+        });
+
+        // ── Date Flatpickr + hora select ───────────────────────────────────────
+        (function inicializarDatePickers() {
+            const DIAS_DISPONIVEIS_URL = @json(route('reserva.diasSemDisponibilidade'));
+            const _disponiveisCache = {};
+
+            function obterDataHojeIso() {
+                const agora = new Date();
+                const ano = agora.getFullYear();
+                const mes = String(agora.getMonth() + 1).padStart(2, '0');
+                const dia = String(agora.getDate()).padStart(2, '0');
+                return `${ano}-${mes}-${dia}`;
+            }
+
+            function fetchDiasDisponiveis(estacaoId, tipo = 'retirada') {
+                const tipoAgenda = tipo || 'retirada';
+                const cacheKey = `${tipoAgenda}|${estacaoId}`;
+                if (_disponiveisCache[cacheKey]) return Promise.resolve(_disponiveisCache[cacheKey]);
+
+                return fetch(DIAS_DISPONIVEIS_URL + '?estacao_id=' + estacaoId + '&dias=90&tipo=' + tipoAgenda, { headers: { 'Accept': 'application/json' } })
+                    .then(r => r.json())
+                    .then(d => { _disponiveisCache[cacheKey] = d.dias_disponiveis || []; return _disponiveisCache[cacheKey]; })
+                    .catch(() => []);
+            }
+
+            function criarPicker(selectorInput, disponiveis, onDateSelected) {
+                const disponiveisSet = new Set((disponiveis || []).map(function(item) { return item.data; }));
+                return flatpickr(selectorInput, {
+                    locale: ptLocale, dateFormat: 'd/m/Y', minDate: 'today', disableMobile: true,
+                    disable: [function(date) {
+                        const isoStr = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0') + '-' + String(date.getDate()).padStart(2,'0');
+                        return !disponiveisSet.has(isoStr);
+                    }],
+                    onChange: function(selectedDates) {
+                        if (!selectedDates.length) return;
+                        const d = selectedDates[0];
+                        const isoStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+                        onDateSelected(isoStr, d.getDay());
                     }
                 });
             }
-        });
 
-        function handleGetGrupoVeiculos() {
+            function recarregarPickerRetirada(estacaoId) {
+                if (_pickerDataRetirada) { _pickerDataRetirada.destroy(); _pickerDataRetirada = null; }
+                $('#data_inicio_hora').empty().append('<option value="">Selecione a data</option>').prop('disabled', true);
+                $('#data_inicio_hora_feedback').text('Escolha uma data.');
+                $('#data_inicio_flatpickr').prop('disabled', true).val('');
+
+                if (!estacaoId) {
+                    $('#data_inicio_dias_feedback').text('Selecione a estação para ver os dias disponíveis.');
+                    return;
+                }
+                $('#data_inicio_dias_feedback').text('Verificando disponibilidade...');
+
+                fetchDiasDisponiveis(estacaoId, 'retirada').then(function(disponiveis) {
+                    $('#data_inicio_dias_feedback').text('Selecione a data de retirada.');
+                    $('#data_inicio_flatpickr').prop('disabled', false).attr('placeholder', 'Clique para selecionar');
+                    _pickerDataRetirada = criarPicker('#data_inicio_flatpickr', disponiveis, function(isoStr) {
+                        buscarHorariosAoSelecionarData('retirada', isoStr);
+                    });
+                }).catch(function() {
+                    $('#data_inicio_dias_feedback').text('Não foi possível verificar a disponibilidade.');
+                });
+            }
+
+            function recarregarPickerDevolucao(estacaoId) {
+                if (_pickerDataDevolucao) { _pickerDataDevolucao.destroy(); _pickerDataDevolucao = null; }
+                $('#data_fim_hora_fp').empty().append('<option value="">Selecione a data</option>').prop('disabled', true);
+                $('#data_fim_hora_feedback').text('Escolha uma data.');
+                $('#data_fim_flatpickr').prop('disabled', true).val('');
+
+                if (!estacaoId) {
+                    $('#data_fim_dias_feedback').text('Selecione a estação para ver os dias disponíveis.');
+                    return;
+                }
+                $('#data_fim_dias_feedback').text('Verificando disponibilidade...');
+
+                fetchDiasDisponiveis(estacaoId, 'devolucao').then(function(disponiveis) {
+                    $('#data_fim_dias_feedback').text('Selecione a data de devolução.');
+                    $('#data_fim_flatpickr').prop('disabled', false).attr('placeholder', 'Clique para selecionar');
+                    _pickerDataDevolucao = criarPicker('#data_fim_flatpickr', disponiveis, function(isoStr) {
+                        buscarHorariosAoSelecionarData('devolucao', isoStr);
+                    });
+                }).catch(function() {
+                    $('#data_fim_dias_feedback').text('Não foi possível verificar a disponibilidade.');
+                });
+            }
+
+            $('#estacao_retirada_id').on('change.fpRetirada', function() {
+                $('#data_inicio_data').val('');
+                $('#data_inicio').val('').trigger('change');
+                recarregarPickerRetirada($(this).val());
+            });
+
+            $('#estacao_devolucao_id').on('change.fpDevolucao', function() {
+                $('#data_fim_data').val('');
+                $('#data_fim_hora_fp').val('');
+                $('#data_fim').val('').trigger('change');
+                recarregarPickerDevolucao($(this).val());
+            });
+
+            const estacaoRetiradaInicial = $('#estacao_retirada_id').val();
+            const estacaoDevolucaoInicial = $('#estacao_devolucao_id').val();
+            if (estacaoRetiradaInicial) recarregarPickerRetirada(estacaoRetiradaInicial);
+            else $('#data_inicio_flatpickr').prop('disabled', true);
+            if (estacaoDevolucaoInicial) recarregarPickerDevolucao(estacaoDevolucaoInicial);
+            else $('#data_fim_flatpickr').prop('disabled', true);
+
+            // Modo edição: pré-selecionar hora
+            const dataInicioEdit = $('#data_inicio_data').val();
+            const horaInicioEdit = @json($dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('H:i') : '');
+            const dataFimEdit = $('#data_fim_data').val();
+            const horaFimEdit = @json($dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('H:i') : '');
+
+            if (dataInicioEdit && estacaoRetiradaInicial) {
+                buscarHorariosAoSelecionarData('retirada', dataInicioEdit, horaInicioEdit || null);
+            }
+            if (dataFimEdit && estacaoDevolucaoInicial) {
+                buscarHorariosAoSelecionarData('devolucao', dataFimEdit, horaFimEdit || null);
+            }
+        }());
+
+        function handleGetGrupoVeiculos(modo = 'submit') {
             const campos = ['#estacao_retirada_id', '#data_inicio', '#estacao_devolucao_id', '#data_fim'];
+            const inicioValorGrupo = $('#data_inicio').val();
+            const fimValorGrupo = $('#data_fim').val();
+            const datasPreenchidas = !!inicioValorGrupo && !!fimValorGrupo;
             let isValid = true;
 
             campos.forEach(function(selector) {
                 const $campo = $(selector);
                 const valor = $campo.val();
                 const vazio = valor === '' || valor == null || (typeof valor === 'string' && valor.trim() === '');
+                const ehDataFim = selector === '#data_fim';
+                const ignorarVazio = modo === 'change' && ehDataFim && !datasPreenchidas;
 
-                $campo.toggleClass('is-invalid', vazio);
+                $campo.toggleClass('is-invalid', vazio && !ignorarVazio);
                 if ($campo.hasClass('js-selectpicker')) {
-                    $campo.closest('.bootstrap-select').find('> .dropdown-toggle').toggleClass('is-invalid', vazio);
+                    $campo.closest('.bootstrap-select').find('> .dropdown-toggle').toggleClass('is-invalid', vazio && !ignorarVazio);
                 }
 
-                if (vazio) {
+                if (vazio && !ignorarVazio) {
                     isValid = false;
                 }
             });
+
+            if (modo === 'change' && !datasPreenchidas) {
+                $('#data_fim').removeClass('is-invalid');
+                return true;
+            }
 
             if (!isValid) {
                 return false;
@@ -2150,9 +3140,9 @@
 
             // Mesma estacao e permitida.
             // A unica regra de consistencia aqui e: data de devolucao >= data de retirada.
-            const dataInicio = new Date($('#data_inicio').val());
-            const dataFim = new Date($('#data_fim').val());
-            const datasInvalidas = isNaN(dataInicio.getTime()) || isNaN(dataFim.getTime()) || dataFim < dataInicio;
+            const dataInicioPeriodo = new Date($('#data_inicio').val());
+            const dataFimPeriodo = new Date($('#data_fim').val());
+            const datasInvalidas = isNaN(dataInicioPeriodo.getTime()) || isNaN(dataFimPeriodo.getTime()) || dataFimPeriodo < dataInicioPeriodo;
 
             $('#data_fim').toggleClass('is-invalid', datasInvalidas);
             if (datasInvalidas) {
@@ -2215,7 +3205,7 @@
                 .addClass('text-muted');
 
             if (faltaPreencherEstacoesEDatas()) {
-                alert('Por favor, preencha as estacoes e as datas.');
+                mostrarErroReserva('Atencao!', 'Por favor, preencha as estacoes e as datas.');
                 $('#grupo_frota_id').val('');
                 if ($('#grupo_frota_id').hasClass('js-selectpicker')) {
                     $('#grupo_frota_id').selectpicker('refresh');
@@ -2438,8 +3428,11 @@
             $('#minhaReserva_opcionals_ul').append(html.trim());
 
         }
+
     </script>
 @stop
+
+
 
 
 

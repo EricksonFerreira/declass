@@ -11,6 +11,8 @@ class Reserva extends Model
 
     protected $fillable = [
         'user_id',
+        'criado_por_user_id',
+        'origem_cadastro',
         'modelo_id',
         'estacao_retirada_id',
         'estacao_devolucao_id',
@@ -30,6 +32,8 @@ class Reserva extends Model
         'valor_total_com_desconto',
         'valor_opcionais',
         'valor_total_final',
+        'taxa_coleta',
+        'taxa_entrega',
     ];
 
     public function podeEditar()
@@ -72,6 +76,11 @@ class Reserva extends Model
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function criadoPor()
+    {
+        return $this->belongsTo(User::class, 'criado_por_user_id');
     }
 
     public function empresa()
@@ -119,6 +128,15 @@ class Reserva extends Model
         return $this->belongsTo(GrupoFrota::class, 'grupo_frota_id');
     }
 
+    public function getLabelOrigemCadastroAttribute(): string
+    {
+        return match (strtolower((string) ($this->origem_cadastro ?? ''))) {
+            'site' => 'Site',
+            'colaborador' => 'Colaborador',
+            default => 'Sem origem',
+        };
+    }
+
     public function contratoCheckin()
     {
         return $this->hasOne(ContratoCheckin::class, 'reserva_id');
@@ -141,6 +159,11 @@ class Reserva extends Model
     public function nfseAtual()
     {
         return $this->hasOne(Nfse::class, 'reserva_id')->latestOfMany();
+    }
+
+    public function satisfacao()
+    {
+        return $this->hasOne(ReservaSatisfacao::class, 'reserva_id');
     }
 
     public function transacoes()

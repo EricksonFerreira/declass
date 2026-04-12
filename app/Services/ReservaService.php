@@ -89,6 +89,14 @@ class ReservaService extends AbstractBaseService
                 'updated_at' => null,
             ];
 
+            if (Schema::hasColumn($this->model->getTable(), 'criado_por_user_id')) {
+                $dadosReserva['criado_por_user_id'] = $this->resolverCriadorCadastroReserva($data);
+            }
+
+            if (Schema::hasColumn($this->model->getTable(), 'origem_cadastro')) {
+                $dadosReserva['origem_cadastro'] = $this->resolverOrigemCadastroReserva($data);
+            }
+
             // Faltou hora inicio e hora fim
             $reserva = $this->model->create($dadosReserva);
             if($reserva == null) {
@@ -416,39 +424,49 @@ class ReservaService extends AbstractBaseService
 
     private function validarFuncionamentoEstacao(int $estacaoId, string $dataHora, string $tipo): ?string
     {
+        $resultado = $this->avaliarFuncionamentoEstacao($estacaoId, $dataHora, $tipo);
+
+        return $resultado['ok'] ? null : ($resultado['message'] ?? null);
+    }
+
+    /**
+     * @return array{ok:bool,taxa_extra:bool,message:?string,fora_expediente:bool}
+     */
+    private function avaliarFuncionamentoEstacao(int $estacaoId, string $dataHora, string $tipo): array
+    {
         if ($estacaoId <= 0 || trim($dataHora) === '') {
-            return null;
+            return [
+                'ok' => true,
+                'taxa_extra' => false,
+                'message' => null,
+                'fora_expediente' => false,
+            ];
         }
 
         try {
             $dt = Carbon::parse($dataHora);
         } catch (\Throwable) {
-            return null;
+            return [
+                'ok' => true,
+                'taxa_extra' => false,
+                'message' => null,
+                'fora_expediente' => false,
+            ];
         }
 
         $data = $dt->toDateString();
         $hora = $dt->format('H:i');
+        $permiteTaxaExtra = $this->estacaoPermiteTaxaForaExpediente($estacaoId, $tipo);
+        $ehFeriado = $this->dataEhFeriadoParaEstacao($estacaoId, $dt);
 
         // Feriados
-        if (Schema::hasTable('feriados') && Schema::hasColumn('feriados', 'data')) {
-            $feriado = DB::table('feriados')
-                ->whereDate('data', $data)
-                ->when(Schema::hasColumn('feriados', 'estacao_id'), function ($q) use ($estacaoId) {
-                    $q->where(function ($sub) use ($estacaoId) {
-                        $sub->where('estacao_id', $estacaoId)->orWhereNull('estacao_id');
-                    });
-                })
-                ->when(Schema::hasColumn('feriados', 'ativo'), function ($q) {
-                    $q->where(function ($sub) {
-                        $sub->where('ativo', 'S')->orWhere('ativo', 1);
-                    });
-                })
-                ->first();
-
-            if ($feriado) {
-                $nome = $feriado->nome ?? 'Feriado';
-                return "A data/hora de {$tipo} cai em feriado ({$nome}) para a estacao selecionada.";
-            }
+        if ($ehFeriado && !$this->estacaoOperaFeriado($estacaoId)) {
+            return [
+                'ok' => false,
+                'taxa_extra' => false,
+                'message' => "A data/hora de {$tipo} cai em feriado para a estacao selecionada.",
+                'fora_expediente' => false,
+            ];
         }
 
         // Dias uteis (se configurado)
@@ -463,55 +481,379 @@ class ReservaService extends AbstractBaseService
                 ->all();
 
             if (!empty($dias)) {
-                $dow = (int) $dt->dayOfWeekIso; // 1=Mon..7=Sun
+                $dow = (int) $dt->dayOfWeek; // 0=Sun..6=Sat
                 if (!in_array($dow, $dias, true)) {
-                    return "A estacao selecionada nao funciona no dia escolhido para {$tipo}.";
+                    return [
+                        'ok' => false,
+                        'taxa_extra' => false,
+                        'message' => "A estacao selecionada nao funciona no dia escolhido para {$tipo}.",
+                        'fora_expediente' => false,
+                    ];
                 }
             }
         }
 
         // Horarios
-        if (Schema::hasTable('horarios') && Schema::hasColumn('horarios', 'estacao_id') && Schema::hasColumn('horarios', 'horario_diario_id')) {
-            $dow = (int) $dt->dayOfWeekIso;
-            $hor = DB::table('horarios')
-                ->where('estacao_id', $estacaoId)
-                ->where('horario_diario_id', $dow)
-                ->first();
+        $hor = $this->obterHorarioEstacaoParaData($estacaoId, $dt);
+        if ($hor) {
+            $funciona24h = false;
+            if (property_exists($hor, 'funciona_24h')) {
+                $funciona24h = in_array((string) $hor->funciona_24h, ['S', '1', 'true', 'TRUE'], true);
+            }
 
-            if ($hor) {
-                $funciona24h = false;
-                if (property_exists($hor, 'funciona_24h')) {
-                    $funciona24h = in_array((string) $hor->funciona_24h, ['S', '1', 'true', 'TRUE'], true);
-                }
-                if ($funciona24h) {
-                    return null;
-                }
+            if ($funciona24h) {
+                return [
+                    'ok' => true,
+                    'taxa_extra' => false,
+                    'message' => null,
+                    'fora_expediente' => false,
+                ];
+            }
 
-                $abertura = $hor->hora_abertura ?? null;
-                $fechamento = $hor->hora_fechamento ?? null;
-                if ($abertura && $fechamento) {
-                    $a = substr((string) $abertura, 0, 5);
-                    $f = substr((string) $fechamento, 0, 5);
-                    if ($hora < $a || $hora > $f) {
-                        return "Horario de {$tipo} fora do funcionamento da estacao ({$abertura} - {$fechamento}).";
-                    }
+            $abertura = $hor->hora_abertura ?? null;
+            $fechamento = $hor->hora_fechamento ?? null;
+            if ($abertura && $fechamento) {
+                $a = substr((string) $abertura, 0, 5);
+                $f = substr((string) $fechamento, 0, 5);
+                if ($a === '00:00' && $f === '00:00') {
+                    return [
+                        'ok' => false,
+                        'taxa_extra' => false,
+                        'message' => "A estacao selecionada nao possui expediente configurado para {$tipo} neste dia.",
+                        'fora_expediente' => false,
+                    ];
                 }
+                $foraExpediente = ($hora < $a || $hora > $f);
+                if ($foraExpediente && $permiteTaxaExtra) {
+                    return [
+                        'ok' => true,
+                        'taxa_extra' => true,
+                        'message' => null,
+                        'fora_expediente' => true,
+                    ];
+                }
+                if ($foraExpediente) {
+                    return [
+                        'ok' => false,
+                        'taxa_extra' => false,
+                        'message' => "Horario de {$tipo} fora do funcionamento da estacao ({$abertura} - {$fechamento}).",
+                        'fora_expediente' => true,
+                    ];
+                }
+            }
 
-                $almocoIni = $hor->hora_inicio_almoco ?? null;
-                $almocoFim = $hor->hora_fim_almoco ?? null;
-                if ($almocoIni && $almocoFim) {
-                    $ai = substr((string) $almocoIni, 0, 5);
-                    $af = substr((string) $almocoFim, 0, 5);
-                    if ($ai !== '00:00' || $af !== '00:00') {
-                        if ($hora >= $ai && $hora <= $af) {
-                            return "Horario de {$tipo} cai no intervalo de almoco da estacao ({$almocoIni} - {$almocoFim}).";
-                        }
+            $temIntervaloAlmoco = true;
+            if (property_exists($hor, 'tem_intervalo_almoco')) {
+                $temIntervaloAlmoco = in_array((string) $hor->tem_intervalo_almoco, ['S', '1', 'true', 'TRUE'], true);
+            }
+
+            $almocoIni = $hor->hora_inicio_almoco ?? null;
+            $almocoFim = $hor->hora_fim_almoco ?? null;
+            if ($temIntervaloAlmoco && $almocoIni && $almocoFim) {
+                $ai = substr((string) $almocoIni, 0, 5);
+                $af = substr((string) $almocoFim, 0, 5);
+                if ($ai !== '00:00' || $af !== '00:00') {
+                    if ($hora >= $ai && $hora <= $af) {
+                        return [
+                            'ok' => false,
+                            'taxa_extra' => false,
+                            'message' => "Horario de {$tipo} cai no intervalo de almoco da estacao ({$almocoIni} - {$almocoFim}).",
+                            'fora_expediente' => false,
+                        ];
                     }
                 }
             }
         }
 
-        return null;
+        return [
+            'ok' => true,
+            'taxa_extra' => false,
+            'message' => null,
+            'fora_expediente' => false,
+        ];
+    }
+
+    private function dataEhFeriadoParaEstacao(int $estacaoId, Carbon $dt): bool
+    {
+        if (!Schema::hasTable('feriados') || !Schema::hasColumn('feriados', 'data')) {
+            return false;
+        }
+
+        return DB::table('feriados')
+            ->whereDate('data', $dt->toDateString())
+            ->when(Schema::hasColumn('feriados', 'estacao_id'), function ($q) use ($estacaoId) {
+                $q->where(function ($sub) use ($estacaoId) {
+                    $sub->where('estacao_id', $estacaoId)->orWhereNull('estacao_id');
+                });
+            })
+            ->when(Schema::hasColumn('feriados', 'ativo'), function ($q) {
+                $q->where(function ($sub) {
+                    $sub->where('ativo', 'S')->orWhere('ativo', 1);
+                });
+            })
+            ->exists();
+    }
+
+    private function estacaoOperaFeriado(int $estacaoId): bool
+    {
+        if (!Schema::hasTable('estacoes') || !Schema::hasColumn('estacoes', 'opera_feriado')) {
+            return false;
+        }
+
+        $valor = DB::table('estacoes')->where('id', $estacaoId)->value('opera_feriado');
+        return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
+    }
+
+    private function obterHorarioEstacaoParaData(int $estacaoId, Carbon $dt): ?object
+    {
+        if (!Schema::hasTable('horarios') || !Schema::hasTable('horarios_diarios')) {
+            return null;
+        }
+
+        $empresaId = $this->currentEmpresaId();
+        if ($empresaId === null) {
+            return null;
+        }
+
+        $tipoHorario = $this->resolverTipoHorarioDiarioParaData($estacaoId, $dt);
+        if ($tipoHorario === null) {
+            return null;
+        }
+
+        $horarioDiarioId = $this->resolverHorarioDiarioIdPorTipo($empresaId, $tipoHorario);
+        if ($horarioDiarioId === null) {
+            return null;
+        }
+
+        return DB::table('horarios')
+            ->where('estacao_id', $estacaoId)
+            ->where('horario_diario_id', $horarioDiarioId)
+            ->first();
+    }
+
+    private function resolverTipoHorarioDiarioParaData(int $estacaoId, Carbon $dt): ?string
+    {
+        if ($this->dataEhFeriadoParaEstacao($estacaoId, $dt)) {
+            return $this->estacaoOperaFeriado($estacaoId) ? 'feriados' : null;
+        }
+
+        if ($dt->isSaturday()) {
+            return 'sabados';
+        }
+
+        if ($dt->isSunday()) {
+            return 'domingos';
+        }
+
+        return 'dias_semana';
+    }
+
+    private function resolverHorarioDiarioIdPorTipo(int $empresaId, string $tipoHorario): ?int
+    {
+        static $cache = [];
+
+        $cacheKey = $empresaId . '|' . $tipoHorario;
+        if (array_key_exists($cacheKey, $cache)) {
+            return $cache[$cacheKey];
+        }
+
+        $patterns = match ($tipoHorario) {
+            'sabados' => ['%sab%'],
+            'domingos' => ['%dom%'],
+            'feriados' => ['%feri%'],
+            default => ['%semana%', '%dias%'],
+        };
+
+        $query = DB::table('horarios_diarios')
+            ->where('empresa_id', $empresaId)
+            ->where('ativo', 'S');
+
+        $query->where(function ($subQuery) use ($patterns) {
+            foreach ($patterns as $index => $pattern) {
+                if ($index === 0) {
+                    $subQuery->whereRaw('LOWER(nome) LIKE ?', [$pattern]);
+                } else {
+                    $subQuery->orWhereRaw('LOWER(nome) LIKE ?', [$pattern]);
+                }
+            }
+        });
+
+        $id = $query->value('id');
+        $cache[$cacheKey] = $id ? (int) $id : null;
+
+        return $cache[$cacheKey];
+    }
+
+    private function estacaoPermiteTaxaForaExpediente(int $estacaoId, string $tipo): bool
+    {
+        if (!Schema::hasTable('estacoes')) {
+            return false;
+        }
+
+        $coluna = $tipo === 'devolucao' ? 'cobrar_na_entrega' : 'cobrar_na_coleta';
+        if (!Schema::hasColumn('estacoes', $coluna)) {
+            return false;
+        }
+
+        $valor = DB::table('estacoes')
+            ->where('id', $estacaoId)
+            ->value($coluna);
+
+        return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
+    }
+
+    public function obterDatasRetiradaDisponiveisParaEstacao(int $estacaoId, ?string $dataBase = null, int $limite = 14): array
+    {
+        if ($estacaoId <= 0) {
+            return [];
+        }
+
+        $base = !empty($dataBase)
+            ? Carbon::parse($dataBase)
+            : now();
+
+        $base = $base->startOfDay();
+        $limite = max(1, min($limite, 60));
+        $datas = [];
+
+        for ($i = 0; $i < $limite; $i++) {
+            $dia = $base->copy()->addDays($i);
+            $horario = $this->obterHorarioEstacaoParaData($estacaoId, $dia);
+
+            if (!$horario) {
+                continue;
+            }
+
+            $funciona24h = false;
+            if (property_exists($horario, 'funciona_24h')) {
+                $funciona24h = in_array((string) $horario->funciona_24h, ['S', '1', 'true', 'TRUE'], true);
+            }
+
+            $horaSugestao = '08:00';
+            if ($funciona24h) {
+                $horaSugestao = '00:00';
+            } elseif (!empty($horario->hora_abertura)) {
+                $horaSugestao = substr((string) $horario->hora_abertura, 0, 5);
+            }
+
+            $dataHora = $dia->copy()->setTimeFromTimeString($horaSugestao)->format('Y-m-d\TH:i');
+            $msg = $this->validarFuncionamentoEstacao($estacaoId, $dataHora, 'retirada');
+            if ($msg !== null) {
+                continue;
+            }
+
+            $datas[] = [
+                'value' => $dataHora,
+                'label' => Carbon::parse($dataHora)->format('d/m/Y H:i'),
+            ];
+        }
+
+        return $datas;
+    }
+
+    public function obterAgendaDisponivelPorEstacao(int $estacaoId, string $tipo = 'retirada', ?string $dataBase = null, int $limite = 14, ?int $reservaId = null): array
+    {
+        if ($estacaoId <= 0) {
+            return [];
+        }
+
+        $tipo = strtolower(trim($tipo)) ?: 'retirada';
+
+        $quantidadeVeiculosPorEstacao = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao([$estacaoId]);
+        if ($tipo !== 'devolucao' && (int) ($quantidadeVeiculosPorEstacao[$estacaoId] ?? 0) <= 0) {
+            return [];
+        }
+
+        $base = !empty($dataBase)
+            ? Carbon::parse($dataBase)
+            : now();
+
+        $base = $base->startOfDay();
+        $limite = max(1, min($limite, 60));
+        $agenda = [];
+
+        for ($i = 0; $i < $limite; $i++) {
+            $dia = $base->copy()->addDays($i);
+            $horario = $this->obterHorarioEstacaoParaData($estacaoId, $dia);
+            if (!$horario) {
+                continue;
+            }
+
+            $funciona24h = false;
+            if (property_exists($horario, 'funciona_24h')) {
+                $funciona24h = in_array((string) $horario->funciona_24h, ['S', '1', 'true', 'TRUE'], true);
+            }
+
+            $abertura = $horario->hora_abertura ?? null;
+            $fechamento = $horario->hora_fechamento ?? null;
+            $inicioAlmoco = $horario->hora_inicio_almoco ?? null;
+            $fimAlmoco = $horario->hora_fim_almoco ?? null;
+            $permiteTaxaExtra = $this->estacaoPermiteTaxaForaExpediente($estacaoId, $tipo);
+            $slots = [];
+            $inicio = null;
+            $fim = null;
+
+            if ($tipo === 'devolucao' && $permiteTaxaExtra) {
+                $inicio = $dia->copy()->startOfDay();
+                $fim = $dia->copy()->endOfDay();
+            } else {
+                $inicio = $funciona24h
+                    ? $dia->copy()->startOfDay()
+                    : ($abertura ? Carbon::parse($dia->toDateString() . ' ' . substr((string) $abertura, 0, 5)) : null);
+                $fim = $funciona24h
+                    ? $dia->copy()->endOfDay()
+                    : ($fechamento ? Carbon::parse($dia->toDateString() . ' ' . substr((string) $fechamento, 0, 5)) : null);
+            }
+
+            if (!$inicio || !$fim) {
+                continue;
+            }
+
+            $passoMinutos = 30;
+            $slotAtual = $inicio->copy();
+            $temIntervaloAlmoco = true;
+            if (property_exists($horario, 'tem_intervalo_almoco')) {
+                $temIntervaloAlmoco = in_array((string) $horario->tem_intervalo_almoco, ['S', '1', 'true', 'TRUE'], true);
+            }
+
+            while ($slotAtual->lessThanOrEqualTo($fim)) {
+                $slotHora = $slotAtual->format('H:i');
+                if (!($tipo === 'devolucao' && $permiteTaxaExtra) && $temIntervaloAlmoco && $inicioAlmoco && $fimAlmoco) {
+                    $ia = substr((string) $inicioAlmoco, 0, 5);
+                    $fa = substr((string) $fimAlmoco, 0, 5);
+                    if (!(($ia === '00:00' && $fa === '00:00') || $slotHora < $ia || $slotHora > $fa)) {
+                        $slotAtual->addMinutes($passoMinutos);
+                        continue;
+                    }
+                }
+
+                $dataHora = $slotAtual->format('Y-m-d\TH:i');
+                $avaliacao = $this->avaliarFuncionamentoEstacao($estacaoId, $dataHora, $tipo);
+                if ($avaliacao['ok']) {
+                    if ($tipo === 'devolucao' || $this->veiculoService->temVeiculoDisponivelNaEstacaoEmDataHora($estacaoId, $dataHora, $reservaId)) {
+                        $slots[] = [
+                            'value' => $dataHora,
+                            'label' => $slotAtual->format('H:i'),
+                            'taxa_extra' => $avaliacao['taxa_extra'] ?? false,
+                            'status' => ($avaliacao['taxa_extra'] ?? false) ? 'taxa_extra' : 'normal',
+                        ];
+                    }
+                }
+
+                $slotAtual->addMinutes($passoMinutos);
+            }
+
+            if (!empty($slots)) {
+                $agenda[] = [
+                    'date' => $dia->format('Y-m-d'),
+                    'label' => $dia->format('d/m/Y'),
+                    'weekday' => (int) $dia->dayOfWeek,
+                    'slots' => $slots,
+                ];
+            }
+        }
+
+        return $agenda;
     }
 
     public function validarFuncionamentoEstacaoParaApi(int $estacaoId, string $dataHora, string $tipo): ?string
@@ -546,6 +888,34 @@ class ReservaService extends AbstractBaseService
                                                 $data['valor_opcionais'],
                                                 $data['percentual_desconto']);
         return $data;
+    }
+
+    private function resolverOrigemCadastroReserva(array $data): string
+    {
+        if (!empty($data['origem_cadastro'])) {
+            return (string) $data['origem_cadastro'];
+        }
+
+        $routeName = request()?->route()?->getName();
+        if (is_string($routeName) && str_starts_with($routeName, 'site.reserva.')) {
+            return 'site';
+        }
+
+        return 'colaborador';
+    }
+
+    private function resolverCriadorCadastroReserva(array $data): ?int
+    {
+        if (array_key_exists('criado_por_user_id', $data)) {
+            return $data['criado_por_user_id'] !== null ? (int) $data['criado_por_user_id'] : null;
+        }
+
+        $routeName = request()?->route()?->getName();
+        if (is_string($routeName) && str_starts_with($routeName, 'site.reserva.')) {
+            return null;
+        }
+
+        return Auth::id() ? (int) Auth::id() : null;
     }
     private function converteObjetoReservaParaArray($objeto){
         return array_map(function($item) {

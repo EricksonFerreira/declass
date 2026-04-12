@@ -57,6 +57,3 @@
         </div>
     </div>
 </div>
-<!-- Select2 -->
-<link rel="stylesheet" href="{{asset('css/select2.min.css')}}">
-<script src="{{asset('js/select2.min.js')}}"></script>

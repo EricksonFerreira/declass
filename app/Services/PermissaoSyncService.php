@@ -176,12 +176,18 @@ class PermissaoSyncService
             // Gerente: opera praticamente todo o sistema, sem gestão de segurança.
             'gerente' => fn (string $permissionName) =>
                 ! $this->isDangerousAction($permissionName)
-                && ! $this->isSecurityModule($permissionName),
+                && (
+                    ! $this->isSecurityModule($permissionName)
+                    || $this->isReservationStaffPermission($permissionName)
+                ),
 
             // Colaborador chefe: foco operacional com leitura ampla.
             'colaborador_chefe' => fn (string $permissionName) =>
-                $this->isOperationalAction($permissionName)
-                && $this->isOperationalModule($permissionName),
+                (
+                    $this->isOperationalAction($permissionName)
+                    && $this->isOperationalModule($permissionName)
+                )
+                || $this->isReservationStaffPermission($permissionName),
 
             // Colaborador administrativo: leitura + rotinas operacionais básicas (sem segurança).
             'colaborador_administrativo' => fn (string $permissionName) =>
@@ -189,21 +195,29 @@ class PermissaoSyncService
                 && (
                     $this->isReadOnlyAction($permissionName)
                     || ($this->isOperationalAction($permissionName) && $this->isOperationalModule($permissionName))
+                    || $this->isReservationStaffPermission($permissionName)
                 ),
 
             // Cliente: acesso mínimo.
-            'cliente' => fn (string $permissionName) => in_array($permissionName, ['reserva.index'], true),
+            'cliente' => fn (string $permissionName) => $this->isReservationClientPermission($permissionName),
 
             // Compatibilidade (bases antigas).
             'gestor' => fn (string $permissionName) =>
                 ! $this->isDangerousAction($permissionName)
-                && ! $this->isSecurityModule($permissionName),
+                && (
+                    ! $this->isSecurityModule($permissionName)
+                    || $this->isReservationStaffPermission($permissionName)
+                ),
             'operador' => fn (string $permissionName) =>
-                $this->isOperationalAction($permissionName)
-                && $this->isOperationalModule($permissionName),
+                (
+                    $this->isOperationalAction($permissionName)
+                    && $this->isOperationalModule($permissionName)
+                )
+                || $this->isReservationStaffPermission($permissionName),
             'financeiro' => fn (string $permissionName) =>
                 $this->isReadOnlyAction($permissionName)
-                || $this->isFinancialModule($permissionName),
+                || $this->isFinancialModule($permissionName)
+                || $this->isReservationFinancialPermission($permissionName),
             'visualizador' => fn (string $permissionName) => $this->isReadOnlyAction($permissionName),
         ];
     }
@@ -279,6 +293,21 @@ class PermissaoSyncService
         return in_array($this->modulePrefix($permissionName), ['financeiro', 'transacao', 'cupom', 'calcao'], true);
     }
 
+    private function isReservationStaffPermission(string $permissionName): bool
+    {
+        return in_array($permissionName, $this->reservationStaffPermissions(), true);
+    }
+
+    private function isReservationFinancialPermission(string $permissionName): bool
+    {
+        return in_array($permissionName, $this->reservationFinancialPermissions(), true);
+    }
+
+    private function isReservationClientPermission(string $permissionName): bool
+    {
+        return in_array($permissionName, $this->reservationClientPermissions(), true);
+    }
+
     private function isOperationalModule(string $permissionName): bool
     {
         return in_array($this->modulePrefix($permissionName), [
@@ -291,5 +320,121 @@ class PermissaoSyncService
             'sinistro',
             'multa',
         ], true);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function reservationStaffPermissions(): array
+    {
+        return [
+            'reserva.index',
+            'reserva.show',
+            'reserva.create',
+            'reserva.store',
+            'reserva.edit',
+            'reserva.update',
+            'reserva.filtro',
+            'reserva.setPerPage',
+            'reserva.removerFiltro',
+            'reserva.horarios_diarios',
+            'reserva.salvar_horarios_diarios',
+            'reserva.cancelar',
+            'reserva.historico',
+            'reserva.obterOpcionais',
+            'reserva.veiculosDisponiveis',
+            'reserva.estacoesDisponiveisNoPeriodo',
+            'reserva.estacoesDisponiveisNaDataHora',
+            'reserva.datasRetiradaDisponiveisPorEstacao',
+            'reserva.agendaDisponivelPorEstacao',
+            'reserva.validarFuncionamentoEstacao',
+            'reserva.dadosEdicaoNoShow',
+            'reserva.atualizarNoShow',
+            'reserva.gerenciar_opcionais',
+            'reserva.editar_no_show',
+            'reserva.checkin',
+            'reserva.checkin.statusUpgrade',
+            'reserva.checkin.veiculosDisponiveis',
+            'reserva.checkin.veiculosModal',
+            'reserva.checkin.excluirContrato',
+            'reserva.criarContratoCheckin',
+            'reserva.assinarContratoCheckin',
+            'reserva.salvarAssinarContratoCheckIn',
+            'reserva.salvar.assinatura',
+            'reserva.verContratoCheckin',
+            'reserva.adicionarDanoVeiculo',
+            'reserva.checkout.vistoria',
+            'reserva.checkout.finalizar',
+            'reserva.efetuarPagamento',
+            'reserva.processarPagamento',
+            'reserva.confirmarPagamentoDinheiro',
+            'reserva.emitirNfse',
+            'reserva.calcao',
+            'reserva.calcao.autorizar',
+            'reserva.calcao.capturar',
+            'reserva.calcao.liberar',
+            'reserva.calcao.presencial',
+            'reserva.calcao.presencial.devolver',
+            'reserva.avarias.cobranca',
+            'reserva.avarias.cobrar',
+            'avaria.cobrar',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function reservationFinancialPermissions(): array
+    {
+        return [
+            'reserva.index',
+            'reserva.show',
+            'reserva.filtro',
+            'reserva.setPerPage',
+            'reserva.removerFiltro',
+            'reserva.historico',
+            'reserva.efetuarPagamento',
+            'reserva.processarPagamento',
+            'reserva.confirmarPagamentoDinheiro',
+            'reserva.emitirNfse',
+            'reserva.avarias.cobranca',
+            'reserva.avarias.cobrar',
+            'avaria.cobrar',
+        ];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function reservationClientPermissions(): array
+    {
+        return [
+            'reserva.minhas',
+            'reserva.show',
+            'reserva.efetuarPagamento',
+            'reserva.processarPagamento',
+            'site.apresentacao',
+            'site.apresentacao.estacoes',
+            'site.reserva.index',
+            'site.reserva.create',
+            'site.reserva.store',
+            'site.reserva.disponibilidade',
+            'site.reserva.estacoesDisponiveis',
+            'site.reserva.pagamento',
+            'site.reserva.pagamento.metodo',
+            'site.reserva.processarPagamento',
+            'site.reserva.success',
+            'site.reserva.login',
+            'site.reserva.verificarCupom',
+            'cancel',
+            'success',
+            'stripe.payment',
+            'stripe.success',
+            'stripe.failure',
+            'stripe.processPayment',
+            'cashier.payment',
+            'cashier.webhook',
+            'subscription-checkout',
+        ];
     }
 }

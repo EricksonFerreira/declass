@@ -8,13 +8,13 @@ return new class extends Migration
     public function up(): void
     {
         $dias = [
+            ['dia' => 0, 'nome' => 'Domingo'],
             ['dia' => 1, 'nome' => 'Segunda-feira'],
             ['dia' => 2, 'nome' => 'Terça-feira'],
             ['dia' => 3, 'nome' => 'Quarta-feira'],
             ['dia' => 4, 'nome' => 'Quinta-feira'],
             ['dia' => 5, 'nome' => 'Sexta-feira'],
             ['dia' => 6, 'nome' => 'Sábado'],
-            ['dia' => 7, 'nome' => 'Domingo'],
         ];
 
         foreach ($dias as $item) {

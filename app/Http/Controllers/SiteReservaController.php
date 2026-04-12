@@ -8,7 +8,9 @@ use App\Models\Empresa;
 use App\Models\Estacao;
 use App\Models\GrupoFrota;
 use App\Models\Modelo;
+use App\Models\ReservaSatisfacao;
 use App\Models\Opcional;
+use App\Models\Multa;
 use App\Models\Reserva;
 use App\Models\Transacao;
 use App\Models\User;
@@ -424,7 +426,7 @@ class SiteReservaController extends Controller
             return $this->defaultResponse();
         }
 
-        $query = Reserva::query()->with(['estacaoRetirada', 'estacaoDevolucao', 'modelos', 'usuario']);
+        $query = Reserva::query()->with(['estacaoRetirada', 'estacaoDevolucao', 'modelos', 'usuario', 'grupoFrota', 'veiculo', 'satisfacao']);
         if (Schema::hasColumn('reservas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
@@ -447,6 +449,51 @@ class SiteReservaController extends Controller
             'loginUrl' => Route::has('login') ? route('login') : $this->adminLoginFallbackUrl(),
             'isAuth' => auth()->check(),
         ]);
+    }
+
+    public function salvarSatisfacao(Request $request, int $reserva): RedirectResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $query = Reserva::query();
+        if (Schema::hasColumn('reservas', 'empresa_id')) {
+            $query->where('empresa_id', (int) $empresa->id);
+        }
+
+        $reservaItem = $query->find($reserva);
+        if (!$reservaItem) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['reserva' => 'Reserva nao encontrada para este dominio.']);
+        }
+
+        $validated = Validator::make($request->all(), [
+            'satisfacao_geral' => ['required', 'integer', 'min:1', 'max:5'],
+            'facilidade_reserva' => ['required', 'integer', 'min:1', 'max:5'],
+            'nps_nota' => ['required', 'integer', 'min:0', 'max:10'],
+            'comentario' => ['nullable', 'string', 'max:1000'],
+        ])->validate();
+
+        ReservaSatisfacao::updateOrCreate(
+            ['reserva_id' => (int) $reservaItem->id],
+            [
+                'empresa_id' => (int) $empresa->id,
+                'respondente_user_id' => auth()->id(),
+                'satisfacao_geral' => (int) $validated['satisfacao_geral'],
+                'facilidade_reserva' => (int) $validated['facilidade_reserva'],
+                'nps_nota' => (int) $validated['nps_nota'],
+                'comentario' => trim((string) ($validated['comentario'] ?? '')) ?: null,
+            ]
+        );
+
+        return redirect()
+            ->route('site.reserva.success', ['reserva' => $reservaItem->id])
+            ->with('success', 'Obrigado! Seu feedback foi registrado com sucesso.');
     }
 
     public function loginRedirect(Request $request): RedirectResponse
@@ -669,6 +716,347 @@ class SiteReservaController extends Controller
         return redirect()
             ->route('site.reserva.pagamento', ['reserva' => $reservaItem->id])
             ->with('success', 'Metodo de pagamento adicionado com sucesso.');
+    }
+
+    public function pagamentoMulta(Request $request, int $multa): View|RedirectResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $query = Multa::query()->with([
+            'reserva.usuario',
+            'veiculo.modelo',
+            'cliente',
+        ]);
+        if (Schema::hasColumn('multas', 'empresa_id')) {
+            $query->where('empresa_id', (int) $empresa->id);
+        }
+
+        $multaItem = $query->find($multa);
+        if (!$multaItem) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['multa' => 'Multa nao encontrada para este dominio.']);
+        }
+
+        if (!auth()->check()) {
+            session()->put('url.intended', route('site.multa.pagamento', ['multa' => $multaItem->id]));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
+        $usuarioMulta = $multaItem->reserva?->usuario ?? $multaItem->cliente;
+        if (!$usuarioMulta || (int) auth()->id() !== (int) $usuarioMulta->id) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['multa' => 'Esta multa nao pertence ao usuario autenticado.']);
+        }
+
+        if (!empty($multaItem->pago_em)) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->with('success', 'Esta multa ja foi paga.');
+        }
+
+        $gatewayPadrao = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $moedaPadrao = $this->gatewayEmpresaConfigService->moeda($empresa);
+        $gatewayNome = [
+            'stripe' => 'Stripe',
+            'mercado_livre' => 'Mercado Livre',
+            'paypal' => 'PayPal',
+        ][$gatewayPadrao] ?? strtoupper((string) $gatewayPadrao);
+
+        $metodosPagamento = [];
+        $stripePublicKey = null;
+        if ($gatewayPadrao === 'stripe') {
+            $stripePublicKey = (string) ($empresa->stripe_public_key ?? config('services.stripe.key') ?? env('STRIPE_KEY'));
+            if (!empty(auth()->user()?->stripe_id)) {
+                $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
+                if ($stripeSecret !== '') {
+                    try {
+                        $metodosPagamento = $this->clienteStripeService->getPaymentMethods(auth()->user()->stripe_id, $stripeSecret);
+                    } catch (\Throwable $e) {
+                        \Log::warning('Erro ao consultar metodos Stripe para multa', [
+                            'user_id' => auth()->id(),
+                            'stripe_id' => auth()->user()?->stripe_id ?? null,
+                            'exception' => $e->getMessage(),
+                        ]);
+                        $metodosPagamento = [];
+                    }
+                }
+            }
+        }
+
+        $valorMulta = (float) ($multaItem->valor_final ?? $multaItem->valor_original ?? 0);
+
+        return view('site-apresentacao.multa-pagamento', [
+            'empresa' => $empresa,
+            'multa' => $multaItem,
+            'gatewayPadrao' => $gatewayPadrao,
+            'gatewayNome' => $gatewayNome,
+            'moedaPadrao' => $moedaPadrao,
+            'metodosPagamento' => $metodosPagamento,
+            'stripePublicKey' => $stripePublicKey,
+            'urlVoltarPortal' => route('reserva.index'),
+            'urlProcessar' => route('site.multa.processarPagamento', ['multa' => $multaItem->id]),
+            'urlAdicionarMetodo' => route('site.multa.pagamento.metodo', ['multa' => $multaItem->id]),
+            'urlLogin' => Route::has('login') ? route('login') : $this->adminLoginFallbackUrl(),
+            'valorMulta' => $valorMulta,
+        ]);
+    }
+
+    public function adicionarMetodoPagamentoMulta(Request $request, int $multa): RedirectResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $multaItem = Multa::query()->with(['reserva.usuario', 'cliente']);
+        if (Schema::hasColumn('multas', 'empresa_id')) {
+            $multaItem->where('empresa_id', (int) $empresa->id);
+        }
+        $multaItem = $multaItem->find($multa);
+
+        if (!$multaItem) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['multa' => 'Multa nao encontrada.']);
+        }
+
+        if (!auth()->check()) {
+            session()->put('url.intended', route('site.multa.pagamento', ['multa' => $multaItem->id]));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
+        $usuarioMulta = $multaItem->reserva?->usuario ?? $multaItem->cliente;
+        if (!$usuarioMulta || (int) auth()->id() !== (int) $usuarioMulta->id) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['multa' => 'Esta multa nao pertence ao usuario autenticado.']);
+        }
+
+        $stripeToken = (string) $request->input('stripeToken', '');
+        if ($stripeToken === '') {
+            return redirect()
+                ->back()
+                ->withErrors(['stripeToken' => 'Token do cartao nao informado.']);
+        }
+
+        $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
+        if ($stripeSecret === '') {
+            return redirect()
+                ->back()
+                ->withErrors(['stripe' => 'Chave Stripe nao configurada para esta empresa.']);
+        }
+
+        $user = auth()->user();
+        if (!$user) {
+            return redirect()->back();
+        }
+
+        $stripeId = $user->stripe_id;
+        if (!$stripeId) {
+            try {
+                $clienteStripe = $this->clienteStripeService->criarCliente($user->email, $user->nome ?? 'Cliente', $stripeSecret);
+                $stripeId = (string) ($clienteStripe->id ?? '');
+                if ($stripeId !== '') {
+                    $this->usuarioService->updateUser($user->id, ['stripe_id' => $stripeId]);
+                }
+            } catch (\Throwable $e) {
+                return redirect()
+                    ->back()
+                    ->withErrors(['stripe' => 'Nao foi possivel criar o cliente no Stripe.']);
+            }
+        }
+
+        if ($stripeId === '') {
+            return redirect()
+                ->back()
+                ->withErrors(['stripe' => 'Cliente Stripe nao encontrado.']);
+        }
+
+        try {
+            $this->clienteStripeService->criarMetodoPagamento($stripeId, $stripeToken, $stripeSecret);
+        } catch (\Throwable $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['stripe' => 'Nao foi possivel adicionar o metodo de pagamento.']);
+        }
+
+        return redirect()
+            ->route('site.multa.pagamento', ['multa' => $multaItem->id])
+            ->with('success', 'Metodo de pagamento adicionado com sucesso.');
+    }
+
+    public function processarPagamentoMulta(Request $request, int $multa): RedirectResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $query = Multa::query()->with(['reserva.usuario', 'veiculo.modelo', 'cliente']);
+        if (Schema::hasColumn('multas', 'empresa_id')) {
+            $query->where('empresa_id', (int) $empresa->id);
+        }
+
+        $multaItem = $query->find($multa);
+        if (!$multaItem) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['multa' => 'Multa nao encontrada.']);
+        }
+
+        if (!auth()->check()) {
+            session()->put('url.intended', route('site.multa.pagamento', ['multa' => $multaItem->id]));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
+        $usuarioMulta = $multaItem->reserva?->usuario ?? $multaItem->cliente;
+        if (!$usuarioMulta || (int) auth()->id() !== (int) $usuarioMulta->id) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->withErrors(['multa' => 'Esta multa nao pertence ao usuario autenticado.']);
+        }
+
+        if (!empty($multaItem->pago_em)) {
+            return redirect()
+                ->route('site.reserva.index')
+                ->with('success', 'Esta multa ja foi paga.');
+        }
+
+        $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
+        $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
+        $paymentType = (string) $request->input('payment_type', '');
+        $paymentMethodId = (string) $request->input('payment_method_id', '');
+
+        if ($gateway === 'mercado_livre' && $paymentType === 'pix' && $paymentMethodId === '') {
+            $paymentMethodId = 'pix';
+        }
+
+        if ($gateway === 'stripe' && empty($request->payment_method)) {
+            return redirect()
+                ->back()
+                ->withErrors(['payment_method' => 'Selecione um metodo de pagamento para Stripe.']);
+        }
+
+        $valorMulta = (float) ($multaItem->valor_final ?? $multaItem->valor_original ?? 0);
+        if ($valorMulta <= 0) {
+            return redirect()
+                ->back()
+                ->withErrors(['pagamento' => 'Valor invalido para pagamento da multa.']);
+        }
+
+        $salvarMetodo = (string) $request->input('salvar_metodo', 'S');
+        $customerId = (string) (auth()->user()?->stripe_id ?? '');
+        if ($gateway === 'stripe' && strtoupper($salvarMetodo) === 'N') {
+            $customerId = '';
+        }
+
+        $payload = array_merge([
+            'multa_id' => $multaItem->id,
+            'valor' => $valorMulta,
+            'currency' => $currency,
+            'payment_method' => (string) $request->input('payment_method', ''),
+            'customer_id' => $customerId,
+            'descricao' => 'Pagamento da multa #' . $multaItem->id,
+            'payer_email' => (string) (auth()->user()?->email ?? ''),
+            'payment_method_id' => $paymentMethodId,
+            'token' => (string) $request->input('token', ''),
+            'installments' => (int) $request->input('installments', 1),
+        ], $credenciais);
+
+        try {
+            $resultado = $this->gerenciadorDePagamentos
+                ->resolver($gateway)
+                ->cobrarPagamento($payload);
+        } catch (\Throwable $e) {
+            return redirect()
+                ->back()
+                ->withErrors(['pagamento' => 'Falha ao processar o pagamento. Tente novamente.']);
+        }
+
+        if (
+            $gateway === 'mercado_livre'
+            && ($resultado['status'] ?? '') === 'pending'
+            && ($resultado['payment_method_id'] ?? '') === 'pix'
+        ) {
+            return redirect()
+                ->route('site.multa.pagamento', ['multa' => $multaItem->id])
+                ->with('success', 'Pix gerado. Escaneie o QR Code para concluir o pagamento.')
+                ->with('pix', $resultado);
+        }
+
+        if (($resultado['status'] ?? 'error') !== 'success') {
+            return redirect()
+                ->back()
+                ->withErrors(['pagamento' => $resultado['message'] ?? 'Pagamento nao efetuado.']);
+        }
+
+        $multaItem->update([
+            'forma_pagamento'      => $gateway === 'mercado_livre' ? 'pix' : 'cartao_credito',
+            'referencia_pagamento' => $resultado['transaction_id'] ?? $resultado['id'] ?? null,
+            'pago_em'              => now(),
+            'pago_por_user_id'     => Auth::id(),
+            'status_multa'         => 'paga',
+        ]);
+
+        Transacao::create([
+            'user_id' => $multaItem->cliente_id ?: ($multaItem->reserva?->user_id ?? Auth::id()),
+            'pago_por_user_id' => Auth::id(),
+            'reserva_id' => $multaItem->reserva_id,
+            'valor' => $valorMulta,
+            'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency)),
+            'metodo_pagamento' => $gateway,
+            'gateway_transaction_id' => $resultado['transaction_id'] ?? null,
+            'status' => $resultado['raw_status'] ?? 'success',
+            'info_pagamento' => [
+                'tipo' => 'multa',
+                'multa_id' => $multaItem->id,
+                'gateway' => $gateway,
+                'resultado' => $resultado,
+            ],
+        ]);
+
+        if (!empty($multaItem->reserva_id)) {
+            $this->reservaService->adicionaLog((int) $multaItem->reserva_id, (int) Auth::id(), json_encode([
+                'acao' => 'Pagamento de multa efetuado',
+                'multa_id' => $multaItem->id,
+                'valor_total' => $valorMulta,
+                'gateway' => $gateway,
+                'usuario_pagador_id' => Auth::id(),
+                'status' => $resultado['raw_status'] ?? 'success',
+                'data_pagamento' => now()->format('Y-m-d H:i:s'),
+            ]));
+        }
+
+        return redirect()
+            ->route('reserva.index')
+            ->with('success', 'Pagamento da multa efetuado com sucesso.');
     }
 
     public function processarPagamento(Request $request, int $reserva): RedirectResponse

@@ -2,8 +2,11 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 class Estacao extends Model
 {
@@ -30,7 +33,9 @@ class Estacao extends Model
         'checkin',
         'checkout',
         'cobrar_na_coleta',
+        'valor_taxa_coleta',
         'cobrar_na_entrega',
+        'valor_taxa_entrega',
         'valido_no_intervalo',
     ];
 
@@ -51,12 +56,19 @@ class Estacao extends Model
                 'hora_inicio_fora_expediente',
                 'hora_fim_fora_expediente',
                 'funciona_24h',
+                'funciona',
+                'tem_intervalo_almoco',
             ]);
     }
 
     public function diasUteis()
     {
         return $this->belongsToMany(DiaUtil::class, 'estacoes_dias_uteis', 'estacao_id', 'dia_util_id');
+    }
+
+    public function veiculos()
+    {
+        return $this->hasMany(Veiculo::class, 'local_disponibilidade');
     }
 
     public function getHorariosComPivot()
@@ -89,4 +101,175 @@ class Estacao extends Model
     {
         return $this->hasMany(TempoEntreEntacao::class, 'estacao_destino_id');
     }
+
+    /**
+     * Retorna um array fixo com os dias da semana em formato do Carbon:
+     * 0 => domingo, 1 => segunda, ..., 6 => sábado
+     */
+    public function diasSemanaFuncionamento(): array
+    {
+        $dias = [
+            0 => false,
+            1 => false,
+            2 => false,
+            3 => false,
+            4 => false,
+            5 => false,
+            6 => false,
+        ];
+
+        foreach ($this->diasUteis as $diaUtil) {
+            $diaBanco = (int) $diaUtil->dia; // banco: 0=domingo ... 6=sábado
+
+            if (array_key_exists($diaBanco, $dias)) {
+                $dias[$diaBanco] = true;
+            }
+        }
+
+        return $dias;
+    }
+
+    /**
+     * Retorna os próximos dias em que a estação funciona.
+     *
+     * Ex:
+     * [
+     *   ['data' => '2026-04-13', 'dia_semana' => 1],
+     *   ['data' => '2026-04-14', 'dia_semana' => 2],
+     * ]
+     */
+    public function proximosDiasFuncionamento(int $dias = 90, ?Carbon $dataBase = null): array
+    {
+        $dataBase = $dataBase ?: Carbon::today();
+        $diasSemana = $this->diasSemanaFuncionamento();
+        $retorno = [];
+
+        for ($i = 0; $i < $dias; $i++) {
+            $dia = $dataBase->copy()->addDays($i);
+            $diaSemana = $dia->dayOfWeek; // 0=domingo ... 6=sábado
+
+            if (empty($diasSemana[$diaSemana])) {
+                continue;
+            }
+
+            $retorno[] = [
+                'data' => $dia->toDateString(),
+                'dia_semana' => $diaSemana,
+            ];
+        }
+
+        return $retorno;
+    }
+
+    /**
+     * Verifica se a estação possui ao menos 1 veículo disponível na data.
+     */
+    public function temVeiculoDisponivelNaData(string $data): bool
+    {
+        $dia = Carbon::parse($data)->toDateString();
+
+        return $this->obterDiasComVeiculoDisponivel([
+            ['data' => $dia, 'dia_semana' => Carbon::parse($dia)->dayOfWeek],
+        ]) !== [];
+    }
+
+    /**
+     * Recebe um array de datas e devolve somente as que possuem veículo disponível.
+     *
+     * Entrada:
+     * [
+     *   ['data' => '2026-04-13', 'dia_semana' => 1],
+     *   ...
+     * ]
+     */
+    public function filtrarDiasComVeiculoDisponivel(array $dias): array
+    {
+        return $this->obterDiasComVeiculoDisponivel($dias);
+    }
+
+    /**
+     * Recebe um array de datas e devolve somente as que NÃO possuem veículo disponível.
+     */
+    public function filtrarDiasSemVeiculoDisponivel(array $dias): array
+    {
+        $datasDisponiveis = array_flip(array_map(
+            static fn (array $item): string => $item['data'],
+            $this->obterDiasComVeiculoDisponivel($dias)
+        ));
+
+        return array_values(array_filter($dias, static fn (array $item): bool => !isset($datasDisponiveis[$item['data']])));
+    }
+
+    /**
+     * @param array<int, array{data:string,dia_semana:int}> $dias
+     * @return array<int, array{data:string,dia_semana:int}>
+     */
+    private function obterDiasComVeiculoDisponivel(array $dias): array
+    {
+        if (empty($dias)) {
+            return [];
+        }
+
+        if (!Schema::hasTable('movimentacoes') || !Schema::hasTable('veiculos') || !Schema::hasTable('status_movimentacao')) {
+            return [];
+        }
+
+        $dataInicial = Carbon::parse($dias[0]['data'])->startOfDay();
+        $dataFinal = Carbon::parse(end($dias)['data'])->endOfDay();
+
+        $movimentacoes = DB::table('movimentacoes')
+            ->join('veiculos', 'veiculos.id', '=', 'movimentacoes.veiculo_id')
+            ->join('status_movimentacao as sm', 'sm.id', '=', 'movimentacoes.status_movimentacao_id')
+            ->where('veiculos.local_disponibilidade', $this->id)
+            ->where('veiculos.ativo', 'S')
+            ->where(function ($query) {
+                $query->whereRaw('LOWER(sm.nome) LIKE ?', ['%conclu%'])
+                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%indispon%'])
+                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%transit%'])
+                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%manuten%'])
+                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%espera%']);
+            })
+            ->where(function ($query) use ($dataFinal) {
+                $query->whereNull('data_saida')
+                    ->orWhere('data_saida', '<=', $dataFinal);
+            })
+            ->where(function ($query) use ($dataInicial) {
+                $query->whereNull('data_chegada_real')
+                    ->orWhere('data_chegada_real', '>=', $dataInicial);
+            })
+            ->select(['data_saida', 'data_chegada_real'])
+            ->get();
+
+        $bloqueados = [];
+        foreach ($movimentacoes as $movimentacao) {
+            $inicio = !empty($movimentacao->data_saida)
+                ? Carbon::parse($movimentacao->data_saida)->startOfDay()
+                : $dataInicial->copy();
+
+            $fim = !empty($movimentacao->data_chegada_real)
+                ? Carbon::parse($movimentacao->data_chegada_real)->startOfDay()
+                : $dataFinal->copy();
+
+            if ($inicio->lt($dataInicial)) {
+                $inicio = $dataInicial->copy();
+            }
+
+            if ($fim->gt($dataFinal)) {
+                $fim = $dataFinal->copy();
+            }
+
+            if ($inicio->gt($fim)) {
+                continue;
+            }
+
+            $cursor = $inicio->copy();
+            while ($cursor->lte($fim)) {
+                $bloqueados[$cursor->toDateString()] = true;
+                $cursor->addDay();
+            }
+        }
+
+        return array_values(array_filter($dias, static fn (array $item): bool => !isset($bloqueados[$item['data']])));
+    }
+
 }

@@ -42,6 +42,12 @@ return [
     'payment' => [
         'default_gateway' => env('PAYMENT_DEFAULT_GATEWAY', 'stripe'),
     ],
+    'fipe' => [
+        'base_url' => env('FIPE_API_BASE_URL', 'https://fipe.parallelum.com.br/api/v2'),
+        'vehicle_type' => env('FIPE_VEHICLE_TYPE', 'cars'),
+        'reference' => env('FIPE_API_REFERENCE'),
+        'token' => env('FIPE_API_TOKEN'),
+    ],
     'nuvemfiscal' => [
         'auth_url' => env('NUVEMFISCAL_AUTH_URL', 'https://auth.nuvemfiscal.com.br/oauth/token'),
         'base_url' => env('NUVEMFISCAL_BASE_URL', 'https://api.nuvemfiscal.com.br'),

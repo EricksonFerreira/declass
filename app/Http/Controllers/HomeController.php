@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Permissao;
+use App\Models\Estacao;
 use App\Models\Regra;
 use App\Models\TipoTransacao;
 use App\Models\User;
@@ -35,6 +36,7 @@ public function home()
     $hasVisibleItems = collect($items)->contains(fn (array $grupo) => !empty($grupo['items']));
     $hasVisibleCharts = in_array(true, $homeSections, true);
     $totalVeiculos = 0;
+    $estacoesFiltro = $this->estacoesParaFiltro();
 
     if ($homeSections['frota']) {
         $veiculosQuery = \App\Models\Veiculo::query();
@@ -42,7 +44,7 @@ public function home()
         $totalVeiculos = (int) $veiculosQuery->count();
     }
 
-    return view('home', compact('breadcrumb', 'items', 'totalVeiculos', 'homeSections', 'hasVisibleItems', 'hasVisibleCharts'))
+    return view('home', compact('breadcrumb', 'items', 'totalVeiculos', 'homeSections', 'hasVisibleItems', 'hasVisibleCharts', 'estacoesFiltro'))
         ->with('titulo', $this->titulo);
 }
 
@@ -50,6 +52,7 @@ public function chartData(Request $request)
 {
     $homeSections = $this->getHomeSectionPermissions();
     $mesesPt = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    $estacaoSelecionadaId = $this->estacaoSelecionadaId($request);
 
     $dataInicio = $request->filled('data_inicio')
         ? Carbon::parse($request->data_inicio)->startOfMonth()
@@ -89,23 +92,86 @@ public function chartData(Request $request)
     $ticketMedioFinanceiro = 0.0;
     $qtdTransacoesFinanceiro = 0;
     $taxaAprovacaoFinanceiro = 0.0;
+    $satisfacaoResumo = [
+        'total_respostas' => 0,
+        'media_geral' => 0.0,
+        'media_facilidade' => 0.0,
+        'nps' => 0.0,
+        'promotores' => 0,
+        'neutros' => 0,
+        'detratores' => 0,
+    ];
+    $satisfacaoEvolucao = [
+        'labels' => $labels,
+        'satisfacao_geral' => array_fill(0, count($labels), 0.0),
+        'facilidade_reserva' => array_fill(0, count($labels), 0.0),
+        'nps' => array_fill(0, count($labels), 0.0),
+        'respostas' => array_fill(0, count($labels), 0),
+    ];
+    $reservasOrigemResumo = [
+        'total' => 0,
+        'site' => 0,
+        'colaborador' => 0,
+        'sem_origem' => 0,
+        'percentual_site' => 0.0,
+        'percentual_colaborador' => 0.0,
+        'percentual_sem_origem' => 0.0,
+    ];
+    $reservasOrigemDistribuicao = [
+        'labels' => ['Site', 'Colaborador', 'Sem origem'],
+        'data' => [0, 0, 0],
+    ];
+    $reservasColaboradoresRanking = [
+        'labels' => [],
+        'data' => [],
+        'rows' => [],
+    ];
+    $satisfacaoDistribuicao = [
+        'labels' => ['Promotores', 'Neutros', 'Detratores'],
+        'data' => [0, 0, 0],
+    ];
+    $satisfacaoEstacoes = ['labels' => [], 'data' => [], 'respostas' => []];
+    $satisfacaoGrupos = ['labels' => [], 'data' => [], 'respostas' => []];
+    $satisfacaoVeiculos = ['labels' => [], 'data' => [], 'respostas' => []];
+    $satisfacaoMarcas = ['labels' => [], 'data' => [], 'respostas' => []];
+    $satisfacaoModelos = ['labels' => [], 'data' => [], 'respostas' => []];
+    $satisfacaoResponsaveis = ['labels' => [], 'data' => [], 'respostas' => []];
+    $analiseAvancadaResumo = [
+        'total_veiculos' => 0,
+        'veiculos_lucrativos' => 0,
+        'veiculos_prejuizo' => 0,
+        'veiculos_protegidos' => 0,
+        'saude_media' => 0.0,
+        'eficiencia_media' => 0.0,
+        'custo_real_total' => 0.0,
+        'lucro_real_total' => 0.0,
+        'valor_protegido_total' => 0.0,
+    ];
+    $analiseAvancadaLucrativos = ['labels' => [], 'data' => [], 'rows' => []];
+    $analiseAvancadaPrejuizo = ['labels' => [], 'data' => [], 'rows' => []];
+    $analiseAvancadaProtecao = ['labels' => ['Protegidos', 'Sem proteção'], 'data' => [0, 0]];
+    $analiseAvancadaDetalhes = [];
+    $analiseAvancadaRecomendacoes = [];
 
     if ($homeSections['reservas'] || $homeSections['ocupacao']) {
         $reservasNoPeriodo = \App\Models\Reserva::query()
-            ->whereBetween('created_at', [$dataInicio, $dataFim]);
+            ->whereBetween('reservas.created_at', [$dataInicio, $dataFim]);
         $reservasNoPeriodo = $this->applyEmpresaScope($reservasNoPeriodo, 'reservas');
+        if ($estacaoSelecionadaId !== null) {
+            $reservasNoPeriodo->where('estacao_retirada_id', $estacaoSelecionadaId);
+        }
 
         if ($homeSections['reservas']) {
             $resConfirmadas = (clone $reservasNoPeriodo)
                 ->whereNull('data_cancelamento')
-                ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
+                ->selectRaw('YEAR(reservas.created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
                 ->groupBy('ano', 'mes')
                 ->get()
                 ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
 
             $resCanceladas = (clone $reservasNoPeriodo)
                 ->whereNotNull('data_cancelamento')
-                ->selectRaw('YEAR(created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
+                ->selectRaw('YEAR(reservas.created_at) as ano, MONTH(created_at) as mes, COUNT(*) as total')
                 ->groupBy('ano', 'mes')
                 ->get()
                 ->keyBy(fn($r) => $r->ano . '-' . $r->mes);
@@ -120,6 +186,60 @@ public function chartData(Request $request)
             }
 
             $totalReservas = (int) (clone $reservasNoPeriodo)->count();
+
+            if (Schema::hasColumn('reservas', 'origem_cadastro') || Schema::hasColumn('reservas', 'criado_por_user_id')) {
+                $baseOrigemReservas = clone $reservasNoPeriodo;
+                $origemRows = $baseOrigemReservas
+                    ->selectRaw("COALESCE(NULLIF(origem_cadastro, ''), 'sem_origem') as origem")
+                    ->selectRaw('COUNT(*) as total')
+                    ->groupBy('origem')
+                    ->get()
+                    ->keyBy('origem');
+
+                $site = (int) ($origemRows['site']->total ?? 0);
+                $colaborador = (int) ($origemRows['colaborador']->total ?? 0);
+                $semOrigem = (int) ($origemRows['sem_origem']->total ?? 0);
+                $totalOrigem = $site + $colaborador + $semOrigem;
+
+                $reservasOrigemResumo = [
+                    'total' => $totalOrigem,
+                    'site' => $site,
+                    'colaborador' => $colaborador,
+                    'sem_origem' => $semOrigem,
+                    'percentual_site' => $totalOrigem > 0 ? round(($site / $totalOrigem) * 100, 1) : 0.0,
+                    'percentual_colaborador' => $totalOrigem > 0 ? round(($colaborador / $totalOrigem) * 100, 1) : 0.0,
+                    'percentual_sem_origem' => $totalOrigem > 0 ? round(($semOrigem / $totalOrigem) * 100, 1) : 0.0,
+                ];
+
+                $reservasOrigemDistribuicao = [
+                    'labels' => ['Site', 'Colaborador', 'Sem origem'],
+                    'data' => [$site, $colaborador, $semOrigem],
+                ];
+            }
+
+            if (Schema::hasColumn('reservas', 'criado_por_user_id')) {
+                $rankingColaboradores = (clone $reservasNoPeriodo)
+                    ->leftJoin('users', 'users.id', '=', 'reservas.criado_por_user_id')
+                    ->whereNotNull('reservas.criado_por_user_id')
+                    ->selectRaw("COALESCE(users.nome, users.nome, CONCAT('Usuario #', reservas.criado_por_user_id)) as label")
+                    ->selectRaw('reservas.criado_por_user_id as colaborador_id')
+                    ->selectRaw('COUNT(*) as total')
+                    ->groupBy('reservas.criado_por_user_id', 'users.nome', 'users.nome')
+                    ->orderByDesc('total')
+                    ->limit(10)
+                    ->get();
+
+                $reservasColaboradoresRanking = [
+                    'labels' => $rankingColaboradores->pluck('label')->toArray(),
+                    'data' => $rankingColaboradores->pluck('total')->map(fn ($v) => (int) $v)->toArray(),
+                    'rows' => $rankingColaboradores->map(function ($row): array {
+                        return [
+                            'label' => (string) $row->label,
+                            'total' => (int) $row->total,
+                        ];
+                    })->values()->all(),
+                ];
+            }
         }
 
         if ($homeSections['ocupacao'] && Schema::hasTable('grupos_frota')) {
@@ -127,6 +247,9 @@ public function chartData(Request $request)
                 ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
                 ->selectRaw('grupos_frota.id, grupos_frota.nome, COUNT(*) as total');
             $totalPorGrupoBase = $this->applyEmpresaScope($totalPorGrupoBase, 'veiculos');
+            if ($estacaoSelecionadaId !== null && Schema::hasColumn('veiculos', 'local_disponibilidade')) {
+                $totalPorGrupoBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
+            }
             $totalPorGrupo = $totalPorGrupoBase
                 ->groupBy('grupos_frota.id', 'grupos_frota.nome')
                 ->get();
@@ -137,6 +260,9 @@ public function chartData(Request $request)
                 ->where('data_fim', '>=', $dataInicio)
                 ->selectRaw('grupo_frota_id, COUNT(*) as total');
             $ativasPorGrupoBase = $this->applyEmpresaScope($ativasPorGrupoBase, 'reservas');
+            if ($estacaoSelecionadaId !== null) {
+                $ativasPorGrupoBase->where('estacao_retirada_id', $estacaoSelecionadaId);
+            }
             $ativasPorGrupo = $ativasPorGrupoBase
                 ->groupBy('grupo_frota_id')
                 ->get()
@@ -164,6 +290,12 @@ public function chartData(Request $request)
             ->selectRaw('status_movimentacao.nome as label, COUNT(*) as total')
             ->whereBetween('movimentacoes.created_at', [$dataInicio, $dataFim]);
         $movStatusBase = $this->applyEmpresaScope($movStatusBase, 'movimentacoes');
+        if ($estacaoSelecionadaId !== null) {
+            $movStatusBase->where(function ($query) use ($estacaoSelecionadaId) {
+                $query->where('movimentacoes.local_origem_id', $estacaoSelecionadaId)
+                    ->orWhere('movimentacoes.local_destino_id', $estacaoSelecionadaId);
+            });
+        }
         $movStatus = $movStatusBase
             ->groupBy('status_movimentacao.id', 'status_movimentacao.nome')
             ->get();
@@ -179,6 +311,9 @@ public function chartData(Request $request)
             ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
             ->selectRaw('grupos_frota.nome as label, COUNT(*) as total');
         $gruposVeiculosBase = $this->applyEmpresaScope($gruposVeiculosBase, 'veiculos');
+        if ($estacaoSelecionadaId !== null && Schema::hasColumn('veiculos', 'local_disponibilidade')) {
+            $gruposVeiculosBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
+        }
         $gruposVeiculos = $gruposVeiculosBase
             ->groupBy('grupos_frota.id', 'grupos_frota.nome')
             ->get();
@@ -188,6 +323,10 @@ public function chartData(Request $request)
         $baseFinanceiro = DB::table('transacoes')
             ->whereBetween('transacoes.created_at', [$dataInicio, $dataFim]);
         $baseFinanceiro = $this->applyEmpresaScope($baseFinanceiro, 'transacoes');
+        if ($estacaoSelecionadaId !== null && Schema::hasTable('reservas')) {
+            $baseFinanceiro = $baseFinanceiro->join('reservas as r_fin', 'r_fin.id', '=', 'transacoes.reserva_id')
+                ->where('r_fin.estacao_retirada_id', $estacaoSelecionadaId);
+        }
 
         $financeiroMensal = (clone $baseFinanceiro)
             ->selectRaw('YEAR(transacoes.created_at) as ano, MONTH(transacoes.created_at) as mes')
@@ -236,6 +375,79 @@ public function chartData(Request $request)
             ->toArray();
     }
 
+    if ($homeSections['satisfacao'] && Schema::hasTable('reserva_satisfacoes')) {
+        $baseSatisfacao = DB::table('reserva_satisfacoes as rs')
+            ->join('reservas as r', 'r.id', '=', 'rs.reserva_id')
+            ->whereBetween('rs.created_at', [$dataInicio, $dataFim]);
+        $empresaId = $this->empresaIdParaConsulta();
+        if ($empresaId !== null) {
+            if (Schema::hasColumn('reservas', 'empresa_id')) {
+                $baseSatisfacao->where('r.empresa_id', $empresaId);
+            } elseif (Schema::hasColumn('reserva_satisfacoes', 'empresa_id')) {
+                $baseSatisfacao->where('rs.empresa_id', $empresaId);
+            }
+        }
+        if ($estacaoSelecionadaId !== null) {
+            $baseSatisfacao->where('r.estacao_retirada_id', $estacaoSelecionadaId);
+        }
+
+        $satisfacaoResumo['total_respostas'] = (int) (clone $baseSatisfacao)->count();
+        $satisfacaoResumo['media_geral'] = round((float) (clone $baseSatisfacao)->avg('rs.satisfacao_geral'), 2);
+        $satisfacaoResumo['media_facilidade'] = round((float) (clone $baseSatisfacao)->avg('rs.facilidade_reserva'), 2);
+
+        $promotores = (int) (clone $baseSatisfacao)->where('rs.nps_nota', '>=', 9)->count();
+        $detratores = (int) (clone $baseSatisfacao)->where('rs.nps_nota', '<=', 6)->count();
+        $neutros = max(0, $satisfacaoResumo['total_respostas'] - $promotores - $detratores);
+        $satisfacaoResumo['promotores'] = $promotores;
+        $satisfacaoResumo['neutros'] = $neutros;
+        $satisfacaoResumo['detratores'] = $detratores;
+        $satisfacaoResumo['nps'] = $satisfacaoResumo['total_respostas'] > 0
+            ? round((($promotores / $satisfacaoResumo['total_respostas']) * 100) - (($detratores / $satisfacaoResumo['total_respostas']) * 100), 1)
+            : 0.0;
+
+        $satisfacaoMensal = (clone $baseSatisfacao)
+            ->selectRaw('YEAR(rs.created_at) as ano, MONTH(rs.created_at) as mes')
+            ->selectRaw('AVG(rs.satisfacao_geral) as media_geral')
+            ->selectRaw('AVG(rs.facilidade_reserva) as media_facilidade')
+            ->selectRaw('AVG(rs.nps_nota) as media_nps')
+            ->selectRaw('COUNT(rs.id) as respostas')
+            ->groupBy('ano', 'mes')
+            ->get()
+            ->keyBy(fn ($r) => $r->ano . '-' . $r->mes);
+
+        foreach ($meses as $index => $m) {
+            $key = $m->year . '-' . $m->month;
+            $satisfacaoEvolucao['satisfacao_geral'][$index] = round((float) ($satisfacaoMensal[$key]->media_geral ?? 0.0), 2);
+            $satisfacaoEvolucao['facilidade_reserva'][$index] = round((float) ($satisfacaoMensal[$key]->media_facilidade ?? 0.0), 2);
+            $satisfacaoEvolucao['nps'][$index] = round((float) ($satisfacaoMensal[$key]->media_nps ?? 0.0), 2);
+            $satisfacaoEvolucao['respostas'][$index] = (int) ($satisfacaoMensal[$key]->respostas ?? 0);
+        }
+
+        $satisfacaoDistribuicao['data'] = [
+            $promotores,
+            $neutros,
+            $detratores,
+        ];
+
+        $satisfacaoEstacoes = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'estacao');
+        $satisfacaoGrupos = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'grupo');
+        $satisfacaoVeiculos = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'veiculo');
+        $satisfacaoMarcas = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'marca');
+        $satisfacaoModelos = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'modelo');
+        $satisfacaoResponsaveis = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'respondente');
+    }
+
+    if ($homeSections['analise_avancada'] && Schema::hasTable('veiculos')) {
+        [
+            $analiseAvancadaResumo,
+            $analiseAvancadaLucrativos,
+            $analiseAvancadaPrejuizo,
+            $analiseAvancadaProtecao,
+            $analiseAvancadaDetalhes,
+            $analiseAvancadaRecomendacoes,
+        ] = $this->analiseAvancadaFrota($dataInicio, $dataFim, $estacaoSelecionadaId);
+    }
+
     return response()->json([
         'secoes' => $homeSections,
         'dadosReservas' => compact('labels', 'confirmadas', 'cancelamentos', 'tendencia'),
@@ -251,6 +463,9 @@ public function chartData(Request $request)
         'ocupacaoGeral' => $ocupacaoGeral,
         'totalReservas' => $totalReservas,
         'totalMovimentacoes' => $totalMovimentacoes,
+        'reservasOrigemResumo' => $reservasOrigemResumo,
+        'reservasOrigemDistribuicao' => $reservasOrigemDistribuicao,
+        'reservasColaboradoresRanking' => $reservasColaboradoresRanking,
         'financeiroEvolucao' => [
             'labels' => $labels,
             'valores' => $financeiroValores,
@@ -270,6 +485,23 @@ public function chartData(Request $request)
             'qtd_transacoes' => $qtdTransacoesFinanceiro,
             'taxa_aprovacao' => $taxaAprovacaoFinanceiro,
         ],
+        'estacaoSelecionadaId' => $estacaoSelecionadaId,
+        'estacaoSelecionadaNome' => $this->nomeEstacaoSelecionada($estacaoSelecionadaId),
+        'satisfacaoResumo' => $satisfacaoResumo,
+        'satisfacaoEvolucao' => $satisfacaoEvolucao,
+        'satisfacaoDistribuicao' => $satisfacaoDistribuicao,
+        'satisfacaoEstacoes' => $satisfacaoEstacoes,
+        'satisfacaoGrupos' => $satisfacaoGrupos,
+        'satisfacaoVeiculos' => $satisfacaoVeiculos,
+        'satisfacaoMarcas' => $satisfacaoMarcas,
+        'satisfacaoModelos' => $satisfacaoModelos,
+        'satisfacaoResponsaveis' => $satisfacaoResponsaveis,
+        'analiseAvancadaResumo' => $analiseAvancadaResumo,
+        'analiseAvancadaLucrativos' => $analiseAvancadaLucrativos,
+        'analiseAvancadaPrejuizo' => $analiseAvancadaPrejuizo,
+        'analiseAvancadaProtecao' => $analiseAvancadaProtecao,
+        'analiseAvancadaDetalhes' => $analiseAvancadaDetalhes,
+        'analiseAvancadaRecomendacoes' => $analiseAvancadaRecomendacoes,
         'simboloMoeda' => $this->simboloMoedaEmpresa(),
     ]);
 }
@@ -348,7 +580,68 @@ public function dashboard()
         };
     }
 
-    private function getHomeSectionPermissions(): array
+    public function estacoesParaFiltro(): array
+    {
+        $query = Estacao::query()
+            ->select(['id', 'nome'])
+            ->orderBy('nome');
+
+        $query = $this->applyEmpresaScope($query, 'estacoes');
+
+        $user = Auth::user();
+        if ($user && ! $user->isAdministrador() && method_exists($user, 'hasAcessoTodasEstacoes') && ! $user->hasAcessoTodasEstacoes()) {
+            $ids = $user->estacoesPermitidasIds();
+            if (empty($ids)) {
+                return [];
+            }
+
+            $query->whereIn('id', $ids);
+        }
+
+        return $query
+            ->get()
+            ->map(fn ($estacao) => [
+                'id' => (int) $estacao->id,
+                'nome' => (string) $estacao->nome,
+            ])
+            ->all();
+    }
+
+    private function estacaoSelecionadaId(Request $request): ?int
+    {
+        $estacaoId = (int) $request->input('estacao_id', 0);
+        if ($estacaoId <= 0) {
+            return null;
+        }
+
+        $query = Estacao::query()->where('id', $estacaoId);
+        $query = $this->applyEmpresaScope($query, 'estacoes');
+
+        $user = Auth::user();
+        if ($user && ! $user->isAdministrador() && method_exists($user, 'hasAcessoTodasEstacoes') && ! $user->hasAcessoTodasEstacoes()) {
+            $ids = $user->estacoesPermitidasIds();
+            if (empty($ids) || ! in_array($estacaoId, $ids, true)) {
+                return null;
+            }
+        }
+
+        return $query->exists() ? $estacaoId : null;
+    }
+
+    private function nomeEstacaoSelecionada(?int $estacaoId): string
+    {
+        if ($estacaoId === null) {
+            return 'Todas as estações';
+        }
+
+        $nome = Estacao::query()
+            ->where('id', $estacaoId)
+            ->value('nome');
+
+        return $nome ? (string) $nome : 'Todas as estações';
+    }
+
+    public function getHomeSectionPermissions(): array
     {
         return [
             'reservas' => $this->userCanAccessAny(['reserva.index', 'status_reserva.index']),
@@ -356,6 +649,404 @@ public function dashboard()
             'frota' => $this->userCanAccessAny(['veiculo.index', 'grupo_frota.index', 'tipo_frota.index', 'marca.index', 'modelo.index', 'segmento.index']),
             'ocupacao' => $this->userCanAccessAny(['veiculo.index', 'grupo_frota.index', 'reserva.index']),
             'financeiro' => $this->userCanAccessAny(['financeiro.index', 'financeiro.reservas', 'tipo_transacao.index', 'nfse.index']),
+            'satisfacao' => $this->userCanAccessAny(['dashboard', 'powerbi', 'reserva.index']),
+            'analise_avancada' => $this->userCanAccessAny(['veiculo.index', 'financeiro.index', 'reserva.index']),
+        ];
+    }
+
+    private function analiseAvancadaFrota(Carbon $dataInicio, Carbon $dataFim, ?int $estacaoSelecionadaId): array
+    {
+        $defaults = [
+            [
+                'total_veiculos' => 0,
+                'veiculos_lucrativos' => 0,
+                'veiculos_prejuizo' => 0,
+                'veiculos_protegidos' => 0,
+                'saude_media' => 0.0,
+                'eficiencia_media' => 0.0,
+                'custo_real_total' => 0.0,
+                'lucro_real_total' => 0.0,
+                'valor_protegido_total' => 0.0,
+            ],
+            ['labels' => [], 'data' => [], 'rows' => []],
+            ['labels' => [], 'data' => [], 'rows' => []],
+            ['labels' => ['Protegidos', 'Sem proteção'], 'data' => [0, 0]],
+            [],
+            [],
+        ];
+
+        if (!Schema::hasTable('veiculos')) {
+            return $defaults;
+        }
+
+        $empresaId = $this->empresaIdParaConsulta();
+
+        $veiculosBase = DB::table('veiculos')
+            ->leftJoin('marcas', 'marcas.id', '=', 'veiculos.marca_id')
+            ->leftJoin('modelos', 'modelos.id', '=', 'veiculos.modelo_id')
+            ->leftJoin('grupos_frota', 'grupos_frota.id', '=', 'veiculos.grupo_frota_id')
+            ->selectRaw('veiculos.id, veiculos.nome, veiculos.placa_licenca, veiculos.valor_compra, veiculos.valor_fipe, veiculos.data_compra, veiculos.taxa_depreciacao_anual')
+            ->selectRaw('COALESCE(marcas.nome_fipe, marcas.nome, "") as marca_nome')
+            ->selectRaw('COALESCE(modelos.nome_fipe, modelos.nome, "") as modelo_nome')
+            ->selectRaw('COALESCE(grupos_frota.nome, "") as grupo_nome');
+
+        if (Schema::hasColumn('veiculos', 'deleted_at')) {
+            $veiculosBase->whereNull('veiculos.deleted_at');
+        }
+
+        if ($empresaId !== null && Schema::hasColumn('veiculos', 'empresa_id')) {
+            $veiculosBase->where('veiculos.empresa_id', $empresaId);
+        }
+
+        if ($estacaoSelecionadaId !== null && Schema::hasColumn('veiculos', 'local_disponibilidade')) {
+            $veiculosBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
+        }
+
+        $receitasSub = DB::table('reservas')
+            ->selectRaw('veiculo_id, COUNT(*) as reservas_qtd, COALESCE(SUM(COALESCE(valor_total_final, 0)), 0) as receita_total')
+            ->whereNotNull('veiculo_id')
+            ->whereNull('data_cancelamento')
+            ->whereBetween('reservas.created_at', [$dataInicio, $dataFim]);
+
+        if ($empresaId !== null && Schema::hasColumn('reservas', 'empresa_id')) {
+            $receitasSub->where('empresa_id', $empresaId);
+        }
+
+        if ($estacaoSelecionadaId !== null && Schema::hasColumn('reservas', 'estacao_retirada_id')) {
+            $receitasSub->where('estacao_retirada_id', $estacaoSelecionadaId);
+        }
+
+        $receitasSub->groupBy('veiculo_id');
+
+        $multasSub = DB::table('multas')
+            ->selectRaw('veiculo_id, COUNT(*) as multas_qtd, COALESCE(SUM(COALESCE(valor_final, 0)), 0) as custo_multas')
+            ->whereNotNull('veiculo_id')
+            ->whereBetween('data_hora_infracao', [$dataInicio, $dataFim]);
+
+        if ($empresaId !== null && Schema::hasColumn('multas', 'empresa_id')) {
+            $multasSub->where('empresa_id', $empresaId);
+        }
+
+        if (Schema::hasColumn('multas', 'destino_cobranca')) {
+            $multasSub->where('destino_cobranca', 'empresa');
+        }
+
+        $multasSub->groupBy('veiculo_id');
+
+        $sinistrosSub = DB::table('sinistros')
+            ->selectRaw('veiculo_id, COUNT(*) as sinistros_qtd, COALESCE(SUM(COALESCE(valor_custo_empresa, 0)), 0) as custo_sinistros')
+            ->whereNotNull('veiculo_id')
+            ->whereBetween('data_hora_ocorrido', [$dataInicio, $dataFim]);
+
+        if ($empresaId !== null && Schema::hasColumn('sinistros', 'empresa_id')) {
+            $sinistrosSub->where('empresa_id', $empresaId);
+        }
+
+        $sinistrosSub->groupBy('veiculo_id');
+
+        $danosSub = DB::table('veiculo_danos as vd')
+            ->join('veiculos as v_danos', 'v_danos.id', '=', 'vd.veiculo_id')
+            ->selectRaw('vd.veiculo_id, COUNT(*) as danos_qtd, COALESCE(SUM(COALESCE(vd.custo_estimado, 0)), 0) as custo_danos')
+            ->whereNotNull('vd.veiculo_id');
+
+        if ($empresaId !== null && Schema::hasColumn('veiculos', 'empresa_id')) {
+            $danosSub->where('v_danos.empresa_id', $empresaId);
+        }
+
+        if (Schema::hasColumn('veiculo_danos', 'created_at')) {
+            $danosSub->whereBetween('vd.created_at', [$dataInicio, $dataFim]);
+        }
+
+        $danosSub->groupBy('vd.veiculo_id');
+
+        $veiculos = $veiculosBase
+            ->leftJoinSub($receitasSub, 'receitas', 'receitas.veiculo_id', '=', 'veiculos.id')
+            ->leftJoinSub($multasSub, 'multas_analise', 'multas_analise.veiculo_id', '=', 'veiculos.id')
+            ->leftJoinSub($sinistrosSub, 'sinistros_analise', 'sinistros_analise.veiculo_id', '=', 'veiculos.id')
+            ->leftJoinSub($danosSub, 'danos_analise', 'danos_analise.veiculo_id', '=', 'veiculos.id')
+            ->orderBy('veiculos.nome')
+            ->get();
+
+        if ($veiculos->isEmpty()) {
+            return $defaults;
+        }
+
+        $rows = [];
+        $totalVeiculos = 0;
+        $totalLucroReal = 0.0;
+        $totalCustoReal = 0.0;
+        $totalSaude = 0.0;
+        $totalEficiencia = 0.0;
+        $veiculosLucro = 0;
+        $veiculosPrejuizo = 0;
+        $veiculosProtegidos = 0;
+        $valorProtegidoTotal = 0.0;
+
+        foreach ($veiculos as $veiculo) {
+            $receita = (float) ($veiculo->receita_total ?? 0);
+            $custoMultas = (float) ($veiculo->custo_multas ?? 0);
+            $custoSinistros = (float) ($veiculo->custo_sinistros ?? 0);
+            $custoDanos = (float) ($veiculo->custo_danos ?? 0);
+            $custoOperacional = $custoMultas + $custoSinistros + $custoDanos;
+
+            $valorCompra = (float) ($veiculo->valor_compra ?? 0);
+            $valorFipe = (float) ($veiculo->valor_fipe ?? 0);
+            $baseDepreciacao = $valorFipe > 0 ? $valorFipe : $valorCompra;
+            $taxaDepreciacao = (float) ($veiculo->taxa_depreciacao_anual ?? 0);
+            $percentualDepreciacao = 0.0;
+            $valorDepreciacao = 0.0;
+
+            if ($baseDepreciacao > 0 && $taxaDepreciacao > 0 && !empty($veiculo->data_compra)) {
+                $dataCompra = Carbon::parse($veiculo->data_compra);
+                if ($dataCompra->lte($dataFim)) {
+                    $mesesEmUso = max(0, $dataCompra->diffInMonths($dataFim));
+                    $percentualDepreciacao = min(100, ($mesesEmUso / 12) * $taxaDepreciacao);
+                    $valorDepreciacao = round(($baseDepreciacao * $percentualDepreciacao) / 100, 2);
+                }
+            }
+
+            $custoReal = round($custoOperacional + $valorDepreciacao, 2);
+            $lucroReal = round($receita - $custoReal, 2);
+            $eficiencia = round(($receita + $custoReal) > 0 ? ($receita / ($receita + $custoReal)) * 100 : 0, 1);
+
+            $protecaoValor = 0.0;
+            $protecaoPercentual = 0.0;
+            if ($valorCompra > 0 && $valorFipe > 0 && $valorCompra < $valorFipe) {
+                $protecaoValor = round($valorFipe - $valorCompra, 2);
+                $protecaoPercentual = round(($protecaoValor / $valorFipe) * 100, 1);
+                $veiculosProtegidos++;
+                $valorProtegidoTotal += $protecaoValor;
+            }
+
+            $indiceSaude = round(min(100, max(0, ($eficiencia * 0.7) + ($protecaoPercentual * 0.3))), 1);
+
+            $labelPrincipal = trim((string) ($veiculo->placa_licenca ?: $veiculo->nome ?: ('Veiculo #' . $veiculo->id)));
+            $labelSecundario = trim(implode(' • ', array_filter([
+                $veiculo->marca_nome ?: null,
+                $veiculo->modelo_nome ?: null,
+                $veiculo->grupo_nome ?: null,
+            ])));
+
+            $status = $lucroReal < 0
+                ? 'prejuizo'
+                : ($indiceSaude >= 70 ? 'saudavel' : ($indiceSaude >= 45 ? 'atencao' : 'critico'));
+
+            $recomendacao = $lucroReal < 0
+                ? 'Rever precificacao, manutencoes e ocupacao.'
+                : ($indiceSaude < 45
+                    ? 'Acompanhar custos e revisar uso da frota.'
+                    : ($protecaoValor > 0
+                        ? 'Veiculo com protecao contra depreciacao.'
+                        : 'Sem protecao de depreciacao identificada.'));
+
+            $rows[] = [
+                'id' => (int) $veiculo->id,
+                'label' => $labelPrincipal,
+                'sub_label' => $labelSecundario,
+                'receita' => round($receita, 2),
+                'custo_operacional' => round($custoOperacional, 2),
+                'depreciacao' => round($valorDepreciacao, 2),
+                'custo_real' => $custoReal,
+                'lucro_real' => $lucroReal,
+                'eficiencia' => $eficiencia,
+                'saude' => $indiceSaude,
+                'protecao_valor' => round($protecaoValor, 2),
+                'protecao_percentual' => $protecaoPercentual,
+                'status' => $status,
+                'recomendacao' => $recomendacao,
+                'marca' => (string) ($veiculo->marca_nome ?? ''),
+                'modelo' => (string) ($veiculo->modelo_nome ?? ''),
+                'grupo' => (string) ($veiculo->grupo_nome ?? ''),
+                'reservas_qtd' => (int) ($veiculo->reservas_qtd ?? 0),
+            ];
+
+            $totalVeiculos++;
+            $totalLucroReal += $lucroReal;
+            $totalCustoReal += $custoReal;
+            $totalSaude += $indiceSaude;
+            $totalEficiencia += $eficiencia;
+            if ($lucroReal > 0) {
+                $veiculosLucro++;
+            } elseif ($lucroReal < 0) {
+                $veiculosPrejuizo++;
+            }
+        }
+
+        $sortByLucroDesc = $rows;
+        usort($sortByLucroDesc, fn (array $a, array $b) => $b['lucro_real'] <=> $a['lucro_real']);
+
+        $sortByLucroAsc = $rows;
+        usort($sortByLucroAsc, fn (array $a, array $b) => $a['lucro_real'] <=> $b['lucro_real']);
+
+        $protegidosCount = $veiculosProtegidos;
+        $semProtecaoCount = max(0, $totalVeiculos - $protegidosCount);
+
+        $topLucrativos = array_slice(array_values(array_filter($sortByLucroDesc, fn (array $row) => $row['lucro_real'] > 0)), 0, 10);
+        $topPrejuizo = array_slice(array_values(array_filter($sortByLucroAsc, fn (array $row) => $row['lucro_real'] < 0)), 0, 10);
+
+        $recomendacoes = [];
+        if ($veiculosPrejuizo > 0) {
+            $pior = $sortByLucroAsc[0] ?? null;
+            if ($pior) {
+                $recomendacoes[] = [
+                    'tipo' => 'danger',
+                    'titulo' => 'Veículos no prejuízo',
+                    'descricao' => sprintf(
+                        '%d veículos ficaram negativos no período. O pior caso foi %s com prejuízo de %s.',
+                        $veiculosPrejuizo,
+                        $pior['label'],
+                        number_format(abs((float) $pior['lucro_real']), 2, ',', '.')
+                    ),
+                ];
+            }
+        } else {
+            $recomendacoes[] = [
+                'tipo' => 'success',
+                'titulo' => 'Frota sem prejuízo',
+                'descricao' => 'Nenhum veículo fechou o período com lucro real negativo.',
+            ];
+        }
+
+        if ($protegidosCount > 0) {
+            $recomendacoes[] = [
+                'tipo' => 'info',
+                'titulo' => 'Proteção contra depreciação',
+                'descricao' => sprintf(
+                    '%d veículos foram comprados abaixo da FIPE, somando proteção estimada de %s.',
+                    $protegidosCount,
+                    number_format($valorProtegidoTotal, 2, ',', '.')
+                ),
+            ];
+        } else {
+            $recomendacoes[] = [
+                'tipo' => 'warning',
+                'titulo' => 'Sem proteção FIPE identificada',
+                'descricao' => 'Nenhum veículo do recorte atual foi comprado abaixo da FIPE.',
+            ];
+        }
+
+        if ($totalVeiculos > 0 && $totalSaude / $totalVeiculos < 45) {
+            $recomendacoes[] = [
+                'tipo' => 'warning',
+                'titulo' => 'Saúde da frota baixa',
+                'descricao' => 'A saúde média da frota está abaixo do ideal. Vale revisar preço, ocupação e custos.',
+            ];
+        }
+
+        if ($topLucrativos) {
+            $melhor = $topLucrativos[0];
+            $recomendacoes[] = [
+                'tipo' => 'success',
+                'titulo' => 'Melhor veículo no período',
+                'descricao' => sprintf(
+                    '%s lidera a rentabilidade com lucro real de %s.',
+                    $melhor['label'],
+                    number_format((float) $melhor['lucro_real'], 2, ',', '.')
+                ),
+            ];
+        }
+
+        $analiseAvancadaResumo = [
+            'total_veiculos' => $totalVeiculos,
+            'veiculos_lucrativos' => $veiculosLucro,
+            'veiculos_prejuizo' => $veiculosPrejuizo,
+            'veiculos_protegidos' => $protegidosCount,
+            'saude_media' => $totalVeiculos > 0 ? round($totalSaude / $totalVeiculos, 1) : 0.0,
+            'eficiencia_media' => $totalVeiculos > 0 ? round($totalEficiencia / $totalVeiculos, 1) : 0.0,
+            'custo_real_total' => round($totalCustoReal, 2),
+            'lucro_real_total' => round($totalLucroReal, 2),
+            'valor_protegido_total' => round($valorProtegidoTotal, 2),
+        ];
+
+        $analiseAvancadaLucrativos = [
+            'labels' => array_map(fn (array $row) => $row['label'], $topLucrativos),
+            'data' => array_map(fn (array $row) => round((float) $row['lucro_real'], 2), $topLucrativos),
+            'rows' => $topLucrativos,
+        ];
+
+        $analiseAvancadaPrejuizo = [
+            'labels' => array_map(fn (array $row) => $row['label'], $topPrejuizo),
+            'data' => array_map(fn (array $row) => round((float) $row['lucro_real'], 2), $topPrejuizo),
+            'rows' => $topPrejuizo,
+        ];
+
+        $analiseAvancadaProtecao = [
+            'labels' => ['Protegidos', 'Sem proteção'],
+            'data' => [$protegidosCount, $semProtecaoCount],
+        ];
+
+        $analiseAvancadaDetalhes = array_slice($sortByLucroDesc, 0, 12);
+        $analiseAvancadaRecomendacoes = $recomendacoes;
+
+        return [
+            $analiseAvancadaResumo,
+            $analiseAvancadaLucrativos,
+            $analiseAvancadaPrejuizo,
+            $analiseAvancadaProtecao,
+            $analiseAvancadaDetalhes,
+            $analiseAvancadaRecomendacoes,
+        ];
+    }
+
+    private function rankingSatisfacaoPorDimensao($baseSatisfacao, string $tipo): array
+    {
+        if (!Schema::hasTable('reserva_satisfacoes')) {
+            return ['labels' => [], 'data' => [], 'respostas' => []];
+        }
+
+        $query = clone $baseSatisfacao;
+        $selectLabel = 'COALESCE(dim.nome, "Sem dado")';
+
+        switch ($tipo) {
+            case 'estacao':
+                $query->leftJoin('estacoes as dim', 'dim.id', '=', 'r.estacao_retirada_id');
+                $selectLabel = 'COALESCE(dim.nome, "Sem estação")';
+                break;
+            case 'grupo':
+                $query->leftJoin('grupos_frota as dim', 'dim.id', '=', 'r.grupo_frota_id');
+                $selectLabel = 'COALESCE(dim.nome, "Sem grupo")';
+                break;
+            case 'veiculo':
+                $query->leftJoin('veiculos as dim', 'dim.id', '=', 'r.veiculo_id');
+                $selectLabel = 'COALESCE(dim.nome, dim.placa_licenca, "Sem veículo")';
+                break;
+            case 'marca':
+                $query->leftJoin('veiculos as v', 'v.id', '=', 'r.veiculo_id')
+                    ->leftJoin('marcas as dim', 'dim.id', '=', 'v.marca_id');
+                $selectLabel = 'COALESCE(dim.nome_fipe, dim.nome, "Sem marca")';
+                break;
+            case 'modelo':
+                $query->leftJoin('veiculos as v', 'v.id', '=', 'r.veiculo_id')
+                    ->leftJoin('modelos as dim', 'dim.id', '=', 'v.modelo_id');
+                $selectLabel = 'COALESCE(dim.nome_fipe, dim.nome, "Sem modelo")';
+                break;
+            case 'respondente':
+                $query->leftJoin('users as dim', 'dim.id', '=', 'rs.respondente_user_id');
+                $selectLabel = 'COALESCE(dim.nome, "Sem responsável")';
+                break;
+        }
+
+        $rows = $query
+            ->selectRaw($selectLabel . ' as label')
+            ->selectRaw('AVG(rs.satisfacao_geral) as media_geral')
+            ->selectRaw('AVG(rs.facilidade_reserva) as media_facilidade')
+            ->selectRaw('AVG(rs.nps_nota) as media_nps')
+            ->selectRaw('COUNT(rs.id) as respostas')
+            ->groupBy('label')
+            ->orderByDesc('media_geral')
+            ->limit(10)
+            ->get();
+
+        return [
+            'labels' => $rows->pluck('label')->toArray(),
+            'data' => $rows->map(fn ($row) => [
+                'label' => (string) $row->label,
+                'media_geral' => round((float) $row->media_geral, 2),
+                'media_facilidade' => round((float) $row->media_facilidade, 2),
+                'media_nps' => round((float) $row->media_nps, 2),
+                'respostas' => (int) $row->respostas,
+            ])->toArray(),
+            'respostas' => $rows->pluck('respostas')->map(fn ($v) => (int) $v)->toArray(),
         ];
     }
 
@@ -606,4 +1297,3 @@ public function dashboard()
         ];
     }
 }
-

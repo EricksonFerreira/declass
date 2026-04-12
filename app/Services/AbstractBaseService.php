@@ -294,7 +294,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
         $table = $this->model->getTable();
         $estacaoColumns = $this->estacaoScopeColumns($table);
 
-        // Se a tabela NÃO é 'estacoes' e NÃO possui nenhuma coluna de vinculo com estacao,
+        // Se a tabela NíO é 'estacoes' e NÃO possui nenhuma coluna de vinculo com estacao,
         // esse scope não deve aplicar nenhum filtro restritivo.
         if ($table !== 'estacoes' && empty($estacaoColumns)) {
             return $query;

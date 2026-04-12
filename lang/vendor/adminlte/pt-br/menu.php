@@ -23,6 +23,7 @@ return [
     'sidebar.home'                         => 'Dashboard',
     'sidebar.operacao'                     => 'Operação',
     'sidebar.reservas_atendimento'         => 'Reservas e Atendimento',
+    'sidebar.notificacoes'                 => 'Notificações',
     'sidebar.frota'                        => 'Frota',
     'sidebar.financeiro'                   => 'Financeiro',
     'sidebar.cadastros'                    => 'Cadastros',
@@ -31,6 +32,7 @@ return [
 
     // Operação / Reservas
     'sidebar.reserva'                      => 'Reservas',
+    'sidebar.nova_reserva'                 => 'Nova Reserva',
     'sidebar.minhas_reservas'              => 'Minhas Reservas',
     'sidebar.status_reserva'               => 'Status das Reservas',
     'sidebar.movimentacoes'                => 'Movimentações',

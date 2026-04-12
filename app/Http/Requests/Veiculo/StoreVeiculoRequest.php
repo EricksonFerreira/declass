@@ -2,7 +2,10 @@
 
 namespace App\Http\Requests\Veiculo;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class StoreVeiculoRequest extends FormRequest
 {
@@ -21,12 +24,22 @@ class StoreVeiculoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+
+        $marcaExists = Rule::exists('marcas', 'id');
+        $modeloExists = Rule::exists('modelos', 'id');
+
+        if ($empresaId !== null) {
+            $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+        }
+
         return [
             'status_veiculo_id' => 'required|string|max:2',
             'tipo_frota_id' => 'required|integer|exists:tipo_frota,id',
             'grupo_frota_id' => 'required|integer|exists:grupos_frota,id',
-            'marca_id' => 'required|integer|exists:marcas,id',
-            'modelo_id' => 'required|integer|exists:modelos,id',
+            'marca_id' => ['required', 'integer', $marcaExists],
+            'modelo_id' => ['required', 'integer', $modeloExists],
             'data_vendido' => 'nullable|date',
             'ano_fabricacao' => 'required|integer|min:1900|max:' . date('Y'),
             'ano_modelo' => 'required|integer|min:1900|max:' . (date('Y') + 1),
@@ -36,6 +49,12 @@ class StoreVeiculoRequest extends FormRequest
             'numero_motor' => 'required|string|max:50',
             'data_placa_licenca' => 'required|date',
             'data_compra' => 'required|date',
+            'valor_compra' => 'nullable|numeric|min:0',
+            'valor_fipe' => 'nullable|numeric|min:0',
+            'codigo_fipe' => 'nullable|string|max:20',
+            'referencia_fipe' => 'nullable|string|max:20',
+            'data_consulta_fipe' => 'nullable|date',
+            'taxa_depreciacao_anual' => 'nullable|numeric|min:0|max:100',
             'data_validade' => 'required|date',
             'data_proxima_manutencao' => 'required|date',
             'data_proxima_inspecao' => 'required|date',

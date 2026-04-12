@@ -187,6 +187,153 @@
                 </div>
             </div>
 
+            {{-- Card Financeiro --}}
+            <div class="config-card mb-4">
+                <div class="config-block">
+                    <div class="config-block-label">
+                        <i class="fas fa-chart-line text-primary"></i>
+                        <div>
+                            <strong>Financeiro</strong>
+                            <span>Receita, custos e rentabilidade do veículo</span>
+                        </div>
+                    </div>
+                    <div class="veiculo-grid">
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Receita Total (Reservas)</span>
+                            <span class="veiculo-field__value text-success fw-bold">
+                                R$ {{ number_format($finReceita, 2, ',', '.') }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Custo — Multas (empresa)</span>
+                            <span class="veiculo-field__value {{ $finCustoMultas > 0 ? 'text-danger' : '' }}">
+                                R$ {{ number_format($finCustoMultas, 2, ',', '.') }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Custo — Sinistros (empresa)</span>
+                            <span class="veiculo-field__value {{ $finCustoSinistros > 0 ? 'text-danger' : '' }}">
+                                R$ {{ number_format($finCustoSinistros, 2, ',', '.') }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Lucro Líquido</span>
+                            <span class="veiculo-field__value fw-bold {{ $finLucroLiquido >= 0 ? 'text-success' : 'text-danger' }}">
+                                R$ {{ number_format($finLucroLiquido, 2, ',', '.') }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Rentabilidade Real</span>
+                            <span class="veiculo-field__value">
+                                @if($finRentabilidade !== null)
+                                    <span class="{{ $finRentabilidade >= 0 ? 'text-success' : 'text-danger' }}">
+                                        {{ number_format($finRentabilidade, 2, ',', '.') }}%
+                                        @if($finValorCompra > 0)
+                                            <small class="text-muted">(sobre valor de compra)</small>
+                                        @endif
+                                    </span>
+                                @else
+                                    <span class="text-muted">— (sem valor de compra)</span>
+                                @endif
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Payback Estimado</span>
+                            <span class="veiculo-field__value">
+                                @if($finPaybackMeses !== null)
+                                    {{ $finPaybackMeses }} meses
+                                    @if($finPaybackMeses >= 12)
+                                        <small class="text-muted">(≈ {{ number_format($finPaybackMeses / 12, 1, ',', '.') }} anos)</small>
+                                    @endif
+                                @elseif($finValorCompra <= 0)
+                                    <span class="text-muted">— (sem valor de compra)</span>
+                                @elseif(empty($veiculo->data_compra))
+                                    <span class="text-muted">— (data de compra não informada)</span>
+                                @else
+                                    <span class="text-muted">— (lucro insuficiente para calcular)</span>
+                                @endif
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="config-card mb-4">
+                <div class="config-block">
+                    <div class="config-block-label">
+                        <i class="fas fa-coins text-success"></i>
+                        <div>
+                            <strong>Depreciacao / FIPE</strong>
+                            <span>Base de compra, valor FIPE e valor estimado atual</span>
+                        </div>
+                    </div>
+                    <div class="veiculo-grid">
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Valor de Compra</span>
+                            <span class="veiculo-field__value">
+                                {{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : '—' }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Valor FIPE</span>
+                            <span class="veiculo-field__value">
+                                {{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : '—' }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Diferenca Compra / FIPE</span>
+                            <span class="veiculo-field__value">
+                                @if($veiculo->diferenca_fipe_compra !== null)
+                                    <span class="{{ (float) $veiculo->diferenca_fipe_compra >= 0 ? 'text-success' : 'text-danger' }}">
+                                        R$ {{ number_format((float) $veiculo->diferenca_fipe_compra, 2, ',', '.') }}
+                                    </span>
+                                @else
+                                    —
+                                @endif
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Depreciacao Acumulada</span>
+                            <span class="veiculo-field__value">
+                                {{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : '—' }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Valor Estimado Atual</span>
+                            <span class="veiculo-field__value">
+                                {{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : '—' }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Protecao Abaixo da FIPE</span>
+                            <span class="veiculo-field__value">
+                                @if($veiculo->tem_protecao_depreciacao)
+                                    <span class="status-badge status-badge--green">Ativa</span>
+                                @else
+                                    <span class="status-badge status-badge--gray">Inativa</span>
+                                @endif
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Taxa Anual</span>
+                            <span class="veiculo-field__value">
+                                {{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '—' }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Consulta FIPE</span>
+                            <span class="veiculo-field__value">
+                                {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}
+                            </span>
+                        </div>
+                        <div class="veiculo-field">
+                            <span class="veiculo-field__label">Codigo FIPE</span>
+                            <span class="veiculo-field__value">{{ $veiculo->codigo_fipe ?? '—' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             {{-- ════ ETAPAS OPERACIONAIS ════ --}}
             
 

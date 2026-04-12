@@ -26,7 +26,20 @@
       "WebFetch(domain:adago.com.br)",
       "WebFetch(domain:www.omnilink.com.br)",
       "Bash(grep -l \"create_sinistros_table\\\\|create_multas_table\\\\|create_ordens_servico\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)",
-      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(c['name']\\) for t in d.get\\('tables',[]\\) if t['name']=='veiculos' for c in t.get\\('columns',[]\\)]\")"
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); [print\\(c['name']\\) for t in d.get\\('tables',[]\\) if t['name']=='veiculos' for c in t.get\\('columns',[]\\)]\")",
+      "Bash(grep -n \"^\\\\s*\\\\$\\(function\\\\|^\\\\s*\\\\$\\(document\" \"c:/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/reserva/add-edit.blade.php\")",
+      "Bash(awk 'NR>=2800 && NR<=2830' \"c:/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/reserva/add-edit.blade.php\")",
+      "Bash(python3 -)",
+      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations -name \"*.php\" -exec grep -l \"valor_total\\\\|tarifa_base\" {} \\\\;)",
+      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations -name \"*.php\" -exec grep -l \"Schema::table.*reservas\" {} \\\\;)",
+      "Bash(grep -r \"valor\\\\|preco\\\\|custo\" /c/Users/Erickson/Dev/laragon/www/xpandCars/app/Models/*.php)",
+      "Bash(grep 'protected $fillable\\\\|decimal\\\\|->decimal')",
+      "Bash(grep -l \"valor_custo\\\\|valor_preco\\\\|valor_\" /c/Users/Erickson/Dev/laragon/www/xpandCars/app/Models/*.php)",
+      "Bash(grep -A 10 'protected $fillable' /c/Users/Erickson/Dev/laragon/www/xpandCars/app/Models/VeiculoDanos.php)",
+      "Bash(xargs ls:*)",
+      "Bash(grep -n \"use App\\\\\\\\Http\\\\\\\\Controllers\" /c/Users/Erickson/Dev/laragon/www/xpandCars/routes/web.php)",
+      "Bash(node -e ':*)",
+      "Bash(php -l \"resources/views/veiculo/add-edit.blade.php\")"
     ]
   }
 }

@@ -23,6 +23,14 @@
                 <span class="minha-reserva-list__label">Desconto</span>
                 <span class="minha-reserva-list__value" id="desconto">0 %</span>
             </li>
+            <li class="minha-reserva-list__item d-none" id="minhaReserva_taxa_coleta_li">
+                <span class="minha-reserva-list__label text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>Taxa coleta fora exp.</span>
+                <span class="minha-reserva-list__value text-warning" id="minhaReserva_taxa_coleta_val">R$ 0,00</span>
+            </li>
+            <li class="minha-reserva-list__item d-none" id="minhaReserva_taxa_entrega_li">
+                <span class="minha-reserva-list__label text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>Taxa entrega fora exp.</span>
+                <span class="minha-reserva-list__value text-warning" id="minhaReserva_taxa_entrega_val">R$ 0,00</span>
+            </li>
         </ul>
     </div>
 

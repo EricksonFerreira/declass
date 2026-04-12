@@ -34,7 +34,7 @@
 
                     <div class="col-lg-3 col-md-4">
                         <div class="form-group">
-                            <x-form-input type="date" id="data" name="data" label="Data" value="{{ old('data', isset($feriado) ? $feriado->data?->format('Y-m-d') : '') }}" required />
+                            <x-form-input type="date" id="data" name="data" label="Data" value="{{ old('data', isset($feriado) ? \Illuminate\Support\Carbon::parse($feriado->data)->format('Y-m-d') : '') }}" required />
                         </div>
                     </div>
 

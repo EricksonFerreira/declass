@@ -66,6 +66,106 @@
             gap: 10px;
         }
 
+        .survey {
+            margin-top: 18px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, .18);
+        }
+
+        .survey h2 {
+            margin: 0 0 6px;
+            font-size: 1.05rem;
+        }
+
+        .survey p.small {
+            font-size: .88rem;
+            color: rgba(255, 255, 255, .82);
+        }
+
+        .survey-card {
+            margin-top: 14px;
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .survey-block {
+            margin-bottom: 14px;
+        }
+
+        .survey-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 8px;
+            font-size: .92rem;
+        }
+
+        .survey-options {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .survey-option {
+            position: relative;
+            display: inline-flex;
+        }
+
+        .survey-option input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .survey-option span {
+            min-width: 42px;
+            height: 40px;
+            padding: 0 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .38);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            background: rgba(255, 255, 255, .08);
+            transition: all .15s ease;
+        }
+
+        .survey-option input:checked + span {
+            background: #fff;
+            color: #0f172a;
+            border-color: #fff;
+        }
+
+        .survey-textarea {
+            width: 100%;
+            min-height: 84px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .3);
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            padding: 10px 12px;
+            resize: vertical;
+            outline: none;
+        }
+
+        .survey-textarea::placeholder { color: rgba(255, 255, 255, .65); }
+
+        .survey-note {
+            font-size: .78rem;
+            color: rgba(255, 255, 255, .72);
+            margin-top: 6px;
+        }
+
+        .survey-submitted {
+            margin-top: 14px;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(22, 101, 52, .22);
+            border: 1px solid rgba(187, 247, 208, .35);
+        }
+
         .btn {
             border-radius: 999px;
             padding: 10px 14px;
@@ -92,6 +192,7 @@
 <body>
     <div class="toast-wrap" id="toastWrap"></div>
     <section class="card">
+        @php($satisfacao = $reserva->satisfacao)
         <div class="header">
             @if(!empty($empresa->logo_url))
                 <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}" class="logo">
@@ -121,6 +222,68 @@
                 @endif
             @endif
             <a href="{{ $urlAdmin }}" class="btn btn-secondary">Area administrativa</a>
+        </div>
+
+        <div class="survey">
+            <h2>Ajude a gente a melhorar</h2>
+            <p class="small">Leva menos de 30 segundos. São perguntas rápidas para entendermos sua experiência.</p>
+
+            @if($satisfacao)
+                <div class="survey-submitted">
+                    <strong>Feedback registrado.</strong>
+                    <div class="mt-1">Obrigado pela contribuição! Sua resposta já foi salva.</div>
+                </div>
+            @else
+                <form method="POST" action="{{ route('site.reserva.satisfacao.store', $reserva->id) }}" class="survey-card">
+                    @csrf
+
+                    <div class="survey-block">
+                        <label class="survey-label">1. Como foi sua experiência geral?</label>
+                        <div class="survey-options">
+                            @for($i = 1; $i <= 5; $i++)
+                                <label class="survey-option">
+                                    <input type="radio" name="satisfacao_geral" value="{{ $i }}" {{ old('satisfacao_geral') == $i ? 'checked' : '' }} required>
+                                    <span>{{ $i }}</span>
+                                </label>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <div class="survey-block">
+                        <label class="survey-label">2. Foi fácil concluir a reserva?</label>
+                        <div class="survey-options">
+                            @for($i = 1; $i <= 5; $i++)
+                                <label class="survey-option">
+                                    <input type="radio" name="facilidade_reserva" value="{{ $i }}" {{ old('facilidade_reserva') == $i ? 'checked' : '' }} required>
+                                    <span>{{ $i }}</span>
+                                </label>
+                            @endfor
+                        </div>
+                    </div>
+
+                    <div class="survey-block">
+                        <label class="survey-label">3. De 0 a 10, quanto você recomendaria a empresa?</label>
+                        <div class="survey-options">
+                            @for($i = 0; $i <= 10; $i++)
+                                <label class="survey-option">
+                                    <input type="radio" name="nps_nota" value="{{ $i }}" {{ old('nps_nota') !== null && (string) old('nps_nota') === (string) $i ? 'checked' : '' }} required>
+                                    <span>{{ $i }}</span>
+                                </label>
+                            @endfor
+                        </div>
+                        <div class="survey-note">0 = não recomendaria | 10 = recomendaria com certeza</div>
+                    </div>
+
+                    <div class="survey-block mb-0">
+                        <label class="survey-label" for="comentario">O que podemos melhorar? <span style="font-weight:400;">(opcional)</span></label>
+                        <textarea id="comentario" name="comentario" class="survey-textarea" placeholder="Uma sugestão rápida já ajuda bastante.">{{ old('comentario') }}</textarea>
+                    </div>
+
+                    <div class="mt-3">
+                        <button type="submit" class="btn btn-primary">Enviar feedback</button>
+                    </div>
+                </form>
+            @endif
         </div>
     </section>
     <script>

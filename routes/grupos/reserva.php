@@ -9,6 +9,10 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('obterOpcionais', [ReservaController::class, 'obterOpcionais'])->name('obterOpcionais');
     Route::get('veiculosDisponiveis', [ReservaController::class, 'veiculosDisponiveis'])->name('veiculosDisponiveis');
     Route::get('estacoes-disponiveis', [ReservaController::class, 'estacoesDisponiveisNoPeriodo'])->name('estacoesDisponiveisNoPeriodo');
+    Route::get('estacoes-disponiveis-dia', [ReservaController::class, 'estacoesDisponiveisNaDataHora'])->name('estacoesDisponiveisNaDataHora');
+    Route::get('datas-retirada-disponiveis', [ReservaController::class, 'datasRetiradaDisponiveisPorEstacao'])->name('datasRetiradaDisponiveisPorEstacao');
+    Route::get('dias-sem-disponibilidade', [ReservaController::class, 'diasSemDisponibilidade'])->name('diasSemDisponibilidade');
+    Route::get('agenda-disponivel', [ReservaController::class, 'agendaDisponivelPorEstacao'])->name('agendaDisponivelPorEstacao');
     Route::get('validar-funcionamento', [ReservaController::class, 'validarFuncionamentoEstacao'])->name('validarFuncionamentoEstacao');
     Route::post('setperpage', [ReservaController::class, 'setPerPage'])->name('setPerPage');
     Route::get('removerfiltro', [ReservaController::class, 'removerFiltro'])->name('removerFiltro');

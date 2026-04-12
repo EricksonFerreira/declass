@@ -63,6 +63,8 @@ class StoreEmpresaRequest extends FormRequest
             'reserva_selecionar_modelo' => ['nullable', Rule::in(['S', 'N'])],
             'reserva_atraso_max_minutos' => ['nullable', 'integer', 'min:0', 'max:10080'],
             'reserva_bloqueio_pos_reserva_horas' => ['nullable', 'integer', 'min:0', 'max:720'],
+            'adicionar_novas_marcas_automaticamente' => ['nullable', Rule::in(['S', 'N'])],
+            'adicionar_novos_modelos_automaticamente' => ['nullable', Rule::in(['S', 'N'])],
             'nfse_ativo' => ['nullable', Rule::in(['S', 'N'])],
             'nfse_ambiente' => ['nullable', Rule::in(['homologacao', 'producao'])],
             'nfse_provedor' => ['nullable', 'string', 'max:50'],

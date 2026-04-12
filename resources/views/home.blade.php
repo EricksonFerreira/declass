@@ -43,8 +43,20 @@
         outline: none;
     }
 
-    .period-bar input[type=date]:focus {
+    .period-bar input[type=date]:focus,
+    .period-bar select:focus {
         border-color: #0891b2;
+    }
+
+    .period-bar select {
+        border: 1px solid #e2e5ef;
+        border-radius: 8px;
+        padding: 6px 10px;
+        font-size: 12px;
+        color: #1a1d2e;
+        outline: none;
+        min-width: 220px;
+        background: #fff;
     }
 
     .btn-filtrar {
@@ -364,6 +376,80 @@
         background: #f8fafc;
     }
 
+    .analysis-table td,
+    .analysis-table th {
+        white-space: nowrap;
+    }
+
+    .analysis-note {
+        font-size: 12px;
+        color: #64748b;
+        margin: 0;
+    }
+
+    .recommendation-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .recommendation-item {
+        border: 1px solid #e2e5ef;
+        border-radius: 14px;
+        padding: 12px 14px;
+        background: #f8fafc;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .recommendation-item.is-danger {
+        background: #fff1f2;
+        border-color: #fecdd3;
+    }
+
+    .recommendation-item.is-warning {
+        background: #fffbeb;
+        border-color: #fde68a;
+    }
+
+    .recommendation-item.is-success {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+    }
+
+    .recommendation-item.is-info {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+    }
+
+    .recommendation-title {
+        font-size: 12px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+    }
+
+    .recommendation-desc {
+        font-size: 12px;
+        color: #334155;
+        margin: 0;
+    }
+
+    .status-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 3px 8px;
+        border-radius: 999px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    .status-chip.is-danger { background: #fee2e2; color: #b91c1c; }
+    .status-chip.is-warning { background: #fef3c7; color: #b45309; }
+    .status-chip.is-success { background: #dcfce7; color: #166534; }
+    .status-chip.is-info { background: #dbeafe; color: #1d4ed8; }
+
     .chart-canvas {
         position: relative;
         width: 100%;
@@ -523,10 +609,19 @@
     <input type="date" id="data_inicio" name="data_inicio">
     <span class="period-sep">ate</span>
     <input type="date" id="data_fim" name="data_fim">
+    <label for="estacao_id" style="margin-left:8px;">Estação:</label>
+    <select id="estacao_id" name="estacao_id">
+        <option value="0">Todas as estações</option>
+        @foreach($estacoesFiltro as $estacao)
+            <option value="{{ $estacao['id'] }}">{{ $estacao['nome'] }}</option>
+        @endforeach
+    </select>
     <button class="btn-filtrar" id="btnFiltrar">Aplicar</button>
     <button class="btn-filtrar" id="btnHoje" style="background:#059669;">Hoje</button>
     <button class="btn-filtrar" id="btn12m" style="background:#7c3aed;">Ultimos 12 meses</button>
-    <button class="btn-secondary" id="btnToggleDetalhes" type="button">Detalhes</button>
+    <a href="{{ route('indicadores.index') }}" class="btn-secondary" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+        <i class="fas fa-chart-bar"></i> Indicadores detalhados
+    </a>
 </div>
 
 <div class="kpi-grid">
@@ -584,9 +679,44 @@
         </div>
         <p class="kpi-sub">Cadastrados</p>
     </div>
+
+    <div class="kpi-card c-indigo">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">Origem</p>
+                <p class="kpi-value" id="kpiReservasOrigem">--</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-user-tie"></i></div>
+        </div>
+        <p class="kpi-sub" id="kpiReservasOrigemSub">Site vs colaborador</p>
+    </div>
+
+    @if ($homeSections['satisfacao'])
+    <div class="kpi-card c-teal">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">Satisfacao</p>
+                <p class="kpi-value" id="kpiSatisfacao">--</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-smile"></i></div>
+        </div>
+        <p class="kpi-sub" id="kpiSatisfacaoSub">CSAT medio</p>
+    </div>
+
+    <div class="kpi-card c-indigo">
+        <div class="kpi-top">
+            <div>
+                <p class="kpi-label">NPS</p>
+                <p class="kpi-value" id="kpiNps">--</p>
+            </div>
+            <div class="kpi-icon"><i class="fas fa-thumbs-up"></i></div>
+        </div>
+        <p class="kpi-sub" id="kpiNpsSub">Promotores vs detratores</p>
+    </div>
+    @endif
 </div>
 
-<div class="home-details" id="homeDetails">
+<div class="home-details d-none" id="homeDetails">
 <div class="charts-grid">
     @if ($homeSections['reservas'])
     <div class="chart-card span-12">
@@ -608,6 +738,47 @@
         </div>
         <div class="chart-canvas h-220">
             <canvas id="chartReservas"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-4">
+        <div class="chart-overlay" id="overlayReservasOrigem"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Origem das reservas</p>
+                <p class="card-sub" id="subReservasOrigem">Site, colaborador e sem origem</p>
+            </div>
+        </div>
+        <div class="legend-row" id="legReservasOrigem"></div>
+        <div class="chart-canvas h-220">
+            <canvas id="chartReservasOrigem"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-8">
+        <div class="chart-overlay" id="overlayReservasColaboradores"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Top colaboradores</p>
+                <p class="card-sub" id="subReservasColaboradores">Reservas registradas no periodo</p>
+            </div>
+            <div class="text-right">
+                <p class="metric-big" id="totalReservasColaboradores">--</p>
+                <div class="metric-delta delta-up" id="subTopColaborador">--</div>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Colaborador</th>
+                        <th class="text-center">Reservas</th>
+                    </tr>
+                </thead>
+                <tbody id="reservasColaboradoresBody">
+                    <tr><td colspan="2" class="text-center text-muted py-4">Sem dados no periodo.</td></tr>
+                </tbody>
+            </table>
         </div>
     </div>
     @endif
@@ -712,6 +883,273 @@
         </div>
     </div>
     @endif
+
+    @if ($homeSections['satisfacao'])
+    <div class="chart-card span-8">
+        <div class="chart-overlay" id="overlaySatisfacaoLinha"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Satisfacao ao longo do tempo</p>
+                <p class="card-sub" id="subSatisfacao">--</p>
+            </div>
+            <div class="text-right">
+                <p class="metric-big" id="totalSatisfacao">--</p>
+                <div class="metric-delta delta-up" id="mediaFacilidadeSatisfacao">facilidade media --</div>
+            </div>
+        </div>
+        <div class="legend-row">
+            <span class="leg-item"><span class="leg-dot" style="background:#0891b2;"></span>CSAT</span>
+            <span class="leg-item"><span class="leg-dot" style="background:#7c3aed;"></span>Facilidade</span>
+            <span class="leg-item"><span class="leg-dot" style="background:#16a34a;"></span>NPS medio</span>
+        </div>
+        <div class="chart-canvas h-220">
+            <canvas id="chartSatisfacaoLinha"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-4">
+        <div class="chart-overlay" id="overlaySatisfacaoDistribuicao"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Distribuicao NPS</p>
+                <p class="card-sub">Promotores, neutros e detratores</p>
+            </div>
+        </div>
+        <div class="legend-row" id="legSatisfacaoNps"></div>
+        <div class="chart-canvas h-220">
+            <canvas id="chartSatisfacaoDistribuicao"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-6">
+        <div class="chart-overlay" id="overlaySatisfacaoEstacoes"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Satisfacao por estacao</p>
+                <p class="card-sub">Media de satisfacao geral</p>
+            </div>
+        </div>
+        <div class="chart-canvas h-210">
+            <canvas id="chartSatisfacaoEstacoes"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-6">
+        <div class="chart-overlay" id="overlaySatisfacaoGrupos"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Satisfacao por grupo</p>
+                <p class="card-sub">Media de satisfacao geral</p>
+            </div>
+        </div>
+        <div class="chart-canvas h-210">
+            <canvas id="chartSatisfacaoGrupos"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-12">
+        <div class="card-head">
+            <div>
+                <p class="card-title">Rankings de satisfacao</p>
+                <p class="card-sub">Veiculos, marcas, modelos e respondentes</p>
+            </div>
+        </div>
+        <div class="legend-row mb-3">
+            <button type="button" class="btn-secondary js-sat-tab" data-sat-tab="veiculos">Veiculos</button>
+            <button type="button" class="btn-secondary js-sat-tab" data-sat-tab="marcas">Marcas</button>
+            <button type="button" class="btn-secondary js-sat-tab" data-sat-tab="modelos">Modelos</button>
+            <button type="button" class="btn-secondary js-sat-tab" data-sat-tab="responsaveis">Respondentes</button>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Dimensao</th>
+                        <th class="text-center">Respostas</th>
+                        <th class="text-center">CSAT</th>
+                        <th class="text-center">Facilidade</th>
+                        <th class="text-center">NPS</th>
+                    </tr>
+                </thead>
+                <tbody id="satisfacaoRankingBody">
+                    <tr><td colspan="5" class="text-center text-muted py-4">Selecione uma dimensao para ver os dados.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
+
+    @if ($homeSections['analise_avancada'])
+    <div class="chart-card span-12">
+        <div class="card-head">
+            <div>
+                <p class="card-title">Análise avançada da frota</p>
+                <p class="card-sub">Saúde, eficiência, custo real, lucro real e proteção FIPE no período</p>
+            </div>
+        </div>
+
+        <div class="kpi-grid">
+            <div class="kpi-card c-emerald">
+                <div class="kpi-top">
+                    <div>
+                        <p class="kpi-label">Saúde média</p>
+                        <p class="kpi-value" id="kpiAnaliseSaude">--</p>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-heartbeat"></i></div>
+                </div>
+                <p class="kpi-sub">Índice composto da frota</p>
+            </div>
+
+            <div class="kpi-card c-teal">
+                <div class="kpi-top">
+                    <div>
+                        <p class="kpi-label">Eficiência média</p>
+                        <p class="kpi-value" id="kpiAnaliseEficiencia">--</p>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-bolt"></i></div>
+                </div>
+                <p class="kpi-sub">Receita vs custo real</p>
+            </div>
+
+            <div class="kpi-card c-rose">
+                <div class="kpi-top">
+                    <div>
+                        <p class="kpi-label">Prejuízo</p>
+                        <p class="kpi-value" id="kpiAnalisePrejuizo">--</p>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                </div>
+                <p class="kpi-sub">Veículos com lucro real negativo</p>
+            </div>
+
+            <div class="kpi-card c-indigo">
+                <div class="kpi-top">
+                    <div>
+                        <p class="kpi-label">Proteção FIPE</p>
+                        <p class="kpi-value" id="kpiAnaliseProtecao">--</p>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-shield-heart"></i></div>
+                </div>
+                <p class="kpi-sub">Comprados abaixo da FIPE</p>
+            </div>
+
+            <div class="kpi-card c-amber">
+                <div class="kpi-top">
+                    <div>
+                        <p class="kpi-label">Custo real</p>
+                        <p class="kpi-value" id="kpiAnaliseCustoReal">--</p>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-sack-dollar"></i></div>
+                </div>
+                <p class="kpi-sub">Operacional + depreciação</p>
+            </div>
+
+            <div class="kpi-card c-teal">
+                <div class="kpi-top">
+                    <div>
+                        <p class="kpi-label">Lucro real</p>
+                        <p class="kpi-value" id="kpiAnaliseLucroReal">--</p>
+                    </div>
+                    <div class="kpi-icon"><i class="fas fa-chart-line"></i></div>
+                </div>
+                <p class="kpi-sub">Receita menos custo real</p>
+            </div>
+        </div>
+
+        <p class="analysis-note mt-3">Os indicadores abaixo usam receita, multas, sinistros, danos e depreciação estimada para mostrar o desempenho real de cada veículo.</p>
+    </div>
+
+    <div class="chart-card span-6">
+        <div class="chart-overlay" id="overlayAnaliseLucrativos"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Veículos mais lucrativos</p>
+                <p class="card-sub">Baseado em lucro real</p>
+            </div>
+        </div>
+        <div class="chart-canvas h-220">
+            <canvas id="chartAnaliseLucrativos"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-6">
+        <div class="chart-overlay" id="overlayAnalisePrejuizo"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Veículos com prejuízo</p>
+                <p class="card-sub">Lucro real negativo no período</p>
+            </div>
+        </div>
+        <div class="chart-canvas h-220">
+            <canvas id="chartAnalisePrejuizo"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-4">
+        <div class="chart-overlay" id="overlayAnaliseProtecao"><div class="spinner"></div></div>
+        <div class="card-head">
+            <div>
+                <p class="card-title">Proteção contra depreciação</p>
+                <p class="card-sub">Comprado abaixo da FIPE</p>
+            </div>
+        </div>
+        <div class="legend-row">
+            <span class="leg-item"><span class="leg-dot" style="background:#16a34a;"></span>Protegidos</span>
+            <span class="leg-item"><span class="leg-dot" style="background:#94a3b8;"></span>Sem proteção</span>
+        </div>
+        <div class="chart-canvas h-220">
+            <canvas id="chartAnaliseProtecao"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card span-8">
+        <div class="card-head">
+            <div>
+                <p class="card-title">Relatório automático com recomendações</p>
+                <p class="card-sub">Sinalizações geradas a partir dos números do período</p>
+            </div>
+        </div>
+        <div class="recommendation-list" id="analiseRecomendacoes">
+            <div class="recommendation-item is-info">
+                <p class="recommendation-title">Carregando recomendações</p>
+                <p class="recommendation-desc">A análise será preenchida após aplicar o filtro de período.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-card span-12">
+        <div class="card-head">
+            <div>
+                <p class="card-title">Diagnóstico detalhado por veículo</p>
+                <p class="card-sub">Receita, custo real, lucro real, saúde e proteção FIPE</p>
+            </div>
+        </div>
+        <div class="table-responsive">
+            <table class="table table-sm table-hover mb-0 analysis-table">
+                <thead class="thead-light">
+                    <tr>
+                        <th>Veículo</th>
+                        <th>Grupo</th>
+                        <th class="text-right">Receita</th>
+                        <th class="text-right">Custo operacional</th>
+                        <th class="text-right">Depreciação</th>
+                        <th class="text-right">Custo real</th>
+                        <th class="text-right">Lucro real</th>
+                        <th class="text-center">Eficiência</th>
+                        <th class="text-center">Saúde</th>
+                        <th class="text-center">FIPE</th>
+                        <th>Recomendação</th>
+                    </tr>
+                </thead>
+                <tbody id="analiseDetalhadaBody">
+                    <tr>
+                        <td colspan="11" class="text-center text-muted py-4">Aplique o filtro para visualizar o diagnóstico detalhado.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    @endif
 </div>
 </div>
 @endif
@@ -782,12 +1220,21 @@ const textColor = 'rgba(0,0,0,0.45)';
 const gridColor = 'rgba(0,0,0,0.06)';
 const overlayIds = [
     'overlayReservas',
+    'overlayReservasOrigem',
+    'overlayReservasColaboradores',
     'overlayMovStatus',
     'overlayFrota',
     'overlayOcupacao',
     'overlayFinanceiroLinha',
     'overlayFinanceiroStatus',
     'overlayFinanceiroGateway',
+    'overlaySatisfacaoLinha',
+    'overlaySatisfacaoDistribuicao',
+    'overlaySatisfacaoEstacoes',
+    'overlaySatisfacaoGrupos',
+    'overlayAnaliseLucrativos',
+    'overlayAnalisePrejuizo',
+    'overlayAnaliseProtecao',
 ];
 
 const baseOpts = {
@@ -799,15 +1246,8 @@ const baseOpts = {
     }
 };
 
-let chartReservas = null;
-let chartMovStatus = null;
-let chartFrota = null;
-let chartFinanceiroLinha = null;
-let chartFinanceiroStatus = null;
-let chartFinanceiroGateway = null;
 let simboloMoeda = 'R$';
 let lastDashboardData = null;
-let detailsOpen = false;
 
 const movColors = ['#0891b2', '#059669', '#d97706', '#e11d48', '#7c3aed', '#0ea5e9', '#f59e0b', '#10b981'];
 const finStatusColors = ['#16a34a', '#d97706', '#dc2626'];
@@ -858,6 +1298,44 @@ function formatShortDate(isoDate) {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
 }
 
+function escapeHtml(value) {
+    return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
+function analiseStatusClass(status) {
+    switch (status) {
+        case 'prejuizo':
+        case 'critico':
+            return 'danger';
+        case 'atencao':
+            return 'warning';
+        case 'saudavel':
+            return 'success';
+        default:
+            return 'info';
+    }
+}
+
+function analiseStatusLabel(status) {
+    switch (status) {
+        case 'prejuizo':
+            return 'Prejuízo';
+        case 'critico':
+            return 'Crítico';
+        case 'atencao':
+            return 'Atenção';
+        case 'saudavel':
+            return 'Saudável';
+        default:
+            return 'Indefinido';
+    }
+}
+
 function setDateInputs(inicio, fim) {
     const dataInicio = document.getElementById('data_inicio');
     const dataFim = document.getElementById('data_fim');
@@ -870,75 +1348,11 @@ function setDateInputs(inicio, fim) {
     dataFim.value = fim;
 }
 
-function setDetailsOpen(open) {
-    detailsOpen = !!open;
-    const details = document.getElementById('homeDetails');
-    const btn = document.getElementById('btnToggleDetalhes');
-    if (details) details.classList.toggle('is-open', detailsOpen);
-    if (btn) btn.textContent = detailsOpen ? 'Ocultar detalhes' : 'Detalhes';
-    localStorage.setItem('homeDetailsOpen', detailsOpen ? '1' : '0');
-
-    if (detailsOpen && lastDashboardData) {
-        const dataInicio = document.getElementById('data_inicio')?.value;
-        const dataFim = document.getElementById('data_fim')?.value;
-        if (dataInicio && dataFim) {
-            showOverlays();
-            try {
-                if (HOME_SECTIONS.reservas) renderReservas(lastDashboardData.dadosReservas, lastDashboardData.totalReservas, dataInicio, dataFim);
-                if (HOME_SECTIONS.movimentacoes) renderMovStatus(lastDashboardData.movPorStatus, lastDashboardData.totalMovimentacoes);
-                if (HOME_SECTIONS.frota) renderFrota(lastDashboardData.veiculosPorGrupo);
-                if (HOME_SECTIONS.ocupacao) renderOcupacao(lastDashboardData.ocupacaoFrota, lastDashboardData.ocupacaoGeral);
-                if (HOME_SECTIONS.financeiro) {
-                    renderFinanceiroLinha(lastDashboardData.financeiroEvolucao, lastDashboardData.financeiroResumo, dataInicio, dataFim);
-                    renderFinanceiroStatus(lastDashboardData.financeiroStatus, lastDashboardData.financeiroResumo);
-                    renderFinanceiroGateway(lastDashboardData.financeiroGateway, lastDashboardData.financeiroResumo);
-                }
-            } finally {
-                hideOverlays();
-            }
-        }
-    }
+function getEstacaoSelecionada() {
+    const estacao = document.getElementById('estacao_id');
+    return estacao ? (estacao.value || '0') : '0';
 }
 
-function initHomeToggles() {
-    const btnDetails = document.getElementById('btnToggleDetalhes');
-    if (btnDetails) {
-        btnDetails.addEventListener('click', () => setDetailsOpen(!detailsOpen));
-    }
-
-    const saved = localStorage.getItem('homeDetailsOpen') === '1';
-    setDetailsOpen(saved);
-
-    const btnMore = document.getElementById('btnMoreCards');
-    const more = document.getElementById('moreCards');
-    if (btnMore && more) {
-        btnMore.addEventListener('click', () => {
-            const isHidden = more.classList.contains('d-none');
-            more.classList.toggle('d-none', !isHidden);
-            btnMore.textContent = isHidden ? 'Mostrar menos atalhos' : 'Mostrar mais atalhos';
-        });
-    }
-}
-
-function showOverlays() {
-    if (!detailsOpen) return;
-    overlayIds.forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.remove('hidden');
-        }
-    });
-}
-
-function hideOverlays() {
-    if (!detailsOpen) return;
-    overlayIds.forEach((id) => {
-        const el = document.getElementById(id);
-        if (el) {
-            el.classList.add('hidden');
-        }
-    });
-}
 
 function fetchChartData() {
     const dataInicio = document.getElementById('data_inicio');
@@ -958,9 +1372,9 @@ function fetchChartData() {
     }
 
     btn.disabled = true;
-    showOverlays();
 
-    const url = `${CHART_DATA_URL}?data_inicio=${encodeURIComponent(inicio)}&data_fim=${encodeURIComponent(fim)}`;
+    const estacaoId = getEstacaoSelecionada();
+    const url = `${CHART_DATA_URL}?data_inicio=${encodeURIComponent(inicio)}&data_fim=${encodeURIComponent(fim)}&estacao_id=${encodeURIComponent(estacaoId)}`;
 
     fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
         .then((response) => {
@@ -972,34 +1386,11 @@ function fetchChartData() {
         .then((data) => {
             lastDashboardData = data;
             simboloMoeda = data.simboloMoeda || 'R$';
-
             renderKpis(data, inicio, fim);
-
-            if (!detailsOpen) {
-                return;
-            }
-            if (HOME_SECTIONS.reservas) {
-                renderReservas(data.dadosReservas, data.totalReservas, inicio, fim);
-            }
-            if (HOME_SECTIONS.movimentacoes) {
-                renderMovStatus(data.movPorStatus, data.totalMovimentacoes);
-            }
-            if (HOME_SECTIONS.frota) {
-                renderFrota(data.veiculosPorGrupo);
-            }
-            if (HOME_SECTIONS.ocupacao) {
-                renderOcupacao(data.ocupacaoFrota, data.ocupacaoGeral);
-            }
-            if (HOME_SECTIONS.financeiro) {
-                renderFinanceiroLinha(data.financeiroEvolucao, data.financeiroResumo, inicio, fim);
-                renderFinanceiroStatus(data.financeiroStatus, data.financeiroResumo);
-                renderFinanceiroGateway(data.financeiroGateway, data.financeiroResumo);
-            }
         })
         .catch(() => alert('Erro ao carregar dados. Tente novamente.'))
         .finally(() => {
             btn.disabled = false;
-            hideOverlays();
         });
 }
 
@@ -1009,6 +1400,8 @@ function renderKpis(data, inicio, fim) {
     const ocupacao = Number(data?.ocupacaoGeral ?? 0);
     const totalFin = Number(data?.financeiroResumo?.total ?? 0);
     const ticket = Number(data?.financeiroResumo?.ticket_medio ?? 0);
+    const satResumo = data?.satisfacaoResumo || {};
+    const reservasOrigem = data?.reservasOrigemResumo || {};
 
     const elReservas = document.getElementById('kpiTotalReservas');
     const elMov = document.getElementById('kpiMovimentacoes');
@@ -1016,359 +1409,59 @@ function renderKpis(data, inicio, fim) {
     const elFin = document.getElementById('kpiTotalFinanceiro');
     const elTicket = document.getElementById('kpiTicketMedio');
     const elPeriodo = document.getElementById('kpiPeriodo');
+    const elReservasOrigem = document.getElementById('kpiReservasOrigem');
+    const elReservasOrigemSub = document.getElementById('kpiReservasOrigemSub');
+    const elSatisfacao = document.getElementById('kpiSatisfacao');
+    const elSatisfacaoSub = document.getElementById('kpiSatisfacaoSub');
+    const elNps = document.getElementById('kpiNps');
+    const elNpsSub = document.getElementById('kpiNpsSub');
+    const estacaoNome = data?.estacaoSelecionadaNome || 'Todas as estações';
 
     if (elReservas) elReservas.textContent = totalReservas.toLocaleString('pt-BR');
     if (elMov) elMov.textContent = totalMov.toLocaleString('pt-BR');
     if (elOcup) elOcup.textContent = formatPercent(ocupacao);
     if (elFin) elFin.textContent = formatMoney(totalFin);
     if (elTicket) elTicket.textContent = `Ticket medio: ${formatMoney(ticket)}`;
-    if (elPeriodo) elPeriodo.textContent = `${formatShortDate(inicio)} - ${formatShortDate(fim)}`;
-}
-
-function renderReservas(dados, total, inicio, fim) {
-    if (!document.getElementById('chartReservas')) {
-        return;
+    if (elPeriodo) elPeriodo.textContent = `${formatShortDate(inicio)} - ${formatShortDate(fim)} • ${estacaoNome}`;
+    if (elReservasOrigem) elReservasOrigem.textContent = `${Number(reservasOrigem?.percentual_site ?? 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+    if (elReservasOrigemSub) {
+        elReservasOrigemSub.textContent = `Site ${Number(reservasOrigem?.site ?? 0).toLocaleString('pt-BR')} • Colaborador ${Number(reservasOrigem?.colaborador ?? 0).toLocaleString('pt-BR')} • Sem origem ${Number(reservasOrigem?.sem_origem ?? 0).toLocaleString('pt-BR')}`;
     }
-
-    const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
-    const confirmadas = dados?.confirmadas?.length ? dados.confirmadas : [0];
-    const cancelamentos = dados?.cancelamentos?.length ? dados.cancelamentos : [0];
-    const tendencia = dados?.tendencia?.length ? dados.tendencia : [0];
-
-    document.getElementById('totalReservas').textContent = Number(total || 0).toLocaleString('pt-BR');
-    document.getElementById('subReservas').textContent = `${formatShortDate(inicio)} - ${formatShortDate(fim)}`;
-
-    if (chartReservas) {
-        chartReservas.destroy();
-    }
-
-    chartReservas = new Chart(document.getElementById('chartReservas'), {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [
-                {
-                    label: 'Confirmadas',
-                    data: confirmadas,
-                    backgroundColor: '#0891b2',
-                    borderRadius: 5,
-                    order: 2
-                },
-                {
-                    label: 'Cancelamentos',
-                    data: cancelamentos,
-                    backgroundColor: '#bae6fd',
-                    borderRadius: 5,
-                    order: 3
-                },
-                {
-                    label: 'Tendencia',
-                    data: tendencia,
-                    type: 'line',
-                    borderColor: '#06b6d4',
-                    backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    tension: 0.35,
-                    order: 1
-                }
-            ]
-        },
-        options: {
-            ...baseOpts,
-            scales: {
-                x: {
-                    stacked: true,
-                    ticks: { color: textColor, font: { size: 11 }, autoSkip: false },
-                    grid: { display: false }
-                },
-                y: {
-                    stacked: true,
-                    ticks: { color: textColor, font: { size: 11 } },
-                    grid: { color: gridColor },
-                    border: { display: false }
-                }
-            }
-        }
-    });
-}
-
-function renderMovStatus(dados, total) {
-    if (!document.getElementById('chartMovStatus')) {
-        return;
-    }
-
-    const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
-    const valores = dados?.data?.length ? dados.data : [0];
-    const palette = labels.map((_, index) => movColors[index % movColors.length]);
-
-    document.getElementById('totalMovimentacoes').textContent = Number(total || 0).toLocaleString('pt-BR');
-
-    const leg = document.getElementById('legMovStatus');
-    leg.innerHTML = '';
-    labels.forEach((label, index) => {
-        leg.innerHTML += `<span class="leg-item"><span class="leg-dot" style="background:${movColors[index % movColors.length]};"></span>${label} ${Number(valores[index] || 0).toLocaleString('pt-BR')}</span>`;
-    });
-
-    if (chartMovStatus) {
-        chartMovStatus.destroy();
-    }
-
-    chartMovStatus = new Chart(document.getElementById('chartMovStatus'), {
-        type: 'doughnut',
-        data: {
-            labels,
-            datasets: [{
-                data: valores,
-                backgroundColor: palette,
-                borderWidth: 0,
-                hoverOffset: 8
-            }]
-        },
-        options: { ...baseOpts, cutout: '68%', layout: { padding: 4 } }
-    });
-}
-
-function renderFrota(dados) {
-    if (!document.getElementById('chartFrota')) {
-        return;
-    }
-
-    const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
-    const valores = dados?.data?.length ? dados.data : [0];
-    const colors = ['#0891b2', '#059669', '#d97706', '#7c3aed', '#e11d48', '#0ea5e9'];
-    const palette = labels.map((_, index) => colors[index % colors.length]);
-
-    if (chartFrota) {
-        chartFrota.destroy();
-    }
-
-    chartFrota = new Chart(document.getElementById('chartFrota'), {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                data: valores,
-                backgroundColor: palette,
-                borderRadius: 5,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            ...baseOpts,
-            indexAxis: 'y',
-            scales: {
-                x: {
-                    ticks: { color: textColor, font: { size: 11 }, stepSize: 1 },
-                    grid: { color: gridColor },
-                    border: { display: false }
-                },
-                y: {
-                    ticks: { color: textColor, font: { size: 11 } },
-                    grid: { display: false }
-                }
-            }
-        }
-    });
-}
-
-function renderOcupacao(frota, geral) {
-    if (!document.getElementById('ocupacaoGeral') || !document.getElementById('gaugeList')) {
-        return;
-    }
-
-    document.getElementById('ocupacaoGeral').textContent = `${Number(geral || 0)}%`;
-
-    const list = document.getElementById('gaugeList');
-    list.innerHTML = '';
-
-    if (!Array.isArray(frota) || frota.length === 0) {
-        list.innerHTML = '<div class="empty-gauge">Sem dados de ocupacao para o periodo selecionado.</div>';
-        return;
-    }
-
-    frota.forEach((item) => {
-        list.innerHTML += `
-            <div class="gauge-row">
-                <div class="gauge-label"><span>${item.label}</span><span>${item.pct}%</span></div>
-                <div class="gauge-bar-bg"><div class="gauge-bar-fill" style="width:${item.pct}%;background:${item.color};"></div></div>
-            </div>
-        `;
-    });
-}
-
-function renderFinanceiroLinha(dados, resumo, inicio, fim) {
-    if (!document.getElementById('chartFinanceiroLinha')) {
-        return;
-    }
-
-    const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
-    const valores = dados?.valores?.length ? dados.valores : [0];
-    const quantidades = dados?.quantidades?.length ? dados.quantidades : [0];
-
-    document.getElementById('totalFinanceiro').textContent = formatMoney(resumo?.total ?? 0);
-    document.getElementById('ticketMedioFinanceiro').textContent = `ticket medio ${formatMoney(resumo?.ticket_medio ?? 0)}`;
-    document.getElementById('subFinanceiro').textContent = `${formatShortDate(inicio)} - ${formatShortDate(fim)}`;
-
-    if (chartFinanceiroLinha) {
-        chartFinanceiroLinha.destroy();
-    }
-
-    chartFinanceiroLinha = new Chart(document.getElementById('chartFinanceiroLinha'), {
-        data: {
-            labels,
-            datasets: [
-                {
-                    type: 'bar',
-                    label: 'Receita',
-                    data: valores,
-                    yAxisID: 'y',
-                    backgroundColor: '#0ea5e9',
-                    borderRadius: 5,
-                    borderSkipped: false
-                },
-                {
-                    type: 'line',
-                    label: 'Transacoes',
-                    data: quantidades,
-                    yAxisID: 'y1',
-                    borderColor: '#6366f1',
-                    backgroundColor: 'transparent',
-                    pointBackgroundColor: '#6366f1',
-                    pointRadius: 2,
-                    borderWidth: 2,
-                    tension: 0.35
-                }
-            ]
-        },
-        options: {
-            ...baseOpts,
-            scales: {
-                x: {
-                    ticks: { color: textColor, font: { size: 11 }, autoSkip: false },
-                    grid: { display: false }
-                },
-                y: {
-                    position: 'left',
-                    ticks: {
-                        color: textColor,
-                        font: { size: 11 },
-                        callback: (value) => formatMoney(value)
-                    },
-                    grid: { color: gridColor },
-                    border: { display: false }
-                },
-                y1: {
-                    position: 'right',
-                    ticks: { color: textColor, font: { size: 11 } },
-                    grid: { display: false },
-                    border: { display: false }
-                }
-            }
-        }
-    });
-}
-
-function renderFinanceiroGateway(dados, resumo) {
-    if (!document.getElementById('chartFinanceiroGateway')) {
-        return;
-    }
-
-    const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
-    const valores = dados?.data?.length ? dados.data : [0];
-    const chartColors = labels.length ? finGatewayColors.slice(0, labels.length) : ['#cbd5e1'];
-
-    document.getElementById('qtdTransacoesFinanceiro').textContent = Number(resumo?.qtd_transacoes || 0).toLocaleString('pt-BR');
-
-    const leg = document.getElementById('legFinGateway');
-    leg.innerHTML = '';
-    labels.forEach((label, index) => {
-        leg.innerHTML += `<span class="leg-item"><span class="leg-dot" style="background:${finGatewayColors[index % finGatewayColors.length]};"></span>${label} ${formatMoney(valores[index] || 0)}</span>`;
-    });
-
-    if (chartFinanceiroGateway) {
-        chartFinanceiroGateway.destroy();
-    }
-
-    chartFinanceiroGateway = new Chart(document.getElementById('chartFinanceiroGateway'), {
-        type: 'bar',
-        data: {
-            labels,
-            datasets: [{
-                data: valores,
-                backgroundColor: chartColors,
-                borderRadius: 5,
-                borderSkipped: false
-            }]
-        },
-        options: {
-            ...baseOpts,
-            scales: {
-                x: {
-                    ticks: { color: textColor, font: { size: 11 } },
-                    grid: { display: false }
-                },
-                y: {
-                    ticks: {
-                        color: textColor,
-                        font: { size: 11 },
-                        callback: (value) => formatMoney(value)
-                    },
-                    grid: { color: gridColor },
-                    border: { display: false }
-                }
-            }
-        }
-    });
-}
-
-function renderFinanceiroStatus(dados, resumo) {
-    if (!document.getElementById('chartFinanceiroStatus')) {
-        return;
-    }
-
-    const labels = dados?.labels?.length ? dados.labels : ['Sem dados'];
-    const valores = dados?.data?.length ? dados.data : [0];
-    const chartColors = labels.length ? finStatusColors.slice(0, labels.length) : ['#cbd5e1'];
-
-    document.getElementById('taxaAprovacaoFinanceiro').textContent = formatPercent(resumo?.taxa_aprovacao ?? 0);
-
-    const leg = document.getElementById('legFinStatus');
-    leg.innerHTML = '';
-    labels.forEach((label, index) => {
-        leg.innerHTML += `<span class="leg-item"><span class="leg-dot" style="background:${finStatusColors[index % finStatusColors.length]};"></span>${label} ${formatMoney(valores[index] || 0)}</span>`;
-    });
-
-    if (chartFinanceiroStatus) {
-        chartFinanceiroStatus.destroy();
-    }
-
-    chartFinanceiroStatus = new Chart(document.getElementById('chartFinanceiroStatus'), {
-        type: 'doughnut',
-        data: {
-            labels,
-            datasets: [{
-                data: valores,
-                backgroundColor: chartColors,
-                borderWidth: 0,
-                hoverOffset: 8
-            }]
-        },
-        options: { ...baseOpts, cutout: '66%', layout: { padding: 4 } }
-    });
+    if (elSatisfacao) elSatisfacao.textContent = satResumo.total_respostas ? Number(satResumo.media_geral || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '--';
+    if (elSatisfacaoSub) elSatisfacaoSub.textContent = satResumo.total_respostas ? `CSAT medio • ${Number(satResumo.total_respostas || 0).toLocaleString('pt-BR')} respostas` : 'Sem respostas no periodo';
+    if (elNps) elNps.textContent = satResumo.total_respostas ? Number(satResumo.nps || 0).toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) : '--';
+    if (elNpsSub) elNpsSub.textContent = satResumo.total_respostas ? `${Number(satResumo.promotores || 0).toLocaleString('pt-BR')} promotores • ${Number(satResumo.detratores || 0).toLocaleString('pt-BR')} detratores` : 'Sem respostas no periodo';
 }
 
 if (Object.values(HOME_SECTIONS).some(Boolean)) {
-    initHomeToggles();
+    // Tabs de satisfação (se existirem no DOM)
+    document.querySelectorAll('.js-sat-tab').forEach((btn) => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.js-sat-tab').forEach((el) => el.classList.remove('active'));
+            btn.classList.add('active');
+        });
+    });
+
+    const btnMore = document.getElementById('btnMoreCards');
+    const more = document.getElementById('moreCards');
+    if (btnMore && more) {
+        btnMore.addEventListener('click', () => {
+            const isHidden = more.classList.contains('d-none');
+            more.classList.toggle('d-none', !isHidden);
+            btnMore.textContent = isHidden ? 'Mostrar menos atalhos' : 'Mostrar mais atalhos';
+        });
+    }
+
+    const estacaoSelect = document.getElementById('estacao_id');
+    if (estacaoSelect) {
+        estacaoSelect.addEventListener('change', () => { fetchChartData(); });
+    }
 
     const btnFiltrar = document.getElementById('btnFiltrar');
     const btnHoje = document.getElementById('btnHoje');
     const btn12m = document.getElementById('btn12m');
 
-    if (btnFiltrar) {
-        btnFiltrar.addEventListener('click', fetchChartData);
-    }
-
+    if (btnFiltrar) { btnFiltrar.addEventListener('click', fetchChartData); }
     if (btnHoje) {
         btnHoje.addEventListener('click', () => {
             const hoje = formatInputDate(new Date());
@@ -1376,7 +1469,6 @@ if (Object.values(HOME_SECTIONS).some(Boolean)) {
             fetchChartData();
         });
     }
-
     if (btn12m) {
         btn12m.addEventListener('click', () => {
             const periodo = defaultDates();

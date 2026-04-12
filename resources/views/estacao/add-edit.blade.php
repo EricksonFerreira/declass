@@ -177,6 +177,7 @@
                     <div class="estacao-section-title"><i class="fas fa-clock mr-1"></i>Horários por Tipo de Dia</div>
                     <p class="text-muted small mb-3">
                         Defina os horários de abertura, fechamento e intervalo para cada tipo de dia.
+                        Use o botão de intervalo para sinalizar quando não há almoço.
                         Os campos "Fora de Expediente" são preenchidos automaticamente.
                     </p>
 
@@ -208,9 +209,14 @@
                                 $iconInfo   = $iconMap[$nomeLower] ?? ['icon' => 'fa-clock', 'color' => '#64748b', 'bg' => '#f8fafc'];
                             @endphp
 
-                            <div class="ec-horario-card">
+                            @php
+                                $isFeriado = mb_stripos($horarioNome, 'feriado') !== false;
+                                $funcionaFeriado = old('funciona.'.$loop->index, $pivotData?->funciona ?? 'S') === 'S';
+                            @endphp
+                            <div class="ec-horario-card {{ $isFeriado && !$funcionaFeriado ? 'ec-horario-card--inativo' : '' }}">
                                 @php
                                     $is24h = old('funciona_24h.'.$loop->index, $pivotData?->funciona_24h ?? 'N') === 'S';
+                                    $temIntervaloAlmoco = old('tem_intervalo_almoco.'.$loop->index, $pivotData?->tem_intervalo_almoco ?? 'S') === 'S';
                                 @endphp
                                 <div class="ec-horario-card__head" style="background:{{ $iconInfo['bg'] }}; border-color:{{ $iconInfo['color'] }}20;">
                                     <div class="ec-horario-card__icon" style="background:{{ $iconInfo['color'] }}20; color:{{ $iconInfo['color'] }};">
@@ -219,8 +225,24 @@
                                     <span class="ec-horario-card__title">{{ $horarioNome }}</span>
                                     <input type="hidden" name="horario_diario_id[]" value="{{ $horarioId }}">
 
-                                    {{-- Toggle 24h --}}
-                                    <label class="ec-toggle-24h ml-auto" title="Funciona 24 horas">
+                                    @if($isFeriado)
+                                        {{-- Toggle: Funciona em feriados? --}}
+                                        <label class="ec-toggle-24h ec-toggle-24h--feriado ml-auto js-toggle-feriado" title="Funciona em feriados">
+                                            <input type="hidden" name="funciona[]" value="N" class="input-funciona-feriado-hidden">
+                                            <input type="checkbox" class="input-funciona-feriado-check" value="S"
+                                                {{ $funcionaFeriado ? 'checked' : '' }}>
+                                            <span class="ec-toggle-24h__track">
+                                                <span class="ec-toggle-24h__knob"></span>
+                                            </span>
+                                            <span class="ec-toggle-24h__label">Funciona</span>
+                                        </label>
+                                    @else
+                                        {{-- Para outros tipos, funciona é sempre S --}}
+                                        <input type="hidden" name="funciona[]" value="S">
+                                    @endif
+
+                                    {{-- Toggle 24h (oculto se feriado inativo) --}}
+                                    <label class="ec-toggle-24h {{ $isFeriado ? 'ml-2' : 'ml-auto' }} js-horario-campos-feriado {{ $isFeriado && !$funcionaFeriado ? 'd-none' : '' }}" title="Funciona 24 horas">
                                         <input type="hidden" name="funciona_24h[]" value="N" class="input-24h-hidden">
                                         <input type="checkbox" class="input-24h-check" value="S"
                                             {{ $is24h ? 'checked' : '' }}>
@@ -229,6 +251,14 @@
                                         </span>
                                         <span class="ec-toggle-24h__label">24h</span>
                                     </label>
+                                    <label class="ec-toggle-24h ec-toggle-24h--warning ml-2 js-horario-campos-feriado {{ $isFeriado && !$funcionaFeriado ? 'd-none' : '' }}" title="Sem intervalo para almoço">
+                                        <input type="hidden" name="tem_intervalo_almoco[]" value="{{ $temIntervaloAlmoco ? 'S' : 'N' }}" class="input-almoco-hidden">
+                                        <input type="checkbox" class="input-almoco-check" value="N" {{ $temIntervaloAlmoco ? '' : 'checked' }}>
+                                        <span class="ec-toggle-24h__track">
+                                            <span class="ec-toggle-24h__knob"></span>
+                                        </span>
+                                        <span class="ec-toggle-24h__label">Sem intervalo</span>
+                                    </label>
                                 </div>
 
                                 <div class="ec-horario-card__body {{ $is24h ? 'ec-body--24h' : '' }}">
@@ -236,6 +266,10 @@
                                     <div class="ec-24h-banner {{ $is24h ? '' : 'd-none' }}">
                                         <i class="fas fa-infinity mr-2"></i>
                                         Funcionamento 24 horas — sem restrição de horário
+                                    </div>
+                                    <div class="ec-no-lunch-banner {{ $temIntervaloAlmoco ? 'd-none' : '' }}">
+                                        <i class="fas fa-ban mr-2"></i>
+                                        Este dia não possui intervalo para almoço.
                                     </div>
 
                                     <div class="ec-horario-fields {{ $is24h ? 'd-none' : '' }}">
@@ -342,14 +376,38 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="cobrar_na_coleta" label="Cobrar taxa fora de expediente (coleta)" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="cobrar_na_coleta" id="cobrar_na_coleta" label="Cobrar taxa fora de expediente (coleta)" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N')" class="form-control form-control-sm" required />
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 js-taxa-coleta-wrap {{ old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N') === 'S' ? '' : 'd-none' }}">
+                            <div class="form-group form-group-estacao">
+                                <label class="mb-1">Valor da taxa (coleta) <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                                    <input type="number" name="valor_taxa_coleta" id="valor_taxa_coleta" step="0.01" min="0"
+                                        class="form-control form-control-sm"
+                                        value="{{ old('valor_taxa_coleta', $estacao->valor_taxa_coleta ?? '') }}"
+                                        placeholder="0,00">
+                                </div>
                             </div>
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="cobrar_na_entrega" label="Cobrar taxa fora de expediente (entrega)" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="cobrar_na_entrega" id="cobrar_na_entrega" label="Cobrar taxa fora de expediente (entrega)" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N')" class="form-control form-control-sm" required />
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-6 js-taxa-entrega-wrap {{ old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N') === 'S' ? '' : 'd-none' }}">
+                            <div class="form-group form-group-estacao">
+                                <label class="mb-1">Valor da taxa (entrega) <span class="text-danger">*</span></label>
+                                <div class="input-group input-group-sm">
+                                    <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                                    <input type="number" name="valor_taxa_entrega" id="valor_taxa_entrega" step="0.01" min="0"
+                                        class="form-control form-control-sm"
+                                        value="{{ old('valor_taxa_entrega', $estacao->valor_taxa_entrega ?? '') }}"
+                                        placeholder="0,00">
+                                </div>
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6">
@@ -545,6 +603,14 @@
 .ec-toggle-24h input[type="checkbox"]:checked ~ .ec-toggle-24h__track .ec-toggle-24h__knob { transform: translateX(16px); }
 .ec-toggle-24h__label { font-size: .75rem; font-weight: 700; color: #475569; }
 
+/* Toggle Funciona (feriado) — verde */
+.ec-toggle-24h--feriado .ec-toggle-24h__label { color: #15803d; }
+.ec-toggle-24h--feriado input[type="checkbox"]:checked ~ .ec-toggle-24h__track { background: #16a34a; }
+
+/* Card de feriado desativado */
+.ec-horario-card--inativo { opacity: .55; }
+.ec-horario-card--inativo .ec-horario-card__body { display: none; }
+
 /* 24h active state */
 .ec-horario-card.is-24h .ec-horario-card__head { border-bottom: 2px solid #2563eb; }
 .ec-24h-banner {
@@ -553,6 +619,17 @@
     border-radius: 8px;
     padding: 10px 14px;
     color: #1d4ed8;
+    font-weight: 700;
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+}
+.ec-no-lunch-banner {
+    background: linear-gradient(90deg, #fffbeb, #fef3c7);
+    border: 1px solid #fcd34d;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #b45309;
     font-weight: 700;
     font-size: .85rem;
     display: flex;
@@ -686,17 +763,49 @@ $(function () {
     });
 
     // ── Toggle 24h ──
+    function applyIntervaloAlmoco($card, semAlmoco) {
+        const $lunchInputs = $card.find('input[name="hora_inicio_almoco[]"], input[name="hora_fim_almoco[]"]');
+
+        $card.find('.ec-no-lunch-banner').toggleClass('d-none', !semAlmoco);
+        $card.find('.ec-time-group--almoco').toggleClass('d-none', semAlmoco);
+        $card.find('.input-almoco-hidden').val(semAlmoco ? 'N' : 'S');
+        $lunchInputs.prop('readonly', semAlmoco);
+
+        $lunchInputs.each(function() {
+            const $input = $(this);
+            if ($input.data('almocoAnterior') === undefined) {
+                $input.data('almocoAnterior', $input.val() || '');
+            }
+        });
+
+        if (semAlmoco) {
+            $card.find('input[name="hora_inicio_almoco[]"]').val('00:00');
+            $card.find('input[name="hora_fim_almoco[]"]').val('00:00');
+        } else {
+            $card.find('input[name="hora_inicio_almoco[]"]').each(function() {
+                const valorAnterior = $(this).data('almocoAnterior');
+                if (valorAnterior !== undefined) {
+                    $(this).val(valorAnterior);
+                }
+            });
+            $card.find('input[name="hora_fim_almoco[]"]').each(function() {
+                const valorAnterior = $(this).data('almocoAnterior');
+                if (valorAnterior !== undefined) {
+                    $(this).val(valorAnterior);
+                }
+            });
+        }
+    }
+
     function apply24h($card, is24h) {
         $card.toggleClass('is-24h', is24h);
         $card.find('.ec-24h-banner').toggleClass('d-none', !is24h);
         $card.find('.ec-horario-fields').toggleClass('d-none', is24h);
         $card.find('.ec-hidden-24h-fields').toggleClass('d-none', !is24h);
-        // Disable visible time inputs so they don't POST when 24h is active
         $card.find('.ec-horario-fields input[type="time"]').prop('disabled', is24h);
-        // Enable/disable preset hidden fields
         $card.find('.ec-hidden-24h-fields input').prop('disabled', !is24h);
-        // The single hidden field carries the final value (checkbox is display-only)
         $card.find('.input-24h-hidden').val(is24h ? 'S' : 'N');
+        applyIntervaloAlmoco($card, $card.find('.input-almoco-check').is(':checked'));
     }
 
     // Init state on load
@@ -706,15 +815,36 @@ $(function () {
         apply24h($card, checked);
     });
 
-    $(document).on('change', '.input-24h-check', function() {
+    $(document).on('change', '.input-24h-check, .input-almoco-check', function() {
         const $card = $(this).closest('.ec-horario-card');
-        apply24h($card, $(this).is(':checked'));
+        if ($(this).hasClass('input-24h-check') && $(this).is(':checked')) {
+            $card.find('.input-almoco-check').prop('checked', false);
+        }
+        if ($(this).hasClass('input-almoco-check') && $(this).is(':checked')) {
+            $card.find('.input-24h-check').prop('checked', false);
+        }
+        apply24h($card, $card.find('.input-24h-check').is(':checked'));
+        autoFillFora($card);
+    });
+
+    // Toggle "Funciona em feriados"
+    $(document).on('change', '.input-funciona-feriado-check', function() {
+        const $card  = $(this).closest('.ec-horario-card');
+        const ativo  = $(this).is(':checked');
+        $card.find('.input-funciona-feriado-hidden').val(ativo ? 'S' : 'N');
+        $card.toggleClass('ec-horario-card--inativo', !ativo);
+        $card.find('.js-horario-campos-feriado').toggleClass('d-none', !ativo);
+        $card.find('.ec-horario-card__body').toggle(ativo);
     });
 
     // ── Horário auto-fill (fora de expediente) ──
     function autoFillFora($card) {
         const abertura   = $card.find('input[name="hora_abertura[]"]').val()   || '';
         const fechamento = $card.find('input[name="hora_fechamento[]"]').val() || '';
+        if ($card.find('.input-24h-check').is(':checked') || $card.find('.input-almoco-check').is(':checked')) {
+            return;
+        }
+
         if (abertura && fechamento) {
             $card.find('input[name="hora_inicio_fora_expediente[]"]').val(fechamento);
             $card.find('input[name="hora_fim_fora_expediente[]"]').val(abertura);
@@ -725,6 +855,21 @@ $(function () {
 
     $(document).on('change', 'input[name="hora_abertura[]"], input[name="hora_fechamento[]"]', function() {
         autoFillFora($(this).closest('.ec-horario-card'));
+    });
+
+    $(document).on('change', 'input[name="hora_inicio_almoco[]"], input[name="hora_fim_almoco[]"]', function() {
+        const $card = $(this).closest('.ec-horario-card');
+        if (!$card.find('.input-almoco-check').is(':checked')) {
+            $(this).data('almocoAnterior', $(this).val() || '');
+        }
+    });
+
+    // ── Mostrar/ocultar campos de valor de taxa conforme seleção ──
+    $('#cobrar_na_coleta').on('change', function() {
+        $('.js-taxa-coleta-wrap').toggleClass('d-none', $(this).val() !== 'S');
+    });
+    $('#cobrar_na_entrega').on('change', function() {
+        $('.js-taxa-entrega-wrap').toggleClass('d-none', $(this).val() !== 'S');
     });
 
     // ── Form submit validation ──
@@ -738,12 +883,21 @@ $(function () {
             const $card = $(this);
             // Skip validation for 24h cards (they use hidden fields with preset values)
             if ($card.hasClass('is-24h')) return;
+            const semAlmoco = $card.find('.input-almoco-check').is(':checked');
 
             $card.find('.ec-horario-fields input[type="time"]').each(function() {
+                if (semAlmoco && $(this).hasClass('input-almoco')) {
+                    $(this).removeClass('is-invalid');
+                    return;
+                }
                 const v = ($(this).val() || '').trim();
                 if (!v || v === '00:00') { $(this).addClass('is-invalid'); ok = false; }
                 else $(this).removeClass('is-invalid');
             });
+
+            if (semAlmoco) {
+                $card.find('input[name="hora_inicio_almoco[]"], input[name="hora_fim_almoco[]"]').removeClass('is-invalid');
+            }
         });
 
         if (!ok) {

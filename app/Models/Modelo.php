@@ -11,7 +11,10 @@ class Modelo extends Model
 
     protected $table = 'modelos';
     protected $fillable = [
+        'empresa_id',
         'nome',
+        'nome_fipe',
+        'codigo_fipe',
         'imagem',
         'ativo',
         'marca_id',

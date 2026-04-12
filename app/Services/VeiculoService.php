@@ -232,7 +232,7 @@ class VeiculoService extends AbstractBaseService
                     ->where('reservas.data_fim', '>', $data_inicio);
             })
             ->whereDoesntHave('movimentacoes', function ($query) use ($data_fim) {
-                // Bloqueia veÃ­culos com movimentaÃ§Ã£o ainda nÃ£o concluÃ­da (ex: transferÃªncia entre estaÃ§Ãµes),
+                // Bloqueia Veículo com movimentaÃ§Ã£o ainda nÃ£o concluÃ­da (ex: transferÃªncia entre estações),
                 // mesmo quando a movimentaÃ§Ã£o nÃ£o estÃ¡ vinculada a uma reserva.
                 $query->whereNull('data_chegada_real')
                     ->where(function ($sub) use ($data_fim) {
@@ -413,6 +413,25 @@ class VeiculoService extends AbstractBaseService
         $query = $this->scopeStatusVeiculoDisponivel($query);
 
         return (int) $query->count();
+    }
+
+    public function temVeiculoDisponivelNaEstacaoEmDataHora(
+        int $estacaoId,
+        string $dataHora,
+        ?int $reservaId = null
+    ): bool {
+        if ($estacaoId <= 0 || trim($dataHora) === '') {
+            return false;
+        }
+
+        $dataFim = Carbon::parse($dataHora)->addMinute()->format('Y-m-d\TH:i');
+
+        return $this->getQuantidadeVeiculosDisponiveisPorEstacaoEPeriodo(
+            $estacaoId,
+            $dataHora,
+            $dataFim,
+            $reservaId
+        ) > 0;
     }
 
     /**
