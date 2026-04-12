@@ -362,6 +362,7 @@
                                 </button>
                             </div>
                         </div>
+                        <div id="fipeLookupStatus" class="alert alert-danger d-none mt-2 mb-3" role="alert"></div>
                         <div class="form-row">
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
@@ -844,7 +845,29 @@
             const $referenciaFipe = $('#referencia_fipe');
             const $dataConsultaFipe = $('#data_consulta_fipe');
             const $taxaDepreciacao = $('#taxa_depreciacao_anual');
+            const $fipeLookupStatus = $('#fipeLookupStatus');
             const fipeUrl = '{{ route('veiculo.consultarFipe') }}';
+            let ultimaFalhaFipe = null;
+
+            function limparStatusFipe() {
+                $fipeLookupStatus.addClass('d-none').removeClass('alert-success alert-warning alert-danger').empty();
+            }
+
+            function mostrarStatusFipe(tipo, mensagem) {
+                $fipeLookupStatus
+                    .removeClass('d-none alert-success alert-warning alert-danger')
+                    .addClass(`alert-${tipo}`)
+                    .html(mensagem);
+            }
+
+            function limparCacheFalhaFipe() {
+                ultimaFalhaFipe = null;
+                limparStatusFipe();
+            }
+
+            $('#marca_id, #modelo_id, #ano_modelo').on('change input', function() {
+                limparCacheFalhaFipe();
+            });
 
             window.carregarGruposVeiculo = function(tipoId, selectValor) {
                 const $grupoFrota = $('#grupo_frota_id');
@@ -957,6 +980,7 @@
                 const marcaId = $marca.val();
                 const modeloId = $modelo.val();
                 const anoModelo = $('#ano_modelo').val();
+                const chaveConsulta = [marcaId || '', modeloId || '', anoModelo || ''].join('|');
 
                 if (!marcaId || !modeloId || !anoModelo) {
                     fireSwal({
@@ -970,6 +994,20 @@
                     return;
                 }
 
+                if (ultimaFalhaFipe && ultimaFalhaFipe.chave === chaveConsulta) {
+                    mostrarStatusFipe('warning', `<strong>Atenção:</strong> ${ultimaFalhaFipe.mensagem}`);
+                    fireSwal({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: ultimaFalhaFipe.mensagem,
+                        showConfirmButton: false,
+                        timer: 5000
+                    });
+                    return;
+                }
+
+                limparStatusFipe();
                 const originalButton = $btnConsultarFipe.html();
                 $btnConsultarFipe.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i>Consultando...');
 
@@ -980,6 +1018,11 @@
                 }).done(function(resp) {
                     // Resposta com mensagem de erro (HTTP 200 mas sem dados)
                     if (resp.message && !resp.valor_fipe && resp.valor_fipe !== 0) {
+                        ultimaFalhaFipe = {
+                            chave: chaveConsulta,
+                            mensagem: resp.message
+                        };
+                        mostrarStatusFipe('warning', `<strong>FIPE indisponível:</strong> ${resp.message}`);
                         fireSwal({
                             toast: true,
                             position: 'top-end',
@@ -1007,6 +1050,8 @@
                         $taxaDepreciacao.val(15);
                     }
 
+                    ultimaFalhaFipe = null;
+                    limparStatusFipe();
                     fireSwal({
                         toast: true,
                         position: 'top-end',
@@ -1018,6 +1063,13 @@
                     });
                 }).fail(function(xhr) {
                     const message = xhr.responseJSON?.message || 'Não foi possível consultar a FIPE.';
+                    if (xhr.status === 422) {
+                        ultimaFalhaFipe = {
+                            chave: chaveConsulta,
+                            mensagem: message
+                        };
+                        mostrarStatusFipe('warning', `<strong>FIPE indisponível:</strong> ${message}`);
+                    }
                     fireSwal({
                         toast: true,
                         position: 'top-end',
