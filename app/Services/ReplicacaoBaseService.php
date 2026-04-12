@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Empresa;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 
 class ReplicacaoBaseService
@@ -161,6 +162,8 @@ class ReplicacaoBaseService
 
                 if ($mode === 'regra_permissao') {
                     $resultadoModulo = $this->replicarVinculosRegraPermissao($empresaOrigemId, $destinos);
+                } elseif ($mode === 'bundle' && $modulo === 'catalogo_fipe') {
+                    $resultadoModulo = $this->replicarCatalogoFipe($empresaOrigemId, $destinos);
                 } elseif ($mode === 'bundle') {
                     $resultadoModulo = ['inseridos' => 0, 'ignorados' => 0];
 
@@ -241,6 +244,278 @@ class ReplicacaoBaseService
         }
 
         return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
+    }
+
+    /**
+     * Replica o catalogo FIPE preservando os relacionamentos entre segmentos, marcas e modelos.
+     *
+     * @param array<int, int> $destinos
+     * @return array{inseridos:int, ignorados:int}
+     */
+    private function replicarCatalogoFipe(int $origem, array $destinos): array
+    {
+        if (
+            empty($destinos)
+            || !Schema::hasTable('segmentos')
+            || !Schema::hasTable('marcas')
+            || !Schema::hasTable('modelos')
+        ) {
+            return ['inseridos' => 0, 'ignorados' => 0];
+        }
+
+        $segmentosOrigem = DB::table('segmentos')
+            ->where('empresa_id', $origem)
+            ->orderBy('id')
+            ->get();
+
+        $marcasOrigem = DB::table('marcas')
+            ->where('empresa_id', $origem)
+            ->orderBy('id')
+            ->get();
+
+        $modelosOrigem = DB::table('modelos')
+            ->where('empresa_id', $origem)
+            ->orderBy('id')
+            ->get();
+
+        $inseridos = 0;
+        $ignorados = 0;
+
+        foreach ($destinos as $empresaDestinoId) {
+            $mapaSegmentos = [];
+            $mapaMarcas = [];
+
+            $resultadoSegmentos = $this->replicarSegmentosCatalogo($segmentosOrigem, $empresaDestinoId, $mapaSegmentos);
+            $resultadoMarcas = $this->replicarMarcasCatalogo($marcasOrigem, $empresaDestinoId, $mapaMarcas);
+            $resultadoModelos = $this->replicarModelosCatalogo($modelosOrigem, $empresaDestinoId, $mapaMarcas, $mapaSegmentos);
+
+            $inseridos += $resultadoSegmentos['inseridos'] + $resultadoMarcas['inseridos'] + $resultadoModelos['inseridos'];
+            $ignorados += $resultadoSegmentos['ignorados'] + $resultadoMarcas['ignorados'] + $resultadoModelos['ignorados'];
+        }
+
+        return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
+    }
+
+    /**
+     * @param iterable<int, object> $segmentosOrigem
+     * @param array<int, int> $mapaSegmentos
+     * @return array{inseridos:int, ignorados:int}
+     */
+    private function replicarSegmentosCatalogo(iterable $segmentosOrigem, int $empresaDestinoId, array &$mapaSegmentos): array
+    {
+        $destinoPorChave = DB::table('segmentos')
+            ->where('empresa_id', $empresaDestinoId)
+            ->get()
+            ->keyBy(fn ($segmento) => $this->chaveSegmentoCatalogo($segmento));
+
+        $inseridos = 0;
+        $ignorados = 0;
+
+        foreach ($segmentosOrigem as $segmentoOrigem) {
+            $chave = $this->chaveSegmentoCatalogo($segmentoOrigem);
+            if ($chave === '') {
+                $ignorados++;
+                continue;
+            }
+
+            $payload = [
+                'nome' => $segmentoOrigem->nome ?? null,
+                'ativo' => $segmentoOrigem->ativo ?? 'S',
+                'empresa_id' => $empresaDestinoId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            $existente = $destinoPorChave->get($chave);
+            if ($existente) {
+                $mapaSegmentos[(int) $segmentoOrigem->id] = (int) $existente->id;
+                $ignorados++;
+                continue;
+            }
+
+            $novoId = (int) DB::table('segmentos')->insertGetId($payload);
+            $mapaSegmentos[(int) $segmentoOrigem->id] = $novoId;
+            $destinoPorChave->put($chave, (object) ['id' => $novoId]);
+            $inseridos++;
+        }
+
+        return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
+    }
+
+    /**
+     * @param iterable<int, object> $marcasOrigem
+     * @param array<int, int> $mapaMarcas
+     * @return array{inseridos:int, ignorados:int}
+     */
+    private function replicarMarcasCatalogo(iterable $marcasOrigem, int $empresaDestinoId, array &$mapaMarcas): array
+    {
+        $destinoPorChave = DB::table('marcas')
+            ->where('empresa_id', $empresaDestinoId)
+            ->get()
+            ->keyBy(fn ($marca) => $this->chaveMarcaCatalogo($marca));
+
+        $inseridos = 0;
+        $ignorados = 0;
+
+        foreach ($marcasOrigem as $marcaOrigem) {
+            $chave = $this->chaveMarcaCatalogo($marcaOrigem);
+            if ($chave === '') {
+                $ignorados++;
+                continue;
+            }
+
+            $payload = [
+                'nome' => $marcaOrigem->nome ?? null,
+                'nome_fipe' => $marcaOrigem->nome_fipe ?? null,
+                'codigo_fipe' => $marcaOrigem->codigo_fipe ?? null,
+                'ativo' => $marcaOrigem->ativo ?? 'S',
+                'empresa_id' => $empresaDestinoId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            $existente = $destinoPorChave->get($chave);
+            if ($existente) {
+                $mapaMarcas[(int) $marcaOrigem->id] = (int) $existente->id;
+                $ignorados++;
+                continue;
+            }
+
+            $novoId = (int) DB::table('marcas')->insertGetId($payload);
+            $mapaMarcas[(int) $marcaOrigem->id] = $novoId;
+            $destinoPorChave->put($chave, (object) ['id' => $novoId]);
+            $inseridos++;
+        }
+
+        return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
+    }
+
+    /**
+     * @param iterable<int, object> $modelosOrigem
+     * @param array<int, int> $mapaMarcas
+     * @param array<int, int> $mapaSegmentos
+     * @return array{inseridos:int, ignorados:int}
+     */
+    private function replicarModelosCatalogo(iterable $modelosOrigem, int $empresaDestinoId, array $mapaMarcas, array $mapaSegmentos): array
+    {
+        $destinoPorChave = DB::table('modelos')
+            ->where('empresa_id', $empresaDestinoId)
+            ->get()
+            ->keyBy(fn ($modelo) => $this->chaveModeloCatalogo($modelo));
+
+        $inseridos = 0;
+        $ignorados = 0;
+        $temSegmento = Schema::hasColumn('modelos', 'segmento_id');
+
+        foreach ($modelosOrigem as $modeloOrigem) {
+            $marcaOrigemId = isset($modeloOrigem->marca_id) ? (int) $modeloOrigem->marca_id : null;
+            $segmentoOrigemId = $temSegmento && isset($modeloOrigem->segmento_id) ? (int) $modeloOrigem->segmento_id : null;
+
+            $marcaDestinoId = $marcaOrigemId !== null ? ($mapaMarcas[$marcaOrigemId] ?? null) : null;
+            $segmentoDestinoId = $segmentoOrigemId !== null ? ($mapaSegmentos[$segmentoOrigemId] ?? null) : null;
+
+            if ($marcaOrigemId !== null && $marcaDestinoId === null) {
+                $ignorados++;
+                continue;
+            }
+
+            if ($temSegmento && $segmentoOrigemId !== null && $segmentoDestinoId === null) {
+                $ignorados++;
+                continue;
+            }
+
+            $payload = [
+                'nome' => $modeloOrigem->nome ?? null,
+                'nome_fipe' => $modeloOrigem->nome_fipe ?? null,
+                'codigo_fipe' => $modeloOrigem->codigo_fipe ?? null,
+                'imagem' => $modeloOrigem->imagem ?? null,
+                'ativo' => $modeloOrigem->ativo ?? 'S',
+                'marca_id' => $marcaDestinoId,
+                'empresa_id' => $empresaDestinoId,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            if ($temSegmento) {
+                $payload['segmento_id'] = $segmentoDestinoId;
+            }
+
+            $chave = $this->chaveModeloCatalogo($payload);
+            if ($chave === '') {
+                $ignorados++;
+                continue;
+            }
+
+            $existente = $destinoPorChave->get($chave);
+            if ($existente) {
+                $ignorados++;
+                continue;
+            }
+
+            $novoId = (int) DB::table('modelos')->insertGetId($payload);
+            $destinoPorChave->put($chave, (object) ['id' => $novoId]);
+            $inseridos++;
+        }
+
+        return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
+    }
+
+    private function normalizarChaveCatalogo(mixed $valor): string
+    {
+        $texto = trim((string) $valor);
+        if ($texto === '') {
+            return '';
+        }
+
+        $texto = Str::ascii(mb_strtolower($texto));
+        $texto = preg_replace('/\s+/u', ' ', $texto);
+
+        return trim((string) $texto);
+    }
+
+    private function chaveSegmentoCatalogo(mixed $row): string
+    {
+        $nome = $this->normalizarChaveCatalogo(data_get($row, 'nome'));
+
+        return $nome === '' ? '' : 'nome:' . $nome;
+    }
+
+    private function chaveMarcaCatalogo(mixed $row): string
+    {
+        $codigoFipe = $this->normalizarChaveCatalogo(data_get($row, 'codigo_fipe'));
+        if ($codigoFipe !== '') {
+            return 'codigo:' . $codigoFipe;
+        }
+
+        $nomeFipe = $this->normalizarChaveCatalogo(data_get($row, 'nome_fipe'));
+        if ($nomeFipe !== '') {
+            return 'nome_fipe:' . $nomeFipe;
+        }
+
+        $nome = $this->normalizarChaveCatalogo(data_get($row, 'nome'));
+
+        return $nome === '' ? '' : 'nome:' . $nome;
+    }
+
+    private function chaveModeloCatalogo(mixed $row): string
+    {
+        $codigoFipe = $this->normalizarChaveCatalogo(data_get($row, 'codigo_fipe'));
+        if ($codigoFipe !== '') {
+            return 'codigo:' . $codigoFipe;
+        }
+
+        $nomeFipe = $this->normalizarChaveCatalogo(data_get($row, 'nome_fipe'));
+        if ($nomeFipe !== '') {
+            return 'nome_fipe:' . $nomeFipe
+                . '|marca:' . (data_get($row, 'marca_id') ?? 'null')
+                . '|segmento:' . (data_get($row, 'segmento_id') ?? 'null');
+        }
+
+        $nome = $this->normalizarChaveCatalogo(data_get($row, 'nome'));
+
+        return $nome === '' ? '' : 'nome:' . $nome
+            . '|marca:' . (data_get($row, 'marca_id') ?? 'null')
+            . '|segmento:' . (data_get($row, 'segmento_id') ?? 'null');
     }
 
     /**
