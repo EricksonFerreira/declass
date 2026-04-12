@@ -582,6 +582,7 @@
             border-left: 1px solid rgba(255,255,255,0.08);
             display: flex;
             align-items: stretch;
+            min-width: 0;
         }
 
         .booking-form {
@@ -590,6 +591,7 @@
             display: flex;
             flex-direction: column;
             gap: 0;
+            min-width: 0;
         }
 
         .booking-form-title {
@@ -615,12 +617,14 @@
             grid-template-columns: 1fr 1fr;
             gap: 12px 14px;
             margin-bottom: 10px;
+            width: 100%;
         }
 
         .field {
             display: flex;
             flex-direction: column;
             gap: 5px;
+            min-width: 0;
         }
 
         .field-full { grid-column: 1 / -1; }
@@ -646,6 +650,9 @@
             border-radius: 10px;
             min-height: 44px;
             padding: 10px 13px;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
             font-family: inherit;
             font-size: .88rem;
             color: var(--ink);
@@ -664,6 +671,9 @@
             border-radius: 10px;
             border: 1.5px solid var(--line);
             min-height: 44px;
+            width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
             background: #fff;
             font-size: .88rem;
             padding: 5px 10px;
@@ -1403,9 +1413,9 @@
             <div class="hero-inner">
 
                 <div class="hero-content reveal d1">
-                    @if(!empty($heroTag))
+                    {{-- @if(!empty($heroTag))
                         <span class="hero-tag">{{ $heroTag }}</span>
-                    @endif
+                    @endif --}}
 
                     <h1 class="hero-title">{{ $titulo }}</h1>
 
@@ -1449,7 +1459,7 @@
                                 <div class="field field-full">
                                     <label for="retirada">{{ $heroFormLabelRetirada }}</label>
                                     <select id="retirada" name="retirada">
-                                        <option value="">Selecione uma estacao</option>
+                                        <option value="">Selecione uma estação</option>
                                         @foreach($estacoesRetirada as $estacao_id => $nome)
                                             <option value="{{ $estacao_id }}">{{ $nome }}</option>
                                         @endforeach
@@ -1471,9 +1481,9 @@
                                 </div>
 
                                 <div class="field field-full" id="devolucaoField">
-                                    <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolucao' }}</label>
+                                    <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolução' }}</label>
                                     <select id="devolucao" name="devolucao">
-                                        <option value="">Selecione uma estacao</option>
+                                        <option value="">Selecione uma estação</option>
                                         @foreach($estacoesDevolucao as  $estacao_id => $nome)
                                             <option value="{{ $estacao_id }}">{{ $nome }}</option>
                                         @endforeach
@@ -1803,7 +1813,7 @@
                 const devolDate    = dataDevolucao.value ? new Date(`${dataDevolucao.value}T00:00:00`) : null;
 
                 if (retiradaDate && retiradaDate < today) {
-                    dataRetirada.setCustomValidity('A retirada nao pode ser antes de hoje.');
+                    dataRetirada.setCustomValidity('A retirada não pode ser antes de hoje.');
                     dataRetirada.reportValidity();
                     return false;
                 }
@@ -1812,7 +1822,7 @@
                 if (retiradaDate && retiradaDate.getTime() === today.getTime() && horaRetirada.value) {
                     const dt = new Date(`${dataRetirada.value}T${horaRetirada.value}`);
                     if (dt < now) {
-                        horaRetirada.setCustomValidity('A hora de retirada nao pode ser no passado.');
+                        horaRetirada.setCustomValidity('A hora de retirada não pode ser no passado.');
                         horaRetirada.reportValidity();
                         return false;
                     }
@@ -1822,7 +1832,7 @@
                 if (dataRetirada.value && dataDevolucao.value) {
                     const minDevol = addDays(new Date(`${dataRetirada.value}T00:00:00`), 1);
                     if (devolDate < minDevol) {
-                        dataDevolucao.setCustomValidity('A devolucao deve ser ao menos 1 dia apos a retirada.');
+                        dataDevolucao.setCustomValidity('A devolução deve ser ao menos 1 dia após a retirada.');
                         dataDevolucao.reportValidity();
                         return false;
                     }
@@ -2201,11 +2211,11 @@
                     if (!sel) return;
                     new window.Choices(sel, {
                         searchEnabled: true,
-                        searchPlaceholderValue: 'Buscar estacao...',
+                        searchPlaceholderValue: 'Buscar estação...',
                         itemSelectText: '',
                         shouldSort: false,
-                        noResultsText: 'Nenhuma estacao encontrada',
-                        noChoicesText: 'Nenhuma estacao disponivel'
+                        noResultsText: 'Nenhuma estação encontrada',
+                        noChoicesText: 'Nenhuma estação disponível'
                     });
                 });
             }

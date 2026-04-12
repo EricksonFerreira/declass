@@ -56,9 +56,9 @@ class SiteApresentacaoController extends Controller
             'empresa' => $empresa,
             'modelo' => $modelo,
             'heroTag' => $this->textValue($textos, 'hero_tag', 'Modelo 1 - Premium Locadora'),
-            'titulo' => $this->textValue($textos, 'hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veiculos com praticidade e seguranca'),
-            'subtitulo' => $this->textValue($textos, 'hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rapido e viaje com cobertura nacional.'),
-            'descricao' => $this->textValue($textos, 'hero_descricao', $empresa->site_apresentacao_descricao ?: 'Planos diarios, semanais e mensais para pessoas fisicas e empresas.'),
+            'titulo' => $this->textValue($textos, 'hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veículos com praticidade e segurança'),
+            'subtitulo' => $this->textValue($textos, 'hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rápido e viaje com cobertura nacional.'),
+            'descricao' => $this->textValue($textos, 'hero_descricao', $empresa->site_apresentacao_descricao ?: 'Planos diários, semanais e mensais para pessoas físicas e empresas.'),
             'botaoTexto' => $empresa->site_apresentacao_botao_texto ?: 'Reservar agora',
             'botaoUrl' => $urlReserva,
             'botaoLoginUrl' => $urlAdminEntrada,
@@ -93,28 +93,28 @@ class SiteApresentacaoController extends Controller
             'menuItemContato' => $this->textValue($textos, 'menu_item_contato', 'Contato'),
             'frotaTitulo' => $this->textValue($textos, 'frota_titulo', 'Categorias para cada tipo de viagem'),
             'frotaLabelSuperior' => $this->textValue($textos, 'frota_label_superior', 'Frota em destaque'),
-            'frotaDescricao' => $this->textValue($textos, 'frota_descricao', 'Selecione o grupo ideal e reserve com condicoes ajustadas ao seu perfil, seja turismo, trabalho ou locacao corporativa.'),
+            'frotaDescricao' => $this->textValue($textos, 'frota_descricao', 'Selecione o grupo ideal e reserve com condições ajustadas ao seu perfil, seja turismo, trabalho ou locação corporativa.'),
             'frotaDestaques' => $frotaDestaques,
             'vantagensTitulo' => $this->textValue($textos, 'vantagens_titulo', 'Por que escolher ' . $empresa->nome),
             'vantagensLabelSuperior' => $this->textValue($textos, 'vantagens_label_superior', 'Diferenciais'),
-            'vantagensDescricao' => $this->textValue($textos, 'vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado, com foco em conversao, credibilidade e rapidez no atendimento.'),
+            'vantagensDescricao' => $this->textValue($textos, 'vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado, com foco em conversão, credibilidade e rapidez no atendimento.'),
             'beneficios' => $this->beneficios($textos),
-            'etapasTitulo' => $this->textValue($textos, 'etapas_titulo', 'Como funciona a locacao'),
+            'etapasTitulo' => $this->textValue($textos, 'etapas_titulo', 'Como funciona a locação'),
             'etapasLabelSuperior' => $this->textValue($textos, 'etapas_label_superior', 'Jornada do cliente'),
             'etapasReserva' => $this->etapasReserva($textos),
-            'contatoTitulo' => $this->textValue($textos, 'contato_titulo', 'Informacoes da locadora'),
+            'contatoTitulo' => $this->textValue($textos, 'contato_titulo', 'Informações da locadora'),
             'contatoLabelSuperior' => $this->textValue($textos, 'contato_label_superior', 'Contato direto'),
             'heroFormTitulo' => $this->textValue($textos, 'hero_form_titulo', 'Simule sua reserva'),
             'heroFormDescricao' => $this->textValue($textos, 'hero_form_descricao', 'Preencha os dados da viagem e siga para a reserva completa em passos.'),
             'heroFormLabelRetirada' => $this->textValue($textos, 'hero_form_label_retirada', 'Local de retirada'),
-            'heroFormLabelDevolucao' => $this->textValue($textos, 'hero_form_label_devolucao', 'Local de devolucao'),
+            'heroFormLabelDevolucao' => $this->textValue($textos, 'hero_form_label_devolucao', 'Local de devolução'),
             'heroFormLabelDataRetirada' => $this->textValue($textos, 'hero_form_label_data_retirada', 'Data de retirada'),
             'heroFormLabelHoraRetirada' => $this->textValue($textos, 'hero_form_label_hora_retirada', 'Hora de retirada'),
-            'heroFormLabelDataDevolucao' => $this->textValue($textos, 'hero_form_label_data_devolucao', 'Data de devolucao'),
-            'heroFormLabelHoraDevolucao' => $this->textValue($textos, 'hero_form_label_hora_devolucao', 'Hora de devolucao'),
+            'heroFormLabelDataDevolucao' => $this->textValue($textos, 'hero_form_label_data_devolucao', 'Data de devolução'),
+            'heroFormLabelHoraDevolucao' => $this->textValue($textos, 'hero_form_label_hora_devolucao', 'Hora de devolução'),
             'heroFormTextoBotao' => $this->textValue($textos, 'hero_form_texto_botao', 'Iniciar reserva'),
-            'heroFormNota' => $this->textValue($textos, 'hero_form_nota', 'Ao avancar, voce segue para o fluxo completo de reserva da locadora.'),
-            'botaoAdminTexto' => $this->textValue($textos, 'botao_admin_texto', 'Area administrativa'),
+            'heroFormNota' => $this->textValue($textos, 'hero_form_nota', 'Ao avançar, você segue para o fluxo completo de reserva da locadora.'),
+            'botaoAdminTexto' => $this->textValue($textos, 'botao_admin_texto', 'Área administrativa'),
             'footerTexto' => $this->textValue($textos, 'footer_texto', 'Todos os direitos reservados.'),
             'imagemHero' => $this->imageUrl($imagens, 'hero', $this->imageEnabled($imagensConfig, 'hero')),
             'imagemVantagens' => $this->imageUrl($imagens, 'vantagens', $this->imageEnabled($imagensConfig, 'vantagens')),
@@ -203,13 +203,13 @@ class SiteApresentacaoController extends Controller
     {
         return [
             [
-                'titulo' => $this->textValue($textos, 'frota_card_1_titulo', 'Economicos Urbanos'),
+                'titulo' => $this->textValue($textos, 'frota_card_1_titulo', 'Econômicos Urbanos'),
                 'descricao' => $this->textValue($textos, 'frota_card_1_descricao', 'Carros compactos com baixo consumo para o dia a dia e viagens curtas.'),
                 'imagem' => $this->imageUrl($imagens, 'frota_1', $this->imageEnabled($imagensConfig, 'frota_1')),
             ],
             [
-                'titulo' => $this->textValue($textos, 'frota_card_2_titulo', 'SUV e Familia'),
-                'descricao' => $this->textValue($textos, 'frota_card_2_descricao', 'Mais espaco, conforto e seguranca para viagens com bagagens e familia.'),
+                'titulo' => $this->textValue($textos, 'frota_card_2_titulo', 'SUV e Família'),
+                'descricao' => $this->textValue($textos, 'frota_card_2_descricao', 'Mais espaço, conforto e segurança para viagens com bagagens e família.'),
                 'imagem' => $this->imageUrl($imagens, 'frota_2', $this->imageEnabled($imagensConfig, 'frota_2')),
             ],
             [
@@ -251,9 +251,9 @@ class SiteApresentacaoController extends Controller
     private function beneficios(array $textos): array
     {
         return [
-            $this->textValue($textos, 'beneficio_1', 'Retirada agil com pre-cadastro online'),
+            $this->textValue($textos, 'beneficio_1', 'Retirada ágil com pré-cadastro online'),
             $this->textValue($textos, 'beneficio_2', 'Protecoes e adicionais sob medida'),
-            $this->textValue($textos, 'beneficio_3', 'Atendimento para pessoa fisica e empresas'),
+            $this->textValue($textos, 'beneficio_3', 'Atendimento para pessoa física e empresas'),
             $this->textValue($textos, 'beneficio_4', 'Frota revisada e higienizada regularmente'),
         ];
     }
@@ -263,7 +263,7 @@ class SiteApresentacaoController extends Controller
         return [
             [
                 'titulo' => $this->textValue($textos, 'etapa_1_titulo', 'Escolha local e datas'),
-                'descricao' => $this->textValue($textos, 'etapa_1_descricao', 'Informe onde deseja retirar e devolver o veiculo no formulario de reserva.'),
+                'descricao' => $this->textValue($textos, 'etapa_1_descricao', 'Informe onde deseja retirar e devolver o veículo no formulário de reserva.'),
             ],
             [
                 'titulo' => $this->textValue($textos, 'etapa_2_titulo', 'Selecione o grupo ideal'),
