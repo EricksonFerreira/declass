@@ -664,6 +664,12 @@ return [
             'can'   => 'gerenciar-empresa',
         ],
         [
+            'text'  => 'Sincronizar catálogo FIPE',
+            'route' => 'fipe.catalogo.run',
+            'icon'  => 'fas fa-car',
+            'can'   => 'gerenciar-empresa',
+        ],
+        [
             'text' => 'sidebar.termo_consentimento',
             'url'  => 'termo_consentimento',
             'icon' => 'fas fa-file-signature',

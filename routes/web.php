@@ -8,6 +8,7 @@ use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\PowerBIController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\FipeCatalogController;
 use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\SiteApresentacaoController;
 use App\Http\Controllers\SiteReservaController;
@@ -81,6 +82,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     // Protegida por middleware auth + can:gerenciar-empresa. Opcional: defina APP_MIGRATION_ROUTE_TOKEN para usar ?token=SECRET
     Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function () {
         Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
+        Route::get('fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('fipe.catalogo.run');
     });
 
     require __DIR__ . '/auth.php';
@@ -136,8 +138,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::post('empresa-contexto', [EmpresaContextController::class, 'update'])->name('empresa_context.update');
     });
 
-    Route::get('/powerbi/reports', [PowerBIController::class, 'listReports']);
-    Route::get('/powerbi/report/{reportId}', [PowerBIController::class, 'showReport'])->name('powerbi.report');
+    // Route::get('/powerbi/reports', [PowerBIController::class, 'listReports']);
+    // Route::get('/powerbi/report/{reportId}', [PowerBIController::class, 'showReport'])->name('powerbi.report');
 
     Route::middleware('api')->group(function (): void {
         require base_path('routes/grupos/status_reserva.php');
