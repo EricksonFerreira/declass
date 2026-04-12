@@ -1,4 +1,4 @@
-
+﻿
 @php
     $corPrimaria = $empresa->cor_primaria ?: '#1f4f7a';
     $corSecundaria = $empresa->cor_secundaria ?: '#14324d';
@@ -232,7 +232,7 @@
                             <label for="estacao_retirada_id">Estacao de retirada</label>
                             <select id="estacao_retirada_id" name="estacao_retirada_id" required>
                                 <option value="">Selecione...</option>
-                                @foreach($estacoes as $estacao)
+                        @foreach($estacoesRetirada ?? $estacoes as $estacao)
                                     <option value="{{ $estacao['id'] }}" {{ (string) old('estacao_retirada_id', $prefill['estacao_retirada_id'] ?? '') === (string) $estacao['id'] ? 'selected' : '' }}>
                                         {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' - ' . $estacao['cidade'] : '' }}
                                     </option>
@@ -243,12 +243,13 @@
                             <label for="estacao_devolucao_id">Estacao de devolucao</label>
                             <select id="estacao_devolucao_id" name="estacao_devolucao_id" required>
                                 <option value="">Selecione...</option>
-                                @foreach($estacoes as $estacao)
+                        @foreach($estacoesDevolucao ?? $estacoes as $estacao)
                                     <option value="{{ $estacao['id'] }}" {{ (string) old('estacao_devolucao_id', $prefill['estacao_devolucao_id'] ?? '') === (string) $estacao['id'] ? 'selected' : '' }}>
                                         {{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' - ' . $estacao['cidade'] : '' }}
                                     </option>
                                 @endforeach
                             </select>
+                            <small class="text-muted" id="estacao_devolucao_feedback">Se a estação de retirada também aceitar checkout, a devolução será ajustada automaticamente.</small>
                         </div>
                         <div class="field">
                             <label for="picker_data_inicio">Data de retirada</label>
@@ -316,7 +317,7 @@
                                                 @if(!empty($caracteristica['imagem_url']))
                                                     <img src="{{ $caracteristica['imagem_url'] }}" alt="{{ $caracteristica['nome'] }}">
                                                 @else
-                                                    <span>•</span>
+                                                    <span>â€¢</span>
                                                 @endif
                                             </span>
                                             <span>{{ $caracteristica['nome'] }}{{ $caracteristica['valor'] !== '' ? ': ' . $caracteristica['valor'] : '' }}</span>
@@ -558,6 +559,7 @@
             const clientCadastroPanel = document.getElementById('clientCadastroPanel');
             const clientCadastroFields = document.querySelectorAll('#clientCadastroFields input, #clientCadastroFields select, #clientCadastroFields textarea');
             const clientFeedback = document.getElementById('clientFeedback');
+            const estacaoDevolucaoFeedback = document.getElementById('estacao_devolucao_feedback');
             const modoInput = document.getElementById('modo_cliente');
             const usarUsuarioLogadoInput = document.getElementById('usar_usuario_logado');
             let clientMode = isAuth ? 'login' : 'cadastro';
@@ -621,6 +623,13 @@
             function selectedModeloCard() {
                 if (!modelosGrid) return null;
                 return modelosGrid.querySelector(`.modelo-card[data-modelo-id="${modelo.value}"]`);
+            }
+            function estacaoPodeSerDevolucao(estacaoId) {
+                if (!estacaoId) {
+                    return false;
+                }
+
+                return $('#estacao_devolucao_id option[value="' + estacaoId + '"]').length > 0;
             }
             function highlightGrupo() {
                 if (!gruposGrid) {
@@ -1054,12 +1063,41 @@
             }
 
             let pickerInicio = null, pickerFim = null;
-            let diasIndisponiveisInicio = [], diasIndisponiveisFim = [];
+
+            function obterDataHojeIso() {
+                return flatpickr.formatDate(new Date(), 'Y-m-d');
+            }
+
+            function fetchDiasRetiradaDisponiveis(estacaoId) {
+                return fetch(`${diasDisponiveisUrl}?estacao_id=${estacaoId}&dias=90&tipo=retirada`)
+                    .then(r => r.json())
+                    .then(function(data) {
+                        return Array.isArray(data.dias_disponiveis) ? data.dias_disponiveis : [];
+                    });
+            }
+
+            function fetchDiasDevolucaoDisponiveis(estacaoId) {
+                const params = new URLSearchParams({
+                    estacao_id: estacaoId,
+                    tipo: 'devolucao',
+                    data_base: obterDataHojeIso(),
+                    limite: 90,
+                });
+
+                return fetch(`${agendaUrl}?${params.toString()}`)
+                    .then(r => r.json())
+                    .then(function(data) {
+                        const agenda = Array.isArray(data.agenda) ? data.agenda : [];
+                        return agenda.map(function(item) {
+                            return item && item.date ? { data: item.date, label: item.label || item.date } : null;
+                        }).filter(Boolean);
+                    });
+            }
 
             function criarPickerInicio(estacaoId) {
-                fetch(`${diasDisponiveisUrl}?estacao_id=${estacaoId}&dias=90&tipo=retirada`)
-                    .then(r => r.json()).then(function(data) {
-                        const dispSet = new Set((data.dias_disponiveis || []).map(x => x.data || x));
+                fetchDiasRetiradaDisponiveis(estacaoId)
+                    .then(function(disponiveis) {
+                        const dispSet = new Set((disponiveis || []).map(x => x.data || x));
                         const disable = [function(date) {
                             const s = flatpickr.formatDate(date, 'Y-m-d');
                             return !dispSet.has(s);
@@ -1085,9 +1123,9 @@
             }
 
             function criarPickerFim(estacaoId) {
-                fetch(`${diasDisponiveisUrl}?estacao_id=${estacaoId}&dias=90&tipo=devolucao`)
-                    .then(r => r.json()).then(function(data) {
-                        const dispSet = new Set((data.dias_disponiveis || []).map(x => x.data || x));
+                fetchDiasDevolucaoDisponiveis(estacaoId)
+                    .then(function(disponiveis) {
+                        const dispSet = new Set((disponiveis || []).map(x => x.data || x));
                         const disable = [function(date) {
                             const s = flatpickr.formatDate(date, 'Y-m-d');
                             return !dispSet.has(s);
@@ -1114,9 +1152,10 @@
             function carregarHorariosInicio(estacaoId, data) {
                 const sel = document.getElementById('hora_inicio');
                 sel.innerHTML = '<option value="">Carregando...</option>';
-                fetch(`${agendaUrl}?estacao_id=${estacaoId}&data=${data}&limite=1`)
+                fetch(`${agendaUrl}?estacao_id=${estacaoId}&tipo=retirada&data_base=${data}&limite=1`)
                     .then(r => r.json()).then(function(d) {
-                        const slots = d.slots || d.horarios || [];
+                        const agenda = Array.isArray(d.agenda) ? d.agenda : [];
+                        const slots = agenda[0]?.slots || [];
                         sel.innerHTML = '<option value="">Selecione o horario...</option>';
                         if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return; }
                         slots.forEach(function(s) {
@@ -1139,9 +1178,10 @@
             function carregarHorariosFim(estacaoId, data) {
                 const sel = document.getElementById('hora_fim');
                 sel.innerHTML = '<option value="">Carregando...</option>';
-                fetch(`${agendaUrl}?estacao_id=${estacaoId}&data=${data}&limite=1`)
+                fetch(`${agendaUrl}?estacao_id=${estacaoId}&tipo=devolucao&data_base=${data}&limite=1`)
                     .then(r => r.json()).then(function(d) {
-                        const slots = d.slots || d.horarios || [];
+                        const agenda = Array.isArray(d.agenda) ? d.agenda : [];
+                        const slots = agenda[0]?.slots || [];
                         sel.innerHTML = '<option value="">Selecione o horario...</option>';
                         if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return; }
                         slots.forEach(function(s) {
@@ -1193,7 +1233,7 @@
                 onDateHoraChanged();
             });
 
-            document.getElementById('estacao_retirada_id').addEventListener('change', function () {
+                document.getElementById('estacao_retirada_id').addEventListener('change', function () {
                 const estId = this.value;
                 state.taxaColeta = 0;
                 document.getElementById('taxa_aviso_inicio').classList.remove('visible');
@@ -1202,6 +1242,19 @@
                 dataInicio.value = '';
                 if (pickerInicio) { pickerInicio.clear(); }
                 if (estId) criarPickerInicio(estId);
+                if (estacaoPodeSerDevolucao(estId)) {
+                    const $devolucao = $('#estacao_devolucao_id');
+                    if (String($devolucao.val() || '') !== String(estId)) {
+                        $devolucao.val(estId).trigger('change');
+                    } else {
+                        $devolucao.trigger('change');
+                    }
+                    if (estacaoDevolucaoFeedback) {
+                        estacaoDevolucaoFeedback.textContent = 'Devolução ajustada automaticamente para a mesma estação, pois ela aceita checkout.';
+                    }
+                } else if (estacaoDevolucaoFeedback) {
+                    estacaoDevolucaoFeedback.textContent = 'Selecione uma estação de devolução disponível.';
+                }
                 refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade();
             });
             document.getElementById('estacao_devolucao_id').addEventListener('change', function () {
@@ -1213,6 +1266,11 @@
                 dataFim.value = '';
                 if (pickerFim) { pickerFim.clear(); }
                 if (estId) criarPickerFim(estId);
+                if (estacaoDevolucaoFeedback) {
+                    estacaoDevolucaoFeedback.textContent = estId
+                        ? 'Selecione a data de devolução. A hora será carregada de acordo com o expediente da estação.'
+                        : 'Se a estação de retirada também aceitar checkout, a devolução será ajustada automaticamente.';
+                }
                 refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade();
             });
             grupo.addEventListener('change', function () {
@@ -1306,6 +1364,9 @@
                 else { pickerInicio = flatpickr('#picker_data_inicio', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0]||null; syncHiddenInicio(); onDateHoraChanged(); } }); }
                 if (estDev) criarPickerFim(estDev);
                 else { pickerFim = flatpickr('#picker_data_fim', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0]||null; syncHiddenFim(); onDateHoraChanged(); } }); }
+                if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
+                    $('#estacao_devolucao_id').val(estRet).trigger('change');
+                }
                 // Restore from old() values if present
                 const oldInicio = dataInicio.value;
                 const oldFim = dataFim.value;
@@ -1450,3 +1511,4 @@
     </script>
 </body>
 </html>
+

@@ -67,7 +67,8 @@ class SiteReservaController extends Controller
 
         $this->activateEmpresaContext($empresa);
 
-        $estacoes = $this->estacoesForEmpresa();
+        $estacoesRetirada = $this->estacoesForEmpresa('checkin');
+        $estacoesDevolucao = $this->estacoesForEmpresa('checkout');
         $gruposFrota = $this->gruposFrotaAtivos();
         $paises = $this->paisService->getAllForSelectSigla();
         $moedaEmpresa = strtoupper($this->gatewayEmpresaConfigService->moeda($empresa));
@@ -75,7 +76,9 @@ class SiteReservaController extends Controller
 
         return view('site-apresentacao.reserva', [
             'empresa' => $empresa,
-            'estacoes' => $estacoes,
+            'estacoes' => $estacoesRetirada,
+            'estacoesRetirada' => $estacoesRetirada,
+            'estacoesDevolucao' => $estacoesDevolucao,
             'gruposFrota' => $gruposFrota,
             'paises' => $paises,
             'moedaEmpresa' => $moedaEmpresa,
@@ -1279,17 +1282,32 @@ class SiteReservaController extends Controller
         app(EmpresaContext::class)->setEmpresaId((int) $empresa->id);
     }
 
-    private function estacoesForEmpresa(): array
+    private function estacoesForEmpresa(?string $tipoOperacao = null): array
     {
-        return Estacao::query()
+        $query = Estacao::query()
             ->where('ativo', 'S')
-            ->orderBy('nome')
-            ->get(['id', 'nome', 'cidade'])
+            ->orderBy('nome');
+
+        if ($tipoOperacao === 'checkin' && Schema::hasColumn('estacoes', 'checkin')) {
+            $query->where(function ($subQuery) {
+                $subQuery->where('checkin', 'S')->orWhere('checkin', 1);
+            });
+        }
+
+        if ($tipoOperacao === 'checkout' && Schema::hasColumn('estacoes', 'checkout')) {
+            $query->where(function ($subQuery) {
+                $subQuery->where('checkout', 'S')->orWhere('checkout', 1);
+            });
+        }
+
+        return $query->get(['id', 'nome', 'cidade', 'checkin', 'checkout'])
             ->map(function (Estacao $estacao): array {
                 return [
                     'id' => (int) $estacao->id,
                     'nome' => (string) $estacao->nome,
                     'cidade' => (string) ($estacao->cidade ?? ''),
+                    'checkin' => (string) ($estacao->checkin ?? 'N'),
+                    'checkout' => (string) ($estacao->checkout ?? 'N'),
                 ];
             })
             ->values()

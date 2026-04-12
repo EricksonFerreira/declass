@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\Estacao;
+use App\Services\EstacaoService;
 use App\Support\DomainNormalizer;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -13,9 +14,16 @@ use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
+
 class SiteApresentacaoController extends Controller
 {
     private const MODELO_1 = 'modelo_1';
+    protected $estacaoService;
+
+    public function __construct(EstacaoService $estacaoService)
+    {
+        $this->estacaoService = $estacaoService;
+    }
 
     public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
@@ -34,7 +42,8 @@ class SiteApresentacaoController extends Controller
         $corSecundaria = $this->colorValue($cores, 'brand_secundaria', $empresa->cor_secundaria ?: '#193C68');
         $corTerciaria = $this->colorValue($cores, 'brand_terciaria', $empresa->cor_terciaria ?: '#E7B93A');
         $imagensConfig = is_array($empresa->site_apresentacao_imagens_config) ? $empresa->site_apresentacao_imagens_config : [];
-        $estacoesSelect = $this->estacoesForEmpresa($empresa);
+        $estacoesRetirada = $this->estacaoService->getEstacoesParaRetiradaSelect();
+        $estacoesDevolucao = $this->estacaoService->getEstacoesParaDevolucaoSelect();
         $frotaDestaques = $this->frotaDestaques($textos, $imagens, $imagensConfig);
         $urlReserva = Route::has('site.reserva.index')
             ? route('site.reserva.index')
@@ -110,7 +119,8 @@ class SiteApresentacaoController extends Controller
             'imagemHero' => $this->imageUrl($imagens, 'hero', $this->imageEnabled($imagensConfig, 'hero')),
             'imagemVantagens' => $this->imageUrl($imagens, 'vantagens', $this->imageEnabled($imagensConfig, 'vantagens')),
             'imagemContato' => $this->imageUrl($imagens, 'contato', $this->imageEnabled($imagensConfig, 'contato')),
-            'estacoesSelect' => $estacoesSelect,
+            'estacoesRetirada' => $estacoesRetirada,
+            'estacoesDevolucao' => $estacoesDevolucao,
         ]);
     }
 

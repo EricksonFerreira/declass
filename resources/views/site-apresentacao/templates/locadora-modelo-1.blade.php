@@ -9,6 +9,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,700;0,800;0,900;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         /* ══════════════════════════════════════════
            TOKENS
@@ -612,7 +613,7 @@
         .field-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 12px 14px;
             margin-bottom: 10px;
         }
 
@@ -623,6 +624,13 @@
         }
 
         .field-full { grid-column: 1 / -1; }
+
+        .field small {
+            display: block;
+            min-height: 18px;
+            line-height: 1.3;
+            color: var(--ink-2);
+        }
 
         .field label {
             font-size: .72rem;
@@ -1442,47 +1450,49 @@
                                     <label for="retirada">{{ $heroFormLabelRetirada }}</label>
                                     <select id="retirada" name="retirada">
                                         <option value="">Selecione uma estacao</option>
-                                        @foreach($estacoesSelect as $estacao)
-                                            <option value="{{ $estacao['id'] }}">{{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' — ' . $estacao['cidade'] : '' }}</option>
+                                        @foreach($estacoesRetirada as $estacao_id => $nome)
+                                            <option value="{{ $estacao_id }}">{{ $nome }}</option>
                                         @endforeach
                                     </select>
                                 </div>
 
                                 <div class="field">
                                     <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
-                                    <input id="data_retirada" name="data_retirada" type="date">
+                                    <input id="data_retirada" name="data_retirada" type="text" readonly placeholder="Selecione a data">
+                                    <small class="text-muted" id="data_retirada_feedback">Selecione uma estação de retirada para ver os dias disponíveis.</small>
                                 </div>
 
                                 <div class="field">
                                     <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
-                                    <input id="hora_retirada" name="hora_retirada" type="time">
-                                </div>
-
-                                <div class="field field-full">
-                                    <div class="toggle-row">
-                                        <input type="checkbox" id="mesmo_local" name="mesmo_local" checked>
-                                        <label for="mesmo_local">Devolver no mesmo local de retirada</label>
-                                    </div>
+                                    <select id="hora_retirada" name="hora_retirada" disabled>
+                                        <option value="">Selecione a data</option>
+                                    </select>
+                                    <small class="text-muted" id="hora_retirada_feedback">Escolha uma data para ver os horários disponíveis.</small>
                                 </div>
 
                                 <div class="field field-full" id="devolucaoField">
                                     <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolucao' }}</label>
                                     <select id="devolucao" name="devolucao">
                                         <option value="">Selecione uma estacao</option>
-                                        @foreach($estacoesSelect as $estacao)
-                                            <option value="{{ $estacao['id'] }}">{{ $estacao['nome'] }}{{ $estacao['cidade'] !== '' ? ' — ' . $estacao['cidade'] : '' }}</option>
+                                        @foreach($estacoesDevolucao as  $estacao_id => $nome)
+                                            <option value="{{ $estacao_id }}">{{ $nome }}</option>
                                         @endforeach
                                     </select>
+                                    <small class="text-muted" id="devolucao_feedback">Selecione uma estação de devolução.</small>
                                 </div>
 
                                 <div class="field">
                                     <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
-                                    <input id="data_devolucao" name="data_devolucao" type="date">
+                                    <input id="data_devolucao" name="data_devolucao" type="text" readonly placeholder="Selecione a data">
+                                    <small class="text-muted" id="data_devolucao_feedback">Selecione uma estação de devolução para ver os dias disponíveis.</small>
                                 </div>
 
                                 <div class="field">
                                     <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
-                                    <input id="hora_devolucao" name="hora_devolucao" type="time">
+                                    <select id="hora_devolucao" name="hora_devolucao" disabled>
+                                        <option value="">Selecione a data</option>
+                                    </select>
+                                    <small class="text-muted" id="hora_devolucao_feedback">Escolha uma data para ver os horários disponíveis.</small>
                                 </div>
                             </div>
 
@@ -1720,16 +1730,28 @@
             });
         })();
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script>
         (function () {
             const retiradaSelect  = document.getElementById('retirada');
             const devolucaoSelect = document.getElementById('devolucao');
             const devolucaoField  = document.getElementById('devolucaoField');
-            const mesmoLocal      = document.getElementById('mesmo_local');
             const dataRetirada    = document.getElementById('data_retirada');
             const horaRetirada    = document.getElementById('hora_retirada');
             const dataDevolucao   = document.getElementById('data_devolucao');
+            const horaDevolucao   = document.getElementById('hora_devolucao');
             const form            = dataRetirada?.closest('form');
+            const diasDisponiveisUrl = @json(route('reserva.diasSemDisponibilidade'));
+            const agendaUrl = @json(route('reserva.agendaDisponivelPorEstacao'));
+            const dataRetiradaFeedback = document.getElementById('data_retirada_feedback');
+            const horaRetiradaFeedback = document.getElementById('hora_retirada_feedback');
+            const dataDevolucaoFeedback = document.getElementById('data_devolucao_feedback');
+            const horaDevolucaoFeedback = document.getElementById('hora_devolucao_feedback');
+            const devolucaoFeedback = document.getElementById('devolucao_feedback');
+            const eventoChange = new Event('change', { bubbles: true });
+            let pickerRetirada = null;
+            let pickerDevolucao = null;
 
             function toLocalDateInput(date) {
                 const y = date.getFullYear();
@@ -1809,17 +1831,369 @@
                 return true;
             }
 
-            function syncDevolucao() {
-                if (!devolucaoField || !devolucaoSelect || !mesmoLocal) return;
-                const hide = mesmoLocal.checked;
-                devolucaoField.style.display = hide ? 'none' : 'block';
-                devolucaoSelect.disabled     = hide;
-                if (hide && retiradaSelect?.value) devolucaoSelect.value = retiradaSelect.value;
+            function estacaoPermiteCheckout(estacaoId) {
+                if (!devolucaoSelect || !estacaoId) {
+                    return false;
+                }
+
+                return !!devolucaoSelect.querySelector(`option[value="${estacaoId}"]`);
             }
 
-            mesmoLocal?.addEventListener('change', syncDevolucao);
+            function syncDevolucao(triggeredFromRetirada = false) {
+                if (!devolucaoField || !devolucaoSelect) return;
+
+                const retiradaId = retiradaSelect?.value || '';
+                const podeMesmoLocal = estacaoPermiteCheckout(retiradaId);
+                const retiradaTexto = retiradaSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
+
+                devolucaoField.style.display = 'block';
+                devolucaoSelect.disabled = false;
+
+                if (podeMesmoLocal && retiradaId) {
+                    const valorAnterior = devolucaoSelect.value;
+                    devolucaoSelect.value = retiradaId;
+                    if (triggeredFromRetirada && valorAnterior !== retiradaId) {
+                        devolucaoSelect.dispatchEvent(eventoChange);
+                    }
+                    if (devolucaoFeedback) {
+                        devolucaoFeedback.textContent = retiradaTexto
+                            ? `Estação de devolução definida automaticamente: ${retiradaTexto}.`
+                            : 'Estação de devolução definida automaticamente.';
+                    }
+                } else if (!podeMesmoLocal && devolucaoSelect.value === retiradaId) {
+                    devolucaoSelect.value = '';
+                    if (devolucaoFeedback) {
+                        devolucaoFeedback.textContent = 'Selecione uma estação de devolução.';
+                    }
+                } else if (devolucaoFeedback) {
+                    devolucaoFeedback.textContent = devolucaoSelect.value
+                        ? `Estação de devolução selecionada: ${devolucaoSelect.selectedOptions?.[0]?.textContent?.trim() || ''}.`
+                        : 'Selecione uma estação de devolução.';
+                }
+            }
+
             retiradaSelect?.addEventListener('change', () => {
-                if (mesmoLocal?.checked && devolucaoSelect) devolucaoSelect.value = retiradaSelect.value;
+                syncDevolucao(true);
+            });
+
+            const ptLocale = window.flatpickr?.l10ns?.pt || {};
+
+            function toIsoDate(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            function normalizarSlotHorario(slot) {
+                if (slot && typeof slot === 'object') {
+                    const value = String(slot.value || slot.hora || slot.time || '').trim();
+                    const label = String(slot.label || slot.text || value).trim();
+                    if (!value) {
+                        return null;
+                    }
+
+                    return {
+                        value,
+                        label: label || value,
+                        taxa_extra: Boolean(slot.taxa_extra || slot.status === 'taxa_extra'),
+                    };
+                }
+
+                const value = String(slot || '').trim();
+                if (!value) {
+                    return null;
+                }
+
+                return {
+                    value,
+                    label: value,
+                    taxa_extra: false,
+                };
+            }
+
+            function mostrarCarregandoHorarios(selectEl, feedbackEl) {
+                if (!selectEl) return;
+
+                selectEl.innerHTML = '';
+                selectEl.appendChild(new Option('Carregando horários...', ''));
+                selectEl.disabled = true;
+
+                if (feedbackEl) {
+                    feedbackEl.textContent = 'Carregando horários disponíveis...';
+                }
+            }
+
+            function mostrarCarregandoDatas(feedbackEl, mensagem) {
+                if (!feedbackEl) return;
+                feedbackEl.textContent = mensagem || 'Carregando datas disponíveis...';
+            }
+
+            function preencherHorarios(selectEl, feedbackEl, slots, horaPreferida = null) {
+                const lista = Array.isArray(slots) ? slots.map(normalizarSlotHorario).filter(Boolean) : [];
+                selectEl.innerHTML = '';
+
+                if (!lista.length) {
+                    selectEl.appendChild(new Option('Sem horários disponíveis', ''));
+                    selectEl.disabled = true;
+                    if (feedbackEl) {
+                        feedbackEl.textContent = 'Sem horários disponíveis para a data selecionada.';
+                    }
+                    return [];
+                }
+
+                selectEl.appendChild(new Option('Selecione a hora', ''));
+                lista.forEach(function(slot) {
+                    const valor = String(slot.value).includes('T')
+                        ? String(slot.value).split('T')[1].slice(0, 5)
+                        : String(slot.value).slice(0, 5);
+                    const texto = slot.taxa_extra ? `${slot.label} • Taxa extra` : slot.label;
+                    const option = new Option(texto, valor);
+                    option.dataset.taxaExtra = slot.taxa_extra ? '1' : '0';
+                    selectEl.appendChild(option);
+                });
+
+                selectEl.disabled = false;
+
+                const preferida = horaPreferida ? String(horaPreferida).slice(0, 5) : (lista.length === 1 ? String(lista[0].value).slice(0, 5) : '');
+                if (preferida && Array.from(selectEl.options).some((option) => option.value === preferida)) {
+                    selectEl.value = preferida;
+                } else {
+                    selectEl.value = '';
+                }
+
+                if (feedbackEl) {
+                    feedbackEl.textContent = 'Escolha a hora disponível.';
+                }
+
+                return lista;
+            }
+
+            function carregarHorariosAgenda(tipo, dataBase, horaPreferida = null) {
+                const estacaoId = tipo === 'devolucao' ? devolucaoSelect?.value : retiradaSelect?.value;
+                if (!estacaoId || !dataBase) {
+                    return Promise.resolve([]);
+                }
+
+                if (tipo === 'devolucao') {
+                    mostrarCarregandoHorarios(horaDevolucao, horaDevolucaoFeedback);
+                } else {
+                    mostrarCarregandoHorarios(horaRetirada, horaRetiradaFeedback);
+                }
+
+                const params = new URLSearchParams({
+                    estacao_id: estacaoId,
+                    tipo: tipo || 'retirada',
+                    data_base: dataBase,
+                    limite: 1,
+                });
+
+                return fetch(`${agendaUrl}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(function(response) {
+                    const agenda = Array.isArray(response.agenda) ? response.agenda : [];
+                    const dia = agenda.find(item => String(item.date) === String(dataBase)) || agenda[0] || null;
+                    const slots = Array.isArray(dia?.slots) ? dia.slots : [];
+
+                    if (tipo === 'devolucao') {
+                        return preencherHorarios(horaDevolucao, horaDevolucaoFeedback, slots, horaPreferida);
+                    }
+
+                    return preencherHorarios(horaRetirada, horaRetiradaFeedback, slots, horaPreferida);
+                })
+                .catch(function() {
+                    if (tipo === 'devolucao') {
+                        preencherHorarios(horaDevolucao, horaDevolucaoFeedback, [], null);
+                    } else {
+                        preencherHorarios(horaRetirada, horaRetiradaFeedback, [], null);
+                    }
+                    return [];
+                });
+            }
+
+            function buscarDiasDisponiveis(estacaoId, tipo) {
+                if (!estacaoId) {
+                    return Promise.resolve([]);
+                }
+
+                const params = new URLSearchParams({
+                    estacao_id: estacaoId,
+                    dias: 90,
+                    tipo: tipo || 'retirada',
+                });
+
+                return fetch(`${diasDisponiveisUrl}?${params.toString()}`, {
+                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+                })
+                .then(r => r.json())
+                .then(function(response) {
+                    return Array.isArray(response.dias_disponiveis) ? response.dias_disponiveis : [];
+                })
+                .catch(function() {
+                    return [];
+                });
+            }
+
+            function criarPickerDate(inputEl, diasDisponiveis) {
+                if (!inputEl || !window.flatpickr) {
+                    return null;
+                }
+
+                const allowed = new Set((diasDisponiveis || []).map(function(item) {
+                    return String(item.data || item).slice(0, 10);
+                }));
+
+                return window.flatpickr(inputEl, {
+                    locale: ptLocale,
+                    altInput: true,
+                    altFormat: 'd/m/Y',
+                    dateFormat: 'Y-m-d',
+                    disableMobile: true,
+                    minDate: 'today',
+                    disable: [function(date) {
+                        return !allowed.has(toIsoDate(date));
+                    }],
+                    onChange: function(selectedDates) {
+                        const date = selectedDates[0] || null;
+                        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                        return date;
+                    }
+                });
+            }
+
+            function getDataRetiradaSelecionada() {
+                if (!dataRetirada?.value) {
+                    return null;
+                }
+
+                const data = new Date(`${dataRetirada.value}T00:00:00`);
+                return Number.isNaN(data.getTime()) ? null : data;
+            }
+
+            function atualizarMinDateDevolucao() {
+                const retirada = getDataRetiradaSelecionada();
+                if (!retirada) {
+                    return;
+                }
+
+                const minDevolucao = new Date(retirada.getTime() + 86400000);
+                if (pickerDevolucao) {
+                    pickerDevolucao.set('minDate', minDevolucao);
+                    const selecionada = pickerDevolucao.selectedDates[0] || null;
+                    if (selecionada && selecionada.getTime() < minDevolucao.getTime()) {
+                        pickerDevolucao.clear();
+                        dataDevolucao.value = '';
+                        horaDevolucao.value = '';
+                        horaDevolucao.disabled = true;
+                        if (dataDevolucaoFeedback) {
+                            dataDevolucaoFeedback.textContent = 'Escolha uma data de devolução igual ou posterior ao dia seguinte.';
+                        }
+                    }
+                } else if (window.flatpickr) {
+                    pickerDevolucao = window.flatpickr(dataDevolucao, {
+                        locale: ptLocale,
+                        altInput: true,
+                        altFormat: 'd/m/Y',
+                        dateFormat: 'Y-m-d',
+                        disableMobile: true,
+                        minDate: minDevolucao,
+                        onChange: function() {
+                            dataDevolucao.dispatchEvent(new Event('change', { bubbles: true }));
+                        }
+                    });
+                }
+            }
+
+            function atualizarRetirada() {
+                const data = dataRetirada.value || '';
+                const hora = horaRetirada.value || '';
+                if (!data) {
+                    horaRetirada.value = '';
+                    horaRetirada.disabled = true;
+                    dataRetiradaFeedback && (dataRetiradaFeedback.textContent = 'Selecione uma estação de retirada para ver os dias disponíveis.');
+                    return;
+                }
+
+                dataRetiradaFeedback && (dataRetiradaFeedback.textContent = 'Selecione a hora de retirada.');
+                atualizarMinDateDevolucao();
+                carregarHorariosAgenda('retirada', data, hora);
+            }
+
+            function atualizarDevolucao() {
+                const data = dataDevolucao.value || '';
+                const hora = horaDevolucao.value || '';
+                if (!data) {
+                    horaDevolucao.value = '';
+                    horaDevolucao.disabled = true;
+                    dataDevolucaoFeedback && (dataDevolucaoFeedback.textContent = 'Selecione uma estação de devolução para ver os dias disponíveis.');
+                    return;
+                }
+
+                dataDevolucaoFeedback && (dataDevolucaoFeedback.textContent = 'Selecione a hora de devolução.');
+                carregarHorariosAgenda('devolucao', data, hora);
+            }
+
+            function recarregarPickersPorEstacao() {
+                const estRet = retiradaSelect?.value || '';
+                const estDev = devolucaoSelect?.value || '';
+
+                if (pickerRetirada) {
+                    pickerRetirada.destroy();
+                    pickerRetirada = null;
+                }
+                if (pickerDevolucao) {
+                    pickerDevolucao.destroy();
+                    pickerDevolucao = null;
+                }
+
+                dataRetirada.value = '';
+                dataDevolucao.value = '';
+                horaRetirada.value = '';
+                horaDevolucao.value = '';
+                horaRetirada.disabled = true;
+                horaDevolucao.disabled = true;
+
+                if (estRet) {
+                    mostrarCarregandoDatas(dataRetiradaFeedback, 'Carregando datas de retirada...');
+                    buscarDiasDisponiveis(estRet, 'retirada').then(function(dias) {
+                        if (dataRetiradaFeedback) {
+                            dataRetiradaFeedback.textContent = dias.length
+                                ? 'Selecione a data de retirada.'
+                                : 'Não há dias disponíveis para retirada nesta estação.';
+                        }
+                        pickerRetirada = criarPickerDate(dataRetirada, dias);
+                        atualizarMinDateDevolucao();
+                    });
+                }
+
+                if (estDev) {
+                    mostrarCarregandoDatas(dataDevolucaoFeedback, 'Carregando datas de devolução...');
+                    buscarDiasDisponiveis(estDev, 'devolucao').then(function(dias) {
+                        if (dataDevolucaoFeedback) {
+                            dataDevolucaoFeedback.textContent = dias.length
+                                ? 'Selecione a data de devolução.'
+                                : 'Não há dias disponíveis para devolução nesta estação.';
+                        }
+                        pickerDevolucao = criarPickerDate(dataDevolucao, dias);
+                        atualizarMinDateDevolucao();
+                    });
+                }
+            }
+
+            dataRetirada.addEventListener('change', atualizarRetirada);
+            horaRetirada.addEventListener('change', atualizarRetirada);
+            dataDevolucao.addEventListener('change', atualizarDevolucao);
+            horaDevolucao.addEventListener('change', atualizarDevolucao);
+
+            retiradaSelect?.addEventListener('change', function() {
+                syncDevolucao(true);
+                recarregarPickersPorEstacao();
+            });
+            devolucaoSelect?.addEventListener('change', function() {
+                syncDevolucao(false);
+                recarregarPickersPorEstacao();
             });
 
             if (typeof window.Choices !== 'undefined') {
@@ -1847,9 +2221,10 @@
                 if (!validateDates()) e.preventDefault();
             });
 
+            syncDevolucao();
+            recarregarPickersPorEstacao();
             normalizeMinDates();
             normalizeMinTime();
-            syncDevolucao();
         })();
     </script>
 </body>
