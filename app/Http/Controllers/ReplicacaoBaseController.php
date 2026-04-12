@@ -39,6 +39,10 @@ class ReplicacaoBaseController extends Controller
         $oldModulos = (array) old('modulos', []);
         $oldEmpresaOrigem = (int) old('empresa_origem_id', 0);
 
+        if (in_array('catalogo_fipe', $oldModulos, true)) {
+            $oldEmpresaOrigem = 1;
+        }
+
         return view('replicacao_base.index', compact(
             'empresas',
             'modulos',
@@ -71,6 +75,11 @@ class ReplicacaoBaseController extends Controller
 
         $empresaOrigemId = (int) $data['empresa_origem_id'];
         $empresasDestinoIds = array_map('intval', $data['empresas_destino']);
+        $modulosSelecionados = array_values($data['modulos']);
+
+        if (in_array('catalogo_fipe', $modulosSelecionados, true)) {
+            $empresaOrigemId = 1;
+        }
 
         if (in_array($empresaOrigemId, $empresasDestinoIds, true)) {
             return back()
@@ -82,7 +91,7 @@ class ReplicacaoBaseController extends Controller
             $resultado = $this->replicacaoBaseService->replicar(
                 $empresaOrigemId,
                 $empresasDestinoIds,
-                array_values($data['modulos'])
+                $modulosSelecionados
             );
         } catch (InvalidArgumentException $e) {
             return back()->withInput()->withErrors(['replicacao' => $e->getMessage()]);

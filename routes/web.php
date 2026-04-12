@@ -35,6 +35,7 @@ Route::post('/reserva/{reserva}/pagamento/metodo', [SiteReservaController::class
 Route::get('/multa/{multa}/pagamento', [SiteReservaController::class, 'pagamentoMulta'])->name('site.multa.pagamento');
 Route::post('/multa/{multa}/pagamento', [SiteReservaController::class, 'processarPagamentoMulta'])->name('site.multa.processarPagamento');
 Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'adicionarMetodoPagamentoMulta'])->name('site.multa.pagamento.metodo');
+Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('job.fipe.catalogo.run');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::get('/cadastro/sucesso', function () {

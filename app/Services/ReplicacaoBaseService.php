@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Empresa;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use InvalidArgumentException;
@@ -9,7 +10,7 @@ use InvalidArgumentException;
 class ReplicacaoBaseService
 {
     /**
-     * @return array<string, array{label: string, area: string, table: string, mode: string}>
+     * @return array<string, array{label: string, area: string, table: string, mode: string, tables?: array<int, string>}>
      */
     public function modulosDisponiveis(): array
     {
@@ -18,6 +19,12 @@ class ReplicacaoBaseService
             'segmentos' => ['label' => 'Segmentos', 'area' => 'Cadastros Basicos', 'tables' => ['segmentos']],
             'marcas' => ['label' => 'Marcas', 'area' => 'Cadastros Basicos', 'tables' => ['marcas']],
             'modelos' => ['label' => 'Modelos', 'area' => 'Cadastros Basicos', 'tables' => ['modelos']],
+            'catalogo_fipe' => [
+                'label' => 'Marca + Modelo + Segmentos',
+                'area' => 'Cadastros Basicos',
+                'tables' => ['segmentos', 'marcas', 'modelos'],
+                'mode' => 'bundle',
+            ],
             'dias_uteis' => ['label' => 'Dias Uteis', 'area' => 'Cadastros Basicos', 'tables' => ['dias_uteis']],
             'horarios_diarios' => ['label' => 'Horarios Diarios', 'area' => 'Cadastros Basicos', 'tables' => ['horarios_diarios']],
             'tipo_valor_caracteristica_frota' => ['label' => 'Tipos de Valor da Caracteristica de Frota', 'area' => 'Frota', 'tables' => ['tipo_valor_caracteristica_frota']],
@@ -76,6 +83,24 @@ class ReplicacaoBaseService
                 continue;
             }
 
+            if ($mode === 'bundle') {
+                $tables = array_values(array_filter(array_map('strval', $module['tables'] ?? [])));
+                $tablesExistentes = $this->resolverTabelasComEmpresaId($tables);
+
+                if (count($tables) === 0 || count($tablesExistentes) !== count($tables)) {
+                    continue;
+                }
+
+                $disponiveis[$chave] = [
+                    'label' => (string) $module['label'],
+                    'area' => (string) ($module['area'] ?? 'Geral'),
+                    'table' => implode(' + ', $tablesExistentes),
+                    'mode' => $mode,
+                    'tables' => $tablesExistentes,
+                ];
+                continue;
+            }
+
             $table = $this->resolverTabelaComEmpresaId($module['tables'] ?? []);
             if ($table === null) {
                 continue;
@@ -101,6 +126,15 @@ class ReplicacaoBaseService
     {
         $modulesMap = $this->modulosDisponiveis();
         $modulos = $this->expandirDependenciasModulos($modulos);
+
+        if (in_array('catalogo_fipe', $modulos, true)) {
+            if (!Empresa::query()->where('id', 1)->exists()) {
+                throw new InvalidArgumentException('A empresa base 1 não foi encontrada para replicar o catálogo FIPE.');
+            }
+
+            $empresaOrigemId = 1;
+        }
+
         $destinos = array_values(array_unique(array_map('intval', $empresasDestinoIds)));
         $destinos = array_values(array_filter($destinos, fn (int $id) => $id !== $empresaOrigemId));
         $destinos = $this->apenasEmpresasExistentes($destinos);
@@ -127,6 +161,14 @@ class ReplicacaoBaseService
 
                 if ($mode === 'regra_permissao') {
                     $resultadoModulo = $this->replicarVinculosRegraPermissao($empresaOrigemId, $destinos);
+                } elseif ($mode === 'bundle') {
+                    $resultadoModulo = ['inseridos' => 0, 'ignorados' => 0];
+
+                    foreach ((array) ($moduleData['tables'] ?? []) as $bundleTable) {
+                        $bundleResultado = $this->replicarModulo((string) $bundleTable, $empresaOrigemId, $destinos);
+                        $resultadoModulo['inseridos'] += (int) $bundleResultado['inseridos'];
+                        $resultadoModulo['ignorados'] += (int) $bundleResultado['ignorados'];
+                    }
                 } else {
                     $resultadoModulo = $this->replicarModulo($table, $empresaOrigemId, $destinos);
                 }
@@ -354,6 +396,10 @@ class ReplicacaoBaseService
             $result[] = 'regras_permissoes';
         }
 
+        if (in_array('catalogo_fipe', $result, true)) {
+            $result = array_values(array_diff($result, ['segmentos', 'marcas', 'modelos']));
+        }
+
         return array_values(array_unique($result));
     }
 
@@ -401,6 +447,23 @@ class ReplicacaoBaseService
         }
 
         return null;
+    }
+
+    /**
+     * @param array<int, string> $tables
+     * @return array<int, string>
+     */
+    private function resolverTabelasComEmpresaId(array $tables): array
+    {
+        $tablesExistentes = [];
+
+        foreach ($tables as $table) {
+            if (Schema::hasTable($table) && Schema::hasColumn($table, 'empresa_id')) {
+                $tablesExistentes[] = $table;
+            }
+        }
+
+        return array_values(array_unique($tablesExistentes));
     }
 
     /**

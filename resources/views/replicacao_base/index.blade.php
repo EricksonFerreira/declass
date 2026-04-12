@@ -29,6 +29,7 @@
                                     </option>
                                 @endforeach
                             </select>
+                            <small class="text-muted d-block mt-1">Ao selecionar o catálogo FIPE, a empresa base é ajustada automaticamente para a empresa 1.</small>
                             @error('empresa_origem_id')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -131,11 +132,17 @@
                                                         name="modulos[]"
                                                         value="{{ $moduloChave }}"
                                                         data-area="{{ $areaSlug }}"
+                                                        data-modulo="{{ $moduloChave }}"
                                                         {{ in_array($moduloChave, $oldModulos, true) ? 'checked' : '' }}
                                                     >
                                                     <label class="custom-control-label" for="{{ $moduloId }}">
                                                         {{ $modulo['label'] }}
                                                     </label>
+                                                    @if($moduloChave === 'catalogo_fipe')
+                                                        <small class="text-muted d-block mt-1">
+                                                            Copia marcas, modelos e segmentos da empresa 1.
+                                                        </small>
+                                                    @endif
                                                 </div>
                                             @endforeach
                                         </div>
@@ -291,6 +298,8 @@
             var btnMarcarTodos = document.getElementById('btnMarcarTodosModulos');
             var btnLimparTodos = document.getElementById('btnLimparTodosModulos');
             var formReplicacao = document.getElementById('formReplicacaoBase');
+            var empresaOrigemSelect = document.getElementById('empresa_origem_id');
+            var moduloCatalogoFipe = document.querySelector('.modulo-checkbox[value="catalogo_fipe"]');
 
             if (btnMarcarTodos) {
                 btnMarcarTodos.addEventListener('click', function (event) {
@@ -304,6 +313,20 @@
                     event.preventDefault();
                     window.replicacaoLimparTodos(event);
                 });
+            }
+
+            function sincronizarEmpresaBaseCatalogoFipe() {
+                if (!empresaOrigemSelect || !moduloCatalogoFipe) {
+                    return;
+                }
+
+                if (moduloCatalogoFipe.checked) {
+                    empresaOrigemSelect.value = '1';
+                    if (window.jQuery && window.jQuery.fn && window.jQuery.fn.select2) {
+                        window.jQuery(empresaOrigemSelect).trigger('change.select2');
+                    }
+                    return;
+                }
             }
 
             document.addEventListener('click', function (event) {
@@ -327,6 +350,18 @@
                 }
             });
 
+            if (moduloCatalogoFipe) {
+                moduloCatalogoFipe.addEventListener('change', sincronizarEmpresaBaseCatalogoFipe);
+            }
+
+            if (empresaOrigemSelect) {
+                empresaOrigemSelect.addEventListener('change', function () {
+                    if (moduloCatalogoFipe && moduloCatalogoFipe.checked) {
+                        sincronizarEmpresaBaseCatalogoFipe();
+                    }
+                });
+            }
+
             if (formReplicacao) {
                 formReplicacao.addEventListener('submit', function (event) {
                     var possuiDestino = document.querySelectorAll('.empresa-destino-checkbox:checked').length > 0;
@@ -345,6 +380,8 @@
             for (var i = 0; i < checkboxesDestino.length; i++) {
                 checkboxesDestino[i].addEventListener('change', hideDestinoFeedbackIfNeeded);
             }
+
+            sincronizarEmpresaBaseCatalogoFipe();
         }
 
         if (document.readyState === 'loading') {

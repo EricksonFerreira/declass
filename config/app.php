@@ -63,6 +63,7 @@ return [
     |
     */
     'admin_prefix' => trim((string) env('ADMIN_PREFIX', 'admin'), '/'),
+    'migration_route_token' => env('APP_MIGRATION_ROUTE_TOKEN'),
 
     /*
     |--------------------------------------------------------------------------
