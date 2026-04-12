@@ -605,6 +605,17 @@
                         <span class="vs-step__count">{{ $veiculo->reservas->count() }}</span>
                     </button>
 
+                    <button class="vs-step" type="button" data-step="fipe">
+                        <span class="vs-step__icon"><i class="fas fa-chart-pie"></i></span>
+                        <span class="vs-step__content">
+                            <strong>FIPE</strong>
+                            <small>Mercado, proteção e depreciação</small>
+                        </span>
+                        <span class="vs-step__count {{ $veiculo->tem_protecao_depreciacao ? 'vs-step__count--success' : 'vs-step__count--alert' }}">
+                            {{ $veiculo->valor_fipe !== null ? 'FIPE' : '—' }}
+                        </span>
+                    </button>
+
                     <button class="vs-step" type="button" data-step="avarias">
                         <span class="vs-step__icon"><i class="fas fa-car-crash"></i></span>
                         <span class="vs-step__content">
@@ -705,11 +716,92 @@
                     ])
                 </div>
 
+                {{-- ── PAINEL: FIPE / DEPRECIAÇÃO ── --}}
+                <div class="vs-panel" data-step-panel="fipe">
+                    <div class="vs-panel-head">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Etapa 02</span>
+                            <h4 class="vs-panel-head__title">Monitoramento FIPE</h4>
+                            <p class="vs-panel-head__sub">Acompanhe o valor de compra, valor FIPE, depreciação acumulada e a proteção financeira do veículo.</p>
+                        </div>
+                        <div class="vs-kpis">
+                            <div class="vs-kpi">
+                                <span>Compra</span>
+                                <strong>{{ $finValorCompra > 0 ? 'R$ ' . number_format($finValorCompra, 2, ',', '.') : '—' }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>FIPE</span>
+                                <strong>{{ $finValorFipe > 0 ? 'R$ ' . number_format($finValorFipe, 2, ',', '.') : '—' }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Atual estimado</span>
+                                <strong>{{ $finValorAtualEstimado !== null ? 'R$ ' . number_format($finValorAtualEstimado, 2, ',', '.') : '—' }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-xl-7 mb-3">
+                            <div class="vs-chart-card">
+                                <div class="vs-chart-card__head">
+                                    <div>
+                                        <strong>Composição de valor</strong>
+                                        <small>Compra, depreciação e valor estimado atual</small>
+                                    </div>
+                                </div>
+                                <div class="vs-chart-wrap">
+                                    <canvas id="fipeValueChart" height="170"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-5 mb-3">
+                            <div class="vs-metrics-stack">
+                                <div class="vs-metric-box">
+                                    <span class="vs-metric-box__label">Diferença Compra / FIPE</span>
+                                    <strong class="{{ ($finDiferencaFipeCompra ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
+                                        @if($finDiferencaFipeCompra !== null)
+                                            R$ {{ number_format($finDiferencaFipeCompra, 2, ',', '.') }}
+                                        @else
+                                            —
+                                        @endif
+                                    </strong>
+                                    <small>Quanto o veículo está acima ou abaixo do valor de mercado.</small>
+                                </div>
+                                <div class="vs-metric-box">
+                                    <span class="vs-metric-box__label">Depreciação acumulada</span>
+                                    <strong>{{ $finDepreciacaoAcumulada !== null ? 'R$ ' . number_format($finDepreciacaoAcumulada, 2, ',', '.') : '—' }}</strong>
+                                    <small>{{ $finPctDepreciacao !== null ? number_format($finPctDepreciacao, 2, ',', '.') . '% acumulado' : 'Taxa anual não informada.' }}</small>
+                                </div>
+                                <div class="vs-metric-box">
+                                    <span class="vs-metric-box__label">Proteção contra depreciação</span>
+                                    <strong class="{{ $finTemProtecaoDepreciacao ? 'text-success' : 'text-muted' }}">
+                                        {{ $finTemProtecaoDepreciacao ? 'Ativa' : 'Inativa' }}
+                                    </strong>
+                                    <small>
+                                        @if($finTemProtecaoDepreciacao && $finValorProtegidoDepreciacao !== null)
+                                            Protegido até R$ {{ number_format($finValorProtegidoDepreciacao, 2, ',', '.') }}.
+                                        @else
+                                            O valor de compra ainda não supera a FIPE.
+                                        @endif
+                                    </small>
+                                </div>
+                                <div class="vs-metric-box">
+                                    <span class="vs-metric-box__label">Consulta FIPE</span>
+                                    <strong>
+                                        {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}
+                                    </strong>
+                                    <small>{{ $veiculo->codigo_fipe ?? 'Sem código FIPE salvo' }}</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 {{-- ── PAINEL: Avarias ── --}}
                 <div class="vs-panel" data-step-panel="avarias">
                     <div class="vs-panel-head">
                         <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 02</span>
+                            <span class="vs-panel-head__eyebrow">Etapa 03</span>
                             <h4 class="vs-panel-head__title">Avarias registradas</h4>
                             <p class="vs-panel-head__sub">Filtre rapidamente por pendências, tipo do dano, local afetado e vínculo com reserva.</p>
                         </div>
@@ -857,7 +949,7 @@
                 <div class="vs-panel" data-step-panel="os">
                     <div class="vs-panel-head">
                         <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 03</span>
+                            <span class="vs-panel-head__eyebrow">Etapa 04</span>
                             <h4 class="vs-panel-head__title">Ordens de serviço</h4>
                             <p class="vs-panel-head__sub">Acompanhe aberturas, andamento e conclusões com filtros mais objetivos.</p>
                         </div>
@@ -1004,7 +1096,7 @@
                 <div class="vs-panel" data-step-panel="mov">
                     <div class="vs-panel-head">
                         <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 04</span>
+                            <span class="vs-panel-head__eyebrow">Etapa 05</span>
                             <h4 class="vs-panel-head__title">Movimentações do veículo</h4>
                             <p class="vs-panel-head__sub">Cruze tipo, status, origem, destino, data, usuário e vínculo com reserva em uma leitura só.</p>
                         </div>
@@ -1222,7 +1314,7 @@
                 <div class="vs-panel" data-step-panel="sinistros">
                     <div class="vs-panel-head">
                         <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 05</span>
+                            <span class="vs-panel-head__eyebrow">Etapa 06</span>
                             <h4 class="vs-panel-head__title">Sinistros</h4>
                             <p class="vs-panel-head__sub">Entenda rapidamente status, período, seguradora e números do processo.</p>
                         </div>
@@ -1389,7 +1481,7 @@
                 <div class="vs-panel" data-step-panel="multas">
                     <div class="vs-panel-head">
                         <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 06</span>
+                            <span class="vs-panel-head__eyebrow">Etapa 07</span>
                             <h4 class="vs-panel-head__title">Multas e infrações</h4>
                             <p class="vs-panel-head__sub">Use filtros mais ricos por status, órgão, auto, período, valor e desconto.</p>
                         </div>
@@ -2184,6 +2276,59 @@
         display: block;
         animation: fadeVsPanel .18s ease;
     }
+    .vs-chart-card,
+    .vs-metric-box {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+    }
+    .vs-chart-card {
+        padding: 1rem;
+        height: 100%;
+    }
+    .vs-chart-card__head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .75rem;
+    }
+    .vs-chart-card__head strong {
+        display: block;
+        font-size: 1rem;
+        color: #0f172a;
+    }
+    .vs-chart-card__head small,
+    .vs-metric-box small {
+        display: block;
+        color: #64748b;
+        margin-top: .2rem;
+    }
+    .vs-chart-wrap {
+        position: relative;
+        min-height: 240px;
+    }
+    .vs-metrics-stack {
+        display: grid;
+        gap: .75rem;
+    }
+    .vs-metric-box {
+        padding: .95rem 1rem;
+    }
+    .vs-metric-box__label {
+        display: block;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .04em;
+        color: #64748b;
+        margin-bottom: .35rem;
+        font-weight: 700;
+    }
+    .vs-metric-box strong {
+        display: block;
+        font-size: 1.25rem;
+        color: #0f172a;
+    }
     @keyframes fadeVsPanel {
         from { opacity: 0; transform: translateY(4px); }
         to { opacity: 1; transform: translateY(0); }
@@ -2495,6 +2640,7 @@
 @stop
 
 @section('js')
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
     (function () {
         function q(id) {
@@ -2586,6 +2732,58 @@
         });
 
         activateStep('disp');
+
+        var fipeCanvas = document.getElementById('fipeValueChart');
+        if (fipeCanvas && window.Chart) {
+            var valorCompra = Number(@json((float) ($finValorCompra ?? 0)));
+            var valorFipe = Number(@json((float) ($finValorFipe ?? 0)));
+            var valorAtual = Number(@json((float) ($finValorAtualEstimado ?? 0)));
+            var depreciacao = Number(@json((float) ($finDepreciacaoAcumulada ?? 0)));
+
+            new Chart(fipeCanvas.getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Valor de compra', 'FIPE', 'Depreciação acumulada', 'Valor atual estimado'],
+                    datasets: [{
+                        data: [
+                            valorCompra > 0 ? valorCompra : 0,
+                            valorFipe > 0 ? valorFipe : 0,
+                            depreciacao > 0 ? depreciacao : 0,
+                            valorAtual > 0 ? valorAtual : 0
+                        ],
+                        backgroundColor: ['#2563eb', '#f59e0b', '#ef4444', '#22c55e'],
+                        borderWidth: 0,
+                        hoverOffset: 10
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                boxWidth: 10,
+                                padding: 14
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    var value = Number(context.raw || 0);
+                                    return context.label + ': ' + value.toLocaleString('pt-BR', {
+                                        style: 'currency',
+                                        currency: 'BRL'
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
 
         window.chipAvarias = function (button, action) {
             activateChip('avarias', button);

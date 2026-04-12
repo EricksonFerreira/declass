@@ -9,7 +9,7 @@ class OpcionalGrupoVeiculo extends Model
 {
     use HasFactory;
 
-    protected $table = 'opcional_grupo_veiculo';
+    protected $table = 'opcional_grupo_veiculos';
     protected $fillable = [
         'nome',
         'ativo',

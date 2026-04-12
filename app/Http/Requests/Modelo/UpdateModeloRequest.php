@@ -36,6 +36,7 @@ class UpdateModeloRequest extends FormRequest
             'nome' => 'required|string|max:255|unique:tipo_transacoes,nome,' . $this->route('modelo'),
             'marca_id' => ['required', 'integer', $marcaExists],
             'segmento_id' => 'required|integer|exists:segmentos,id',
+            'ano_modelo' => 'required|integer|min:1900|max:' . (now()->year + 1),
             'ativo' => 'required|string|max:1',
             'imagem' => 'nullable|image|mimes:jpg,jpeg,png,webp,svg|max:2048',
         ];

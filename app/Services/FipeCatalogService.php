@@ -139,6 +139,15 @@ class FipeCatalogService
             'ativo' => 'S',
         ];
 
+        $anoModelo = $this->resolveModelYear(
+            $vehicleType,
+            (string) ($brandApi['code'] ?? $brandApi['codigo'] ?? ''),
+            $codigoFipe
+        );
+        if ($anoModelo !== null) {
+            $payload['ano_modelo'] = $anoModelo;
+        }
+
         if (!$modelo) {
             $payload['nome'] = $nomeFipe;
             if (!$dryRun) {
@@ -157,6 +166,37 @@ class FipeCatalogService
         }
 
         return ['action' => 'models_updated'];
+    }
+
+    private function resolveModelYear(string $vehicleType, string $brandCode, string $modelCode): ?int
+    {
+        if ($brandCode === '' || $modelCode === '') {
+            return null;
+        }
+
+        try {
+            $years = collect($this->requestJson($vehicleType . '/brands/' . $brandCode . '/models/' . $modelCode . '/years'));
+        } catch (\Throwable) {
+            return null;
+        }
+
+        $yearValues = $years
+            ->map(function (array $item) {
+                $raw = (string) ($item['name'] ?? $item['nome'] ?? $item['code'] ?? $item['codigo'] ?? '');
+                if ($raw === '') {
+                    return null;
+                }
+
+                if (preg_match('/(\d{4})/', $raw, $matches)) {
+                    return (int) $matches[1];
+                }
+
+                return null;
+            })
+            ->filter()
+            ->values();
+
+        return $yearValues->isEmpty() ? null : (int) $yearValues->max();
     }
 
     private function requestJson(string $path): array

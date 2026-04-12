@@ -66,7 +66,7 @@
                         <div class="modelo-section-title">Informacoes Basicas</div>
                     </div>
 
-                    <div class="col-lg-4 col-md-6">
+                    <div class="col-lg-3 col-md-6">
                         <div class="form-group form-group-modelo">
                             <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
                                 label="Nome" value="{{ old('nome', $modelo->nome ?? '') }}" required />
@@ -81,11 +81,19 @@
                         </div>
                     </div>
 
-                    <div class="col-lg-3 col-md-6">
+                                        <div class="col-lg-2 col-md-6">
                         <div class="form-group form-group-modelo">
                             <x-form-select name="segmento_id" label="Segmento" :options="$segmentos" placeholder="Selecione..."
                                 :selected="old('segmento_id', isset($modelo->segmento_id) && $modelo->segmento_id ? $modelo->segmento_id : null)"
                                 class="form-control form-control-sm" required />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-6">
+                        <div class="form-group form-group-modelo">
+                            <x-form-input type="number" class="form-control form-control-sm" id="ano_modelo" name="ano_modelo"
+                                label="Ano Modelo" value="{{ old('ano_modelo', $modelo->ano_modelo ?? '') }}" min="1900"
+                                max="{{ now()->year + 1 }}" step="1" required />
                         </div>
                     </div>
 

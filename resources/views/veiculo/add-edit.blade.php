@@ -880,6 +880,25 @@
                 });
             }
 
+            function obterAnoModeloSelecionado() {
+                const anoInput = $('#ano_modelo');
+                const anoAtual = parseInt(anoInput.val(), 10);
+                if (!Number.isNaN(anoAtual) && anoAtual > 0) {
+                    return anoAtual;
+                }
+
+                const option = $('#modelo_id option:selected');
+                const anoOption = parseInt(option.data('ano-modelo') || option.data('anoModelo') || 0, 10);
+                return Number.isNaN(anoOption) ? null : anoOption;
+            }
+
+            function preencherAnoModelo(anoModelo) {
+                const ano = parseInt(anoModelo || 0, 10);
+                if (!Number.isNaN(ano) && ano > 0) {
+                    $('#ano_modelo').val(ano);
+                }
+            }
+
             $(document).on('focus', '[data-money-field="1"]', function() {
                 const valorNormalizado = parseMoedaBR($(this).val());
                 if (valorNormalizado !== '') {
@@ -987,7 +1006,8 @@
                     let html = '<option value="">Selecione um valor</option>';
                     modelos.forEach(function(m) {
                         const sel = selectValor && String(selectValor) === String(m.id) ? ' selected' : '';
-                        html += `<option value="${m.id}"${sel}>${m.nome}</option>`;
+                        const anoModelo = m.ano_modelo || '';
+                        html += `<option value="${m.id}" data-ano-modelo="${anoModelo}"${sel}>${m.nome}</option>`;
                     });
 
                     $modeloLocal.html(html).prop('disabled', false);
@@ -995,6 +1015,9 @@
                         $modeloLocal.val(String(selectValor));
                     }
                     syncLookupDisplay('#modelo_id', '#modelo_display');
+                    if (selectValor) {
+                        preencherAnoModelo($modeloLocal.find('option:selected').data('ano-modelo'));
+                    }
                     if (selectTexto) {
                         $('#modelo_display').val(selectTexto);
                     }
@@ -1019,6 +1042,7 @@
                 }
 
                 window.carregarModelosVeiculo(item.marca_id || $marca.val(), item.id, item.nome);
+                preencherAnoModelo(item.ano_modelo);
             };
 
             $('#grupo_frota_id').on('change', function() {
@@ -1032,6 +1056,7 @@
 
             $('#modelo_id').on('change', function() {
                 syncLookupDisplay('#modelo_id', '#modelo_display');
+                preencherAnoModelo($(this).find('option:selected').data('ano-modelo'));
             });
 
             $('#tipo_frota_id').on('change', function() {
@@ -1055,7 +1080,7 @@
             function consultarFipe() {
                 const marcaId = $marca.val();
                 const modeloId = $modelo.val();
-                const anoModelo = $('#ano_modelo').val();
+                const anoModelo = obterAnoModeloSelecionado();
                 const chaveConsulta = [marcaId || '', modeloId || '', anoModelo || ''].join('|');
 
                 if (!marcaId || !modeloId || !anoModelo) {

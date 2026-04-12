@@ -15,10 +15,15 @@ class Modelo extends Model
         'nome',
         'nome_fipe',
         'codigo_fipe',
+        'ano_modelo',
         'imagem',
         'ativo',
         'marca_id',
         'segmento_id',
+    ];
+
+    protected $casts = [
+        'ano_modelo' => 'integer',
     ];
 
     public function getImagemUrlAttribute(): ?string

@@ -763,7 +763,7 @@ return [
                     'icon' => 'fas fa-clipboard-list',
                 ],
                                 [
-                    'text' => 'Ordens de ServiÃƒÂ§o',
+                    'text' => 'Ordens de Serviço',
                     'icon' => 'fas fa-file-alt',
                     'submenu' => [
                         [

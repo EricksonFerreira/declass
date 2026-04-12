@@ -459,6 +459,13 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $finLucroLiquido = $finReceita - $finCustoMultas - $finCustoSinistros;
 
         $finValorCompra  = (float) ($veiculo->valor_compra ?? 0);
+        $finValorFipe    = (float) ($veiculo->valor_fipe ?? 0);
+        $finValorAtualEstimado = $veiculo->valor_atual_estimado !== null ? (float) $veiculo->valor_atual_estimado : null;
+        $finDepreciacaoAcumulada = $veiculo->valor_depreciacao_acumulada !== null ? (float) $veiculo->valor_depreciacao_acumulada : null;
+        $finDiferencaFipeCompra = $veiculo->diferenca_fipe_compra !== null ? (float) $veiculo->diferenca_fipe_compra : null;
+        $finPctDepreciacao = $veiculo->percentual_depreciacao_acumulada !== null ? (float) $veiculo->percentual_depreciacao_acumulada : null;
+        $finTemProtecaoDepreciacao = (bool) $veiculo->tem_protecao_depreciacao;
+        $finValorProtegidoDepreciacao = $veiculo->valor_protegido_depreciacao !== null ? (float) $veiculo->valor_protegido_depreciacao : null;
         $finRentabilidade = ($finValorCompra > 0) ? ($finLucroLiquido / $finValorCompra * 100) : null;
 
         // Payback: meses desde a compra e receita líquida média mensal
@@ -500,6 +507,13 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'finCustoSinistros',
             'finLucroLiquido',
             'finValorCompra',
+            'finValorFipe',
+            'finValorAtualEstimado',
+            'finDepreciacaoAcumulada',
+            'finDiferencaFipeCompra',
+            'finPctDepreciacao',
+            'finTemProtecaoDepreciacao',
+            'finValorProtegidoDepreciacao',
             'finRentabilidade',
             'finPaybackMeses'
         ));
@@ -669,6 +683,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 'modelos.nome',
                 'modelos.codigo_fipe',
                 'modelos.nome_fipe',
+                'modelos.ano_modelo',
                 'modelos.marca_id',
                 'marcas_modelo.nome as marca_nome',
                 'segmentos.nome as segmento_nome',
@@ -698,6 +713,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 if (!empty($modelo->marca_nome)) {
                     $partes[] = 'Marca: ' . $modelo->marca_nome;
                 }
+                if (!empty($modelo->ano_modelo)) {
+                    $partes[] = 'Ano modelo: ' . $modelo->ano_modelo;
+                }
                 if (!empty($modelo->segmento_nome)) {
                     $partes[] = 'Segmento: ' . $modelo->segmento_nome;
                 }
@@ -710,6 +728,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     'nome' => $modelo->nome,
                     'marca_id' => $modelo->marca_id,
                     'marca_nome' => $modelo->marca_nome,
+                    'ano_modelo' => $modelo->ano_modelo,
                     'extra' => implode(' • ', $partes),
                 ];
             })
@@ -735,7 +754,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $modelos = \App\Models\Modelo::where('ativo', 'S')
             ->when($marcaId, fn($q) => $q->where('marca_id', $marcaId))
             ->orderBy('nome')
-            ->get(['id', 'nome']);
+            ->get(['id', 'nome', 'ano_modelo']);
 
         return response()->json($modelos);
     }

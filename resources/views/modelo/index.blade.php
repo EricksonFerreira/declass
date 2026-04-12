@@ -53,6 +53,17 @@
                             <td>{{ $modelo->nome }}</td>
                             <td>{{ $modelo->marcas?->nome }}</td>
                             <td>{{ $modelo->segmentos?->nome }}</td>
+                            <td>{{ $modelo->ano_modelo ?? '—' }}</td>
+                            <td>
+                                <div class="d-flex flex-column">
+                                    <span class="badge badge-light border text-dark align-self-start mb-1">
+                                        Código: {{ $modelo->codigo_fipe ?: '—' }}
+                                    </span>
+                                    <small class="text-muted">
+                                        {{ $modelo->nome_fipe ?: 'Sem dados FIPE' }}
+                                    </small>
+                                </div>
+                            </td>
                             <td>
                                 <span class="badge badge-xs bg-{{ $modelo->ativo == 'S' ? 'success' : 'danger' }}">
                                     {{ $modelo->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
