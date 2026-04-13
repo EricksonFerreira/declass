@@ -244,6 +244,34 @@
         text-transform: uppercase;
     }
     .hero-differential i { color: var(--cyan); font-size: .72rem; }
+    .hero-credit {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .4rem .85rem;
+        margin-top: 1rem;
+        border-radius: 999px;
+        background: var(--bg);
+        border: 1px solid rgba(10,22,40,.12);
+        color: white;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .hero-credit a {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        color: inherit;
+        text-decoration: none;
+    }
+    .hero-credit img {
+        width: 10em;
+                /* height: 20px; */
+        object-fit: contain;
+        flex-shrink: 0;
+    }
 
     /* Imagem hero com animação */
     .hero-visual {
@@ -990,6 +1018,40 @@
     .footer-col ul li a:hover { color: var(--bg); padding-left: 4px; }
     .footer-bottom { display: flex; align-items: center; justify-content: space-between; padding-top: 2rem; flex-wrap: wrap; gap: 1rem; }
     .footer-bottom p { font-size: .8rem; color: var(--muted2); }
+    .footer-brand-credit {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .55rem .8rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        color: rgba(255,255,255,.75);
+        background: var(--bg);
+        font-size: .78rem;
+        font-weight: 700;
+        letter-spacing: .02em;
+        text-decoration: none;
+        transition: transform .2s, border-color .2s, background .2s, box-shadow .2s;
+    }
+    .footer-brand-credit:hover {
+        transform: translateY(-1px);
+        border-color: rgba(10,22,40,.2);
+        background: #1c2723;
+        box-shadow: var(--shadow-sm);
+    }
+    .footer-brand-credit strong {
+        font-size: .78rem;
+        font-weight: 800;
+        letter-spacing: .03em;
+        text-transform: none;
+        color: var(--bg);
+    }
+    .footer-brand-credit img {
+        width: 88px;
+        height: auto;
+        object-fit: contain;
+        display: block;
+    }
     .footer-socials { display: flex; gap: .6rem; }
     .social-btn {
         width: 34px; height: 34px; border-radius: 8px;
@@ -1080,7 +1142,7 @@
         </ul>
         <div class="nav-actions" id="navActions">
             <a href="{{ route('login') }}" class="btn-ghost-nav">Entrar</a>
-            <a href="#planos" class="btn-nav">Solicitar Demo</a>
+            {{-- <a href="#planos" class="btn-nav">Solicitar Demo</a> --}}
         </div>
         <button class="nav-toggle" id="navToggle" aria-label="Menu">
             <span></span><span></span><span></span>
@@ -1117,6 +1179,12 @@
                     <div class="hero-trust-item"><i class="fas fa-check-circle"></i> Sem taxa de implantação</div>
                     <div class="hero-trust-item"><i class="fas fa-check-circle"></i> Suporte incluso</div>
                     <div class="hero-trust-item"><i class="fas fa-check-circle"></i> Dados na nuvem</div>
+                </div>
+                <div class="hero-credit reveal delay-4">
+                    <a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+                        Software da
+                        <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
+                    </a>
                 </div>
             </div>
             <div class="hero-visual reveal-right delay-2">
@@ -1590,7 +1658,7 @@
                     <li class="plan-feature"><i class="fas fa-check"></i> Sem site de vendas</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
                 </ul>
-                <a href="https://wa.me/5500000000000?text={{ urlencode('Olá! Gostei do plano Gestão e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar sem site</a>
+                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Gostei do plano Gestão e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar sem site</a>
             </div>
             <div class="plan-card reveal delay-1">
                 <div class="plan-name">Essencial</div>
@@ -1610,7 +1678,7 @@
                     <li class="plan-feature"><i class="fas fa-check"></i> Personalização de cores e textos</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
                 </ul>
-                <a href="https://wa.me/5500000000000?text={{ urlencode('Olá! Gostei do plano Essencial e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar agora</a>
+                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Gostei do plano Essencial e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar agora</a>
             </div>
             <div class="plan-card popular reveal delay-2">
                 <div class="plan-badge">Mais escolhido</div>
@@ -1634,7 +1702,7 @@
                     <li class="plan-feature"><i class="fas fa-check"></i> Relatórios avançados</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte prioritário</li>
                 </ul>
-                <a href="https://wa.me/5500000000000?text={{ urlencode('Olá! Gostei do plano Crescimento e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-primary" target="_blank" rel="noopener">Começar agora</a>
+                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Gostei do plano Crescimento e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-primary" target="_blank" rel="noopener">Começar agora</a>
             </div>
             <div class="plan-card reveal delay-3">
                 <div class="plan-name">Escala</div>
@@ -1672,7 +1740,7 @@
         <p class="section-sub" style="text-align:center;margin:0 auto 2.5rem">Implantação em até 48 horas. Sem taxa de setup. Suporte incluso desde o primeiro dia.</p>
         <div class="cta-actions">
             <a href="#planos" class="btn-cta-white">Ver planos</a>
-            <a href="https://wa.me/5500000000000" class="btn-whatsapp" target="_blank" rel="noopener">
+            <a href="https://wa.me/558192554172" class="btn-whatsapp" target="_blank" rel="noopener">
                 <i class="fab fa-whatsapp"></i> Falar com especialista
             </a>
         </div>
@@ -1698,10 +1766,10 @@
                     <li><a href="#funcionalidades">Funcionalidades</a></li>
                     <li><a href="#modulos">Módulos</a></li>
                     <li><a href="#planos">Planos</a></li>
-                    <li><a href="#numeros">Números</a></li>
+                    {{-- <li><a href="#numeros">Números</a></li> --}}
                 </ul>
             </div>
-            <div class="footer-col">
+            {{-- <div class="footer-col">
                 <h5>Empresa</h5>
                 <ul>
                     <li><a href="#">Sobre nós</a></li>
@@ -1709,25 +1777,23 @@
                     <li><a href="#">Cases</a></li>
                     <li><a href="#">Contato</a></li>
                 </ul>
-            </div>
+            </div> --}}
             <div class="footer-col">
                 <h5>Suporte</h5>
                 <ul>
-                    <li><a href="#">Central de ajuda</a></li>
+                    {{-- <li><a href="#">Central de ajuda</a></li>
                     <li><a href="#">Documentação</a></li>
-                    <li><a href="#">Status do sistema</a></li>
+                    <li><a href="#">Status do sistema</a></li> --}}
                     <li><a href="{{ route('login') }}">Entrar no sistema</a></li>
                 </ul>
             </div>
         </div>
         <div class="footer-bottom">
             <p>© {{ date('Y') }} DeCars. Todos os direitos reservados.</p>
-            <p>
-                Criado por
-                <a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer">
-                    Sonyd Tech
-                </a>
-            </p>
+            <a class="footer-brand-credit" href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+                <span>Software oficial da</span>
+                <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
+            </a>
             {{-- <div class="footer-socials">
                 <a href="#" class="social-btn" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
                 <a href="#" class="social-btn" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
