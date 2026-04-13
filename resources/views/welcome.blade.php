@@ -228,33 +228,107 @@
     .hero-trust { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; }
     .hero-trust-item { display: flex; align-items: center; gap: .45rem; font-size: .82rem; font-weight: 500; color: var(--muted); }
     .hero-trust-item i { color: var(--bg); font-size: .75rem; }
+    .hero-differential {
+        display: inline-flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .38rem .9rem;
+        margin-bottom: 1.2rem;
+        border-radius: 999px;
+        background: rgba(14,165,233,.08);
+        border: 1px solid rgba(14,165,233,.2);
+        color: var(--bg);
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+    }
+    .hero-differential i { color: var(--cyan); font-size: .72rem; }
 
     /* Imagem hero com animação */
     .hero-visual {
         position: relative;
         animation: floatY 5s ease-in-out infinite;
     }
-    .hero-img-wrap {
-        border-radius: 16px; overflow: hidden;
-        box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+    .hero-carousel-wrap {
         position: relative;
     }
-    .hero-img-wrap::before {
+    .hero-carousel {
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: var(--shadow-lg), 0 0 0 1px var(--border);
+        position: relative;
+        aspect-ratio: 16 / 10;
+        background: var(--surface);
+    }
+    .hero-carousel::before {
         content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
         background: linear-gradient(90deg, var(--bg), var(--cyan), var(--bg));
         z-index: 1; background-size: 200% 100%;
         animation: shimmer 3s linear infinite;
     }
-    .hero-placeholder {
-        width: 100%; aspect-ratio: 16/10;
-        background: var(--surface); border-radius: 16px;
-        display: flex; flex-direction: column; align-items: center;
-        justify-content: center; gap: 1rem;
-        border: 2px dashed var(--border); color: var(--muted2);
+    .hero-carousel-slide {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transform: scale(1.02);
+        transition: opacity .75s ease, transform .75s ease;
+        pointer-events: none;
     }
-    .hero-placeholder i { font-size: 3rem; color: var(--muted2); opacity: .4; }
-    .hero-placeholder strong { font-size: .9rem; color: var(--muted); }
-    .hero-placeholder span { font-size: .75rem; }
+    .hero-carousel-slide.is-active {
+        opacity: 1;
+        transform: scale(1);
+        pointer-events: auto;
+    }
+    .hero-carousel-slide img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .hero-carousel-slide::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(180deg, transparent 45%, rgba(10,22,40,.18) 100%);
+        pointer-events: none;
+    }
+    .hero-carousel-caption {
+        position: absolute;
+        left: 16px;
+        right: 16px;
+        bottom: 16px;
+        z-index: 2;
+        padding: .85rem 1rem;
+        border-radius: 14px;
+        background: rgba(10,22,40,.84);
+        color: #fff;
+        backdrop-filter: blur(12px);
+        box-shadow: 0 10px 28px rgba(0,0,0,.18);
+    }
+    .hero-carousel-caption strong {
+        display: block;
+        margin-bottom: .15rem;
+        font-size: .92rem;
+        font-weight: 800;
+        letter-spacing: -.01em;
+    }
+    .hero-carousel-caption span {
+        display: block;
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        margin-bottom: .22rem;
+    }
+    .hero-carousel-caption small {
+        display: block;
+        font-size: .76rem;
+        line-height: 1.45;
+        color: rgba(255,255,255,.74);
+    }
     /* Badges flutuantes sobre a imagem */
     .hero-badge-float {
         position: absolute; display: flex; align-items: center; gap: .6rem;
@@ -267,6 +341,128 @@
     .hero-badge-float.pos-tl { top: -18px; left: -20px; animation: floatY 4s ease-in-out infinite; }
     .hero-badge-float.pos-br { bottom: -18px; right: -20px; animation: floatY 4.5s ease-in-out infinite .5s; }
     .hero-badge-float .dot { width: 8px; height: 8px; border-radius: 50%; background: #22c55e; animation: pulse 1.5s ease-in-out infinite; }
+
+    /* ══ SALES DIFFERENTIAL ══ */
+    .sales-diff {
+        padding: 5rem 0;
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+    .sales-diff-inner {
+        display: grid;
+        grid-template-columns: 1fr 1.05fr;
+        gap: 2.5rem;
+        align-items: center;
+    }
+    .sales-diff-tag {
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .33rem .8rem;
+        margin-bottom: 1rem;
+        border-radius: 999px;
+        background: rgba(14,165,233,.08);
+        color: var(--bg);
+        font-size: .72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+    }
+    .sales-diff-title {
+        font-family: 'Raleway', sans-serif;
+        font-size: clamp(1.8rem, 3.4vw, 2.8rem);
+        font-weight: 900;
+        line-height: 1.1;
+        letter-spacing: -.03em;
+        color: var(--bg);
+        margin-bottom: 1rem;
+    }
+    .sales-diff-copy {
+        font-size: 1rem;
+        line-height: 1.8;
+        color: var(--muted);
+        max-width: 560px;
+        margin-bottom: 1.5rem;
+    }
+    .sales-diff-points {
+        display: grid;
+        gap: .9rem;
+        margin-bottom: 1.8rem;
+    }
+    .sales-diff-point {
+        display: flex;
+        align-items: flex-start;
+        gap: .7rem;
+        font-size: .92rem;
+        line-height: 1.6;
+        color: var(--text);
+    }
+    .sales-diff-point i {
+        color: #22c55e;
+        margin-top: .2rem;
+        font-size: .88rem;
+        flex-shrink: 0;
+    }
+    .sales-diff-actions {
+        display: flex;
+        align-items: center;
+        gap: .9rem;
+        flex-wrap: wrap;
+    }
+    .sales-diff-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .9rem 1.2rem;
+        border-radius: var(--radius);
+        background: var(--bg);
+        color: #fff;
+        font-size: .9rem;
+        font-weight: 700;
+        transition: transform .2s, background .2s, box-shadow .2s;
+    }
+    .sales-diff-link:hover {
+        background: var(--bg-hover);
+        transform: translateY(-1px);
+        box-shadow: 0 10px 26px rgba(10,22,40,.18);
+    }
+    .sales-diff-note {
+        font-size: .84rem;
+        color: var(--muted);
+    }
+    .sales-diff-visual {
+        position: relative;
+        padding: 1rem;
+        border-radius: 22px;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        box-shadow: var(--shadow-lg);
+    }
+    .sales-diff-visual img {
+        width: 100%;
+        border-radius: 16px;
+        display: block;
+        box-shadow: 0 18px 32px rgba(15,23,42,.12);
+    }
+    .sales-diff-badge {
+        position: absolute;
+        top: -14px;
+        left: 18px;
+        display: inline-flex;
+        align-items: center;
+        gap: .45rem;
+        padding: .52rem .8rem;
+        border-radius: 999px;
+        background: #0f172a;
+        color: #fff;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        box-shadow: 0 10px 24px rgba(15,23,42,.2);
+    }
+    .sales-diff-badge i { color: var(--cyan); }
 
     /* ══ CLIENTS TICKER ══ */
     .clients {
@@ -378,13 +574,144 @@
         display: flex; align-items: center; justify-content: center;
         border-left: 1.5px solid var(--border); overflow: hidden;
     }
-    .feature-slide-image img { width: 100%; height: 100%; object-fit: cover; }
+    .feature-slide-image img { width: 100%; height: 100%; object-fit: scale-down; }
+    /* .feature-slide-image img { width: 100%; height: 100%; object-fit: cover; } */
     .feature-placeholder {
         display: flex; flex-direction: column; align-items: center;
         justify-content: center; gap: .75rem; color: var(--muted2); text-align: center; padding: 2rem;
     }
     .feature-placeholder i { font-size: 3.5rem; opacity: .25; color: var(--bg); }
     .feature-placeholder span { font-size: .78rem; }
+    .site-sales-preview {
+        width: 100%;
+        height: 100%;
+        padding: 1.25rem;
+        background:
+            radial-gradient(circle at top left, rgba(14,165,233,.12), transparent 38%),
+            linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        gap: 1rem;
+    }
+    .site-sales-preview__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .75rem;
+    }
+    .site-sales-preview__header strong {
+        font-family: 'Raleway', sans-serif;
+        font-size: 1rem;
+        font-weight: 900;
+        color: var(--bg);
+        letter-spacing: -.02em;
+    }
+    .site-sales-preview__header span {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        background: rgba(14,165,233,.08);
+        padding: .28rem .6rem;
+        border-radius: 999px;
+    }
+    .site-sales-models {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: .75rem;
+    }
+    .site-sales-model {
+        background: rgba(255,255,255,.88);
+        border: 1px solid rgba(10,22,40,.1);
+        border-radius: 16px;
+        padding: .9rem;
+        box-shadow: 0 12px 26px rgba(15,23,42,.06);
+    }
+    .site-sales-model__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: .65rem;
+    }
+    .site-sales-model__name {
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: var(--bg);
+    }
+    .site-sales-model__dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+    .site-sales-model__screen {
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid rgba(10,22,40,.08);
+        background: #fff;
+        min-height: 132px;
+        display: flex;
+        flex-direction: column;
+    }
+    .site-sales-model__hero {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: .9rem .75rem;
+        color: #fff;
+        text-align: center;
+        font-family: 'Raleway', sans-serif;
+        font-weight: 900;
+        font-size: .9rem;
+        line-height: 1.2;
+    }
+    .site-sales-model__bar {
+        display: flex;
+        gap: .35rem;
+        padding: .55rem .65rem;
+        background: #fff;
+    }
+    .site-sales-model__bar span {
+        flex: 1;
+        height: 6px;
+        border-radius: 999px;
+        background: #e2e8f0;
+    }
+    .site-sales-model__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: .5rem;
+        margin-top: .65rem;
+        font-size: .72rem;
+        color: var(--muted);
+        line-height: 1.4;
+    }
+    .site-sales-model__footer strong {
+        display: block;
+        color: var(--bg);
+        font-size: .74rem;
+    }
+    .site-sales-model__chips {
+        display: flex;
+        gap: .35rem;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .site-sales-model__chips span {
+        padding: .22rem .45rem;
+        border-radius: 999px;
+        background: rgba(10,22,40,.05);
+        color: var(--bg);
+        font-size: .6rem;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+    }
     /* Controles swiper */
     .swiper-nav { display: flex; align-items: center; gap: 1rem; margin-top: 2rem; }
     .swiper-btn {
@@ -499,6 +826,57 @@
     .pricing-toggle { display: flex; align-items: center; justify-content: center; gap: 1rem; margin: 2rem 0 3rem; }
     .pricing-toggle span { font-size: .875rem; font-weight: 600; color: var(--muted); transition: color .3s; }
     .pricing-toggle span.active { color: var(--bg); }
+    .pricing-highlight {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 1rem 1.25rem;
+        align-items: center;
+        padding: 1.25rem 1.4rem;
+        margin: 2rem auto 0;
+        border: 1.5px solid rgba(10,22,40,.12);
+        border-radius: 18px;
+        background: linear-gradient(180deg, rgba(10,22,40,.04), rgba(10,22,40,.015));
+        box-shadow: var(--shadow-sm);
+        max-width: 980px;
+    }
+    .pricing-highlight-icon {
+        width: 52px; height: 52px; border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--bg); color: #fff; font-size: 1.1rem;
+        box-shadow: 0 10px 24px rgba(10,22,40,.16);
+        flex-shrink: 0;
+    }
+    .pricing-highlight h3 {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 900;
+        font-size: 1.05rem;
+        color: var(--bg);
+        margin-bottom: .25rem;
+    }
+    .pricing-highlight p {
+        font-size: .9rem;
+        line-height: 1.7;
+        color: var(--muted);
+        max-width: 680px;
+    }
+    .pricing-highlight-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .8rem 1rem;
+        border-radius: var(--radius);
+        border: 1.5px solid var(--border);
+        color: var(--bg);
+        font-size: .85rem;
+        font-weight: 700;
+        transition: background .2s, border-color .2s, transform .2s;
+        white-space: nowrap;
+    }
+    .pricing-highlight-link:hover {
+        background: rgba(10,22,40,.04);
+        border-color: var(--bg);
+        transform: translateY(-1px);
+    }
     .toggle-switch {
         width: 48px; height: 26px; border-radius: 13px;
         background: var(--bg); position: relative; cursor: pointer;
@@ -515,7 +893,7 @@
         font-size: .65rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
         color: #fff; background: #22c55e; border-radius: 999px; padding: .2rem .55rem; margin-left: .3rem;
     }
-    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; align-items: start; }
+    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; align-items: start; }
     .plan-card {
         padding: 2.2rem; background: #fff;
         border: 1.5px solid var(--border); border-radius: 16px;
@@ -637,10 +1015,16 @@
         .features-header { grid-template-columns: 1fr; gap: 1.5rem; }
         .feature-slide { grid-template-columns: 1fr; }
         .feature-slide-image { min-height: 260px; border-left: none; border-top: 1.5px solid var(--border); }
+        .site-sales-models { grid-template-columns: 1fr; }
+        .sales-diff-inner { grid-template-columns: 1fr; gap: 1.75rem; }
         .testimonials-inner { grid-template-columns: 1fr; gap: 2rem; }
         .modules-grid { grid-template-columns: repeat(3, 1fr); }
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .footer-grid { grid-template-columns: 1fr 1fr; }
+        .hero-carousel-caption { left: 14px; right: 14px; bottom: 14px; }
+        .pricing-grid { grid-template-columns: repeat(2, 1fr); }
+        .pricing-highlight { grid-template-columns: auto 1fr; }
+        .pricing-highlight-link { grid-column: 2; justify-self: start; }
     }
     @media (max-width: 768px) {
         .nav-links, .nav-actions { display: none; }
@@ -657,6 +1041,14 @@
         .modules-grid { grid-template-columns: repeat(2, 1fr); }
         .footer-grid { grid-template-columns: 1fr; }
         .hero-badge-float { display: none; }
+        .hero-carousel-caption { left: 12px; right: 12px; bottom: 12px; padding: .72rem .85rem; }
+        .site-sales-preview { padding: 1rem; }
+        .site-sales-model__screen { min-height: 116px; }
+        .sales-diff { padding: 4rem 0; }
+        .sales-diff-visual { padding: .8rem; }
+        .pricing-grid { grid-template-columns: 1fr; }
+        .pricing-highlight { grid-template-columns: 1fr; }
+        .pricing-highlight-link { grid-column: auto; justify-self: stretch; width: 100%; }
     }
     @media (max-width: 480px) {
         .hero-ctas { flex-direction: column; width: 100%; }
@@ -676,7 +1068,7 @@
     <div class="nav-inner">
         <a href="/" class="nav-logo">
             <div class="nav-logo-icon">
-                <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
+                <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="">
             </div>
             DECARS
         </a>
@@ -704,10 +1096,10 @@
     <div class="container">
         <div class="hero-inner">
             <div>
-                {{-- <div class="hero-eyebrow reveal">
-                    <i class="fas fa-circle" style="font-size:.5rem;color:#22c55e"></i>
-                    Software para Locadoras de Veículos
-                </div> --}}
+                <div class="hero-differential reveal">
+                    <i class="fas fa-sparkles"></i>
+                    Sistema + site de reservas para vender online
+                </div>
                 <h1 class="hero-title reveal delay-1">
                     Gestão completa<br>da sua locadora<br>em <span class="line-accent" id="typewriterTarget"></span><span class="cursor" id="typewriterCursor"></span>
                 </h1>
@@ -731,15 +1123,41 @@
                 {{-- <div class="hero-badge-float pos-tl">
                     <div class="dot"></div> Sistema Online
                 </div> --}}
-                <div class="hero-img-wrap">
-                    <img src="{{'assets/welcome/home.png'}}" alt="">
-                    {{-- Substitua pela imagem do sistema quando disponível --}}
-                    {{-- <div class="hero-placeholder">
-                        <i class="fas fa-desktop"></i>
-                        <strong>Print do sistema aqui</strong>
-                        <span>Substitua pela imagem do dashboard ou tela principal</span>
-                    </div> --}}
-                    {{-- Exemplo: <img src="{{ asset('img/hero-dashboard.png') }}" alt="DeCars Dashboard"> --}}
+                <div class="hero-carousel-wrap">
+                    <div class="hero-carousel" id="heroCarousel">
+                        <figure class="hero-carousel-slide is-active">
+                            <img src="{{ asset('assets/welcome/site-aluguel.png') }}" alt="Site de reservas online do DeCars">
+                            <figcaption class="hero-carousel-caption">
+                                <span>Site de vendas</span>
+                                <strong>O cliente reserva online com a sua marca</strong>
+                                <small>Uma vitrine pronta para vender veículos direto no site.</small>
+                            </figcaption>
+                        </figure>
+                        <figure class="hero-carousel-slide">
+                            <img src="{{ asset('assets/welcome/home.png') }}" alt="Painel principal do DeCars">
+                            <figcaption class="hero-carousel-caption">
+                                <span>Dashboard</span>
+                                <strong>Visão executiva da operação</strong>
+                                <small>Reservas, faturamento e frota em um só lugar.</small>
+                            </figcaption>
+                        </figure>
+                        <figure class="hero-carousel-slide">
+                            <img src="{{ asset('assets/welcome/reservas.png') }}" alt="Lista de reservas do DeCars">
+                            <figcaption class="hero-carousel-caption">
+                                <span>Reservas online</span>
+                                <strong>Receba e organize as locações</strong>
+                                <small>O cliente inicia a jornada e a equipe acompanha tudo com clareza.</small>
+                            </figcaption>
+                        </figure>
+                        <figure class="hero-carousel-slide">
+                            <img src="{{ asset('assets/welcome/disponibilidade.png') }}" alt="Grade de disponibilidade de veículos">
+                            <figcaption class="hero-carousel-caption">
+                                <span>Disponibilidade</span>
+                                <strong>Confirmação em tempo real</strong>
+                                <small>Menos conflito de agenda e mais conversão no portal.</small>
+                            </figcaption>
+                        </figure>
+                    </div>
                 </div>
                 <div class="hero-badge-float pos-br">
                     <i class="fas fa-chart-line" style="color:#22c55e"></i> +37% de produtividade
@@ -775,6 +1193,36 @@
     </div>
 </section> --}}
 
+<!-- ══ SALES DIFFERENTIAL ══ -->
+<section class="sales-diff">
+    <div class="container">
+        <div class="sales-diff-inner">
+            <div class="reveal-left">
+                <div class="sales-diff-tag"><i class="fas fa-store"></i> Diferencial competitivo</div>
+                <h2 class="sales-diff-title">Além de gerenciar, sua locadora também vende.</h2>
+                <p class="sales-diff-copy">
+                    O DeCars não entrega apenas controle operacional. Ele também oferece um site de vendas para a locadora escalar os alugueis, gerar mais reservas e transformar a marca em um canal de aquisição.
+                </p>
+                <div class="sales-diff-points">
+                    <div class="sales-diff-point"><i class="fas fa-check-circle"></i> Site público integrado ao sistema, com reserva online e identidade visual da empresa.</div>
+                    <div class="sales-diff-point"><i class="fas fa-check-circle"></i> Modelos de apresentação para customizar cores, textos e imagens sem depender de desenvolvimento.</div>
+                    <div class="sales-diff-point"><i class="fas fa-check-circle"></i> Uma vitrine que ajuda a converter visitantes em locatários e aumenta a escala da operação.</div>
+                </div>
+                <div class="sales-diff-actions">
+                    <a href="#funcionalidades" class="sales-diff-link">Ver um dos modelos de site de vendas</a>
+                    <span class="sales-diff-note">Esse é o diferencial que faz o DeCars se destacar entre os sistemas do mercado.</span>
+                </div>
+            </div>
+            <div class="reveal-right delay-1">
+                <div class="sales-diff-visual">
+                    <div class="sales-diff-badge"><i class="fas fa-sparkles"></i> Site de vendas</div>
+                    <img src="{{ asset('assets/welcome/site-aluguel.png') }}" alt="Site de vendas do DeCars">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ══ PROBLEMS ══ -->
 <section class="problems" id="problemas">
     <div class="container">
@@ -809,10 +1257,10 @@
         <div class="features-header">
             <div class="reveal-left">
                 <div class="section-tag">Funcionalidades</div>
-                <h2 class="section-title">Uma plataforma.<br>Operação completa.</h2>
+                <h2 class="section-title">Uma plataforma.<br>Operação completa e site de vendas.</h2>
             </div>
             <p class="section-sub reveal-right delay-1">
-                Cada módulo foi desenhado a partir de demandas reais de locadoras, não de suposições de mercado.
+                Cada módulo foi desenhado a partir de demandas reais de locadoras, incluindo o site público que vende, personaliza e converte reservas.
             </p>
         </div>
 
@@ -839,7 +1287,7 @@
                                 <i class="fas fa-calendar-alt"></i>
                                 <span>Adicione print da tela de Reservas</span>
                             </div> --}}
-                            <img src="{{'assets/welcome/reservas.png'}}" alt="Tela de Reservas">
+                            <img src="{{ asset('assets/welcome/reservas.png') }}" alt="Tela de Reservas">
                         </div>
                     </div>
                 </div>
@@ -863,7 +1311,7 @@
                                 <i class="fas fa-mobile-alt"></i>
                                 <span>Adicione print da tela de Check-in</span>
                             </div> --}}
-                            <img src="{{'assets/welcome/check-in.png'}}" alt="Tela de Check-in Digital">
+                            <img src="{{ asset('assets/welcome/check-in.png') }}" alt="Tela de Check-in Digital">
                         </div>
                     </div>
                 </div>
@@ -887,7 +1335,7 @@
                                 <i class="fas fa-car-side"></i>
                                 <span>Adicione print da tela de Frota</span>
                             </div> --}}
-                            <img src="{{'assets/welcome/frota.png'}}" alt="Tela de Frota">
+                            <img src="{{ asset('assets/welcome/frota.png') }}" alt="Tela de Frota">
                         </div>
                     </div>
                 </div>
@@ -911,7 +1359,27 @@
                                 <i class="fas fa-chart-bar"></i>
                                 <span>Adicione print da tela Financeiro</span>
                             </div> --}}
-                            <img src="{{'assets/welcome/financeiro.png'}}" alt="Tela de Financeiro">
+                            <img src="{{ asset('assets/welcome/financeiro.png') }}" alt="Tela de Financeiro">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SLIDE 5 — Site de Vendas -->
+                <div class="swiper-slide">
+                    <div class="feature-slide">
+                        <div class="feature-slide-content">
+                            <div class="feature-slide-tag"><i class="fas fa-store"></i> Site de Vendas</div>
+                            <h3>Escolha um modelo e personalize sua vitrine online</h3>
+                            <p>Sua locadora ganha um site de reservas com modelos visuais diferentes, onde a empresa pode ajustar cores, textos e imagens para vender mais e reforçar a própria marca.</p>
+                            <div class="feature-items">
+                                <div class="feature-item"><i class="fas fa-check"></i> Vários modelos de apresentação</div>
+                                <div class="feature-item"><i class="fas fa-check"></i> Cores, textos e imagens editáveis</div>
+                                <div class="feature-item"><i class="fas fa-check"></i> Site público para reservas online</div>
+                                <div class="feature-item"><i class="fas fa-check"></i> Identidade visual da própria locadora</div>
+                            </div>
+                        </div>
+                        <div class="feature-slide-image">
+                            <img src="{{ asset('assets/welcome/site-aluguel.png') }}" alt="Site de reservas personalizado da locadora">
                         </div>
                     </div>
                 </div>
@@ -1087,7 +1555,17 @@
         <div class="section-header" style="text-align:center">
             <div class="section-tag reveal" style="justify-content:center">Planos</div>
             <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Investimento justo para cada tamanho de locadora</h2>
-            {{-- <p class="section-sub reveal delay-2" style="margin:0 auto">Sem taxa de implantação. Sem surpresas. Cancele quando quiser.</p> --}}
+            <p class="section-sub reveal delay-2" style="margin:0 auto">Além do sistema administrativo, sua locadora também ganha um site de reservas para vender online e facilitar o aluguel dos veículos.</p>
+        </div>
+        <div class="pricing-highlight reveal delay-1">
+            <div class="pricing-highlight-icon">
+                <i class="fas fa-globe"></i>
+            </div>
+            <div>
+                <h3>Seu sistema também vira vitrine de vendas</h3>
+                <p>Com o DeCars, a locadora não fica só no controle interno. Você pode oferecer um site público para clientes pesquisarem veículos, simularem aluguel e fazerem reservas pela internet.</p>
+            </div>
+            <a href="#funcionalidades" class="pricing-highlight-link">Ver como funciona</a>
         </div>
         <div class="pricing-toggle reveal delay-1">
             <span id="lblMonthly" class="active">Mensal</span>
@@ -1096,54 +1574,81 @@
         </div>
         <div class="pricing-grid">
             <div class="plan-card reveal delay-1">
-                <div class="plan-name">Starter</div>
+                <div class="plan-name">Gestão</div>
                 <div class="plan-price">
                     <span class="currency">R$</span>
-                    <span class="amount" data-monthly="149" data-annual="119">149</span>
+                    <span class="amount" data-monthly="247" data-annual="197">247</span>
                     <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$360/ano</span>
+                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$600/ano</span>
                 </div>
-                <p class="plan-desc">Para locadoras em fase inicial, com frota reduzida e operação centralizada.</p>
+                <p class="plan-desc">Para quem quer começar com o sistema administrativo e deixar o site de vendas para uma próxima etapa.</p>
+                <ul class="plan-features">
+                    <li class="plan-feature"><i class="fas fa-check"></i> Gestão da frota</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Reservas e contratos</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Check-in digital</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Financeiro básico</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Sem site de vendas</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
+                </ul>
+                <a href="https://wa.me/5500000000000?text={{ urlencode('Olá! Gostei do plano Gestão e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar sem site</a>
+            </div>
+            <div class="plan-card reveal delay-1">
+                <div class="plan-name">Essencial</div>
+                <div class="plan-price">
+                    <span class="currency">R$</span>
+                    <span class="amount" data-monthly="397" data-annual="317">397</span>
+                    <span class="period">/mês</span>
+                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$960/ano</span>
+                </div>
+                <p class="plan-desc">Para locadoras que querem começar com presença digital profissional e reservas online no mesmo pacote.</p>
                 <ul class="plan-features">
                     <li class="plan-feature"><i class="fas fa-check"></i> Até 20 veículos</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Reservas e contratos</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Check-in digital</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Financeiro básico</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Site de vendas com 1 modelo</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Personalização de cores e textos</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
                 </ul>
-                <a href="#" class="btn-plan btn-plan-ghost">Começar agora</a>
+                <a href="https://wa.me/5500000000000?text={{ urlencode('Olá! Gostei do plano Essencial e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar agora</a>
             </div>
             <div class="plan-card popular reveal delay-2">
                 <div class="plan-badge">Mais escolhido</div>
-                <div class="plan-name">Pro</div>
+                <div class="plan-name">Crescimento</div>
                 <div class="plan-price">
                     <span class="currency">R$</span>
-                    <span class="amount" data-monthly="299" data-annual="239">299</span>
+                    <span class="amount" data-monthly="697" data-annual="557">697</span>
                     <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$720/ano</span>
+                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$1.680/ano</span>
                 </div>
-                <p class="plan-desc">Para locadoras em crescimento que precisam de controle avançado e múltiplas filiais.</p>
+                <p class="plan-desc">Para locadoras que querem vender mais, acelerar reservas e ter um site com cara de marca forte.</p>
                 <ul class="plan-features">
                     <li class="plan-feature"><i class="fas fa-check"></i> Até 80 veículos</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Tudo do Starter</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Tudo do Essencial</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Módulo de multas</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> NFS-e automática</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Portal de reservas para clientes</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Até 3 modelos de site</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Customização completa de branding</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Multi-estação / filiais</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Relatórios avançados</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte prioritário</li>
                 </ul>
-                <a href="#" class="btn-plan btn-plan-primary">Começar agora</a>
+                <a href="https://wa.me/5500000000000?text={{ urlencode('Olá! Gostei do plano Crescimento e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-primary" target="_blank" rel="noopener">Começar agora</a>
             </div>
             <div class="plan-card reveal delay-3">
-                <div class="plan-name">Enterprise</div>
+                <div class="plan-name">Escala</div>
                 <div class="plan-price">
-                    <span class="amount" style="font-size:2rem;color:var(--muted)">Sob consulta</span>
+                    <span class="amount" data-monthly="1297" data-annual="1037" style="font-size:2rem;color:var(--muted)">1297</span>
+                    <span class="period">/mês</span>
+                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$3.120/ano</span>
                 </div>
-                <p class="plan-desc">Para redes e grandes operações com necessidades específicas de integração e SLA dedicado.</p>
+                <p class="plan-desc">Para operações que precisam de uma vitrine white-label, integrações e atendimento dedicado.</p>
                 <ul class="plan-features">
                     <li class="plan-feature"><i class="fas fa-check"></i> Frota ilimitada</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Tudo do Pro</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Tudo do Crescimento</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> API de integração</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Site white-label de reservas</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Customizações</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Gerente de conta dedicado</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> SLA 99,9% garantido</li>
@@ -1181,7 +1686,7 @@
             <div>
                 <div class="footer-logo">
                     <div class="footer-logo-icon">
-                       <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
+                       <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="">
                     </div>
                    DECARS
                 </div>
@@ -1282,6 +1787,37 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }, { threshold: 0.1 });
     revealEls.forEach(el => io.observe(el));
+
+    /* ── Hero Carousel ── */
+    const heroCarousel = document.getElementById('heroCarousel');
+    const heroSlides = heroCarousel ? Array.from(heroCarousel.querySelectorAll('.hero-carousel-slide')) : [];
+    if (heroCarousel && heroSlides.length > 1) {
+        let heroIndex = 0;
+        let heroTimer = null;
+
+        const showHeroSlide = (nextIndex) => {
+            heroSlides[heroIndex].classList.remove('is-active');
+            heroIndex = nextIndex;
+            heroSlides[heroIndex].classList.add('is-active');
+        };
+
+        const startHeroTimer = () => {
+            heroTimer = setInterval(() => {
+                showHeroSlide((heroIndex + 1) % heroSlides.length);
+            }, 1800);
+        };
+
+        const stopHeroTimer = () => {
+            if (heroTimer) {
+                clearInterval(heroTimer);
+                heroTimer = null;
+            }
+        };
+
+        heroCarousel.addEventListener('mouseenter', stopHeroTimer);
+        heroCarousel.addEventListener('mouseleave', startHeroTimer);
+        startHeroTimer();
+    }
 
     /* ── Typewriter ── */
     const target = document.getElementById('typewriterTarget');
