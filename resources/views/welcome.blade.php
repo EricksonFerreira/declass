@@ -600,7 +600,7 @@
         font-family: 'Raleway', sans-serif; font-weight: 900; font-size: 1.25rem;
         color: var(--bg); margin-bottom: 1rem; letter-spacing: -.02em;
     }
-    .footer-logo-icon { width: 30px; height: 30px; border-radius: 7px; background: var(--bg); display: flex; align-items: center; justify-content: center; font-size: .75rem; color: #fff; }
+    .footer-logo-icon { width: 30px; height: 30px; border-radius: 7px;   display: flex; align-items: center; justify-content: center; font-size: .75rem; color: #fff; }
     .footer-logo em { color: var(--cyan); font-style: normal; }
     .footer-tagline { font-size: .85rem; color: var(--muted); line-height: 1.7; max-width: 240px; }
     .footer-col h5 {
