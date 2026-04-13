@@ -118,7 +118,7 @@
     }
     .nav-logo-icon {
         width: 36px; height: 36px; border-radius: 8px;
-        background: var(--bg); display: flex; align-items: center;
+        display: flex; align-items: center;
         justify-content: center; font-size: .85rem; color: #fff; flex-shrink: 0;
         transition: transform .3s;
     }
@@ -674,8 +674,10 @@
 <nav class="navbar" id="navbar">
     <div class="nav-inner">
         <a href="/" class="nav-logo">
-            <div class="nav-logo-icon"><i class="fas fa-car"></i></div>
-           <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
+            <div class="nav-logo-icon">
+                <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
+            </div>
+            DECARS
         </a>
         <ul class="nav-links" id="navLinks">
             <li><a href="#funcionalidades">Funcionalidades</a></li>
@@ -709,8 +711,7 @@
                     Gestão completa<br>da sua locadora<br>em <span class="line-accent" id="typewriterTarget"></span><span class="cursor" id="typewriterCursor"></span>
                 </h1>
                 <p class="hero-text reveal delay-2">
-                    Do check-in digital ao financeiro, do controle de multas às reservas online —
-                    tudo em um sistema robusto, pensado para quem vive o dia a dia da locação.
+                    Do check-in digital ao financeiro, do controle de multas às reservas online, tudo em um sistema robusto, pensado para quem vive o dia a dia da locação.
                 </p>
                 <div class="hero-ctas reveal delay-2">
                     <a href="#planos" class="btn-hero">Ver planos e preços</a>
@@ -726,9 +727,9 @@
                 </div>
             </div>
             <div class="hero-visual reveal-right delay-2">
-                <div class="hero-badge-float pos-tl">
+                {{-- <div class="hero-badge-float pos-tl">
                     <div class="dot"></div> Sistema Online
-                </div>
+                </div> --}}
                 <div class="hero-img-wrap">
                     <img src="{{'assets/welcome/home.png'}}" alt="">
                     {{-- Substitua pela imagem do sistema quando disponível --}}
@@ -810,7 +811,7 @@
                 <h2 class="section-title">Uma plataforma.<br>Operação completa.</h2>
             </div>
             <p class="section-sub reveal-right delay-1">
-                Cada módulo foi desenhado a partir de demandas reais de locadoras — não de suposições de mercado.
+                Cada módulo foi desenhado a partir de demandas reais de locadoras, não de suposições de mercado.
             </p>
         </div>
 
@@ -823,7 +824,7 @@
                         <div class="feature-slide-content">
                             <div class="feature-slide-tag"><i class="fas fa-calendar-check"></i> Reservas</div>
                             <h3>Controle total da agenda de locação</h3>
-                            <p>Receba reservas, valide disponibilidade em tempo real e gerencie contratos — tudo no mesmo lugar, sem conflito.</p>
+                            <p>Receba reservas, valide disponibilidade em tempo real e gerencie contratos, tudo no mesmo lugar, sem conflito.</p>
                             <div class="feature-items">
                                 <div class="feature-item"><i class="fas fa-check"></i> Calendário visual por veículo</div>
                                 <div class="feature-item"><i class="fas fa-check"></i> Reserva pelo próprio cliente (portal)</div>
@@ -1085,7 +1086,7 @@
         <div class="section-header" style="text-align:center">
             <div class="section-tag reveal" style="justify-content:center">Planos</div>
             <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Investimento justo para cada tamanho de locadora</h2>
-            <p class="section-sub reveal delay-2" style="margin:0 auto">Sem taxa de implantação. Sem surpresas. Cancele quando quiser.</p>
+            {{-- <p class="section-sub reveal delay-2" style="margin:0 auto">Sem taxa de implantação. Sem surpresas. Cancele quando quiser.</p> --}}
         </div>
         <div class="pricing-toggle reveal delay-1">
             <span id="lblMonthly" class="active">Mensal</span>
@@ -1099,7 +1100,7 @@
                     <span class="currency">R$</span>
                     <span class="amount" data-monthly="149" data-annual="119">149</span>
                     <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente — economia de R$360/ano</span>
+                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$360/ano</span>
                 </div>
                 <p class="plan-desc">Para locadoras em fase inicial, com frota reduzida e operação centralizada.</p>
                 <ul class="plan-features">
@@ -1118,7 +1119,7 @@
                     <span class="currency">R$</span>
                     <span class="amount" data-monthly="299" data-annual="239">299</span>
                     <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente — economia de R$720/ano</span>
+                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$720/ano</span>
                 </div>
                 <p class="plan-desc">Para locadoras em crescimento que precisam de controle avançado e múltiplas filiais.</p>
                 <ul class="plan-features">
