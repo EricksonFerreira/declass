@@ -1217,11 +1217,17 @@
         </div>
         <div class="footer-bottom">
             <p>© {{ date('Y') }} DeCars. Todos os direitos reservados.</p>
-            <div class="footer-socials">
+            <p>
+                Criado por
+                <a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer">
+                    Sonyd Tech
+                </a>
+            </p>
+            {{-- <div class="footer-socials">
                 <a href="#" class="social-btn" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
                 <a href="#" class="social-btn" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
                 <a href="#" class="social-btn" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
-            </div>
+            </div> --}}
         </div>
     </div>
 </footer>
