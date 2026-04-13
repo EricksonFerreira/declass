@@ -6,6 +6,7 @@
     <meta name="description" content="DeCars — Sistema completo para gestão de locadoras de veículos. Reservas, frota, financeiro, check-in digital, multas e muito mais.">
     <title>DeCars — Sistema para Locadoras de Veículos</title>
 
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicons/favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -1179,8 +1180,10 @@
         <div class="footer-grid">
             <div>
                 <div class="footer-logo">
-                    <div class="footer-logo-icon"><i class="fas fa-car"></i></div>
-                    De<em>Cars</em>
+                    <div class="footer-logo-icon">
+                       <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
+                    </div>
+                   DECARS
                 </div>
                 <p class="footer-tagline">Software completo para gestão de locadoras de veículos. Simples para a equipe, poderoso para o gestor.</p>
             </div>
