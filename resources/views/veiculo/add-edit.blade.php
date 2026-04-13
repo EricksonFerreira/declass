@@ -70,7 +70,7 @@
         $bloquearSalvarVeiculo = $metodo === 'POST' && !$podeCriarVeiculo;
 
         // Determine start step from validation errors
-        $errosIdent = ['ano_fabricacao', 'ano_modelo', 'placa_licenca', 'chassi', 'cor', 'numero_motor', 'renavam'];
+        $errosIdent = ['ano_fabricacao', 'placa_licenca', 'chassi', 'cor', 'numero_motor', 'renavam'];
         $errosDatas = [
             'valor_compra',
             'valor_fipe',
@@ -238,12 +238,12 @@
                                     <select name="modelo_id" id="modelo_id" class="d-none" required>
                                         <option value="">Selecione um valor</option>
                                         @foreach($modelos as $key => $value)
-                                            <option value="{{ $key }}" {{ (string) $modeloSelecionadoId === (string) $key ? 'selected' : '' }}>
+                                            <option value="{{ $key }}" data-ano-modelo="{{ $modelosAno[$key] ?? '' }}" {{ (string) $modeloSelecionadoId === (string) $key ? 'selected' : '' }}>
                                                 {{ $value }}
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="veiculo-lookup-help">Use a lupa para encontrar o modelo por nome ou marca.</small>
+                                    <small class="veiculo-lookup-help">Use a lupa para encontrar o modelo por nome ou marca. O ano modelo será usado automaticamente na consulta FIPE.</small>
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
@@ -278,13 +278,6 @@
                                         name="ano_fabricacao" label="Ano de Fabricação" min="1900"
                                         value="{{ old('ano_fabricacao', $veiculo->ano_fabricacao ?? date('Y')) }}"
                                         required />
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-4">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" class="form-control form-control-sm" id="ano_modelo"
-                                        name="ano_modelo" min="1900" label="Ano do Modelo"
-                                        value="{{ old('ano_modelo', $veiculo->ano_modelo ?? date('Y')) }}" required />
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-4">
@@ -881,22 +874,9 @@
             }
 
             function obterAnoModeloSelecionado() {
-                const anoInput = $('#ano_modelo');
-                const anoAtual = parseInt(anoInput.val(), 10);
-                if (!Number.isNaN(anoAtual) && anoAtual > 0) {
-                    return anoAtual;
-                }
-
                 const option = $('#modelo_id option:selected');
                 const anoOption = parseInt(option.data('ano-modelo') || option.data('anoModelo') || 0, 10);
                 return Number.isNaN(anoOption) ? null : anoOption;
-            }
-
-            function preencherAnoModelo(anoModelo) {
-                const ano = parseInt(anoModelo || 0, 10);
-                if (!Number.isNaN(ano) && ano > 0) {
-                    $('#ano_modelo').val(ano);
-                }
             }
 
             $(document).on('focus', '[data-money-field="1"]', function() {
@@ -960,7 +940,7 @@
 
             formatarCamposMoeda();
 
-            $('#marca_id, #modelo_id, #ano_modelo').on('change input', function() {
+            $('#marca_id, #modelo_id').on('change input', function() {
                 limparCacheFalhaFipe();
             });
 
@@ -1015,9 +995,6 @@
                         $modeloLocal.val(String(selectValor));
                     }
                     syncLookupDisplay('#modelo_id', '#modelo_display');
-                    if (selectValor) {
-                        preencherAnoModelo($modeloLocal.find('option:selected').data('ano-modelo'));
-                    }
                     if (selectTexto) {
                         $('#modelo_display').val(selectTexto);
                     }
@@ -1042,7 +1019,6 @@
                 }
 
                 window.carregarModelosVeiculo(item.marca_id || $marca.val(), item.id, item.nome);
-                preencherAnoModelo(item.ano_modelo);
             };
 
             $('#grupo_frota_id').on('change', function() {
@@ -1056,7 +1032,6 @@
 
             $('#modelo_id').on('change', function() {
                 syncLookupDisplay('#modelo_id', '#modelo_display');
-                preencherAnoModelo($(this).find('option:selected').data('ano-modelo'));
             });
 
             $('#tipo_frota_id').on('change', function() {
@@ -1088,7 +1063,7 @@
                         toast: true,
                         position: 'top-end',
                         icon: 'warning',
-                        title: 'Selecione marca, modelo e ano do modelo antes de consultar a FIPE.',
+                        title: 'O modelo selecionado precisa ter ano modelo cadastrado para consultar a FIPE.',
                         showConfirmButton: false,
                         timer: 5000
                     });
@@ -1114,8 +1089,7 @@
 
                 $.get(fipeUrl, {
                     marca_id: marcaId,
-                    modelo_id: modeloId,
-                    ano_modelo: anoModelo
+                    modelo_id: modeloId
                 }).done(function(resp) {
                     // Resposta com mensagem de erro (HTTP 200 mas sem dados)
                     if (resp.message && !resp.valor_fipe && resp.valor_fipe !== 0) {

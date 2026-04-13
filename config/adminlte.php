@@ -4,12 +4,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | TÃƒÆ’Ã‚Â­tulo
+    | Tí­tulo
     |--------------------------------------------------------------------------
     |
-    | Aqui vocÃƒÆ’Ã‚Âª pode alterar o tÃƒÆ’Ã‚Â­tulo padrÃƒÆ’Ã‚Â£o do seu painel de administraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
+    | Aqui você pode alterar o título padrão do seu painel de administração.
     |
-    | Para instruÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes detalhadas, vocÃƒÆ’Ã‚Âª pode consultar a seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de tÃƒÆ’Ã‚Â­tulo aqui:
+    | Para instruções detalhadas, você pode consultar a seção de título aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -23,9 +23,9 @@ return [
     | Favicon
     |--------------------------------------------------------------------------
     |
-    | Aqui vocÃƒÆ’Ã‚Âª pode ativar o favicon.
+    | Aqui você pode ativar o favicon.
     |
-    | Para instruÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes detalhadas, vocÃƒÆ’Ã‚Âª pode consultar a seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de favicon aqui:
+    | Para instruções detalhadas, você pode consultar a seção de favicon aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -38,11 +38,11 @@ return [
     | Fontes do Google
     |--------------------------------------------------------------------------
     |
-    | Aqui vocÃƒÆ’Ã‚Âª pode permitir ou nÃƒÆ’Ã‚Â£o o uso de fontes externas do Google. Desativar as
-    | fontes do Google pode ser ÃƒÆ’Ã‚Âºtil se o acesso ÃƒÆ’Ã‚Â  internet do seu painel de administraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
+    | Aqui você pode permitir ou não o uso de fontes externas do Google. Desativar as
+    | fontes do Google pode ser útil se o acesso à internet do seu painel de administração
     | for restrito de alguma forma.
     |
-    | Para instruÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes detalhadas, vocÃƒÆ’Ã‚Âª pode consultar a seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de fontes do Google aqui:
+    | Para instruções detalhadas, você pode consultar a seção de fontes do Google aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -53,12 +53,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Logo do Painel de AdministraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
+    | Logo do Painel de Administração
     |--------------------------------------------------------------------------
     |
-    | Aqui vocÃƒÆ’Ã‚Âª pode alterar o logo do seu painel de administraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o.
+    | Aqui você pode alterar o logo do seu painel de administração.
     |
-    | Para instruÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes detalhadas, vocÃƒÆ’Ã‚Âª pode consultar a seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de logo aqui:
+    | Para instruções detalhadas, você pode consultar a seção de logo aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -72,13 +72,13 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Logo de AutenticaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o
+    | Logo de Autenticação
     |--------------------------------------------------------------------------
     |
-    | Aqui vocÃƒÆ’Ã‚Âª pode configurar um logo alternativo para usar nas telas de login e registro.
-    | Quando desativado, o logo do painel de administraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o serÃƒÆ’Ã‚Â¡ usado.
+    | Aqui você pode configurar um logo alternativo para usar nas telas de login e registro.
+    | Quando desativado, o logo do painel de administração será usado.
     |
-    | Para instruÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes detalhadas, vocÃƒÆ’Ã‚Âª pode consultar a seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de logo de autenticaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o aqui:
+    | Para instruções detalhadas, você pode consultar a seção de logo de autenticação aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -87,7 +87,7 @@ return [
         'enabled' => true,
         'img' => [
             'path' => 'public/assets/imgs/logo-sem-texto.png',
-            'alt' => 'Logo de AutenticaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o',
+            'alt' => 'Logo de Autenticação',
             'class' => '',
             'width' => 50,
             'height' => 50,
@@ -96,15 +96,15 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | AnimaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de PrÃƒÆ’Ã‚Â©-carregamento
+    | Animação de Pré-carregamento
     |--------------------------------------------------------------------------
     |
-    | Aqui vocÃƒÆ’Ã‚Âª pode alterar a configuraÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o da animaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de prÃƒÆ’Ã‚Â©-carregamento. Atualmente, dois
-    | modos sÃƒÆ’Ã‚Â£o suportados: 'fullscreen' para uma animaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de prÃƒÆ’Ã‚Â©-carregamento em tela cheia
-    | e 'cwrapper' para anexar a animaÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de prÃƒÆ’Ã‚Â©-carregamento ao elemento content-wrapper
-    | e evitar sobreposiÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o com as barras laterais e a barra superior.
+    | Aqui você pode alterar a configuração da animação de pré-carregamento. Atualmente, dois
+    | modos são suportados: 'fullscreen' para uma animação de pré-carregamento em tela cheia
+    | e 'cwrapper' para anexar a animação de pré-carregamento ao elemento content-wrapper
+    | e evitar sobreposição com as barras laterais e a barra superior.
     |
-    | Para instruÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes detalhadas, vocÃƒÆ’Ã‚Âª pode consultar a seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de prÃƒÆ’Ã‚Â©-carregamento aqui:
+    | Para instruções detalhadas, você pode consultar a seção de pré-carregamento aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */
@@ -114,7 +114,7 @@ return [
         'mode' => 'cwrapper',
         'img' => [
             'path' => 'public/assets/imgs/logo-sem-texto.png',
-            'alt' => 'Imagem de PrÃƒÆ’Ã‚Â©-carregamento DECARS',
+            'alt' => 'Imagem de Pré-carregamento DECARS',
             'effect' => 'animation__shake',
             'width' => 160,
             'height' => 160,
@@ -123,12 +123,12 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Menu do UsuÃƒÆ’Ã‚Â¡rio
+    | Menu do Usuário
     |--------------------------------------------------------------------------
     |
-    | Aqui vocÃƒÆ’Ã‚Âª pode ativar e alterar o menu do usuÃƒÆ’Ã‚Â¡rio.
+    | Aqui você pode ativar e alterar o menu do usuário.
     |
-    | Para instruÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Âµes detalhadas, vocÃƒÆ’Ã‚Âª pode consultar a seÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o de menu do usuÃƒÆ’Ã‚Â¡rio aqui:
+    | Para instruções detalhadas, você pode consultar a seção de menu do usuário aqui:
     | https://github.com/jeroennoten/Laravel-AdminLTE/wiki/Basic-Configuration
     |
     */

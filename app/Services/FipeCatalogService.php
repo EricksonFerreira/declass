@@ -44,7 +44,7 @@ class FipeCatalogService
             $stats['models_api'] += $models->count();
 
             foreach ($models as $modelApi) {
-                $result = $this->syncModel($brand, $modelApi, $refreshExisting, $dryRun);
+                $result = $this->syncModel($vehicleType, $brand, $modelApi, $refreshExisting, $dryRun);
                 $stats[$result['action']]++;
             }
         }
@@ -104,7 +104,7 @@ class FipeCatalogService
         return $dryRun ? $marca : $marca->refresh();
     }
 
-    private function syncModel(Marca $marca, array $modelApi, bool $refreshExisting, bool $dryRun): array
+    private function syncModel(string $vehicleType, Marca $marca, array $modelApi, bool $refreshExisting, bool $dryRun): array
     {
         $codigoFipe = trim((string) ($modelApi['code'] ?? $modelApi['codigo'] ?? ''));
         $nomeFipe = trim((string) ($modelApi['name'] ?? $modelApi['nome'] ?? ''));
@@ -139,9 +139,10 @@ class FipeCatalogService
             'ativo' => 'S',
         ];
 
+        $brandCode = (string) ($marca->codigo_fipe ?? '');
         $anoModelo = $this->resolveModelYear(
             $vehicleType,
-            (string) ($brandApi['code'] ?? $brandApi['codigo'] ?? ''),
+            $brandCode,
             $codigoFipe
         );
         if ($anoModelo !== null) {

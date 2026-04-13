@@ -119,7 +119,12 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
         $grupoFrotas = $this->grupoFrotaService->getAllAtivos();
         $marcas = $this->marcaService->getAllAtivos();
-        $modelos = $this->modeloService->getAllAtivos();
+        $modelosDetalhados = $this->modeloService->getModel()->newQuery()
+            ->where('ativo', 'S')
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'ano_modelo']);
+        $modelos = $modelosDetalhados->pluck('nome', 'id')->all();
+        $modelosAno = $modelosDetalhados->pluck('ano_modelo', 'id')->all();
         $segmentos = $this->segmentoService->getAllAtivos();
         $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
         $estacoes = $this->estacaoService->getAllAtivos();
@@ -133,6 +138,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'grupoFrotas',
             'marcas',
             'modelos',
+            'modelosAno',
             'estacoes',
             'segmentos',
             'statusVeiculos',
@@ -166,7 +172,6 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $dados = $request->validate([
             'marca_id' => ['required', 'integer', $marcaExists],
             'modelo_id' => ['required', 'integer', $modeloExists],
-            'ano_modelo' => 'required|integer|min:1900|max:' . ((int) date('Y') + 1),
         ]);
 
         $marca = Marca::query()->find($dados['marca_id']);
@@ -174,6 +179,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         if (!$marca || !$modelo) {
             return response()->json(['message' => 'Marca ou modelo nao encontrado no cadastro local.'], 422);
+        }
+
+        $anoModelo = (int) ($modelo->ano_modelo ?? 0);
+        if ($anoModelo <= 0) {
+            return response()->json(['message' => 'O modelo selecionado nao possui ano modelo cadastrado.'], 422);
         }
 
         $baseUrl = rtrim((string) config('services.fipe.base_url', 'https://fipe.parallelum.com.br/api/v2'), '/');
@@ -231,7 +241,6 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 ->throw()
                 ->json();
 
-            $anoModelo = (int) $dados['ano_modelo'];
             $anoApi = collect($anosResponse)->first(function (array $item) use ($anoModelo) {
                 return Str::contains((string) ($item['name'] ?? $item['nome'] ?? ''), (string) $anoModelo);
             });
@@ -533,7 +542,12 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
         $grupoFrotas = $this->grupoFrotaService->getAllAtivos();
         $marcas = $this->marcaService->getAllAtivos();
-        $modelos = $this->modeloService->getAllAtivos();
+        $modelosDetalhados = $this->modeloService->getModel()->newQuery()
+            ->where('ativo', 'S')
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'ano_modelo']);
+        $modelos = $modelosDetalhados->pluck('nome', 'id')->all();
+        $modelosAno = $modelosDetalhados->pluck('ano_modelo', 'id')->all();
         $segmentos = $this->segmentoService->getAllAtivos();
         $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
         $estacoes = $this->estacaoService->getAllAtivos();
@@ -546,6 +560,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'marcas',
             'estacoes',
             'modelos',
+            'modelosAno',
             'segmentos',
             'statusVeiculos',
             'defaultStatusId',

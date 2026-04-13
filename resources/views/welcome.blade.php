@@ -675,7 +675,7 @@
     <div class="nav-inner">
         <a href="/" class="nav-logo">
             <div class="nav-logo-icon"><i class="fas fa-car"></i></div>
-            De<em>Cars</em>
+           <img src="{{'assets/imgs/logo-sem-texto.png'}}" alt="">
         </a>
         <ul class="nav-links" id="navLinks">
             <li><a href="#funcionalidades">Funcionalidades</a></li>
@@ -701,10 +701,10 @@
     <div class="container">
         <div class="hero-inner">
             <div>
-                <div class="hero-eyebrow reveal">
+                {{-- <div class="hero-eyebrow reveal">
                     <i class="fas fa-circle" style="font-size:.5rem;color:#22c55e"></i>
                     Software para Locadoras de Veículos
-                </div>
+                </div> --}}
                 <h1 class="hero-title reveal delay-1">
                     Gestão completa<br>da sua locadora<br>em <span class="line-accent" id="typewriterTarget"></span><span class="cursor" id="typewriterCursor"></span>
                 </h1>
@@ -730,12 +730,13 @@
                     <div class="dot"></div> Sistema Online
                 </div>
                 <div class="hero-img-wrap">
+                    <img src="{{'assets/welcome/home.png'}}" alt="">
                     {{-- Substitua pela imagem do sistema quando disponível --}}
-                    <div class="hero-placeholder">
+                    {{-- <div class="hero-placeholder">
                         <i class="fas fa-desktop"></i>
                         <strong>Print do sistema aqui</strong>
                         <span>Substitua pela imagem do dashboard ou tela principal</span>
-                    </div>
+                    </div> --}}
                     {{-- Exemplo: <img src="{{ asset('img/hero-dashboard.png') }}" alt="DeCars Dashboard"> --}}
                 </div>
                 <div class="hero-badge-float pos-br">
@@ -747,7 +748,7 @@
 </section>
 
 <!-- ══ CLIENTS TICKER ══ -->
-<section class="clients">
+{{-- <section class="clients">
     <div class="clients-label">Locadoras que confiam na plataforma</div>
     <div style="overflow:hidden">
         <div class="clients-track">
@@ -770,7 +771,7 @@
             <div class="client-chip">Locadora Sul</div>
         </div>
     </div>
-</section>
+</section> --}}
 
 <!-- ══ PROBLEMS ══ -->
 <section class="problems" id="problemas">
@@ -832,10 +833,11 @@
                         </div>
                         <div class="feature-slide-image">
                             {{-- <img src="{{ asset('img/screen-reservas.png') }}" alt="Reservas"> --}}
-                            <div class="feature-placeholder">
+                            {{-- <div class="feature-placeholder">
                                 <i class="fas fa-calendar-alt"></i>
                                 <span>Adicione print da tela de Reservas</span>
-                            </div>
+                            </div> --}}
+                            <img src="{{'assets/welcome/reservas.png'}}" alt="Tela de Reservas">
                         </div>
                     </div>
                 </div>
@@ -855,10 +857,11 @@
                             </div>
                         </div>
                         <div class="feature-slide-image">
-                            <div class="feature-placeholder">
+                            {{-- <div class="feature-placeholder">
                                 <i class="fas fa-mobile-alt"></i>
                                 <span>Adicione print da tela de Check-in</span>
-                            </div>
+                            </div> --}}
+                            <img src="{{'assets/welcome/check-in.png'}}" alt="Tela de Check-in Digital">
                         </div>
                     </div>
                 </div>
@@ -878,10 +881,11 @@
                             </div>
                         </div>
                         <div class="feature-slide-image">
-                            <div class="feature-placeholder">
+                            {{-- <div class="feature-placeholder">
                                 <i class="fas fa-car-side"></i>
                                 <span>Adicione print da tela de Frota</span>
-                            </div>
+                            </div> --}}
+                            <img src="{{'assets/welcome/frota.png'}}" alt="Tela de Frota">
                         </div>
                     </div>
                 </div>
@@ -901,10 +905,11 @@
                             </div>
                         </div>
                         <div class="feature-slide-image">
-                            <div class="feature-placeholder">
+                            {{-- <div class="feature-placeholder">
                                 <i class="fas fa-chart-bar"></i>
                                 <span>Adicione print da tela Financeiro</span>
-                            </div>
+                            </div> --}}
+                            <img src="{{'assets/welcome/financeiro.png'}}" alt="Tela de Financeiro">
                         </div>
                     </div>
                 </div>
@@ -980,7 +985,7 @@
 </section>
 
 <!-- ══ STATS ══ -->
-<section class="stats" id="numeros">
+{{-- <section class="stats" id="numeros">
     <div class="container">
         <div class="section-header" style="text-align:center;margin-bottom:3rem">
             <div class="section-tag reveal" style="justify-content:center">Números</div>
@@ -1009,10 +1014,10 @@
             </div>
         </div>
     </div>
-</section>
+</section> --}}
 
 <!-- ══ TESTIMONIALS ══ -->
-<section class="testimonials" id="depoimentos">
+{{-- <section class="testimonials" id="depoimentos">
     <div class="container">
         <div class="testimonials-inner">
             <div class="reveal-left">
@@ -1072,7 +1077,7 @@
             </div>
         </div>
     </div>
-</section>
+</section> --}}
 
 <!-- ══ PRICING ══ -->
 <section class="pricing" id="planos">
