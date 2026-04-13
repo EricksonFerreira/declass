@@ -188,7 +188,7 @@
     .hero-inner {
         position: relative; z-index: 1;
         display: grid; grid-template-columns: 1fr 1fr;
-        align-items: center; gap: 4rem; padding: 5rem 0;
+        align-items: center; gap: 4rem; padding: 1rem 0;
         width: 100%;
     }
     .hero-eyebrow {
