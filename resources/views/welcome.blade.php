@@ -1181,7 +1181,7 @@
                     <div class="hero-trust-item"><i class="fas fa-check-circle"></i> Dados na nuvem</div>
                 </div>
                 <div class="hero-credit reveal delay-4">
-                    <a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+                    <a href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                         Software da
                         <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
                     </a>
@@ -1790,7 +1790,7 @@
         </div>
         <div class="footer-bottom">
             <p>© {{ date('Y') }} DeCars. Todos os direitos reservados.</p>
-            <a class="footer-brand-credit" href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+            <a class="footer-brand-credit" href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                 <span>Software oficial da</span>
                 <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
             </a>
