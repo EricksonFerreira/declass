@@ -1324,7 +1324,7 @@
             <li><a href="#planos">Planos</a></li>
             <li><a href="{{ route('site.sobre') }}">Sobre</a></li>
             <li><a href="#perguntas">Perguntas</a></li>
-            <li><a href="#depoimentos">Clientes</a></li>
+            {{-- <li><a href="#depoimentos">Clientes</a></li> --}}
         </ul>
         <div class="nav-actions" id="navActions">
             <a href="{{ route('login') }}" class="btn-ghost-nav">Entrar</a>
