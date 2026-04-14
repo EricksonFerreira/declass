@@ -93,19 +93,21 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id', 'nome', 'nome');
-        $marcas = $this->modeloService->getAllAtivosConcatenado('id', 'nome');
         $caracteristicas = $this->caracteristicaFrotaService->getAllAtivosWithTipoValor();
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
         $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
+        $modelosAgrupados = $this->montarModelosAgrupadosPorMarca();
+        $marcasModelos = $this->montarMarcasParaFiltro($modelosAgrupados);
         $preRequisitosGrupoFrota = $this->montarPreRequisitosGrupoFrota($tipoFrotas, $modelos, $caracteristicas, $tiposOpcionais);
 
         return view(
             'grupo_frota.add-edit',
             compact(
                 'modelos',
+                'modelosAgrupados',
+                'marcasModelos',
                 'caracteristicas',
                 'tiposOpcionais',
-                'marcas',
                 'tipoFrotas',
                 'breadcrumb',
                 'status',
@@ -133,10 +135,11 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Grupos de Frotas', 'grupo_frota.index', "Editar: $grupoFrota->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($grupoFrota);
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos('id', 'nome', 'nome');
-        $modelos = $this->modeloService->getAllAtivosConcatenado('id', 'nome');
         $caracteristicas = $this->caracteristicaFrotaService->getAllAtivosWithTipoValor();
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
         $modelos = $this->modeloService->getAllAtivos('id', 'nome', 'nome');
+        $modelosAgrupados = $this->montarModelosAgrupadosPorMarca();
+        $marcasModelos = $this->montarMarcasParaFiltro($modelosAgrupados);
         $preRequisitosGrupoFrota = $this->montarPreRequisitosGrupoFrota($tipoFrotas, $modelos, $caracteristicas, $tiposOpcionais);
 
         $grupoFrota->opcionais = $grupoFrota->opcionais->pluck('id')->toArray();
@@ -152,6 +155,8 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
             'grupo_frota.add-edit',
             compact(
                 'modelos',
+                'modelosAgrupados',
+                'marcasModelos',
                 'tiposOpcionais',
                 'caracteristicas',
                 'tipoFrotas',
@@ -327,5 +332,46 @@ class GrupoFrotaController extends BaseController implements FiltroInterface, Re
             'POST',
             route('grupo_frota.store'),
         ];
+    }
+
+    private function montarModelosAgrupadosPorMarca(): array
+    {
+        $modelos = $this->modeloService->getModel()->newQuery()
+            ->with(['marcas:id,nome'])
+            ->where('ativo', 'S')
+            ->select('id', 'nome', 'marca_id')
+            ->orderBy('nome')
+            ->get();
+
+        return $modelos
+            ->groupBy(fn ($modelo) => (int) ($modelo->marca_id ?? 0))
+            ->map(function (Collection $items, $marcaId) {
+                $marca = $items->first()?->marcas;
+
+                return [
+                    'id' => (int) $marcaId,
+                    'nome' => $marca?->nome ?: 'Sem marca',
+                    'modelos' => $items->map(function ($modelo) {
+                        return [
+                            'id' => (int) $modelo->id,
+                            'nome' => (string) $modelo->nome,
+                        ];
+                    })->values()->all(),
+                ];
+            })
+            ->sortBy(fn (array $grupo) => mb_strtolower((string) $grupo['nome']))
+            ->values()
+            ->all();
+    }
+
+    private function montarMarcasParaFiltro(array $modelosAgrupados): array
+    {
+        $marcas = [];
+
+        foreach ($modelosAgrupados as $grupo) {
+            $marcas[(string) ($grupo['id'] ?? 0)] = (string) ($grupo['nome'] ?? 'Sem marca');
+        }
+
+        return $marcas;
     }
 }

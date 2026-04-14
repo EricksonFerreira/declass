@@ -363,22 +363,88 @@
                         </div>
 
                         <div id="modelos-content" class="tab-pane fade" role="tabpanel" aria-labelledby="modelos-tab">
-                            <div class="grupo-frota-section-title">Modelos Vinculados</div>
-                            <div class="card card-modelos-grupo">
-                                <div class="card-body py-2 px-3">
-                                    <div class="row">
-                                        @foreach ($modelos as $id_modelo => $modelo)
-                                            <div class="col-lg-4 col-md-6 mb-1">
-                                                <label class="opcional-check mb-0">
-                                                    <input type="checkbox" id="modelo_{{ $id_modelo }}"
-                                                        name="modelos[]" value="{{ $id_modelo }}"
-                                                        {{ isset($grupoFrota) && in_array($id_modelo, $grupoFrota->modelos) ? 'checked' : '' }}>
-                                                    <span>{{ $modelo }}</span>
-                                                </label>
-                                            </div>
+                            <div class="grupo-frota-section-title d-flex align-items-center justify-content-between flex-wrap">
+                                <span>Modelos Vinculados</span>
+                                <small class="text-muted">Agrupados por marca com filtro rápido e colapsos</small>
+                            </div>
+
+                            <div class="row mb-3">
+                                <div class="col-lg-4 col-md-6 mb-2 mb-lg-0">
+                                    <label class="small font-weight-bold text-muted mb-1" for="filtroMarcaModelos">Filtrar por marca</label>
+                                    <select id="filtroMarcaModelos" class="form-control form-control-sm">
+                                        <option value="">Todas as marcas</option>
+                                        @foreach ($marcasModelos as $marcaId => $marcaNome)
+                                            <option value="{{ $marcaId }}">{{ $marcaNome }}</option>
                                         @endforeach
-                                    </div>
+                                    </select>
                                 </div>
+                                <div class="col-lg-8 col-md-6">
+                                    <label class="small font-weight-bold text-muted mb-1" for="filtroTextoModelos">Filtrar por modelo</label>
+                                    <input type="text" id="filtroTextoModelos" class="form-control form-control-sm" placeholder="Digite parte do nome do modelo">
+                                </div>
+                            </div>
+
+                            @php
+                                $modelosSelecionados = isset($grupoFrota)
+                                    ? collect($grupoFrota->modelos)->map(fn ($id) => (int) $id)->all()
+                                    : [];
+                            @endphp
+
+                            <div class="grupo-frota-modelos-accordion" id="accordionModelos">
+                                @foreach ($modelosAgrupados as $grupoMarca)
+                                    @php
+                                        $grupoMarcaId = (int) ($grupoMarca['id'] ?? 0);
+                                        $grupoMarcaNome = (string) ($grupoMarca['nome'] ?? 'Sem marca');
+                                        $modelosDaMarca = collect($grupoMarca['modelos'] ?? []);
+                                        $temModeloSelecionado = $modelosDaMarca->pluck('id')->intersect($modelosSelecionados)->isNotEmpty();
+                                        $collapseId = 'collapseMarcaModelos' . $grupoMarcaId;
+                                        $cardOpen = $loop->first || $temModeloSelecionado;
+                                    @endphp
+
+                                    <div class="card card-modelos-marca js-marca-group" data-marca-id="{{ $grupoMarcaId }}" data-marca-nome="{{ \Illuminate\Support\Str::of($grupoMarcaNome)->ascii()->lower()->toString() }}">
+                                        <div class="card-header py-2 px-3 border-0 d-flex align-items-center justify-content-between">
+                                            <button type="button"
+                                                class="btn btn-link p-0 text-decoration-none text-left flex-grow-1 js-toggle-marca"
+                                                data-toggle="collapse"
+                                                data-target="#{{ $collapseId }}"
+                                                aria-expanded="{{ $cardOpen ? 'true' : 'false' }}"
+                                                aria-controls="{{ $collapseId }}">
+                                                <strong class="d-block">{{ $grupoMarcaNome }}</strong>
+                                                <small class="text-muted">{{ $modelosDaMarca->count() }} modelo(s)</small>
+                                            </button>
+                                            <span class="badge badge-light">{{ $modelosDaMarca->count() }}</span>
+                                        </div>
+                                        <div id="{{ $collapseId }}"
+                                            class="collapse {{ $cardOpen ? 'show' : '' }}"
+                                            data-parent="#accordionModelos">
+                                            <div class="card-body py-3 px-3">
+                                                <div class="row">
+                                                    @foreach ($grupoMarca['modelos'] as $modelo)
+                                                        @php
+                                                            $modeloId = (int) ($modelo['id'] ?? 0);
+                                                            $modeloNome = (string) ($modelo['nome'] ?? '');
+                                                            $checked = in_array($modeloId, $modelosSelecionados, true);
+                                                        @endphp
+                                                        <div class="col-lg-4 col-md-6 mb-2 js-modelo-item"
+                                                            data-marca-id="{{ $grupoMarcaId }}"
+                                                            data-modelo-nome="{{ \Illuminate\Support\Str::of($modeloNome)->ascii()->lower()->toString() }}">
+                                                            <label class="opcional-check mb-0 h-100">
+                                                                <input type="checkbox" id="modelo_{{ $modeloId }}"
+                                                                    name="modelos[]" value="{{ $modeloId }}"
+                                                                    {{ $checked ? 'checked' : '' }}>
+                                                                <span>{{ $modeloNome }}</span>
+                                                            </label>
+                                                        </div>
+                                                    @endforeach
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <div class="alert alert-light border mt-3 d-none js-modelos-empty">
+                                Nenhum modelo encontrado com os filtros aplicados.
                             </div>
                         </div>
                     </div>
@@ -549,6 +615,27 @@
             border-radius: 12px;
             overflow: hidden;
             background: #fff;
+        }
+
+        .card-modelos-marca {
+            border: 1px solid #dbe6f3;
+            border-radius: 12px;
+            overflow: hidden;
+            background: #fff;
+            margin-bottom: 12px;
+        }
+
+        .card-modelos-marca .card-header {
+            background: linear-gradient(180deg, #fbfdff 0%, #f5f8fd 100%);
+        }
+
+        .grupo-frota-modelos-accordion .collapse .card-body {
+            border-top: 1px solid #eef2f7;
+        }
+
+        .js-modelo-item.hidden-by-filter,
+        .js-marca-group.hidden-by-filter {
+            display: none !important;
         }
 
         .table-grupo-frota thead th {
@@ -891,6 +978,54 @@
             $('#imagens').on('change', function () {
                 renderMultiplePreview(this, $('.js-imagens-preview'));
             });
+
+            function normalizarTexto(texto) {
+                return (texto || '')
+                    .toString()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .toLowerCase()
+                    .trim();
+            }
+
+            function aplicarFiltrosModelos() {
+                const marcaFiltro = String($('#filtroMarcaModelos').val() || '');
+                const textoFiltro = normalizarTexto($('#filtroTextoModelos').val());
+                let encontrouAlgum = false;
+
+                $('.js-marca-group').each(function () {
+                    const $group = $(this);
+                    const groupMarcaId = String($group.data('marca-id') ?? '0');
+                    let modelosVisiveis = 0;
+
+                    $group.find('.js-modelo-item').each(function () {
+                        const $item = $(this);
+                        const matchMarca = !marcaFiltro || marcaFiltro === groupMarcaId;
+                        const modeloNome = normalizarTexto($item.data('modelo-nome'));
+                        const matchModelo = !textoFiltro || modeloNome.includes(textoFiltro);
+                        const visible = matchMarca && matchModelo;
+
+                        $item.toggleClass('hidden-by-filter', !visible);
+                        if (visible) {
+                            modelosVisiveis++;
+                        }
+                    });
+
+                    const grupoVisivel = modelosVisiveis > 0;
+                    $group.toggleClass('hidden-by-filter', !grupoVisivel);
+
+                    if (grupoVisivel && (marcaFiltro || textoFiltro)) {
+                        $group.find('.collapse').addClass('show');
+                    }
+
+                    encontrouAlgum = encontrouAlgum || grupoVisivel;
+                });
+
+                $('.js-modelos-empty').toggleClass('d-none', encontrouAlgum);
+            }
+
+            $('#filtroMarcaModelos, #filtroTextoModelos').on('change keyup input', aplicarFiltrosModelos);
+            aplicarFiltrosModelos();
         });
     </script>
 @stop
