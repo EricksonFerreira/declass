@@ -3,6 +3,7 @@
 namespace App\Http\Requests\GrupoFrota;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EmpresaContext;
 use Illuminate\Validation\Rule;
 
 class UpdateGrupoFrotaRequest extends FormRequest
@@ -17,9 +18,10 @@ class UpdateGrupoFrotaRequest extends FormRequest
         $grupoFrota = $this->route('grupo_frotum') ?? $this->route('grupo_frota') ?? $this->id;
         $grupoFrotaId = is_object($grupoFrota) ? $grupoFrota->id : $grupoFrota;
         
-        $empresaId =  session('empresa_context_id') 
-        ?? auth()->user()?->empresa_id
-        ?? request()->input('empresa_id');
+        $empresaId = app(EmpresaContext::class)->empresaId()
+            ?? session('empresa_context_id')
+            ?? auth()->user()?->empresa_id
+            ?? request()->input('empresa_id');
         
         return [
             'codigo' => ['required', 'string', 'max:50'],

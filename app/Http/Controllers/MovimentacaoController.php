@@ -16,6 +16,7 @@ use App\Services\UsuarioService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
+use App\Support\EmpresaContext;
 
 class MovimentacaoController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -69,7 +70,9 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $this->atualizarFiltros($itensFiltered, $additionalFilters);
 
         $perPages = [5, 10, 15, 25, 50, 100];
-        $statusList = \App\Models\StatusMovimentacao::where('empresa_id', auth()->user()->empresa_id)
+        $empresaId = $this->empresaIdParaConsulta();
+        $statusList = \App\Models\StatusMovimentacao::query()
+            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
             ->orderBy('nome')->get(['id', 'nome', 'cor']);
 
         return view('movimentacao.index', compact(
@@ -111,9 +114,16 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
         $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
         $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
-        $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
-        $statusMovimentacaoObj = \App\Models\StatusMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
-        $usuariosObj = \App\Models\User::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
+        $empresaId = $this->empresaIdParaConsulta();
+        $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::query()
+            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
+            ->orderBy('nome')->get();
+        $statusMovimentacaoObj = \App\Models\StatusMovimentacao::query()
+            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
+            ->orderBy('nome')->get();
+        $usuariosObj = \App\Models\User::query()
+            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
+            ->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
         $usuarios = $this->usuarioService->getAllForReservaSelect();
         $estacoes = $this->estacaoService->listarAtivasParaModal();
 
@@ -166,9 +176,16 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
         $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
         $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
-        $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
-        $statusMovimentacaoObj = \App\Models\StatusMovimentacao::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get();
-        $usuariosObj = \App\Models\User::where('empresa_id', auth()->user()->empresa_id)->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
+        $empresaId = $this->empresaIdParaConsulta();
+        $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::query()
+            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
+            ->orderBy('nome')->get();
+        $statusMovimentacaoObj = \App\Models\StatusMovimentacao::query()
+            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
+            ->orderBy('nome')->get();
+        $usuariosObj = \App\Models\User::query()
+            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
+            ->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
         $usuarios = $this->usuarioService->getAllForReservaSelect();
         $estacoes = $this->estacaoService->listarAtivasParaModal();
 
@@ -217,6 +234,18 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $chegadaReal = $request->input('chegada_real');
         $this->movimentacaoService->concluir((int) $id, $chegadaReal ?: null);
         return response()->json(['success' => true]);
+    }
+
+    private function empresaIdParaConsulta(): ?int
+    {
+        $empresaId = app(EmpresaContext::class)->empresaId();
+
+        if ($empresaId !== null) {
+            return (int) $empresaId;
+        }
+
+        $userEmpresaId = auth()->user()?->empresa_id;
+        return $userEmpresaId ? (int) $userEmpresaId : null;
     }
 
     public function buscarReservas(Request $request)

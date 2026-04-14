@@ -103,7 +103,7 @@ class OrdemServicoController extends Controller
 
         $empresaId = (int) $request->session()->get('empresa_context_id', 0);
         if ($empresaId === 0) {
-            $empresaId = (int) (Auth::user()->empresa_id ?? 0);
+            $empresaId = (int) (app(EmpresaContext::class)->empresaId() ?? Auth::user()->empresa_id ?? 0);
         }
         $empresaId = $empresaId > 0 ? $empresaId : null;
 
@@ -154,7 +154,7 @@ class OrdemServicoController extends Controller
             $empresaId = (int) $request->session()->get('empresa_context_id', 0);
         }
         if ($empresaId === 0) {
-            $empresaId = (int) (Auth::user()->empresa_id ?? 0);
+            $empresaId = (int) (app(EmpresaContext::class)->empresaId() ?? Auth::user()->empresa_id ?? 0);
         }
         $empresa = $empresaId > 0 ? Empresa::find($empresaId) : null;
 

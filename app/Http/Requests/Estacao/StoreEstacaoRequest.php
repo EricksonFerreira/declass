@@ -3,6 +3,9 @@
 namespace App\Http\Requests\Estacao;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EmpresaContext;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class StoreEstacaoRequest extends FormRequest
 {
@@ -13,8 +16,15 @@ class StoreEstacaoRequest extends FormRequest
 
     public function rules(): array
     {
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? Auth::user()?->empresa_id;
+
         return [
-            'nome' => 'required|string|max:255',
+            'nome' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('estacoes', 'nome')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
             'email' => 'required|email|max:255',
             'telefone' => ['nullable', 'string', 'max:20', 'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/'],
             'celular' => [

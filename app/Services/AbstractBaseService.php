@@ -141,7 +141,13 @@ abstract class AbstractBaseService implements BaseServiceInterface
             $query->orderBy($orderBy, $orderDirection);
         }
 
-        return $query->where('empresa_id',Auth::user()->empresa_id)->get();
+        $empresaId = $this->currentEmpresaId();
+
+        if ($empresaId === null) {
+            return [];
+        }
+
+        return $query->where('empresa_id', $empresaId)->get();
     }
     public function formatArraySelectSubText($data, string $idField = 'id', string $nameField = 'name'): array
     {

@@ -32,12 +32,10 @@ class NfseController extends Controller
             'empresa_id' => $request->input('empresa_id'),
         ];
 
-        if (!Auth::user()?->isAdministrador()) {
-            $empresaId = Auth::user()?->empresa_id;
-            if ($empresaId && Schema::hasColumn('nfse', 'empresa_id')) {
-                $query->where('empresa_id', $empresaId);
-            }
-        } elseif (!empty($filters['empresa_id']) && Schema::hasColumn('nfse', 'empresa_id')) {
+        $empresaId = $this->empresaIdParaConsulta();
+        if ($empresaId !== null && Schema::hasColumn('nfse', 'empresa_id')) {
+            $query->where('empresa_id', $empresaId);
+        } elseif (!empty($filters['empresa_id']) && Auth::user()?->isAdministrador() && Schema::hasColumn('nfse', 'empresa_id')) {
             $query->where('empresa_id', (int) $filters['empresa_id']);
         }
 
@@ -101,11 +99,9 @@ class NfseController extends Controller
 
         $nfse = Nfse::query()->with(['empresa'])->findOrFail($id);
 
-        if (!Auth::user()?->isAdministrador()) {
-            $empresaId = Auth::user()?->empresa_id;
-            if ($empresaId && (int) $nfse->empresa_id !== (int) $empresaId) {
-                abort(403, 'Sem acesso a esta nota fiscal.');
-            }
+        $empresaId = $this->empresaIdParaConsulta();
+        if ($empresaId !== null && (int) $nfse->empresa_id !== (int) $empresaId) {
+            abort(403, 'Sem acesso a esta nota fiscal.');
         }
 
         $result = $this->nfseService->baixarXml($nfse, $tipo);
@@ -202,5 +198,21 @@ class NfseController extends Controller
         $pode = now()->greaterThanOrEqualTo($proxima);
 
         return [$pode, $ultima, $proxima];
+    }
+
+    private function empresaIdParaConsulta(): ?int
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return null;
+        }
+
+        if ($user->isAdministrador()) {
+            /** @var EmpresaContext $empresaContext */
+            $empresaContext = app(EmpresaContext::class);
+            return $empresaContext->empresaId() ?? $user->empresa_id;
+        }
+
+        return $user->empresa_id ? (int) $user->empresa_id : null;
     }
 }

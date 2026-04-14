@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Usuario;
 
+use App\Support\EmpresaContext;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,7 @@ class UpdateUsuarioRequest extends FormRequest
 
     public function rules(): array
     {
-        $empresaId = auth()->user()?->empresa_id;
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
 
         return [
             'nome' => 'required|string|max:255',

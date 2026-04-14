@@ -3,6 +3,9 @@
 namespace App\Http\Requests\Estacao;
 
 use Illuminate\Foundation\Http\FormRequest;
+use App\Support\EmpresaContext;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class UpdateEstacaoRequest extends FormRequest
 {
@@ -13,12 +16,18 @@ class UpdateEstacaoRequest extends FormRequest
 
     public function rules(): array
     {
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? Auth::user()?->empresa_id;
+        $estacao = $this->route('estacao');
+        $estacaoId = is_object($estacao) ? $estacao->id : $estacao;
+
         return [
             'nome' => [
                 'required',
                 'string',
                 'max:255',
-                'unique:estacoes,nome,' . $this->route('estacao') . ',id'
+                Rule::unique('estacoes', 'nome')
+                    ->ignore($estacaoId)
+                    ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'email' => 'required|email|max:255',
             'telefone' => ['nullable', 'string', 'max:20', 'regex:/^\(\d{2}\) \d{4,5}-\d{4}$/'],

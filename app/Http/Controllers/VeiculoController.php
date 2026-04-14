@@ -159,7 +159,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function consultarFipe(Request $request): JsonResponse
     {
-        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? Auth::user()?->empresa_id;
 
         $marcaExists = Rule::exists('marcas', 'id');
         $modeloExists = Rule::exists('modelos', 'id');
@@ -332,7 +332,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         if (Auth::user()?->isAdministrador()) {
             $empresaId = $empresaContext->empresaId();
         } else {
-            $empresaId = Auth::user()?->empresa_id ?? $empresaContext->empresaId();
+            $empresaId = $empresaContext->empresaId() ?? Auth::user()?->empresa_id;
         }
 
         if ($empresaId && Schema::hasTable('empresas') && Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
@@ -942,7 +942,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         if (Auth::user()?->isAdministrador()) {
             $empresaId = $empresaContext->empresaId();
         } else {
-            $empresaId = Auth::user()?->empresa_id ?? $empresaContext->empresaId();
+            $empresaId = $empresaContext->empresaId() ?? Auth::user()?->empresa_id;
         }
 
         if ($empresaId && Schema::hasTable('empresas') && Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {

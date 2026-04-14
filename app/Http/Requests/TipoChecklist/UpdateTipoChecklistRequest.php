@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests$ns;
+namespace App\Http\Requests\TipoChecklist;
 
 use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,25 +9,36 @@ use Illuminate\Validation\Rule;
 
 class UpdateTipoChecklistRequest extends FormRequest
 {
-    public function authorize(): bool { return true; }
+    public function authorize(): bool
+    {
+        return true;
+    }
 
     public function rules(): array
     {
-        \ = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? Auth::user()?->empresa_id;
+        $tipoChecklist = $this->route('tipo_checklist');
+        $tipoChecklistId = is_object($tipoChecklist) ? $tipoChecklist->id : $tipoChecklist;
+        $uniqueNome = Rule::unique('tipo_checklist', 'nome')->ignore($tipoChecklistId);
+
+        if ($empresaId !== null) {
+            $uniqueNome = $uniqueNome->where(fn ($query) => $query->where('empresa_id', $empresaId));
+        }
+
         return [
-            'nome' => ['required','string','max:255', Rule::unique('{['table']}','nome')->ignore(\->route('{['route']}'))->where('empresa_id',\)],
+            'nome' => ['required', 'string', 'max:255', $uniqueNome],
             'ativo' => 'required|string|max:1',
         ];
     }
 
-    public function messages()
+    public function messages(): array
     {
         return [
-            'nome.required' => 'O campo nome e obrigatorio.',
-            'nome.unique'   => 'Ja existe {['label']} com este nome nesta empresa.',
-            'nome.max'      => 'O campo nome deve ter no maximo 255 caracteres.',
-            'ativo.required'=> 'O campo ativo e obrigatorio.',
-            'ativo.max'     => 'O campo ativo deve ter no maximo 1 caractere.',
+            'nome.required' => 'O campo nome é obrigatório.',
+            'nome.unique' => 'Já existe um tipo de checklist com este nome nesta empresa.',
+            'nome.max' => 'O campo nome deve ter no máximo 255 caracteres.',
+            'ativo.required' => 'O campo ativo é obrigatório.',
+            'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',
         ];
     }
 }

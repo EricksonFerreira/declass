@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Regra;
 
 use App\Models\Regra;
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -24,7 +25,7 @@ class UpdateRegraRequest extends FormRequest
      */
     public function rules(): array
     {
-        $empresaId = auth()->user()?->empresa_id;
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
 
         return [
             'name' => [

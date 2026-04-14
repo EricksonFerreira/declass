@@ -25,7 +25,7 @@ class StoreModeloRequest extends FormRequest
      */
     public function rules(): array
     {
-        $empresaId = Auth::user()?->empresa_id ?? app(EmpresaContext::class)->empresaId();
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? Auth::user()?->empresa_id;
         $marcaExists = Rule::exists('marcas', 'id');
 
         if ($empresaId !== null) {
