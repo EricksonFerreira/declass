@@ -421,16 +421,16 @@
                 </div>
 
                 {{-- NAV BUTTONS --}}
-                <div class="col-12 empresa-wizard-footer">
-                    <button type="button" class="btn btn-outline-secondary btn-sm empresa-wizard-btn"  id="btnPrev" style="display:none!important;">
-                        <i class="fas fa-arrow-left mr-1"></i>Anterior
+                <div class="ec-wizard-nav mt-4 d-flex justify-content-between align-items-center">
+                    <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--back" id="btnPrev" style="display:none!important;">
+                        <i class="fas fa-chevron-left mr-1"></i> Anterior
                     </button>
                     <div class="d-flex align-items-center" style="gap:8px;">
-                        <button type="button" class="btn btn-primary btn-sm empresa-wizard-btn empresa-wizard-btn--next" id="btnNext">
-                            Próximo <i class="fas fa-arrow-right ml-1"></i>
+                        <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--next" id="btnNext">
+                            Próximo <i class="fas fa-chevron-right ml-1"></i>
                         </button>
-                        <button type="submit" class="btn btn-success btn-sm empresa-wizard-btn empresa-wizard-btn--save btn-save-empresa {{ $isEdit ? '' : 'd-none' }}"id="btnSalvar">
-                            Salvar alterações
+                        <button type="submit" class="btn btn-sm ec-nav-btn ec-nav-btn--save d-none" id="btnSalvar">
+                            <i class="fas fa-save mr-1"></i> Salvar alterações
                         </button>
                     </div>
                 </div>
