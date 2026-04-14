@@ -422,9 +422,12 @@
 
                 {{-- NAV BUTTONS --}}
                 <div class="ec-wizard-nav mt-4 d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--back" id="btnPrev" style="display:none!important;">
-                        <i class="fas fa-chevron-left mr-1"></i> Anterior
-                    </button>
+                    <div class="">
+
+                        <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--back" id="btnPrev" style="display:none!important;">
+                            <i class="fas fa-chevron-left mr-1"></i> Anterior
+                        </button>
+                    </div>
                     <div class="d-flex align-items-center" style="gap:8px;">
                         <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--next" id="btnNext">
                             Próximo <i class="fas fa-chevron-right ml-1"></i>
