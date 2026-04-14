@@ -1277,7 +1277,7 @@
                     <div class="sales-diff-point"><i class="fas fa-check-circle"></i> Uma vitrine que ajuda a converter visitantes em locatários e aumenta a escala da operação.</div>
                 </div>
                 <div class="sales-diff-actions">
-                    <a href="https://locrickson.shop" class="sales-diff-link">Ver um dos modelos de site de vendas</a>
+                    <a href="https://locrickson.shop" target="_blank" rel="noopener noreferrer" class="sales-diff-link">Ver um dos modelos de site de vendas</a>
                     <span class="sales-diff-note">Esse é o diferencial que faz o DeCars se destacar entre os sistemas do mercado.</span>
                 </div>
             </div>
