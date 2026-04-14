@@ -14,15 +14,15 @@
     <meta property="og:title" content="Sobre a DeCars | Software da Sonyd Tech para Locadoras">
     <meta property="og:description" content="Gestao de locadoras com site de reservas online, personalizacao e foco em conversao.">
     <meta property="og:url" content="{{ url('/sobre') }}">
-    <meta property="og:image" content="{{ asset('assets/og/decars-share.svg') }}">
-    <meta property="og:image:type" content="image/svg+xml">
+    <meta property="og:image" content="{{ asset('assets/og/decars-share.png') }}">
+    <meta property="og:image:type" content="image/png">
     <meta property="og:image:alt" content="Banner da DeCars com software para locadoras e site de vendas">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Sobre a DeCars | Software da Sonyd Tech para Locadoras">
     <meta name="twitter:description" content="Software para locadoras com site de reservas online e foco em vendas.">
-    <meta name="twitter:image" content="{{ asset('assets/og/decars-share.svg') }}">
+    <meta name="twitter:image" content="{{ asset('assets/og/decars-share.png') }}">
     <meta name="theme-color" content="#0a1628">
     <title>Sobre a DeCars | Software da Sonyd Tech para Locadoras</title>
 

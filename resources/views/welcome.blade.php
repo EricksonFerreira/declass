@@ -14,15 +14,16 @@
     <meta property="og:title" content="DeCars — Sistema para Locadoras com Site de Reservas Online">
     <meta property="og:description" content="Software da Sonyd Tech para gestão de locadoras e site de reservas online.">
     <meta property="og:url" content="{{ url()->current() }}">
-    <meta property="og:image" content="{{ asset('assets/welcome/site-aluguel.png') }}">
-    <meta property="og:image:alt" content="Site de reservas online do DeCars">
+    <meta property="og:image" content="{{ asset('assets/og/decars-share.png') }}">
+    <meta property="og:image:type" content="image/png">
+    <meta property="og:image:alt" content="Banner da DeCars com software para locadoras e site de reservas online">
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="675">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="DeCars — Sistema para Locadoras com Site de Reservas Online">
     <meta name="twitter:description" content="Gestão completa para locadoras com site de vendas para reservas online.">
-    <meta name="twitter:image" content="{{ asset('assets/welcome/site-aluguel.png') }}">
-    <meta name="twitter:image:alt" content="Site de reservas online do DeCars">
+    <meta name="twitter:image" content="{{ asset('assets/og/decars-share.png') }}">
+    <meta name="twitter:image:alt" content="Banner da DeCars com software para locadoras e site de reservas online">
     <meta name="twitter:site" content="@sonydtech">
     <meta name="twitter:creator" content="@sonydtech">
     <meta name="theme-color" content="#0a1628">
@@ -47,7 +48,7 @@
         "publisher": {
             "@type": "Organization",
             "name": "Sonyd Tech",
-            "url": "https://www.sonydtech.com"
+            "url": "https://www.sonyd.com.br"
         },
         "offers": [
             {
@@ -86,7 +87,7 @@
         "publisher": {
             "@type": "Organization",
             "name": "Sonyd Tech",
-            "url": "https://www.sonydtech.com"
+            "url": "https://www.sonyd.com.br"
         }
     }
     </script>
@@ -1367,7 +1368,7 @@
                     <div class="hero-trust-item"><i class="fas fa-check-circle"></i> Dados na nuvem</div>
                 </div>
                 <div class="hero-credit reveal delay-4">
-                    <a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+                    <a href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                         <span>Software da</span>
                         <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
                         <strong>Sonyd Tech</strong>
@@ -2001,7 +2002,7 @@
                 <h5>Empresa</h5>
                 <ul>
                     <li><a href="{{ route('site.sobre') }}">Sobre a DeCars</a></li>
-                    <li><a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer">Sonyd Tech</a></li>
+                    <li><a href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer">Sonyd Tech</a></li>
                     <li><a href="#planos">Planos</a></li>
                 </ul>
             </div>
@@ -2017,7 +2018,7 @@
         </div>
         <div class="footer-bottom">
             <p>© {{ date('Y') }} DeCars. Todos os direitos reservados.</p>
-            <a class="footer-brand-credit" href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+            <a class="footer-brand-credit" href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                 <span>Software oficial da</span>
                 <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
                 <strong>Sonyd Tech</strong>
