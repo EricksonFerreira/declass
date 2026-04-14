@@ -70,6 +70,8 @@ class EmpresaService extends AbstractBaseService
                 return $empresa;
             }
 
+            $this->seedDefaultTemplateCompanyData((int) $templateEmpresaId);
+
             $modulos = array_keys($this->replicacaoBaseService->modulosDisponiveis());
             if (!empty($modulos)) {
                 $this->replicacaoBaseService->replicar($templateEmpresaId, [(int) $empresa->id], $modulos);
@@ -113,6 +115,70 @@ class EmpresaService extends AbstractBaseService
         }
 
         return (int) $newId;
+    }
+
+    /**
+     * Garante que a empresa base tenha os cadastros globais de horarios e dias uteis
+     * para que novas empresas recebam esses registros ao serem replicadas.
+     */
+    private function seedDefaultTemplateCompanyData(int $empresaId): void
+    {
+        $this->replicateGlobalRowsToEmpresa('dias_uteis', $empresaId, ['dia']);
+        $this->replicateGlobalRowsToEmpresa('horarios_diarios', $empresaId, ['nome']);
+    }
+
+    /**
+     * Copia linhas globais (empresa_id nulo) para a empresa informada, respeitando
+     * uma chave natural simples para evitar duplicidade.
+     *
+     * @param array<int, string> $uniqueColumns
+     */
+    private function replicateGlobalRowsToEmpresa(string $table, int $empresaId, array $uniqueColumns): void
+    {
+        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'empresa_id')) {
+            return;
+        }
+
+        $columns = Schema::getColumnListing($table);
+        $rows = DB::table($table)->whereNull('empresa_id')->get();
+        if ($rows->isEmpty()) {
+            return;
+        }
+
+        foreach ($rows as $row) {
+            $payload = [];
+            foreach ($columns as $column) {
+                if (in_array($column, ['id', 'empresa_id', 'created_at', 'updated_at'], true)) {
+                    continue;
+                }
+
+                $payload[$column] = $row->{$column} ?? null;
+            }
+
+            $where = [];
+            foreach ($uniqueColumns as $column) {
+                if (array_key_exists($column, $payload)) {
+                    $where[$column] = $payload[$column];
+                }
+            }
+
+            if (empty($where)) {
+                continue;
+            }
+
+            $payload['empresa_id'] = $empresaId;
+            if (in_array('created_at', $columns, true)) {
+                $payload['created_at'] = now();
+            }
+            if (in_array('updated_at', $columns, true)) {
+                $payload['updated_at'] = now();
+            }
+
+            DB::table($table)->updateOrInsert(
+                array_merge($where, ['empresa_id' => $empresaId]),
+                $payload
+            );
+        }
     }
 
     private function sanitizeDataForExistingColumns(array $data): array
