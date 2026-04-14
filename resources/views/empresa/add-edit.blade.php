@@ -482,14 +482,14 @@
                 </div>
 
                 <div class="col-12 empresa-wizard-footer">
-                    <button type="button" class="btn btn-outline-secondary btn-sm" id="empresaWizardPrev">
+                    <button type="button" class="btn btn-outline-secondary btn-sm empresa-wizard-btn" id="empresaWizardPrev">
                         <i class="fas fa-arrow-left mr-1"></i>Voltar
                     </button>
                     <div class="d-flex align-items-center" style="gap:8px;">
-                        <button type="button" class="btn btn-primary btn-sm" id="empresaWizardNext">
+                        <button type="button" class="btn btn-primary btn-sm empresa-wizard-btn empresa-wizard-btn--next" id="empresaWizardNext">
                             Continuar <i class="fas fa-arrow-right ml-1"></i>
                         </button>
-                        <button type="submit" class="btn btn-primary btn-save-empresa {{ $isEdit ? '' : 'd-none' }}" id="btnSalvarEmpresa">
+                        <button type="submit" class="btn btn-success btn-sm empresa-wizard-btn empresa-wizard-btn--save btn-save-empresa {{ $isEdit ? '' : 'd-none' }}" id="btnSalvarEmpresa">
                             Salvar alterações
                         </button>
                     </div>
@@ -628,6 +628,46 @@
     .empresa-wizard-footer .btn {
         border-radius: 999px;
         font-weight: 700;
+    }
+
+    .empresa-wizard-btn {
+        min-height: 38px;
+        padding: .58rem 1.05rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: .35rem;
+        box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+        transition: transform .15s ease, box-shadow .15s ease, filter .15s ease;
+    }
+
+    .empresa-wizard-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 10px 22px rgba(15, 23, 42, .10);
+    }
+
+    .empresa-wizard-btn--next {
+        background: #2563eb;
+        border-color: #2563eb;
+        color: #fff;
+    }
+
+    .empresa-wizard-btn--next:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        color: #fff;
+    }
+
+    .empresa-wizard-btn--save {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: #fff;
+    }
+
+    .empresa-wizard-btn--save:hover {
+        background: #15803d;
+        border-color: #15803d;
+        color: #fff;
     }
 
     .empresa-section-title {

@@ -422,13 +422,13 @@
 
                 {{-- NAV BUTTONS --}}
                 <div class="ec-wizard-nav mt-4 d-flex justify-content-between align-items-center">
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-4" id="btnPrev" style="display:none!important;">
+                    <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--back" id="btnPrev" style="display:none!important;">
                         <i class="fas fa-chevron-left mr-1"></i> Anterior
                     </button>
-                    <button type="button" class="btn btn-primary btn-sm px-4" id="btnNext">
+                    <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--next" id="btnNext">
                         Próximo <i class="fas fa-chevron-right ml-1"></i>
                     </button>
-                    <button type="submit" class="btn btn-success btn-sm px-4 d-none" id="btnSalvar">
+                    <button type="submit" class="btn btn-sm ec-nav-btn ec-nav-btn--save d-none" id="btnSalvar">
                         <i class="fas fa-save mr-1"></i> Salvar alterações
                     </button>
                 </div>
@@ -657,6 +657,61 @@
 }
 
 /* ── Form inputs ── */
+.ec-nav-btn {
+    min-height: 38px;
+    padding: .58rem 1.05rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .35rem;
+    border-radius: 999px;
+    font-weight: 700;
+    box-shadow: 0 8px 18px rgba(15, 23, 42, .06);
+    transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.ec-nav-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(15, 23, 42, .10);
+}
+
+.ec-nav-btn--back {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+}
+
+.ec-nav-btn--back:hover,
+.ec-nav-btn--back.ec-nav-btn--visible {
+    background: #fff;
+    border-color: #94a3b8;
+    color: #475569;
+}
+
+.ec-nav-btn--next {
+    background: #2563eb;
+    border: 1px solid #2563eb;
+    color: #fff;
+}
+
+.ec-nav-btn--next:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+}
+
+.ec-nav-btn--save {
+    background: #16a34a;
+    border: 1px solid #16a34a;
+    color: #fff;
+}
+
+.ec-nav-btn--save:hover {
+    background: #15803d;
+    border-color: #15803d;
+    color: #fff;
+}
+
 .card-estacao .form-control,
 .card-estacao .form-select {
     border-radius: 10px; border-color: #d8e1ec; min-height: 38px;
@@ -704,18 +759,13 @@ $(function () {
         });
 
         $('#btnPrev').css('display', n > 1 ? 'inline-flex' : 'none');
-        if (n < TOTAL_STEPS) {
-            $('#btnNext').removeClass('d-none');
-        } else {
-            $('#btnNext').addClass('d-none');
-        }
+        $('#btnPrev').toggleClass('ec-nav-btn--visible', n > 1);
+        $('#btnNext').toggleClass('d-none', n >= TOTAL_STEPS);
 
         if (isEdit) {
             $('#btnSalvar').removeClass('d-none');
-        } else if (n < TOTAL_STEPS) {
-            $('#btnSalvar').addClass('d-none');
         } else {
-            $('#btnSalvar').removeClass('d-none');
+            $('#btnSalvar').toggleClass('d-none', n < TOTAL_STEPS);
         }
     }
 
