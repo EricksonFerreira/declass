@@ -92,7 +92,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             'S' => 'Permite',
             'N' => 'Não Permite'
         ];
-        $diasUteis = $this->diaUtilService->getAllAtivos('id', 'dia', 'dia', 'asc');
+        $diasUteis = $this->diaUtilService->getAllAtivos('id', 'nome', 'dia', 'asc' ,['dia']);
 
         $horariosDiarios = $this->horarioDiarioService->getAllAtivos();
         $paisBrasilId = $this->paisService->getPaisBrasilId();
@@ -131,7 +131,8 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             'N' => 'Não Permite'
         ];
 
-        $diasUteis        = $this->diaUtilService->getAllAtivos('id', 'nome', 'id', 'asc');
+        $diasUteis        = $this->diaUtilService->getAllAtivos('id', 'nome', 'dia', 'asc',['dia']);
+
         $horariosDiarios  = $this->horarioDiarioService->getAllAtivos();
         [$metodo, $rota]  = $this->getFormMethodAndRoute($estacao);
         $diasUteisEstacao = $estacao->diasUteis->pluck('dia')->toArray();
