@@ -483,11 +483,11 @@
 
                 <div class="col-12 empresa-wizard-footer">
                     <button type="button" class="btn btn-outline-secondary btn-sm empresa-wizard-btn" id="empresaWizardPrev">
-                        <i class="fas fa-arrow-left mr-1"></i>Voltar
+                        <i class="fas fa-arrow-left mr-1"></i>Anterior
                     </button>
                     <div class="d-flex align-items-center" style="gap:8px;">
                         <button type="button" class="btn btn-primary btn-sm empresa-wizard-btn empresa-wizard-btn--next" id="empresaWizardNext">
-                            Continuar <i class="fas fa-arrow-right ml-1"></i>
+                            Próximo <i class="fas fa-arrow-right ml-1"></i>
                         </button>
                         <button type="submit" class="btn btn-success btn-sm empresa-wizard-btn empresa-wizard-btn--save btn-save-empresa {{ $isEdit ? '' : 'd-none' }}" id="btnSalvarEmpresa">
                             Salvar alterações
