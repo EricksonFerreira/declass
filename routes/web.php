@@ -15,10 +15,50 @@ use App\Http\Controllers\SiteReservaController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\TipoTransacaoController;
 use App\Http\Controllers\MigrationController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [SiteApresentacaoController::class, 'index'])->name('site.apresentacao');
+Route::get('/sobre', [SiteApresentacaoController::class, 'sobre'])->name('site.sobre');
 Route::get('/site/estacoes', [SiteApresentacaoController::class, 'estacoesOptions'])->name('site.apresentacao.estacoes');
+Route::get('/sitemap.xml', function (Request $request) {
+    $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
+    $lastMod = now()->toAtomString();
+
+    $urls = [
+        [
+            'loc' => $baseUrl . '/',
+            'priority' => '1.0',
+            'changefreq' => 'daily',
+        ],
+        [
+            'loc' => $baseUrl . '/reserva',
+            'priority' => '0.9',
+            'changefreq' => 'weekly',
+        ],
+        [
+            'loc' => $baseUrl . '/sobre',
+            'priority' => '0.6',
+            'changefreq' => 'monthly',
+        ],
+    ];
+
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+
+    foreach ($urls as $url) {
+        $xml .= "  <url>\n";
+        $xml .= '    <loc>' . e($url['loc']) . "</loc>\n";
+        $xml .= '    <lastmod>' . $lastMod . "</lastmod>\n";
+        $xml .= '    <changefreq>' . e($url['changefreq']) . "</changefreq>\n";
+        $xml .= '    <priority>' . e($url['priority']) . "</priority>\n";
+        $xml .= "  </url>\n";
+    }
+
+    $xml .= "</urlset>\n";
+
+    return response($xml, 200)->header('Content-Type', 'application/xml; charset=UTF-8');
+})->name('sitemap.xml');
 Route::get('/administrativa', [SiteReservaController::class, 'adminEntry'])->name('site.admin.entry');
 Route::get('/reserva', [SiteReservaController::class, 'index'])->name('site.reserva.index');
 Route::get('/reserva/novo', [SiteReservaController::class, 'index'])->name('site.reserva.create');

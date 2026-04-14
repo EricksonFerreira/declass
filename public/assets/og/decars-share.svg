@@ -1,0 +1,65 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="40" x2="1080" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0A1628"/>
+      <stop offset="1" stop-color="#14233C"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="250" y1="120" x2="950" y2="520" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0EA5E9" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0.4"/>
+    </linearGradient>
+    <linearGradient id="panel" x1="420" y1="180" x2="860" y2="500" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EAF2FF"/>
+    </linearGradient>
+    <filter id="blur" x="0" y="0" width="1200" height="630" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="48"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" rx="40" fill="url(#bg)"/>
+  <circle cx="1020" cy="110" r="190" fill="#0EA5E9" fill-opacity="0.18" filter="url(#blur)"/>
+  <circle cx="180" cy="520" r="220" fill="#38BDF8" fill-opacity="0.14" filter="url(#blur)"/>
+  <circle cx="760" cy="430" r="260" fill="#FFFFFF" fill-opacity="0.05" filter="url(#blur)"/>
+
+  <rect x="80" y="72" width="180" height="40" rx="20" fill="#102033" stroke="#2B3B57"/>
+  <text x="170" y="98" text-anchor="middle" fill="#E0F2FE" font-family="Raleway, Arial, sans-serif" font-size="18" font-weight="800" letter-spacing="2">SONYD TECH</text>
+
+  <text x="84" y="205" fill="#FFFFFF" font-family="Raleway, Arial, sans-serif" font-size="58" font-weight="900" letter-spacing="-1.5">DeCars</text>
+  <text x="84" y="252" fill="#C6D6EA" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="500">Software para locadoras com site de reservas online</text>
+  <text x="84" y="302" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="19" font-weight="400">
+    Gestão, check-in digital, financeiro, multas e uma vitrine de vendas
+  </text>
+  <text x="84" y="330" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="19" font-weight="400">
+    para ajudar a sua locadora a vender mais.
+  </text>
+
+  <rect x="84" y="384" width="168" height="46" rx="23" fill="#FFFFFF"/>
+  <text x="168" y="413" text-anchor="middle" fill="#0A1628" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="800">Site + sistema</text>
+
+  <rect x="268" y="384" width="206" height="46" rx="23" fill="#0EA5E9" fill-opacity="0.16" stroke="#0EA5E9"/>
+  <text x="371" y="413" text-anchor="middle" fill="#E0F2FE" font-family="Inter, Arial, sans-serif" font-size="18" font-weight="700">Aumenta reservas</text>
+
+  <rect x="538" y="132" width="572" height="360" rx="28" fill="url(#panel)" stroke="#D6E2F2" stroke-width="2"/>
+  <rect x="568" y="160" width="512" height="44" rx="12" fill="#0A1628"/>
+  <circle cx="596" cy="182" r="8" fill="#22C55E"/>
+  <circle cx="620" cy="182" r="8" fill="#F59E0B"/>
+  <circle cx="644" cy="182" r="8" fill="#EF4444"/>
+  <text x="688" y="188" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="16" font-weight="700">Site de vendas da locadora</text>
+
+  <rect x="568" y="226" width="230" height="188" rx="20" fill="#FFFFFF" stroke="#DCE7F5"/>
+  <rect x="592" y="250" width="182" height="92" rx="16" fill="#0EA5E9"/>
+  <rect x="592" y="356" width="114" height="14" rx="7" fill="#0A1628" fill-opacity="0.75"/>
+  <rect x="592" y="378" width="150" height="12" rx="6" fill="#CBD5E1"/>
+  <rect x="592" y="398" width="128" height="12" rx="6" fill="#CBD5E1"/>
+
+  <rect x="822" y="226" width="258" height="188" rx="20" fill="#FFFFFF" stroke="#DCE7F5"/>
+  <rect x="848" y="250" width="206" height="20" rx="10" fill="#E2E8F0"/>
+  <rect x="848" y="282" width="174" height="20" rx="10" fill="#E2E8F0"/>
+  <rect x="848" y="314" width="188" height="20" rx="10" fill="#E2E8F0"/>
+  <rect x="848" y="348" width="132" height="38" rx="19" fill="#0A1628"/>
+  <text x="914" y="373" text-anchor="middle" fill="#FFFFFF" font-family="Inter, Arial, sans-serif" font-size="14" font-weight="800">Reservar agora</text>
+
+  <text x="846" y="466" fill="#94A3B8" font-family="Inter, Arial, sans-serif" font-size="15" font-weight="600">Sonyd Tech</text>
+  <text x="846" y="490" fill="#0A1628" font-family="Raleway, Arial, sans-serif" font-size="24" font-weight="900">Tecnologia que vende.</text>
+</svg>

@@ -26,6 +26,13 @@ class SiteApresentacaoController extends Controller
         $this->estacaoService = $estacaoService;
     }
 
+    public function sobre(): View
+    {
+        return view('sobre', [
+            'anoAtual' => (int) now()->format('Y'),
+        ]);
+    }
+
     public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
         $host = DomainNormalizer::normalize($request->getHost());

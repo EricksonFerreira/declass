@@ -3,8 +3,31 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="DeCars — Sistema completo para gestão de locadoras de veículos. Reservas, frota, financeiro, check-in digital, multas e muito mais.">
-    <title>DeCars — Sistema para Locadoras de Veículos</title>
+    <meta name="description" content="DeCars é o software da Sonyd Tech para locadoras de veículos: gestão completa, check-in digital, financeiro, multas, NFS-e e site de reservas online para vender mais.">
+    <meta name="keywords" content="software para locadora de veículos, sistema para locadoras, sistema para locadora de carros, site de reservas online, gestão de frota, check-in digital, financeiro, multas, NFS-e, Sonyd Tech">
+    <meta name="author" content="Sonyd Tech">
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+    <link rel="canonical" href="{{ url()->current() }}">
+    <meta property="og:locale" content="pt_BR">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="DeCars">
+    <meta property="og:title" content="DeCars — Sistema para Locadoras com Site de Reservas Online">
+    <meta property="og:description" content="Software da Sonyd Tech para gestão de locadoras e site de reservas online.">
+    <meta property="og:url" content="{{ url()->current() }}">
+    <meta property="og:image" content="{{ asset('assets/welcome/site-aluguel.png') }}">
+    <meta property="og:image:alt" content="Site de reservas online do DeCars">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="675">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="DeCars — Sistema para Locadoras com Site de Reservas Online">
+    <meta name="twitter:description" content="Gestão completa para locadoras com site de vendas para reservas online.">
+    <meta name="twitter:image" content="{{ asset('assets/welcome/site-aluguel.png') }}">
+    <meta name="twitter:image:alt" content="Site de reservas online do DeCars">
+    <meta name="twitter:site" content="@sonydtech">
+    <meta name="twitter:creator" content="@sonydtech">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="application-name" content="DeCars">
+    <title>DeCars | Software para Locadoras com Site de Reservas Online</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicons/favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,6 +35,101 @@
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "DeCars",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "description": "Software da Sonyd Tech para locadoras de veículos com gestão completa e site de reservas online.",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Sonyd Tech",
+            "url": "https://www.sonydtech.com"
+        },
+        "offers": [
+            {
+                "@type": "Offer",
+                "name": "Gestão",
+                "price": "247",
+                "priceCurrency": "BRL"
+            },
+            {
+                "@type": "Offer",
+                "name": "Essencial",
+                "price": "397",
+                "priceCurrency": "BRL"
+            },
+            {
+                "@type": "Offer",
+                "name": "Crescimento",
+                "price": "697",
+                "priceCurrency": "BRL"
+            },
+            {
+                "@type": "Offer",
+                "name": "Escala",
+                "price": "1297",
+                "priceCurrency": "BRL"
+            }
+        ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "name": "DeCars",
+        "url": "{{ url('/') }}",
+        "publisher": {
+            "@type": "Organization",
+            "name": "Sonyd Tech",
+            "url": "https://www.sonydtech.com"
+        }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+            {
+                "@type": "Question",
+                "name": "O DeCars é só um sistema administrativo?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Não. O DeCars combina gestão para locadoras com um site de reservas online para vender mais e centralizar a operação."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Posso usar o sistema sem site de vendas?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sim. Existe um plano de gestão para quem quer começar apenas com os recursos internos da locadora."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "Consigo personalizar cores, textos e imagens?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sim. O site de apresentação pode ser adaptado com cores, textos e imagens para combinar com a marca da locadora."
+                }
+            },
+            {
+                "@type": "Question",
+                "name": "O software serve para pequenas e grandes locadoras?",
+                "acceptedAnswer": {
+                    "@type": "Answer",
+                    "text": "Sim. O DeCars atende operações menores e também locadoras que precisam de mais escala, controle e personalização."
+                }
+            }
+        ]
+    }
+    </script>
 
     <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -265,12 +383,20 @@
         gap: .55rem;
         color: inherit;
         text-decoration: none;
+        flex-wrap: wrap;
     }
+    .hero-credit a span { color: rgba(255,255,255,.8); }
     .hero-credit img {
-        width: 10em;
-                /* height: 20px; */
+        width: 9.5em;
         object-fit: contain;
         flex-shrink: 0;
+    }
+    .hero-credit strong {
+        color: #fff;
+        font-size: .74rem;
+        font-weight: 900;
+        letter-spacing: .1em;
+        text-transform: uppercase;
     }
 
     /* Imagem hero com animação */
@@ -534,6 +660,59 @@
         margin-bottom: .9rem;
     }
     .section-sub { font-size: .97rem; color: var(--muted); line-height: 1.75; max-width: 520px; }
+
+    /* ══ FAQ ══ */
+    .faq { padding: 7rem 0; background: var(--surface); }
+    .faq-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+        margin-top: 3rem;
+    }
+    .faq-card {
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        padding: 1.7rem;
+        box-shadow: var(--shadow-sm);
+        transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s;
+    }
+    .faq-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--bg);
+        box-shadow: var(--shadow);
+    }
+    .faq-q {
+        display: flex;
+        gap: .75rem;
+        align-items: flex-start;
+        margin-bottom: .85rem;
+    }
+    .faq-q i {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: rgba(10,22,40,.06);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--bg);
+        flex-shrink: 0;
+        margin-top: 1px;
+    }
+    .faq-card h3 {
+        font-family: 'Raleway', sans-serif;
+        font-size: 1rem;
+        line-height: 1.35;
+        font-weight: 800;
+        color: var(--bg);
+    }
+    .faq-card p {
+        font-size: .9rem;
+        line-height: 1.75;
+        color: var(--muted);
+        margin-left: 2.95rem;
+    }
 
     /* ══ PROBLEMS ══ */
     .problems { padding: 7rem 0; background: #fff; }
@@ -1036,15 +1215,19 @@
     .footer-brand-credit:hover {
         transform: translateY(-1px);
         border-color: rgba(10,22,40,.2);
-        background: #1c2723;
+        background: #162035;
         box-shadow: var(--shadow-sm);
+    }
+    .footer-brand-credit span {
+        color: rgba(255,255,255,.75);
+        font-weight: 700;
     }
     .footer-brand-credit strong {
         font-size: .78rem;
         font-weight: 800;
         letter-spacing: .03em;
         text-transform: none;
-        color: var(--bg);
+        color: #fff;
     }
     .footer-brand-credit img {
         width: 88px;
@@ -1101,6 +1284,7 @@
         .problems-grid { grid-template-columns: 1fr; }
         .pricing-grid { grid-template-columns: 1fr; }
         .modules-grid { grid-template-columns: repeat(2, 1fr); }
+        .faq-grid { grid-template-columns: 1fr; }
         .footer-grid { grid-template-columns: 1fr; }
         .hero-badge-float { display: none; }
         .hero-carousel-caption { left: 12px; right: 12px; bottom: 12px; padding: .72rem .85rem; }
@@ -1138,6 +1322,8 @@
             <li><a href="#funcionalidades">Funcionalidades</a></li>
             <li><a href="#modulos">Módulos</a></li>
             <li><a href="#planos">Planos</a></li>
+            <li><a href="{{ route('site.sobre') }}">Sobre</a></li>
+            <li><a href="#perguntas">Perguntas</a></li>
             <li><a href="#depoimentos">Clientes</a></li>
         </ul>
         <div class="nav-actions" id="navActions">
@@ -1166,7 +1352,7 @@
                     Gestão completa<br>da sua locadora<br>em <span class="line-accent" id="typewriterTarget"></span><span class="cursor" id="typewriterCursor"></span>
                 </h1>
                 <p class="hero-text reveal delay-2">
-                    Do check-in digital ao financeiro, do controle de multas às reservas online, tudo em um sistema robusto, pensado para quem vive o dia a dia da locação.
+                    O software para locadoras de veículos da Sonyd Tech reúne check-in digital, financeiro, controle de multas, reservas online e um site de vendas para ajudar sua empresa a vender mais.
                 </p>
                 <div class="hero-ctas reveal delay-2">
                     <a href="#planos" class="btn-hero">Ver planos e preços</a>
@@ -1181,9 +1367,10 @@
                     <div class="hero-trust-item"><i class="fas fa-check-circle"></i> Dados na nuvem</div>
                 </div>
                 <div class="hero-credit reveal delay-4">
-                    <a href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
-                        Software da
+                    <a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+                        <span>Software da</span>
                         <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
+                        <strong>Sonyd Tech</strong>
                     </a>
                 </div>
             </div>
@@ -1727,6 +1914,47 @@
     </div>
 </section>
 
+<!-- ══ FAQ ══ -->
+<section class="faq" id="perguntas">
+    <div class="container">
+        <div class="section-header" style="text-align:center">
+            <div class="section-tag reveal" style="justify-content:center">Perguntas frequentes</div>
+            <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Tudo o que você precisa saber antes de contratar</h2>
+            <p class="section-sub reveal delay-2" style="margin:0 auto">Respostas rápidas para deixar claro o diferencial do DeCars: gestão para locadoras + site de vendas para reservas online.</p>
+        </div>
+        <div class="faq-grid">
+            <article class="faq-card reveal delay-1">
+                <div class="faq-q">
+                    <i class="fas fa-question"></i>
+                    <h3>O DeCars é só um sistema administrativo?</h3>
+                </div>
+                <p>Não. O DeCars combina gestão completa para locadoras com um site de reservas online para vender mais e centralizar a operação.</p>
+            </article>
+            <article class="faq-card reveal delay-2">
+                <div class="faq-q">
+                    <i class="fas fa-store"></i>
+                    <h3>Posso começar sem o site de vendas?</h3>
+                </div>
+                <p>Sim. O plano Gestão é ideal para quem quer começar apenas com os recursos internos da locadora, sem incluir o portal de reservas.</p>
+            </article>
+            <article class="faq-card reveal delay-3">
+                <div class="faq-q">
+                    <i class="fas fa-palette"></i>
+                    <h3>O site pode ser personalizado com a marca da empresa?</h3>
+                </div>
+                <p>Sim. É possível ajustar cores, textos e imagens para deixar o site com a identidade visual da locadora e mais alinhado à marca.</p>
+            </article>
+            <article class="faq-card reveal delay-4">
+                <div class="faq-q">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>Esse software serve para locadoras pequenas e maiores?</h3>
+                </div>
+                <p>Serve para diferentes portes, desde operações iniciais até locadoras que precisam de mais escala, controle e recursos de crescimento.</p>
+            </article>
+        </div>
+    </div>
+</section>
+
 <!-- ══ CTA FINAL ══ -->
 <section class="cta-section">
     <div class="cta-lines">
@@ -1769,15 +1997,14 @@
                     {{-- <li><a href="#numeros">Números</a></li> --}}
                 </ul>
             </div>
-            {{-- <div class="footer-col">
+            <div class="footer-col">
                 <h5>Empresa</h5>
                 <ul>
-                    <li><a href="#">Sobre nós</a></li>
-                    <li><a href="#">Blog</a></li>
-                    <li><a href="#">Cases</a></li>
-                    <li><a href="#">Contato</a></li>
+                    <li><a href="{{ route('site.sobre') }}">Sobre a DeCars</a></li>
+                    <li><a href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer">Sonyd Tech</a></li>
+                    <li><a href="#planos">Planos</a></li>
                 </ul>
-            </div> --}}
+            </div>
             <div class="footer-col">
                 <h5>Suporte</h5>
                 <ul>
@@ -1790,9 +2017,10 @@
         </div>
         <div class="footer-bottom">
             <p>© {{ date('Y') }} DeCars. Todos os direitos reservados.</p>
-            <a class="footer-brand-credit" href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
+            <a class="footer-brand-credit" href="https://www.sonydtech.com" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                 <span>Software oficial da</span>
                 <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
+                <strong>Sonyd Tech</strong>
             </a>
             {{-- <div class="footer-socials">
                 <a href="#" class="social-btn" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
@@ -1997,6 +2225,30 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 });
+</script>
+{{--  Firebase App --}}
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAQ_OGNmmXZQq3DKgW7CH13_nGvjN30Abw",
+    authDomain: "decars-438c0.firebaseapp.com",
+    projectId: "decars-438c0",
+    storageBucket: "decars-438c0.firebasestorage.app",
+    messagingSenderId: "324332157331",
+    appId: "1:324332157331:web:71d65eabf22e637dc19066",
+    measurementId: "G-0C5NVBZ8XN"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
 </script>
 
 </body>
