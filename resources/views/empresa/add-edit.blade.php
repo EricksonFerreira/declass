@@ -489,7 +489,7 @@
                         <button type="button" class="btn btn-primary btn-sm" id="empresaWizardNext">
                             Continuar <i class="fas fa-arrow-right ml-1"></i>
                         </button>
-                        <button type="submit" class="btn btn-primary btn-save-empresa d-none" id="btnSalvarEmpresa">
+                        <button type="submit" class="btn btn-primary btn-save-empresa {{ $isEdit ? '' : 'd-none' }}" id="btnSalvarEmpresa">
                             Salvar alterações
                         </button>
                     </div>
