@@ -1055,10 +1055,10 @@
             function consultarFipe() {
                 const marcaId = $marca.val();
                 const modeloId = $modelo.val();
-                const anoModelo = obterAnoModeloSelecionado();
-                const chaveConsulta = [marcaId || '', modeloId || '', anoModelo || ''].join('|');
+                // const anoModelo = obterAnoModeloSelecionado();
+                const chaveConsulta = [marcaId || '', modeloId || ''].join('|');
 
-                if (!marcaId || !modeloId || !anoModelo) {
+                if (!marcaId || !modeloId ) {
                     fireSwal({
                         toast: true,
                         position: 'top-end',
