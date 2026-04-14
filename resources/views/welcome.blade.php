@@ -1371,7 +1371,6 @@
                     <a href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                         <span>Software da</span>
                         <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
-                        <strong>Sonyd Tech</strong>
                     </a>
                 </div>
             </div>
@@ -2021,7 +2020,6 @@
             <a class="footer-brand-credit" href="https://www.sonyd.com.br" target="_blank" rel="noopener noreferrer" aria-label="Visitar o site da Sonyd Tech">
                 <span>Software oficial da</span>
                 <img src="{{ asset('assets/imgs/logo-sonydtech.webp') }}" alt="Logo Sonyd Tech">
-                <strong>Sonyd Tech</strong>
             </a>
             {{-- <div class="footer-socials">
                 <a href="#" class="social-btn" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
