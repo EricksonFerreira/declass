@@ -188,7 +188,7 @@
     .hero-inner {
         position: relative; z-index: 1;
         display: grid; grid-template-columns: 1fr 1fr;
-        align-items: center; gap: 4rem; padding: 1rem 0;
+        align-items: center; gap: 4rem; padding: rem 0;
         width: 100%;
     }
     .hero-eyebrow {
@@ -1277,7 +1277,7 @@
                     <div class="sales-diff-point"><i class="fas fa-check-circle"></i> Uma vitrine que ajuda a converter visitantes em locatários e aumenta a escala da operação.</div>
                 </div>
                 <div class="sales-diff-actions">
-                    <a href="#funcionalidades" class="sales-diff-link">Ver um dos modelos de site de vendas</a>
+                    <a href="https://locrickson.shop" class="sales-diff-link">Ver um dos modelos de site de vendas</a>
                     <span class="sales-diff-note">Esse é o diferencial que faz o DeCars se destacar entre os sistemas do mercado.</span>
                 </div>
             </div>
