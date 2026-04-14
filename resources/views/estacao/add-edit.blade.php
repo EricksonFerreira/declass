@@ -17,6 +17,7 @@
         $errors->has('hora_fim_fora_expediente') || $errors->has('hora_fim_fora_expediente.*');
 
     $startStep = $hasHorarioErrors ? 4 : 1;
+    $isEdit = isset($estacao);
 @endphp
 
 @if ($errors->any())
@@ -428,7 +429,7 @@
                         Próximo <i class="fas fa-chevron-right ml-1"></i>
                     </button>
                     <button type="submit" class="btn btn-success btn-sm px-4 d-none" id="btnSalvar">
-                        <i class="fas fa-save mr-1"></i> Salvar Estação
+                        <i class="fas fa-save mr-1"></i> Salvar alterações
                     </button>
                 </div>
 
@@ -682,6 +683,7 @@ $(function () {
     $('#celular').mask('(00) 00000-0000');
     $('#telefone').mask('(00) 00000-0000');
     $('#zip_code').mask('00000-000');
+    const isEdit = @json($isEdit);
 
     // ── Wizard step navigation ──
     const TOTAL_STEPS = 5;
@@ -704,9 +706,15 @@ $(function () {
         $('#btnPrev').css('display', n > 1 ? 'inline-flex' : 'none');
         if (n < TOTAL_STEPS) {
             $('#btnNext').removeClass('d-none');
-            $('#btnSalvar').addClass('d-none');
         } else {
             $('#btnNext').addClass('d-none');
+        }
+
+        if (isEdit) {
+            $('#btnSalvar').removeClass('d-none');
+        } else if (n < TOTAL_STEPS) {
+            $('#btnSalvar').addClass('d-none');
+        } else {
             $('#btnSalvar').removeClass('d-none');
         }
     }

@@ -38,6 +38,7 @@
                     Ao salvar, a nova empresa será criada usando a <strong>empresa-padrão</strong> como modelo de informações.
                 </div>
             @endif
+            @php $isEdit = isset($empresa); @endphp
             <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" enctype="multipart/form-data">
                 <div class="col-12 empresa-wizard-top">
                     <div class="empresa-wizard-steps" role="tablist" aria-label="Passos da empresa">
@@ -489,7 +490,7 @@
                             Continuar <i class="fas fa-arrow-right ml-1"></i>
                         </button>
                         <button type="submit" class="btn btn-primary btn-save-empresa d-none" id="btnSalvarEmpresa">
-                            Salvar
+                            Salvar alterações
                         </button>
                     </div>
                 </div>
@@ -808,7 +809,13 @@
 
                 if (prevBtn) prevBtn.disabled = s <= 1;
                 if (nextBtn) nextBtn.classList.toggle('d-none', s >= maxStep);
-                if (submitBtn) submitBtn.classList.toggle('d-none', s < maxStep);
+                if (submitBtn) {
+                    if (isEdit) {
+                        submitBtn.classList.remove('d-none');
+                    } else {
+                        submitBtn.classList.toggle('d-none', s < maxStep);
+                    }
+                }
 
                 if (persist) localStorage.setItem(storageKey, String(s));
 

@@ -728,7 +728,7 @@
                                 Continuar<i class="fas fa-arrow-right ml-1"></i>
                             </button>
                             <button type="submit" class="btn-action btn-action-success" id="wizardSave">
-                                <i class="fas fa-save mr-1"></i>Salvar configuracoes
+                                <i class="fas fa-save mr-1"></i>Salvar alterações
                             </button>
                         </div>
                     </div>
