@@ -299,6 +299,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'N' => 'Inativo'
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Reservas', 'reserva.index', 'Criar');
+        $usuarioAutenticado = Auth::user()?->loadMissing(['estacoesPermitidas']);
+        $estacoesPermitidasUsuario = $usuarioAutenticado && ! $usuarioAutenticado->hasAcessoTodasEstacoes()
+            ? $usuarioAutenticado->estacoesPermitidas->sortBy('nome')->values()
+            : collect();
 
         // Consultando as variáveis necessárias
         $users = $this->userService->getAllForReservaSelect();
@@ -482,6 +486,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Reservas', 'reserva.index', "Editar: $reserva->id");
         [$metodo, $rota] = $this->getFormMethodAndRoute($reserva);
+        $usuarioAutenticado = Auth::user()?->loadMissing(['estacoesPermitidas']);
+        $estacoesPermitidasUsuario = $usuarioAutenticado && ! $usuarioAutenticado->hasAcessoTodasEstacoes()
+            ? $usuarioAutenticado->estacoesPermitidas->sortBy('nome')->values()
+            : collect();
 
         // Consultando as variáveis necessárias
         $users = $this->userService->getAllForReservaSelect();
