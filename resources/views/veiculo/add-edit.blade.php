@@ -1494,103 +1494,207 @@
             $btnConsultarFipe.on('click', consultarFipe);
             // â”€â”€ Validações de datas e km â”€â”€
             (function() {
-                const today = new Date().toISOString().slice(0, 10);
+                const agora = new Date();
+                const today = [
+                    agora.getFullYear(),
+                    String(agora.getMonth() + 1).padStart(2, '0'),
+                    String(agora.getDate()).padStart(2, '0'),
+                ].join('-');
 
-                const dataEmissaoPlaca = document.getElementById(
-                'data_placa_licenca'); // Emissão da Placa/Licença
-                const dataValidade = document.getElementById(
-                'data_validade'); // Validade da Documentação/Licença
+                const dataCompra = document.getElementById('data_compra');
+                const dataEmissaoPlaca = document.getElementById('data_placa_licenca');
+                const dataValidade = document.getElementById('data_validade');
                 const dataManutencao = document.getElementById('data_proxima_manutencao');
                 const dataInspecao = document.getElementById('data_proxima_inspecao');
                 const kmsAtual = document.getElementById('kms');
+                const limiteKms = document.getElementById('limite_kms');
                 const proxRevisaoKms = document.getElementById('proxima_revisao_kms');
                 const proxManutKms = document.getElementById('proxima_manutencao_kms');
-
-                // Validade da Documentação/Licença > Emissão da Placa
-                function validarValidade() {
-                    if (!dataValidade || !dataEmissaoPlaca) return;
-                    if (dataValidade.value && dataEmissaoPlaca.value && dataValidade.value <= dataEmissaoPlaca
-                        .value) {
-                        dataValidade.setCustomValidity(
-                            'A Validade da Documentação/Licença deve ser posterior à Emissão da Placa (' +
-                            formatarData(dataEmissaoPlaca.value) + ').'
-                        );
-                    } else {
-                        dataValidade.setCustomValidity('');
-                    }
-                    dataValidade.reportValidity && dataValidade.value ? dataValidade.checkValidity() : null;
-                }
-                dataValidade?.addEventListener('change', validarValidade);
-                dataEmissaoPlaca?.addEventListener('change', validarValidade);
-
-                // Próxima Manutenção >= hoje
-                dataManutencao?.addEventListener('change', function() {
-                    if (this.value && this.value < today) {
-                        this.setCustomValidity(
-                            'A Próxima Manutenção deve ser hoje ou uma data futura (hoje = ' +
-                            formatarData(today) + ').');
-                    } else {
-                        this.setCustomValidity('');
-                    }
-                });
-
-                // Próxima Inspeção >= hoje
-                dataInspecao?.addEventListener('change', function() {
-                    if (this.value && this.value < today) {
-                        this.setCustomValidity(
-                            'A Próxima Inspeção deve ser hoje ou uma data futura (hoje = ' +
-                            formatarData(today) + ').');
-                    } else {
-                        this.setCustomValidity('');
-                    }
-                });
-
-                // Km da Próxima Revisão >= Km Atual
-                function validarKmRevisao() {
-                    if (!proxRevisaoKms || !kmsAtual) return;
-                    const km = parseFloat(kmsAtual.value) || 0;
-                    const pr = parseFloat(proxRevisaoKms.value);
-                    if (proxRevisaoKms.value !== '' && pr < km) {
-                        proxRevisaoKms.setCustomValidity(
-                            'O Km da Próxima Revisão (' + pr.toLocaleString('pt-BR') +
-                            ' km) deve ser maior ou igual ao Km Atual (' + km.toLocaleString('pt-BR') +
-                            ' km).'
-                        );
-                    } else {
-                        proxRevisaoKms.setCustomValidity('');
-                    }
-                }
-                proxRevisaoKms?.addEventListener('change', validarKmRevisao);
-                kmsAtual?.addEventListener('change', validarKmRevisao);
-
-                // Km da Próxima Manutenção >= Km Atual
-                function validarKmManut() {
-                    if (!proxManutKms || !kmsAtual) return;
-                    const km = parseFloat(kmsAtual.value) || 0;
-                    const pm = parseFloat(proxManutKms.value);
-                    if (proxManutKms.value !== '' && pm < km) {
-                        proxManutKms.setCustomValidity(
-                            'O Km da Próxima Manutenção (' + pm.toLocaleString('pt-BR') +
-                            ' km) deve ser maior ou igual ao Km Atual (' + km.toLocaleString('pt-BR') +
-                            ' km).'
-                        );
-                    } else {
-                        proxManutKms.setCustomValidity('');
-                    }
-                }
-                proxManutKms?.addEventListener('change', validarKmManut);
-                kmsAtual?.addEventListener('change', validarKmManut);
-
-                // Rodar validações no load para pegar valores já preenchidos (edição)
-                validarValidade();
-                validarKmRevisao();
-                validarKmManut();
 
                 function formatarData(iso) {
                     if (!iso) return '';
                     const [y, m, d] = iso.split('-');
                     return d + '/' + m + '/' + y;
                 }
+
+                function formatarKm(valor) {
+                    return Number(valor).toLocaleString('pt-BR');
+                }
+
+                function setMensagem(campo, mensagem) {
+                    if (!campo) return;
+                    campo.setCustomValidity(mensagem || '');
+                }
+
+                function validarDataCompra() {
+                    if (!dataCompra) return;
+
+                    let mensagem = '';
+                    if (dataCompra.value && dataEmissaoPlaca?.value && dataCompra.value > dataEmissaoPlaca.value) {
+                        mensagem = 'A Data de Compra não pode ser posterior à Emissão da Placa/Licença (' +
+                            formatarData(dataEmissaoPlaca.value) + ').';
+                    }
+
+                    setMensagem(dataCompra, mensagem);
+                }
+
+                function validarDataEmissaoPlaca() {
+                    if (!dataEmissaoPlaca) return;
+
+                    let mensagem = '';
+                    if (dataEmissaoPlaca.value && dataCompra?.value && dataEmissaoPlaca.value < dataCompra.value) {
+                        mensagem = 'A Emissão da Placa/Licença não pode ser anterior à Data de Compra (' +
+                            formatarData(dataCompra.value) + ').';
+                    } else if (
+                        dataEmissaoPlaca.value &&
+                        dataValidade?.value &&
+                        dataEmissaoPlaca.value > dataValidade.value
+                    ) {
+                        mensagem = 'A Emissão da Placa/Licença não pode ser posterior à Validade da Documentação/Licença (' +
+                            formatarData(dataValidade.value) + ').';
+                    }
+
+                    setMensagem(dataEmissaoPlaca, mensagem);
+                }
+
+                function validarDataManutencao() {
+                    if (!dataManutencao) return;
+
+                    const mensagem = dataManutencao.value && dataManutencao.value < today
+                        ? 'A Próxima Manutenção deve ser hoje ou uma data futura (hoje = ' + formatarData(today) + ').'
+                        : '';
+
+                    setMensagem(dataManutencao, mensagem);
+                }
+
+                function validarDataInspecao() {
+                    if (!dataInspecao) return;
+
+                    const mensagem = dataInspecao.value && dataInspecao.value < today
+                        ? 'A Próxima Inspeção deve ser hoje ou uma data futura (hoje = ' + formatarData(today) + ').'
+                        : '';
+
+                    setMensagem(dataInspecao, mensagem);
+                }
+
+                function validarLimiteKms() {
+                    if (!limiteKms) return;
+
+                    let mensagem = '';
+                    const km = Number.parseInt(kmsAtual?.value || '', 10);
+                    const limite = Number.parseInt(limiteKms.value || '', 10);
+
+                    if (
+                        limiteKms.value !== '' &&
+                        kmsAtual?.value !== '' &&
+                        Number.isFinite(km) &&
+                        Number.isFinite(limite) &&
+                        limite < km
+                    ) {
+                        mensagem = 'O Limite de Km por Aluguel (' + formatarKm(limite) +
+                            ' km) não pode ser menor que o Km Atual (' + formatarKm(km) + ' km).';
+                    }
+
+                    setMensagem(limiteKms, mensagem);
+                }
+
+                function validarKmRevisao() {
+                    if (!proxRevisaoKms) return;
+
+                    let mensagem = '';
+                    const km = Number.parseInt(kmsAtual?.value || '', 10);
+                    const pr = Number.parseInt(proxRevisaoKms.value || '', 10);
+
+                    if (
+                        proxRevisaoKms.value !== '' &&
+                        kmsAtual?.value !== '' &&
+                        Number.isFinite(km) &&
+                        Number.isFinite(pr) &&
+                        pr < km
+                    ) {
+                        mensagem = 'O Km da Próxima Revisão (' + formatarKm(pr) +
+                            ' km) deve ser maior ou igual ao Km Atual (' + formatarKm(km) + ' km).';
+                    }
+
+                    setMensagem(proxRevisaoKms, mensagem);
+                }
+
+                function validarKmManut() {
+                    if (!proxManutKms) return;
+
+                    let mensagem = '';
+                    const km = Number.parseInt(kmsAtual?.value || '', 10);
+                    const pm = Number.parseInt(proxManutKms.value || '', 10);
+
+                    if (
+                        proxManutKms.value !== '' &&
+                        kmsAtual?.value !== '' &&
+                        Number.isFinite(km) &&
+                        Number.isFinite(pm) &&
+                        pm < km
+                    ) {
+                        mensagem = 'O Km da Próxima Manutenção (' + formatarKm(pm) +
+                            ' km) deve ser maior ou igual ao Km Atual (' + formatarKm(km) + ' km).';
+                    }
+
+                    setMensagem(proxManutKms, mensagem);
+                }
+
+                function validarTudo() {
+                    validarDataCompra();
+                    validarDataEmissaoPlaca();
+                    validarDataManutencao();
+                    validarDataInspecao();
+                    validarLimiteKms();
+                    validarKmRevisao();
+                    validarKmManut();
+                }
+
+                dataCompra?.addEventListener('input', validarDataCompra);
+                dataCompra?.addEventListener('change', function() {
+                    validarDataCompra();
+                    validarDataEmissaoPlaca();
+                });
+
+                dataEmissaoPlaca?.addEventListener('input', function() {
+                    validarDataCompra();
+                    validarDataEmissaoPlaca();
+                });
+                dataEmissaoPlaca?.addEventListener('change', function() {
+                    validarDataCompra();
+                    validarDataEmissaoPlaca();
+                });
+
+                dataValidade?.addEventListener('input', validarDataEmissaoPlaca);
+                dataValidade?.addEventListener('change', validarDataEmissaoPlaca);
+
+                dataManutencao?.addEventListener('input', validarDataManutencao);
+                dataManutencao?.addEventListener('change', validarDataManutencao);
+
+                dataInspecao?.addEventListener('input', validarDataInspecao);
+                dataInspecao?.addEventListener('change', validarDataInspecao);
+
+                kmsAtual?.addEventListener('input', function() {
+                    validarLimiteKms();
+                    validarKmRevisao();
+                    validarKmManut();
+                });
+                kmsAtual?.addEventListener('change', function() {
+                    validarLimiteKms();
+                    validarKmRevisao();
+                    validarKmManut();
+                });
+
+                limiteKms?.addEventListener('input', validarLimiteKms);
+                limiteKms?.addEventListener('change', validarLimiteKms);
+
+                proxRevisaoKms?.addEventListener('input', validarKmRevisao);
+                proxRevisaoKms?.addEventListener('change', validarKmRevisao);
+
+                proxManutKms?.addEventListener('input', validarKmManut);
+                proxManutKms?.addEventListener('change', validarKmManut);
+
+                validarTudo();
             })();
 
             // â”€â”€ Status Vendido â”€â”€
