@@ -1068,7 +1068,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             }
         }
 
-        $estacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc', $empresaId);
+        $estacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc');
 
         return view('veiculo.disponibilidade', compact(
             'totalVeiculos',

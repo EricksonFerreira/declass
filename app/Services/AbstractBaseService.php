@@ -156,8 +156,10 @@ abstract class AbstractBaseService implements BaseServiceInterface
     }
     public function getAllAtivos($id = 'id', $nome = 'nome', $orderBy = null, $orderDirection = 'asc',$attrExtra = [])
     {
+        $attrExtra = is_array($attrExtra) ? array_values(array_filter($attrExtra, fn ($item) => is_string($item) && trim($item) !== '')) : [];
+
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
-            ->select($id, $nome, ...$attrExtra)
+            ->select(array_merge([$id, $nome], $attrExtra))
             ->distinct();
 
         if (Schema::hasColumn($this->model->getTable(), 'ativo')) {

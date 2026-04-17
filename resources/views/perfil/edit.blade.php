@@ -121,43 +121,57 @@
                 @endforeach
             </section>
 
-            @if (! $temAcessoTodasEstacoes)
-                <section class="profile-stations card">
-                    <div class="profile-stations__header">
-                        <div>
-                            <span class="profile-stations__eyebrow">Acesso por estação</span>
-                            <h2 class="profile-stations__title">Estações permitidas</h2>
-                            <p class="profile-stations__description">
+            <section class="profile-stations card">
+                <div class="profile-stations__header">
+                    <div>
+                        <span class="profile-stations__eyebrow">Acesso por estação</span>
+                        <h2 class="profile-stations__title">
+                            {{ $temAcessoTodasEstacoes ? 'Acesso a todas as estações' : 'Estações permitidas' }}
+                        </h2>
+                        <p class="profile-stations__description">
+                            @if ($temAcessoTodasEstacoes)
+                                Este usuário tem acesso a todas as estações da empresa.
+                            @else
                                 Este usuário não tem acesso a todas as estações da empresa. As unidades abaixo são as que ele pode utilizar.
-                            </p>
+                            @endif
+                        </p>
+                    </div>
+                    <div class="profile-stations__count">
+                        {{ $temAcessoTodasEstacoes ? 'Todas' : $estacoesPermitidas->count() . ' estação' . ($estacoesPermitidas->count() === 1 ? '' : 'ões') }}
+                    </div>
+                </div>
+
+                @if ($temAcessoTodasEstacoes)
+                    <div class="profile-stations__full-access">
+                        <div class="profile-stations__full-access-icon">
+                            <i class="fas fa-check-circle"></i>
                         </div>
-                        <div class="profile-stations__count">
-                            {{ $estacoesPermitidas->count() }} estação{{ $estacoesPermitidas->count() === 1 ? '' : 'ões' }}
+                        <div class="profile-stations__full-access-body">
+                            <strong>Acesso liberado</strong>
+                            <span>Este usuário pode utilizar qualquer estação cadastrada na empresa.</span>
                         </div>
                     </div>
-
-                    @if ($estacoesPermitidas->isNotEmpty())
-                        <div class="profile-stations__grid">
-                            @foreach ($estacoesPermitidas as $estacao)
-                                <div class="profile-station-item">
-                                    <div class="profile-station-item__icon">
-                                        <i class="fas fa-map-marker-alt"></i>
-                                    </div>
-                                    <div class="profile-station-item__body">
-                                        <strong>{{ $estacao->nome }}</strong>
-                                        <span>{{ $estacao->cidade ?? 'Cidade não informada' }}</span>
-                                    </div>
+                @elseif ($estacoesPermitidas->isNotEmpty())
+                    <div class="profile-stations__grid">
+                        @foreach ($estacoesPermitidas as $estacao)
+                            <div class="profile-station-item">
+                                <div class="profile-station-item__icon">
+                                    <i class="fas fa-map-marker-alt"></i>
                                 </div>
-                            @endforeach
-                        </div>
-                    @else
-                        <div class="profile-stations__empty">
-                            <i class="fas fa-info-circle"></i>
-                            Nenhuma estação foi vinculada a este usuário.
-                        </div>
-                    @endif
-                </section>
-            @endif
+                                <div class="profile-station-item__body">
+                                    <strong>{{ $estacao->nome }}</strong>
+                                    <span>{{ $estacao->cidade ?? 'Cidade não informada' }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div class="profile-stations__empty">
+                        <i class="fas fa-info-circle"></i>
+                        Nenhuma estação foi vinculada a este usuário.
+                    </div>
+                @endif
+            </section>
 
             {{-- <section class="profile-action card">
                 <div class="profile-action__content">
@@ -616,6 +630,50 @@
             font-size: .92rem;
         }
 
+        .profile-stations__full-access {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            padding: 1rem 1.05rem;
+            border-radius: 18px;
+            background: linear-gradient(135deg, color-mix(in srgb, var(--profile-primary) 8%, #ffffff 92%) 0%, color-mix(in srgb, var(--profile-secondary) 5%, #f8fbff 95%) 100%);
+            border: 1px solid color-mix(in srgb, var(--profile-primary) 12%, #dbe7f4 88%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
+        }
+
+        .profile-stations__full-access-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            background: var(--profile-primary);
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
+            font-size: 1rem;
+        }
+
+        .profile-stations__full-access-body {
+            min-width: 0;
+        }
+
+        .profile-stations__full-access-body strong {
+            display: block;
+            color: #0f172a;
+            font-size: .98rem;
+            font-weight: 800;
+            line-height: 1.35;
+            margin-bottom: .18rem;
+        }
+
+        .profile-stations__full-access-body span {
+            display: block;
+            color: var(--profile-secondary);
+            font-size: .9rem;
+            line-height: 1.45;
+        }
+
         .profile-action {
             border: 1px solid color-mix(in srgb, var(--profile-primary) 10%, #e5edf7 90%);
             border-radius: 24px;
@@ -714,6 +772,10 @@
             .profile-hero__aside {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
             }
+
+            .profile-stations__full-access {
+                align-items: flex-start;
+            }
         }
 
         @media (max-width: 767.98px) {
@@ -751,6 +813,15 @@
 
             .profile-stations__header {
                 flex-direction: column;
+            }
+
+            .profile-stations__count {
+                width: 100%;
+                justify-content: flex-start;
+            }
+
+            .profile-stations__full-access {
+                padding: .9rem;
             }
 
             .profile-action__content {
