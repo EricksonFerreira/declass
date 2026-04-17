@@ -715,19 +715,26 @@
                 .replace(/'/g, '&#039;');
         }
 
+        function limparRotuloTexto(texto) {
+            return String(texto ?? '')
+                .replace(/\s*\*\s*$/, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
         function obterRotuloCampo($campo) {
-            const rotulo = String($campo.data('field-label') ?? '').trim();
+            const rotulo = limparRotuloTexto($campo.data('field-label'));
             if (rotulo) {
                 return rotulo;
             }
 
             const $group = $campo.closest('.form-group');
-            const textoLabel = String($group.find('label').first().text() ?? '').trim();
+            const textoLabel = limparRotuloTexto($group.find('label').first().text());
             if (textoLabel) {
                 return textoLabel;
             }
 
-            return String($campo.attr('name') ?? 'Campo').replace(/\[\]$/, '');
+            return limparRotuloTexto(String($campo.attr('name') ?? 'Campo').replace(/\[\]$/, ''));
         }
 
         function obterPassoCampo($campo) {
@@ -821,7 +828,9 @@
                 $('.ec-step-btn[data-step="' + step + '"]').addClass('warning');
             });
 
-            $usuarioResumoPendencias.text('Encontramos ' + pendencias.length + ' item(ns) obrigatório(s) pendente(s).');
+            $usuarioResumoPendencias.text(pendencias.length === 1
+                ? 'Encontramos 1 item obrigatório pendente.'
+                : 'Encontramos ' + pendencias.length + ' itens obrigatórios pendentes.');
             $usuarioBotaoIrPassoBase.text('Ir para o passo ' + usuarioStepLabel(usuarioUltimoPassoPendente));
             $usuarioListaPendencias.html(pendencias.map(montarLinhaPendencia).join(''));
             $usuarioAlertaPendencias.removeClass('d-none').addClass('is-live');
