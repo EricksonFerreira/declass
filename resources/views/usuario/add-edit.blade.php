@@ -320,32 +320,13 @@
                             @if ($isCreate)
                                 <div class="tab-pane fade" id="tab-seguranca" role="tabpanel" aria-labelledby="tab-seguranca-link">
                                     <div class="usuario-section-title">Informações Privadas</div>
-                                    <div class="form-row">
-                                        <div class="col-lg-5 col-md-6">
-                                            <div class="form-group form-group-usuario">
-                                                <x-form-input required type="password" class="form-control-sm" id="senha"
-                                                    name="password" label="Senha" value="{{ old('password', '') }}" />
-                                            </div>
-                                        </div>
-
-                                        <div class="col-lg-5 col-md-6">
-                                            <div class="form-group form-group-usuario">
-                                                <x-form-input required type="password" class="form-control-sm" id="confirmacao_senha"
-                                                    name="confirmacao_senha" label="Confirmacao de Senha"
-                                                    value="{{ old('confirmacao_senha', '') }}" />
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-12">
-                                            <div id="passwordValidation" class="alert alert-danger d-none" role="alert">
-                                                <ul class="mb-0 pl-3">
-                                                    <li id="length" class="d-none">A senha deve ter pelo menos 8 caracteres.</li>
-                                                    <li id="uppercase" class="d-none">A senha deve conter pelo menos uma letra maiúscula.</li>
-                                                    <li id="lowercase" class="d-none">A senha deve conter pelo menos uma letra minúscula.</li>
-                                                    <li id="number" class="d-none">A senha deve conter pelo menos um número.</li>
-                                                    <li id="special" class="d-none">A senha deve conter pelo menos um caractere especial.</li>
-                                                    <li id="match" class="d-none">As senhas devem ser iguais.</li>
-                                                </ul>
+                                    <div class="alert alert-info border-0 shadow-sm mb-0">
+                                        <div class="d-flex align-items-start" style="gap:10px;">
+                                            <i class="fas fa-key mt-1 text-primary"></i>
+                                            <div>
+                                                <strong>Senha padrão automática:</strong>
+                                                O sistema vai salvar o acesso com <code class="font-weight-bold">Senh@123</code>
+                                                e o colaborador precisará criar uma nova senha no primeiro login.
                                             </div>
                                         </div>
                                     </div>
@@ -363,7 +344,16 @@
                             <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--next" id="btnNext">
                                 <i class="fas fa-chevron-right mr-1"></i> Próximo
                             </button>
-                            <button type="submit" class="btn btn-sm ec-nav-btn ec-nav-btn--save d-none" id="btnSalvarUsuario">
+                        </div>
+                    </div>
+
+                    <div class="usuario-save-dock js-usuario-save-dock d-none">
+                        <div class="usuario-save-dock__content">
+                            <div>
+                                <strong>Salvar alterações</strong>
+                                <small class="d-block text-muted">Disponível sem descer até o fim da página.</small>
+                            </div>
+                            <button type="submit" class="btn btn-sm ec-nav-btn ec-nav-btn--save" id="btnSalvarUsuario">
                                 <i class="fas fa-save mr-1"></i> Salvar alterações
                             </button>
                         </div>
@@ -477,6 +467,14 @@
         color: #334155;
     }
 
+    .ec-nav-btn--back:hover {
+        transform: none;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+        background: #f8fbff;
+        border-color: #b8c8df;
+        color: #0f2740;
+    }
+
     .ec-nav-btn--next {
         background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
         border: 1px solid #2563eb;
@@ -489,10 +487,41 @@
         color: #fff;
     }
 
-    .ec-nav-btn--back:hover,
     .ec-nav-btn--next:hover,
     .ec-nav-btn--save:hover {
         color: #fff;
+    }
+
+    .usuario-save-dock {
+        position: fixed;
+        right: 24px;
+        bottom: 20px;
+        z-index: 1060;
+        width: min(360px, calc(100vw - 32px));
+    }
+
+    .usuario-save-dock__content {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid #dbe6f3;
+        background: rgba(255, 255, 255, .96);
+        box-shadow: 0 14px 36px rgba(15, 23, 42, .16);
+        backdrop-filter: blur(8px);
+    }
+
+    .usuario-save-dock__content strong {
+        display: block;
+        font-size: .92rem;
+        color: #0f2740;
+    }
+
+    .usuario-save-dock__content small {
+        font-size: .76rem;
+        line-height: 1.25;
     }
 
     .nav-usuario .nav-link {
@@ -660,6 +689,21 @@
             min-width: 0;
             flex: 1 1 0;
         }
+
+        .usuario-save-dock {
+            right: 16px;
+            bottom: 14px;
+            width: calc(100vw - 32px);
+        }
+
+        .usuario-save-dock__content {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .usuario-save-dock__content button {
+            width: 100%;
+        }
     }
 </style>
 @stop
@@ -676,7 +720,7 @@
         const $usuarioForm = $('#form');
         const $usuarioBtnPrev = $('#btnPrev');
         const $usuarioBtnNext = $('#btnNext');
-        const $usuarioBtnSave = $('#btnSalvarUsuario');
+        const $usuarioDockSave = $('.js-usuario-save-dock');
         const $usuarioAlertaPendencias = $('.js-usuario-validacao-alerta');
         const $usuarioListaPendencias = $('.js-usuario-validacao-lista');
         const $usuarioResumoPendencias = $('.js-usuario-validacao-resumo');
@@ -917,7 +961,7 @@
 
             $usuarioBtnPrev.toggleClass('d-none', targetStep <= 1);
             $usuarioBtnNext.toggleClass('d-none', targetStep >= usuarioTotalSteps);
-            $usuarioBtnSave.toggleClass('d-none', targetStep < usuarioTotalSteps);
+            $usuarioDockSave.toggleClass('d-none', isCreateUsuario ? targetStep < usuarioTotalSteps : false);
         }
 
         function applyRoleStationUiRules() {

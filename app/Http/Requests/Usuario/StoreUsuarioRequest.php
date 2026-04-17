@@ -53,12 +53,8 @@ class StoreUsuarioRequest extends FormRequest
             'endereco' => 'required|string|max:255',
             'numero_identificacao' => 'required|string|max:20',
             'role_id' => [$isCadastroReserva ? 'nullable' : 'required', 'integer', 'exists:roles,id'],
-            'password' => $isCadastroReserva
-                ? ['nullable', 'string', 'max:20']
-                : ['required', 'string', 'max:20', 'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/'],
-            'confirmacao_senha' => $isCadastroReserva
-                ? ['nullable', 'string', 'max:20', 'same:password']
-                : ['required', 'string', 'max:20', 'same:password'],
+            'password' => ['nullable', 'string', 'max:20'],
+            'confirmacao_senha' => ['nullable', 'string', 'max:20'],
             'numero_carta_conducao' => 'nullable|string|max:20',
             'local_emissao_carta_conducao' => 'nullable|string|max:100',
             'pais_emissao_carta_conducao' => 'nullable|string|max:2',
@@ -143,8 +139,6 @@ class StoreUsuarioRequest extends FormRequest
             'same' => 'O campo :attribute deve ser igual a :other.',
             'email.unique' => 'O email informado ja esta em uso.',
             'celular.regex' => 'O celular deve estar no formato (XX) XXXXX-XXXX.',
-            'password.regex' => 'A senha deve ter ao menos 8 caracteres com maiuscula, minuscula, numero e simbolo.',
-            'confirmacao_senha.same' => 'A confirmacao da senha nao corresponde.',
             'estacoes.array' => 'As estacoes permitidas devem ser informadas em lista.',
             'estacoes.*.integer' => 'Cada estacao permitida deve ser numerica.',
             'estacoes.*.exists' => 'Uma das estacoes selecionadas nao existe.',

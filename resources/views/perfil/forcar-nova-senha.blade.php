@@ -12,7 +12,7 @@
         <x-form method="PUT" action="{{ route('profile.force-password.update') }}" rowClass="row">
             <div class="col-12">
                 <div class="alert alert-warning mb-3">
-                    <strong>Primeiro acesso:</strong> por seguranca, defina uma nova senha antes de continuar.
+                    <strong>Primeiro acesso:</strong> sua senha inicial foi redefinida. Defina uma nova senha antes de continuar.
                 </div>
             </div>
 

@@ -27,6 +27,8 @@ use Illuminate\Support\Facades\Log;
 
 class UsuarioController extends BaseController implements FiltroInterface, ResourceInterface
 {
+    private const SENHA_PADRAO_ACESSO = 'Senh@123';
+
     use FiltroTrait;
     use AtualizaFiltrosTrait;
     protected $usuarioService;
@@ -139,8 +141,10 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
                 $data['role_id'] = $roleClienteId;
                 $data['acesso_todas_estacoes'] = true;
-                $data['password'] =$request->password;
             }
+
+            $data['password'] = self::SENHA_PADRAO_ACESSO;
+            $data['forcar_troca_senha'] = true;
 
             // Cria o cliente no Stripe
             $cliente = $this->clienteStripeService->criarCliente($data['email'], $data['nome']);
@@ -503,14 +507,22 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         ]);
 
         $mensagem = $resetarParaAcesso
-            ? 'Senha resetada para car@12345. No primeiro login o usuario sera obrigado a definir uma nova senha.'
+            ? 'Senha resetada para Senh@123. No primeiro login o usuario sera obrigado a definir uma nova senha.'
             : 'Senha alterada com sucesso.';
 
         if ($request->expectsJson()) {
             return response()->json(['message' => $mensagem]);
         }
 
-        return $this->redirecionaRotaRedirect($this->nomeFiltro, $mensagem);
+        if ($resetarParaAcesso) {
+            return redirect()
+                ->route('usuario.index')
+                ->with('usuarioResetSenhaMensagem', $mensagem);
+        }
+
+        return redirect()
+            ->route('usuario.index')
+            ->with('success', $mensagem);
     }
 
     public function destroy($id)

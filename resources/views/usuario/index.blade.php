@@ -112,10 +112,22 @@
                                             @endif
 
                                             @if ($canAlterarSenha)
-                                                <a class="btn btn-xs btn-info"
-                                                    href="{{ route('usuario.alterarSenha', $usuario->id) }}">
-                                                    <i class="fas fa-key mr-1"></i> Senha
-                                                </a>
+                                                <form action="{{ route('usuario.salvarNovaSenha', $usuario->id) }}"
+                                                    method="POST"
+                                                    class="d-inline js-reset-senha-form"
+                                                    id="resetSenhaForm-{{ $usuario->id }}">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="resetar_para_acesso" value="1">
+                                                    <input type="hidden" name="password" value="Senh@123">
+                                                    <input type="hidden" name="confirmacao_senha" value="Senh@123">
+                                                    <button type="button"
+                                                        class="btn btn-xs btn-info js-reset-senha"
+                                                        data-user-name="{{ $usuario->nome }}"
+                                                        data-form-id="resetSenhaForm-{{ $usuario->id }}">
+                                                        <i class="fas fa-key mr-1"></i> Resetar senha
+                                                    </button>
+                                                </form>
                                             @endif
 
                                             @if ($canExcluir)
@@ -194,5 +206,113 @@
 @stop
 
 @section('js')
-<script></script>
+    <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
+    <script>
+        $(function () {
+            const senhaPadrao = 'Senh@123';
+
+            function escaparHtml(texto) {
+                return String(texto ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function mostrarSucesso(mensagem) {
+                const options = {
+                    icon: 'success',
+                    title: 'Senha atualizada',
+                    html: `
+                        <div style="text-align:left">
+                            <p class="mb-2">${escaparHtml(mensagem)}</p>
+                            <p class="mb-0">Oriente o usuário a entrar com a senha padrão e trocar no primeiro acesso.</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'Entendi',
+                    confirmButtonColor: '#16a34a',
+                };
+
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    window.Swal.fire(options);
+                    return;
+                }
+
+                if (typeof window.alertConfirmPequena === 'function') {
+                    window.alertConfirmPequena(options.title, mensagem, 'success');
+                    return;
+                }
+
+                window.alert(options.title + '\n\n' + mensagem);
+            }
+
+            function confirmarReset($form, userName) {
+                const texto = `
+                    <div style="text-align:left">
+                        <p class="mb-2">Tem certeza que deseja resetar a senha de <strong>${escaparHtml(userName)}</strong>?</p>
+                        <p class="mb-2">A senha será definida como <strong>${senhaPadrao}</strong>.</p>
+                        <p class="mb-0">No próximo acesso, o colaborador será direcionado para criar uma nova senha.</p>
+                    </div>
+                `;
+
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    window.Swal.fire({
+                        icon: 'warning',
+                        title: 'Resetar senha?',
+                        html: texto,
+                        showCancelButton: true,
+                        confirmButtonText: 'Sim, resetar',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#2563eb',
+                        cancelButtonColor: '#6b7280',
+                    }).then(function (result) {
+                        if (result.isConfirmed) {
+                            $form.trigger('submit');
+                        }
+                    });
+                    return;
+                }
+
+                if (window.confirm('Tem certeza que deseja resetar a senha de ' + userName + ' para ' + senhaPadrao + '?')) {
+                    $form.trigger('submit');
+                }
+            }
+
+            $(document).on('click', '.js-reset-senha', function () {
+                const $btn = $(this);
+                const userName = String($btn.data('user-name') || 'este usuário');
+                const formId = String($btn.data('form-id') || '');
+                const $form = $('#' + formId);
+
+                if (!$form.length) {
+                    return;
+                }
+
+                confirmarReset($form, userName);
+            });
+
+            const resetMessage = @json(session('usuarioResetSenhaMensagem'));
+            if (resetMessage) {
+                mostrarSucesso(resetMessage);
+                return;
+            }
+
+            const successMessage = @json(session('success'));
+            if (successMessage) {
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    window.Swal.fire({
+                        icon: 'success',
+                        title: 'Sucesso',
+                        text: successMessage,
+                        confirmButtonColor: '#16a34a',
+                    });
+                } else if (typeof window.alertConfirmPequena === 'function') {
+                    window.alertConfirmPequena('Sucesso', successMessage, 'success');
+                } else {
+                    window.alert('Sucesso\n\n' + successMessage);
+                }
+            }
+        });
+    </script>
 @stop
