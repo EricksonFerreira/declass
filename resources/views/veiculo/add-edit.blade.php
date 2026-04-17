@@ -1219,6 +1219,33 @@
                 limparStatusFipe();
             }
 
+            function limparMarcaSelecionada() {
+                $marca.val('');
+                syncLookupDisplay('#marca_id', '#marca_display');
+            }
+
+            function limparModeloSelecionado() {
+                $modelo.val('');
+                syncLookupDisplay('#modelo_id', '#modelo_display');
+            }
+
+            function atualizarEstadoBuscaModelo() {
+                const temMarca = String($marca.val() || '').trim() !== '';
+                const $btnBuscarModelo = $('#btnBuscarModelo');
+
+                $btnBuscarModelo.prop('disabled', !temMarca);
+                $btnBuscarModelo.attr(
+                    'title',
+                    temMarca ? 'Pesquisa avançada' : 'Selecione uma marca antes de pesquisar o modelo'
+                );
+            }
+
+            function limparMarcaEmModeloDependente() {
+                limparMarcaSelecionada();
+                limparModeloSelecionado();
+                atualizarEstadoBuscaModelo();
+            }
+
             formatarCamposMoeda();
 
             $('#marca_id, #modelo_id').on('change input', function() {
@@ -1259,6 +1286,13 @@
                 const $modeloLocal = $('#modelo_id');
                 const textoAtual = $('#modelo_display').val();
 
+                if (!marcaId) {
+                    $modeloLocal.prop('disabled', false).html('<option value="">Selecione um valor</option>');
+                    limparModeloSelecionado();
+                    atualizarEstadoBuscaModelo();
+                    return;
+                }
+
                 $modeloLocal.prop('disabled', true).html('<option value="">Carregando...</option>');
 
                 $.get('{{ route('veiculo.modelosPorMarca') }}', {
@@ -1279,6 +1313,7 @@
                     if (selectTexto) {
                         $('#modelo_display').val(selectTexto);
                     }
+                    atualizarEstadoBuscaModelo();
                 }).fail(function() {
                     $modeloLocal.html('<option value="">Selecione um valor</option>').prop('disabled', false);
                     if (!selectValor) {
@@ -1286,6 +1321,7 @@
                     } else if (textoAtual) {
                         $('#modelo_display').val(textoAtual);
                     }
+                    atualizarEstadoBuscaModelo();
                 });
             };
 
@@ -1297,6 +1333,7 @@
                 if (item.marca_id) {
                     $('#marca_id').val(String(item.marca_id));
                     syncLookupDisplay('#marca_id', '#marca_display');
+                    atualizarEstadoBuscaModelo();
                 }
 
                 window.carregarModelosVeiculo(item.marca_id || $marca.val(), item.id, item.nome);
@@ -1304,11 +1341,22 @@
 
             $('#grupo_frota_id').on('change', function() {
                 syncLookupDisplay('#grupo_frota_id', '#grupo_frota_display');
+                limparCacheFalhaFipe();
+                limparMarcaEmModeloDependente();
             });
 
             $('#marca_id').on('change', function() {
                 syncLookupDisplay('#marca_id', '#marca_display');
-                window.carregarModelosVeiculo($(this).val(), null);
+                limparCacheFalhaFipe();
+                const marcaId = String($(this).val() || '').trim();
+                if (!marcaId) {
+                    limparModeloSelecionado();
+                    atualizarEstadoBuscaModelo();
+                    return;
+                }
+
+                limparModeloSelecionado();
+                window.carregarModelosVeiculo(marcaId, null);
             });
 
             $('#modelo_id').on('change', function() {
@@ -1322,6 +1370,7 @@
             syncLookupDisplay('#grupo_frota_id', '#grupo_frota_display');
             syncLookupDisplay('#marca_id', '#marca_display');
             syncLookupDisplay('#modelo_id', '#modelo_display');
+            atualizarEstadoBuscaModelo();
 
             const tipoInicial = $tipoFrota.val();
             const marcaInicial = $marca.val();
@@ -1331,6 +1380,9 @@
             }
             if (marcaInicial) {
                 window.carregarModelosVeiculo(marcaInicial, modeloInicial || null, $('#modelo_display').val() || null);
+            } else {
+                limparModeloSelecionado();
+                atualizarEstadoBuscaModelo();
             }
 
             function consultarFipe() {
