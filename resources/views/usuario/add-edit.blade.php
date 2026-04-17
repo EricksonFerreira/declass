@@ -70,7 +70,14 @@
                     @endforeach
                 </div>
 
-                <x-form method="{{ $metodo }}" action="{{ $rota }}" id="form" rowClass="row">
+                <x-campos-obrigatorios-pendentes
+                    alert-class="js-usuario-validacao-alerta mb-3"
+                    action-class="js-usuario-ir-passo-base"
+                    summary-class="js-usuario-validacao-resumo"
+                    list-class="js-usuario-validacao-lista"
+                />
+
+                <x-form method="{{ $metodo }}" action="{{ $rota }}" id="form" rowClass="row" novalidate>
                     <div class="col-12">
                         <ul class="nav nav-pills nav-usuario mb-3 d-none" id="usuario-tab" role="tablist">
                             <li class="nav-item">
@@ -347,10 +354,19 @@
                         </div>
                     </div>
 
-                    <div class="col-12">
-                        <button type="submit" class="btn btn-primary btn-save-usuario col-12 mt-2">
-                            Salvar
+                    <div class="col-12 usuario-wizard-footer mt-4 d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--back d-none" id="btnPrev">
+                            <i class="fas fa-chevron-left mr-1"></i> Voltar
                         </button>
+
+                        <div class="usuario-wizard-footer__actions ml-auto d-flex align-items-center" style="gap:8px;">
+                            <button type="button" class="btn btn-sm ec-nav-btn ec-nav-btn--next" id="btnNext">
+                                <i class="fas fa-chevron-right mr-1"></i> Próximo
+                            </button>
+                            <button type="submit" class="btn btn-sm ec-nav-btn ec-nav-btn--save d-none" id="btnSalvarUsuario">
+                                <i class="fas fa-save mr-1"></i> Salvar alterações
+                            </button>
+                        </div>
                     </div>
                 </x-form>
             </div>
@@ -435,6 +451,48 @@
         background: #e5eaf2;
         min-width: 16px;
         margin-bottom: 18px;
+    }
+
+    .usuario-wizard-footer {
+        padding-top: 14px;
+        border-top: 1px solid #e5eaf2;
+    }
+
+    .ec-nav-btn {
+        min-width: 140px;
+        border-radius: 999px;
+        font-weight: 700;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+        transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+    }
+
+    .ec-nav-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 14px 28px rgba(15, 23, 42, .12);
+    }
+
+    .ec-nav-btn--back {
+        background: #fff;
+        border: 1px solid #d4dceb;
+        color: #334155;
+    }
+
+    .ec-nav-btn--next {
+        background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+        border: 1px solid #2563eb;
+        color: #fff;
+    }
+
+    .ec-nav-btn--save {
+        background: linear-gradient(135deg, #16a34a 0%, #0f766e 100%);
+        border: 1px solid #16a34a;
+        color: #fff;
+    }
+
+    .ec-nav-btn--back:hover,
+    .ec-nav-btn--next:hover,
+    .ec-nav-btn--save:hover {
+        color: #fff;
     }
 
     .nav-usuario .nav-link {
@@ -585,6 +643,23 @@
             min-height: 36px;
             font-size: 13px;
         }
+
+        .usuario-wizard-footer {
+            flex-direction: column;
+            align-items: stretch !important;
+            gap: 10px;
+        }
+
+        .usuario-wizard-footer__actions {
+            width: 100%;
+            margin-left: 0 !important;
+            justify-content: space-between;
+        }
+
+        .ec-nav-btn {
+            min-width: 0;
+            flex: 1 1 0;
+        }
     }
 </style>
 @stop
@@ -597,32 +672,243 @@
     <script>
         const isCreateUsuario = @json($isCreate);
         const usuarioWizardStartStep = Number(document.getElementById('wizardSteps')?.dataset?.startStep || '1');
+        const $usuarioStepBtns = $('.ec-step-btn');
+        const $usuarioForm = $('#form');
+        const $usuarioBtnPrev = $('#btnPrev');
+        const $usuarioBtnNext = $('#btnNext');
+        const $usuarioBtnSave = $('#btnSalvarUsuario');
+        const $usuarioAlertaPendencias = $('.js-usuario-validacao-alerta');
+        const $usuarioListaPendencias = $('.js-usuario-validacao-lista');
+        const $usuarioResumoPendencias = $('.js-usuario-validacao-resumo');
+        const $usuarioBotaoIrPassoBase = $('.js-usuario-ir-passo-base');
+        const usuarioTotalSteps = $usuarioStepBtns.length || 1;
+        const USUARIO_STEP_TABS = {
+            1: '#tab-geral-link',
+            2: '#tab-contato-link',
+            3: '#tab-acesso-link',
+            4: '#tab-carta-link',
+            5: '#tab-seguranca-link',
+        };
+        const USUARIO_STEP_LABELS = {};
+        $usuarioStepBtns.each(function () {
+            const step = Number($(this).data('step') || 1);
+            USUARIO_STEP_LABELS[step] = $(this).find('.ec-step-label').first().text().trim() || ('Etapa ' + step);
+        });
+        let usuarioCurrentStep = Math.min(Math.max(usuarioWizardStartStep, 1), usuarioTotalSteps);
+        let usuarioUltimoPassoPendente = usuarioCurrentStep;
 
-        function usuarioTabs() {
-            return {
-                1: '#tab-geral-link',
-                2: '#tab-contato-link',
-                3: '#tab-acesso-link',
-                4: '#tab-carta-link',
-                5: '#tab-seguranca-link',
+        function usuarioPane(step) {
+            const linkSel = USUARIO_STEP_TABS[step] || USUARIO_STEP_TABS[1];
+            return linkSel ? $(linkSel).closest('.tab-pane') : $();
+        }
+
+        function usuarioStepLabel(step) {
+            return USUARIO_STEP_LABELS[step] || ('Etapa ' + step);
+        }
+
+        function escaparHtml(texto) {
+            return String(texto ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function obterRotuloCampo($campo) {
+            const rotulo = String($campo.data('field-label') ?? '').trim();
+            if (rotulo) {
+                return rotulo;
+            }
+
+            const $group = $campo.closest('.form-group');
+            const textoLabel = String($group.find('label').first().text() ?? '').trim();
+            if (textoLabel) {
+                return textoLabel;
+            }
+
+            return String($campo.attr('name') ?? 'Campo').replace(/\[\]$/, '');
+        }
+
+        function obterPassoCampo($campo) {
+            const tabId = String($campo.closest('.tab-pane').attr('id') || '');
+            const stepMap = {
+                'tab-geral': 1,
+                'tab-contato': 2,
+                'tab-acesso': 3,
+                'tab-carta': 4,
+                'tab-seguranca': 5,
             };
+
+            return stepMap[tabId] || 1;
+        }
+
+        function obterElementoFoco($campo) {
+            const mapa = {
+                zip_code: '#cep',
+                role_id: 'select[name="role_id"]',
+                acesso_todas_estacoes: '#acesso_todas_estacoes',
+                estacoes: 'input[name="estacoes[]"]',
+                password: '#senha',
+                confirmacao_senha: '#confirmacao_senha',
+            };
+
+            const id = String($campo.attr('id') || '');
+            const name = String($campo.attr('name') || '').replace(/\[\]$/, '');
+            const seletor = mapa[id] || mapa[name];
+
+            if (seletor && $(seletor).length) {
+                return $(seletor).first();
+            }
+
+            return $campo;
+        }
+
+        function mensagemObrigatoria($campo) {
+            const rotulo = obterRotuloCampo($campo);
+            return rotulo ? ('O campo ' + rotulo + ' é obrigatório.') : 'Este campo é obrigatório.';
+        }
+
+        function obterAjudaCampo($campo) {
+            const id = String($campo.attr('id') || '');
+            const ajuda = {
+                senha: 'A senha deve ter pelo menos 8 caracteres, uma letra maiúscula, uma minúscula, um número e um caractere especial.',
+                confirmacao_senha: 'As senhas devem ser iguais.',
+                data_emissao_carta_conducao: 'Use uma data válida de emissão.',
+                data_validade_carta_conducao: 'Deve ser maior que a data de emissão.',
+            };
+
+            return ajuda[id] || '';
+        }
+
+        function limparPendencias() {
+            $usuarioAlertaPendencias.addClass('d-none').removeClass('is-live');
+            $usuarioListaPendencias.empty();
+            $usuarioResumoPendencias.empty();
+            $('.ec-step-btn').removeClass('warning');
+            $usuarioForm.find('.js-validacao-manual')
+                .removeClass('is-invalid js-validacao-manual')
+                .removeAttr('aria-invalid')
+                .removeAttr('title')
+                .removeAttr('data-toggle')
+                .removeAttr('data-placement');
+        }
+
+        function montarLinhaPendencia(item) {
+            const stepLabel = usuarioStepLabel(item.step);
+            return [
+                '<div class="pre-requisitos-alerta__detail-item">',
+                '<span class="pre-requisitos-alerta__detail-label">' + escaparHtml(item.label) + '</span>',
+                '<span class="badge badge-warning text-dark">' + escaparHtml(stepLabel) + '</span>',
+                item.message ? '<div class="pre-requisitos-alerta__detail-message">' + escaparHtml(item.message) + '</div>' : '',
+                '</div>',
+            ].join('');
+        }
+
+        function mostrarPendencias(pendencias) {
+            limparPendencias();
+
+            if (!pendencias.length) {
+                return true;
+            }
+
+            const passosPendentes = [...new Set(pendencias.map(function (item) {
+                return item.step;
+            }))];
+            usuarioUltimoPassoPendente = Math.min(...passosPendentes);
+
+            passosPendentes.forEach(function (step) {
+                $('.ec-step-btn[data-step="' + step + '"]').addClass('warning');
+            });
+
+            $usuarioResumoPendencias.text('Encontramos ' + pendencias.length + ' item(ns) obrigatório(s) pendente(s).');
+            $usuarioBotaoIrPassoBase.text('Ir para o passo ' + usuarioStepLabel(usuarioUltimoPassoPendente));
+            $usuarioListaPendencias.html(pendencias.map(montarLinhaPendencia).join(''));
+            $usuarioAlertaPendencias.removeClass('d-none').addClass('is-live');
+
+            if (usuarioCurrentStep !== usuarioUltimoPassoPendente) {
+                setWizardStep(usuarioUltimoPassoPendente);
+            }
+
+            window.requestAnimationFrame(function () {
+                if ($usuarioAlertaPendencias.length) {
+                    $usuarioAlertaPendencias[0].scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start',
+                    });
+                }
+            });
+
+            const $primeiroCampoInvalido = pendencias[0]?.focusTarget || pendencias[0]?.field;
+            if ($primeiroCampoInvalido && $primeiroCampoInvalido.length) {
+                window.setTimeout(function () {
+                    $primeiroCampoInvalido.trigger('focus');
+                }, 150);
+            }
+
+            return false;
+        }
+
+        function coletarPendencias($escopo) {
+            const pendencias = [];
+
+            $escopo.find(':invalid').each(function () {
+                const $campo = $(this);
+
+                if ($campo.is(':disabled')) {
+                    return;
+                }
+
+                $campo.addClass('is-invalid js-validacao-manual').attr('aria-invalid', 'true');
+
+                const field = $campo[0];
+                let mensagem = '';
+
+                if (field?.validity?.valueMissing) {
+                    mensagem = mensagemObrigatoria($campo);
+                } else {
+                    mensagem = String(field?.validationMessage || '').trim();
+                }
+
+                if (!mensagem) {
+                    mensagem = obterAjudaCampo($campo);
+                }
+
+                if (mensagem) {
+                    $campo.attr('title', mensagem);
+                }
+
+                pendencias.push({
+                    step: obterPassoCampo($campo),
+                    label: obterRotuloCampo($campo),
+                    message: mensagem,
+                    field: $campo,
+                    focusTarget: obterElementoFoco($campo),
+                });
+            });
+
+            return pendencias;
         }
 
         function setWizardStep(step) {
-            const tabs = usuarioTabs();
-            const linkSel = tabs[step] || tabs[1];
+            const targetStep = Math.max(1, Math.min(Number(step || 1), usuarioTotalSteps));
+            usuarioCurrentStep = targetStep;
 
-            // Bootstrap tab
+            const linkSel = USUARIO_STEP_TABS[targetStep] || USUARIO_STEP_TABS[1];
+
             try {
                 $(linkSel).tab('show');
             } catch (e) {}
 
-            // Step visuals
             $('.ec-step-btn').each(function () {
                 const n = Number($(this).data('step') || 1);
-                $(this).toggleClass('active', n === step);
-                $(this).toggleClass('done', n < step);
+                $(this).toggleClass('active', n === targetStep);
+                $(this).toggleClass('done', n < targetStep);
             });
+
+            $usuarioBtnPrev.toggleClass('d-none', targetStep <= 1);
+            $usuarioBtnNext.toggleClass('d-none', targetStep >= usuarioTotalSteps);
+            $usuarioBtnSave.toggleClass('d-none', targetStep < usuarioTotalSteps);
         }
 
         function applyRoleStationUiRules() {
@@ -632,7 +918,6 @@
 
             const roleName = (roleSel.options[roleSel.selectedIndex]?.text || '').trim().toLowerCase();
             const switchEl = document.getElementById('acesso_todas_estacoes');
-            const wrap = document.getElementById('estacoes-permitidas-wrap');
             const boxes = Array.from(document.querySelectorAll('input[name="estacoes[]"]'));
 
             let max = null;
@@ -685,11 +970,20 @@
         }
 
         function validatePassword() {
-            var senha = $('#senha').val();
-            var confirmacaoSenha = $('#confirmacao_senha').val();
-            var valid = true;
+            const senhaEl = document.getElementById('senha');
+            const confirmacaoEl = document.getElementById('confirmacao_senha');
+            if (!senhaEl || !confirmacaoEl) {
+                return true;
+            }
+
+            const senha = String(senhaEl.value || '');
+            const confirmacaoSenha = String(confirmacaoEl.value || '');
+            let valid = true;
 
             $('#passwordValidation li').addClass('d-none');
+
+            senhaEl.setCustomValidity('');
+            confirmacaoEl.setCustomValidity('');
 
             if (senha.length < 8) {
                 $('#length').removeClass('d-none');
@@ -727,6 +1021,9 @@
                 $('#passwordValidation').removeClass('d-none');
             }
 
+            senhaEl.setCustomValidity(valid ? '' : 'A senha não atende aos requisitos mínimos.');
+            confirmacaoEl.setCustomValidity(senha === confirmacaoSenha ? '' : 'As senhas devem ser iguais.');
+
             return valid;
         }
 
@@ -734,7 +1031,37 @@
         $(document).ready(function () {
             setWizardStep(Number.isFinite(usuarioWizardStartStep) && usuarioWizardStartStep > 0 ? usuarioWizardStartStep : 1);
             $('.ec-step-btn').on('click', function () {
-                setWizardStep(Number($(this).data('step') || 1));
+                const target = Number($(this).data('step') || 1);
+                if (target <= usuarioCurrentStep) {
+                    setWizardStep(target);
+                    return;
+                }
+
+                const pendencias = coletarPendencias(usuarioPane(usuarioCurrentStep));
+                if (pendencias.length > 0) {
+                    mostrarPendencias(pendencias);
+                    return;
+                }
+
+                setWizardStep(target);
+            });
+
+            $('#btnNext').on('click', function () {
+                const pendencias = coletarPendencias(usuarioPane(usuarioCurrentStep));
+                if (pendencias.length > 0) {
+                    mostrarPendencias(pendencias);
+                    return;
+                }
+
+                setWizardStep(usuarioCurrentStep + 1);
+            });
+
+            $('#btnPrev').on('click', function () {
+                setWizardStep(usuarioCurrentStep - 1);
+            });
+
+            $usuarioBotaoIrPassoBase.on('click', function () {
+                setWizardStep(usuarioUltimoPassoPendente);
             });
 
             $('#acesso_todas_estacoes').on('change', function () {
@@ -869,13 +1196,30 @@
             toggleEstacoesPermitidas();
 
             if (isCreateUsuario) {
-                $('#senha, #confirmacao_senha').on('keyup', validatePassword);
+                $('#senha, #confirmacao_senha').on('keyup change', validatePassword);
             }
 
             $('#form').on('submit', function(event) {
+                if (isCreateUsuario) {
+                    validatePassword();
+                }
+
+                const pendencias = coletarPendencias($usuarioForm);
+                if (pendencias.length > 0) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    mostrarPendencias(pendencias);
+                    return;
+                }
+
                 if (isCreateUsuario && !validatePassword()) {
                     event.preventDefault();
-                    $('#tab-seguranca-link').tab('show');
+                    event.stopPropagation();
+                    setWizardStep(5);
+                    const pendenciasSenha = coletarPendencias(usuarioPane(5));
+                    if (pendenciasSenha.length > 0) {
+                        mostrarPendencias(pendenciasSenha);
+                    }
                 }
             });
 
