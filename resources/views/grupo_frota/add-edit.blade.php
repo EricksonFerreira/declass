@@ -368,6 +368,18 @@
                                 <small class="text-muted">Agrupados por marca com filtro rápido e colapsos</small>
                             </div>
 
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-3" style="gap: 8px;">
+                                <div class="d-flex flex-wrap" style="gap: 8px;">
+                                    <button type="button" class="btn btn-sm btn-outline-primary js-marcar-todos-modelos">
+                                        <i class="fas fa-check-double mr-1"></i> Selecionar todos
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary js-desmarcar-todos-modelos">
+                                        <i class="fas fa-times mr-1"></i> Limpar seleção
+                                    </button>
+                                </div>
+                                <small class="text-muted">Use os atalhos globais ou por marca para agilizar o vínculo dos modelos.</small>
+                            </div>
+
                             <div class="row mb-3">
                                 <div class="col-lg-4 col-md-6 mb-2 mb-lg-0">
                                     <label class="small font-weight-bold text-muted mb-1" for="filtroMarcaModelos">Filtrar por marca</label>
@@ -412,7 +424,20 @@
                                                 <strong class="d-block">{{ $grupoMarcaNome }}</strong>
                                                 <small class="text-muted">{{ $modelosDaMarca->count() }} modelo(s)</small>
                                             </button>
-                                            <span class="badge badge-light">{{ $modelosDaMarca->count() }}</span>
+                                            <div class="d-flex align-items-center ml-2" style="gap: 8px;">
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-primary js-marcar-modelos-marca"
+                                                    data-marca-id="{{ $grupoMarcaId }}"
+                                                    data-marca-nome="{{ $grupoMarcaNome }}">
+                                                    Selecionar marca
+                                                </button>
+                                                <button type="button"
+                                                    class="btn btn-sm btn-outline-secondary js-desmarcar-modelos-marca"
+                                                    data-marca-id="{{ $grupoMarcaId }}">
+                                                    Limpar
+                                                </button>
+                                                <span class="badge badge-light">{{ $modelosDaMarca->count() }}</span>
+                                            </div>
                                         </div>
                                         <div id="{{ $collapseId }}"
                                             class="collapse {{ $cardOpen ? 'show' : '' }}"
@@ -431,6 +456,8 @@
                                                             <label class="opcional-check mb-0 h-100">
                                                                 <input type="checkbox" id="modelo_{{ $modeloId }}"
                                                                     name="modelos[]" value="{{ $modeloId }}"
+                                                                    class="js-modelo-checkbox"
+                                                                    data-marca-id="{{ $grupoMarcaId }}"
                                                                     {{ $checked ? 'checked' : '' }}>
                                                                 <span>{{ $modeloNome }}</span>
                                                             </label>
@@ -988,6 +1015,12 @@
                     .trim();
             }
 
+            function alterarModelos($scope, marcar) {
+                $scope.find('.js-modelo-checkbox').each(function () {
+                    $(this).prop('checked', marcar);
+                });
+            }
+
             function aplicarFiltrosModelos() {
                 const marcaFiltro = String($('#filtroMarcaModelos').val() || '');
                 const textoFiltro = normalizarTexto($('#filtroTextoModelos').val());
@@ -1023,6 +1056,30 @@
 
                 $('.js-modelos-empty').toggleClass('d-none', encontrouAlgum);
             }
+
+            $(document).on('click', '.js-marcar-todos-modelos', function () {
+                alterarModelos($('.grupo-frota-modelos-accordion'), true);
+            });
+
+            $(document).on('click', '.js-desmarcar-todos-modelos', function () {
+                alterarModelos($('.grupo-frota-modelos-accordion'), false);
+            });
+
+            $(document).on('click', '.js-marcar-modelos-marca', function () {
+                const marcaId = String($(this).data('marca-id') ?? '');
+                const $group = $('.js-marca-group[data-marca-id="' + marcaId + '"]');
+                alterarModelos($group, true);
+
+                if ($group.length) {
+                    $group.find('.collapse').addClass('show');
+                }
+            });
+
+            $(document).on('click', '.js-desmarcar-modelos-marca', function () {
+                const marcaId = String($(this).data('marca-id') ?? '');
+                const $group = $('.js-marca-group[data-marca-id="' + marcaId + '"]');
+                alterarModelos($group, false);
+            });
 
             $('#filtroMarcaModelos, #filtroTextoModelos').on('change keyup input', aplicarFiltrosModelos);
             aplicarFiltrosModelos();

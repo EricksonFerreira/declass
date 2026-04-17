@@ -40,7 +40,10 @@
       "Bash(grep -n \"use App\\\\\\\\Http\\\\\\\\Controllers\" /c/Users/Erickson/Dev/laragon/www/xpandCars/routes/web.php)",
       "Bash(node -e ':*)",
       "Bash(php -l \"resources/views/veiculo/add-edit.blade.php\")",
-      "Bash(php -l \"c:\\\\Users\\\\Erickson\\\\Dev\\\\laragon\\\\www\\\\xpandCars\\\\app\\\\Services\\\\GrupoFrotaService.php\")"
+      "Bash(php -l \"c:\\\\Users\\\\Erickson\\\\Dev\\\\laragon\\\\www\\\\xpandCars\\\\app\\\\Services\\\\GrupoFrotaService.php\")",
+      "Bash(grep -l \"tarifa\\\\|preco\\\\|valor_diario\\\\|weekly\\\\|monthly\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)",
+      "Bash(grep -l \"grupos_frota\\\\|valor_diario\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)",
+      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/routes -name \"*.php\" -exec basename {} \\\\;)"
     ]
   }
 }
