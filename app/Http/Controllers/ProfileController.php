@@ -90,6 +90,6 @@ class ProfileController extends Controller
         $user->forcar_troca_senha = false;
         $user->save();
 
-        return redirect()->route('home')->with('success', 'Senha atualizada com sucesso.');
+        return redirect()->route('profile.edit')->with('success', 'Senha atualizada com sucesso.');
     }
 }
