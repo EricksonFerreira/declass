@@ -224,10 +224,13 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function isAdministrador(): bool
     {
-        $roleId = (int) ($this->role_id ?? 0);
-        $tipoUsuarioIdRaw = (int) ($this->getRawOriginal('tipo_usuario_id') ?? 0);
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
 
-        return $roleId === 1 || $tipoUsuarioIdRaw === 1;
+        $roleName = strtolower(trim((string) ($this->regra?->name ?? $this->tipoUsuario?->name ?? '')));
+
+        return in_array($roleName, ['administrador', 'admin'], true);
     }
 
     /**
