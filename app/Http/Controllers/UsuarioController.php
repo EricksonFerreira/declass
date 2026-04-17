@@ -576,7 +576,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             ['name' => 'email', 'label' => 'E-mail', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'celular', 'label' => 'Celular', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'cidade', 'label' => 'Cidade', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'role_id', 'label' => 'Regra de UsuÃ¡rio', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataTiposUsuarios],
+            ['name' => 'role_id', 'label' => 'Regra de Usuário', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataTiposUsuarios],
         ];
     }
 
