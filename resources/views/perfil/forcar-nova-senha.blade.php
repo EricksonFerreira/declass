@@ -2,10 +2,30 @@
 
 @section('title', $titulo)
 
+@section('classes_body', 'sidebar-collapse force-password-layout')
+
 @section('content')
     <style>
+        .force-password-layout .main-header,
+        .force-password-layout .main-sidebar,
+        .force-password-layout .main-footer,
+        .force-password-layout .main-sidebar::before {
+            display: none !important;
+        }
+
+        .force-password-layout .content-wrapper,
+        .force-password-layout .content,
+        .force-password-layout .content-header {
+            margin-left: 0 !important;
+        }
+
+        .force-password-layout .content-wrapper {
+            min-height: 100vh;
+            background: linear-gradient(180deg, #f5f8ff 0%, #eef4ff 100%);
+        }
+
         .force-password-page {
-            min-height: calc(100vh - 120px);
+            min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -115,7 +135,6 @@
                 padding-left: 1rem;
                 padding-right: 1rem;
             }
-
         }
     </style>
 
