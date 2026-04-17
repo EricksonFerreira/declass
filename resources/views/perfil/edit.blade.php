@@ -83,9 +83,9 @@
                             <p class="profile-email">{{ $user->email }}</p>
 
                             <div class="profile-meta">
-                                <span class="profile-badge profile-badge--primary">
+                                {{-- <span class="profile-badge profile-badge--primary">
                                     <i class="fas fa-user-shield mr-1"></i>{{ $roleLabel }}
-                                </span>
+                                </span> --}}
                                 <span class="profile-badge profile-badge--soft">
                                     <i class="fas fa-circle-info mr-1"></i>Visualização apenas
                                 </span>
