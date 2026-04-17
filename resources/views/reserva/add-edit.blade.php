@@ -1080,8 +1080,8 @@
         .reserva-link-action {
             display: inline-flex;
             align-items: center;
-            border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 65%, #ffffff 35%);
-            color: var(--empresa-cor-primaria, #2563eb);
+            border: 1px solid color-mix(in srgb, var(--empresa-cor-secundaria, #2563eb) 65%, #ffffff 35%);
+            color: var(--empresa-cor-secundaria, #2563eb);
             background: #fff;
             border-radius: 999px;
             padding: 5px 11px;
