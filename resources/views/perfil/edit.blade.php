@@ -8,229 +8,579 @@
 @stop
 
 @section('content')
+    @php
+        $roleLabel = $user->isAdministrador()
+            ? 'Superusuário'
+            : (optional($user->tipoUsuario)->name ?? 'Sem perfil');
 
-<div class="pf-page">
+        $heroHighlights = [
+            [
+                'label' => 'Empresa',
+                'value' => optional($user->empresa)->nome ?? 'Não informada',
+                'icon' => 'fas fa-building',
+            ],
+            [
+                'label' => 'Cadastro',
+                'value' => $user->created_at ? $user->created_at->format('d/m/Y') : 'Não informado',
+                'icon' => 'fas fa-calendar-check',
+            ],
+            [
+                'label' => 'Perfil',
+                'value' => $roleLabel,
+                'icon' => 'fas fa-user-shield',
+            ],
+        ];
 
-    {{-- ── Hero card ── --}}
-    <div class="card pf-card mb-3">
+        $profileCards = [
+            [
+                'label' => 'Empresa',
+                'value' => optional($user->empresa)->nome ?? 'Não informada',
+                'icon' => 'fas fa-building',
+            ],
+            [
+                'label' => 'Telefone',
+                'value' => $user->telefone ?? 'Não informado',
+                'icon' => 'fas fa-phone-alt',
+            ],
+            [
+                'label' => 'Celular',
+                'value' => $user->celular ?? 'Não informado',
+                'icon' => 'fas fa-mobile-alt',
+            ],
+            [
+                'label' => 'Cidade',
+                'value' => $user->cidade ?? 'Não informada',
+                'icon' => 'fas fa-map-marker-alt',
+            ],
+        ];
+    @endphp
 
-        {{-- Banner com cor primária da empresa --}}
-        <div class="pf-banner">
-            <span class="pf-id-badge">ID #{{ $user->id }}</span>
-        </div>
+    <div class="profile-page">
+        <div class="profile-shell">
+            <section class="profile-hero card">
+                <span class="profile-hero__decor profile-hero__decor--one"></span>
+                <span class="profile-hero__decor profile-hero__decor--two"></span>
+                <span class="profile-hero__accent"></span>
 
-        {{-- Avatar sobreposto ao banner --}}
-        <div class="pf-avatar-wrap">
-            <img class="pf-avatar" src="{{ $user->foto_perfil_url }}" alt="Foto de perfil">
-        </div>
+                <div class="profile-hero__content">
+                    <div class="profile-hero__main">
+                        <div class="profile-avatar-wrap">
+                            <div class="profile-avatar" aria-hidden="true">
+                                <img src="{{ $user->foto_perfil_url }}" alt="Foto de perfil de {{ $user->nome }}">
+                            </div>
+                            <div class="profile-id-badge">ID #{{ $user->id }}</div>
+                        </div>
 
-        {{-- Nome, email e badge — claramente na área branca --}}
-        <div class="pf-info-section">
-            <div class="pf-name">{{ $user->nome }}</div>
-            <div class="pf-sub">{{ $user->email }}</div>
-            <div class="pf-role-badge">
-                {{ $user->isAdministrador() ? 'Superusuário' : (optional($user->tipoUsuario)->name ?? 'Sem perfil') }}
-            </div>
-        </div>
+                        <div class="profile-identity">
+                            <span class="profile-kicker">Meu perfil</span>
+                            <h1 class="profile-name">{{ $user->nome }}</h1>
+                            <p class="profile-email">{{ $user->email }}</p>
 
-    </div>
+                            <div class="profile-meta">
+                                <span class="profile-badge profile-badge--primary">
+                                    <i class="fas fa-user-shield mr-1"></i>{{ $roleLabel }}
+                                </span>
+                                <span class="profile-badge profile-badge--soft">
+                                    <i class="fas fa-circle-info mr-1"></i>Visualização apenas
+                                </span>
+                            </div>
+                        </div>
+                    </div>
 
-    {{-- ── Info cards ── --}}
-    <div class="row mb-3">
-        @php
-            $infoItems = [
-                ['label' => 'Empresa',  'icon' => 'fas fa-building',      'value' => optional($user->empresa)->nome ?? 'Não informada'],
-                ['label' => 'Telefone', 'icon' => 'fas fa-phone',         'value' => $user->telefone ?? 'Não informado'],
-                ['label' => 'Celular',  'icon' => 'fas fa-mobile-alt',    'value' => $user->celular  ?? 'Não informado'],
-                ['label' => 'Cidade',   'icon' => 'fas fa-map-marker-alt','value' => $user->cidade   ?? 'Não informada'],
-            ];
-        @endphp
-        @foreach($infoItems as $info)
-            <div class="col-md-3 col-6 mb-2">
-                <div class="pf-info-card">
-                    <span class="pf-info-label">
-                        <i class="{{ $info['icon'] }} mr-1"></i>{{ $info['label'] }}
-                    </span>
-                    <span class="pf-info-value">{{ $info['value'] }}</span>
+                    <div class="profile-hero__aside">
+                        @foreach ($heroHighlights as $item)
+                            <div class="profile-quick-card">
+                                <div class="profile-quick-card__icon">
+                                    <i class="{{ $item['icon'] }}"></i>
+                                </div>
+                                <div class="profile-quick-card__body">
+                                    <span class="profile-quick-card__label">{{ $item['label'] }}</span>
+                                    <span class="profile-quick-card__value">{{ $item['value'] }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-            </div>
-        @endforeach
-    </div>
+            </section>
 
-    {{-- ── Action card ── --}}
-    <div class="card pf-action-card">
-        <div class="card-body d-flex flex-column flex-md-row align-items-md-center justify-content-between">
-            <div class="mb-2 mb-md-0">
-                <div class="font-weight-bold text-dark">Visualização do perfil</div>
-                <small class="text-muted">Nesta tela você pode apenas visualizar as <span class="pf-highlight">informações do usuário</span>.</small>
-            </div>
-            <a href="{{ route('profile.password.edit') }}" class="btn pf-btn-password">
-                <i class="fas fa-key mr-1"></i> Alterar senha
-            </a>
+            <section class="profile-grid">
+                @foreach ($profileCards as $info)
+                    <div class="profile-info-card card">
+                        <div class="profile-info-card__icon">
+                            <i class="{{ $info['icon'] }}"></i>
+                        </div>
+                        <span class="profile-info-card__label">{{ $info['label'] }}</span>
+                        <span class="profile-info-card__value">{{ $info['value'] }}</span>
+                    </div>
+                @endforeach
+            </section>
+
+            <section class="profile-action card">
+                <div class="profile-action__content">
+                    <div class="profile-action__text">
+                        <span class="profile-action__eyebrow">Segurança da conta</span>
+                        <h2 class="profile-action__title">Quer trocar sua senha?</h2>
+                        <p class="profile-action__description">
+                            Use uma senha forte e mantenha seu acesso protegido. O sistema abrirá a tela de atualização com validação reforçada.
+                        </p>
+                    </div>
+
+                    <div class="profile-action__buttons">
+                        <a href="{{ route('profile.password.edit') }}" class="btn profile-btn profile-btn--primary">
+                            <i class="fas fa-key mr-1"></i> Alterar senha
+                        </a>
+                    </div>
+                </div>
+            </section>
         </div>
     </div>
-
-</div>
-
 @stop
 
 @section('css')
-<style>
-/* ── Page ── */
-.pf-page { padding-bottom: 2rem; }
+    <style>
+        .profile-page {
+            position: relative;
+            padding-bottom: 1.5rem;
+        }
 
-/* ── Hero card ── */
-.pf-card {
-    border: 1px solid rgba(0,0,0,.08);
-    border-radius: 18px;
-    overflow: hidden;
-    box-shadow: 0 4px 24px rgba(0,0,0,.07);
-}
+        .profile-page::before,
+        .profile-page::after {
+            content: '';
+            position: fixed;
+            width: 280px;
+            height: 280px;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(8px);
+        }
 
-/* Banner usando cor primária da empresa */
-.pf-banner {
-    height: 55px;
-    position: relative;
-    display: flex;
-    align-items: flex-start;
-    justify-content: flex-end;
-    padding: 12px 16px;
-}
+        .profile-page::before {
+            top: 90px;
+            right: -90px;
+            background: radial-gradient(circle, rgba(37, 99, 235, .13) 0%, rgba(37, 99, 235, 0) 72%);
+        }
 
-/* ID badge no canto superior direito do banner */
-.pf-id-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: 4px 14px;
-    border-radius: 999px;
-    font-size: .78rem;
-    font-weight: 800;
-    background: color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 60%, #000 40%);
-    color: var(--empresa-cor-primaria-contraste, #fff);
-    box-shadow: 0 2px 8px rgba(0,0,0,.25);
-}
+        .profile-page::after {
+            left: -110px;
+            bottom: 40px;
+            background: radial-gradient(circle, rgba(79, 70, 229, .10) 0%, rgba(79, 70, 229, 0) 72%);
+        }
 
-/* Avatar: círculo sobreposto ao banner */
-.pf-avatar-wrap {
-    padding: 0 24px;
-    margin-top: -52px;
-    margin-bottom: 4px;
-}
+        .profile-page > * {
+            position: relative;
+            z-index: 1;
+        }
 
-.pf-avatar {
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 4px solid #fff;
-    box-shadow: 0 6px 20px rgba(0,0,0,.18);
-    background: var(--empresa-cor-secundaria, #E2E8F0);
-    display: block;
-}
+        .profile-shell {
+            max-width: 1180px;
+        }
 
-/* Nome, email, badge — área branca limpa */
-.pf-info-section {
-    padding: 8px 24px 20px;
-}
+        .profile-hero {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e5edf7;
+            border-radius: 28px;
+            background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+            box-shadow: 0 22px 48px rgba(15, 23, 42, .08);
+            margin-bottom: 1rem;
+        }
 
-.pf-name {
-    font-size: 1.25rem;
-    font-weight: 800;
-    color: #0f172a;
-    margin-bottom: 2px;
-    line-height: 1.3;
-}
+        .profile-hero__accent {
+            position: absolute;
+            inset: auto 0 0 0;
+            height: 6px;
+            background: linear-gradient(90deg, #2563eb 0%, #4f46e5 48%, #0ea5e9 100%);
+        }
 
-.pf-sub {
-    color: #64748b;
-    font-size: .88rem;
-    line-height: 1.4;
-}
+        .profile-hero__decor {
+            position: absolute;
+            border-radius: 999px;
+            pointer-events: none;
+            opacity: .85;
+        }
 
-.pf-role-badge {
-    display: inline-flex;
-    align-items: center;
-    margin-top: 8px;
-    padding: 3px 10px;
-    border-radius: 999px;
-    font-size: .72rem;
-    font-weight: 700;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    background: color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 12%, white 88%);
-    color: var(--empresa-cor-primaria, #1F2937);
-    border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 25%, transparent 75%);
-}
+        .profile-hero__decor--one {
+            top: -60px;
+            right: 120px;
+            width: 220px;
+            height: 220px;
+            background: radial-gradient(circle, rgba(37, 99, 235, .10) 0%, rgba(37, 99, 235, 0) 72%);
+        }
 
-/* ── Info cards ── */
-.pf-info-card {
-    border: 1px solid #e9edf3;
-    border-radius: 12px;
-    padding: 14px;
-    background: #fff;
-    height: 100%;
-    transition: box-shadow .15s, border-color .15s;
-    box-shadow: 0 2px 8px rgba(0,0,0,.04);
-}
+        .profile-hero__decor--two {
+            bottom: -100px;
+            left: 40%;
+            width: 260px;
+            height: 260px;
+            background: radial-gradient(circle, rgba(14, 165, 233, .08) 0%, rgba(14, 165, 233, 0) 70%);
+        }
 
-.pf-info-card:hover {
-    border-color: color-mix(in srgb, var(--empresa-cor-primaria, #1F2937) 40%, transparent 60%);
-    box-shadow: 0 4px 16px rgba(0,0,0,.09);
-}
+        .profile-hero__content {
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(0, 1.5fr) minmax(260px, .95fr);
+            gap: 1.25rem;
+            padding: 1.5rem;
+        }
 
-.pf-info-label {
-    display: block;
-    font-size: .72rem;
-    letter-spacing: .05em;
-    text-transform: uppercase;
-    color: var(--empresa-cor-primaria, #64748b);
-    font-weight: 700;
-    margin-bottom: 6px;
-    opacity: .85;
-}
+        .profile-hero__main {
+            display: flex;
+            gap: 1.25rem;
+            align-items: flex-start;
+        }
 
-.pf-info-value {
-    display: block;
-    color: #273547;
-    font-weight: 600;
-    font-size: .95rem;
-    word-break: break-word;
-}
+        .profile-avatar-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: .65rem;
+            flex: 0 0 auto;
+        }
 
-/* ── Action card ── */
-.pf-action-card {
-    border: 1px solid #e9edf3;
-    border-radius: 14px;
-    box-shadow: 0 2px 10px rgba(0,0,0,.05);
-}
+        .profile-avatar {
+            width: 120px;
+            height: 120px;
+            padding: 5px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ffffff 0%, #eef4ff 100%);
+            box-shadow: 0 18px 38px rgba(15, 23, 42, .16);
+        }
 
-.pf-highlight {
-    color: var(--empresa-cor-primaria, #1e40af);
-    font-weight: 600;
-}
+        .profile-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            background: #dbeafe;
+        }
 
-.pf-btn-password {
-    background: var(--empresa-cor-primaria, #1F2937);
-    color: var(--empresa-cor-primaria-contraste, #fff) !important;
-    border: none;
-    border-radius: 10px;
-    font-weight: 700;
-    padding: 10px 18px;
-    transition: all .2s ease;
-    white-space: nowrap;
-}
+        .profile-id-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: .38rem .8rem;
+            border-radius: 999px;
+            background: #1f2937;
+            color: #fff;
+            font-size: .74rem;
+            font-weight: 800;
+            letter-spacing: .04em;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .20);
+        }
 
-.pf-btn-password:hover {
-    opacity: .9;
-    transform: translateY(-1px);
-    box-shadow: 0 8px 20px rgba(0,0,0,.2);
-}
+        .profile-identity {
+            min-width: 0;
+            padding-top: .25rem;
+        }
 
-/* ── Responsive ── */
-@media (max-width: 576px) {
-    .pf-main { padding: 0 16px 20px; }
-    .pf-name { font-size: 1.1rem; }
-    .pf-avatar { width: 88px; height: 88px; }
-}
-</style>
+        .profile-kicker {
+            display: inline-flex;
+            align-items: center;
+            padding: .35rem .75rem;
+            border-radius: 999px;
+            background: rgba(37, 99, 235, .10);
+            color: #1d4ed8;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .profile-name {
+            margin: .7rem 0 .25rem;
+            font-size: 1.85rem;
+            line-height: 1.1;
+            font-weight: 800;
+            color: #0f172a;
+            word-break: break-word;
+        }
+
+        .profile-email {
+            margin: 0;
+            color: #64748b;
+            font-size: 1rem;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .profile-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .55rem;
+            margin-top: 1rem;
+        }
+
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: .42rem .8rem;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 700;
+            border: 1px solid transparent;
+        }
+
+        .profile-badge--primary {
+            background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+            color: #1d4ed8;
+            border-color: #dbe7ff;
+        }
+
+        .profile-badge--soft {
+            background: #fff;
+            color: #475569;
+            border-color: #dbe6f3;
+        }
+
+        .profile-hero__aside {
+            display: grid;
+            gap: .8rem;
+            align-content: start;
+        }
+
+        .profile-quick-card {
+            display: flex;
+            align-items: center;
+            gap: .85rem;
+            padding: .95rem 1rem;
+            background: rgba(255, 255, 255, .78);
+            border: 1px solid #dfe9f7;
+            border-radius: 18px;
+            box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+            backdrop-filter: blur(4px);
+        }
+
+        .profile-quick-card__icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+            color: #2563eb;
+            font-size: 1rem;
+            flex: 0 0 auto;
+        }
+
+        .profile-quick-card__body {
+            min-width: 0;
+        }
+
+        .profile-quick-card__label {
+            display: block;
+            color: #64748b;
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: .22rem;
+        }
+
+        .profile-quick-card__value {
+            display: block;
+            color: #0f172a;
+            font-weight: 700;
+            font-size: .96rem;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+
+        .profile-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: .9rem;
+            margin-bottom: 1rem;
+        }
+
+        .profile-info-card {
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #e5edf7;
+            border-radius: 20px;
+            padding: 1.1rem 1rem 1rem;
+            background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .05);
+            min-height: 142px;
+        }
+
+        .profile-info-card::before {
+            content: '';
+            position: absolute;
+            inset: 0 auto auto 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, #2563eb 0%, #4f46e5 100%);
+        }
+
+        .profile-info-card__icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #eff6ff 0%, #eef2ff 100%);
+            color: #2563eb;
+            margin-bottom: .9rem;
+            font-size: 1rem;
+        }
+
+        .profile-info-card__label {
+            display: block;
+            font-size: .72rem;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+            margin-bottom: .3rem;
+        }
+
+        .profile-info-card__value {
+            display: block;
+            color: #0f172a;
+            font-weight: 700;
+            font-size: .98rem;
+            line-height: 1.45;
+            word-break: break-word;
+        }
+
+        .profile-action {
+            border: 1px solid #e5edf7;
+            border-radius: 24px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            box-shadow: 0 18px 34px rgba(15, 23, 42, .06);
+        }
+
+        .profile-action__content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1.25rem;
+            padding: 1.35rem 1.4rem;
+        }
+
+        .profile-action__text {
+            min-width: 0;
+        }
+
+        .profile-action__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: .32rem .7rem;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: .7rem;
+        }
+
+        .profile-action__title {
+            margin: 0 0 .45rem;
+            color: #0f172a;
+            font-size: 1.08rem;
+            font-weight: 800;
+        }
+
+        .profile-action__description {
+            margin: 0;
+            color: #64748b;
+            font-size: .94rem;
+            line-height: 1.5;
+            max-width: 760px;
+        }
+
+        .profile-btn {
+            min-width: 200px;
+            min-height: 48px;
+            border-radius: 14px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: .45rem;
+            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+        }
+
+        .profile-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 12px 26px rgba(15, 23, 42, .12);
+        }
+
+        .profile-btn--primary {
+            color: #fff !important;
+            background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+            border: 1px solid #2563eb;
+        }
+
+        @media (max-width: 1199.98px) {
+            .profile-hero__content {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-hero__aside {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 991.98px) {
+            .profile-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .profile-hero__main {
+                flex-direction: column;
+            }
+
+            .profile-hero__aside {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 767.98px) {
+            .profile-hero__aside {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .profile-page {
+                padding-bottom: .5rem;
+            }
+
+            .profile-hero__content,
+            .profile-action__content {
+                padding: 1rem;
+            }
+
+            .profile-avatar {
+                width: 96px;
+                height: 96px;
+            }
+
+            .profile-name {
+                font-size: 1.45rem;
+            }
+
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-action__content {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .profile-btn {
+                width: 100%;
+                min-width: 0;
+            }
+        }
+    </style>
 @stop
