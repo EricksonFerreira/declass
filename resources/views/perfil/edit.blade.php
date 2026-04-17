@@ -121,6 +121,44 @@
                 @endforeach
             </section>
 
+            @if (! $temAcessoTodasEstacoes)
+                <section class="profile-stations card">
+                    <div class="profile-stations__header">
+                        <div>
+                            <span class="profile-stations__eyebrow">Acesso por estação</span>
+                            <h2 class="profile-stations__title">Estações permitidas</h2>
+                            <p class="profile-stations__description">
+                                Este usuário não tem acesso a todas as estações da empresa. As unidades abaixo são as que ele pode utilizar.
+                            </p>
+                        </div>
+                        <div class="profile-stations__count">
+                            {{ $estacoesPermitidas->count() }} estação{{ $estacoesPermitidas->count() === 1 ? '' : 'ões' }}
+                        </div>
+                    </div>
+
+                    @if ($estacoesPermitidas->isNotEmpty())
+                        <div class="profile-stations__grid">
+                            @foreach ($estacoesPermitidas as $estacao)
+                                <div class="profile-station-item">
+                                    <div class="profile-station-item__icon">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                    </div>
+                                    <div class="profile-station-item__body">
+                                        <strong>{{ $estacao->nome }}</strong>
+                                        <span>{{ $estacao->cidade ?? 'Cidade não informada' }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @else
+                        <div class="profile-stations__empty">
+                            <i class="fas fa-info-circle"></i>
+                            Nenhuma estação foi vinculada a este usuário.
+                        </div>
+                    @endif
+                </section>
+            @endif
+
             <section class="profile-action card">
                 <div class="profile-action__content">
                     <div class="profile-action__text">
@@ -457,6 +495,127 @@
             word-break: break-word;
         }
 
+        .profile-stations {
+            border: 1px solid color-mix(in srgb, var(--profile-primary) 10%, #e5edf7 90%);
+            border-radius: 24px;
+            overflow: hidden;
+            background: linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--profile-secondary) 3%, #f8fbff 97%) 100%);
+            box-shadow: 0 18px 34px rgba(15, 23, 42, .06);
+            margin-bottom: 1rem;
+            padding: 1.35rem 1.4rem;
+        }
+
+        .profile-stations__header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .profile-stations__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            padding: .28rem .68rem;
+            border-radius: 999px;
+            background: var(--profile-primary);
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
+            font-size: .7rem;
+            font-weight: 800;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+        }
+
+        .profile-stations__title {
+            margin: .55rem 0 .3rem;
+            color: #0f172a;
+            font-size: 1.08rem;
+            font-weight: 800;
+        }
+
+        .profile-stations__description {
+            margin: 0;
+            color: var(--profile-secondary);
+            font-size: .92rem;
+            line-height: 1.5;
+            max-width: 760px;
+        }
+
+        .profile-stations__count {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            padding: .45rem .9rem;
+            border-radius: 999px;
+            background: var(--profile-secondary);
+            color: var(--empresa-cor-secundaria-contraste, #ffffff);
+            font-size: .8rem;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .profile-stations__grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: .8rem;
+        }
+
+        .profile-station-item {
+            display: flex;
+            align-items: center;
+            gap: .8rem;
+            padding: .9rem 1rem;
+            border-radius: 18px;
+            background: #ffffff;
+            border: 1px solid color-mix(in srgb, var(--profile-primary) 10%, #dbe7f4 90%);
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
+        }
+
+        .profile-station-item__icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 0 0 auto;
+            background: var(--profile-primary);
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
+        }
+
+        .profile-station-item__body {
+            min-width: 0;
+        }
+
+        .profile-station-item__body strong {
+            display: block;
+            color: #0f172a;
+            font-size: .95rem;
+            font-weight: 800;
+            line-height: 1.35;
+            word-break: break-word;
+        }
+
+        .profile-station-item__body span {
+            display: block;
+            color: var(--profile-secondary);
+            font-size: .82rem;
+            line-height: 1.3;
+        }
+
+        .profile-stations__empty {
+            display: flex;
+            align-items: center;
+            gap: .5rem;
+            padding: .95rem 1rem;
+            border-radius: 16px;
+            background: #f8fbff;
+            color: var(--profile-secondary);
+            border: 1px dashed color-mix(in srgb, var(--profile-secondary) 20%, #dbe7f4 80%);
+            font-size: .92rem;
+        }
+
         .profile-action {
             border: 1px solid color-mix(in srgb, var(--profile-primary) 10%, #e5edf7 90%);
             border-radius: 24px;
@@ -544,6 +703,10 @@
                 grid-template-columns: repeat(2, minmax(0, 1fr));
             }
 
+            .profile-stations__grid {
+                grid-template-columns: 1fr;
+            }
+
             .profile-hero__main {
                 flex-direction: column;
             }
@@ -580,6 +743,14 @@
 
             .profile-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .profile-stations {
+                padding: 1rem;
+            }
+
+            .profile-stations__header {
+                flex-direction: column;
             }
 
             .profile-action__content {

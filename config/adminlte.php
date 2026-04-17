@@ -919,38 +919,6 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Estações',
-                    'icon' => 'fas fa-map-marker-alt',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'estacao.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Nova',
-                            'route' => 'estacao.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Status de Reserva',
-                    'icon' => 'fas fa-flag-checkered',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'status_reserva.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'status_reserva.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
                     'text' => 'Dias Úteis',
                     'icon' => 'fas fa-calendar-day',
                     'submenu' => [
@@ -1001,6 +969,22 @@ return [
             ],
         ],
 
+        [
+            'text' => 'Estações',
+            'icon' => 'fas fa-map-marker-alt',
+            'submenu' => [
+                [
+                    'text' => 'Listagem',
+                    'route' => 'estacao.index',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Nova',
+                    'route' => 'estacao.create',
+                    'icon' => 'fas fa-plus-circle',
+                ],
+            ],
+        ],
         // USUÁRIOS E ACESSOS
         [
             'header'  => 'sidebar.usuarios_acessos',
