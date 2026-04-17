@@ -6,6 +6,7 @@ use App\Services\BreadcrumbService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
@@ -54,15 +55,8 @@ class ProfileController extends Controller
             return redirect()->route('home');
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
-            'Meu Perfil',
-            'home',
-            'Definir Nova Senha'
-        );
-
         return view('perfil.forcar-nova-senha', [
             'titulo' => 'Definir Nova Senha',
-            'breadcrumb' => $breadcrumb,
         ]);
     }
 
@@ -77,16 +71,17 @@ class ProfileController extends Controller
                 'password' => [
                     'required',
                     'string',
-                    'max:20',
+                    Password::min(8)->mixedCase()->numbers()->symbols(),
                     'confirmed',
-                    'regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{8,}$/',
                 ],
             ],
             [
                 'password.required' => 'A nova senha e obrigatoria.',
-                'password.max' => 'A nova senha deve ter no maximo 20 caracteres.',
                 'password.confirmed' => 'A confirmacao da nova senha nao corresponde.',
-                'password.regex' => 'A senha deve conter letra maiuscula, minuscula, numero e simbolo.',
+                'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
+                'password.mixed' => 'A senha deve conter letra maiuscula e minuscula.',
+                'password.numbers' => 'A senha deve conter pelo menos um numero.',
+                'password.symbols' => 'A senha deve conter pelo menos um caractere especial.',
             ]
         );
 
