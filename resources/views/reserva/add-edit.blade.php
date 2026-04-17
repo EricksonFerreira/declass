@@ -1082,7 +1082,7 @@
             align-items: center;
             border: 1px solid color-mix(in srgb, var(--empresa-cor-secundaria, #2563eb) 65%, #ffffff 35%);
             color: var(--empresa-cor-secundaria, #2563eb);
-            background: #fff;
+            background: var(--empresa-cor-primaria, #ffffff);
             border-radius: 999px;
             padding: 5px 11px;
             font-size: 12px;
