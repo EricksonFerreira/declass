@@ -1,3 +1,5 @@
+@props(['hint' => null])
+
 @if(isset($type) && $type === 'hidden') <div class="d-none"> @endif
     @if(isset($floating) && $floating) <div class="form-floating"> @endif
 
@@ -6,7 +8,7 @@
         @endphp
 
         @if(!isset($floating) || !$floating)
-            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" />
+            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" :hint="$hint" />
         @endif
 
         <input
@@ -33,7 +35,7 @@
         />
 
         @if(isset($floating) && $floating)
-            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" />
+            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" :hint="$hint" />
         @endif
 
     @if(isset($floating) && $floating) </div> @endif

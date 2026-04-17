@@ -394,6 +394,7 @@
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_placa_licenca" name="data_placa_licenca"
                                         label="Emissão da Placa/Licença"
+                                        hint="Deve ser maior ou igual à Data de Compra e menor ou igual à Validade da Documentação/Licença."
                                         value="{{ old('data_placa_licenca', $veiculo->data_placa_licenca ?? '') }}"
                                         required />
                                 </div>
@@ -402,6 +403,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm" id="data_compra"
                                         name="data_compra" label="Data de Compra"
+                                        hint="Deve ser menor ou igual à Emissão da Placa/Licença."
                                         value="{{ old('data_compra', $veiculo->data_compra ?? '') }}" required />
                                 </div>
                             </div>
@@ -409,6 +411,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm" id="data_validade"
                                         name="data_validade" label="Validade da Documentação/Licença"
+                                        hint="Deve ser maior ou igual à Emissão da Placa/Licença."
                                         value="{{ old('data_validade', $veiculo->data_validade ?? '') }}" required />
                                 </div>
                             </div>
@@ -417,6 +420,7 @@
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_proxima_manutencao" name="data_proxima_manutencao"
                                         label="Próxima Manutenção"
+                                        hint="Deve ser hoje ou uma data futura."
                                         value="{{ old('data_proxima_manutencao', $veiculo->data_proxima_manutencao ?? '') }}"
                                         required />
                                 </div>
@@ -425,6 +429,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_proxima_inspecao" name="data_proxima_inspecao" label="Próxima Inspeção"
+                                        hint="Deve ser hoje ou uma data futura."
                                         value="{{ old('data_proxima_inspecao', $veiculo->data_proxima_inspecao ?? '') }}"
                                         required />
                                 </div>
@@ -437,7 +442,9 @@
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm" id="kms"
-                                        name="kms" label="Km Atual" value="{{ old('kms', $veiculo->kms ?? '') }}"
+                                        name="kms" label="Km Atual"
+                                        hint="Base usada para validar os limites abaixo."
+                                        value="{{ old('kms', $veiculo->kms ?? '') }}"
                                         min="0" required />
                                 </div>
                             </div>
@@ -445,6 +452,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm" id="limite_kms"
                                         name="limite_kms" label="Limite de Km por Aluguel"
+                                        hint="Não pode ser menor que o Km Atual."
                                         value="{{ old('limite_kms', $veiculo->limite_kms ?? '') }}" min="0"
                                         required />
                                 </div>
@@ -453,6 +461,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="number" class="form-control form-control-sm"
                                         id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da Próxima Revisão"
+                                        hint="Não pode ser menor que o Km Atual."
                                         value="{{ old('proxima_revisao_kms', $veiculo->proxima_revisao_kms ?? '') }}"
                                         min="0" required />
                                 </div>
@@ -462,6 +471,7 @@
                                     <x-form-input type="number" class="form-control form-control-sm"
                                         id="proxima_manutencao_kms" name="proxima_manutencao_kms"
                                         label="Km da Próxima Manutenção"
+                                        hint="Não pode ser menor que o Km Atual."
                                         value="{{ old('proxima_manutencao_kms', $veiculo->proxima_manutencao_kms ?? '') }}"
                                         min="0" required />
                                 </div>
@@ -927,12 +937,35 @@
                 return $campo;
             }
 
+            function obterAjudaCampo($campo) {
+                const id = String($campo.attr('id') || '');
+
+                const ajuda = {
+                    data_compra: 'Deve ser menor ou igual à Emissão da Placa/Licença.',
+                    data_placa_licenca: 'Deve ser maior ou igual à Data de Compra e menor ou igual à Validade da Documentação/Licença.',
+                    data_validade: 'Deve ser maior ou igual à Emissão da Placa/Licença.',
+                    data_proxima_manutencao: 'Deve ser hoje ou uma data futura.',
+                    data_proxima_inspecao: 'Deve ser hoje ou uma data futura.',
+                    kms: 'Base usada para validar os limites abaixo.',
+                    limite_kms: 'Não pode ser menor que o Km Atual.',
+                    proxima_revisao_kms: 'Não pode ser menor que o Km Atual.',
+                    proxima_manutencao_kms: 'Não pode ser menor que o Km Atual.',
+                };
+
+                return ajuda[id] || '';
+            }
+
             function limparPendencias() {
                 $alertaPendencias.addClass('d-none').removeClass('is-live');
                 $listaPendencias.empty();
                 $resumoPendencias.empty();
                 $('.vc-step-btn').removeClass('warning');
-                $formulario.find('.js-validacao-manual').removeClass('is-invalid js-validacao-manual').removeAttr('aria-invalid');
+                $formulario.find('.js-validacao-manual')
+                    .removeClass('is-invalid js-validacao-manual')
+                    .removeAttr('aria-invalid')
+                    .removeAttr('title')
+                    .removeAttr('data-toggle')
+                    .removeAttr('data-placement');
             }
 
             function montarLinhaPendencia(item) {
@@ -941,6 +974,9 @@
                     '<div class="pre-requisitos-alerta__detail-item">',
                     '<span class="pre-requisitos-alerta__detail-label">' + escaparHtml(item.label) + '</span>',
                     '<span class="badge badge-warning text-dark">' + escaparHtml(stepLabel) + '</span>',
+                    item.message
+                        ? '<div class="pre-requisitos-alerta__detail-message">' + escaparHtml(item.message) + '</div>'
+                        : '',
                     '</div>',
                 ].join('');
             }
@@ -1000,9 +1036,15 @@
                     }
 
                     $campo.addClass('is-invalid js-validacao-manual').attr('aria-invalid', 'true');
+                    const mensagem = String($campo[0].validationMessage || '').trim();
+                    const ajuda = mensagem || obterAjudaCampo($campo);
+                    if (ajuda) {
+                        $campo.attr('title', ajuda);
+                    }
                     pendencias.push({
                         step: obterPassoCampo($campo),
                         label: obterRotuloCampo($campo),
+                        message: ajuda,
                         field: $campo,
                         focusTarget: obterElementoFoco($campo),
                     });
@@ -1524,6 +1566,15 @@
                 function setMensagem(campo, mensagem) {
                     if (!campo) return;
                     campo.setCustomValidity(mensagem || '');
+                    if (mensagem) {
+                        campo.setAttribute('title', mensagem);
+                        campo.setAttribute('data-toggle', 'tooltip');
+                        campo.setAttribute('data-placement', 'top');
+                    } else {
+                        campo.removeAttribute('title');
+                        campo.removeAttribute('data-toggle');
+                        campo.removeAttribute('data-placement');
+                    }
                 }
 
                 function validarDataCompra() {

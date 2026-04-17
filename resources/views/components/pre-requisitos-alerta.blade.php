@@ -121,8 +121,9 @@
 
         .pre-requisitos-alerta__detail-item {
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             justify-content: space-between;
+            flex-wrap: wrap;
             gap: 10px;
             padding: 6px 10px;
             border-bottom: 1px solid #eef3f9;
@@ -136,6 +137,14 @@
         .pre-requisitos-alerta__detail-label {
             color: #1e293b;
             font-weight: 600;
+        }
+
+        .pre-requisitos-alerta__detail-message {
+            margin-top: 2px;
+            color: #92400e;
+            font-size: 11px;
+            line-height: 1.3;
+            flex-basis: 100%;
         }
 
         .pre-requisitos-alerta__detail-value {
