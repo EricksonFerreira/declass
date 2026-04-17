@@ -154,13 +154,20 @@
                     @endforeach
                 </div>
 
+                <x-campos-obrigatorios-pendentes
+                    alert-class="js-veiculo-validacao-alerta mb-3"
+                    action-class="js-veiculo-ir-passo-base"
+                    summary-class="js-veiculo-validacao-resumo"
+                    list-class="js-veiculo-validacao-lista"
+                />
+
                 <form id="formulario" method="POST" action="{{ $rota }}" novalidate>
                     @if ($metodo == 'PUT')
                         @method('PUT')
                     @endif
                     @csrf
 
-                    {{-- â”€â”€ STEP 1: GERAL â”€â”€ --}}
+                    {{--  STEP 1: GERAL  --}}
                     <div class="vc-step-pane" data-pane="1">
                         <div class="veiculo-section-title"><i class="fas fa-car mr-1"></i>Informações Gerais</div>
                         <div class="form-row">
@@ -182,7 +189,7 @@
                             </div>
                             <div class="col-lg-5 col-md-12">
                                 <div class="form-group form-group-veiculo">
-                                    <label for="grupo_frota_display">Grupo de Frota</label>
+                                    <label for="grupo_frota_display">Grupo de Frota <span style="color: red;">*</span></label>
                                     <div class="input-group input-group-sm vc-search-lookup-group">
                                         <input type="text" id="grupo_frota_display" class="form-control form-control-sm vc-lookup-display" value="{{ $grupoFrotaSelecionadoNome }}" placeholder="Clique na lupa para pesquisar o grupo" readonly>
                                         <div class="input-group-append">
@@ -204,7 +211,7 @@
                             </div>
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <label for="marca_display">Marca</label>
+                                    <label for="marca_display">Marca <span style="color: red;">*</span></label>
                                     <div class="input-group input-group-sm vc-search-lookup-group">
                                         <input type="text" id="marca_display" class="form-control form-control-sm vc-lookup-display" value="{{ $marcaSelecionadaNome }}" placeholder="Clique na lupa para pesquisar a marca" readonly>
                                         <div class="input-group-append">
@@ -226,7 +233,7 @@
                             </div>
                             <div class="col-lg-5 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <label for="modelo_display">Modelo</label>
+                                    <label for="modelo_display">Modelo <span style="color: red;">*</span></label>
                                     <div class="input-group input-group-sm vc-search-lookup-group">
                                         <input type="text" id="modelo_display" class="form-control form-control-sm vc-lookup-display" value="{{ $modeloSelecionadoNome }}" placeholder="Clique na lupa para pesquisar o modelo" readonly>
                                         <div class="input-group-append">
@@ -497,16 +504,25 @@
 
                     {{-- â”€â”€ NAV BUTTONS â”€â”€ --}}
                     <div class="vc-wizard-nav mt-4 d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-outline-secondary btn-sm px-4 d-none" id="btnPrev">
+                        <button type="button" class="btn btn-sm vc-nav-btn vc-nav-btn--back d-none" id="btnPrev">
                             <i class="fas fa-chevron-left mr-1"></i> Anterior
                         </button>
-                        <button type="button" class="btn btn-primary btn-sm px-4" id="btnNext">
+                        <button type="button" class="btn btn-sm vc-nav-btn vc-nav-btn--next" id="btnNext">
                             Próximo <i class="fas fa-chevron-right ml-1"></i>
                         </button>
-                        <button type="submit" class="btn btn-success btn-sm px-4 d-none" id="btnSalvar"
-                            {{ $bloquearSalvarVeiculo ? 'disabled' : '' }}>
-                            <i class="fas fa-save mr-1"></i> Salvar Veículo
-                        </button>
+                    </div>
+
+                    <div class="veiculo-save-dock js-veiculo-save-dock d-none">
+                        <div class="veiculo-save-dock__content">
+                            <div>
+                                <strong>Salvar alterações</strong>
+                                <small class="d-block text-muted">Disponível sem descer até o fim da página.</small>
+                            </div>
+                            <button type="submit" class="btn btn-sm vc-nav-btn vc-nav-btn--save"
+                                id="btnSalvarFlutuante" {{ $bloquearSalvarVeiculo ? 'disabled' : '' }}>
+                                <i class="fas fa-save mr-1"></i> Salvar alterações
+                            </button>
+                        </div>
                     </div>
                     @if ($bloquearSalvarVeiculo)
                         <small class="text-danger d-block mt-2 text-center font-weight-semibold">
@@ -534,7 +550,10 @@
                     trigger-id="btnBuscarMarca"
                     target-select-id="marca_id"
                     target-display-id="marca_display"
-                    placeholder="Digite o nome da marca" />
+                    placeholder="Digite o nome da marca"
+                    :extra-params="[
+                        ['name' => 'grupo_frota_id', 'selector' => '#grupo_frota_id']
+                    ]" />
 
                 <x-veiculo.busca-entidade-modal
                     modal-id="modalBuscarModeloVeiculo"
@@ -639,6 +658,13 @@
             color: #10b981;
         }
 
+        .vc-step-btn.warning .vc-step-circle {
+            background: #fff7ed;
+            border-color: #f59e0b;
+            color: #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, .12);
+        }
+
         .vc-step-label {
             font-size: .72rem;
             font-weight: 600;
@@ -652,6 +678,10 @@
 
         .vc-step-btn.done .vc-step-label {
             color: #10b981;
+        }
+
+        .vc-step-btn.warning .vc-step-label {
+            color: #b45309;
         }
 
         .vc-step-line {
@@ -701,6 +731,98 @@
             box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
         }
 
+        .vc-nav-btn {
+            min-width: 138px;
+            border-radius: 12px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
+        }
+
+        .vc-nav-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, .12);
+        }
+
+        .vc-nav-btn--back {
+            background: #fff;
+            border: 1px solid #d6e2f1;
+            color: #334155;
+        }
+
+        .vc-nav-btn--back:hover {
+            background: #f8fbff;
+            color: #0f2740;
+        }
+
+        .vc-nav-btn--next {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8);
+            border: 1px solid #1d4ed8;
+            color: #fff;
+        }
+
+        .vc-nav-btn--next:hover {
+            color: #fff;
+        }
+
+        .vc-nav-btn--save {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            border: 1px solid #15803d;
+            color: #fff;
+        }
+
+        .vc-nav-btn--save:hover {
+            color: #fff;
+        }
+
+        .js-veiculo-validacao-alerta {
+            box-shadow: 0 10px 28px rgba(245, 158, 11, .12);
+        }
+
+        .js-veiculo-validacao-alerta.is-live {
+            animation: veiculoPulse .35s ease-out;
+        }
+
+        .veiculo-save-dock {
+            position: fixed;
+            right: 24px;
+            bottom: 20px;
+            z-index: 1060;
+            width: min(360px, calc(100vw - 32px));
+        }
+
+        .veiculo-save-dock__content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid #dbe6f3;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .16);
+            backdrop-filter: blur(8px);
+        }
+
+        .veiculo-save-dock__content strong {
+            display: block;
+            font-size: .92rem;
+            color: #0f2740;
+        }
+
+        .veiculo-save-dock__content small {
+            font-size: .76rem;
+            line-height: 1.25;
+        }
+
+        #formulario {
+            padding-bottom: 104px;
+        }
+
         @media (max-width:575px) {
             .card-header-veiculo {
                 padding: .85rem;
@@ -713,6 +835,22 @@
             .form-group-veiculo {
                 margin-bottom: .8rem;
             }
+
+            .veiculo-save-dock {
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
+                width: auto;
+            }
+
+            .veiculo-save-dock__content {
+                padding: 11px 12px;
+            }
+        }
+
+        @keyframes veiculoPulse {
+            from { transform: scale(.99); opacity: .7; }
+            to { transform: scale(1); opacity: 1; }
         }
     </style>
 @stop
@@ -726,9 +864,152 @@
             const $stepBtns = $('.vc-step-btn');
             const $btnPrev = $('#btnPrev');
             const $btnNext = $('#btnNext');
-            const $btnSalvar = $('#btnSalvar');
+            const $dockSalvar = $('.js-veiculo-save-dock');
+            const $alertaPendencias = $('.js-veiculo-validacao-alerta');
+            const $listaPendencias = $('.js-veiculo-validacao-lista');
+            const $resumoPendencias = $('.js-veiculo-validacao-resumo');
+            const $botaoIrPassoBase = $('.js-veiculo-ir-passo-base');
+            const $formulario = $('#formulario');
+            const isEdit = @json(isset($veiculo));
             const totalSteps = $panes.length;
-            let currentStep = {{ $startStep }};
+            let currentStep = Math.min({{ $startStep }}, totalSteps);
+            let ultimoPassoPendente = currentStep;
+
+            const STEP_LABELS = {};
+            $stepBtns.each(function () {
+                const step = parseInt($(this).data('step'));
+                STEP_LABELS[step] = $(this).find('.vc-step-label').first().text().trim() || ('Etapa ' + step);
+            });
+
+            function escaparHtml(texto) {
+                return String(texto ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function obterRotuloCampo($campo) {
+                const rotulo = String($campo.data('field-label') ?? '').trim();
+                if (rotulo) {
+                    return rotulo;
+                }
+
+                const $group = $campo.closest('.form-group');
+                const textoLabel = String($group.find('label').first().text() ?? '').trim();
+                if (textoLabel) {
+                    return textoLabel;
+                }
+
+                return String($campo.attr('name') ?? 'Campo').replace(/\[\]$/, '');
+            }
+
+            function obterPassoCampo($campo) {
+                const pane = parseInt($campo.closest('.vc-step-pane').data('pane'));
+                return Number.isNaN(pane) ? 1 : pane;
+            }
+
+            function obterElementoFoco($campo) {
+                const mapa = {
+                    grupo_frota_id: '#grupo_frota_display',
+                    marca_id: '#marca_display',
+                    modelo_id: '#modelo_display',
+                };
+
+                const id = String($campo.attr('id') || '');
+                const seletor = mapa[id];
+
+                if (seletor && $(seletor).length) {
+                    return $(seletor);
+                }
+
+                return $campo;
+            }
+
+            function limparPendencias() {
+                $alertaPendencias.addClass('d-none').removeClass('is-live');
+                $listaPendencias.empty();
+                $resumoPendencias.empty();
+                $('.vc-step-btn').removeClass('warning');
+                $formulario.find('.js-validacao-manual').removeClass('is-invalid js-validacao-manual').removeAttr('aria-invalid');
+            }
+
+            function montarLinhaPendencia(item) {
+                const stepLabel = STEP_LABELS[item.step] || ('Etapa ' + item.step);
+                return [
+                    '<div class="pre-requisitos-alerta__detail-item">',
+                    '<span class="pre-requisitos-alerta__detail-label">' + escaparHtml(item.label) + '</span>',
+                    '<span class="badge badge-warning text-dark">' + escaparHtml(stepLabel) + '</span>',
+                    '</div>',
+                ].join('');
+            }
+
+            function mostrarPendencias(pendencias) {
+                limparPendencias();
+
+                if (!pendencias.length) {
+                    return true;
+                }
+
+                const passosPendentes = [...new Set(pendencias.map(function (item) {
+                    return item.step;
+                }))];
+                ultimoPassoPendente = Math.min(...passosPendentes);
+
+                passosPendentes.forEach(function (step) {
+                    $('.vc-step-btn[data-step="' + step + '"]').addClass('warning');
+                });
+
+                $resumoPendencias.text('Encontramos ' + pendencias.length + ' item(ns) obrigatório(s) pendente(s).');
+                $botaoIrPassoBase.text('Ir para o passo ' + (STEP_LABELS[ultimoPassoPendente] || 'correto'));
+                $listaPendencias.html(pendencias.map(montarLinhaPendencia).join(''));
+                $alertaPendencias.removeClass('d-none').addClass('is-live');
+
+                if (currentStep !== ultimoPassoPendente) {
+                    goToStep(ultimoPassoPendente);
+                }
+
+                window.requestAnimationFrame(function () {
+                    if ($alertaPendencias.length) {
+                        $alertaPendencias[0].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                        });
+                    }
+                });
+
+                const $primeiroCampoInvalido = pendencias[0]?.focusTarget || pendencias[0]?.field;
+                if ($primeiroCampoInvalido && $primeiroCampoInvalido.length) {
+                    window.setTimeout(function () {
+                        $primeiroCampoInvalido.trigger('focus');
+                    }, 150);
+                }
+
+                return false;
+            }
+
+            function coletarPendencias($escopo) {
+                const pendencias = [];
+
+                $escopo.find(':invalid').each(function () {
+                    const $campo = $(this);
+
+                    if ($campo.is(':disabled')) {
+                        return;
+                    }
+
+                    $campo.addClass('is-invalid js-validacao-manual').attr('aria-invalid', 'true');
+                    pendencias.push({
+                        step: obterPassoCampo($campo),
+                        label: obterRotuloCampo($campo),
+                        field: $campo,
+                        focusTarget: obterElementoFoco($campo),
+                    });
+                });
+
+                return pendencias;
+            }
 
             function goToStep(step) {
                 if (step < 1 || step > totalSteps) return;
@@ -750,13 +1031,8 @@
 
                 // Botões de navegação
                 $btnPrev.toggleClass('d-none', step <= 1);
-                if (step === totalSteps) {
-                    $btnNext.addClass('d-none');
-                    $btnSalvar.removeClass('d-none');
-                } else {
-                    $btnNext.removeClass('d-none');
-                    $btnSalvar.addClass('d-none');
-                }
+                $btnNext.toggleClass('d-none', step === totalSteps);
+                $dockSalvar.toggleClass('d-none', !(isEdit || step === totalSteps));
 
                 // Scroll para o topo do card
                 $('html, body').animate({ scrollTop: $('.card-veiculo').offset().top - 20 }, 150);
@@ -786,23 +1062,28 @@
             $btnNext.on('click', function() {
                 // Valida campos do pane atual antes de avançar
                 const $pane = $panes.filter('[data-pane="' + currentStep + '"]');
-                const invalids = $pane.find(':invalid');
-                if (invalids.length > 0) {
-                    $('#formulario').addClass('was-validated');
-                    invalids.first().focus();
-                    fireSwal({
-                        toast: true, position: 'top-end', icon: 'warning',
-                        title: 'Preencha os campos obrigatórios antes de continuar.',
-                        showConfirmButton: false, timer: 4000
-                    });
+                const pendencias = coletarPendencias($pane);
+                if (pendencias.length > 0) {
+                    $formulario.addClass('was-validated');
+                    mostrarPendencias(pendencias);
                     return;
                 }
-                $('#formulario').removeClass('was-validated');
+                $formulario.removeClass('was-validated');
+                limparPendencias();
                 goToStep(currentStep + 1);
             });
 
             $btnPrev.on('click', function() {
                 goToStep(currentStep - 1);
+            });
+
+            $botaoIrPassoBase.on('click', function () {
+                goToStep(ultimoPassoPendente);
+            });
+
+            $formulario.on('input change', '[required], .vc-step-pane input, .vc-step-pane select, .vc-step-pane textarea', function () {
+                const $campo = $(this);
+                $campo.removeClass('is-invalid js-validacao-manual').removeAttr('aria-invalid');
             });
 
             // Inicializa no step correto
@@ -1159,10 +1440,6 @@
             }
 
             $btnConsultarFipe.on('click', consultarFipe);
-            $('#formulario').on('submit', function() {
-                desformatarCamposMoedaParaEnvio();
-            });
-
             // â”€â”€ Validações de datas e km â”€â”€
             (function() {
                 const today = new Date().toISOString().slice(0, 10);
@@ -1307,40 +1584,19 @@
             @endif
 
             $('#formulario').on('submit', function(e) {
-                if (!this.checkValidity()) {
+                const invalids = $formulario.find(':invalid');
+
+                if (invalids.length > 0) {
                     e.preventDefault();
                     e.stopPropagation();
 
-                    const form = this;
-                    const $invalidFields = $(form).find(':invalid');
-                    const firstInvalid = $invalidFields.first();
-
-                    if (firstInvalid.length > 0) {
-                        // Descobre a aba (step) do elemento com erro
-                        const pane = firstInvalid.closest('.vc-step-pane').data('pane');
-                        if (pane) {
-                            goToStep(parseInt(pane));
-                        }
-
-                            // Destaca todos os campos inválidos no bootstrap
-                        form.classList.add('was-validated');
-                        firstInvalid.focus();
-
-                            // Usa a mensagem customizada caso tenha, senão fallback
-                        const errorMsg = firstInvalid[0].validationMessage ||
-                            'Por favor, preencha corretamente os campos obrigatórios marcados em vermelho.';
-
-                        fireSwal({
-                            toast: true,
-                            position: 'top-end',
-                            icon: 'warning',
-                            title: 'Atenção',
-                            text: errorMsg,
-                            showConfirmButton: false,
-                            timer: 5000
-                        });
-                    }
+                    const pendencias = coletarPendencias($formulario);
+                    $formulario.addClass('was-validated');
+                    mostrarPendencias(pendencias);
+                    return;
                 }
+
+                desformatarCamposMoedaParaEnvio();
             });
 
         });

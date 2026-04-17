@@ -646,11 +646,21 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     public function buscarMarcasModal(Request $request): JsonResponse
     {
         $queryTexto = trim((string) $request->input('q', ''));
+        $grupoFrotaId = (int) $request->input('grupo_frota_id', 0);
 
         $query = $this->marcaService->getModel()->newQuery()
             ->from('marcas')
             ->select(['id', 'nome', 'nome_fipe', 'codigo_fipe'])
             ->where('ativo', 'S');
+
+        if ($grupoFrotaId > 0) {
+            $query->whereHas('modelos', function ($sub) use ($grupoFrotaId) {
+                $sub->where('modelos.ativo', 'S')
+                    ->whereHas('gruposFrota', function ($grupos) use ($grupoFrotaId) {
+                        $grupos->where('grupos_frota.id', $grupoFrotaId);
+                    });
+            });
+        }
 
         if ($queryTexto !== '') {
             $query->where(function ($sub) use ($queryTexto) {

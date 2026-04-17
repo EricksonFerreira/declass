@@ -17,4 +17,9 @@ class Marca extends Model
         'codigo_fipe',
         'ativo',
     ];
+
+    public function modelos()
+    {
+        return $this->hasMany(Modelo::class, 'marca_id');
+    }
 }
