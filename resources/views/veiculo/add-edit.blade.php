@@ -394,7 +394,7 @@
                                     <x-form-input type="date" class="form-control form-control-sm"
                                         id="data_placa_licenca" name="data_placa_licenca"
                                         label="Emissão da Placa/Licença"
-                                        hint="Deve ser maior ou igual à Data de Compra e menor ou igual à Validade da Documentação/Licença."
+                                        hint="Deve ser menor ou igual à Validade da Documentação/Licença."
                                         value="{{ old('data_placa_licenca', $veiculo->data_placa_licenca ?? '') }}"
                                         required />
                                 </div>
@@ -403,7 +403,6 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm" id="data_compra"
                                         name="data_compra" label="Data de Compra"
-                                        hint="Deve ser menor ou igual à Emissão da Placa/Licença."
                                         value="{{ old('data_compra', $veiculo->data_compra ?? '') }}" required />
                                 </div>
                             </div>
@@ -941,8 +940,7 @@
                 const id = String($campo.attr('id') || '');
 
                 const ajuda = {
-                    data_compra: 'Deve ser menor ou igual à Emissão da Placa/Licença.',
-                    data_placa_licenca: 'Deve ser maior ou igual à Data de Compra e menor ou igual à Validade da Documentação/Licença.',
+                    data_placa_licenca: 'Deve ser menor ou igual à Validade da Documentação/Licença.',
                     data_validade: 'Deve ser maior ou igual à Emissão da Placa/Licença.',
                     data_proxima_manutencao: 'Deve ser hoje ou uma data futura.',
                     data_proxima_inspecao: 'Deve ser hoje ou uma data futura.',
@@ -1577,26 +1575,11 @@
                     }
                 }
 
-                function validarDataCompra() {
-                    if (!dataCompra) return;
-
-                    let mensagem = '';
-                    if (dataCompra.value && dataEmissaoPlaca?.value && dataCompra.value > dataEmissaoPlaca.value) {
-                        mensagem = 'A Data de Compra não pode ser posterior à Emissão da Placa/Licença (' +
-                            formatarData(dataEmissaoPlaca.value) + ').';
-                    }
-
-                    setMensagem(dataCompra, mensagem);
-                }
-
                 function validarDataEmissaoPlaca() {
                     if (!dataEmissaoPlaca) return;
 
                     let mensagem = '';
-                    if (dataEmissaoPlaca.value && dataCompra?.value && dataEmissaoPlaca.value < dataCompra.value) {
-                        mensagem = 'A Emissão da Placa/Licença não pode ser anterior à Data de Compra (' +
-                            formatarData(dataCompra.value) + ').';
-                    } else if (
+                    if (
                         dataEmissaoPlaca.value &&
                         dataValidade?.value &&
                         dataEmissaoPlaca.value > dataValidade.value
@@ -1692,7 +1675,6 @@
                 }
 
                 function validarTudo() {
-                    validarDataCompra();
                     validarDataEmissaoPlaca();
                     validarDataManutencao();
                     validarDataInspecao();
@@ -1701,20 +1683,8 @@
                     validarKmManut();
                 }
 
-                dataCompra?.addEventListener('input', validarDataCompra);
-                dataCompra?.addEventListener('change', function() {
-                    validarDataCompra();
-                    validarDataEmissaoPlaca();
-                });
-
-                dataEmissaoPlaca?.addEventListener('input', function() {
-                    validarDataCompra();
-                    validarDataEmissaoPlaca();
-                });
-                dataEmissaoPlaca?.addEventListener('change', function() {
-                    validarDataCompra();
-                    validarDataEmissaoPlaca();
-                });
+                dataEmissaoPlaca?.addEventListener('input', validarDataEmissaoPlaca);
+                dataEmissaoPlaca?.addEventListener('change', validarDataEmissaoPlaca);
 
                 dataValidade?.addEventListener('input', validarDataEmissaoPlaca);
                 dataValidade?.addEventListener('change', validarDataEmissaoPlaca);
