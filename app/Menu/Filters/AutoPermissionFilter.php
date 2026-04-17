@@ -23,6 +23,12 @@ class AutoPermissionFilter implements FilterInterface
             return $item;
         }
 
+        if (!empty($item['submenu']) && is_array($item['submenu'])) {
+            $item['submenu'] = array_map(function ($child) {
+                return is_array($child) ? $this->transform($child) : $child;
+            }, $item['submenu']);
+        }
+
         $permission = $this->resolvePermissionFromMenuItem($item);
         if ($permission !== null) {
             $item['can'] = $permission;
