@@ -2009,7 +2009,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             'tipo'            => $v->tipoFrota?->nome ?? '',
             'status'          => $v->statusVeiculo?->nome ?? '',
             'ano_fab'         => $v->ano_fabricacao ?? '',
-            'ano_mod'         => $v->ano_modelo ?? '',
+            'ano_mod'         => $v->modelo?->ano_modelo ?? '',
             'cor'             => $v->cor ?? '',
             'kms'             => $v->kms ?? '',
             'ativo'           => $v->ativo === 'S' ? 'Sim' : 'Não',

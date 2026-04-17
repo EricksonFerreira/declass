@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\DisponibilidadeInicialVeiculo;
 use App\Models\Movimentacao;
-use App\Models\Modelo;
 use App\Models\Veiculo;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -62,7 +61,6 @@ class VeiculoService extends AbstractBaseService
      */
     public function create(array $data)
     {
-        $data = $this->sincronizarAnoModeloComModelo($data);
         $this->injectEmpresaId($data, true);
         $veiculo = $this->model->create($data);
         $veiculo->nome = 'vei' . str_pad($veiculo->id, 4, '0', STR_PAD_LEFT);
@@ -94,7 +92,6 @@ class VeiculoService extends AbstractBaseService
             return null;
         }
 
-        $data = $this->sincronizarAnoModeloComModelo($data);
         $this->injectEmpresaId($data, true);
         $naoMovimentouInicialmente = is_null($veiculo->data_hora_disponibilidade) || is_null($veiculo->local_disponibilidade);
         $veiculo->update($data);
@@ -109,20 +106,6 @@ class VeiculoService extends AbstractBaseService
         }
 
         return $veiculo;
-    }
-
-    private function sincronizarAnoModeloComModelo(array $data): array
-    {
-        $modeloId = (int) ($data['modelo_id'] ?? 0);
-
-        if ($modeloId > 0) {
-            $anoModelo = Modelo::query()->where('id', $modeloId)->value('ano_modelo');
-            if (!empty($anoModelo)) {
-                $data['ano_modelo'] = (int) $anoModelo;
-            }
-        }
-
-        return $data;
     }
 
     /**
@@ -707,10 +690,10 @@ class VeiculoService extends AbstractBaseService
             $query->where('ativo', $filtros['ativo'] === '1' ? 'S' : 'N');
         }
         if (!empty($filtros['ano_de'])) {
-            $query->where('ano_modelo', '>=', (int) $filtros['ano_de']);
+            $query->whereHas('modelo', fn($modelo) => $modelo->where('ano_modelo', '>=', (int) $filtros['ano_de']));
         }
         if (!empty($filtros['ano_ate'])) {
-            $query->where('ano_modelo', '<=', (int) $filtros['ano_ate']);
+            $query->whereHas('modelo', fn($modelo) => $modelo->where('ano_modelo', '<=', (int) $filtros['ano_ate']));
         }
         if (!empty($filtros['kms_ate'])) {
             $query->where('kms', '<=', (int) $filtros['kms_ate']);

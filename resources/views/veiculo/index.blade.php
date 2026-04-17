@@ -38,7 +38,6 @@
                                     'placa_licenca'  => 'Placa',
                                     'renavam'        => 'RENAVAM',
                                     'ano_fabricacao' => 'Ano Fab.',
-                                    'ano_modelo'     => 'Ano Mod.',
                                     'kms'            => 'Km',
                                     'created_at'     => 'Cadastro',
                                 ];

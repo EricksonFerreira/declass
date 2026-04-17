@@ -23,7 +23,6 @@ class Veiculo extends Model
         'segmento_id', // segmento
         'status_veiculo_id', // status
         'ano_fabricacao',
-        'ano_modelo',
         'placa_licenca',
         'chassi',
         'data_disponibilidade',

@@ -83,6 +83,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $perPage  = session()->get("$this->nomeFiltro.perPage", 10);
         $orderBy  = session()->get("$this->nomeFiltro.orderBy", 'id');
         $orderDir = session()->get("$this->nomeFiltro.orderDir", 'asc');
+        $allowedOrderBy = ['id', 'nome', 'placa_licenca', 'renavam', 'ano_fabricacao', 'kms', 'created_at'];
+
+        if (!in_array($orderBy, $allowedOrderBy, true)) {
+            $orderBy = 'id';
+        }
 
         $veiculos = $this->veiculoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, [], $orderBy, $orderDir);
 
@@ -766,7 +771,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $campo  = $request->input('orderBy', 'id');
         $dir    = $request->input('orderDir', 'asc');
-        $allowed = ['id','nome','placa_licenca','renavam','ano_fabricacao','ano_modelo','kms','created_at'];
+        $allowed = ['id','nome','placa_licenca','renavam','ano_fabricacao','kms','created_at'];
         if (!in_array($campo, $allowed)) $campo = 'id';
         if (!in_array($dir, ['asc','desc'])) $dir = 'asc';
         session(['veiculo.orderBy' => $campo, 'veiculo.orderDir' => $dir]);
@@ -796,7 +801,6 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 'veiculos.placa_licenca',
                 'veiculos.chassi',
                 'veiculos.ano_fabricacao',
-                'veiculos.ano_modelo',
                 'veiculos.cor',
                 'veiculos.kms',
                 'veiculos.ativo',
@@ -859,10 +863,10 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $query->where('veiculos.ativo', (bool) $request->input('ativo'));
         }
         if ($v = (int) $request->input('ano_de', 0)) {
-            $query->where('veiculos.ano_modelo', '>=', $v);
+            $query->whereHas('modelo', fn($m) => $m->where('ano_modelo', '>=', $v));
         }
         if ($v = (int) $request->input('ano_ate', 0)) {
-            $query->where('veiculos.ano_modelo', '<=', $v);
+            $query->whereHas('modelo', fn($m) => $m->where('ano_modelo', '<=', $v));
         }
         if ($v = (int) $request->input('kms_ate', 0)) {
             $query->where('veiculos.kms', '<=', $v);
@@ -879,7 +883,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'tipo'        => $v->tipoFrota?->nome ?? '',
             'status'      => $v->statusVeiculo?->nome ?? '',
             'ano_fab'     => $v->ano_fabricacao ?? '',
-            'ano_mod'     => $v->ano_modelo ?? '',
+            'ano_mod'     => $v->modelo?->ano_modelo ?? '',
             'cor'         => $v->cor ?? '',
             'kms'         => $v->kms !== null ? number_format((float)$v->kms, 0, ',', '.') : '',
             'ativo'       => $v->ativo ? 'Sim' : 'Não',

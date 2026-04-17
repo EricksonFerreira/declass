@@ -83,7 +83,7 @@
                         </div>
                         <div class="veiculo-field">
                             <span class="veiculo-field__label">Ano Modelo</span>
-                            <span class="veiculo-field__value">{{ $veiculo->ano_modelo ?? '—' }}</span>
+                            <span class="veiculo-field__value">{{ $veiculo->modelo?->ano_modelo ?? '—' }}</span>
                         </div>
                         <div class="veiculo-field">
                             <span class="veiculo-field__label">Cor</span>
