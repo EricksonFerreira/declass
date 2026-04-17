@@ -183,7 +183,7 @@
 
                                     <div class="col-lg-3 col-md-4">
                                         <div class="form-group form-group-usuario">
-                                            <label class="mb-1" style="font-size:.85rem;font-weight:600">CPF <small class="text-muted font-weight-normal">(zip code)</small> <span class="text-danger">*</span></label>
+                                            <label class="mb-1" style="font-size:.85rem;font-weight:600">CEP <small class="text-muted font-weight-normal">(zip code)</small> <span class="text-danger">*</span></label>
                                             <input required type="text" class="form-control form-control-sm" id="cep" name="zip_code"
                                                 value="{{ old('zip_code', $usuario->zip_code ?? '') }}"
                                                 placeholder="000.000.000-00" maxlength="14" />
