@@ -159,7 +159,7 @@
                 </section>
             @endif
 
-            <section class="profile-action card">
+            {{-- <section class="profile-action card">
                 <div class="profile-action__content">
                     <div class="profile-action__text">
                         <span class="profile-action__eyebrow">Segurança da conta</span>
@@ -175,7 +175,7 @@
                         </a>
                     </div>
                 </div>
-            </section>
+            </section> --}}
         </div>
     </div>
 @stop
