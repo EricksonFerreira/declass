@@ -18,16 +18,22 @@
                 'label' => 'Empresa',
                 'value' => optional($user->empresa)->nome ?? 'Não informada',
                 'icon' => 'fas fa-building',
+                'bg_var' => '--profile-primary',
+                'fg_var' => '--empresa-cor-primaria-contraste, #ffffff',
             ],
             [
                 'label' => 'Cadastro',
                 'value' => $user->created_at ? $user->created_at->format('d/m/Y') : 'Não informado',
                 'icon' => 'fas fa-calendar-check',
+                'bg_var' => '--profile-secondary',
+                'fg_var' => '--empresa-cor-secundaria-contraste, #ffffff',
             ],
             [
                 'label' => 'Perfil',
                 'value' => $roleLabel,
                 'icon' => 'fas fa-user-shield',
+                'bg_var' => '--profile-tertiary',
+                'fg_var' => '--empresa-cor-terciaria-contraste, #111827',
             ],
         ];
 
@@ -89,7 +95,7 @@
 
                     <div class="profile-hero__aside">
                         @foreach ($heroHighlights as $item)
-                            <div class="profile-quick-card">
+                            <div class="profile-quick-card" style="--profile-card-bg: var({{ $item['bg_var'] }}); --profile-card-fg: var({{ $item['fg_var'] }});">
                                 <div class="profile-quick-card__icon">
                                     <i class="{{ $item['icon'] }}"></i>
                                 </div>
@@ -268,7 +274,7 @@
             padding: .38rem .8rem;
             border-radius: 999px;
             background: var(--profile-primary);
-            color: #fff;
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
             font-size: .74rem;
             font-weight: 800;
             letter-spacing: .04em;
@@ -285,8 +291,8 @@
             align-items: center;
             padding: .35rem .75rem;
             border-radius: 999px;
-            background: color-mix(in srgb, var(--profile-primary) 12%, #ffffff 88%);
-            color: var(--profile-primary);
+            background: var(--profile-primary);
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
             font-size: .72rem;
             font-weight: 800;
             letter-spacing: .08em;
@@ -350,10 +356,10 @@
             align-items: center;
             gap: .85rem;
             padding: .95rem 1rem;
-            background: #ffffff;
-            border: 1px solid color-mix(in srgb, var(--profile-primary) 12%, #dfe9f7 88%);
+            background: var(--profile-card-bg, #ffffff);
+            border: 1px solid var(--profile-card-bg, #ffffff);
             border-radius: 18px;
-            box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
+            box-shadow: 0 12px 28px rgba(15, 23, 42, .10);
         }
 
         .profile-quick-card__icon {
@@ -363,8 +369,8 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            background: var(--profile-primary);
-            color: var(--empresa-cor-primaria-contraste, #ffffff);
+            background: var(--profile-card-fg, #ffffff);
+            color: var(--profile-card-bg, #1F2937);
             font-size: 1rem;
             flex: 0 0 auto;
         }
@@ -375,7 +381,7 @@
 
         .profile-quick-card__label {
             display: block;
-            color: var(--profile-secondary);
+            color: var(--profile-card-fg, #0f172a);
             font-size: .72rem;
             font-weight: 800;
             text-transform: uppercase;
@@ -385,7 +391,7 @@
 
         .profile-quick-card__value {
             display: block;
-            color: #0f172a;
+            color: var(--profile-card-fg, #0f172a);
             font-weight: 700;
             font-size: .96rem;
             line-height: 1.4;
@@ -436,7 +442,7 @@
             display: block;
             font-size: .72rem;
             font-weight: 800;
-            color: var(--profile-secondary);
+            color: #334155;
             text-transform: uppercase;
             letter-spacing: .06em;
             margin-bottom: .3rem;
@@ -476,8 +482,8 @@
             align-items: center;
             padding: .32rem .7rem;
             border-radius: 999px;
-            background: color-mix(in srgb, var(--profile-primary) 12%, #ffffff 88%);
-            color: var(--profile-primary);
+            background: var(--profile-primary);
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
             font-size: .72rem;
             font-weight: 800;
             letter-spacing: .06em;
@@ -518,9 +524,9 @@
         }
 
         .profile-btn--primary {
-            color: #111827 !important;
-            background: linear-gradient(135deg, var(--profile-tertiary) 0%, color-mix(in srgb, var(--profile-tertiary) 78%, #ffffff 22%) 100%);
-            border: 1px solid color-mix(in srgb, var(--profile-tertiary) 70%, #d4a72b 30%);
+            color: var(--empresa-cor-primaria-contraste, #ffffff) !important;
+            background: var(--profile-primary);
+            border: 1px solid var(--profile-primary);
         }
 
         @media (max-width: 1199.98px) {
