@@ -71,7 +71,8 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
     {
         $this->cupom_descontoService->create($request->all());
 
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        return $this->redirecionaRotaRedirect($this->nomeFiltro)
+            ->with('success', 'Cupom de desconto cadastrado com sucesso.');
     }
 
     public function edit($id)
@@ -90,7 +91,8 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
     public function update(UpdateCupomDescontoRequest $request, $id)
     {
         $success = $this->cupom_descontoService->update($id,$request->all());
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        return $this->redirecionaRotaRedirect($this->nomeFiltro)
+            ->with('success', 'Cupom de desconto atualizado com sucesso.');
     }
 
     public function destroy($id)

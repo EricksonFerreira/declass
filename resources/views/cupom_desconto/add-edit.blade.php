@@ -59,7 +59,7 @@
                         <div class="col-lg-3 col-md-4">
                             <div class="form-group form-group-cupom-desconto">
                                 <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione um valor"
-                                    :selected="old('ativo', isset($cupom_desconto->ativo) && $cupom_desconto->ativo ? $cupom_desconto->ativo : null)"
+                                    :selected="old('ativo', isset($cupom_desconto->ativo) ? $cupom_desconto->ativo : 'S')"
                                     class="form-control form-control-sm" required />
                             </div>
                         </div>
