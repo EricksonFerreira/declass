@@ -314,6 +314,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $modelosAtivos,
             $resumoVeiculosEstacoes
         );
+        if (($preRequisitosReserva['qtd_estacoes'] ?? 0) <= 0 && $estacoesPermitidasUsuario->isNotEmpty()) {
+            $preRequisitosReserva['faltas'] = array_values(array_filter(
+                $preRequisitosReserva['faltas'],
+                static fn (string $falta): bool => !str_contains(mb_strtolower($falta), 'estacao ativa para iniciar reservas')
+            ));
+            $preRequisitosReserva['faltas'][] = 'Você possui estações no perfil, mas nenhuma está habilitada para retirada/devolução nesta reserva.';
+        }
         $moedaEmpresa = 'BRL';
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
         $paises = $this->paisService->getAllForSelectSigla();
@@ -326,6 +333,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $tiposOpcionais = $this->tipoOpcionalService->getTipoOpcionais('nome', 'asc');
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
+        $usuarioAutenticado = Auth::user()?->loadMissing(['estacoesPermitidas']);
+        $estacoesPermitidasUsuario = $usuarioAutenticado && ! $usuarioAutenticado->hasAcessoTodasEstacoes()
+            ? $usuarioAutenticado->estacoesPermitidas->sortBy('nome')->values()
+            : collect();
+        $estacoesBloqueadasReserva = $this->montarEstacoesBloqueadasReserva($estacoesPermitidasUsuario, array_keys($estacoes));
         $resetWizardStep = Auth::user()?->isAdministrador() ? true : false;
         $reservaSelecionarModelo = ($empresaAtual?->reserva_selecionar_modelo ?? 'N') === 'S';
 
@@ -338,6 +350,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'gruposVeiculo',
             'estacoesRetirada',
             'estacoesDevolucao',
+            'estacoesPermitidasUsuario',
+            'estacoesBloqueadasReserva',
             'preRequisitosReserva',
             'moedaEmpresa',
             'simboloMoedaEmpresa',
@@ -483,6 +497,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $modelosAtivos,
             $resumoVeiculosEstacoes
         );
+        if (($preRequisitosReserva['qtd_estacoes'] ?? 0) <= 0 && $estacoesPermitidasUsuario->isNotEmpty()) {
+            $preRequisitosReserva['faltas'] = array_values(array_filter(
+                $preRequisitosReserva['faltas'],
+                static fn (string $falta): bool => !str_contains(mb_strtolower($falta), 'estacao ativa para iniciar reservas')
+            ));
+            $preRequisitosReserva['faltas'][] = 'Você possui estações no perfil, mas nenhuma está habilitada para retirada/devolução nesta reserva.';
+        }
         $moedaEmpresa = 'BRL';
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
         $paises = $this->paisService->getAllForSelectSigla();
@@ -499,6 +520,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $segmentos = $reserva->modelos->segmentos ?? [];
 
         $opcionaisSelecionados = $reserva->opcionais?->pluck('id')->toArray() ?? [];
+        $usuarioAutenticado = Auth::user()?->loadMissing(['estacoesPermitidas']);
+        $estacoesPermitidasUsuario = $usuarioAutenticado && ! $usuarioAutenticado->hasAcessoTodasEstacoes()
+            ? $usuarioAutenticado->estacoesPermitidas->sortBy('nome')->values()
+            : collect();
+        $estacoesBloqueadasReserva = $this->montarEstacoesBloqueadasReserva($estacoesPermitidasUsuario, array_keys($estacoes));
         $reservaSelecionarModelo = ($empresaAtual?->reserva_selecionar_modelo ?? 'N') === 'S';
 
         return view('reserva.add-edit', compact(
@@ -506,6 +532,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'users',
             'estacoesRetirada',
             'estacoesDevolucao',
+            'estacoesPermitidasUsuario',
+            'estacoesBloqueadasReserva',
             'gruposVeiculo',
             'preRequisitosReserva',
             'moedaEmpresa',
@@ -610,6 +638,55 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         return $unificadas;
+    }
+
+    private function montarEstacoesBloqueadasReserva($estacoesPermitidasUsuario, array $estacoesDisponiveisIds): array
+    {
+        if (empty($estacoesPermitidasUsuario) || !method_exists($estacoesPermitidasUsuario, 'filter')) {
+            return [];
+        }
+
+        $idsDisponiveis = array_map('intval', $estacoesDisponiveisIds);
+
+        return $estacoesPermitidasUsuario
+            ->filter(static function ($estacao) use ($idsDisponiveis): bool {
+                return !in_array((int) ($estacao->id ?? 0), $idsDisponiveis, true);
+            })
+            ->map(function ($estacao): array {
+                return [
+                    'id' => (int) ($estacao->id ?? 0),
+                    'nome' => (string) ($estacao->nome ?? 'Estação'),
+                    'motivo' => $this->descreverMotivoBloqueioEstacaoReserva($estacao),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
+    private function descreverMotivoBloqueioEstacaoReserva($estacao): string
+    {
+        $motivos = [];
+
+        if (($estacao->ativo ?? 'S') !== 'S') {
+            $motivos[] = 'está inativa';
+        }
+
+        $checkin = ($estacao->checkin ?? 'N') === 'S';
+        $checkout = ($estacao->checkout ?? 'N') === 'S';
+
+        if (!$checkin && !$checkout) {
+            $motivos[] = 'não está habilitada para retirada nem devolução';
+        } elseif (!$checkin) {
+            $motivos[] = 'não está habilitada para retirada';
+        } elseif (!$checkout) {
+            $motivos[] = 'não está habilitada para devolução';
+        }
+
+        if (empty($motivos)) {
+            return 'não aparece nas opções da reserva.';
+        }
+
+        return implode(' e ', $motivos) . '.';
     }
 
     private function montarResumoVeiculosPorEstacao($estacoes): array

@@ -84,18 +84,35 @@
                 @foreach ($preRequisitosReserva['faltas'] as $falta)
                     <div class="reserva-top-header__warning-item">{{ $falta }}</div>
                 @endforeach
+
+                @if (!empty($estacoesBloqueadasReserva))
+                    <div class="reserva-top-header__station-explanation">
+                        <div class="reserva-top-header__station-explanation-title">
+                            Você tem acesso ao perfil, mas estas estações não entram na reserva atual:
+                        </div>
+                        <div class="reserva-top-header__station-explanation-list">
+                            @foreach ($estacoesBloqueadasReserva as $estacao)
+                                <div class="reserva-top-header__station-explanation-item">
+                                    <strong>{{ $estacao['nome'] }}</strong>
+                                    <span>{{ $estacao['motivo'] }}</span>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <div class="reserva-top-header__links">
                     @if ($qtdEstacoes === 0 && $linkCadastroEstacao)
-                        <a href="{{ $linkCadastroEstacao }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar estacao</a>
+                        <a href="{{ $linkCadastroEstacao }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar estação</a>
                     @endif
                     @if ($qtdGrupos === 0 && $linkCadastroGrupo)
-                        <a href="{{ $linkCadastroGrupo }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar grupo de veiculos</a>
+                        <a href="{{ $linkCadastroGrupo }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar grupo de veículos</a>
                     @endif
                     @if ($qtdModelos === 0 && $linkCadastroModelo)
                         <a href="{{ $linkCadastroModelo }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar modelo</a>
                     @endif
                     @if ($qtdVeiculosTotal === 0 && $linkCadastroVeiculo)
-                        <a href="{{ $linkCadastroVeiculo }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar veiculo</a>
+                        <a href="{{ $linkCadastroVeiculo }}" class="reserva-link-action" target="_blank" rel="noopener noreferrer">Cadastrar veículo</a>
                     @endif
                 </div>
             </div>
@@ -1070,6 +1087,41 @@
             font-size: 12px;
             color: #111827;
             margin-bottom: 4px;
+        }
+        .reserva-top-header__station-explanation {
+            margin-top: 8px;
+            border: 1px solid #dbe6f3;
+            border-radius: 10px;
+            background: #fff;
+            padding: 10px;
+        }
+        .reserva-top-header__station-explanation-title {
+            color: #0f172a;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+        .reserva-top-header__station-explanation-list {
+            display: grid;
+            gap: 6px;
+        }
+        .reserva-top-header__station-explanation-item {
+            padding: 8px 10px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e5edf7;
+        }
+        .reserva-top-header__station-explanation-item strong {
+            display: block;
+            color: #0f172a;
+            font-size: 12px;
+            margin-bottom: 2px;
+        }
+        .reserva-top-header__station-explanation-item span {
+            display: block;
+            color: #111827;
+            font-size: 12px;
+            line-height: 1.35;
         }
         .reserva-top-header__links {
             display: flex;
