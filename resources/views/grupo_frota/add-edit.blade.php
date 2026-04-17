@@ -93,7 +93,7 @@
             </div>
 
             <div class="card-body p-4">
-                <form id="formulario" method="POST" action="{{ $rota }}" enctype="multipart/form-data">
+                <form id="formulario" method="POST" action="{{ $rota }}" enctype="multipart/form-data" novalidate>
                     @if ($metodo == 'PUT')
                         @method('PUT')
                     @endif
@@ -120,6 +120,13 @@
                             <span class="ec-step-label">Modelos</span>
                         </button>
                     </div>
+
+                    <x-campos-obrigatorios-pendentes
+                        alert-class="js-grupo-frota-validacao-alerta mb-3"
+                        action-class="js-grupo-frota-ir-passo-base"
+                        summary-class="js-grupo-frota-validacao-resumo"
+                        list-class="js-grupo-frota-validacao-lista"
+                    />
 
                     <ul class="nav nav-pills nav-grupo-frota mb-3" id="grupo-frota-tab" role="tablist">
                         <li class="nav-item">
@@ -157,28 +164,31 @@
                                     <div class="form-group form-group-grupo-frota">
                                         <x-form-input type="text" class="form-control form-control-sm" id="nome"
                                             name="nome" label="Nome" value="{{ old('nome', $grupoFrota->nome ?? '') }}"
-                                            required />
+                                            required data-field-label="Nome" data-field-step="1" />
                                     </div>
                                 </div>
                                 <div class="col-lg-2">
                                     <div class="form-group form-group-grupo-frota">
                                         <x-form-input type="text" class="form-control form-control-sm" id="codigo"
                                             name="codigo" label="Codigo"
-                                            value="{{ old('codigo', $grupoFrota->codigo ?? '') }}" required />
+                                            value="{{ old('codigo', $grupoFrota->codigo ?? '') }}" required
+                                            data-field-label="Codigo" data-field-step="1" />
                                     </div>
                                 </div>
                                 <div class="col-lg-2">
                                     <div class="form-group form-group-grupo-frota">
                                         <x-form-input type="text" class="form-control form-control-sm" id="codigo_sipp"
                                             name="codigo_sipp" label="Codigo SIPP"
-                                            value="{{ old('codigo_sipp', $grupoFrota->codigo_sipp ?? '') }}" required />
+                                            value="{{ old('codigo_sipp', $grupoFrota->codigo_sipp ?? '') }}" required
+                                            data-field-label="Codigo SIPP" data-field-step="1" />
                                     </div>
                                 </div>
                                 <div class="col-lg-2">
                                     <div class="form-group form-group-grupo-frota">
                                         <x-form-select name="ativo" label="Status" :options="$status"
                                             placeholder="Selecione..." :selected="old('ativo', $grupoFrota->ativo ?? 'S')"
-                                            class="form-control form-control-sm" required />
+                                            class="form-control form-control-sm" required data-field-label="Status"
+                                            data-field-step="1" />
                                     </div>
                                 </div>
                             </div>
@@ -193,14 +203,16 @@
                                                     ? $grupoFrota->tipo_frota_id
                                                     : null,
                                             )"
-                                            class="form-control form-control-sm" required />
+                                            class="form-control form-control-sm" required data-field-label="Tipo de Frota"
+                                            data-field-step="1" />
                                     </div>
                                 </div>
                                 <div class="col-lg-3">
                                     <div class="form-group form-group-grupo-frota">
                                         <x-form-input type="text" class="form-control form-control-sm" id="valor_diario"
                                             name="valor_diario" label="Valor Diario"
-                                            value="{{ old('valor_diario', $grupoFrota->valor_diario ?? '') }}" required />
+                                            value="{{ old('valor_diario', $grupoFrota->valor_diario ?? '') }}" required
+                                            data-field-label="Valor diario" data-field-step="1" />
                                     </div>
                                 </div>
                                 <div class="col-lg-6">
@@ -299,6 +311,8 @@
                                                     <input type="checkbox" class="caracteristica-check"
                                                         id="caracteristica_{{ $caracteristicaId }}"
                                                         name="caracteristicas[]" value="{{ $caracteristicaId }}"
+                                                        data-field-label="{{ $caracteristica->nome }}"
+                                                        data-field-step="2"
                                                         {{ $caracteristicaSelecionada ? 'checked' : '' }}>
                                                 </td>
 
@@ -320,6 +334,8 @@
                                                         name="caracteristicaValor[{{ $caracteristicaId }}]"
                                                         class="form-control form-control-sm caracteristica-valor"
                                                         value="{{ $valorAtual }}" data-id="{{ $caracteristicaId }}"
+                                                        data-field-label="{{ $caracteristica->nome }}"
+                                                        data-field-step="2"
                                                         {{ $caracteristicaSelecionada ? '' : 'disabled' }}
                                                         @if ($ehQuantidade) min="0"
         step="1"
@@ -493,6 +509,19 @@
                         </div>
                     </div>
 
+                    <div class="grupo-frota-save-dock js-grupo-frota-save-dock d-none">
+                        <div class="grupo-frota-save-dock__content">
+                            <div>
+                                <strong>Salvar agora</strong>
+                                <small class="d-block text-muted">Sem precisar voltar ao fim da tela.</small>
+                            </div>
+                            <button type="submit" class="btn btn-sm ec-nav-btn ec-nav-btn--save"
+                                id="btnSalvarFlutuante" {{ $bloquearSalvarGrupoFrota ? 'disabled' : '' }}>
+                                <i class="fas fa-save mr-1"></i> Salvar alterações
+                            </button>
+                        </div>
+                    </div>
+
                     @if ($bloquearSalvarGrupoFrota)
                         <small class="text-danger d-block mt-2 text-center font-weight-semibold">
                             Cadastre os itens obrigatorios acima para liberar a criacao do grupo de frota.
@@ -566,6 +595,13 @@
             color: #10b981;
         }
 
+        .ec-step-btn.warning .ec-step-circle {
+            background: #fff7ed;
+            border-color: #f59e0b;
+            color: #f59e0b;
+            box-shadow: 0 0 0 4px rgba(245, 158, 11, .12);
+        }
+
         .ec-step-label {
             font-size: .72rem;
             font-weight: 600;
@@ -575,6 +611,7 @@
 
         .ec-step-btn.active .ec-step-label { color: #2563eb; }
         .ec-step-btn.done .ec-step-label { color: #10b981; }
+        .ec-step-btn.warning .ec-step-label { color: #b45309; }
         .ec-step-line {
             flex: 1;
             height: 2px;
@@ -633,6 +670,68 @@
         .card-grupo-frota .form-select:focus {
             border-color: #4b80ff;
             box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
+        }
+
+        .js-grupo-frota-validacao-alerta {
+            box-shadow: 0 10px 28px rgba(245, 158, 11, .12);
+        }
+
+        .js-grupo-frota-validacao-alerta.is-live {
+            animation: grupoFrotaPulse .35s ease-out;
+        }
+
+        #formulario {
+            padding-bottom: 104px;
+        }
+
+        .grupo-frota-save-dock {
+            position: fixed;
+            right: 24px;
+            bottom: 20px;
+            z-index: 1060;
+            width: min(360px, calc(100vw - 32px));
+        }
+
+        .grupo-frota-save-dock__content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid #dbe6f3;
+            background: rgba(255, 255, 255, .96);
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .16);
+            backdrop-filter: blur(8px);
+        }
+
+        .grupo-frota-save-dock__content strong {
+            display: block;
+            font-size: .92rem;
+            color: #0f2740;
+        }
+
+        .grupo-frota-save-dock__content small {
+            font-size: .76rem;
+            line-height: 1.25;
+        }
+
+        @media (max-width: 767.98px) {
+            .grupo-frota-save-dock {
+                left: 12px;
+                right: 12px;
+                bottom: 12px;
+                width: auto;
+            }
+
+            .grupo-frota-save-dock__content {
+                padding: 11px 12px;
+            }
+        }
+
+        @keyframes grupoFrotaPulse {
+            from { transform: scale(.99); opacity: .7; }
+            to { transform: scale(1); opacity: 1; }
         }
 
         .card-interno,
@@ -893,7 +992,187 @@
 
             const isEdit = @json($isEdit);
             const TOTAL_STEPS = 4;
+            const STEP_LABELS = {
+                1: 'Geral',
+                2: 'Caracteristicas',
+                3: 'Opcionais',
+                4: 'Modelos',
+            };
             let currentStep = 1;
+            let ultimoPassoPendente = 1;
+            const $formularioGrupoFrota = $('#formulario');
+            const $alertaValidacaoGrupoFrota = $('.js-grupo-frota-validacao-alerta');
+            const $listaValidacaoGrupoFrota = $('.js-grupo-frota-validacao-lista');
+            const $resumoValidacaoGrupoFrota = $('.js-grupo-frota-validacao-resumo');
+            const $botaoIrPassoBase = $('.js-grupo-frota-ir-passo-base');
+            const $dockSalvarGrupoFrota = $('.js-grupo-frota-save-dock');
+            $('#btnSalvar').remove();
+
+            function escaparHtml(texto) {
+                return String(texto ?? '')
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;')
+                    .replace(/'/g, '&#039;');
+            }
+
+            function obterPassoCampo($campo, fallback = 1) {
+                const valor = parseInt($campo.data('field-step') ?? fallback, 10);
+                return Number.isNaN(valor) ? fallback : valor;
+            }
+
+            function obterRotuloCampo($campo) {
+                const rotulo = String($campo.data('field-label') ?? '').trim();
+                if (rotulo) {
+                    return rotulo;
+                }
+
+                const $group = $campo.closest('.form-group');
+                const textoLabel = String($group.find('label').first().text() ?? '').trim();
+                if (textoLabel) {
+                    return textoLabel;
+                }
+
+                return String($campo.attr('name') ?? 'Campo').replace(/\[\]$/, '');
+            }
+
+            function limparValidacaoGrupoFrota() {
+                $alertaValidacaoGrupoFrota.addClass('d-none').removeClass('is-live');
+                $listaValidacaoGrupoFrota.empty();
+                $resumoValidacaoGrupoFrota.empty();
+                $botaoIrPassoBase.text('Ir para o passo correto');
+                $('.ec-step-btn').removeClass('warning');
+                $('#formulario .js-validacao-manual').removeClass('is-invalid js-validacao-manual').removeAttr('aria-invalid');
+            }
+
+            function destacarValidacaoGrupoFrota(erros) {
+                limparValidacaoGrupoFrota();
+
+                if (!erros.length) {
+                    return true;
+                }
+
+                const passosPendentes = [...new Set(erros.map(function (item) {
+                    return item.step;
+                }))];
+                ultimoPassoPendente = Math.min(...passosPendentes);
+
+                passosPendentes.forEach(function (step) {
+                    $('.ec-step-btn[data-step="' + step + '"]').addClass('warning');
+                });
+
+                $resumoValidacaoGrupoFrota.text(
+                    'Encontramos ' + erros.length + ' item(ns) obrigatorio(s) pendente(s).'
+                );
+
+                $botaoIrPassoBase.text(
+                    'Ir para o passo ' + (STEP_LABELS[ultimoPassoPendente] || 'correto')
+                );
+
+                const blocos = erros.map(function (item) {
+                    const badgeClasses = {
+                        1: 'badge-danger',
+                        2: 'badge-warning text-dark',
+                        3: 'badge-info text-white',
+                        4: 'badge-secondary',
+                    };
+                    const badgeClass = badgeClasses[item.step] || 'badge-dark';
+                    const passoLabel = STEP_LABELS[item.step] || 'Etapa ' + item.step;
+
+                    return [
+                        '<div class="pre-requisitos-alerta__detail-item">',
+                        '<span class="pre-requisitos-alerta__detail-label">' + escaparHtml(item.label) + '</span>',
+                        '<span class="badge ' + badgeClass + '">' + escaparHtml(passoLabel) + '</span>',
+                        '</div>',
+                    ].join('');
+                });
+
+                $listaValidacaoGrupoFrota.html(blocos.join(''));
+                $alertaValidacaoGrupoFrota.removeClass('d-none').addClass('is-live');
+
+                if (currentStep !== ultimoPassoPendente) {
+                    goToStep(ultimoPassoPendente);
+                }
+
+                window.requestAnimationFrame(function () {
+                    if ($alertaValidacaoGrupoFrota.length) {
+                        $alertaValidacaoGrupoFrota[0].scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start',
+                        });
+                    }
+                });
+
+                const $primeiroCampoInvalido = erros[0]?.field;
+                if ($primeiroCampoInvalido && $primeiroCampoInvalido.length) {
+                    window.setTimeout(function () {
+                        $primeiroCampoInvalido.trigger('focus');
+                    }, 150);
+                }
+
+                return false;
+            }
+
+            function coletarErrosGrupoFrota() {
+                const erros = [];
+
+                $formularioGrupoFrota.find('[required]').each(function () {
+                    const $campo = $(this);
+
+                    if ($campo.is(':disabled')) {
+                        return;
+                    }
+
+                    const isCheckbox = $campo.is(':checkbox');
+                    const isRadio = $campo.is(':radio');
+                    const valor = $campo.val();
+
+                    const campoVazio =
+                        isCheckbox
+                            ? !$campo.is(':checked')
+                            : isRadio
+                                ? !$formularioGrupoFrota.find('[name="' + $campo.attr('name') + '"]:checked').length
+                                : String(valor ?? '').trim() === '';
+
+                    if (!campoVazio) {
+                        return;
+                    }
+
+                    $campo.addClass('is-invalid js-validacao-manual').attr('aria-invalid', 'true');
+
+                    erros.push({
+                        step: obterPassoCampo($campo),
+                        label: obterRotuloCampo($campo),
+                        field: $campo,
+                    });
+                });
+
+                $('.caracteristica-check:checked').each(function () {
+                    const $checkbox = $(this);
+                    const caracteristicaId = String($checkbox.val() ?? '');
+                    const $valor = $('.caracteristica-valor[data-id="' + caracteristicaId + '"]');
+
+                    if (!$valor.length || $valor.is(':disabled')) {
+                        return;
+                    }
+
+                    if (String($valor.val() ?? '').trim() !== '') {
+                        return;
+                    }
+
+                    const rotuloCaracteristica = obterRotuloCampo($valor) || obterRotuloCampo($checkbox);
+                    $valor.addClass('is-invalid js-validacao-manual').attr('aria-invalid', 'true');
+
+                    erros.push({
+                        step: obterPassoCampo($valor, 2),
+                        label: 'Valor da característica: ' + rotuloCaracteristica,
+                        field: $valor,
+                    });
+                });
+
+                return erros;
+            }
 
             function goToStep(n) {
                 n = Math.max(1, Math.min(TOTAL_STEPS, n));
@@ -919,15 +1198,32 @@
                 $('#btnPrev').css('display', n > 1 ? 'inline-flex' : 'none');
                 $('#btnPrev').toggleClass('ec-nav-btn--visible', n > 1);
                 $('#btnNext').toggleClass('d-none', n >= TOTAL_STEPS);
-
-                if (isEdit) {
-                    $('#btnSalvar').removeClass('d-none');
-                } else {
-                    $('#btnSalvar').toggleClass('d-none', n < TOTAL_STEPS);
-                }
+                $dockSalvarGrupoFrota.toggleClass('d-none', !(isEdit || n >= TOTAL_STEPS));
             }
 
             goToStep(currentStep);
+
+            $botaoIrPassoBase.on('click', function () {
+                goToStep(ultimoPassoPendente);
+            });
+
+            $formularioGrupoFrota.on('submit', function (event) {
+                const erros = coletarErrosGrupoFrota();
+
+                if (erros.length > 0) {
+                    event.preventDefault();
+                    destacarValidacaoGrupoFrota(erros);
+                    return false;
+                }
+
+                limparValidacaoGrupoFrota();
+                return true;
+            });
+
+            $formularioGrupoFrota.on('input change', '[required], .caracteristica-check, .caracteristica-valor', function () {
+                const $campo = $(this);
+                $campo.removeClass('is-invalid js-validacao-manual').removeAttr('aria-invalid');
+            });
 
             $('#btnNext').on('click', function () {
                 goToStep(currentStep + 1);
