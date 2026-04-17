@@ -1057,18 +1057,18 @@
             margin-top: 10px;
             border: 1px dashed #f3c56a;
             border-radius: 10px;
-            background: #fffbeb;
+            background: #ffffff;
             padding: 10px;
         }
         .reserva-top-header__warning-title {
             font-weight: 700;
-            color: #92400e;
+            color: #0f172a;
             margin-bottom: 6px;
             font-size: 13px;
         }
         .reserva-top-header__warning-item {
             font-size: 12px;
-            color: #7c2d12;
+            color: #111827;
             margin-bottom: 4px;
         }
         .reserva-top-header__links {

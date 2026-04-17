@@ -84,7 +84,7 @@
 
         .pre-requisitos-alerta--warning {
             border: 1px dashed #f3c56a;
-            background: #fffbeb;
+            background: #ffffff;
         }
 
         .pre-requisitos-alerta--ok {
@@ -135,13 +135,13 @@
         }
 
         .pre-requisitos-alerta__detail-label {
-            color: #1e293b;
+            color: #0f172a;
             font-weight: 600;
         }
 
         .pre-requisitos-alerta__detail-message {
             margin-top: 2px;
-            color: #92400e;
+            color: #111827;
             font-size: 11px;
             line-height: 1.3;
             flex-basis: 100%;
@@ -156,14 +156,14 @@
 
         .pre-requisitos-alerta__title {
             font-weight: 700;
-            color: #92400e;
+            color: #0f172a;
             margin-bottom: 6px;
             font-size: 13px;
         }
 
         .pre-requisitos-alerta__item {
             font-size: 12px;
-            color: #7c2d12;
+            color: #111827;
             margin-bottom: 4px;
         }
 
