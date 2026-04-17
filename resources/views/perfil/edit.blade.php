@@ -328,15 +328,15 @@
         }
 
         .profile-badge--primary {
-            background: linear-gradient(135deg, color-mix(in srgb, var(--profile-primary) 12%, #ffffff 88%) 0%, color-mix(in srgb, var(--profile-secondary) 10%, #ffffff 90%) 100%);
-            color: var(--profile-primary);
-            border-color: color-mix(in srgb, var(--profile-primary) 20%, #dbe7ff 80%);
+            background: var(--profile-primary);
+            color: var(--empresa-cor-primaria-contraste, #ffffff);
+            border-color: var(--profile-primary);
         }
 
         .profile-badge--soft {
-            background: #fff;
-            color: var(--profile-secondary);
-            border-color: color-mix(in srgb, var(--profile-secondary) 18%, #dbe6f3 82%);
+            background: var(--profile-secondary);
+            color: var(--empresa-cor-secundaria-contraste, #ffffff);
+            border-color: var(--profile-secondary);
         }
 
         .profile-hero__aside {
@@ -350,11 +350,10 @@
             align-items: center;
             gap: .85rem;
             padding: .95rem 1rem;
-            background: rgba(255, 255, 255, .82);
+            background: #ffffff;
             border: 1px solid color-mix(in srgb, var(--profile-primary) 12%, #dfe9f7 88%);
             border-radius: 18px;
             box-shadow: 0 10px 26px rgba(15, 23, 42, .05);
-            backdrop-filter: blur(4px);
         }
 
         .profile-quick-card__icon {

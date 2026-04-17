@@ -88,7 +88,65 @@ class User extends Authenticatable implements MustVerifyEmail
             return Storage::url($this->foto_perfil);
         }
 
-        return 'https://ui-avatars.com/api/?name=' . urlencode((string) $this->nome) . '&background=0D8ABC&color=fff&size=256';
+        $background = $this->avatarBackgroundColor();
+        $foreground = $this->avatarForegroundColor($background);
+
+        return 'https://ui-avatars.com/api/?name='
+            . urlencode((string) $this->nome)
+            . '&background=' . $this->normalizeHexColor($background)
+            . '&color=' . $this->normalizeHexColor($foreground)
+            . '&size=256';
+    }
+
+    private function avatarBackgroundColor(): string
+    {
+        $empresaCorPrimaria = trim((string) ($this->empresa?->cor_primaria ?? ''));
+
+        return $empresaCorPrimaria !== '' ? $empresaCorPrimaria : '#1F2937';
+    }
+
+    private function avatarForegroundColor(string $background): string
+    {
+        $hex = $this->normalizeHexColor($background);
+
+        if ($hex === '') {
+            return '#FFFFFF';
+        }
+
+        $r = hexdec(substr($hex, 0, 2)) / 255;
+        $g = hexdec(substr($hex, 2, 2)) / 255;
+        $b = hexdec(substr($hex, 4, 2)) / 255;
+
+        $rl = $r <= 0.03928 ? $r / 12.92 : pow(($r + 0.055) / 1.055, 2.4);
+        $gl = $g <= 0.03928 ? $g / 12.92 : pow(($g + 0.055) / 1.055, 2.4);
+        $bl = $b <= 0.03928 ? $b / 12.92 : pow(($b + 0.055) / 1.055, 2.4);
+
+        $luminance = 0.2126 * $rl + 0.7152 * $gl + 0.0722 * $bl;
+
+        return $luminance > 0.58 ? '#0F172A' : '#FFFFFF';
+    }
+
+    private function normalizeHexColor(string $color): string
+    {
+        $color = strtoupper(trim($color));
+
+        if ($color === '') {
+            return '';
+        }
+
+        if ($color[0] === '#') {
+            $color = substr($color, 1);
+        }
+
+        if (strlen($color) === 3 && ctype_xdigit($color)) {
+            $color = $color[0] . $color[0] . $color[1] . $color[1] . $color[2] . $color[2];
+        }
+
+        if (strlen($color) !== 6 || !ctype_xdigit($color)) {
+            return '';
+        }
+
+        return $color;
     }
 
     public function adminlte_image(): string
