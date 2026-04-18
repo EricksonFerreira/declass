@@ -135,7 +135,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
         $horariosDiarios  = $this->horarioDiarioService->getAllAtivos();
         [$metodo, $rota]  = $this->getFormMethodAndRoute($estacao);
-        $diasUteisEstacao = $estacao->diasUteis->pluck('dia')->toArray();
+        $diasUteisEstacao = $estacao->diasUteis->pluck('id')->toArray();
         $paisBrasilId     = $this->paisService->getPaisBrasilId();
 
         return view(
