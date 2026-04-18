@@ -1617,16 +1617,18 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     $tipo          = strtolower(trim((string) ($request->input('tipo') ?: 'retirada')));
     $isDevolucao   = $tipo === 'devolucao';
     $hoje          = Carbon::today();
+    $mensagem      = null;
 
     $estacao = Estacao::with(['diasUteis'])->findOrFail($estacaoId);
+    $quantidadeVeiculosAtivos = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao([$estacaoId]);
 
     // Para retirada: só mostra dias se há veículos ativos na estação
     if (!$isDevolucao) {
-        $quantidadeVeiculosAtivos = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao([$estacaoId]);
         if ((int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) <= 0) {
             return response()->json([
                 'estacao_id'      => $estacao->id,
                 'dias_disponiveis' => [],
+                'mensagem'        => 'A estação selecionada não possui veículos ativos para retirada.',
             ]);
         }
     }
@@ -1641,15 +1643,30 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $estacao->opera_feriado
     );
 
+    if (empty($proximosDias)) {
+        $mensagem = $isDevolucao
+            ? 'A estação selecionada não possui agenda de devolução configurada para o período.'
+            : 'A estação selecionada não possui agenda de retirada configurada para o período.';
+    }
+
     // 3. para retirada: filtrar apenas dias com veículo disponível
     //    para devolução: todos os dias de funcionamento são válidos
     $diasDisponiveis = $isDevolucao
         ? $proximosDias
         : $estacao->filtrarDiasComVeiculoDisponivel($proximosDias);
 
+    if (!$isDevolucao && empty($diasDisponiveis) && (int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) > 0) {
+        $mensagem = 'A estação possui veículos, mas nenhum dia ficou disponível no período selecionado.';
+    }
+
+    if ($isDevolucao && empty($diasDisponiveis) && empty($mensagem)) {
+        $mensagem = 'A estação selecionada não possui dias de devolução disponíveis no período.';
+    }
+
     return response()->json([
         'estacao_id'      => $estacao->id,
         'dias_disponiveis' => $diasDisponiveis,
+        'mensagem'        => $mensagem,
     ]);
 }
 

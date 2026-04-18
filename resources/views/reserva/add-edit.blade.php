@@ -2782,14 +2782,21 @@
             seletores.forEach(function (sel) {
                 const $s = $(sel);
                 const atual = $s.val();
-                    $s.find('option').each(function () {
-                        const v = $(this).attr('value');
-                        if (!v) return; // placeholder
-                        const enable = allowed.has(String(v));
-                        $(this).prop('disabled', !enable);
-                    });
+                $s.find('option').each(function () {
+                    const v = $(this).attr('value');
+                    if (!v) return; // placeholder
 
-                if (atual && !allowed.has(String(atual))) {
+                    if (allowed.size === 0) {
+                        const manterSelecionada = atual && String(v) === String(atual);
+                        $(this).prop('disabled', !manterSelecionada);
+                        return;
+                    }
+
+                    const enable = allowed.has(String(v));
+                    $(this).prop('disabled', !enable);
+                });
+
+                if (allowed.size > 0 && atual && !allowed.has(String(atual))) {
                     $s.val('');
                 }
 
@@ -3090,8 +3097,14 @@
 
                 return fetch(DIAS_DISPONIVEIS_URL + '?estacao_id=' + estacaoId + '&dias=90&tipo=' + tipoAgenda, { headers: { 'Accept': 'application/json' } })
                     .then(r => r.json())
-                    .then(d => { _disponiveisCache[cacheKey] = d.dias_disponiveis || []; return _disponiveisCache[cacheKey]; })
-                    .catch(() => []);
+                    .then(d => {
+                        _disponiveisCache[cacheKey] = {
+                            datas: d.dias_disponiveis || [],
+                            mensagem: d.mensagem || '',
+                        };
+                        return _disponiveisCache[cacheKey];
+                    })
+                    .catch(() => ({ datas: [], mensagem: '' }));
             }
 
             function criarPicker(selectorInput, disponiveis, onDateSelected, minDate) {
@@ -3141,8 +3154,22 @@
                 }
                 $('#data_inicio_dias_feedback').text('Verificando disponibilidade...');
 
-                fetchDiasDisponiveis(estacaoId, 'retirada').then(function(disponiveis) {
-                    $('#data_inicio_dias_feedback').text('Selecione a data de retirada.');
+                fetchDiasDisponiveis(estacaoId, 'retirada').then(function(resultado) {
+                    const disponiveis = Array.isArray(resultado?.datas) ? resultado.datas : [];
+                    const mensagem = (resultado?.mensagem || '').trim();
+
+                    if (!disponiveis.length) {
+                        $('#data_inicio_dias_feedback')
+                            .text(mensagem || 'Nenhuma data de retirada disponível para a estação selecionada.')
+                            .removeClass('text-muted')
+                            .addClass('text-danger');
+                        return;
+                    }
+
+                    $('#data_inicio_dias_feedback')
+                        .text('Selecione a data de retirada.')
+                        .removeClass('text-danger')
+                        .addClass('text-muted');
                     $('#data_inicio_flatpickr').prop('disabled', false).attr('placeholder', 'Clique para selecionar');
                     _pickerDataRetirada = criarPicker('#data_inicio_flatpickr', disponiveis, function(isoStr) {
                         buscarHorariosAoSelecionarData('retirada', isoStr);
@@ -3176,8 +3203,22 @@
 
                 $('#data_fim_dias_feedback').text('Verificando disponibilidade...');
 
-                fetchDiasDisponiveis(estacaoId, 'devolucao').then(function(disponiveis) {
-                    $('#data_fim_dias_feedback').text('Selecione a data de devolução.');
+                fetchDiasDisponiveis(estacaoId, 'devolucao').then(function(resultado) {
+                    const disponiveis = Array.isArray(resultado?.datas) ? resultado.datas : [];
+                    const mensagem = (resultado?.mensagem || '').trim();
+
+                    if (!disponiveis.length) {
+                        $('#data_fim_dias_feedback')
+                            .text(mensagem || 'Nenhuma data de devolução disponível para a estação selecionada.')
+                            .removeClass('text-muted')
+                            .addClass('text-danger');
+                        return;
+                    }
+
+                    $('#data_fim_dias_feedback')
+                        .text('Selecione a data de devolução.')
+                        .removeClass('text-danger')
+                        .addClass('text-muted');
                     $('#data_fim_flatpickr').prop('disabled', false).attr('placeholder', 'Clique para selecionar');
                     _pickerDataDevolucao = criarPicker('#data_fim_flatpickr', disponiveis, function(isoStr) {
                         buscarHorariosAoSelecionarData('devolucao', isoStr);
