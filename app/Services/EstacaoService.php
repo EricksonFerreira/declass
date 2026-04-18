@@ -51,9 +51,7 @@ class EstacaoService extends AbstractBaseService
         $estacao = $this->model->create($data);
 
         $this->adicionarHorarios($data, $estacao->id);
-        if (isset($data['diasUteis']) && !empty($data['diasUteis'])) {
-            $this->adicionaDiasUteis($data['diasUteis'], $estacao->id);
-        }
+        $this->sincronizarDiasUteis($data['diasUteis'] ?? [], $estacao->id);
         return $estacao;
     }
 
@@ -71,9 +69,7 @@ class EstacaoService extends AbstractBaseService
             $estacao->update($data);
         }
         $this->adicionarHorarios($data, $id);
-        if (isset($data['diasUteis']) && !empty($data['diasUteis'])) {
-            $this->adicionaDiasUteis($data['diasUteis'], $id);
-        }
+        $this->sincronizarDiasUteis($data['diasUteis'] ?? [], $id);
     }
 
 
@@ -87,6 +83,24 @@ class EstacaoService extends AbstractBaseService
         }
 
         $estacao->horarios()->sync($horariosSyncData);
+    }
+
+    public function sincronizarDiasUteis($diasUteis, $estacaoId): void
+    {
+        $estacao = Estacao::find($estacaoId);
+
+        if (!$estacao) {
+            throw new \Exception("Estação não encontrada");
+        }
+
+        $diasUteisIds = collect(is_array($diasUteis) ? $diasUteis : [$diasUteis])
+            ->filter(fn ($valor) => $valor !== null && $valor !== '')
+            ->map(fn ($valor) => (int) $valor)
+            ->unique()
+            ->values()
+            ->all();
+
+        $estacao->diasUteis()->sync($diasUteisIds);
     }
 
 

@@ -103,7 +103,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
     public function store(StoreEstacaoRequest $request)
     {
-        $this->estacaoService->create($request->all());
+        $this->estacaoService->create($request->validated());
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -163,7 +163,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
     public function update(UpdateEstacaoRequest $request, $id)
     {
-        $this->estacaoService->update($id, $request->all());
+        $this->estacaoService->update($id, $request->validated());
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 

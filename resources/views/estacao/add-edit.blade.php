@@ -18,6 +18,8 @@
 
     $startStep = $hasHorarioErrors ? 4 : 1;
     $isEdit = isset($estacao);
+    $diasUteisSelecionados = old('diasUteis', $diasUteisEstacao ?? []);
+    $diasUteisSelecionados = is_array($diasUteisSelecionados) ? $diasUteisSelecionados : [$diasUteisSelecionados];
 @endphp
 
 @if ($errors->any())
@@ -352,7 +354,7 @@
                         @foreach ($diasUteis as $idDiaUtil => $nomeDiaUtil)
                             <label class="dia-util-chip">
                                 <input type="checkbox" name="diasUteis[]" value="{{ $idDiaUtil }}"
-                                    {{ isset($diasUteisEstacao) && in_array($idDiaUtil, $diasUteisEstacao) ? 'checked' : '' }}>
+                                    {{ in_array($idDiaUtil, $diasUteisSelecionados) ? 'checked' : '' }}>
                                 <span>{{ $nomeDiaUtil }}</span>
                             </label>
                         @endforeach
