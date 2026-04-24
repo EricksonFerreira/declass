@@ -6,6 +6,7 @@ use App\Models\Empresa;
 use App\Models\EmpresaPlano;
 use App\Models\EmpresaPlanoPagamento;
 use App\Models\Plano;
+use App\Services\EmpresaAlertaService;
 use App\Services\EmpresaPlanoService;
 use App\Services\StripePixService;
 use Illuminate\Http\JsonResponse;
@@ -22,6 +23,7 @@ class AssinaturaController extends Controller
     public function __construct(
         private EmpresaPlanoService $planoService,
         private StripePixService $stripePixService,
+        private EmpresaAlertaService $alertaService,
     ) {}
 
     // ── Gestão global (superadmin / gerenciar-planos) ───────────────────────
@@ -179,7 +181,11 @@ class AssinaturaController extends Controller
         $plano   = Plano::with('itens')->findOrFail($planoId);
         $empresa = Auth::user()->empresa;
 
-        return view('assinatura.contratar', compact('plano', 'periodicidade', 'empresa'));
+        $totalVeiculos    = $empresa ? $empresa->veiculos()->where('ativo', true)->where('vendido', false)->count() : 0;
+        $assinaturaAtual  = $empresa?->planoAtivo()->with('plano')->first();
+        $erroDowngrade    = $empresa ? $this->alertaService->verificarDowngradeNoPeriodo($empresa, $plano) : null;
+
+        return view('assinatura.contratar', compact('plano', 'periodicidade', 'empresa', 'totalVeiculos', 'assinaturaAtual', 'erroDowngrade'));
     }
 
     /** Processa contratação interna: cria assinatura + pagamento pendente. */
@@ -199,7 +205,14 @@ class AssinaturaController extends Controller
         $empresa = Auth::user()->empresa;
         abort_unless($empresa, 403);
 
-        $plano      = Plano::findOrFail($data['plano_id']);
+        $plano = Plano::findOrFail($data['plano_id']);
+
+        // Bloqueia downgrade no mesmo mês pago
+        $erroDowngrade = $this->alertaService->verificarDowngradeNoPeriodo($empresa, $plano);
+        if ($erroDowngrade) {
+            return back()->withErrors(['plano_id' => $erroDowngrade])->withInput();
+        }
+
         $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
 
         if ($excedentes->isNotEmpty()) {

@@ -65,9 +65,14 @@
                 @php
                     $badge = $assinatura->status_badge;
                     $dias  = $assinatura->diasParaVencer();
+                    $planoPago = $assinatura->estaAtivo();
                     $proximoPagamento = $empresa->pagamentosPlano()
                         ->where('status', 'pendente')
                         ->orderBy('data_vencimento')
+                        ->first();
+                    $ultimoPagamentoPago = $empresa->pagamentosPlano()
+                        ->where('status', 'pago')
+                        ->orderByDesc('pago_em')
                         ->first();
                 @endphp
 
@@ -92,14 +97,24 @@
                     </div>
                 @endif
 
+                @if ($planoPago && $ultimoPagamentoPago)
+                <div class="alert alert-success py-2 mb-3" style="font-size:.875rem;border-left:4px solid #22c55e;">
+                    <i class="fas fa-check-circle mr-1"></i>
+                    <strong>Plano ativo e em dia!</strong>
+                    Último pagamento confirmado em {{ $ultimoPagamentoPago->pago_em->format('d/m/Y') }}.
+                    Próximo vencimento: <strong>{{ $assinatura->data_vencimento->format('d/m/Y') }}</strong>.
+                </div>
+                @endif
+
                 <div class="row">
                     {{-- Card do plano --}}
                     <div class="col-md-5 mb-3">
-                        <div class="card h-100" style="border:2px solid #0a1628;border-radius:12px;overflow:hidden;">
+                        @php $borderColor = $planoPago ? '#22c55e' : '#0a1628'; $headerBg = $planoPago ? '#16a34a' : '#0a1628'; @endphp
+                        <div class="card h-100" style="border:2px solid {{ $borderColor }};border-radius:12px;overflow:hidden;">
                             <div class="card-header py-2 text-white d-flex justify-content-between align-items-center"
-                                 style="background:#0a1628;">
+                                 style="background:{{ $headerBg }};">
                                 <span style="font-weight:700;font-size:.95rem;">
-                                    <i class="fas fa-id-card mr-1"></i> {{ $assinatura->plano->nome }}
+                                    <i class="fas fa-{{ $planoPago ? 'check-circle' : 'id-card' }} mr-1"></i> {{ $assinatura->plano->nome }}
                                 </span>
                                 <span class="badge {{ $badge['class'] }}">{{ $badge['label'] }}</span>
                             </div>

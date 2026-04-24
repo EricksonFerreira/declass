@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmpresaAlerta;
 use App\Models\Permissao;
 use App\Models\Estacao;
 use App\Models\Regra;
@@ -38,13 +39,22 @@ public function home()
     $totalVeiculos = 0;
     $estacoesFiltro = $this->estacoesParaFiltro();
 
+    $alertas = collect();
+    $empresaUser = Auth::user()?->empresa;
+    if ($empresaUser) {
+        $alertas = EmpresaAlerta::where('empresa_id', $empresaUser->id)
+            ->where('resolvido', false)
+            ->orderByRaw("FIELD(nivel, 'critico', 'aviso', 'info')")
+            ->get();
+    }
+
     if ($homeSections['frota']) {
         $veiculosQuery = \App\Models\Veiculo::query();
         $veiculosQuery = $this->applyEmpresaScope($veiculosQuery, 'veiculos');
         $totalVeiculos = (int) $veiculosQuery->count();
     }
 
-    return view('home', compact('breadcrumb', 'items', 'totalVeiculos', 'homeSections', 'hasVisibleItems', 'hasVisibleCharts', 'estacoesFiltro'))
+    return view('home', compact('breadcrumb', 'items', 'totalVeiculos', 'homeSections', 'hasVisibleItems', 'hasVisibleCharts', 'estacoesFiltro', 'alertas'))
         ->with('titulo', $this->titulo);
 }
 

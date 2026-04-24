@@ -46,7 +46,8 @@
       "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/routes -name \"*.php\" -exec basename {} \\\\;)",
       "Bash(composer require *)",
       "Bash(php --version)",
-      "Bash(composer show *)"
+      "Bash(composer show *)",
+      "Read(//c/c/Users/Erickson/Dev/laragon/www/xpandCars/database/**)"
     ]
   }
 }

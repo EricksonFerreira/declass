@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Empresa;
+use App\Models\EmpresaAlerta;
 use App\Models\EmpresaPlano;
 use App\Models\EmpresaPlanoPagamento;
 use App\Models\OnboardingStep;
@@ -170,9 +171,21 @@ class EmpresaPlanoService
                 'pago_em' => now(),
             ]);
 
-            $pagamento->empresaPlano()->update(['status' => 'ativo']);
+            $assinatura = $pagamento->empresaPlano;
+            $assinatura->update(['status' => 'ativo']);
 
-            $this->marcarOnboardingPagamentoRealizado($pagamento->empresa);
+            // Cancela outros pagamentos pendentes da mesma assinatura
+            EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)
+                ->where('id', '!=', $pagamento->id)
+                ->where('status', 'pendente')
+                ->update(['status' => 'cancelado']);
+
+            $empresa = $pagamento->empresa;
+            $this->marcarOnboardingPagamentoRealizado($empresa);
+
+            // Executa checks pós-pagamento e gera alertas
+            $assinatura->load('plano');
+            app(EmpresaAlertaService::class)->executarChecksPosPagemento($empresa, $assinatura);
         });
     }
 

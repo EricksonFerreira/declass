@@ -15,11 +15,16 @@ use App\Http\Controllers\SiteReservaController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TipoTransacaoController;
+use App\Http\Controllers\EmpresaAlertaController;
 use App\Http\Controllers\MigrationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Webhook Stripe — sem CSRF, sem auth
+Route::middleware('auth')->prefix('admin')->group(function () {
+    Route::patch('alerta/{alerta}/resolver', [EmpresaAlertaController::class, 'resolver'])->name('alerta.resolver');
+});
+
 Route::post('/webhook/stripe', [StripeWebhookController::class, 'handle'])
     ->name('webhook.stripe')
     ->withoutMiddleware('web');

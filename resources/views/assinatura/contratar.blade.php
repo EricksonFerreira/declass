@@ -24,6 +24,23 @@
         </div>
     @endif
 
+    @if ($erroDowngrade)
+        <div class="alert alert-warning">
+            <i class="fas fa-lock mr-1"></i> <strong>Downgrade bloqueado:</strong> {{ $erroDowngrade }}
+        </div>
+    @endif
+
+    @php
+        $veiculosExcedentes = $plano->limite_veiculos !== null && $totalVeiculos > $plano->limite_veiculos
+            ? $totalVeiculos - $plano->limite_veiculos : 0;
+    @endphp
+    @if ($veiculosExcedentes > 0)
+        <div class="alert alert-warning">
+            <i class="fas fa-car mr-1"></i>
+            <strong>Atenção:</strong> Você tem <strong>{{ $totalVeiculos }} veículos ativos</strong> e este plano permite apenas <strong>{{ $plano->limite_veiculos }}</strong>. Ao contratar, você precisará desativar <strong>{{ $veiculosExcedentes }} veículo(s)</strong>.
+        </div>
+    @endif
+
     <form action="{{ route('assinatura.contratar.confirmar') }}" method="POST" id="formContratar">
         @csrf
         <input type="hidden" name="plano_id" value="{{ $plano->id }}">
@@ -201,7 +218,8 @@
                     <a href="{{ route('assinatura.meu-plano') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left mr-1"></i> Cancelar
                     </a>
-                    <button type="button" onclick="confirmar()" class="btn btn-primary btn-lg px-5">
+                    <button type="button" onclick="confirmar()" class="btn btn-primary btn-lg px-5"
+                            {{ $erroDowngrade ? 'disabled title="Downgrade bloqueado neste período"' : '' }}>
                         <i class="fas fa-check mr-1"></i> Confirmar Contratação
                     </button>
                 </div>

@@ -603,6 +603,30 @@
 @stop
 
 @section('content')
+
+{{-- ══ ALERTAS DA EMPRESA ══ --}}
+@if(isset($alertas) && $alertas->isNotEmpty())
+<div id="painelAlertas" style="margin-bottom:16px;">
+    @foreach($alertas as $alerta)
+    <div class="alert alert-{{ $alerta->nivel_class }} alert-dismissible d-flex align-items-start"
+         id="alerta-{{ $alerta->id }}"
+         style="border-left:4px solid {{ $alerta->nivel === 'critico' ? '#dc3545' : ($alerta->nivel === 'aviso' ? '#f59e0b' : '#0ea5e9') }};border-radius:8px;padding:12px 16px;margin-bottom:8px;">
+        <i class="{{ $alerta->nivel_icone }} mr-3 mt-1 flex-shrink-0" style="font-size:1.1rem;"></i>
+        <div class="flex-grow-1">
+            <strong style="font-size:.9rem;">{{ $alerta->titulo }}</strong>
+            <div class="mt-1" style="font-size:.82rem;">{{ $alerta->mensagem }}</div>
+        </div>
+        <button type="button"
+                class="btn btn-sm ml-3 flex-shrink-0"
+                style="background:rgba(0,0,0,.08);border:none;border-radius:6px;font-size:.75rem;white-space:nowrap;"
+                onclick="resolverAlerta({{ $alerta->id }}, this)">
+            <i class="fas fa-check mr-1"></i> Marcar como resolvido
+        </button>
+    </div>
+    @endforeach
+</div>
+@endif
+
 <x-onboarding-widget />
 @if ($hasVisibleCharts)
 <div class="period-bar">
@@ -1215,6 +1239,35 @@
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+function resolverAlerta(id, btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm mr-1"></span> Resolvendo…';
+    fetch(`/admin/alerta/${id}/resolver`, {
+        method: 'PATCH',
+        headers: {
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        },
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.ok) {
+            const el = document.getElementById('alerta-' + id);
+            el.style.transition = 'opacity .4s';
+            el.style.opacity = '0';
+            setTimeout(() => {
+                el.remove();
+                const painel = document.getElementById('painelAlertas');
+                if (painel && !painel.querySelector('[id^="alerta-"]')) painel.remove();
+            }, 400);
+        }
+    })
+    .catch(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check mr-1"></i> Marcar como resolvido';
+    });
+}
+
 const CHART_DATA_URL = '{{ route('home.chart-data') }}';
 const HOME_SECTIONS = @json($homeSections);
 const textColor = 'rgba(0,0,0,0.45)';
