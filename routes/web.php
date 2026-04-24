@@ -129,6 +129,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     // Protegida por middleware auth + can:gerenciar-empresa. Opcional: defina APP_MIGRATION_ROUTE_TOKEN para usar ?token=SECRET
     Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function () {
         Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
+        Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
+        Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
         Route::get('fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('fipe.catalogo.run');
     });
 

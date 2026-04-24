@@ -25,11 +25,29 @@ class StripePixService
         $customerId = $empresa->gateway_customer_id ?? null;
 
         if (!$customerId) {
-            $customer = Customer::create([
-                'name'  => $empresa->nome,
-                'email' => $empresa->email ?? $empresa->users()->first()?->email,
+            // Usa email do usuário admin da empresa se o email da empresa for inválido
+            $emailEmpresa = filter_var($empresa->email ?? '', FILTER_VALIDATE_EMAIL)
+                ? $empresa->email
+                : null;
+
+            $emailUsuario = $empresa->users()
+                ->whereNotNull('email')
+                ->get()
+                ->first(fn ($u) => filter_var($u->email, FILTER_VALIDATE_EMAIL))
+                ?->email;
+
+            $emailFinal = $emailEmpresa ?? $emailUsuario ?? null;
+
+            $customerData = [
+                'name'     => $empresa->nome,
                 'metadata' => ['empresa_id' => $empresa->id],
-            ]);
+            ];
+
+            if ($emailFinal) {
+                $customerData['email'] = $emailFinal;
+            }
+
+            $customer = Customer::create($customerData);
             $customerId = $customer->id;
             $empresa->update(['gateway_customer_id' => $customerId]);
         }
