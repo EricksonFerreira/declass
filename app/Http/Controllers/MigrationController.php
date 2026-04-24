@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class MigrationController extends Controller
 {
@@ -77,5 +78,15 @@ class MigrationController extends Controller
         }
 
         return response("<h2>Migrations + Seeders</h2><pre style=\"white-space:pre-wrap;max-height:80vh;overflow:auto;border:1px solid #ddd;padding:8px\">" . e($output) . "</pre>");
+    }
+
+    public function fixGatewayCustomer(Request $request)
+    {
+        $this->checkToken($request);
+
+        $affected = DB::table('empresas')->whereNotNull('gateway_customer_id')->count();
+        DB::table('empresas')->update(['gateway_customer_id' => null]);
+
+        return response("<h2>gateway_customer_id limpo</h2><pre>{$affected} empresa(s) atualizadas.</pre>");
     }
 }
