@@ -11,6 +11,7 @@ class StripePixService
 {
     public function __construct()
     {
+        // Usa sempre a chave Stripe da env (gateway da plataforma, não da empresa)
         Stripe::setApiKey(config('services.stripe.secret'));
     }
 
