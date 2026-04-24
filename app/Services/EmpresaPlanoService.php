@@ -9,11 +9,91 @@ use App\Models\EmpresaPlanoPagamento;
 use App\Models\OnboardingStep;
 use App\Models\Plano;
 use App\Models\Veiculo;
+use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 class EmpresaPlanoService
 {
+    public function valorTotalPlano(Plano $plano, string $periodicidade): float
+    {
+        return $periodicidade === 'anual'
+            ? (float) $plano->valor_anual * 12
+            : (float) $plano->valor_mensal;
+    }
+
+    /**
+     * Cria uma cobrança de upgrade com proration (padrão SaaS).
+     *
+     * Regras:
+     * - Upgrade no mesmo ciclo: cobra a diferença proporcional pelos dias restantes (não reinicia vencimento).
+     * - Mensal -> Anual: cobra o anual (à vista) menos o crédito dos dias restantes e reinicia vigência por 12 meses.
+     */
+    public function criarCobrancaUpgrade(
+        EmpresaPlano $assinatura,
+        Plano $novoPlano,
+        string $novaPeriodicidade,
+        string $metodoPagamento,
+        ?int $criadoPorUserId,
+        bool $reiniciarVigenciaAoTrocarParaAnual = true,
+    ): EmpresaPlanoPagamento {
+        $periodicidadeAtual = (string) $assinatura->periodicidade;
+        $dataInicio = Carbon::parse($assinatura->data_inicio)->startOfDay();
+        $dataFim    = Carbon::parse($assinatura->data_vencimento)->startOfDay();
+        $hoje       = now()->startOfDay();
+
+        $diasTotal = max(1, $dataInicio->diffInDays($dataFim));
+        $diasRestantes = max(0, $hoje->diffInDays($dataFim, false));
+
+        $valorAtualTotal = (float) $assinatura->valor_cobrado;
+        $valorNovoTotal  = $this->valorTotalPlano($novoPlano, $novaPeriodicidade);
+
+        $reiniciaPeriodo = false;
+        $valorCobrar = 0.0;
+
+        if ($periodicidadeAtual === $novaPeriodicidade) {
+            $diffTotal = $valorNovoTotal - $valorAtualTotal;
+            $valorCobrar = ($diasRestantes / $diasTotal) * $diffTotal;
+        } elseif ($periodicidadeAtual === 'mensal' && $novaPeriodicidade === 'anual' && $reiniciarVigenciaAoTrocarParaAnual) {
+            $reiniciaPeriodo = true;
+            $credito = ($diasRestantes / $diasTotal) * $valorAtualTotal;
+            $valorCobrar = $valorNovoTotal - $credito;
+        } else {
+            throw new \RuntimeException('Troca de periodicidade não suportada para upgrade imediato neste fluxo.');
+        }
+
+        $valorCobrar = round(max(0, $valorCobrar), 2);
+        if ($valorCobrar < 0.01) {
+            throw new \RuntimeException('Não há valor a cobrar para este upgrade.');
+        }
+
+        $vencimentoPagamento = now()->addDays(3)->toDateString();
+
+        return EmpresaPlanoPagamento::create([
+            'empresa_plano_id'      => $assinatura->id,
+            'empresa_id'            => $assinatura->empresa_id,
+            'valor'                 => $valorCobrar,
+            'periodicidade'         => $novaPeriodicidade,
+            'metodo'                => $metodoPagamento,
+            'status'                => 'pendente',
+            'data_vencimento'       => $vencimentoPagamento,
+            'referencia_interna'    => 'UPG-' . strtoupper(substr($novoPlano->slug, 0, 4)) . '-' . now()->format('YmdHis'),
+            'instrucoes_pagamento'  => 'Upgrade de plano: após confirmar o pagamento, os recursos do novo plano são liberados.',
+            'pix_chave'             => $metodoPagamento === 'pix' ? env('PIX_CHAVE') : null,
+            'metadados'             => [
+                'acao'               => 'upgrade',
+                'novo_plano_id'      => $novoPlano->id,
+                'nova_periodicidade' => $novaPeriodicidade,
+                'reinicia_periodo'   => $reiniciaPeriodo,
+                'dias_total'         => $diasTotal,
+                'dias_restantes'     => $diasRestantes,
+                'valor_atual_total'  => $valorAtualTotal,
+                'valor_novo_total'   => $valorNovoTotal,
+            ],
+            'registrado_por_user_id'=> $criadoPorUserId,
+        ]);
+    }
+
     /**
      * Verifica se o novo plano é um downgrade em relação ao atual.
      */
@@ -108,7 +188,11 @@ class EmpresaPlanoService
                 ->whereIn('status', ['ativo', 'trial', 'aguardando_pagamento', 'inadimplente'])
                 ->update(['status' => 'cancelado']);
 
-            $valor = $periodicidade === 'anual' ? $plano->valor_anual : $plano->valor_mensal;
+            // Observação: `valor_anual` é o valor mensal equivalente do plano anual (com desconto).
+            // Na cobrança anual, o total é `valor_anual * 12`.
+            $valor = $periodicidade === 'anual'
+                ? (float) $plano->valor_anual * 12
+                : (float) $plano->valor_mensal;
 
             $dataInicio     = now()->toDateString();
             $dataVencimento = $periodicidade === 'anual'
@@ -150,6 +234,7 @@ class EmpresaPlanoService
                 'referencia_interna'    => 'INI-' . strtoupper(substr($plano->slug, 0, 4)) . '-' . now()->format('YmdHis'),
                 'instrucoes_pagamento'  => $this->instrucoesPagamento($metodoCobranca, $valor, $renovacaoAutomatica),
                 'pix_chave'             => $metodoCobranca === 'pix' ? env('PIX_CHAVE') : null,
+                'metadados'             => ['acao' => 'contratacao'],
                 'registrado_por_user_id'=> $criadoPorUserId,
             ]);
 
@@ -166,22 +251,60 @@ class EmpresaPlanoService
     public function ativarAposConfirmacao(EmpresaPlanoPagamento $pagamento): void
     {
         DB::transaction(function () use ($pagamento) {
+            $acao = (string) (($pagamento->metadados['acao'] ?? null) ?: 'contratacao');
+
             $pagamento->update([
                 'status'  => 'pago',
-                'pago_em' => now(),
+                'pago_em' => $pagamento->pago_em ?? now(),
             ]);
 
             $assinatura = $pagamento->empresaPlano;
-            $assinatura->update(['status' => 'ativo']);
 
-            // Cancela outros pagamentos pendentes da mesma assinatura
-            EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)
+            if ($acao === 'upgrade') {
+                $novoPlanoId = (int) ($pagamento->metadados['novo_plano_id'] ?? 0);
+                $novaPeriodicidade = (string) ($pagamento->metadados['nova_periodicidade'] ?? $assinatura->periodicidade);
+                $reiniciaPeriodo = (bool) ($pagamento->metadados['reinicia_periodo'] ?? false);
+
+                $novoPlano = Plano::findOrFail($novoPlanoId);
+                $valorNovoTotal = $this->valorTotalPlano($novoPlano, $novaPeriodicidade);
+
+                $updates = [
+                    'plano_id'             => $novoPlano->id,
+                    'periodicidade'        => $novaPeriodicidade,
+                    'valor_cobrado'        => $valorNovoTotal,
+                    // Se estava agendado um downgrade/cancelamento, o upgrade prevalece.
+                    'proximo_plano_id'      => null,
+                    'proxima_periodicidade' => null,
+                    'mudanca_tipo'          => null,
+                    'mudanca_efetiva_em'    => null,
+                    'mudanca_solicitada_em' => null,
+                ];
+
+                if ($reiniciaPeriodo) {
+                    $updates['data_inicio']     = now()->toDateString();
+                    $updates['data_vencimento'] = now()->addYear()->toDateString();
+                }
+
+                $assinatura->update($updates);
+            } else {
+                $assinatura->update(['status' => 'ativo']);
+            }
+
+            // Cancela outros pagamentos pendentes da mesma assinatura (escopo por ação).
+            $pendentes = EmpresaPlanoPagamento::where('empresa_plano_id', $assinatura->id)
                 ->where('id', '!=', $pagamento->id)
-                ->where('status', 'pendente')
-                ->update(['status' => 'cancelado']);
+                ->where('status', 'pendente');
+
+            if ($acao === 'upgrade') {
+                $pendentes->where('metadados->acao', 'upgrade');
+            }
+
+            $pendentes->update(['status' => 'cancelado']);
 
             $empresa = $pagamento->empresa;
-            $this->marcarOnboardingPagamentoRealizado($empresa);
+            if ($acao === 'contratacao') {
+                $this->marcarOnboardingPagamentoRealizado($empresa);
+            }
 
             // Executa checks pós-pagamento e gera alertas
             $assinatura->load('plano');

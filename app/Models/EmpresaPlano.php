@@ -13,11 +13,16 @@ class EmpresaPlano extends Model
     protected $fillable = [
         'empresa_id',
         'plano_id',
+        'proximo_plano_id',
         'periodicidade',
+        'proxima_periodicidade',
         'status',
+        'mudanca_tipo',
         'metodo_cobranca',
         'data_inicio',
         'data_vencimento',
+        'mudanca_efetiva_em',
+        'mudanca_solicitada_em',
         'data_renovacao',
         'dia_vencimento',
         'renovacao_automatica',
@@ -34,6 +39,8 @@ class EmpresaPlano extends Model
     protected $casts = [
         'data_inicio'     => 'date',
         'data_vencimento' => 'date',
+        'mudanca_efetiva_em'    => 'date',
+        'mudanca_solicitada_em' => 'datetime',
         'data_renovacao'  => 'date',
         'valor_cobrado'        => 'decimal:2',
         'renovacao_automatica' => 'boolean',
@@ -48,6 +55,11 @@ class EmpresaPlano extends Model
     public function plano(): BelongsTo
     {
         return $this->belongsTo(Plano::class, 'plano_id');
+    }
+
+    public function proximoPlano(): BelongsTo
+    {
+        return $this->belongsTo(Plano::class, 'proximo_plano_id');
     }
 
     public function criadoPor(): BelongsTo
@@ -90,5 +102,10 @@ class EmpresaPlano extends Model
     public function getPeriodicidadeTextoAttribute(): string
     {
         return $this->periodicidade === 'anual' ? 'Anual' : 'Mensal';
+    }
+
+    public function temMudancaAgendada(): bool
+    {
+        return $this->mudanca_tipo !== null && $this->mudanca_efetiva_em !== null;
     }
 }

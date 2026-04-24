@@ -85,8 +85,9 @@ class EmpresaAlertaService
 
         // Só bloqueia se for downgrade de valor
         $valorAtual = (float) $assinaturaAtual->valor_cobrado;
+        // `valor_anual` é mensal equivalente; total anual = valor_anual * 12.
         $valorNovo  = $assinaturaAtual->periodicidade === 'anual'
-            ? (float) $novoPlano->valor_anual
+            ? (float) $novoPlano->valor_anual * 12
             : (float) $novoPlano->valor_mensal;
 
         if ($valorNovo >= $valorAtual) return null;

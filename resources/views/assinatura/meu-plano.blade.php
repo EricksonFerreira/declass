@@ -162,6 +162,23 @@
                                     </tr>
                                 </table>
 
+                                @if ($assinatura->temMudancaAgendada())
+                                    <div class="alert alert-warning py-2 mb-2" style="font-size:.82rem;">
+                                        <i class="fas fa-calendar-alt mr-1"></i>
+                                        @if ($assinatura->mudanca_tipo === 'cancelamento')
+                                            Cancelamento agendado para <strong>{{ $assinatura->mudanca_efetiva_em?->format('d/m/Y') }}</strong>.
+                                        @else
+                                            Downgrade agendado para <strong>{{ $assinatura->mudanca_efetiva_em?->format('d/m/Y') }}</strong>.
+                                        @endif
+                                        <form method="POST" action="{{ route('assinatura.mudanca.remover') }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-link btn-sm p-0 ml-2" onclick="return confirm('Remover mudanca agendada?')">
+                                                Remover
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endif
+
                                 <div class="d-flex" style="gap:.5rem;flex-wrap:wrap;">
                                     <button type="button" class="btn btn-primary btn-sm flex-fill"
                                             data-toggle="modal" data-target="#modalRenovar">
@@ -170,6 +187,15 @@
                                     <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="irParaAba('tab-planos')">
                                         <i class="fas fa-exchange-alt mr-1"></i> Trocar plano
                                     </button>
+                                    @if (!$assinatura->temMudancaAgendada())
+                                        <form method="POST" action="{{ route('assinatura.cancelar') }}" class="flex-fill m-0">
+                                            @csrf
+                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100"
+                                                    onclick="return confirm('Agendar cancelamento para o fim do periodo vigente?')">
+                                                <i class="fas fa-ban mr-1"></i> Cancelar
+                                            </button>
+                                        </form>
+                                    @endif
                                 </div>
                             </div>
                         </div>
