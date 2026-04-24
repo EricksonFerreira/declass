@@ -9,6 +9,9 @@ use App\Models\Plano;
 use App\Services\EmpresaPlanoService;
 use App\Services\StripePixService;
 use Illuminate\Http\JsonResponse;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
+use Stripe\Customer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -185,7 +188,7 @@ class AssinaturaController extends Controller
         $data = $request->validate([
             'plano_id'             => 'required|exists:planos,id',
             'periodicidade'        => 'required|in:mensal,anual',
-            'metodo_pagamento'     => 'required|in:boleto,pix,cartao',
+            'metodo_pagamento'     => 'required|in:pix,cartao',
             'renovacao_automatica' => 'nullable|boolean',
             'dia_vencimento'       => 'nullable|integer|min:1|max:28',
         ], [
@@ -373,6 +376,100 @@ class AssinaturaController extends Controller
                 : "Cartão de crédito {$v}. Nossa equipe entrará em contato para processar o pagamento.",
             default  => "Pagamento de {$v}. Entre em contato com nosso suporte para finalizar.",
         };
+    }
+
+    /** Cria PaymentIntent para pagamento com cartão de crédito via Stripe Elements. */
+    public function criarIntentCartao(Request $request, EmpresaPlanoPagamento $pagamento): JsonResponse
+    {
+        $empresa = Auth::user()->empresa;
+        abort_unless($empresa && $pagamento->empresa_id === $empresa->id && $pagamento->status === 'pendente', 403);
+
+        try {
+            Stripe::setApiKey(config('services.stripe.secret'));
+
+            // Peek: só retorna a chave pública para inicializar Stripe.js sem criar intent
+            if ($request->boolean('peek', false)) {
+                return response()->json(['stripe_key' => config('services.stripe.key')]);
+            }
+
+            $salvar = $request->boolean('salvar_cartao', false);
+            $valorCentavos = (int) round((float) $pagamento->valor * 100);
+
+            // Cria ou reutiliza Customer
+            $customerId = $empresa->gateway_customer_id ?? null;
+            if (!$customerId) {
+                $emailEmpresa = filter_var($empresa->email ?? '', FILTER_VALIDATE_EMAIL) ? $empresa->email : null;
+                $emailUsuario = $empresa->users()->whereNotNull('email')->get()
+                    ->first(fn ($u) => filter_var($u->email, FILTER_VALIDATE_EMAIL))?->email;
+                $emailFinal = $emailEmpresa ?? $emailUsuario ?? null;
+
+                $customerData = ['name' => $empresa->nome, 'metadata' => ['empresa_id' => $empresa->id]];
+                if ($emailFinal) $customerData['email'] = $emailFinal;
+
+                $customer = Customer::create($customerData);
+                $customerId = $customer->id;
+                $empresa->update(['gateway_customer_id' => $customerId]);
+            }
+
+            $intentParams = [
+                'amount'               => $valorCentavos,
+                'currency'             => 'brl',
+                'payment_method_types' => ['card'],
+                'customer'             => $customerId,
+                'description'          => 'Plano ' . ($pagamento->empresaPlano?->plano?->nome ?? 'DeCars'),
+                'metadata'             => [
+                    'pagamento_id' => $pagamento->id,
+                    'empresa_id'   => $pagamento->empresa_id,
+                ],
+            ];
+
+            if ($salvar) {
+                $intentParams['setup_future_usage'] = 'off_session';
+            }
+
+            $intent = PaymentIntent::create($intentParams);
+
+            $pagamento->update(['stripe_payment_intent_id' => $intent->id]);
+
+            return response()->json([
+                'client_secret' => $intent->client_secret,
+                'intent_id'     => $intent->id,
+                'stripe_key'    => config('services.stripe.key'),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
+    }
+
+    /** Registra pagamento de cartão após confirmação pelo Stripe Elements no frontend. */
+    public function confirmarCartao(Request $request, EmpresaPlanoPagamento $pagamento): JsonResponse
+    {
+        $empresa = Auth::user()->empresa;
+        abort_unless($empresa && $pagamento->empresa_id === $empresa->id, 403);
+
+        $request->validate(['payment_intent_id' => 'required|string']);
+
+        try {
+            Stripe::setApiKey(config('services.stripe.secret'));
+            $intent = PaymentIntent::retrieve($request->payment_intent_id);
+
+            if ($intent->status !== 'succeeded') {
+                return response()->json(['error' => 'Pagamento não confirmado. Status: ' . $intent->status], 422);
+            }
+
+            $this->planoService->ativarAposConfirmacao($pagamento);
+
+            $pagamento->update([
+                'status'             => 'pago',
+                'pago_em'            => now(),
+                'gateway_payment_id' => $intent->id,
+                'metodo'             => 'cartao',
+            ]);
+
+            return response()->json(['ok' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
     /** Renova o plano atual (mesmo plano, nova vigência). */

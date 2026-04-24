@@ -329,63 +329,74 @@
                                         @endif
                                     @endif
 
-                                    {{-- Boleto --}}
-                                    @if ($proximoPagamento->metodo === 'boleto')
-                                        <div class="d-flex align-items-center mb-2" style="gap:.5rem;">
-                                            <i class="fas fa-barcode fa-2x text-secondary"></i>
-                                            <div>
-                                                <p class="font-weight-bold mb-0" style="font-size:.88rem;">Boleto Bancário</p>
-                                                <p class="text-muted mb-0" style="font-size:.8rem;">
-                                                    Será enviado por e-mail em até 24 horas úteis.
-                                                </p>
+                                    {{-- Falar com atendente (boleto legado ou sem método reconhecido) --}}
+                                    @if (!in_array($proximoPagamento->metodo, ['pix', 'cartao']))
+                                        <div>
+                                            <p class="font-weight-bold mb-1" style="font-size:.88rem;">
+                                                <i class="fas fa-headset mr-1"></i> Precisa de ajuda para pagar?
+                                            </p>
+                                            <p class="text-muted mb-3" style="font-size:.82rem;">
+                                                Fale com nossa equipe e escolha a melhor forma de pagamento para você.
+                                            </p>
+                                            <div class="d-flex" style="gap:.75rem;flex-wrap:wrap;">
+                                                <a href="mailto:suporte@decars.com.br?subject={{ urlencode('Pagamento do plano - Ref: ' . ($proximoPagamento->referencia_interna ?? '')) }}"
+                                                   class="btn btn-outline-secondary btn-sm">
+                                                    <i class="fas fa-envelope mr-1"></i> E-mail
+                                                </a>
+                                                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Preciso pagar minha fatura. Ref: ' . ($proximoPagamento->referencia_interna ?? '') . ' - R$ ' . number_format($proximoPagamento->valor, 2, ',', '.')) }}"
+                                                   target="_blank" rel="noopener" class="btn btn-success btn-sm">
+                                                    <i class="fab fa-whatsapp mr-1"></i> WhatsApp
+                                                </a>
+                                                <button type="button" class="btn btn-outline-primary btn-sm"
+                                                        onclick="abrirAlterarMetodo({{ $proximoPagamento->id }}, '{{ $proximoPagamento->metodo }}')">
+                                                    <i class="fas fa-exchange-alt mr-1"></i> Alterar forma de pagamento
+                                                </button>
                                             </div>
                                         </div>
-                                        @if ($proximoPagamento->boleto_url)
-                                            <a href="{{ $proximoPagamento->boleto_url }}" target="_blank" rel="noopener"
-                                               class="btn btn-warning btn-sm mr-1">
-                                                <i class="fas fa-external-link-alt mr-1"></i> Visualizar Boleto
-                                            </a>
-                                        @endif
-                                        @if ($proximoPagamento->boleto_codigo)
-                                            <div class="mt-2">
-                                                <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;">Linha Digitável</label>
-                                                <div class="input-group input-group-sm" style="max-width:420px;">
-                                                    <input type="text" class="form-control" id="codigoBoleto"
-                                                           value="{{ $proximoPagamento->boleto_codigo }}" readonly>
-                                                    <div class="input-group-append">
-                                                        <button class="btn btn-outline-secondary" type="button" onclick="copiarCodigo()">
-                                                            <i class="fas fa-copy" id="boletoCopyIcon"></i>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endif
                                     @endif
 
                                     {{-- Cartão de Crédito --}}
                                     @if ($proximoPagamento->metodo === 'cartao')
-                                        <div class="d-flex align-items-start" style="gap:1rem;">
-                                            <div style="font-size:2.5rem;color:#0a1628;line-height:1;">
-                                                <i class="fas fa-credit-card"></i>
-                                            </div>
-                                            <div>
-                                                <p class="font-weight-bold mb-1" style="font-size:.88rem;">Cartão de Crédito</p>
-                                                @if ($assinatura->renovacao_automatica)
-                                                    <div class="alert alert-success py-2 mb-2" style="font-size:.8rem;">
-                                                        <i class="fas fa-sync-alt mr-1"></i>
-                                                        <strong>Renovação automática ativa.</strong>
-                                                        Sua assinatura será renovada automaticamente.
-                                                    </div>
-                                                @endif
-                                                <p class="text-muted mb-2" style="font-size:.8rem;">
-                                                    Nossa equipe entrará em contato para processar o pagamento com segurança via Stripe.
+                                        <div id="cartaoWrapper">
+                                            {{-- Formulário de cartão --}}
+                                            <div id="cartaoFormArea">
+                                                <p class="font-weight-bold mb-2" style="font-size:.92rem;color:#0a1628;">
+                                                    <i class="fas fa-credit-card mr-1"></i>
+                                                    Pague R$ {{ number_format($proximoPagamento->valor, 2, ',', '.') }} com cartão de crédito
                                                 </p>
-                                                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Quero pagar o plano ' . ($assinatura->plano->nome ?? '') . ' de R$ ' . number_format($proximoPagamento->valor, 2, ',', '.') . ' com cartão de crédito. Ref: ' . ($proximoPagamento->referencia_interna ?? '')) }}"
-                                                   target="_blank" rel="noopener" class="btn btn-primary btn-sm">
-                                                    <i class="fab fa-whatsapp mr-1"></i> Agendar pagamento com cartão
-                                                </a>
+
+                                                <div id="cartaoErro" class="alert alert-danger py-2 mb-2" style="display:none;font-size:.82rem;"></div>
+                                                <div id="cartaoSucesso" class="alert alert-success py-2 mb-2" style="display:none;font-size:.82rem;">
+                                                    <i class="fas fa-check-circle mr-1"></i> <strong>Pagamento confirmado!</strong> Sua assinatura está sendo ativada…
+                                                </div>
+
+                                                {{-- Stripe Card Element --}}
+                                                <div id="stripe-card-element"
+                                                     style="border:1px solid #ced4da;border-radius:6px;padding:10px 12px;background:#fff;margin-bottom:.75rem;"></div>
+
+                                                <div class="custom-control custom-checkbox mb-3">
+                                                    <input type="checkbox" class="custom-control-input" id="chkSalvarCartao">
+                                                    <label class="custom-control-label" for="chkSalvarCartao" style="font-size:.82rem;">
+                                                        Salvar cartão para renovações futuras
+                                                    </label>
+                                                </div>
+
+                                                <button type="button" class="btn btn-primary btn-sm" id="btnPagarCartao"
+                                                        onclick="pagarCartao()">
+                                                    <i class="fas fa-lock mr-1"></i> Pagar agora
+                                                </button>
+                                                <div class="text-muted mt-2" style="font-size:.72rem;">
+                                                    <i class="fas fa-shield-alt mr-1"></i> Pagamento seguro via Stripe. Seus dados não são armazenados em nossos servidores.
+                                                </div>
                                             </div>
                                         </div>
+
+                                        <input type="hidden" id="cartaoUrlIntent"
+                                               value="{{ route('assinatura.pagamento.cartao-intent', $proximoPagamento) }}">
+                                        <input type="hidden" id="cartaoUrlConfirmar"
+                                               value="{{ route('assinatura.pagamento.cartao-confirmar', $proximoPagamento) }}">
+                                        <input type="hidden" id="cartaoCsrf"
+                                               value="{{ csrf_token() }}">
                                     @endif
                                 </div>
                             </div>
@@ -564,9 +575,8 @@
 
                     <div class="row" id="metodosCards">
                         @foreach ([
-                            ['boleto', 'fas fa-barcode',     'Boleto Bancário',   'Receba por e-mail em até 24h.'],
                             ['pix',    'fas fa-qrcode',      'PIX',               'Pagamento instantâneo com QR Code.'],
-                            ['cartao', 'fas fa-credit-card', 'Cartão de Crédito', 'Nossa equipe processa com segurança.'],
+                            ['cartao', 'fas fa-credit-card', 'Cartão de Crédito', 'Pague com cartão de crédito.'],
                         ] as [$v, $ic, $nm, $desc])
                             <div class="col-md-4 mb-2">
                                 <label class="metodo-alt-opt card border text-center p-3 h-100"
@@ -664,7 +674,6 @@
                         <label class="font-weight-bold mb-2">Método de Pagamento</label>
                         <div class="row">
                             @foreach ([
-                                ['boleto', 'fas fa-barcode',     'Boleto'],
                                 ['pix',    'fas fa-qrcode',      'PIX'],
                                 ['cartao', 'fas fa-credit-card', 'Cartão de Crédito'],
                             ] as [$v, $ic, $nm])
@@ -731,6 +740,107 @@
 @endpush
 
 @push('js')
+@if(isset($proximoPagamento) && $proximoPagamento?->metodo === 'cartao')
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+// ── Stripe Elements (cartão) ─────────────────────────────────────────────────
+let stripeInstance = null;
+let cardElement    = null;
+let cartaoClientSecret = null;
+
+async function inicializarStripeElements(stripeKey) {
+    stripeInstance = Stripe(stripeKey);
+    const elements = stripeInstance.elements();
+    cardElement = elements.create('card', {
+        style: {
+            base: { fontSize: '14px', color: '#212529', '::placeholder': { color: '#6c757d' } },
+            invalid: { color: '#dc3545' },
+        },
+        hidePostalCode: true,
+    });
+    cardElement.mount('#stripe-card-element');
+    cardElement.on('change', ({ error }) => {
+        const el = document.getElementById('cartaoErro');
+        if (error) { el.textContent = error.message; el.style.display = 'block'; }
+        else el.style.display = 'none';
+    });
+}
+
+async function pagarCartao() {
+    const btn = document.getElementById('btnPagarCartao');
+    const erroEl = document.getElementById('cartaoErro');
+    const salvar = document.getElementById('chkSalvarCartao')?.checked ?? false;
+    const urlIntent    = document.getElementById('cartaoUrlIntent')?.value;
+    const urlConfirmar = document.getElementById('cartaoUrlConfirmar')?.value;
+    const csrf         = document.getElementById('cartaoCsrf')?.value;
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm mr-1"></span> Processando…';
+    erroEl.style.display = 'none';
+
+    try {
+        // 1. Obtém o client_secret do servidor
+        if (!cartaoClientSecret) {
+            const r = await fetch(urlIntent, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ salvar_cartao: salvar }),
+            });
+            const data = await r.json();
+            if (data.error) throw new Error(data.error);
+            cartaoClientSecret = data.client_secret;
+        }
+
+        // 2. Confirma o pagamento com os dados do cartão
+        const { paymentIntent, error } = await stripeInstance.confirmCardPayment(cartaoClientSecret, {
+            payment_method: { card: cardElement },
+        });
+
+        if (error) throw new Error(error.message);
+
+        if (paymentIntent.status !== 'succeeded') {
+            throw new Error('Pagamento não aprovado. Por favor, tente novamente.');
+        }
+
+        // 3. Notifica o servidor
+        const r2 = await fetch(urlConfirmar, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ payment_intent_id: paymentIntent.id }),
+        });
+        const data2 = await r2.json();
+        if (data2.error) throw new Error(data2.error);
+
+        // Sucesso
+        document.getElementById('cartaoSucesso').style.display = 'block';
+        document.getElementById('cartaoFormArea').querySelector('button').style.display = 'none';
+        setTimeout(() => location.reload(), 2500);
+
+    } catch (err) {
+        erroEl.textContent = err.message || 'Erro ao processar pagamento.';
+        erroEl.style.display = 'block';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock mr-1"></i> Pagar agora';
+        cartaoClientSecret = null; // reseta para nova tentativa
+    }
+}
+
+// Inicializa Elements buscando a stripe_key do servidor
+document.addEventListener('DOMContentLoaded', async () => {
+    if (!document.getElementById('stripe-card-element')) return;
+    const urlIntent = document.getElementById('cartaoUrlIntent')?.value;
+    const csrf      = document.getElementById('cartaoCsrf')?.value;
+    // Busca só a stripe_key sem criar o intent ainda
+    const r = await fetch(urlIntent + '?peek=1', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ peek: true }),
+    });
+    const data = await r.json();
+    if (data.stripe_key) await inicializarStripeElements(data.stripe_key);
+});
+</script>
+@endif
 <script>
 // ── Navegação entre abas ─────────────────────────────────────────────────────
 function irParaAba(tabId) {

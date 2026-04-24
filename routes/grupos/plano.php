@@ -40,4 +40,8 @@ Route::prefix('meu-plano')->name('assinatura.')->group(function () {
     Route::post('/pagamento/{pagamento}/pix', [AssinaturaController::class, 'gerarPixStripe'])->name('pagamento.pix');
     // Verificar status do pagamento (polling)
     Route::get('/pagamento/{pagamento}/status', [AssinaturaController::class, 'statusPagamento'])->name('pagamento.status');
+    // Criar PaymentIntent para cartão de crédito
+    Route::post('/pagamento/{pagamento}/cartao-intent', [AssinaturaController::class, 'criarIntentCartao'])->name('pagamento.cartao-intent');
+    // Confirmar pagamento cartão após Stripe Elements
+    Route::post('/pagamento/{pagamento}/cartao-confirmar', [AssinaturaController::class, 'confirmarCartao'])->name('pagamento.cartao-confirmar');
 });

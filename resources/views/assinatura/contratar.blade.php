@@ -106,9 +106,9 @@
                     <div class="card-body">
                         <div class="row" id="metodosGrid">
                             @foreach ([
-                                ['boleto', 'fas fa-barcode',     'Boleto Bancário',   'Receba o boleto por e-mail em até 24h. Compensação em 1–3 dias úteis.'],
-                                ['pix',    'fas fa-qrcode',      'PIX',               'Pagamento instantâneo via QR Code ou chave. Ativação imediata após confirmação.'],
-                                ['cartao', 'fas fa-credit-card', 'Cartão de Crédito', 'Pague com cartão. Possibilidade de renovação automática.'],
+                                ['pix',    'fas fa-qrcode',      'PIX',               'Pagamento instantâneo via QR Code. Ativação imediata após confirmação.'],
+                                ['cartao', 'fas fa-credit-card', 'Cartão de Crédito', 'Pague com cartão de crédito. Possibilidade de renovação automática.'],
+                                ['atendente', 'fas fa-headset',  'Falar com Atendente', 'Prefere ajuda? Fale com nossa equipe por e-mail ou WhatsApp.'],
                             ] as [$val, $icon, $nome, $desc])
                                 <div class="col-md-4 mb-2">
                                     <div class="metodo-card card border text-center p-3 h-100"
@@ -131,7 +131,7 @@
                     </div>
                 </div>
 
-                {{-- Painel cartão (aparece ao selecionar cartão) --}}
+                {{-- Painel cartão --}}
                 <div id="divCartao" class="card mb-3" style="display:none;border:1.5px solid #bae6fd;border-radius:12px;overflow:hidden;">
                     <div class="card-header py-2" style="background:#f0f9ff;">
                         <h5 class="mb-0" style="font-size:.88rem;font-weight:700;color:#0369a1;">
@@ -145,8 +145,7 @@
                                     <i class="fas fa-sync-alt mr-1 text-primary"></i> Renovação Automática
                                 </div>
                                 <p class="text-muted mb-0" style="font-size:.8rem;">
-                                    Ative para nunca perder o acesso. A assinatura é renovada automaticamente
-                                    a cada período via Stripe. Você pode cancelar a qualquer momento.
+                                    Ative para nunca perder o acesso. A assinatura é renovada automaticamente a cada período. Você pode cancelar a qualquer momento.
                                 </p>
                             </div>
                             <div class="custom-control custom-switch flex-shrink-0 mt-1">
@@ -157,25 +156,48 @@
                         </div>
                         <div id="divRenovacaoAtiva" class="mt-2 alert alert-success py-2 mb-0" style="display:none;font-size:.8rem;">
                             <i class="fas fa-check-circle mr-1"></i>
-                            <strong>Renovação automática ativa.</strong>
-                            Nossa equipe entrará em contato para salvar o cartão de forma segura via Stripe.
+                            <strong>Renovação automática ativa.</strong> O pagamento será processado automaticamente via Stripe.
                         </div>
                         <div id="divRenovacaoInativa" class="mt-2 alert alert-info py-2 mb-0" style="font-size:.8rem;">
                             <i class="fas fa-info-circle mr-1"></i>
-                            Pagamento avulso. Nossa equipe entrará em contato para processar com segurança.
+                            Pagamento avulso. Após confirmar você será direcionado para inserir os dados do cartão.
                         </div>
                     </div>
                 </div>
 
-                {{-- Nota de segurança --}}
-                <div class="alert alert-light border mb-3" style="font-size:.82rem;">
-                    <i class="fas fa-shield-alt text-primary mr-1"></i>
-                    <strong>Sem cobrança imediata.</strong>
-                    Após confirmar, você recebe as instruções de pagamento. Sua conta fica ativa em modo de avaliação até a confirmação.
+                {{-- Painel atendente --}}
+                <div id="divAtendente" class="card mb-3" style="display:none;border:1.5px solid #d1fae5;border-radius:12px;overflow:hidden;">
+                    <div class="card-header py-2" style="background:#f0fdf4;">
+                        <h5 class="mb-0" style="font-size:.88rem;font-weight:700;color:#065f46;">
+                            <i class="fas fa-headset mr-1"></i> Fale com nossa equipe
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted mb-3" style="font-size:.83rem;">
+                            Prefere que um atendente te ajude? Escolha o canal abaixo e informe o plano que deseja contratar.
+                        </p>
+                        <div class="d-flex" style="gap:.75rem;flex-wrap:wrap;">
+                            <a href="mailto:suporte@decars.com.br?subject={{ urlencode('Quero contratar o plano ' . $plano->nome) }}"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-envelope mr-1"></i> Enviar e-mail
+                            </a>
+                            <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Quero contratar o plano ' . $plano->nome . '. Podem me ajudar?') }}"
+                               target="_blank" rel="noopener" class="btn btn-success btn-sm">
+                                <i class="fab fa-whatsapp mr-1"></i> Chamar no WhatsApp
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Botão confirmar --}}
-                <div class="d-flex justify-content-between align-items-center">
+                {{-- Nota de segurança (oculta quando atendente selecionado) --}}
+                <div id="divNotaSeguranca" class="alert alert-light border mb-3" style="font-size:.82rem;">
+                    <i class="fas fa-shield-alt text-primary mr-1"></i>
+                    <strong>Sem cobrança imediata.</strong>
+                    Após confirmar, você insere os dados de pagamento. Sua conta fica ativa em modo de avaliação até a confirmação.
+                </div>
+
+                {{-- Botão confirmar (oculto quando atendente selecionado) --}}
+                <div id="divBtnConfirmar" class="d-flex justify-content-between align-items-center">
                     <a href="{{ route('assinatura.meu-plano') }}" class="btn btn-secondary">
                         <i class="fas fa-arrow-left mr-1"></i> Cancelar
                     </a>
@@ -214,15 +236,18 @@ function selecionarMetodo(metodo, el) {
     el.style.borderColor = '#0a1628';
     el.style.boxShadow   = '0 0 0 3px rgba(10,22,40,.1)';
     el.style.background  = '#f8faff';
-    document.getElementById('inputMetodo').value = metodo;
+    document.getElementById('inputMetodo').value = metodo === 'atendente' ? '' : metodo;
     document.getElementById('errMetodo').style.display = 'none';
 
-    // Mostrar/ocultar painel cartão
-    document.getElementById('divCartao').style.display = metodo === 'cartao' ? 'block' : 'none';
+    document.getElementById('divCartao').style.display    = metodo === 'cartao'    ? 'block' : 'none';
+    document.getElementById('divAtendente').style.display = metodo === 'atendente' ? 'block' : 'none';
+    document.getElementById('divNotaSeguranca').style.display = metodo === 'atendente' ? 'none' : 'block';
+    document.getElementById('divBtnConfirmar').style.display  = metodo === 'atendente' ? 'none' : 'flex';
+
     if (metodo !== 'cartao') {
         document.getElementById('toggleRenovacao').checked = false;
         document.getElementById('inputRenovacaoAutomatica').value = '0';
-        document.getElementById('divRenovacaoAtiva').style.display = 'none';
+        document.getElementById('divRenovacaoAtiva').style.display  = 'none';
         document.getElementById('divRenovacaoInativa').style.display = 'block';
     }
 }
