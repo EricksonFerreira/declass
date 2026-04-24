@@ -41,6 +41,37 @@
         </div>
     @endif
 
+    {{-- Stepper (padrao do painel) --}}
+    <div class="card card-outline card-secondary mb-3" style="border-radius:12px;">
+        <div class="card-body py-2">
+            <div class="plano-stepper">
+                <div class="plano-step is-active">
+                    <div class="plano-step-circle"><i class="fas fa-tags"></i></div>
+                    <div class="plano-step-text">
+                        <div class="plano-step-title">Plano</div>
+                        <div class="plano-step-sub">Escolha mensal/anual</div>
+                    </div>
+                </div>
+                <div class="plano-step-line"></div>
+                <div class="plano-step">
+                    <div class="plano-step-circle"><i class="fas fa-credit-card"></i></div>
+                    <div class="plano-step-text">
+                        <div class="plano-step-title">Pagamento</div>
+                        <div class="plano-step-sub">PIX ou cartao</div>
+                    </div>
+                </div>
+                <div class="plano-step-line"></div>
+                <div class="plano-step">
+                    <div class="plano-step-circle"><i class="fas fa-check"></i></div>
+                    <div class="plano-step-text">
+                        <div class="plano-step-title">Ativacao</div>
+                        <div class="plano-step-sub">Liberacao do plano</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <form action="{{ route('assinatura.contratar.confirmar') }}" method="POST" id="formContratar">
         @csrf
         <input type="hidden" name="plano_id" value="{{ $plano->id }}">
@@ -228,6 +259,18 @@
         </div>
     </form>
 @stop
+
+@push('css')
+<style>
+.plano-stepper{display:flex;align-items:center;gap:.6rem;flex-wrap:wrap}
+.plano-step{display:flex;align-items:center;gap:.6rem}
+.plano-step-line{height:2px;flex:1;min-width:24px;background:#e5e7eb}
+.plano-step-circle{width:34px;height:34px;border-radius:999px;display:flex;align-items:center;justify-content:center;background:#f1f5f9;border:1px solid #e2e8f0;color:#0a1628}
+.plano-step.is-active .plano-step-circle{background:#0a1628;border-color:#0a1628;color:#fff}
+.plano-step-title{font-size:.82rem;font-weight:800;line-height:1}
+.plano-step-sub{font-size:.72rem;color:#64748b;line-height:1.1;margin-top:2px}
+</style>
+@endpush
 
 @push('js')
 <script>
