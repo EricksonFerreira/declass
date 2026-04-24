@@ -16,6 +16,8 @@ use Stripe\Customer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 class AssinaturaController extends Controller
@@ -56,6 +58,20 @@ class AssinaturaController extends Controller
         $planos = Plano::ativos()->get();
 
         return view('assinatura.show', compact('assinatura', 'planos'));
+    }
+
+    public function regras(): View
+    {
+        $regrasPath = base_path('docs/REGRAS_PLANOS.md');
+        $logicaPath = base_path('docs/logica-de-planos.md');
+
+        $regrasMd = File::exists($regrasPath) ? File::get($regrasPath) : '# Regras\n\nArquivo nao encontrado: docs/REGRAS_PLANOS.md';
+        $logicaMd = File::exists($logicaPath) ? File::get($logicaPath) : '# Logica\n\nArquivo nao encontrado: docs/logica-de-planos.md';
+
+        return view('assinatura.regras', [
+            'regrasHtml' => Str::markdown($regrasMd),
+            'logicaHtml' => Str::markdown($logicaMd),
+        ]);
     }
 
     /** Admin atribui plano diretamente a uma empresa. */
@@ -216,11 +232,31 @@ class AssinaturaController extends Controller
                 return back()->withErrors(['plano_id' => 'Voce ja esta neste plano e periodicidade.'])->withInput();
             }
 
-            $valorAtual = (float) $assinaturaAtual->valor_cobrado;
-            $valorNovo  = (float) $this->planoService->valorTotalPlano($plano, $data['periodicidade']);
+            // Define upgrade vs downgrade pelo "preco mensal equivalente" (mais intuitivo para o usuario).
+            $valorMensalAtual = (float) ($assinaturaAtual->periodicidade === 'anual'
+                ? ($assinaturaAtual->plano?->valor_anual ?? 0)
+                : ($assinaturaAtual->plano?->valor_mensal ?? 0));
+
+            $valorMensalNovo = (float) ($data['periodicidade'] === 'anual'
+                ? $plano->valor_anual
+                : $plano->valor_mensal);
+
+            // Regra padrao SaaS: anual -> mensal reduz compromisso, entao agenda para o fim do periodo anual.
+            if ((string) $assinaturaAtual->periodicidade === 'anual' && (string) $data['periodicidade'] === 'mensal') {
+                $this->agendarMudancaPlano(
+                    assinatura:    $assinaturaAtual,
+                    proximoPlano:  $plano,
+                    periodicidade: $data['periodicidade'],
+                    tipo:          'downgrade',
+                );
+
+                return redirect()->route('assinatura.meu-plano')
+                    ->with('success', 'Mudanca para mensal agendada para a proxima renovacao anual. Voce mantera o plano atual ate o fim do periodo.');
+            }
+
 
             // Downgrade: agenda para a prÃ³xima renovaÃ§Ã£o (fim do perÃ­odo vigente).
-            if ($valorNovo < $valorAtual) {
+            if ($valorMensalNovo < $valorMensalAtual) {
                 $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
 
                 if ($excedentes->isNotEmpty()) {

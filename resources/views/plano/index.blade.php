@@ -6,7 +6,14 @@
     <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">
         <div>
             <h1 class="m-0 text-dark" style="font-size:1.3rem;font-weight:700;">Planos</h1>
-            <small class="text-muted">Gerencie os planos disponíveis para locadoras</small>
+            <small class="text-muted">Gerencie os planos disponiveis para locadoras</small>
+
+            <nav aria-label="breadcrumb" class="mt-1">
+                <ol class="breadcrumb p-0 m-0 bg-transparent" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Planos</li>
+                </ol>
+            </nav>
         </div>
         <a href="{{ route('plano.create') }}" class="btn btn-primary btn-sm">
             <i class="fas fa-plus mr-1"></i> Novo Plano
@@ -49,10 +56,10 @@
                             <div class="text-muted" style="font-size:.8rem;">Mensal</div>
                             <div class="font-weight-bold" style="font-size:1.5rem;color:#0a1628;">
                                 R$ {{ number_format($plano->valor_mensal, 2, ',', '.') }}
-                                <small class="text-muted font-weight-normal" style="font-size:.8rem;">/mês</small>
+                                <small class="text-muted font-weight-normal" style="font-size:.8rem;">/mes</small>
                             </div>
                             <div class="text-muted" style="font-size:.8rem;">
-                                Anual: R$ {{ number_format($plano->valor_anual, 2, ',', '.') }}/mês
+                                Anual: R$ {{ number_format($plano->valor_anual, 2, ',', '.') }}/mes
                                 @if ($plano->desconto_anual_percentual > 0)
                                     <span class="badge badge-success ml-1">{{ $plano->desconto_anual_percentual }}% off</span>
                                 @endif
@@ -62,13 +69,13 @@
                         <ul class="list-unstyled mb-3 flex-grow-1" style="font-size:.85rem;">
                             <li class="mb-1 text-muted">
                                 <i class="fas fa-car mr-1"></i>
-                                Veículos: <strong>{{ $plano->limite_veiculos_texto }}</strong>
+                                Veiculos: <strong>{{ $plano->limite_veiculos_texto }}</strong>
                             </li>
                             @foreach ([
                                 ['site_vendas',   'globe',       'Site de vendas'],
-                                ['modulo_multas', 'file-invoice','Módulo de multas'],
+                                ['modulo_multas', 'file-invoice','Modulo de multas'],
                                 ['modulo_nfse',   'receipt',     'NFS-e'],
-                                ['multi_estacao', 'map-marker',  'Multi-estação'],
+                                ['multi_estacao', 'map-marker',  'Multi-estacao'],
                                 ['api_integracao','plug',        'API'],
                             ] as [$campo, $icon, $label])
                                 <li class="mb-1 {{ $plano->$campo ? '' : 'text-muted' }}">
@@ -114,3 +121,4 @@
         @endforelse
     </div>
 @stop
+

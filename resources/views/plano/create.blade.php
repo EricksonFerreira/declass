@@ -3,9 +3,17 @@
 @section('title', 'Novo Plano')
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">
         <div>
             <h1 class="m-0 text-dark" style="font-size:1.3rem;font-weight:700;">Novo Plano</h1>
+
+            <nav aria-label="breadcrumb" class="mt-1">
+                <ol class="breadcrumb p-0 m-0 bg-transparent" style="font-size:.82rem;">
+                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ route('plano.index') }}">Planos</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Novo</li>
+                </ol>
+            </nav>
         </div>
         <a href="{{ route('plano.index') }}" class="btn btn-secondary btn-sm">
             <i class="fas fa-arrow-left mr-1"></i> Voltar
@@ -33,3 +41,4 @@
         </div>
     </form>
 @stop
+

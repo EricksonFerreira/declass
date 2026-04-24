@@ -898,6 +898,35 @@ return [
             'header'  => 'sidebar.configuracoes',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
+
+        // PLANOS & ASSINATURAS (SUPERADMIN)
+        [
+            'header'  => 'Planos & Assinaturas',
+            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
+            'can'     => 'gerenciar-planos',
+        ],
+        [
+            'text'    => 'Planos',
+            'icon'    => 'fas fa-layer-group',
+            'can'     => 'gerenciar-planos',
+            'submenu' => [
+                [
+                    'text'  => 'Catalogo de Planos',
+                    'route' => 'plano.index',
+                    'icon'  => 'fas fa-tags',
+                ],
+                [
+                    'text'  => 'Assinaturas (Gestao)',
+                    'route' => 'assinatura.index',
+                    'icon'  => 'fas fa-id-card',
+                ],
+                [
+                    'text'  => 'Regras & Politicas',
+                    'route' => 'assinatura.regras',
+                    'icon'  => 'fas fa-book',
+                ],
+            ],
+        ],
         [
             'text'    => 'sidebar.parametrizacao_reserva',
             'icon'    => 'fas fa-calendar-cog',
