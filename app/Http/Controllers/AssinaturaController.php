@@ -181,7 +181,7 @@ class AssinaturaController extends Controller
         $plano   = Plano::with('itens')->findOrFail($planoId);
         $empresa = Auth::user()->empresa;
 
-        $totalVeiculos    = $empresa ? $empresa->veiculos()->where('ativo', true)->where('vendido', false)->count() : 0;
+        $totalVeiculos    = $empresa ? \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count() : 0;
         $assinaturaAtual  = $empresa?->planoAtivo()->with('plano')->first();
         $erroDowngrade    = $empresa ? $this->alertaService->verificarDowngradeNoPeriodo($empresa, $plano) : null;
 

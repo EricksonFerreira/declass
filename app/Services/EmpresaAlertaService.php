@@ -17,7 +17,7 @@ class EmpresaAlertaService
 
         // 1. Veículos excedentes
         if ($plano->limite_veiculos !== null) {
-            $totalVeiculos = $empresa->veiculos()->where('ativo', true)->where('vendido', false)->count();
+            $totalVeiculos = \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count();
             if ($totalVeiculos > $plano->limite_veiculos) {
                 $excedente = $totalVeiculos - $plano->limite_veiculos;
                 $this->criarOuAtualizar($empresa, 'veiculos_excedentes', 'critico',
