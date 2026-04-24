@@ -78,7 +78,17 @@ class PermissoesNovasFuncionalidadesSeeder extends Seeder
                 if (!$perm) {
                     $data = ['name' => $name, 'guard_name' => 'web', 'created_at' => now(), 'updated_at' => now()];
                     if ($permissionHasEmpresa) $data['empresa_id'] = $empresaId;
-                    $permId = DB::table($permissionsTable)->insertGetId($data);
+                    try {
+                        $permId = DB::table($permissionsTable)->insertGetId($data);
+                    } catch (\Illuminate\Database\QueryException $e) {
+                        // Registro já existe (corrida ou índice único sem empresa_id) — busca novamente
+                        $fallback = DB::table($permissionsTable)
+                            ->where('name', $name)
+                            ->where('guard_name', 'web')
+                            ->first();
+                        if (!$fallback) throw $e;
+                        $permId = $fallback->id;
+                    }
                 } else {
                     $permId = $perm->id;
                 }
