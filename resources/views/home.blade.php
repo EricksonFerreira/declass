@@ -603,6 +603,7 @@
 @stop
 
 @section('content')
+<x-onboarding-widget />
 @if ($hasVisibleCharts)
 <div class="period-bar">
     <label for="data_inicio">Periodo:</label>

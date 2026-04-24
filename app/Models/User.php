@@ -88,7 +88,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return Storage::url($this->foto_perfil);
         }
 
-        $background = $this->normalizeHexColor($this->avatarBackgroundColor()) ?: '1F2937';
+        $background = $this->normalizeHexColor($this->avatarBackgroundColor()) ?: 'FFFFFF';
         $foreground = $this->normalizeHexColor($this->avatarForegroundColor()) ?: $this->avatarForegroundColorFromBackground($background);
 
         return 'https://ui-avatars.com/api/?name='
@@ -102,7 +102,7 @@ class User extends Authenticatable implements MustVerifyEmail
     {
         $empresaCorPrimaria = trim((string) ($this->empresa?->cor_primaria ?? ''));
 
-        return $empresaCorPrimaria !== '' ? $empresaCorPrimaria : '#1F2937';
+        return $empresaCorPrimaria !== '' ? $empresaCorPrimaria : '#FFFFFF';
     }
 
     private function avatarForegroundColor(): string
@@ -117,7 +117,7 @@ class User extends Authenticatable implements MustVerifyEmail
         $hex = $this->normalizeHexColor($background);
 
         if ($hex === '') {
-            return '#FFFFFF';
+            return '#0F172A';
         }
 
         $r = hexdec(substr($hex, 0, 2)) / 255;

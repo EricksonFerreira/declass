@@ -20,6 +20,7 @@ Foco principal:
 1. Crie 2 empresas: `Empresa A` e `Empresa B`.
 2. Na `Empresa A`, defina o plano mais completo que voce quiser validar.
 3. Na `Empresa B`, defina um plano mais simples para validar isolamento.
+- ``Obs: Após clia-las deve replicar a base de Decars o atributo:Marca + Modelo + Segmentos para essas empresas``
 4. Na `Empresa A`, crie 2 estacoes:
    - `Estacao A1` com `checkin = S` e `checkout = S`
    - `Estacao A2` com `checkin = S` e `checkout = N`
@@ -157,3 +158,7 @@ Se algum caso falhar, anote:
 - o usuario logado
 - a mensagem exibida na tela
 
+
+
+
+# testar a rotina de reset de senha de usuarios ou de login

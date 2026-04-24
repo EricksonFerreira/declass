@@ -2,6 +2,7 @@
     $logout_url = View::getSection('logout_url') ?? config('adminlte.logout_url', 'logout');
     $profile_url = View::getSection('profile_url') ?? config('adminlte.profile_url', 'logout');
     $empresaSelecionada = (int) session('empresa_context_id', 0);
+    $empresaSelecionadaNome = 'Todas as empresas';
 
     if (config('adminlte.usermenu_profile_url', false)) {
         $profile_url = Auth::user()->adminlte_profile_url();
@@ -13,6 +14,12 @@
     } else {
         $profile_url = $profile_url ? url($profile_url) : '';
         $logout_url = $logout_url ? url($logout_url) : '';
+    }
+
+    if (Auth::check() && Auth::user()->isSuperAdmin() && \Illuminate\Support\Facades\Schema::hasTable('empresas') && $empresaSelecionada > 0) {
+        $empresaSelecionadaNome = (string) (\Illuminate\Support\Facades\DB::table('empresas')->where('id', $empresaSelecionada)->value('nome') ?? 'Empresa selecionada');
+    } elseif (Auth::check() && !Auth::user()->isSuperAdmin()) {
+        $empresaSelecionadaNome = Auth::user()->empresa?->nome ?? 'Empresa do usuário';
     }
 @endphp
 
@@ -64,6 +71,42 @@
             </li>
         @endif
 
+        @if(Auth::check() && Auth::user()->isSuperAdmin() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
+            @php
+                // Busca sem qualquer escopo de tenant para sempre listar todas as empresas
+                $empresasMenu = \Illuminate\Support\Facades\DB::table('empresas')->orderBy('nome')->pluck('nome', 'id')->toArray();
+            @endphp
+
+            <li class="user-body empresa-context-body">
+                <div class="empresa-context-select">
+                    <label>Empresa da sessão</label>
+                    <div class="empresa-context-current">
+                        <i class="fas fa-building mr-1"></i>
+                        <span>{{ $empresaSelecionadaNome }}</span>
+                    </div>
+                    <form method="POST" action="{{ route('empresa_context.update') }}" class="mb-0">
+                        @csrf
+                        <select
+                            name="empresa_id"
+                            class="form-control form-control-sm"
+                            onchange="this.form.submit()"
+                            title="Empresa da sessão"
+                        >
+                            <option value="0" {{ $empresaSelecionada === 0 ? 'selected' : '' }}>Todas as empresas</option>
+                            @foreach($empresasMenu as $empresaId => $empresaNome)
+                                <option value="{{ $empresaId }}" {{ $empresaSelecionada === (int) $empresaId ? 'selected' : '' }}>
+                                    {{ $empresaNome }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                    <a href="{{ route('empresa_context.edit') }}" class="empresa-context-link">
+                        Abrir tela de troca
+                    </a>
+                </div>
+            </li>
+        @endif
+
         {{-- User menu footer --}}
         <li class="user-footer">
             @if($profile_url)
@@ -83,33 +126,6 @@
                 @endif
                 {{ csrf_field() }}
             </form>
-
-            @if(Auth::check() && Auth::user()->isSuperAdmin() && \Illuminate\Support\Facades\Schema::hasTable('empresas'))
-                @php
-                    // Busca sem qualquer escopo de tenant para sempre listar todas as empresas
-                    $empresasMenu = \Illuminate\Support\Facades\DB::table('empresas')->orderBy('nome')->pluck('nome', 'id')->toArray();
-                @endphp
-
-                <div class="empresa-context-select">
-                    <label>Empresa em visualizacao</label>
-                    <form method="POST" action="{{ route('empresa_context.update') }}" class="mb-0">
-                        @csrf
-                        <select
-                            name="empresa_id"
-                            class="form-control form-control-sm"
-                            onchange="this.form.submit()"
-                            title="Empresa em visualizacao"
-                        >
-                            <option value="0" {{ $empresaSelecionada === 0 ? 'selected' : '' }}>Todas as empresas</option>
-                            @foreach($empresasMenu as $empresaId => $empresaNome)
-                                <option value="{{ $empresaId }}" {{ $empresaSelecionada === (int) $empresaId ? 'selected' : '' }}>
-                                    {{ $empresaNome }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </form>
-                </div>
-            @endif
         </li>
 
     </ul>

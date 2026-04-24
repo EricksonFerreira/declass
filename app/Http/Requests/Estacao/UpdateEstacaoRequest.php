@@ -51,6 +51,8 @@ class UpdateEstacaoRequest extends FormRequest
             'checkout' => 'required|string|max:1|in:S,N',
             'tem_intervalo_almoco' => 'required|array',
             'tem_intervalo_almoco.*' => ['required', 'in:S,N'],
+            'horario_diario_id' => 'required|array',
+            'horario_diario_id.*' => 'required|integer',
             'hora_abertura' => 'required|array',
             'hora_abertura.*' => ['required', 'regex:/^([01]\d|2[0-3]):([0-5]\d)(:[0-5]\d)?$/'],
             'hora_fechamento' => 'required|array',

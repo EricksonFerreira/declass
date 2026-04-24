@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             FrotaCatalogSeeder::class,
             PermissoesNovasFuncionalidadesSeeder::class,
+            PlanoSeeder::class,
         ]);
     }
 }

@@ -6,13 +6,13 @@ use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\CaracteristicaFrota\StoreCaracteristicaFrotaRequest;
 use App\Http\Requests\CaracteristicaFrota\UpdateCaracteristicaFrotaRequest;
+use App\Support\ArquivoAnexoHelper;
 use App\Services\BreadcrumbService;
 use App\Services\CaracteristicaFrotaService;
 use App\Services\TipoValorCaracteristicaFrotaService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Traits\FiltroTrait;
 
@@ -220,23 +220,6 @@ class CaracteristicaFrotaController extends BaseController implements FiltroInte
 
     private function storeImagem(?UploadedFile $file, ?string $oldPath = null): ?string
     {
-        if (!$file instanceof UploadedFile || !$file->isValid()) {
-            return null;
-        }
-
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-        $fileName = Str::uuid()->toString() . '.' . $extension;
-        $path = 'caracteristicas_frota/imagens/' . $fileName;
-
-        $stored = Storage::disk('public')->put($path, $file->getContent());
-        if (!$stored) {
-            return null;
-        }
-
-        if (is_string($oldPath) && trim($oldPath) !== '' && Storage::disk('public')->exists($oldPath)) {
-            Storage::disk('public')->delete($oldPath);
-        }
-
-        return $path;
+        return ArquivoAnexoHelper::armazenar($file, 'caracteristicas_frota/imagens', $oldPath);
     }
 }

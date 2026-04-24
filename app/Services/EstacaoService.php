@@ -161,9 +161,14 @@ class EstacaoService extends AbstractBaseService
                     $fimForaEx = $horarios["hora_fim_fora_expediente"][$i];
                 }
 
+                $horarioDiarioId = $horarios['horario_diario_id'][$i] ?? null;
+                if ($horarioDiarioId === null || $horarioDiarioId === '') {
+                    throw new \Exception('Horario diario invalido ou ausente ao salvar a estacao.');
+                }
+
                 $horariosFiltrados = [
                     "estacao_id"                  => $estacaoId,
-                    "horario_diario_id"           => $horarios['horario_diario_id'][$i],
+                    "horario_diario_id"           => (int) $horarioDiarioId,
                     "funciona_24h"                => $funciona24h,
                     "funciona"                    => $funciona,
                     "tem_intervalo_almoco"        => $temIntervaloAlmoco,

@@ -43,7 +43,10 @@
       "Bash(php -l \"c:\\\\Users\\\\Erickson\\\\Dev\\\\laragon\\\\www\\\\xpandCars\\\\app\\\\Services\\\\GrupoFrotaService.php\")",
       "Bash(grep -l \"tarifa\\\\|preco\\\\|valor_diario\\\\|weekly\\\\|monthly\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)",
       "Bash(grep -l \"grupos_frota\\\\|valor_diario\" /c/Users/Erickson/Dev/laragon/www/xpandCars/database/migrations/*.php)",
-      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/routes -name \"*.php\" -exec basename {} \\\\;)"
+      "Bash(find /c/Users/Erickson/Dev/laragon/www/xpandCars/routes -name \"*.php\" -exec basename {} \\\\;)",
+      "Bash(composer require *)",
+      "Bash(php --version)",
+      "Bash(composer show *)"
     ]
   }
 }

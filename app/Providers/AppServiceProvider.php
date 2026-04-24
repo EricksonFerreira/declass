@@ -3,9 +3,11 @@
 namespace App\Providers;
 
 use App\Menu\CustomAdminLte;
+use App\Models\Estacao;
 use App\Models\Movimentacao;
 use App\Models\User;
 use App\Models\Veiculo;
+use App\Observers\OnboardingObserver;
 use App\Services\DisponibilidadeInicialVeiculoService;
 use App\Services\MovimentacaoService;
 use App\Services\VeiculoService;
@@ -48,16 +50,24 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Superadmin tem acesso irrestrito a tudo, sem excecao.
         Gate::before(function (User $user, mixed $ability) {
             if (! is_string($ability)) {
                 return null;
             }
 
-            if ($user->isAdministrador()) {
+            if ($user->isSuperAdmin()) {
                 return true;
             }
 
-            // Acesso a empresa deve ser exclusivo de administrador.
+            if ($user->isAdministrador()) {
+                // Administrador de empresa tem acesso a tudo, exceto gestao global de planos.
+                if (in_array($ability, ['gerenciar-planos'], true)) {
+                    return null;
+                }
+                return true;
+            }
+
             if ($ability === 'gerenciar-empresa') {
                 return null;
             }
@@ -67,6 +77,11 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('gerenciar-empresa', function (User $user) {
             return $user->isAdministrador();
+        });
+
+        // Superadmin sempre pode. Outros precisam de permissao explicita.
+        Gate::define('gerenciar-planos', function (User $user) {
+            return $user->isSuperAdmin() || $user->hasPermissao('gerenciar-planos');
         });
 
         Gate::define('acessar-perfil', function (User $user) {
@@ -84,6 +99,10 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Cashier::useCustomerModel(User::class);
+
+        Veiculo::observe(OnboardingObserver::class);
+        Estacao::observe(OnboardingObserver::class);
+        User::observe(OnboardingObserver::class);
 
         // Replace the AdminLTE singleton with our custom version that hides
         // orphan section headers (OPERAÇÃO, FROTA, etc.) when the user has

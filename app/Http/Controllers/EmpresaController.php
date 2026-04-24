@@ -8,16 +8,14 @@ use App\Http\Requests\Empresa\StoreEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
 use App\Models\Empresa;
+use App\Support\ArquivoAnexoHelper;
 use App\Services\BreadcrumbService;
 use App\Services\EmpresaService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class EmpresaController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -441,39 +439,26 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return $data;
         }
 
-        $file = $request->file('logo');
-
-        if (! $file instanceof UploadedFile || ! $file->isValid()) {
-            return $data;
-        }
-
         try {
-            $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-            $fileName = Str::uuid()->toString().'.'.$extension;
-            $path = 'empresas/logos/'.$fileName;
+            $path = ArquivoAnexoHelper::armazenar(
+                $request->file('logo'),
+                'empresas/logos',
+                $empresaAtual?->logo_path ?? null
+            );
 
-            $stored = Storage::disk('public')->put($path, $file->getContent());
-            if (! $stored) {
+            if (! is_string($path) || $path === '') {
                 return $data;
             }
+
+            $data['logo_path'] = $path;
         } catch (\Throwable $e) {
             Log::error('Falha ao salvar logo da empresa.', [
                 'empresa_id' => $empresaAtual?->id,
-                'file_name' => $file->getClientOriginalName(),
+                'file_name' => $request->file('logo')?->getClientOriginalName(),
                 'error' => $e->getMessage(),
             ]);
 
             return $data;
-        }
-
-        if (! is_string($path) || $path === '') {
-            return $data;
-        }
-
-        $data['logo_path'] = $path;
-
-        if ($empresaAtual && ! empty($empresaAtual->logo_path) && Storage::disk('public')->exists($empresaAtual->logo_path)) {
-            Storage::disk('public')->delete($empresaAtual->logo_path);
         }
 
         return $data;
@@ -562,27 +547,18 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
                 continue;
             }
 
-            $file = $request->file($inputName);
-            if (! $file instanceof UploadedFile || ! $file->isValid()) {
-                continue;
-            }
-
             try {
-                $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-                $fileName = Str::uuid()->toString().'.'.$extension;
-                $path = 'empresas/site_apresentacao/'.$empresaAtual->id.'/'.$imageKey.'/'.$fileName;
+                $path = ArquivoAnexoHelper::armazenar(
+                    $request->file($inputName),
+                    'empresas/site_apresentacao/' . $empresaAtual->id . '/' . $imageKey,
+                    $imagens[$imageKey] ?? null
+                );
 
-                $stored = Storage::disk('public')->put($path, $file->getContent());
-                if (! $stored || ! is_string($path) || $path === '') {
-
+                if (! is_string($path) || $path === '') {
+                    continue;
                 }
 
-                $oldPath = $imagens[$imageKey] ?? null;
                 $imagens[$imageKey] = $path;
-
-                if (is_string($oldPath) && $oldPath !== '' && Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
-                }
             } catch (\Throwable $e) {
                 Log::error('Falha ao salvar imagem da apresentacao da empresa.', [
                     'empresa_id' => $empresaAtual->id,

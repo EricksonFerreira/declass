@@ -13,10 +13,16 @@ use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\SiteApresentacaoController;
 use App\Http\Controllers\SiteReservaController;
 use App\Http\Controllers\StripeController;
+use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TipoTransacaoController;
 use App\Http\Controllers\MigrationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+
+// Webhook Stripe — sem CSRF, sem auth
+Route::post('/webhook/stripe', [StripeWebhookController::class, 'handle'])
+    ->name('webhook.stripe')
+    ->withoutMiddleware('web');
 
 Route::get('/', [SiteApresentacaoController::class, 'index'])->name('site.apresentacao');
 Route::get('/sobre', [SiteApresentacaoController::class, 'sobre'])->name('site.sobre');
@@ -166,6 +172,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'tipo_movimentacao',
         'status_movimentacao',
         'status_reserva',
+        'plano',
+        'onboarding',
     ];
 
     foreach ($authGroupFiles as $groupFile) {

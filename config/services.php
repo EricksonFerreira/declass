@@ -35,8 +35,10 @@ return [
         ],
     ],
     'stripe' => [
-        'secret'     => env('STRIPE_SECRET'),
-        'return_url' => env('RETURN_URL_PAGAMENTO'),
+        'key'            => env('STRIPE_KEY'),
+        'secret'         => env('STRIPE_SECRET'),
+        'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
+        'return_url'     => env('RETURN_URL_PAGAMENTO'),
     ],
 
     'payment' => [

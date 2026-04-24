@@ -60,9 +60,9 @@
 @endphp
 
 @php
-    $corPrimaria = $empresaTemaAtual->cor_primaria ?? '#1F2937';
-    $corSecundaria = $empresaTemaAtual->cor_secundaria ?? '#E2E8F0';
-    $corTerciaria = $empresaTemaAtual->cor_terciaria ?? '#64748B';
+    $corPrimaria = $empresaTemaAtual->cor_primaria ?? '#FFFFFF';
+    $corSecundaria = $empresaTemaAtual->cor_secundaria ?? '#F8FAFC';
+    $corTerciaria = $empresaTemaAtual->cor_terciaria ?? '#CBD5E1';
 
     $corPrimariaContraste = $contrasteParaHex($corPrimaria);
     $corSecundariaContraste = $contrasteParaHex($corSecundaria);
@@ -121,6 +121,10 @@
         padding: 10px;
     }
 
+    .user-menu .empresa-context-body {
+        padding: 12px 12px 0;
+    }
+
     .user-menu .empresa-context-select label {
         font-size: 11px;
         text-transform: uppercase;
@@ -131,9 +135,35 @@
         font-weight: 700;
     }
 
+    .user-menu .empresa-context-current {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        width: 100%;
+        margin-bottom: 8px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        background: #f8fafc;
+        color: #0f172a;
+        font-weight: 700;
+        font-size: 13px;
+    }
+
     .user-menu .empresa-context-select select {
         border-radius: 10px;
         font-size: 13px;
+    }
+
+    .user-menu .empresa-context-link {
+        display: inline-flex;
+        margin-top: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--empresa-cor-primaria, #2563eb);
+    }
+
+    .user-menu .empresa-context-link:hover {
+        text-decoration: underline;
     }
 </style>
 

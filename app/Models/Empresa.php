@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
+use App\Models\OnboardingStep;
 
 class Empresa extends Model
 {
@@ -41,6 +42,7 @@ class Empresa extends Model
         'cor_secundaria',
         'cor_terciaria',
         'gateway_pagamento',
+        'gateway_customer_id',
         'moeda_pagamento',
         'stripe_public_key',
         'stripe_secret',
@@ -84,6 +86,28 @@ class Empresa extends Model
     public function users()
     {
         return $this->hasMany(User::class, 'empresa_id');
+    }
+
+    public function planos()
+    {
+        return $this->hasMany(EmpresaPlano::class, 'empresa_id');
+    }
+
+    public function planoAtivo()
+    {
+        return $this->hasOne(EmpresaPlano::class, 'empresa_id')
+            ->whereIn('status', ['ativo', 'trial', 'inadimplente', 'aguardando_pagamento'])
+            ->latest();
+    }
+
+    public function pagamentosPlano()
+    {
+        return $this->hasMany(EmpresaPlanoPagamento::class, 'empresa_id');
+    }
+
+    public function onboardingStep()
+    {
+        return $this->hasOne(OnboardingStep::class, 'empresa_id');
     }
 
     public function getLogoUrlAttribute(): ?string
