@@ -594,24 +594,7 @@
                         @endforeach
                     </div>
 
-                    <input type="hidden" name="renovacao_automatica" id="alterarRenovacaoAuto" value="0">
-
-                    <div id="divAlterarCartao" class="mt-3 p-3 rounded"
-                         style="display:none;background:#f0f9ff;border:1px solid #bae6fd;">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <div class="font-weight-bold" style="font-size:.83rem;">
-                                    <i class="fas fa-sync-alt mr-1 text-primary"></i> Renovação automática
-                                </div>
-                                <div class="text-muted" style="font-size:.75rem;">Renova sem intervenção. Cancele quando quiser.</div>
-                            </div>
-                            <div class="custom-control custom-switch">
-                                <input type="checkbox" class="custom-control-input" id="alterarToggleAuto"
-                                       onchange="document.getElementById('alterarRenovacaoAuto').value = this.checked ? '1' : '0'">
-                                <label class="custom-control-label" for="alterarToggleAuto"></label>
-                            </div>
-                        </div>
-                    </div>
+                    <input type="hidden" name="renovacao_automatica" value="0">
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
@@ -982,20 +965,12 @@ function abrirAlterarMetodo(pagamentoId, metodoAtual) {
         radio.checked = true;
         radio.closest('.metodo-alt-opt')?.classList.add('selected');
     }
-    document.getElementById('divAlterarCartao').style.display = metodoAtual === 'cartao' ? 'block' : 'none';
-    document.getElementById('alterarToggleAuto').checked = false;
-    document.getElementById('alterarRenovacaoAuto').value = '0';
     $('#modalAlterarMetodo').modal('show');
 }
 
 function onAlterarMetodoChange(metodo) {
     document.querySelectorAll('.metodo-alt-opt').forEach(l => l.classList.remove('selected'));
     document.getElementById('met_' + metodo)?.closest('.metodo-alt-opt')?.classList.add('selected');
-    document.getElementById('divAlterarCartao').style.display = metodo === 'cartao' ? 'block' : 'none';
-    if (metodo !== 'cartao') {
-        document.getElementById('alterarToggleAuto').checked = false;
-        document.getElementById('alterarRenovacaoAuto').value = '0';
-    }
 }
 
 // ── Modal Renovar ─────────────────────────────────────────────────────────────

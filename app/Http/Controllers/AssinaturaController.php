@@ -343,7 +343,7 @@ class AssinaturaController extends Controller
         abort_unless($empresa && $pagamento->empresa_id === $empresa->id && $pagamento->status === 'pendente', 403);
 
         $data = $request->validate([
-            'metodo'               => 'required|in:boleto,pix,cartao',
+            'metodo'               => 'required|in:pix,cartao',
             'renovacao_automatica' => 'nullable|boolean',
         ]);
 
@@ -480,7 +480,7 @@ class AssinaturaController extends Controller
 
         $data = $request->validate([
             'periodicidade'        => 'required|in:mensal,anual',
-            'metodo_cobranca'      => 'required|in:boleto,pix,cartao,manual',
+            'metodo_cobranca'      => 'required|in:pix,cartao,manual',
             'renovacao_automatica' => 'nullable|boolean',
             'dia_vencimento'       => 'nullable|integer|min:1|max:28',
         ]);
