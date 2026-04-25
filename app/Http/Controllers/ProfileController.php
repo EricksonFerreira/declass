@@ -98,6 +98,6 @@ class ProfileController extends Controller
         $user->email_verified_at = now();
         $user->save();
 
-        return redirect()->route('profile.edit')->with('success', 'Senha atualizada com sucesso.');
+        return redirect()->route('onboarding.plano')->with('success', 'Senha atualizada com sucesso. Vamos configurar seu plano.');
     }
 }

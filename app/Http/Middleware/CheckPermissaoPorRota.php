@@ -24,6 +24,8 @@ class CheckPermissaoPorRota
         'ignition.',
         'debugbar.',
         'profile.',
+        'onboarding.',
+        'assinatura.',
     ];
 
     public function handle(Request $request, Closure $next): Response

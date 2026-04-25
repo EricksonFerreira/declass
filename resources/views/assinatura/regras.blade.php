@@ -4,19 +4,18 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="$titulo" :subtitle="$subtitulo">
+        <a href="{{ route('planos.hub') }}" class="btn btn-xs btn-outline-secondary">
+            <i class="fas fa-th-large mr-1"></i> Central
+        </a>
+        <a href="{{ route('assinatura.index') }}" class="btn btn-xs btn-outline-secondary">
+            <i class="fas fa-id-card mr-1"></i> Assinaturas
+        </a>
+    </x-page-title>
 @stop
 
 @section('content')
-    <x-page-header-card :title="$titulo" :subtitle="$subtitulo">
-        <x-slot:actions>
-            <a href="{{ route('planos.hub') }}" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-th-large mr-1"></i> Central
-            </a>
-            <a href="{{ route('assinatura.index') }}" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-id-card mr-1"></i> Assinaturas
-            </a>
-        </x-slot:actions>
-
+    <x-page-header-card :showHeader="false">
         <div class="card card-outline card-secondary mb-0">
             <div class="card-header py-2">
                 <ul class="nav nav-pills card-header-pills" role="tablist" style="gap:.35rem;">

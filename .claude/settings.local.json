@@ -47,7 +47,21 @@
       "Bash(composer require *)",
       "Bash(php --version)",
       "Bash(composer show *)",
-      "Read(//c/c/Users/Erickson/Dev/laragon/www/xpandCars/database/**)"
+      "Read(//c/c/Users/Erickson/Dev/laragon/www/xpandCars/database/**)",
+      "Bash(php -r \"echo extension_loaded\\('pdo_sqlite'\\) ? 'sqlite ok' : 'sem sqlite';\")",
+      "Bash(php -r \"echo extension_loaded\\('pdo_mysql'\\) ? 'mysql ok' : 'sem mysql';\")",
+      "Bash(mysql -u root -e \"CREATE DATABASE IF NOT EXISTS xpandcars_test CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;\")",
+      "Bash(mysql -h 127.0.0.1 -P 3306 -u root -e \"SELECT 1\")",
+      "Bash(mysql -h 127.0.0.1 -P 3307 -u root -e \"SELECT 1\")",
+      "Bash(php -l tests/Feature/Plano/EmpresaPlanoServiceTest.php)",
+      "Bash(php -l tests/Feature/Plano/PlanoModelTest.php)",
+      "Bash(php -l tests/Feature/Plano/EmpresaPlanoModelTest.php)",
+      "Bash(php -l tests/Feature/Plano/AssinaturaControllerTest.php)",
+      "Bash(php -l tests/Feature/Plano/ExigirPagamentoPlanoMiddlewareTest.php)",
+      "Bash(php -l database/factories/PlanoFactory.php)",
+      "Bash(php -l database/factories/EmpresaFactory.php)",
+      "Bash(php -l database/factories/EmpresaPlanoFactory.php)",
+      "Bash(php -l database/factories/EmpresaPlanoPagamentoFactory.php)"
     ]
   }
 }

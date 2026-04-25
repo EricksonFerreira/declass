@@ -72,27 +72,60 @@ class AssinaturaController extends Controller
 
     public function regras(): View
     {
-        $titulo = 'Regras & Politicas';
-        $subtitulo = 'Referencia interna para descontos, upgrades, downgrades e cancelamentos';
+        // Backward-compatible: a tela de regras virou o modulo de ajuda.
+        return $this->ajuda();
+    }
+
+    public function ajuda(): View
+    {
+        $titulo = 'Ajuda (Planos)';
+        $subtitulo = 'FAQ interno para upgrades, downgrades, cancelamentos e cobranca';
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
-            new \App\DTO\BreadCrumbItem('Regras', null),
+            new \App\DTO\BreadCrumbItem('Ajuda', null),
         ]);
 
-        $regrasPath = base_path('docs/REGRAS_PLANOS.md');
-        $logicaPath = base_path('docs/logica-de-planos.md');
+        $ajudaPath = base_path('docs/ajuda-planos.md');
+        $ajudaMd = File::exists($ajudaPath) ? File::get($ajudaPath) : "# Ajuda - Planos\n\nArquivo nao encontrado: docs/ajuda-planos.md";
 
-        $regrasMd = File::exists($regrasPath) ? File::get($regrasPath) : '# Regras\n\nArquivo nao encontrado: docs/REGRAS_PLANOS.md';
-        $logicaMd = File::exists($logicaPath) ? File::get($logicaPath) : '# Logica\n\nArquivo nao encontrado: docs/logica-de-planos.md';
+        $faqs = $this->parseFaqMarkdown($ajudaMd);
 
-        return view('assinatura.regras', [
-            'regrasHtml' => Str::markdown($regrasMd),
-            'logicaHtml' => Str::markdown($logicaMd),
-            'breadcrumb' => $breadcrumb,
-            'titulo'     => $titulo,
-            'subtitulo'  => $subtitulo,
-        ]);
+        return view('assinatura.ajuda', compact('faqs', 'breadcrumb', 'titulo', 'subtitulo'));
+    }
+
+    private function parseFaqMarkdown(string $md): array
+    {
+        $md = str_replace(["\r\n", "\r"], "\n", $md);
+
+        $parts = preg_split('/^##\\s+/m', $md);
+        if (!$parts || count($parts) <= 1) {
+            return [[
+                'id'    => 'faq-1',
+                'q'     => 'Como usar este modulo?',
+                'aHtml' => Str::markdown("Edite o arquivo `docs/ajuda-planos.md` e crie perguntas usando titulos `##`."),
+            ]];
+        }
+
+        array_shift($parts); // ignora cabecalho antes do primeiro ##
+        $faqs = [];
+        foreach ($parts as $i => $chunk) {
+            $chunk = ltrim($chunk);
+            if ($chunk === '') continue;
+
+            $lines = explode("\n", $chunk, 2);
+            $q = trim($lines[0] ?? '');
+            $a = trim($lines[1] ?? '');
+            if ($q === '') continue;
+
+            $faqs[] = [
+                'id'    => 'faq-' . ($i + 1),
+                'q'     => $q,
+                'aHtml' => Str::markdown($a === '' ? '_' : $a),
+            ];
+        }
+
+        return $faqs;
     }
 
     /** Admin atribui plano diretamente a uma empresa. */
@@ -190,7 +223,9 @@ class AssinaturaController extends Controller
     public function meuPlano(): View
     {
         $empresa    = Auth::user()->empresa;
-        abort_unless($empresa, 404);
+        if (!$empresa) {
+            return redirect()->route('home')->with('error', 'Seu usuario nao esta vinculado a uma empresa.');
+        }
 
         $assinatura = $empresa->planoAtivo()->with('plano.itens')->first();
         $planos     = Plano::ativos()->with('itens')->get();
@@ -253,14 +288,11 @@ class AssinaturaController extends Controller
                 return back()->withErrors(['plano_id' => 'Voce ja esta neste plano e periodicidade.'])->withInput();
             }
 
-            // Define upgrade vs downgrade pelo "preco mensal equivalente" (mais intuitivo para o usuario).
-            $valorMensalAtual = (float) ($assinaturaAtual->periodicidade === 'anual'
-                ? ($assinaturaAtual->plano?->valor_anual ?? 0)
-                : ($assinaturaAtual->plano?->valor_mensal ?? 0));
-
-            $valorMensalNovo = (float) ($data['periodicidade'] === 'anual'
-                ? $plano->valor_anual
-                : $plano->valor_mensal);
+            // Define upgrade vs downgrade pelo valor TOTAL do periodo (mensal vs anual).
+            // Isso evita tratar "mensal -> anual" como downgrade quando o valor_anual e menor (desconto),
+            // pois no anual o total cobrado e (valor_anual * 12).
+            $valorAtualTotal = (float) ($assinaturaAtual->valor_cobrado ?? 0);
+            $valorNovoTotal  = (float) $this->planoService->valorTotalPlano($plano, (string) $data['periodicidade']);
 
             // Regra padrao SaaS: anual -> mensal reduz compromisso, entao agenda para o fim do periodo anual.
             if ((string) $assinaturaAtual->periodicidade === 'anual' && (string) $data['periodicidade'] === 'mensal') {
@@ -277,7 +309,7 @@ class AssinaturaController extends Controller
 
 
             // Downgrade: agenda para a prÃ³xima renovaÃ§Ã£o (fim do perÃ­odo vigente).
-            if ($valorMensalNovo < $valorMensalAtual) {
+            if ($valorNovoTotal < $valorAtualTotal) {
                 $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
 
                 if ($excedentes->isNotEmpty()) {

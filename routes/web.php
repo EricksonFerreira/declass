@@ -17,6 +17,7 @@ use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TipoTransacaoController;
 use App\Http\Controllers\EmpresaAlertaController;
 use App\Http\Controllers\MigrationController;
+use App\Http\Controllers\CadastroEmpresaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -89,6 +90,11 @@ Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'a
 Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('job.fipe.catalogo.run');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
+    // Comecar agora (cadastro rapido de empresa + usuario unico com senha padrao).
+    Route::middleware('guest')->get('/comecar', [CadastroEmpresaController::class, 'create'])->name('cadastro.empresa.create');
+    Route::middleware('guest')->post('/comecar', [CadastroEmpresaController::class, 'store'])->name('cadastro.empresa.store');
+    Route::middleware('guest')->get('/comecar/sucesso', [CadastroEmpresaController::class, 'success'])->name('cadastro.empresa.success');
+
     Route::get('/cadastro/sucesso', function () {
         return view('auth.register-success');
     })->name('register.success');

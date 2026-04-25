@@ -4,10 +4,11 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="$titulo" :subtitle="$subtitulo" />
 @stop
 
 @section('content')
-    <x-page-header-card :title="$titulo" :subtitle="$subtitulo">
+    <x-page-header-card :showHeader="false">
         <div class="row">
             <div class="col-md-4 mb-3">
                 <div class="card h-100 shadow-sm border-0" style="border-radius:14px; cursor:pointer;"
@@ -57,20 +58,20 @@
 
             <div class="col-md-4 mb-3">
                 <div class="card h-100 shadow-sm border-0" style="border-radius:14px; cursor:pointer;"
-                     onclick="window.location='{{ route('assinatura.regras') }}'">
+                     onclick="window.location='{{ route('assinatura.ajuda') }}'">
                     <div class="card-body">
                         <div class="d-flex align-items-center" style="gap:.75rem;">
                             <div class="rounded-circle d-flex align-items-center justify-content-center"
                                  style="width:44px;height:44px;background:#fef3c7;color:#92400e;">
-                                <i class="fas fa-book"></i>
+                                <i class="fas fa-question-circle"></i>
                             </div>
                             <div>
-                                <div class="font-weight-bold">Regras & Politicas</div>
-                                <div class="text-muted" style="font-size:.82rem;">Padrao de upgrades, downgrades e descontos</div>
+                                <div class="font-weight-bold">Ajuda</div>
+                                <div class="text-muted" style="font-size:.82rem;">FAQ interno (trocas, cancelamento e cobranca)</div>
                             </div>
                         </div>
                         <div class="mt-3">
-                            <a href="{{ route('assinatura.regras') }}" class="btn btn-outline-secondary btn-sm">
+                            <a href="{{ route('assinatura.ajuda') }}" class="btn btn-outline-secondary btn-sm">
                                 Acessar <i class="fas fa-arrow-right ml-1"></i>
                             </a>
                         </div>
@@ -80,4 +81,3 @@
         </div>
     </x-page-header-card>
 @stop
-

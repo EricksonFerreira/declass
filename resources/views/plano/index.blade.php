@@ -4,6 +4,14 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="$titulo" :subtitle="$subtitulo">
+        <a href="{{ route('planos.hub') }}" class="btn btn-xs btn-outline-secondary">
+            <i class="fas fa-th-large mr-1"></i> Central
+        </a>
+        <a href="{{ route('plano.create') }}" class="btn btn-xs btn-primary">
+            <i class="fa fa-plus" style="font-size:10px"></i> Novo Plano
+        </a>
+    </x-page-title>
 @stop
 
 @section('content')
@@ -20,16 +28,7 @@
         </div>
     @endif
 
-    <x-page-header-card :title="$titulo" :subtitle="$subtitulo">
-        <x-slot:actions>
-            <a href="{{ route('planos.hub') }}" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-th-large mr-1"></i> Central
-            </a>
-            <a href="{{ route('plano.create') }}" class="btn btn-xs btn-primary">
-                <i class="fa fa-plus" style="font-size:10px"></i> Novo Plano
-            </a>
-        </x-slot:actions>
-
+    <x-page-header-card :showHeader="false">
         <div class="row">
             @forelse ($planos as $plano)
                 <div class="col-md-6 col-xl-3 mb-4">

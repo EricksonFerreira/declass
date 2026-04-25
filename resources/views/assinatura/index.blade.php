@@ -4,6 +4,20 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    <x-page-title :title="$titulo" :subtitle="$subtitulo">
+        <a href="{{ route('planos.hub') }}" class="btn btn-xs btn-outline-secondary">
+            <i class="fas fa-th-large mr-1"></i> Central
+        </a>
+        <a href="{{ route('plano.index') }}" class="btn btn-xs btn-outline-secondary">
+            <i class="fas fa-tags mr-1"></i> Catalogo
+        </a>
+        <a href="{{ route('assinatura.ajuda') }}" class="btn btn-xs btn-outline-secondary">
+            <i class="fas fa-question-circle mr-1"></i> Ajuda
+        </a>
+        <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modalAtribuir">
+            <i class="fa fa-plus" style="font-size:10px"></i> Atribuir
+        </button>
+    </x-page-title>
 @stop
 
 @section('content')
@@ -20,22 +34,7 @@
         </div>
     @endif
 
-    <x-page-header-card :title="$titulo" :subtitle="$subtitulo">
-        <x-slot:actions>
-            <a href="{{ route('planos.hub') }}" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-th-large mr-1"></i> Central
-            </a>
-            <a href="{{ route('plano.index') }}" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-tags mr-1"></i> Catalogo
-            </a>
-            <a href="{{ route('assinatura.regras') }}" class="btn btn-xs btn-outline-secondary">
-                <i class="fas fa-book mr-1"></i> Regras
-            </a>
-            <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modalAtribuir">
-                <i class="fa fa-plus" style="font-size:10px"></i> Atribuir
-            </button>
-        </x-slot:actions>
-
+    <x-page-header-card :showHeader="false">
         {{-- Filtros --}}
         <div class="card card-outline card-secondary mb-3">
             <div class="card-body py-2">

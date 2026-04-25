@@ -15,6 +15,8 @@ Route::middleware('can:gerenciar-planos')->group(function () {
 // ── Gestão de Assinaturas (visão global) — superadmin / gerenciar-planos ────
 Route::middleware('can:gerenciar-planos')->prefix('assinatura')->name('assinatura.')->group(function () {
     Route::get('/',                                     [AssinaturaController::class, 'index'])->name('index');
+    Route::get('/ajuda',                                [AssinaturaController::class, 'ajuda'])->name('ajuda');
+    // Backward-compatible alias (tela de regras virou modulo de ajuda).
     Route::get('/regras',                               [AssinaturaController::class, 'regras'])->name('regras');
     Route::post('/atribuir',                            [AssinaturaController::class, 'atribuir'])->name('atribuir');
     Route::get('/{assinatura}',                         [AssinaturaController::class, 'show'])->name('show');

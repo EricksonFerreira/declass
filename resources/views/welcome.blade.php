@@ -1845,7 +1845,7 @@
                     <li class="plan-feature"><i class="fas fa-check"></i> Sem site de vendas</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
                 </ul>
-                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Gostei do plano Gestão e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar sem site</a>
+                <a href="{{ url('/admin/comecar?plano=gestao&sem_site=1') }}" class="btn-plan btn-plan-ghost">Começar sem site</a>
             </div>
             <div class="plan-card reveal delay-1">
                 <div class="plan-name">Essencial</div>
@@ -1865,7 +1865,7 @@
                     <li class="plan-feature"><i class="fas fa-check"></i> Personalização de cores e textos</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
                 </ul>
-                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Gostei do plano Essencial e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-ghost" target="_blank" rel="noopener">Começar agora</a>
+                <a href="{{ url('/admin/comecar?plano=essencial') }}" class="btn-plan btn-plan-ghost">Começar agora</a>
             </div>
             <div class="plan-card popular reveal delay-2">
                 <div class="plan-badge">Mais escolhido</div>
@@ -1889,7 +1889,7 @@
                     <li class="plan-feature"><i class="fas fa-check"></i> Relatórios avançados</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Suporte prioritário</li>
                 </ul>
-                <a href="https://wa.me/558192554172?text={{ urlencode('Olá! Gostei do plano Crescimento e queria conhecer melhor o sistema.') }}" class="btn-plan btn-plan-primary" target="_blank" rel="noopener">Começar agora</a>
+                <a href="{{ url('/admin/comecar?plano=crescimento') }}" class="btn-plan btn-plan-primary">Começar agora</a>
             </div>
             <div class="plan-card reveal delay-3">
                 <div class="plan-name">Escala</div>

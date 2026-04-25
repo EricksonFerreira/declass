@@ -336,6 +336,11 @@ return [
             'icon'  => 'fas fa-chart-bar',
         ],
         [
+            'text'  => 'Meu Plano',
+            'route' => 'assinatura.meu-plano',
+            'icon'  => 'fas fa-id-card',
+        ],
+        [
             'header'  => 'Atalhos rápidos',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
@@ -926,9 +931,9 @@ return [
                     'icon'  => 'fas fa-id-card',
                 ],
                 [
-                    'text'  => 'Regras & Politicas',
-                    'route' => 'assinatura.regras',
-                    'icon'  => 'fas fa-book',
+                    'text'  => 'Ajuda (FAQ)',
+                    'route' => 'assinatura.ajuda',
+                    'icon'  => 'fas fa-question-circle',
                 ],
             ],
         ],
