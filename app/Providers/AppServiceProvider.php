@@ -61,8 +61,8 @@ class AppServiceProvider extends ServiceProvider
             }
 
             if ($user->isAdministrador()) {
-                // Administrador de empresa tem acesso a tudo, exceto gestao global de planos.
-                if (in_array($ability, ['gerenciar-planos'], true)) {
+                // Administrador de empresa tem acesso a tudo, exceto gestao global/superadmin.
+                if (in_array($ability, ['gerenciar-planos', 'acessar-superadmin'], true)) {
                     return null;
                 }
                 return true;
@@ -82,6 +82,10 @@ class AppServiceProvider extends ServiceProvider
         // Superadmin sempre pode. Outros precisam de permissao explicita.
         Gate::define('gerenciar-planos', function (User $user) {
             return $user->isSuperAdmin() || $user->hasPermissao('gerenciar-planos');
+        });
+
+        Gate::define('acessar-superadmin', function (User $user) {
+            return $user->isSuperAdmin();
         });
 
         Gate::define('acessar-perfil', function (User $user) {

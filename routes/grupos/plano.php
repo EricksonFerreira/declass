@@ -6,14 +6,14 @@ use App\Http\Controllers\StripeWebhookController;
 use Illuminate\Support\Facades\Route;
 
 // ── Gestão de Planos (catálogo) — superadmin / gerenciar-planos ─────────────
-Route::middleware('can:gerenciar-planos')->group(function () {
+Route::middleware('can:acessar-superadmin')->group(function () {
     Route::get('planos', [PlanoController::class, 'hub'])->name('planos.hub');
     Route::resource('plano', PlanoController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 });
 
 // ── Gestão de Assinaturas (visão global) — superadmin / gerenciar-planos ────
-Route::middleware('can:gerenciar-planos')->prefix('assinatura')->name('assinatura.')->group(function () {
+Route::middleware('can:acessar-superadmin')->prefix('assinatura')->name('assinatura.')->group(function () {
     Route::get('/',                                     [AssinaturaController::class, 'index'])->name('index');
     Route::get('/ajuda',                                [AssinaturaController::class, 'ajuda'])->name('ajuda');
     // Backward-compatible alias (tela de regras virou modulo de ajuda).

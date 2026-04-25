@@ -366,7 +366,7 @@ return [
             'text'  => 'Nova Empresa',
             'route' => 'empresa.create',
             'icon'  => 'fas fa-building',
-            'can'   => 'gerenciar-empresa',
+            'can'   => 'acessar-superadmin',
         ],
         [
             'text'  => 'Novo Usuário',
@@ -377,7 +377,7 @@ return [
             'text'  => 'Replicação de Base',
             'route' => 'replicacao_base.index',
             'icon'  => 'fas fa-copy',
-            'can'   => 'gerenciar-empresa',
+            'can'   => 'acessar-superadmin',
         ],
         [
             'text'  => 'Sincronizar catálogo FIPE',
@@ -904,36 +904,46 @@ return [
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
         ],
 
-        // PLANOS & ASSINATURAS (SUPERADMIN)
+        // PLANOS (SUPERADMIN)
         [
-            'header'  => 'Planos & Assinaturas',
+            'header'  => 'Planos',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-            'can'     => 'gerenciar-planos',
+            'can'     => 'acessar-superadmin',
         ],
         [
             'text'    => 'Planos',
             'icon'    => 'fas fa-layer-group',
-            'can'     => 'gerenciar-planos',
+            'can'     => 'acessar-superadmin',
             'submenu' => [
                 [
-                    'text'  => 'Central de Planos',
+                    'text'  => 'Planos',
                     'route' => 'planos.hub',
-                    'icon'  => 'fas fa-th-large',
+                    'icon'  => 'fas fa-layer-group',
                 ],
                 [
-                    'text'  => 'Catalogo de Planos',
-                    'route' => 'plano.index',
-                    'icon'  => 'fas fa-tags',
+                    'text'  => 'Regras',
+                    'route' => 'regra.index',
+                    'icon'  => 'fas fa-key',
                 ],
                 [
-                    'text'  => 'Assinaturas (Gestao)',
-                    'route' => 'assinatura.index',
-                    'icon'  => 'fas fa-id-card',
+                    'text'  => 'Empresas',
+                    'route' => 'empresa.index',
+                    'icon'  => 'fas fa-building',
                 ],
                 [
-                    'text'  => 'Ajuda (FAQ)',
-                    'route' => 'assinatura.ajuda',
-                    'icon'  => 'fas fa-question-circle',
+                    'text'  => 'Permissões',
+                    'route' => 'permissao.index',
+                    'icon'  => 'fas fa-lock',
+                ],
+                [
+                    'text'  => 'Perfis de Usuários',
+                    'route' => 'tipo_usuario.index',
+                    'icon'  => 'fas fa-user-tag',
+                ],
+                [
+                    'text'  => 'Replicação de Base',
+                    'route' => 'replicacao_base.index',
+                    'icon'  => 'fas fa-copy',
                 ],
             ],
         ],
@@ -1050,56 +1060,6 @@ return [
                     'icon' => 'fas fa-plus-circle',
                 ],
             ],
-        ],
-        [
-            'text'    => 'Perfis de Usuários',
-            'icon'    => 'fas fa-user-tag',
-            'can'     => 'gerenciar-empresa',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
-                    'route' => 'tipo_usuario.index',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Novo',
-                    'route' => 'tipo_usuario.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text' => 'sidebar.permissao',
-            'route' => 'permissao.index',
-            'icon' => 'fas fa-lock',
-        ],
-        [
-            'text' => 'sidebar.regra',
-            'route' => 'regra.index',
-            'icon' => 'fas fa-key',
-        ],
-        [
-            'text'    => 'Empresas',
-            'icon'    => 'fas fa-building',
-            'can'     => 'gerenciar-empresa',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
-                    'route' => 'empresa.index',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Nova',
-                    'route' => 'empresa.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text'  => 'sidebar.replicacao_base',
-            'route' => 'replicacao_base.index',
-            'icon'  => 'fas fa-copy',
-            'can'   => 'gerenciar-empresa',
         ],
         [
         [
