@@ -11,6 +11,7 @@ use App\Services\ReplicacaoBaseService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
@@ -113,8 +114,12 @@ class CadastroEmpresaController extends Controller
         try {
             Mail::to($payload['user']->email)
                 ->send(new BoasVindasAdminMail($payload['empresa'], $payload['user'], $payload['senha']));
-        } catch (\Throwable) {
-            // Não bloqueia o cadastro se o envio de e-mail falhar.
+        } catch (\Throwable $e) {
+            Log::error('Falha ao enviar e-mail de boas-vindas ao admin.', [
+                'email'     => $payload['user']->email,
+                'empresa'   => $payload['empresa']->nome,
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         // Envia e-mail para o e-mail da empresa (pode ser diferente do admin).
@@ -124,8 +129,12 @@ class CadastroEmpresaController extends Controller
                 Mail::to($emailEmpresa)
                     ->send(new BoasVindasEmpresaMail($payload['empresa'], $payload['user'], $payload['senha']));
             }
-        } catch (\Throwable) {
-            // Não bloqueia o cadastro se o envio de e-mail falhar.
+        } catch (\Throwable $e) {
+            Log::error('Falha ao enviar e-mail de boas-vindas a empresa.', [
+                'email'     => $payload['empresa']->email,
+                'empresa'   => $payload['empresa']->nome,
+                'exception' => $e->getMessage(),
+            ]);
         }
 
         return redirect()->route('cadastro.empresa.success')

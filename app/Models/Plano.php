@@ -18,6 +18,7 @@ class Plano extends Model
         'valor_mensal',
         'valor_anual',
         'limite_veiculos',
+        'limite_usuarios',
         'site_vendas',
         'modulo_multas',
         'modulo_nfse',
@@ -80,6 +81,11 @@ class Plano extends Model
     public function getLimiteVeiculosTextoAttribute(): string
     {
         return $this->limite_veiculos === null ? 'Ilimitado' : (string) $this->limite_veiculos;
+    }
+
+    public function getLimiteUsuariosTextoAttribute(): string
+    {
+        return $this->limite_usuarios === null ? 'Ilimitado' : (string) $this->limite_usuarios;
     }
 
     /**
@@ -286,11 +292,17 @@ class Plano extends Model
             // — Gestão —
             [
                 'grupo'     => 'Gestao',
-                'label'     => 'Múltiplos usuários',
-                'descricao' => 'Crie quantos usuários precisar com perfis e permissões diferenciados.',
+                'label'     => $this->limite_usuarios === null
+                    ? 'Usuários ilimitados'
+                    : ($this->limite_usuarios === 1 ? '1 usuário' : "Até {$this->limite_usuarios} usuários"),
+                'descricao' => $this->limite_usuarios === null
+                    ? 'Crie quantos usuários precisar com perfis e permissões diferenciados.'
+                    : ($this->limite_usuarios === 1
+                        ? 'Acesso exclusivo para o proprietário. Faça upgrade para adicionar colaboradores.'
+                        : "Adicione até {$this->limite_usuarios} usuários com perfis e permissões diferenciados."),
                 'incluso'   => true,
                 'icone'     => 'users',
-                'destaque'  => false,
+                'destaque'  => true,
             ],
             [
                 'grupo'     => 'Gestao',

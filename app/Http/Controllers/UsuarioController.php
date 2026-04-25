@@ -94,6 +94,19 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function create()
     {
+        // Bloqueia criacao de usuario se o plano atingiu o limite.
+        $empresa = auth()->user()?->empresa;
+        if ($empresa) {
+            $plano = $empresa->planoAtivo()?->with('plano')->first()?->plano;
+            if ($plano && $plano->limite_usuarios !== null) {
+                $totalUsuarios = \App\Models\User::where('empresa_id', $empresa->id)->count();
+                if ($totalUsuarios >= $plano->limite_usuarios) {
+                    return redirect()->route('usuario.index')
+                        ->with('error', "Seu plano permite ate {$plano->limite_usuarios} usuario(s). Faca upgrade para adicionar mais colaboradores.");
+                }
+            }
+        }
+
         $sexo = [
             'M' => 'Masculino',
             'F' => 'Feminino',
