@@ -86,7 +86,10 @@
     @endif
 
     {{-- Progresso --}}
-    @php $pct = $step->percentualConcluido(); @endphp
+    @php
+        $planoAtivo = $empresa->planoAtivo()?->with('plano')->first()?->plano ?? null;
+        $pct = $step->percentualConcluido($planoAtivo);
+    @endphp
     <div style="margin-bottom:1.5rem;">
         <div style="display:flex; justify-content:space-between; font-size:.8rem; font-weight:600; color:#374151; margin-bottom:.3rem;">
             <span>Progresso de configuração</span>
@@ -99,7 +102,7 @@
 
     {{-- Lista de passos --}}
     <div class="steps-list">
-        @foreach ($step->stepsParaExibir() as $s)
+        @foreach ($step->stepsParaExibir($planoAtivo) as $s)
             @php $podeIr = Route::has($s['rota']); @endphp
             <div class="step-item {{ $s['feito'] ? 'feito' : '' }}">
                 <div class="step-icon">

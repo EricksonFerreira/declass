@@ -1,8 +1,9 @@
 @php
     $step = auth()->user()?->empresa?->onboardingStep ?? null;
     if (!$step || $step->concluido) return;
-    $pct   = $step->percentualConcluido();
-    $steps = $step->stepsParaExibir();
+    $planoAtivo = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano ?? null;
+    $pct   = $step->percentualConcluido($planoAtivo);
+    $steps = $step->stepsParaExibir($planoAtivo);
     $pendentes = collect($steps)->where('feito', false);
 @endphp
 

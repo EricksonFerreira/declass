@@ -1132,20 +1132,24 @@
         .reserva-link-action {
             display: inline-flex;
             align-items: center;
-            border: 1px solid color-mix(in srgb, var(--empresa-cor-secundaria, #2563eb) 65%, #ffffff 35%);
-            color: var(--empresa-cor-secundaria, #2563eb);
-            background: var(--empresa-cor-primaria, #ffffff);
+            gap: 6px;
+            border: 1px solid #f59e0b;
+            color: #92400e;
+            background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 100%);
             border-radius: 999px;
-            padding: 5px 11px;
+            padding: 6px 12px;
             font-size: 12px;
             font-weight: 700;
             text-decoration: none !important;
+            box-shadow: 0 4px 10px rgba(245, 158, 11, .16);
             transition: all .15s ease;
         }
         .reserva-link-action:hover {
-            color: #fff;
-            background: var(--empresa-cor-primaria, #2563eb);
-            border-color: var(--empresa-cor-primaria, #2563eb);
+            color: #fff8eb;
+            background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+            border-color: #d97706;
+            box-shadow: 0 8px 18px rgba(217, 119, 6, .24);
+            transform: translateY(-1px);
         }
 
         .reserva-page .reserva-main-card {
