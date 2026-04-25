@@ -60,15 +60,7 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
-            if ($user->isAdministrador()) {
-                // Administrador de empresa tem acesso a tudo, exceto gestao global/superadmin.
-                if (in_array($ability, ['gerenciar-planos', 'acessar-superadmin'], true)) {
-                    return null;
-                }
-                return true;
-            }
-
-            if ($ability === 'gerenciar-empresa') {
+            if (in_array($ability, ['gerenciar-empresa', 'gerenciar-planos', 'acessar-superadmin', 'acessar-perfil'], true)) {
                 return null;
             }
 

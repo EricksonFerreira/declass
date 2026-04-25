@@ -18,15 +18,16 @@ class AutoPermissionFilter implements FilterInterface
             $item['url'] = $this->normalizeAdminUrl($item['url']);
         }
 
-        // Se a permissao foi definida manualmente no menu, respeita.
-        if (!empty($item['can'])) {
-            return $item;
-        }
-
         if (!empty($item['submenu']) && is_array($item['submenu'])) {
             $item['submenu'] = array_map(function ($child) {
                 return is_array($child) ? $this->transform($child) : $child;
             }, $item['submenu']);
+        }
+
+        // Se a permissao foi definida manualmente no menu, respeita,
+        // sem impedir o tratamento automatico dos filhos.
+        if (!empty($item['can'])) {
+            return $item;
         }
 
         $permission = $this->resolvePermissionFromMenuItem($item);
