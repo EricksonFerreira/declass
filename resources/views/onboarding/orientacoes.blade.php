@@ -109,7 +109,7 @@
                     <div class="step-label">{{ $s['label'] }}</div>
                     <div class="step-desc">{{ $s['descricao'] }}</div>
                     @if (!$s['feito'] && $podeIr)
-                        <a href="{{ route($s['rota']) }}" class="step-btn">
+                        <a href="{{ route($s['rota'], $s['params'] ?? []) }}" class="step-btn">
                             <i class="fas fa-arrow-right"></i> Fazer agora
                         </a>
                     @endif

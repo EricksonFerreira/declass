@@ -52,7 +52,7 @@
                                 </div>
                             </div>
                             @if (!$s['feito'] && $podeIr)
-                                <a href="{{ route($s['rota']) }}"
+                                <a href="{{ route($s['rota'], $s['params'] ?? []) }}"
                                    class="btn btn-xs btn-outline-primary flex-shrink-0"
                                    style="font-size:.72rem;padding:.2rem .55rem;border-radius:6px;white-space:nowrap;">
                                     Fazer

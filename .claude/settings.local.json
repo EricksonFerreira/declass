@@ -61,7 +61,8 @@
       "Bash(php -l database/factories/PlanoFactory.php)",
       "Bash(php -l database/factories/EmpresaFactory.php)",
       "Bash(php -l database/factories/EmpresaPlanoFactory.php)",
-      "Bash(php -l database/factories/EmpresaPlanoPagamentoFactory.php)"
+      "Bash(php -l database/factories/EmpresaPlanoPagamentoFactory.php)",
+      "Bash(grep -n 'route.*$s\\\\['\\\\''rota'\\\\''\\\\]\\\\|route.*rota' resources/views/onboarding/orientacoes.blade.php)"
     ]
   }
 }
