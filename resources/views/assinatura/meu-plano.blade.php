@@ -531,47 +531,84 @@
                 </span>
             </div>
 
+            {{-- Labels dos grupos de features --}}
+            @php
+            $grupoLabels = [
+                'Frota'    => ['icone' => 'car',           'label' => 'Frota'],
+                'Reservas' => ['icone' => 'calendar-check','label' => 'Reservas'],
+                'Financeiro'=> ['icone'=> 'dollar-sign',   'label' => 'Financeiro'],
+                'Estacoes' => ['icone' => 'map-marker-alt','label' => 'Estacoes'],
+                'Site'     => ['icone' => 'globe',         'label' => 'Site de Vendas'],
+                'Modulos'  => ['icone' => 'puzzle-piece',  'label' => 'Modulos Extras'],
+                'Gestao'   => ['icone' => 'users-cog',     'label' => 'Gestao'],
+            ];
+            @endphp
+
             <div class="row justify-content-center">
                 @foreach ($planos as $p)
-                    @php $isAtual = $assinatura && $assinatura->plano_id === $p->id && $assinatura->estaAtivo(); @endphp
-                    <div class="col-sm-6 col-lg-3 mb-3">
+                    @php
+                        $isAtual  = $assinatura && $assinatura->plano_id === $p->id && $assinatura->estaAtivo();
+                        $features = $p->featuresDetalhadas();
+                        $grupos   = collect($features)->groupBy('grupo');
+                    @endphp
+                    <div class="col-sm-6 col-xl-4 mb-4">
                         <div class="card h-100 {{ $p->destaque ? 'shadow' : '' }}"
-                             style="border:{{ $isAtual ? '2px solid #22c55e' : ($p->destaque ? '2px solid #0a1628' : '1px solid #e2e8f0') }};border-radius:12px;overflow:hidden;transition:box-shadow .2s;">
+                             style="border:{{ $isAtual ? '2px solid #22c55e' : ($p->destaque ? '2px solid #0a1628' : '1px solid #e2e8f0') }};border-radius:14px;overflow:hidden;transition:box-shadow .2s;">
+
+                            {{-- Faixa topo --}}
                             @if ($isAtual)
-                                <div class="py-1 text-center text-white"
-                                     style="background:#22c55e;font-size:.7rem;font-weight:700;letter-spacing:.05em;">
+                                <div class="py-1 text-center text-white" style="background:#22c55e;font-size:.7rem;font-weight:700;letter-spacing:.06em;">
                                     <i class="fas fa-check mr-1"></i> PLANO ATUAL
                                 </div>
                             @elseif ($p->destaque)
-                                <div class="py-1 text-center text-white"
-                                     style="background:#0a1628;font-size:.7rem;font-weight:700;letter-spacing:.05em;">
+                                <div class="py-1 text-center text-white" style="background:#0a1628;font-size:.7rem;font-weight:700;letter-spacing:.06em;">
                                     <i class="fas fa-star mr-1"></i> MAIS ESCOLHIDO
                                 </div>
                             @endif
-                            <div class="card-body p-3 d-flex flex-column">
-                                <h5 class="font-weight-bold mb-1">{{ $p->nome }}</h5>
-                                <p class="text-muted mb-3" style="font-size:.78rem;min-height:2rem;">{{ $p->descricao }}</p>
 
-                                <div class="mb-3">
-                                    <div style="font-size:1.9rem;font-weight:900;color:#0a1628;line-height:1;">
+                            <div class="card-body p-3 d-flex flex-column">
+                                {{-- Nome + preco --}}
+                                <h5 class="font-weight-bold mb-0">{{ $p->nome }}</h5>
+                                <p class="text-muted mb-2" style="font-size:.76rem;min-height:1.8rem;">{{ $p->descricao }}</p>
+
+                                <div class="mb-2">
+                                    <div style="font-size:2rem;font-weight:900;color:#0a1628;line-height:1;">
                                         <span class="plan-price-mensal">R$ {{ number_format($p->valor_mensal, 2, ',', '.') }}</span>
                                         <span class="plan-price-anual d-none">R$ {{ number_format($p->valor_anual, 2, ',', '.') }}</span>
                                     </div>
-                                    <small class="text-muted">/mês</small>
+                                    <small class="text-muted">/mes</small>
                                     <div class="plan-anual-note d-none text-success" style="font-size:.75rem;">
-                                        Economia R$ {{ number_format($p->economia_anual, 2, ',', '.') }}/ano
+                                        <i class="fas fa-piggy-bank mr-1"></i>Economia R$ {{ number_format($p->economia_anual, 2, ',', '.') }}/ano
                                     </div>
                                 </div>
 
-                                <ul class="list-unstyled flex-grow-1 mb-3" style="font-size:.8rem;">
-                                    @foreach ($p->itens as $item)
-                                        <li class="mb-1">
-                                            <i class="fas fa-check text-success mr-1" style="font-size:.7rem;"></i>
-                                            {{ $item->descricao }}
-                                        </li>
-                                    @endforeach
-                                </ul>
+                                <hr class="my-2">
 
+                                {{-- Features detalhadas por grupo --}}
+                                <div class="flex-grow-1 mb-3" style="font-size:.78rem;">
+                                    @foreach ($grupoLabels as $grupoKey => $grupoMeta)
+                                        @if ($grupos->has($grupoKey))
+                                            <div class="mb-2">
+                                                <div style="font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:.3rem;">
+                                                    <i class="fas fa-{{ $grupoMeta['icone'] }} mr-1"></i>{{ $grupoMeta['label'] }}
+                                                </div>
+                                                @foreach ($grupos[$grupoKey] as $feat)
+                                                    <div class="d-flex align-items-start mb-1 {{ !$feat['incluso'] ? 'text-muted' : '' }}"
+                                                         style="{{ $feat['destaque'] && $feat['incluso'] ? 'font-weight:700;' : '' }}">
+                                                        <i class="fas fa-{{ $feat['incluso'] ? 'check-circle text-success' : 'times-circle text-secondary' }} mr-2 flex-shrink-0"
+                                                           style="font-size:.75rem;margin-top:2px;"></i>
+                                                        <div>
+                                                            <span>{{ $feat['label'] }}</span>
+                                                            <div class="text-muted" style="font-size:.7rem;line-height:1.35;font-weight:400;">{{ $feat['descricao'] }}</div>
+                                                        </div>
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        @endif
+                                    @endforeach
+                                </div>
+
+                                {{-- Botao --}}
                                 @if ($isAtual)
                                     <span class="btn btn-sm btn-block disabled"
                                           style="background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;cursor:default;">

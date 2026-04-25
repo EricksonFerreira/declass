@@ -75,6 +75,19 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
     public function create()
     {
+        // Bloqueia criação de segunda estação se o plano não inclui multi-estação.
+        $empresa = auth()->user()?->empresa;
+        if ($empresa) {
+            $plano = $empresa->planoAtivo()?->with('plano')->first()?->plano;
+            if ($plano && !$plano->multi_estacao) {
+                $totalEstacoes = \App\Models\Estacao::where('empresa_id', $empresa->id)->count();
+                if ($totalEstacoes >= 1) {
+                    return redirect()->route('estacao.index')
+                        ->with('error', 'Seu plano permite apenas uma estação. Faça upgrade para adicionar mais filiais.');
+                }
+            }
+        }
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Estações', 'estacao.index', 'Criar');
 
         $paises =  $this->paisService->getAllForSelectId();

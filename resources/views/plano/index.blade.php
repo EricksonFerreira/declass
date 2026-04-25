@@ -60,27 +60,66 @@
                                 </div>
                             </div>
 
-                            <ul class="list-unstyled mb-3 flex-grow-1" style="font-size:.85rem;">
-                                <li class="mb-1 text-muted">
-                                    <i class="fas fa-car mr-1"></i>
-                                    Veiculos: <strong>{{ $plano->limite_veiculos_texto }}</strong>
-                                </li>
+                            {{-- Resumo dos modulos do plano --}}
+                            <div class="mb-3 flex-grow-1">
+                                {{-- Veiculos --}}
+                                <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">
+                                    <i class="fas fa-car text-primary mr-2" style="width:14px;text-align:center;"></i>
+                                    <span><strong>{{ $plano->limite_veiculos_texto }}</strong> veiculos</span>
+                                </div>
+                                {{-- Multi-estacao --}}
+                                <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">
+                                    <i class="fas fa-map-marker-alt {{ $plano->multi_estacao ? 'text-success' : 'text-muted' }} mr-2" style="width:14px;text-align:center;"></i>
+                                    <span class="{{ $plano->multi_estacao ? '' : 'text-muted' }}">
+                                        {{ $plano->multi_estacao ? 'Multi-estacoes' : '1 estacao' }}
+                                    </span>
+                                </div>
+                                {{-- Site de vendas --}}
+                                <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">
+                                    <i class="fas fa-globe {{ $plano->site_vendas ? 'text-success' : 'text-muted' }} mr-2" style="width:14px;text-align:center;"></i>
+                                    <span class="{{ $plano->site_vendas ? '' : 'text-muted' }}">
+                                        Site de vendas
+                                        @if (!$plano->site_vendas)<i class="fas fa-times text-secondary ml-1" style="font-size:.65rem;"></i>@endif
+                                    </span>
+                                </div>
+                                {{-- Modulo multas --}}
+                                <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">
+                                    <i class="fas fa-file-invoice {{ $plano->modulo_multas ? 'text-success' : 'text-muted' }} mr-2" style="width:14px;text-align:center;"></i>
+                                    <span class="{{ $plano->modulo_multas ? '' : 'text-muted' }}">
+                                        Modulo de multas
+                                        @if (!$plano->modulo_multas)<i class="fas fa-times text-secondary ml-1" style="font-size:.65rem;"></i>@endif
+                                    </span>
+                                </div>
+                                {{-- NFS-e --}}
+                                <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">
+                                    <i class="fas fa-receipt {{ $plano->modulo_nfse ? 'text-success' : 'text-muted' }} mr-2" style="width:14px;text-align:center;"></i>
+                                    <span class="{{ $plano->modulo_nfse ? '' : 'text-muted' }}">
+                                        NFS-e
+                                        @if (!$plano->modulo_nfse)<i class="fas fa-times text-secondary ml-1" style="font-size:.65rem;"></i>@endif
+                                    </span>
+                                </div>
+                                {{-- API --}}
+                                <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">
+                                    <i class="fas fa-plug {{ $plano->api_integracao ? 'text-success' : 'text-muted' }} mr-2" style="width:14px;text-align:center;"></i>
+                                    <span class="{{ $plano->api_integracao ? '' : 'text-muted' }}">
+                                        API de integracao
+                                        @if (!$plano->api_integracao)<i class="fas fa-times text-secondary ml-1" style="font-size:.65rem;"></i>@endif
+                                    </span>
+                                </div>
+                                {{-- Sempre inclusos --}}
                                 @foreach ([
-                                    ['site_vendas',   'globe',       'Site de vendas'],
-                                    ['modulo_multas', 'file-invoice','Modulo de multas'],
-                                    ['modulo_nfse',   'receipt',     'NFS-e'],
-                                    ['multi_estacao', 'map-marker',  'Multi-estacao'],
-                                    ['api_integracao','plug',        'API'],
-                                ] as [$campo, $icon, $label])
-                                    <li class="mb-1 {{ $plano->$campo ? '' : 'text-muted' }}">
-                                        <i class="fas fa-{{ $icon }} mr-1 {{ $plano->$campo ? 'text-success' : '' }}"></i>
-                                        {{ $label }}
-                                        @if (!$plano->$campo)
-                                            <i class="fas fa-times text-secondary ml-1" style="font-size:.7rem;"></i>
-                                        @endif
-                                    </li>
+                                    ['calendar-check','Reservas completas'],
+                                    ['file-signature','Contratos digitais'],
+                                    ['dollar-sign',   'Controle financeiro'],
+                                    ['users',         'Multiplos usuarios'],
+                                    ['chart-bar',     'Relatorios e exportacao'],
+                                ] as [$icon, $label])
+                                    <div class="d-flex align-items-center mb-1 text-muted" style="font-size:.78rem;">
+                                        <i class="fas fa-{{ $icon }} text-success mr-2" style="width:14px;text-align:center;font-size:.7rem;"></i>
+                                        <span>{{ $label }}</span>
+                                    </div>
                                 @endforeach
-                            </ul>
+                            </div>
 
                             <div class="text-muted mb-3" style="font-size:.8rem;">
                                 <i class="fas fa-users mr-1"></i>

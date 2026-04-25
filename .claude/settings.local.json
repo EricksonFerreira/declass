@@ -67,7 +67,11 @@
       "Bash(php -l app/Services/PermissaoSyncService.php)",
       "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Http/Controllers/CadastroEmpresaController.php)",
       "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Mail/BoasVindasAdminMail.php)",
-      "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Mail/BoasVindasEmpresaMail.php)"
+      "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Mail/BoasVindasEmpresaMail.php)",
+      "Bash(php -l app/Http/Middleware/CheckPermissaoPorRota.php)",
+      "Bash(php -l app/Http/Controllers/EstacaoController.php)",
+      "Bash(php -l app/Models/Plano.php)",
+      "Bash(php -l database/migrations/2026_04_25_000001_update_plano_gestao_limite_veiculos.php)"
     ]
   }
 }

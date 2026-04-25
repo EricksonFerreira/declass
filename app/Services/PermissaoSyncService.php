@@ -173,25 +173,30 @@ class PermissaoSyncService
         return [
             'administrador' => fn (string $permissionName) => true,
 
-            // Gerente: opera praticamente todo o sistema, sem gestão de segurança.
+            // Gerente: opera o sistema operacional/financeiro; sem acesso a gestão de plataforma.
             'gerente' => fn (string $permissionName) =>
                 ! $this->isDangerousAction($permissionName)
+                && ! $this->isPlatformModule($permissionName)
                 && (
                     ! $this->isSecurityModule($permissionName)
                     || $this->isReservationStaffPermission($permissionName)
                 ),
 
-            // Colaborador chefe: foco operacional com leitura ampla.
+            // Colaborador chefe: foco operacional com leitura ampla; sem plataforma.
             'colaborador_chefe' => fn (string $permissionName) =>
-                (
-                    $this->isOperationalAction($permissionName)
-                    && $this->isOperationalModule($permissionName)
-                )
-                || $this->isReservationStaffPermission($permissionName),
+                ! $this->isPlatformModule($permissionName)
+                && (
+                    (
+                        $this->isOperationalAction($permissionName)
+                        && $this->isOperationalModule($permissionName)
+                    )
+                    || $this->isReservationStaffPermission($permissionName)
+                ),
 
-            // Colaborador administrativo: leitura + rotinas operacionais básicas (sem segurança).
+            // Colaborador administrativo: leitura + rotinas operacionais básicas; sem plataforma.
             'colaborador_administrativo' => fn (string $permissionName) =>
                 ! $this->isSecurityModule($permissionName)
+                && ! $this->isPlatformModule($permissionName)
                 && (
                     $this->isReadOnlyAction($permissionName)
                     || ($this->isOperationalAction($permissionName) && $this->isOperationalModule($permissionName))
@@ -204,21 +209,30 @@ class PermissaoSyncService
             // Compatibilidade (bases antigas).
             'gestor' => fn (string $permissionName) =>
                 ! $this->isDangerousAction($permissionName)
+                && ! $this->isPlatformModule($permissionName)
                 && (
                     ! $this->isSecurityModule($permissionName)
                     || $this->isReservationStaffPermission($permissionName)
                 ),
             'operador' => fn (string $permissionName) =>
-                (
-                    $this->isOperationalAction($permissionName)
-                    && $this->isOperationalModule($permissionName)
-                )
-                || $this->isReservationStaffPermission($permissionName),
+                ! $this->isPlatformModule($permissionName)
+                && (
+                    (
+                        $this->isOperationalAction($permissionName)
+                        && $this->isOperationalModule($permissionName)
+                    )
+                    || $this->isReservationStaffPermission($permissionName)
+                ),
             'financeiro' => fn (string $permissionName) =>
-                $this->isReadOnlyAction($permissionName)
-                || $this->isFinancialModule($permissionName)
-                || $this->isReservationFinancialPermission($permissionName),
-            'visualizador' => fn (string $permissionName) => $this->isReadOnlyAction($permissionName),
+                ! $this->isPlatformModule($permissionName)
+                && (
+                    $this->isReadOnlyAction($permissionName)
+                    || $this->isFinancialModule($permissionName)
+                    || $this->isReservationFinancialPermission($permissionName)
+                ),
+            'visualizador' => fn (string $permissionName) =>
+                ! $this->isPlatformModule($permissionName)
+                && $this->isReadOnlyAction($permissionName),
         ];
     }
 
@@ -286,6 +300,24 @@ class PermissaoSyncService
     private function isSecurityModule(string $permissionName): bool
     {
         return in_array($this->modulePrefix($permissionName), ['permissao', 'tipo_usuario'], true);
+    }
+
+    /**
+     * Módulos de gestão de plataforma: exclusivos do administrador do sistema.
+     * Nenhum usuário de empresa cliente deve ter acesso a estes módulos.
+     */
+    private function isPlatformModule(string $permissionName): bool
+    {
+        return in_array($this->modulePrefix($permissionName), [
+            'empresa',
+            'replicacao_base',
+            'regra',
+            'permissao',
+            'tipo_usuario',
+            'plano',
+            'planos',
+            'assinatura',
+        ], true);
     }
 
     private function isFinancialModule(string $permissionName): bool
