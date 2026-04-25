@@ -6,7 +6,10 @@ use App\Mail\BoasVindasAdminMail;
 use App\Mail\BoasVindasEmpresaMail;
 use App\Models\Empresa;
 use App\Models\OnboardingStep;
+use App\Models\Permissao;
+use App\Models\Regra;
 use App\Models\User;
+use App\Services\PermissaoSyncService;
 use App\Services\ReplicacaoBaseService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -28,7 +31,7 @@ class CadastroEmpresaController extends Controller
         ]);
     }
 
-    public function store(Request $request, ReplicacaoBaseService $replicacaoBaseService): RedirectResponse
+    public function store(Request $request, ReplicacaoBaseService $replicacaoBaseService, PermissaoSyncService $permissaoSyncService): RedirectResponse
     {
         $data = $request->validate([
             'empresa_nome'     => 'required|string|max:200',
@@ -47,6 +50,9 @@ class CadastroEmpresaController extends Controller
         ]);
 
         $senhaPadrao = 'Senh@123';
+
+        // Garante que permissões existem antes da transação.
+        $permissaoSyncService->syncIfNeeded();
 
         $payload = DB::transaction(function () use ($data, $replicacaoBaseService, $senhaPadrao) {
             $slugBase = Str::slug((string) $data['empresa_nome']);
@@ -69,20 +75,28 @@ class CadastroEmpresaController extends Controller
                 // Nao bloqueia o cadastro se a replicacao nao estiver disponivel.
             }
 
-            $roleId = null;
-            if (Schema::hasTable('roles') && Schema::hasColumn('users', 'role_id')) {
-                $roles = DB::table('roles')->where('guard_name', 'web');
-                if (Schema::hasColumn('roles', 'empresa_id')) {
-                    $roles->where('empresa_id', $empresa->id);
-                }
-                $roleId = $roles
-                    ->orderByRaw("CASE
-                        WHEN LOWER(name) IN ('administrador','admin') THEN 0
-                        WHEN LOWER(name) LIKE '%admin%' THEN 1
-                        WHEN LOWER(name) LIKE '%gerente%' THEN 2
-                        ELSE 99 END")
-                    ->value('id');
-            }
+            // Cria o perfil "Administrador" para esta empresa com todas as permissões disponíveis.
+            // Módulos de plataforma são excluídos — o administrador da empresa só pode o que o plano permite.
+            $prefixosBloqueados = [
+                'empresa', 'replicacao_base', 'regra', 'permissao', 'tipo_usuario',
+                'plano', 'planos', 'assinatura', 'migrations', 'fipe',
+                'powerbi', 'stripe', 'cashier', 'webhook', 'cancel', 'success',
+                'subscription', 'profile', 'onboarding',
+            ];
+
+            $todasPermissoes = Permissao::where('guard_name', 'web')->get()
+                ->filter(function (Permissao $p) use ($prefixosBloqueados) {
+                    $prefixo = strtolower(explode('.', $p->name)[0]);
+                    return !in_array($prefixo, $prefixosBloqueados, true);
+                });
+
+            $roleAdmin = Regra::create([
+                'name'       => 'Administrador',
+                'guard_name' => 'web',
+            ]);
+            $roleAdmin->permissoes()->sync($todasPermissoes->pluck('id')->all());
+
+            $roleId = $roleAdmin->id;
 
             $user = User::create([
                 'nome'              => $data['admin_nome'],
