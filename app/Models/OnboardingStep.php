@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Plano;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -37,27 +38,28 @@ class OnboardingStep extends Model
         return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
-    public function percentualConcluido(): int
+    public function percentualConcluido(?Plano $plano = null): int
     {
-        $steps = [
-            'step_empresa_configurada',
-            'step_plano_contratado',
-            'step_pagamento_realizado',
-            'step_estacao_cadastrada',
-            'step_frota_cadastrada',
-            'step_usuario_criado',
-            'step_site_configurado',
-        ];
+        $steps = $this->stepsParaExibir($plano);
+        $total = count($steps);
 
-        $total    = count($steps);
-        $feitos   = collect($steps)->filter(fn ($s) => (bool) $this->$s)->count();
+        if ($total === 0) {
+            return 100;
+        }
+
+        $feitos = collect($steps)->filter(fn ($s) => (bool) $s['feito'])->count();
 
         return (int) round(($feitos / $total) * 100);
     }
 
-    public function stepsParaExibir(): array
+    public function stepsParaExibir(?Plano $plano = null): array
     {
-        return [
+        $temSite     = $plano?->site_vendas ?? true;
+        $limiteUsers = $plano?->limite_usuarios ?? null;
+        // Só exibe "convidar colaborador" se o plano permite mais de 1 usuário.
+        $podeConvidar = $limiteUsers === null || $limiteUsers > 1;
+
+        $steps = [
             [
                 'key'      => 'step_empresa_configurada',
                 'label'    => 'Configurar dados da empresa',
@@ -66,6 +68,7 @@ class OnboardingStep extends Model
                 'params'   => [$this->empresa_id],
                 'icone'    => 'building',
                 'feito'    => $this->step_empresa_configurada,
+                'visivel'  => true,
             ],
             [
                 'key'      => 'step_plano_contratado',
@@ -74,6 +77,7 @@ class OnboardingStep extends Model
                 'rota'     => 'assinatura.meu-plano',
                 'icone'    => 'tags',
                 'feito'    => $this->step_plano_contratado,
+                'visivel'  => true,
             ],
             [
                 'key'      => 'step_pagamento_realizado',
@@ -82,6 +86,7 @@ class OnboardingStep extends Model
                 'rota'     => 'assinatura.meu-plano',
                 'icone'    => 'credit-card',
                 'feito'    => $this->step_pagamento_realizado,
+                'visivel'  => true,
             ],
             [
                 'key'      => 'step_estacao_cadastrada',
@@ -90,6 +95,7 @@ class OnboardingStep extends Model
                 'rota'     => 'estacao.index',
                 'icone'    => 'map-marker-alt',
                 'feito'    => $this->step_estacao_cadastrada,
+                'visivel'  => true,
             ],
             [
                 'key'      => 'step_frota_cadastrada',
@@ -98,6 +104,7 @@ class OnboardingStep extends Model
                 'rota'     => 'frota.index',
                 'icone'    => 'car',
                 'feito'    => $this->step_frota_cadastrada,
+                'visivel'  => true,
             ],
             [
                 'key'      => 'step_usuario_criado',
@@ -106,6 +113,7 @@ class OnboardingStep extends Model
                 'rota'     => 'usuario.index',
                 'icone'    => 'users',
                 'feito'    => $this->step_usuario_criado,
+                'visivel'  => $podeConvidar,
             ],
             [
                 'key'      => 'step_site_configurado',
@@ -115,7 +123,10 @@ class OnboardingStep extends Model
                 'params'   => [$this->empresa_id],
                 'icone'    => 'globe',
                 'feito'    => $this->step_site_configurado,
+                'visivel'  => $temSite,
             ],
         ];
+
+        return array_values(array_filter($steps, fn ($s) => $s['visivel']));
     }
 }

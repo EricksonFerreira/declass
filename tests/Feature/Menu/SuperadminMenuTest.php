@@ -186,4 +186,6 @@ it('oculta no menu os itens sem permissao para o administrador da empresa', func
     expect(collect($perfis['submenu'])->pluck('text')->values()->all())
         ->toBe(['Listagem']);
     expect(localizarItemPorTexto(menuSidebar(), 'sidebar.financeiro'))->toBeNull();
+    expect(localizarItemPorTexto(menuSidebar(), 'Multas'))->toBeNull();
+    expect(localizarItemPorTexto(menuSidebar(), 'Sinistros'))->toBeNull();
 });

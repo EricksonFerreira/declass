@@ -11,6 +11,36 @@ use Illuminate\Support\Facades\Schema;
 
 class PlanoPermissaoService
 {
+    /**
+     * Rotas internas/auxiliares que nao devem participar da logica de menu/permissao.
+     *
+     * @var string[]
+     */
+    private array $ignoredRoutePrefixes = [
+        'login',
+        'logout',
+        'register',
+        'password.',
+        'verification.',
+        'sanctum.',
+        'ignition.',
+        'debugbar.',
+        'profile.',
+        'onboarding.',
+        'assinatura.',
+    ];
+
+    /**
+     * Rotas sempre liberadas para usuarios autenticados.
+     *
+     * @var string[]
+     */
+    private array $alwaysAllowedRoutes = [
+        'home',
+        'dashboard',
+        'home.chart-data',
+    ];
+
     public function planoAtivoDaEmpresa(?Empresa $empresa): ?Plano
     {
         if (! $empresa) {
@@ -100,6 +130,37 @@ class PlanoPermissaoService
         return $this->empresaPodeUsarPermissao($user->empresa, $permissionName);
     }
 
+    public function usuarioPodeAcessarRota(User $user, string $routeName): bool
+    {
+        return $this->motivoBloqueioRota($user, $routeName) === null;
+    }
+
+    public function motivoBloqueioRota(User $user, string $routeName): ?string
+    {
+        if ($routeName === '' || $this->shouldIgnoreRoute($routeName)) {
+            return null;
+        }
+
+        if ($user->isSuperAdmin()) {
+            return null;
+        }
+
+        if (in_array($routeName, $this->alwaysAllowedRoutes, true)) {
+            return null;
+        }
+
+        $moduleBlock = $this->checkPlanoModuleAccess($user, $routeName);
+        if ($moduleBlock !== null) {
+            return $moduleBlock;
+        }
+
+        if (! $user->hasPermissao($routeName)) {
+            return 'Sem permissao para acessar esta acao.';
+        }
+
+        return null;
+    }
+
     public function validarSelecaoDePermissoes(User $user, array $permissionIds): array
     {
         $permissionIds = collect($permissionIds)
@@ -135,5 +196,58 @@ class PlanoPermissaoService
             ->groupBy(fn (Permissao $permissao) => $permissao->grupo_efetivo ?: '_outros')
             ->sortKeys()
             ->all();
+    }
+
+    private function checkPlanoModuleAccess(User $user, string $routeName): ?string
+    {
+        $empresa = $user->empresa ?? null;
+        if (! $empresa) {
+            return null;
+        }
+
+        $plano = $this->planoAtivoDaEmpresa($empresa);
+        if (! $plano) {
+            return null;
+        }
+
+        if (! $plano->modulo_multas && $this->routeIsInModule($routeName, ['multa'])) {
+            return 'Seu plano não inclui o módulo de multas. Faça upgrade para acessar este recurso.';
+        }
+
+        if (! $plano->modulo_nfse && $this->routeIsInModule($routeName, ['nfse'])) {
+            return 'Seu plano não inclui a emissão de NFS-e. Faça upgrade para acessar este recurso.';
+        }
+
+        if (! $plano->api_integracao && $this->routeIsInModule($routeName, ['api', 'webhook'])) {
+            return 'Seu plano não inclui acesso à API. Faça upgrade para acessar este recurso.';
+        }
+
+        if (! $plano->site_vendas && $this->routeIsInModule($routeName, ['empresa.site-apresentacao'])) {
+            return 'Seu plano não inclui o site de vendas. Faça upgrade para personalizar seu site.';
+        }
+
+        return null;
+    }
+
+    private function routeIsInModule(string $routeName, array $prefixes): bool
+    {
+        foreach ($prefixes as $prefix) {
+            if (str_starts_with($routeName, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function shouldIgnoreRoute(string $routeName): bool
+    {
+        foreach ($this->ignoredRoutePrefixes as $prefix) {
+            if (str_starts_with($routeName, $prefix)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
