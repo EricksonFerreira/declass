@@ -8,6 +8,7 @@ use App\Models\EmpresaPlanoPagamento;
 use App\Models\Plano;
 use App\Services\EmpresaAlertaService;
 use App\Services\EmpresaPlanoService;
+use App\Services\BreadcrumbService;
 use App\Services\StripePixService;
 use Illuminate\Http\JsonResponse;
 use Stripe\Stripe;
@@ -26,12 +27,21 @@ class AssinaturaController extends Controller
         private EmpresaPlanoService $planoService,
         private StripePixService $stripePixService,
         private EmpresaAlertaService $alertaService,
+        private BreadcrumbService $breadcrumbService,
     ) {}
 
     // ── Gestão global (superadmin / gerenciar-planos) ───────────────────────
 
     public function index(Request $request): View
     {
+        $titulo = 'Assinaturas';
+        $subtitulo = 'Gestao de planos contratados por cada locadora';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Assinaturas', null),
+        ]);
+
         $query = EmpresaPlano::with(['empresa', 'plano'])
             ->orderByRaw("FIELD(status, 'inadimplente', 'aguardando_pagamento', 'ativo', 'trial', 'cancelado')")
             ->orderBy('data_vencimento');
@@ -49,7 +59,7 @@ class AssinaturaController extends Controller
         $assinaturas = $query->paginate(20)->withQueryString();
         $planos      = Plano::ativos()->get();
 
-        return view('assinatura.index', compact('assinaturas', 'planos'));
+        return view('assinatura.index', compact('assinaturas', 'planos', 'breadcrumb', 'titulo', 'subtitulo'));
     }
 
     public function show(EmpresaPlano $assinatura): View
@@ -62,6 +72,14 @@ class AssinaturaController extends Controller
 
     public function regras(): View
     {
+        $titulo = 'Regras & Politicas';
+        $subtitulo = 'Referencia interna para descontos, upgrades, downgrades e cancelamentos';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Regras', null),
+        ]);
+
         $regrasPath = base_path('docs/REGRAS_PLANOS.md');
         $logicaPath = base_path('docs/logica-de-planos.md');
 
@@ -71,6 +89,9 @@ class AssinaturaController extends Controller
         return view('assinatura.regras', [
             'regrasHtml' => Str::markdown($regrasMd),
             'logicaHtml' => Str::markdown($logicaMd),
+            'breadcrumb' => $breadcrumb,
+            'titulo'     => $titulo,
+            'subtitulo'  => $subtitulo,
         ]);
     }
 

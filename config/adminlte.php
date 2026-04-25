@@ -911,6 +911,11 @@ return [
             'can'     => 'gerenciar-planos',
             'submenu' => [
                 [
+                    'text'  => 'Central de Planos',
+                    'route' => 'planos.hub',
+                    'icon'  => 'fas fa-th-large',
+                ],
+                [
                     'text'  => 'Catalogo de Planos',
                     'route' => 'plano.index',
                     'icon'  => 'fas fa-tags',

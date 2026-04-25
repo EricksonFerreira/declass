@@ -1,33 +1,9 @@
 @extends('adminlte::page')
 
-@section('title', 'Gestao de Assinaturas')
+@section('title', $titulo)
 
 @section('content_header')
-    <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">
-        <div>
-            <h1 class="m-0 text-dark" style="font-size:1.3rem;font-weight:700;">Gestao de Assinaturas</h1>
-            <small class="text-muted">Planos contratados por cada locadora</small>
-
-            <nav aria-label="breadcrumb" class="mt-1">
-                <ol class="breadcrumb p-0 m-0 bg-transparent" style="font-size:.82rem;">
-                    <li class="breadcrumb-item"><a href="{{ url('home') }}">Dashboard</a></li>
-                    <li class="breadcrumb-item active" aria-current="page">Assinaturas</li>
-                </ol>
-            </nav>
-        </div>
-
-        <div class="d-flex align-items-center flex-wrap" style="gap:6px;">
-            <a href="{{ route('plano.index') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-tags mr-1"></i> Catalogo
-            </a>
-            <a href="{{ route('assinatura.regras') }}" class="btn btn-outline-secondary btn-sm">
-                <i class="fas fa-book mr-1"></i> Regras
-            </a>
-            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#modalAtribuir">
-                <i class="fas fa-plus mr-1"></i> Atribuir Plano
-            </button>
-        </div>
-    </div>
+    <x-breadcrumb :breadcrumbs="$breadcrumb" />
 @stop
 
 @section('content')
@@ -44,104 +20,121 @@
         </div>
     @endif
 
-    {{-- Filtros --}}
-    <div class="card card-outline card-secondary mb-3">
-        <div class="card-body py-2">
-            <form method="GET" class="form-inline flex-wrap" style="gap:8px;">
-                <input type="text" name="empresa" value="{{ request('empresa') }}"
-                       class="form-control form-control-sm" placeholder="Nome da empresa">
-                <select name="status" class="form-control form-control-sm">
-                    <option value="">Todos os status</option>
-                    @foreach (['ativo','trial','inadimplente','aguardando_pagamento','cancelado'] as $s)
-                        <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
-                            {{ ucfirst(str_replace('_', ' ', $s)) }}
-                        </option>
-                    @endforeach
-                </select>
-                <select name="plano_id" class="form-control form-control-sm">
-                    <option value="">Todos os planos</option>
-                    @foreach ($planos as $p)
-                        <option value="{{ $p->id }}" {{ request('plano_id') == $p->id ? 'selected' : '' }}>{{ $p->nome }}</option>
-                    @endforeach
-                </select>
-                <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-search mr-1"></i>Filtrar</button>
-                <a href="{{ route('assinatura.index') }}" class="btn btn-outline-secondary btn-sm">Limpar</a>
-            </form>
-        </div>
-    </div>
+    <x-page-header-card :title="$titulo" :subtitle="$subtitulo">
+        <x-slot:actions>
+            <a href="{{ route('planos.hub') }}" class="btn btn-xs btn-outline-secondary">
+                <i class="fas fa-th-large mr-1"></i> Central
+            </a>
+            <a href="{{ route('plano.index') }}" class="btn btn-xs btn-outline-secondary">
+                <i class="fas fa-tags mr-1"></i> Catalogo
+            </a>
+            <a href="{{ route('assinatura.regras') }}" class="btn btn-xs btn-outline-secondary">
+                <i class="fas fa-book mr-1"></i> Regras
+            </a>
+            <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modalAtribuir">
+                <i class="fa fa-plus" style="font-size:10px"></i> Atribuir
+            </button>
+        </x-slot:actions>
 
-    <div class="card">
-        <div class="card-header py-2">
-            <h3 class="card-title mb-0 text-sm">
-                Assinaturas
-                <span class="badge badge-primary ml-1">{{ $assinaturas->total() }}</span>
-            </h3>
+        {{-- Filtros --}}
+        <div class="card card-outline card-secondary mb-3">
+            <div class="card-body py-2">
+                <form method="GET" class="form-inline flex-wrap" style="gap:8px;">
+                    <input type="text" name="empresa" value="{{ request('empresa') }}"
+                           class="form-control form-control-sm" placeholder="Nome da empresa">
+                    <select name="status" class="form-control form-control-sm">
+                        <option value="">Todos os status</option>
+                        @foreach (['ativo','trial','inadimplente','aguardando_pagamento','cancelado'] as $s)
+                            <option value="{{ $s }}" {{ request('status') === $s ? 'selected' : '' }}>
+                                {{ ucfirst(str_replace('_', ' ', $s)) }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <select name="plano_id" class="form-control form-control-sm">
+                        <option value="">Todos os planos</option>
+                        @foreach ($planos as $p)
+                            <option value="{{ $p->id }}" {{ request('plano_id') == $p->id ? 'selected' : '' }}>{{ $p->nome }}</option>
+                        @endforeach
+                    </select>
+                    <button type="submit" class="btn btn-secondary btn-sm"><i class="fas fa-search mr-1"></i>Filtrar</button>
+                    <a href="{{ route('assinatura.index') }}" class="btn btn-outline-secondary btn-sm">Limpar</a>
+                </form>
+            </div>
         </div>
-        <div class="card-body p-0 table-responsive">
-            <table class="table table-hover table-sm mb-0" style="font-size:13px;">
-                <thead class="thead-light">
-                    <tr>
-                        <th class="pl-3">Empresa</th>
-                        <th>Plano</th>
-                        <th>Periodicidade</th>
-                        <th>Valor</th>
-                        <th>Vencimento</th>
-                        <th>Status</th>
-                        <th>Cobranca</th>
-                        <th class="text-center">Acoes</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse ($assinaturas as $ass)
-                        @php
-                            $badge = $ass->status_badge;
-                            $dias  = $ass->diasParaVencer();
-                        @endphp
+
+        <div class="card">
+            <div class="card-header py-2">
+                <h3 class="card-title mb-0 text-sm">
+                    Assinaturas
+                    <span class="badge badge-primary ml-1">{{ $assinaturas->total() }}</span>
+                </h3>
+            </div>
+            <div class="card-body p-0 table-responsive">
+                <table class="table table-hover table-sm mb-0" style="font-size:13px;">
+                    <thead class="thead-light">
                         <tr>
-                            <td class="pl-3 align-middle font-weight-bold">{{ $ass->empresa->nome }}</td>
-                            <td class="align-middle">
-                                {{ $ass->plano->nome }}
-                                @if ($ass->plano->destaque)
-                                    <i class="fas fa-star text-warning ml-1" style="font-size:.7rem;" title="Destaque"></i>
-                                @endif
-                            </td>
-                            <td class="align-middle">
-                                <span class="badge badge-light border">{{ $ass->periodicidade_texto }}</span>
-                            </td>
-                            <td class="align-middle">R$ {{ number_format($ass->valor_cobrado, 2, ',', '.') }}</td>
-                            <td class="align-middle">
-                                {{ $ass->data_vencimento->format('d/m/Y') }}
-                                @if ($dias <= 10 && $dias >= 0 && $ass->estaAtivo())
-                                    <span class="badge badge-warning ml-1">{{ $dias }}d</span>
-                                @elseif ($dias < 0 && !in_array($ass->status, ['cancelado']))
-                                    <span class="badge badge-danger ml-1">{{ abs($dias) }}d atraso</span>
-                                @endif
-                            </td>
-                            <td class="align-middle">
-                                <span class="badge {{ $badge['class'] }}">{{ $badge['label'] }}</span>
-                            </td>
-                            <td class="align-middle text-capitalize" style="font-size:.8rem;">
-                                {{ str_replace('_', ' ', $ass->metodo_cobranca) }}
-                            </td>
-                            <td class="text-center align-middle">
-                                <div class="d-flex justify-content-center" style="gap:4px;">
-                                    <a href="{{ route('assinatura.show', $ass) }}"
-                                       class="btn btn-xs btn-outline-secondary" title="Ver detalhes">
-                                        <i class="fas fa-eye"></i>
-                                    </a>
-                                </div>
-                            </td>
+                            <th class="pl-3">Empresa</th>
+                            <th>Plano</th>
+                            <th>Periodicidade</th>
+                            <th>Valor</th>
+                            <th>Vencimento</th>
+                            <th>Status</th>
+                            <th>Cobranca</th>
+                            <th class="text-center">Acoes</th>
                         </tr>
-                    @empty
-                        <tr><td colspan="8" class="text-center text-muted py-4">Nenhuma assinatura encontrada.</td></tr>
-                    @endforelse
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse ($assinaturas as $ass)
+                            @php
+                                $badge = $ass->status_badge;
+                                $dias  = $ass->diasParaVencer();
+                            @endphp
+                            <tr>
+                                <td class="pl-3 align-middle font-weight-bold">{{ $ass->empresa->nome }}</td>
+                                <td class="align-middle">
+                                    {{ $ass->plano->nome }}
+                                    @if ($ass->plano->destaque)
+                                        <i class="fas fa-star text-warning ml-1" style="font-size:.7rem;" title="Destaque"></i>
+                                    @endif
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge badge-light border">{{ $ass->periodicidade_texto }}</span>
+                                </td>
+                                <td class="align-middle">R$ {{ number_format($ass->valor_cobrado, 2, ',', '.') }}</td>
+                                <td class="align-middle">
+                                    {{ $ass->data_vencimento->format('d/m/Y') }}
+                                    @if ($dias <= 10 && $dias >= 0 && $ass->estaAtivo())
+                                        <span class="badge badge-warning ml-1">{{ $dias }}d</span>
+                                    @elseif ($dias < 0 && !in_array($ass->status, ['cancelado']))
+                                        <span class="badge badge-danger ml-1">{{ abs($dias) }}d atraso</span>
+                                    @endif
+                                </td>
+                                <td class="align-middle">
+                                    <span class="badge {{ $badge['class'] }}">{{ $badge['label'] }}</span>
+                                </td>
+                                <td class="align-middle text-capitalize" style="font-size:.8rem;">
+                                    {{ str_replace('_', ' ', $ass->metodo_cobranca) }}
+                                </td>
+                                <td class="text-center align-middle">
+                                    <div class="d-flex justify-content-center" style="gap:4px;">
+                                        <a href="{{ route('assinatura.show', $ass) }}"
+                                           class="btn btn-xs btn-outline-secondary" title="Ver detalhes">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        @empty
+                            <tr><td colspan="8" class="text-center text-muted py-4">Nenhuma assinatura encontrada.</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            @if ($assinaturas->hasPages())
+                <div class="card-footer py-2">{{ $assinaturas->links() }}</div>
+            @endif
         </div>
-        @if ($assinaturas->hasPages())
-            <div class="card-footer py-2">{{ $assinaturas->links() }}</div>
-        @endif
-    </div>
+    </x-page-header-card>
 @stop
 
 @section('footer')
@@ -239,4 +232,3 @@
     </div>
 </div>
 @endsection
-

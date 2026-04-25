@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 // ── Gestão de Planos (catálogo) — superadmin / gerenciar-planos ─────────────
 Route::middleware('can:gerenciar-planos')->group(function () {
+    Route::get('planos', [PlanoController::class, 'hub'])->name('planos.hub');
     Route::resource('plano', PlanoController::class)
         ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
 });

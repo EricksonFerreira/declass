@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ItemPlano;
 use App\Models\Plano;
+use App\Services\BreadcrumbService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,16 +12,44 @@ use Illuminate\View\View;
 
 class PlanoController extends Controller
 {
+    public function __construct(private readonly BreadcrumbService $breadcrumbService) {}
+
+    public function hub(): View
+    {
+        $titulo = 'Planos';
+        $subtitulo = 'Central de gestao: catalogo, assinaturas e regras/politicas';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Planos');
+
+        return view('plano.hub', compact('breadcrumb', 'titulo', 'subtitulo'));
+    }
+
     public function index(): View
     {
+        $titulo = 'Catalogo de Planos';
+        $subtitulo = 'Gerencie os planos disponiveis para locadoras';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Catalogo', null),
+        ]);
+
         $planos = Plano::withCount('assinaturas')->orderBy('ordem')->get();
 
-        return view('plano.index', compact('planos'));
+        return view('plano.index', compact('planos', 'breadcrumb', 'titulo', 'subtitulo'));
     }
 
     public function create(): View
     {
-        return view('plano.create');
+        $titulo = 'Novo Plano';
+        $subtitulo = 'Crie um novo plano e defina recursos e limites';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Catalogo', route('plano.index')),
+            new \App\DTO\BreadCrumbItem('Novo', null),
+        ]);
+
+        return view('plano.create', compact('breadcrumb', 'titulo', 'subtitulo'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -59,9 +88,18 @@ class PlanoController extends Controller
 
     public function edit(Plano $plano): View
     {
+        $titulo = 'Editar Plano';
+        $subtitulo = 'Atualize precos, limites e recursos do plano';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Catalogo', route('plano.index')),
+            new \App\DTO\BreadCrumbItem('Editar: ' . $plano->nome, null),
+        ]);
+
         $plano->load('itens');
 
-        return view('plano.edit', compact('plano'));
+        return view('plano.edit', compact('plano', 'breadcrumb', 'titulo', 'subtitulo'));
     }
 
     public function update(Request $request, Plano $plano): RedirectResponse
