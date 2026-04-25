@@ -9,6 +9,7 @@ use App\Services\BreadcrumbService;
 use App\Services\PlanoPermissaoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -125,7 +126,9 @@ class PlanoController extends Controller
             ->orderBy('name')
             ->get();
 
-        $permitidas = $plano->permissoes()->pluck('permissions.id')->map(fn ($id) => (int) $id)->all();
+        $permitidas = Schema::hasTable('plano_permissao')
+            ? $plano->permissoes()->pluck('permissions.id')->map(fn ($id) => (int) $id)->all()
+            : [];
         $gruposPermissao = $this->planoPermissaoService->gruposDePermissoesParaTela($permissoes);
 
         return view('plano.acessos', compact(
@@ -155,7 +158,9 @@ class PlanoController extends Controller
         $plano->update([
             'limite_permissoes_por_regra' => $data['limite_permissoes_por_regra'] ?? null,
         ]);
-        $plano->permissoes()->sync($permissionIds);
+        if (Schema::hasTable('plano_permissao')) {
+            $plano->permissoes()->sync($permissionIds);
+        }
 
         return redirect()
             ->route('plano.acessos', $plano)

@@ -7,6 +7,7 @@ use App\Models\Permissao;
 use App\Models\Plano;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Schema;
 
 class PlanoPermissaoService
 {
@@ -16,11 +17,27 @@ class PlanoPermissaoService
             return null;
         }
 
-        return $empresa->planoAtivo()?->with('plano.permissoes')->first()?->plano;
+        $query = $empresa->planoAtivo();
+
+        if (Schema::hasTable('plano_permissao')) {
+            $query->with('plano.permissoes');
+        } else {
+            $query->with('plano');
+        }
+
+        return $query->first()?->plano;
     }
 
     public function permissoesPermitidasDoPlano(Plano $plano): Collection
     {
+        if (!Schema::hasTable('plano_permissao')) {
+            return Permissao::query()
+                ->where('guard_name', 'web')
+                ->orderBy('grupo')
+                ->orderBy('name')
+                ->get();
+        }
+
         return $plano->permissoes()
             ->where('guard_name', 'web')
             ->orderBy('grupo')
@@ -62,6 +79,10 @@ class PlanoPermissaoService
         $plano = $this->planoAtivoDaEmpresa($empresa);
         if (! $plano) {
             return false;
+        }
+
+        if (!Schema::hasTable('plano_permissao')) {
+            return true;
         }
 
         if (! $plano->permissoes()->exists()) {

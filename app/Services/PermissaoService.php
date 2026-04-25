@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Permissao;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Schema;
 
 class PermissaoService extends AbstractBaseService
 {
@@ -66,9 +67,24 @@ class PermissaoService extends AbstractBaseService
             return $this->getAll();
         }
 
-        $plano = $user->empresa?->planoAtivo()?->with('plano.permissoes')->first()?->plano;
+        $query = $user->empresa?->planoAtivo();
+        if (!$query) {
+            return collect();
+        }
+
+        if (Schema::hasTable('plano_permissao')) {
+            $query->with('plano.permissoes');
+        } else {
+            $query->with('plano');
+        }
+
+        $plano = $query->first()?->plano;
         if (!$plano) {
             return collect();
+        }
+
+        if (!Schema::hasTable('plano_permissao')) {
+            return $this->getAll();
         }
 
         if (!$plano->permissoes()->exists()) {
