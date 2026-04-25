@@ -3,8 +3,8 @@
 namespace App\Services;
 
 use App\Models\Permissao;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use App\Services\AbstractBaseService;
 
 class PermissaoService extends AbstractBaseService
 {
@@ -28,9 +28,6 @@ class PermissaoService extends AbstractBaseService
         return $this->model;
     }
 
-    /**
-     * Permissões são globais — não aplicar escopo de empresa.
-     */
     protected function shouldApplyEmpresaScope(): bool
     {
         return false;
@@ -41,16 +38,9 @@ class PermissaoService extends AbstractBaseService
         return false;
     }
 
-    /**
-     * Retorna todas as permissões globais, marcando quais estão na regra.
-     */
     public function getAllWithChecked($regraPermissoes)
     {
-        $permissoes = $this->model->newQuery()
-            ->where('guard_name', 'web')
-            ->orderBy('name')
-            ->get();
-
+        $permissoes = $this->getAll();
         $permissoesDaRegra = $regraPermissoes->pluck('id')->toArray();
 
         foreach ($permissoes as $permissao) {
@@ -60,16 +50,48 @@ class PermissaoService extends AbstractBaseService
         return $permissoes;
     }
 
-    /**
-     * Retorna todas as permissões globais web ordenadas.
-     */
     public function getAll($where = [])
     {
-        // Mantemos compatibilidade com a assinatura de AbstractBaseService::getAll($where = [])
-        // Ignoramos o filtro $where pois permissões são globais, mas aceitamos o parâmetro.
         return $this->model->newQuery()
             ->where('guard_name', 'web')
+            ->orderByRaw("CASE WHEN grupo IS NULL OR grupo = '' THEN 1 ELSE 0 END")
+            ->orderBy('grupo')
             ->orderBy('name')
             ->get();
+    }
+
+    public function getAllForUserContext(?User $user)
+    {
+        if (!$user || $user->isSuperAdmin()) {
+            return $this->getAll();
+        }
+
+        $plano = $user->empresa?->planoAtivo()?->with('plano.permissoes')->first()?->plano;
+        if (!$plano) {
+            return collect();
+        }
+
+        if (!$plano->permissoes()->exists()) {
+            return $this->getAll();
+        }
+
+        return $plano->permissoes()
+            ->where('guard_name', 'web')
+            ->orderByRaw("CASE WHEN grupo IS NULL OR grupo = '' THEN 1 ELSE 0 END")
+            ->orderBy('grupo')
+            ->orderBy('name')
+            ->get();
+    }
+
+    public function getAllWithCheckedForUserContext($regraPermissoes, ?User $user)
+    {
+        $permissoes = $this->getAllForUserContext($user);
+        $permissoesDaRegra = $regraPermissoes->pluck('id')->map(fn ($id) => (int) $id)->all();
+
+        foreach ($permissoes as $permissao) {
+            $permissao->checked = in_array((int) $permissao->id, $permissoesDaRegra, true) ? 'checked' : '';
+        }
+
+        return $permissoes;
     }
 }

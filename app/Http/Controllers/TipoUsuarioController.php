@@ -76,11 +76,13 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
     public function create()
     {
         $this->permissaoSyncService->syncIfNeeded();
-        $permissoes = $this->permissaoService->getAll();
+        $permissoes = $this->permissaoService->getAllForUserContext(auth()->user());
+        $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
+        $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Tipos de Usuario', 'tipo_usuario.index', 'Criar');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
-        return view('tipo_usuario.add-edit', compact('breadcrumb', 'metodo', 'rota', 'permissoes'))
+        return view('tipo_usuario.add-edit', compact('breadcrumb', 'metodo', 'rota', 'permissoes', 'plano', 'limitePermissoesPorRegra'))
             ->with('titulo', $this->titulo);
     }
 
@@ -100,11 +102,13 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
         }
 
         $this->permissaoSyncService->syncIfNeeded();
-        $permissoes = $this->permissaoService->getAllWithChecked($tipoUsuario->permissoes);
+        $permissoes = $this->permissaoService->getAllWithCheckedForUserContext($tipoUsuario->permissoes, auth()->user());
+        $plano = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano;
+        $limitePermissoesPorRegra = $plano?->limite_permissoes_por_regra;
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Tipos de Usuario', 'tipo_usuario.index', "Editar: $tipoUsuario->name");
         [$metodo, $rota] = $this->getFormMethodAndRoute($tipoUsuario);
 
-        return view('tipo_usuario.add-edit', compact('tipoUsuario', 'breadcrumb', 'permissoes', 'metodo', 'rota'))
+        return view('tipo_usuario.add-edit', compact('tipoUsuario', 'breadcrumb', 'permissoes', 'metodo', 'rota', 'plano', 'limitePermissoesPorRegra'))
             ->with('titulo', $this->titulo);
     }
 

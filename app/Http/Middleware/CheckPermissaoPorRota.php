@@ -35,7 +35,7 @@ class CheckPermissaoPorRota
         }
 
         $user = auth()->user();
-        if ($user->isAdministrador()) {
+        if ($user->isSuperAdmin()) {
             return $next($request);
         }
 

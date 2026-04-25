@@ -4,18 +4,24 @@ namespace App\Services;
 
 use App\Models\Regra;
 use Illuminate\Database\Eloquent\Model;
-use App\Services\AbstractBaseService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class RegraService extends AbstractBaseService
 {
     protected Model $model;
 
-    /**
-     * Regras/roles são defaults globais — não aplicar escopo de empresa.
-     */
     protected function shouldApplyEmpresaScope(): bool
     {
-        return false;
+        if (!Schema::hasColumn($this->model->getTable(), 'empresa_id')) {
+            return false;
+        }
+
+        if (request()?->routeIs('tipo_usuario.*') || request()?->routeIs('usuario.*')) {
+            return true;
+        }
+
+        return !Auth::user()?->isSuperAdmin();
     }
 
     protected function shouldApplyEstacaoScope(): bool
@@ -41,17 +47,27 @@ class RegraService extends AbstractBaseService
         return $this->model;
     }
 
-    public function getAllTiposUsuarios(){
-        $data = $this->model->newQuery()
+    public function getAllTiposUsuarios()
+    {
+        $query = $this->model->newQuery();
+
+        if ($this->shouldApplyEmpresaScope()) {
+            $query->where('empresa_id', $this->currentEmpresaId());
+        }
+
+        $data = $query
             ->select('id', 'name')
             ->distinct()
+            ->orderBy('name')
             ->get();
+
         return $this->formatArraySelect($data);
     }
 
     public function getClienteRoleId(): ?int
     {
         return $this->model->newQuery()
+            ->whereNull('empresa_id')
             ->whereRaw('LOWER(name) = ?', ['cliente'])
             ->value('id');
     }

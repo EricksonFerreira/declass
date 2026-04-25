@@ -129,11 +129,17 @@
                             <div class="text-muted mb-3" style="font-size:.8rem;">
                                 <i class="fas fa-users mr-1"></i>
                                 {{ $plano->assinaturas_count }} assinatura(s)
+                                <br>
+                                <i class="fas fa-user-shield mr-1"></i>
+                                {{ $plano->limite_permissoes_por_regra ? $plano->limite_permissoes_por_regra . ' permissões por perfil' : 'Permissões por perfil sem limite' }}
                             </div>
 
-                            <div class="mt-auto d-flex" style="gap:6px;">
+                            <div class="mt-auto d-flex flex-wrap" style="gap:6px;">
                                 <a href="{{ route('plano.edit', $plano) }}" class="btn btn-outline-secondary btn-sm flex-fill">
                                     <i class="fas fa-edit mr-1"></i> Editar
+                                </a>
+                                <a href="{{ route('plano.acessos', $plano) }}" class="btn btn-outline-primary btn-sm flex-fill">
+                                    <i class="fas fa-user-shield mr-1"></i> Acessos
                                 </a>
                                 @if ($plano->assinaturas_count === 0)
                                     <form action="{{ route('plano.destroy', $plano) }}" method="POST"

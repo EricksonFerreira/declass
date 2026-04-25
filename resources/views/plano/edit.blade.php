@@ -12,6 +12,9 @@
             <a href="{{ route('plano.index') }}" class="btn btn-xs btn-outline-secondary">
                 <i class="fas fa-arrow-left mr-1"></i> Voltar
             </a>
+            <a href="{{ route('plano.acessos', $plano) }}" class="btn btn-xs btn-outline-primary">
+                <i class="fas fa-user-shield mr-1"></i> Política de Acesso
+            </a>
         </x-slot:actions>
 
         <form action="{{ route('plano.update', $plano) }}" method="POST" id="formPlano">

@@ -2,27 +2,18 @@
 
 namespace App\Http\Requests\Regra;
 
-use App\Models\Regra;
+use App\Services\PlanoPermissaoService;
 use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateRegraRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         $empresaId = app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
@@ -33,7 +24,7 @@ class UpdateRegraRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('roles', 'name')
-                    ->ignore($this->route('regra'))
+                    ->ignore($this->route('regra') ?? $this->route('tipo_usuario'))
                     ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'guard_name' => 'required|string|max:255',
@@ -41,8 +32,30 @@ class UpdateRegraRequest extends FormRequest
             'permissions.*' => [
                 Rule::exists('permissions', 'id'),
             ],
-
         ];
+    }
+
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            if (auth()->user()?->isSuperAdmin()) {
+                return;
+            }
+
+            $roleName = mb_strtolower(trim((string) $this->input('name')));
+            if (in_array($roleName, ['superadmin', 'administrador', 'admin', 'cliente'], true)) {
+                $validator->errors()->add('name', 'Esse nome de perfil e reservado pelo sistema.');
+            }
+
+            $resultado = app(PlanoPermissaoService::class)->validarSelecaoDePermissoes(
+                auth()->user(),
+                (array) $this->input('permissions', [])
+            );
+
+            if (!$resultado['ok']) {
+                $validator->errors()->add('permissions', (string) $resultado['message']);
+            }
+        });
     }
 
     public function messages()

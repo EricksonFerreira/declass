@@ -92,6 +92,18 @@
             </div>
             <div class="card-body p-4">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
+                    @if(isset($plano))
+                        <div class="col-12 mb-3">
+                            <div class="alert alert-light border">
+                                <strong>Plano atual:</strong> {{ $plano->nome }}
+                                @if($limitePermissoesPorRegra)
+                                    <span class="d-block mt-1 text-muted">Cada perfil pode receber no máximo {{ $limitePermissoesPorRegra }} permissões.</span>
+                                @else
+                                    <span class="d-block mt-1 text-muted">Este plano não limita a quantidade de permissões por perfil.</span>
+                                @endif
+                            </div>
+                        </div>
+                    @endif
 
                     {{-- Nome e Guard --}}
                     <div class="col-md-6">
@@ -320,6 +332,8 @@
 
 @section('js')
 <script>
+const limitePermissoesPorRegra = {{ (int) ($limitePermissoesPorRegra ?? 0) }};
+
 function toggleGrupo(prefixo) {
     const body = document.getElementById('body_' + prefixo);
     const chev = document.getElementById('chev_' + prefixo);
@@ -333,6 +347,7 @@ function toggleGrupoAll(prefixo, marcar) {
             cb.checked = marcar;
             cb.closest('.perm-item').classList.toggle('perm-item--checked', marcar);
         });
+    enforcePermissionLimit();
     updateCount(prefixo);
 }
 
@@ -341,6 +356,7 @@ function toggleAll(marcar) {
         cb.checked = marcar;
         cb.closest('.perm-item').classList.toggle('perm-item--checked', marcar);
     });
+    enforcePermissionLimit();
     document.querySelectorAll('.perm-grupo').forEach(function(g) {
         const prefixo = g.id.replace('grupo_', '');
         updateCount(prefixo);
@@ -348,9 +364,33 @@ function toggleAll(marcar) {
 }
 
 function onPermChange(cb) {
+    if (limitePermissoesPorRegra > 0 && cb.checked) {
+        const totalMarcado = document.querySelectorAll('.perm-item input[type="checkbox"]:checked').length;
+        if (totalMarcado > limitePermissoesPorRegra) {
+            cb.checked = false;
+            alert('Este plano permite no máximo ' + limitePermissoesPorRegra + ' permissões por perfil.');
+        }
+    }
+
     cb.closest('.perm-item').classList.toggle('perm-item--checked', cb.checked);
     const prefixo = cb.closest('.perm-item').dataset.grupo;
     updateCount(prefixo);
+}
+
+function enforcePermissionLimit() {
+    if (limitePermissoesPorRegra <= 0) {
+        return;
+    }
+
+    const marcados = Array.from(document.querySelectorAll('.perm-item input[type="checkbox"]:checked'));
+    if (marcados.length <= limitePermissoesPorRegra) {
+        return;
+    }
+
+    marcados.slice(limitePermissoesPorRegra).forEach(function(cb) {
+        cb.checked = false;
+        cb.closest('.perm-item').classList.remove('perm-item--checked');
+    });
 }
 
 function updateCount(prefixo) {

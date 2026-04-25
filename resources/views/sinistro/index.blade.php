@@ -8,30 +8,28 @@
 @stop
 
 @section('content')
-
     <div class="card p-2">
         <div class="card-header px-0 pt-0 pb-1">
-            <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h3 class="card-title text-sm text-bold mb-0">
                     REGISTROS <span class="badge badge-danger">{{ $sinistros->total() }}</span>
                 </h3>
 
-                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem">
-                    {{-- Filtros rápidos --}}
-                    <form method="GET" action="{{ route('sinistro.index') }}" class="d-flex align-items-center flex-wrap" style="gap:.4rem" id="formFiltrosSinistro">
+                <div class="d-flex flex-row align-items-center flex-wrap" style="gap:6px;">
+                    <form method="GET" action="{{ route('sinistro.index') }}" class="d-flex align-items-center flex-wrap" style="gap:6px;" id="formFiltrosSinistro">
                         <input type="date" name="data_inicio" class="form-control form-control-sm" style="width:130px"
                                value="{{ $filtros['data_inicio'] ?? '' }}" title="Data ocorrido de">
                         <input type="date" name="data_fim" class="form-control form-control-sm" style="width:130px"
                                value="{{ $filtros['data_fim'] ?? '' }}" title="Data ocorrido até">
                         <input type="text" name="placa" class="form-control form-control-sm" style="width:100px"
                                value="{{ $filtros['placa'] ?? '' }}" placeholder="Placa">
-                        <select name="tipo_sinistro" class="form-control form-control-sm" style="width:130px">
+                        <select name="tipo_sinistro" class="form-control form-control-sm" style="width:140px">
                             <option value="">Tipo</option>
                             @foreach(\App\Models\Sinistro::TIPOS as $key => $label)
                                 <option value="{{ $key }}" {{ ($filtros['tipo_sinistro'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
-                        <select name="status" class="form-control form-control-sm" style="width:140px">
+                        <select name="status" class="form-control form-control-sm" style="width:150px">
                             <option value="">Status</option>
                             @foreach(\App\Models\Sinistro::STATUS as $key => $label)
                                 <option value="{{ $key }}" {{ ($filtros['status'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -45,15 +43,13 @@
                         </a>
                     </form>
 
-                    {{-- Exportar --}}
                     @can('sinistro.export')
                     <a href="{{ route('sinistro.export', request()->query()) }}" class="btn btn-xs btn-outline-success" title="Exportar CSV">
                         <i class="fas fa-file-csv mr-1"></i>CSV
                     </a>
                     @endcan
 
-                    {{-- Toggle de view --}}
-                    <div class="sn-view-toggle">
+                    <div class="sx-view-toggle">
                         <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
                             <i class="fas fa-th-large mr-1"></i>Cards
                         </button>
@@ -62,7 +58,6 @@
                         </button>
                     </div>
 
-                    {{-- Paginação --}}
                     <div class="d-flex align-items-end">
                         {{ $sinistros->links() }}
                     </div>
@@ -70,81 +65,73 @@
             </div>
         </div>
 
-        <div class="card-body px-0 pt-0 pb-1 sn-index-body" data-view="cards">
-
-            {{-- VIEW CARDS --}}
-            <div class="sn-cards">
+        <div class="card-body px-0 pt-0 pb-1 sx-index-body" data-view="cards">
+            <div class="sx-cards">
                 @forelse($sinistros as $sinistro)
                     @php
                         $badgeStatus = match($sinistro->status) {
-                            'encerrado'  => 'success',
-                            'indenizado' => 'info',
-                            'aprovado'   => 'primary',
-                            'cancelado'  => 'secondary',
-                            'aguardando_documentos' => 'warning',
-                            default      => 'danger',
+                            'encerrado', 'indenizado' => 'sx__badge--green',
+                            'aprovado' => 'sx__badge--blue',
+                            'cancelado' => 'sx__badge--slate',
+                            'aguardando_documentos' => 'sx__badge--amber',
+                            default => 'sx__badge--red',
                         };
-                        $iconeTipo = match($sinistro->tipo_sinistro) {
-                            'furto_roubo' => 'fa-user-secret',
-                            'incendio'    => 'fa-fire',
-                            'vandalismo'  => 'fa-hammer',
-                            'alagamento'  => 'fa-water',
-                            default       => 'fa-car-crash',
+                        $accentCls = match($sinistro->status) {
+                            'encerrado', 'indenizado' => 'sx--green',
+                            'cancelado' => 'sx--slate',
+                            default => 'sx--red',
                         };
-                        $accentClass = match($sinistro->status) {
-                            'encerrado', 'indenizado' => 'sn-status--green',
-                            'cancelado'               => 'sn-status--slate',
-                            default                   => 'sn-status--red',
-                        };
+                        $placa = trim((string) ($sinistro->placa_momento ?? ''));
+                        $iniciais = $placa !== '' ? mb_strtoupper(mb_substr($placa, 0, 3)) : 'SIN';
                     @endphp
 
-                    <article class="sn {{ $accentClass }}"
+                    <article class="sx {{ $accentCls }}"
                              onclick="window.location='{{ route('sinistro.show', $sinistro->id) }}';">
-                        <div class="sn__accent"></div>
+                        <div class="sx__accent"></div>
 
-                        <div class="sn__head">
-                            <div class="sn__avatar">
-                                <i class="fas {{ $iconeTipo }}"></i>
+                        <div class="sx__head">
+                            <div class="sx__avatar">{{ $iniciais }}</div>
+                            <div class="sx__head-info">
+                                <div class="sx__id">SINISTRO #{{ $sinistro->id }}</div>
+                                <div class="sx__title">{{ $sinistro->placa_momento ?? 'Placa não informada' }}</div>
+                                <div class="sx__sub">
+                                    {{ $sinistro->label_tipo }}
+                                    @if($sinistro->reserva_id)
+                                        · Reserva #{{ $sinistro->reserva_id }}
+                                    @endif
+                                </div>
                             </div>
-                            <div class="sn__head-info">
-                                <div class="sn__id">SINISTRO #{{ $sinistro->id }}</div>
-                                @if($sinistro->reserva_id)
-                                    <div class="sn__id">Reserva #{{ $sinistro->reserva_id }}</div>
-                                @endif
-                                <div class="sn__title">{{ $sinistro->placa_momento ?? '—' }}</div>
-                                <div class="sn__sub">{{ $sinistro->label_tipo }}</div>
-                            </div>
-                            <div class="sn__badges">
-                                <span class="badge badge-{{ $badgeStatus }}">{{ $sinistro->label_status }}</span>
+                            <div class="sx__badges">
+                                <span class="sx__badge {{ $badgeStatus }}">{{ $sinistro->label_status }}</span>
                             </div>
                         </div>
 
-                        <div class="sn__meta">
-                            <div class="sn__meta-row">
-                                <span class="sn__meta-label"><i class="fas fa-car mr-1"></i>Veículo</span>
-                                <strong class="sn__meta-value">{{ $sinistro->veiculo?->nome ?? '—' }}</strong>
+                        <div class="sx__meta">
+                            <div class="sx__meta-row">
+                                <span class="sx__meta-label"><i class="fas fa-car mr-1"></i>Veículo</span>
+                                <strong class="sx__meta-value">{{ $sinistro->veiculo?->nome ?? '-' }}</strong>
                             </div>
-                            <div class="sn__meta-row">
-                                <span class="sn__meta-label"><i class="fas fa-user mr-1"></i>Cliente</span>
-                                <strong class="sn__meta-value">{{ $sinistro->cliente?->nome ?? '—' }}</strong>
+                            <div class="sx__meta-row">
+                                <span class="sx__meta-label"><i class="fas fa-user mr-1"></i>Cliente</span>
+                                <strong class="sx__meta-value">{{ $sinistro->cliente?->nome ?? '-' }}</strong>
                             </div>
-                            <div class="sn__meta-row">
-                                <span class="sn__meta-label"><i class="fas fa-calendar mr-1"></i>Ocorrido</span>
-                                <strong class="sn__meta-value">{{ $sinistro->data_hora_ocorrido?->format('d/m/Y') ?? '—' }}</strong>
+                            <div class="sx__meta-row">
+                                <span class="sx__meta-label"><i class="fas fa-calendar mr-1"></i>Ocorrido</span>
+                                <strong class="sx__meta-value">{{ $sinistro->data_hora_ocorrido?->format('d/m/Y') ?? '-' }}</strong>
                             </div>
-                            <div class="sn__meta-row">
-                                <span class="sn__meta-label"><i class="fas fa-map-marker-alt mr-1"></i>Local</span>
-                                <strong class="sn__meta-value">{{ Str::limit($sinistro->local_ocorrido ?? '—', 30) }}</strong>
+                            <div class="sx__meta-row">
+                                <span class="sx__meta-label"><i class="fas fa-map-marker-alt mr-1"></i>Local</span>
+                                <strong class="sx__meta-value">{{ Str::limit($sinistro->local_ocorrido ?? '-', 26) }}</strong>
                             </div>
-                            @if($sinistro->valor_prejuizo_estimado)
-                            <div class="sn__meta-row sn__meta-row--full">
-                                <span class="sn__meta-label"><i class="fas fa-dollar-sign mr-1"></i>Prejuízo Est.</span>
-                                <strong class="sn__meta-value text-danger">R$ {{ number_format((float)$sinistro->valor_prejuizo_estimado, 2, ',', '.') }}</strong>
+                            <div class="sx__meta-row sx__meta-row--full">
+                                <span class="sx__meta-label"><i class="fas fa-dollar-sign mr-1"></i>Prejuízo est.</span>
+                                <strong class="sx__meta-value">
+                                    {{ $sinistro->valor_prejuizo_estimado !== null ? 'R$ ' . number_format((float) $sinistro->valor_prejuizo_estimado, 2, ',', '.') : '-' }}
+                                </strong>
                             </div>
-                            @endif
                         </div>
 
-                        <div class="sn__foot">
+                        <div class="sx__foot">
                             <a href="{{ route('sinistro.show', $sinistro->id) }}" class="btn btn-xs btn-info" onclick="event.stopPropagation();">
                                 <i class="fas fa-eye mr-1"></i>Ver
                             </a>
@@ -168,59 +155,76 @@
                 @endforelse
             </div>
 
-            {{-- VIEW TABELA --}}
-            <div class="sn-table table-responsive">
-                <table class="table table-striped table-bordered table-sm">
-                    <thead class="thead-light">
+            <div class="sx-table table-responsive">
+                <table class="table table-striped table-bordered table-sm table-sinistro-index">
+                    <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Tipo</th>
-                            <th>Placa</th>
-                            <th>Veículo</th>
-                            <th>Cliente</th>
-                            <th>Data Ocorrido</th>
-                            <th>Local</th>
-                            <th>Seguradora</th>
-                            <th class="text-right">Prejuízo Est.</th>
+                            <th>Sinistro</th>
+                            <th>Veículo / Cliente</th>
+                            <th>Ocorrido</th>
+                            <th>Local / Seguradora</th>
+                            <th>Prejuízo</th>
                             <th>Status</th>
-                            <th style="width:110px"></th>
+                            <th style="width:220px;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach($sinistros as $sinistro)
-                        @php
-                            $badgeStatus = match($sinistro->status) {
-                                'encerrado', 'indenizado' => 'success',
-                                'aprovado'   => 'primary',
-                                'cancelado'  => 'secondary',
-                                'aguardando_documentos' => 'warning',
-                                default      => 'danger',
-                            };
-                        @endphp
-                        <tr style="cursor:pointer" onclick="window.location='{{ route('sinistro.show', $sinistro->id) }}'">
-                            <td>{{ $sinistro->id }}</td>
-                            <td>{{ $sinistro->label_tipo }}</td>
-                            <td>{{ $sinistro->placa_momento ?? '—' }}</td>
-                            <td>{{ $sinistro->veiculo?->nome ?? '—' }}</td>
-                            <td>{{ $sinistro->cliente?->nome ?? '—' }}</td>
-                            <td>{{ $sinistro->data_hora_ocorrido?->format('d/m/Y H:i') ?? '—' }}</td>
-                            <td>{{ Str::limit($sinistro->local_ocorrido ?? '—', 30) }}</td>
-                            <td>{{ $sinistro->seguradora ?? '—' }}</td>
-                            <td class="text-right">
-                                {{ $sinistro->valor_prejuizo_estimado !== null ? 'R$ ' . number_format((float)$sinistro->valor_prejuizo_estimado, 2, ',', '.') : '—' }}
-                            </td>
-                            <td><span class="badge badge-{{ $badgeStatus }}">{{ $sinistro->label_status }}</span></td>
-                            <td onclick="event.stopPropagation()">
-                                <a href="{{ route('sinistro.show', $sinistro->id) }}" class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>
-                                @can('sinistro.edit')
-                                <a href="{{ route('sinistro.edit', $sinistro->id) }}" class="btn btn-xs btn-warning"><i class="fas fa-edit"></i></a>
-                                @endcan
-                                @can('sinistro.delete')
-                                <x-delete-button :action="route('sinistro.destroy', $sinistro->id)" />
-                                @endcan
-                            </td>
-                        </tr>
-                    @endforeach
+                        @foreach($sinistros as $sinistro)
+                            @php
+                                $badgeStatusTable = match($sinistro->status) {
+                                    'encerrado', 'indenizado' => 'success',
+                                    'aprovado' => 'primary',
+                                    'cancelado' => 'secondary',
+                                    'aguardando_documentos' => 'warning',
+                                    default => 'danger',
+                                };
+                            @endphp
+                            <tr onclick="window.location='{{ route('sinistro.show', $sinistro->id) }}';" style="cursor:pointer;">
+                                <td>
+                                    <div class="font-weight-bold">#{{ $sinistro->id }} · {{ $sinistro->placa_momento ?? '-' }}</div>
+                                    <small class="text-muted">{{ $sinistro->label_tipo }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ $sinistro->veiculo?->nome ?? '-' }}</div>
+                                    <small class="text-muted">{{ $sinistro->cliente?->nome ?? '-' }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ $sinistro->data_hora_ocorrido?->format('d/m/Y H:i') ?? '-' }}</div>
+                                    <small class="text-muted">
+                                        @if($sinistro->reserva_id)
+                                            Reserva #{{ $sinistro->reserva_id }}
+                                        @else
+                                            Sem reserva
+                                        @endif
+                                    </small>
+                                </td>
+                                <td>
+                                    <div>{{ Str::limit($sinistro->local_ocorrido ?? '-', 40) }}</div>
+                                    <small class="text-muted">{{ $sinistro->seguradora ?? '-' }}</small>
+                                </td>
+                                <td>
+                                    <div class="font-weight-bold">
+                                        {{ $sinistro->valor_prejuizo_estimado !== null ? 'R$ ' . number_format((float) $sinistro->valor_prejuizo_estimado, 2, ',', '.') : '-' }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ $badgeStatusTable }}">{{ $sinistro->label_status }}</span>
+                                </td>
+                                <td onclick="event.stopPropagation();" style="width:220px;">
+                                    <a href="{{ route('sinistro.show', $sinistro->id) }}" class="btn btn-xs btn-info">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                    @can('sinistro.edit')
+                                    <a href="{{ route('sinistro.edit', $sinistro->id) }}" class="btn btn-xs btn-warning">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    @endcan
+                                    @can('sinistro.delete')
+                                    <x-delete-button :action="route('sinistro.destroy', $sinistro->id)" />
+                                    @endcan
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -230,89 +234,92 @@
             </div>
         </div>
     </div>
-
 @stop
 
 @section('css')
 <style>
-/* ---- Cards de sinistro ---- */
-.sn-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    padding: .75rem;
+.sx-view-toggle { display:flex; gap:4px; }
+.sx-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 16px;
+    padding: 10px 0;
 }
-.sn {
+.sx {
     position: relative;
+    display: flex;
+    flex-direction: column;
     background: #fff;
-    border: 1px solid #e4e9f0;
-    border-radius: 10px;
-    width: 280px;
-    min-width: 260px;
-    flex: 1 1 260px;
-    max-width: 340px;
+    border: 1px solid #e5eaf2;
+    border-radius: 14px;
     overflow: hidden;
     cursor: pointer;
     transition: box-shadow .18s, transform .15s;
-    display: flex;
-    flex-direction: column;
 }
-.sn:hover { box-shadow: 0 4px 18px rgba(0,0,0,.10); transform: translateY(-2px); }
-
-.sn__accent { height: 4px; width: 100%; }
-.sn-status--red   .sn__accent { background: #dc3545; }
-.sn-status--green .sn__accent { background: #28a745; }
-.sn-status--slate .sn__accent { background: #6c757d; }
-
-.sn__head { display: flex; align-items: flex-start; gap: .6rem; padding: .75rem .75rem .4rem; }
-.sn__avatar {
-    width: 38px; height: 38px; border-radius: 8px;
-    background: #fff3f3; color: #dc3545;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; flex-shrink: 0;
+.sx:hover { box-shadow: 0 6px 24px rgba(0,0,0,.10); transform: translateY(-2px); }
+.sx__accent { height: 5px; width: 100%; }
+.sx--green .sx__accent { background: linear-gradient(90deg, #10b981, #34d399); }
+.sx--red .sx__accent { background: linear-gradient(90deg, #ef4444, #f87171); }
+.sx--slate .sx__accent { background: linear-gradient(90deg, #64748b, #94a3b8); }
+.sx__head { display:flex; align-items:flex-start; gap:12px; padding:14px 16px 8px; }
+.sx__avatar {
+    width:44px; height:44px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.95rem; color:#fff;
+    background: linear-gradient(135deg, #2563eb, #1d4ed8);
 }
-.sn-status--green .sn__avatar { background: #f0fff4; color: #28a745; }
-.sn-status--slate .sn__avatar { background: #f5f5f5; color: #6c757d; }
-.sn__head-info { flex: 1; min-width: 0; }
-.sn__id   { font-size: .68rem; color: #aaa; font-weight: 600; letter-spacing: .04em; }
-.sn__title{ font-size: .95rem; font-weight: 700; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sn__sub  { font-size: .75rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sn__badges { display: flex; flex-direction: column; gap: .2rem; align-items: flex-end; flex-shrink: 0; }
-
-.sn__meta { padding: .4rem .75rem; flex: 1; }
-.sn__meta-row { display: flex; justify-content: space-between; padding: .18rem 0; border-bottom: 1px solid #f0f0f0; font-size: .78rem; }
-.sn__meta-row--full { border-bottom: none; }
-.sn__meta-label { color: #888; }
-.sn__meta-value { color: #333; text-align: right; max-width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.sn__foot { padding: .5rem .75rem; display: flex; gap: .35rem; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
-
-/* ---- Toggle view ---- */
-.sn-table { display: none; }
-.sn-index-body[data-view="cards"] .sn-cards { display: flex; }
-.sn-index-body[data-view="table"] .sn-cards  { display: none; }
-.sn-index-body[data-view="table"] .sn-table  { display: block; }
+.sx__head-info { flex:1; min-width:0; }
+.sx__id { font-size:.72rem; color:#94a3b8; font-weight:600; letter-spacing:.04em; }
+.sx__title { font-size:.97rem; font-weight:700; color:#0f2740; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sx__sub { font-size:.78rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.sx__badges { display:flex; flex-direction:column; gap:4px; }
+.sx__badge {
+    display:inline-block; padding:2px 8px; border-radius:20px;
+    font-size:.7rem; font-weight:700; text-transform:uppercase; white-space:nowrap;
+}
+.sx__badge--green { background:rgba(16,185,129,.15); color:#047857; }
+.sx__badge--red { background:rgba(239,68,68,.13); color:#b91c1c; }
+.sx__badge--slate { background:rgba(100,116,139,.12); color:#475569; }
+.sx__badge--blue { background:rgba(59,130,246,.12); color:#1d4ed8; }
+.sx__badge--amber { background:rgba(245,158,11,.18); color:#92400e; }
+.sx__meta { display:flex; flex-direction:column; gap:4px; padding:6px 16px 10px; flex:1; }
+.sx__meta-row { display:flex; align-items:baseline; gap:6px; font-size:.8rem; }
+.sx__meta-row--full { flex-wrap:wrap; }
+.sx__meta-label { color:#64748b; min-width:90px; flex-shrink:0; }
+.sx__meta-value { color:#1e293b; font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.sx__foot {
+    display:flex; gap:6px; align-items:center;
+    padding:10px 16px; border-top:1px solid #f1f5f9;
+    background:#fafbfc; flex-wrap:wrap;
+}
+.sx-table { display:none; }
+.table-sinistro-index td { vertical-align:middle; }
+.sx-index-body[data-view="table"] .sx-cards { display:none; }
+.sx-index-body[data-view="table"] .sx-table  { display:block; }
+.sx-index-body[data-view="cards"] .sx-cards  { display:grid; }
+.sx-index-body[data-view="cards"] .sx-table  { display:none; }
+@media (max-width:575px) {
+    .sx-cards { grid-template-columns: 1fr; }
+}
 </style>
 @stop
 
 @section('js')
 <script>
 (function () {
-    const body    = document.querySelector('.sn-index-body');
-    const buttons = document.querySelectorAll('.sn-view-toggle [data-view]');
-    const STORAGE_KEY = 'sinistro_index_view';
+    const body = document.querySelector('.sx-index-body');
+    const btns = document.querySelectorAll('.sx-view-toggle [data-view]');
+    const store = 'sinistro_index_view';
 
     function setView(view) {
         if (!body) return;
         body.dataset.view = view;
-        buttons.forEach(b => b.classList.toggle('active', b.dataset.view === view));
-        try { localStorage.setItem(STORAGE_KEY, view); } catch(e) {}
+        btns.forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+        localStorage.setItem(store, view);
     }
 
-    buttons.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
-
-    const saved = (() => { try { return localStorage.getItem(STORAGE_KEY); } catch(e) { return null; } })();
-    setView(saved || 'cards');
+    btns.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    setView(localStorage.getItem(store) || 'cards');
 })();
 </script>
 @stop

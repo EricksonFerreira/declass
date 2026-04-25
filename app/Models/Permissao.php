@@ -36,4 +36,9 @@ class Permissao extends Model
     {
         return $this->belongsToMany(Regra::class, 'role_has_permissions', 'permission_id', 'role_id');
     }
+
+    public function planos()
+    {
+        return $this->belongsToMany(Plano::class, 'plano_permissao', 'permission_id', 'plano_id')->withTimestamps();
+    }
 }

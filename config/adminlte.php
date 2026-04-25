@@ -921,6 +921,11 @@ return [
                     'icon'  => 'fas fa-layer-group',
                 ],
                 [
+                    'text'  => 'Política de Acesso',
+                    'route' => 'plano.index',
+                    'icon'  => 'fas fa-user-shield',
+                ],
+                [
                     'text'  => 'Regras',
                     'route' => 'regra.index',
                     'icon'  => 'fas fa-key',
@@ -1057,6 +1062,23 @@ return [
                 [
                     'text' => 'Novo',
                     'route' => 'usuario.create',
+                    'icon' => 'fas fa-plus-circle',
+                ],
+            ],
+        ],
+        [
+            'text'    => 'Perfis de Usuários',
+            'icon'    => 'fas fa-user-tag',
+            'can'     => 'gerenciar-empresa',
+            'submenu' => [
+                [
+                    'text' => 'Listagem',
+                    'route' => 'tipo_usuario.index',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Novo',
+                    'route' => 'tipo_usuario.create',
                     'icon' => 'fas fa-plus-circle',
                 ],
             ],

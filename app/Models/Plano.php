@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Plano extends Model
 {
@@ -19,6 +20,7 @@ class Plano extends Model
         'valor_anual',
         'limite_veiculos',
         'limite_usuarios',
+        'limite_permissoes_por_regra',
         'site_vendas',
         'modulo_multas',
         'modulo_nfse',
@@ -39,6 +41,7 @@ class Plano extends Model
         'api_integracao' => 'boolean',
         'ativo'          => 'boolean',
         'destaque'       => 'boolean',
+        'limite_permissoes_por_regra' => 'integer',
     ];
 
     public function itens(): HasMany
@@ -49,6 +52,12 @@ class Plano extends Model
     public function assinaturas(): HasMany
     {
         return $this->hasMany(EmpresaPlano::class, 'plano_id');
+    }
+
+    public function permissoes(): BelongsToMany
+    {
+        return $this->belongsToMany(Permissao::class, 'plano_permissao', 'plano_id', 'permission_id')
+            ->withTimestamps();
     }
 
     public function scopeAtivos($query)

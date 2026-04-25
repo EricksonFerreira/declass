@@ -244,22 +244,35 @@ class User extends Authenticatable implements MustVerifyEmail
 
     public function hasPermissao(string $permissao): bool
     {
-        if ($this->isAdministrador()) {
+        if ($this->isSuperAdmin()) {
             return true;
         }
 
-        if (!$this->role_id || $permissao === '') {
+        if ($permissao === '') {
             return false;
         }
 
-        // Permissões e roles são defaults globais do sistema (sem empresa_id).
-        return DB::table('permissions')
+        if ($this->isAdministrador()) {
+            return app(\App\Services\PlanoPermissaoService::class)->usuarioPodeUsarPermissao($this, $permissao);
+        }
+
+        if (!$this->role_id) {
+            return false;
+        }
+
+        $hasPermission = DB::table('permissions')
             ->join('role_has_permissions', 'permissions.id', '=', 'role_has_permissions.permission_id')
             ->join('roles', 'roles.id', '=', 'role_has_permissions.role_id')
             ->where('permissions.name', $permissao)
             ->where('permissions.guard_name', 'web')
             ->where('roles.id', $this->role_id)
             ->exists();
+
+        if (!$hasPermission) {
+            return false;
+        }
+
+        return app(\App\Services\PlanoPermissaoService::class)->usuarioPodeUsarPermissao($this, $permissao);
     }
 
     public function firstPermittedRouteNameForRedirect(): ?string

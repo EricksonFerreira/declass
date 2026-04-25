@@ -8,20 +8,15 @@
 @stop
 
 @section('content')
-    @if (isset($filters) && is_array($filters) && count($filters) > 0)
-        <x-filter :additionalFilters="$additionalFilters ?? []" :filters="$filters" :itensFiltered="$itensFiltered ?? 0" />
-    @endif
-
     <div class="card p-2">
         <div class="card-header px-0 pt-0 pb-1">
-            <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:.5rem">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
                 <h3 class="card-title text-sm text-bold mb-0">
                     REGISTROS <span class="badge badge-danger">{{ $multas->total() }}</span>
                 </h3>
 
-                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem">
-                    {{-- Filtros rápidos --}}
-                    <form method="GET" action="{{ route('multa.index') }}" class="d-flex align-items-center flex-wrap" style="gap:.4rem" id="formFiltrosMulta">
+                <div class="d-flex flex-row align-items-center flex-wrap" style="gap:6px;">
+                    <form method="GET" action="{{ route('multa.index') }}" class="d-flex align-items-center flex-wrap" style="gap:6px;" id="formFiltrosMulta">
                         <input type="date" name="data_inicio" class="form-control form-control-sm" style="width:130px"
                                value="{{ $filtros['data_inicio'] ?? '' }}" title="Data infração de">
                         <input type="date" name="data_fim" class="form-control form-control-sm" style="width:130px"
@@ -34,7 +29,7 @@
                                 <option value="{{ $key }}" {{ ($filtros['status_multa'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                             @endforeach
                         </select>
-                        <select name="status_desconto" class="form-control form-control-sm" style="width:130px">
+                        <select name="status_desconto" class="form-control form-control-sm" style="width:140px">
                             <option value="">Status desconto</option>
                             @foreach(\App\Models\Multa::STATUS_DESCONTO as $key => $label)
                                 <option value="{{ $key }}" {{ ($filtros['status_desconto'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
@@ -48,15 +43,13 @@
                         </a>
                     </form>
 
-                    {{-- Exportar --}}
                     @can('multa.export')
                     <a href="{{ route('multa.export', request()->query()) }}" class="btn btn-xs btn-outline-success" title="Exportar CSV">
                         <i class="fas fa-file-csv mr-1"></i>CSV
                     </a>
                     @endcan
 
-                    {{-- Toggle de view --}}
-                    <div class="multa-view-toggle">
+                    <div class="mx-view-toggle">
                         <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
                             <i class="fas fa-th-large mr-1"></i>Cards
                         </button>
@@ -65,7 +58,6 @@
                         </button>
                     </div>
 
-                    {{-- Paginação --}}
                     <div class="d-flex align-items-end">
                         {{ $multas->links() }}
                     </div>
@@ -73,79 +65,79 @@
             </div>
         </div>
 
-        <div class="card-body px-0 pt-0 pb-1 multa-index-body" data-view="cards">
-
-            {{-- VIEW CARDS --}}
-            <div class="multa-cards">
+        <div class="card-body px-0 pt-0 pb-1 mx-index-body" data-view="cards">
+            <div class="mx-cards">
                 @forelse($multas as $multa)
                     @php
                         $badgeMulta = match($multa->status_multa) {
-                            'paga'       => 'success',
-                            'cancelada'  => 'secondary',
-                            'deferida'   => 'info',
-                            'indeferida' => 'warning',
-                            default      => 'danger',
+                            'paga'       => 'mx__badge--green',
+                            'cancelada'  => 'mx__badge--slate',
+                            'deferida'   => 'mx__badge--blue',
+                            'indeferida' => 'mx__badge--amber',
+                            default      => 'mx__badge--red',
                         };
                         $badgeDesc = match($multa->status_desconto) {
-                            'descontado'    => 'success',
-                            'nao_descontar' => 'secondary',
-                            'estornado'     => 'warning',
-                            'pendente'      => 'info',
-                            default         => 'light',
+                            'descontado'    => 'mx__badge--green',
+                            'nao_descontar' => 'mx__badge--slate',
+                            'estornado'     => 'mx__badge--amber',
+                            'pendente'      => 'mx__badge--blue',
+                            default         => 'mx__badge--slate',
                         };
-                        $accentClass = match($multa->status_multa) {
-                            'paga'      => 'mt-status--green',
-                            'cancelada' => 'mt-status--slate',
-                            default     => 'mt-status--red',
+                        $accentCls = match($multa->status_multa) {
+                            'paga'      => 'mx--green',
+                            'cancelada' => 'mx--slate',
+                            default     => 'mx--red',
                         };
+                        $placa = trim((string) ($multa->placa_momento ?? ''));
+                        $iniciais = $placa !== '' ? mb_strtoupper(mb_substr($placa, 0, 3)) : 'MTA';
                     @endphp
 
-                    <article class="mt {{ $accentClass }}"
+                    <article class="mx {{ $accentCls }}"
                              onclick="window.location='{{ route('multa.show', $multa->id) }}';">
-                        <div class="mt__accent"></div>
+                        <div class="mx__accent"></div>
 
-                        <div class="mt__head">
-                            <div class="mt__avatar">
-                                <i class="fas fa-exclamation-triangle"></i>
+                        <div class="mx__head">
+                            <div class="mx__avatar">{{ $iniciais }}</div>
+                            <div class="mx__head-info">
+                                <div class="mx__id">MULTA #{{ $multa->id }}</div>
+                                <div class="mx__title">{{ $multa->placa_momento ?? 'Placa não informada' }}</div>
+                                <div class="mx__sub">
+                                    {{ $multa->orgao_autuador ?? 'Órgão não informado' }}
+                                    @if($multa->reserva_id)
+                                        · Reserva #{{ $multa->reserva_id }}
+                                    @endif
+                                </div>
                             </div>
-                            <div class="mt__head-info">
-                                <div class="mt__id">MULTA #{{ $multa->id }}</div>
-                                @if($multa->reserva_id)
-                                    <div class="mt__id">Reserva #{{ $multa->reserva_id }}</div>
-                                @endif
-                                <div class="mt__title">{{ $multa->placa_momento ?? '—' }}</div>
-                                <div class="mt__sub">{{ $multa->orgao_autuador ?? '—' }}</div>
-                            </div>
-                            <div class="mt__badges">
-                                <span class="badge badge-{{ $badgeMulta }}">{{ $multa->label_status_multa }}</span>
-                                <span class="badge badge-{{ $badgeDesc }}">{{ $multa->label_status_desconto }}</span>
+                            <div class="mx__badges">
+                                <span class="mx__badge {{ $badgeMulta }}">{{ $multa->label_status_multa }}</span>
+                                <span class="mx__badge {{ $badgeDesc }}">{{ $multa->label_status_desconto }}</span>
                             </div>
                         </div>
 
-                        <div class="mt__meta">
-                            <div class="mt__meta-row">
-                                <span class="mt__meta-label"><i class="fas fa-user mr-1"></i>Cliente</span>
-                                <strong class="mt__meta-value">{{ $multa->cliente?->nome ?? '—' }}</strong>
+                        <div class="mx__meta">
+                            <div class="mx__meta-row">
+                                <span class="mx__meta-label"><i class="fas fa-user mr-1"></i>Cliente</span>
+                                <strong class="mx__meta-value">{{ $multa->cliente?->nome ?? '-' }}</strong>
                             </div>
-                            <div class="mt__meta-row">
-                                <span class="mt__meta-label"><i class="fas fa-car mr-1"></i>Veículo</span>
-                                <strong class="mt__meta-value">{{ $multa->veiculo?->nome ?? '—' }}</strong>
+                            <div class="mx__meta-row">
+                                <span class="mx__meta-label"><i class="fas fa-car mr-1"></i>Veículo</span>
+                                <strong class="mx__meta-value">{{ $multa->veiculo?->nome ?? '-' }}</strong>
                             </div>
-                            <div class="mt__meta-row">
-                                <span class="mt__meta-label"><i class="fas fa-calendar mr-1"></i>Infração</span>
-                                <strong class="mt__meta-value">{{ $multa->data_hora_infracao?->format('d/m/Y') ?? '—' }}</strong>
+                            <div class="mx__meta-row">
+                                <span class="mx__meta-label"><i class="fas fa-calendar mr-1"></i>Infração</span>
+                                <strong class="mx__meta-value">{{ $multa->data_hora_infracao?->format('d/m/Y') ?? '-' }}</strong>
                             </div>
-                            <div class="mt__meta-row">
-                                <span class="mt__meta-label"><i class="fas fa-clock mr-1"></i>Vencimento</span>
-                                <strong class="mt__meta-value">{{ $multa->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
+                            <div class="mx__meta-row">
+                                <span class="mx__meta-label"><i class="fas fa-clock mr-1"></i>Vencimento</span>
+                                <strong class="mx__meta-value">{{ $multa->data_vencimento?->format('d/m/Y') ?? '-' }}</strong>
                             </div>
-                            <div class="mt__meta-row mt__meta-row--full">
-                                <span class="mt__meta-label"><i class="fas fa-dollar-sign mr-1"></i>Valor Final</span>
-                                <strong class="mt__meta-value text-danger">R$ {{ number_format((float)$multa->valor_final, 2, ',', '.') }}</strong>
+                            <div class="mx__meta-row mx__meta-row--full">
+                                <span class="mx__meta-label"><i class="fas fa-dollar-sign mr-1"></i>Valor final</span>
+                                <strong class="mx__meta-value">R$ {{ number_format((float) $multa->valor_final, 2, ',', '.') }}</strong>
                             </div>
                         </div>
 
-                        <div class="mt__foot">
+                        <div class="mx__foot">
                             <a href="{{ route('multa.show', $multa->id) }}" class="btn btn-xs btn-info" onclick="event.stopPropagation();">
                                 <i class="fas fa-eye mr-1"></i>Ver
                             </a>
@@ -169,71 +161,80 @@
                 @endforelse
             </div>
 
-            {{-- VIEW TABELA --}}
-            <div class="multa-table table-responsive">
-                <table class="table table-striped table-bordered table-sm">
-                    <thead class="thead-light">
+            <div class="mx-table table-responsive">
+                <table class="table table-striped table-bordered table-sm table-multa-index">
+                    <thead>
                         <tr>
-                            <th>#</th>
-                            <th>Reserva</th>
-                            <th>Placa</th>
-                            <th>Veículo</th>
-                            <th>Cliente</th>
-                            <th>Órgão</th>
-                            <th>Data Infração</th>
-                            <th>Vencimento</th>
-                            <th class="text-right">Valor Final</th>
-                            <th>Status Multa</th>
-                            <th>Status Desconto</th>
-                            <th style="width:110px"></th>
+                            <th>Multa</th>
+                            <th>Cliente / Veículo</th>
+                            <th>Órgão / Datas</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                            <th style="width:220px;">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
-                    @foreach($multas as $multa)
-                        @php
-                            $badgeMulta = match($multa->status_multa) {
-                                'paga'       => 'success',
-                                'cancelada'  => 'secondary',
-                                'deferida'   => 'info',
-                                'indeferida' => 'warning',
-                                default      => 'danger',
-                            };
-                            $badgeDesc = match($multa->status_desconto) {
-                                'descontado'    => 'success',
-                                'nao_descontar' => 'secondary',
-                                'estornado'     => 'warning',
-                                'pendente'      => 'info',
-                                default         => 'light',
-                            };
-                        @endphp
-                        <tr style="cursor:pointer" onclick="window.location='{{ route('multa.show', $multa->id) }}'">
-                            <td>{{ $multa->id }}</td>
-                            <td>
-                                @if($multa->reserva_id)
-                                    <a href="{{ route('reserva.show', $multa->reserva_id) }}" onclick="event.stopPropagation()">#{{ $multa->reserva_id }}</a>
-                                @else —
-                                @endif
-                            </td>
-                            <td>{{ $multa->placa_momento ?? '—' }}</td>
-                            <td>{{ $multa->veiculo?->nome ?? '—' }}</td>
-                            <td>{{ $multa->cliente?->nome ?? '—' }}</td>
-                            <td>{{ $multa->orgao_autuador ?? '—' }}</td>
-                            <td>{{ $multa->data_hora_infracao?->format('d/m/Y') ?? '—' }}</td>
-                            <td>{{ $multa->data_vencimento?->format('d/m/Y') ?? '—' }}</td>
-                            <td class="text-right font-weight-bold">R$ {{ number_format((float)$multa->valor_final, 2, ',', '.') }}</td>
-                            <td><span class="badge badge-{{ $badgeMulta }}">{{ $multa->label_status_multa }}</span></td>
-                            <td><span class="badge badge-{{ $badgeDesc }}">{{ $multa->label_status_desconto }}</span></td>
-                            <td onclick="event.stopPropagation()">
-                                <a href="{{ route('multa.show', $multa->id) }}" class="btn btn-xs btn-info"><i class="fas fa-eye"></i></a>
-                                @can('multa.edit')
-                                <a href="{{ route('multa.edit', $multa->id) }}" class="btn btn-xs btn-warning"><i class="fas fa-edit"></i></a>
-                                @endcan
-                                @can('multa.delete')
-                                <x-delete-button :action="route('multa.destroy', $multa->id)" />
-                                @endcan
-                            </td>
-                        </tr>
-                    @endforeach
+                        @foreach($multas as $multa)
+                            @php
+                                $badgeMultaTable = match($multa->status_multa) {
+                                    'paga'       => 'success',
+                                    'cancelada'  => 'secondary',
+                                    'deferida'   => 'info',
+                                    'indeferida' => 'warning',
+                                    default      => 'danger',
+                                };
+                                $badgeDescTable = match($multa->status_desconto) {
+                                    'descontado'    => 'success',
+                                    'nao_descontar' => 'secondary',
+                                    'estornado'     => 'warning',
+                                    'pendente'      => 'info',
+                                    default         => 'light',
+                                };
+                            @endphp
+                            <tr onclick="window.location='{{ route('multa.show', $multa->id) }}';" style="cursor:pointer;">
+                                <td>
+                                    <div class="font-weight-bold">#{{ $multa->id }} · {{ $multa->placa_momento ?? '-' }}</div>
+                                    <small class="text-muted">
+                                        @if($multa->reserva_id)
+                                            Reserva #{{ $multa->reserva_id }}
+                                        @else
+                                            Sem reserva
+                                        @endif
+                                    </small>
+                                </td>
+                                <td>
+                                    <div>{{ $multa->cliente?->nome ?? '-' }}</div>
+                                    <small class="text-muted">{{ $multa->veiculo?->nome ?? '-' }}</small>
+                                </td>
+                                <td>
+                                    <div>{{ $multa->orgao_autuador ?? '-' }}</div>
+                                    <small class="text-muted">
+                                        Infração: {{ $multa->data_hora_infracao?->format('d/m/Y') ?? '-' }}
+                                        · Venc.: {{ $multa->data_vencimento?->format('d/m/Y') ?? '-' }}
+                                    </small>
+                                </td>
+                                <td>
+                                    <div class="font-weight-bold">R$ {{ number_format((float) $multa->valor_final, 2, ',', '.') }}</div>
+                                </td>
+                                <td>
+                                    <span class="badge badge-{{ $badgeMultaTable }}">{{ $multa->label_status_multa }}</span>
+                                    <span class="badge badge-{{ $badgeDescTable }}">{{ $multa->label_status_desconto }}</span>
+                                </td>
+                                <td onclick="event.stopPropagation();" style="width:220px;">
+                                    <a href="{{ route('multa.show', $multa->id) }}" class="btn btn-xs btn-info">
+                                        <i class="fas fa-eye"></i> Ver
+                                    </a>
+                                    @can('multa.edit')
+                                    <a href="{{ route('multa.edit', $multa->id) }}" class="btn btn-xs btn-warning">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    @endcan
+                                    @can('multa.delete')
+                                    <x-delete-button :action="route('multa.destroy', $multa->id)" />
+                                    @endcan
+                                </td>
+                            </tr>
+                        @endforeach
                     </tbody>
                 </table>
             </div>
@@ -247,84 +248,88 @@
 
 @section('css')
 <style>
-/* ---- Cards de multa ---- */
-.multa-cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    padding: .75rem;
+.mx-view-toggle { display:flex; gap:4px; }
+.mx-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+    gap: 16px;
+    padding: 10px 0;
 }
-.mt {
+.mx {
     position: relative;
+    display: flex;
+    flex-direction: column;
     background: #fff;
-    border: 1px solid #e4e9f0;
-    border-radius: 10px;
-    width: 280px;
-    min-width: 260px;
-    flex: 1 1 260px;
-    max-width: 340px;
+    border: 1px solid #e5eaf2;
+    border-radius: 14px;
     overflow: hidden;
     cursor: pointer;
     transition: box-shadow .18s, transform .15s;
-    display: flex;
-    flex-direction: column;
 }
-.mt:hover { box-shadow: 0 4px 18px rgba(0,0,0,.10); transform: translateY(-2px); }
-
-.mt__accent { height: 4px; width: 100%; }
-.mt-status--red   .mt__accent { background: #dc3545; }
-.mt-status--green .mt__accent { background: #28a745; }
-.mt-status--slate .mt__accent { background: #6c757d; }
-
-.mt__head { display: flex; align-items: flex-start; gap: .6rem; padding: .75rem .75rem .4rem; }
-.mt__avatar {
-    width: 38px; height: 38px; border-radius: 8px;
-    background: #fff3f3; color: #dc3545;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem; flex-shrink: 0;
+.mx:hover { box-shadow: 0 6px 24px rgba(0,0,0,.10); transform: translateY(-2px); }
+.mx__accent { height: 5px; width: 100%; }
+.mx--green .mx__accent { background: linear-gradient(90deg, #10b981, #34d399); }
+.mx--red .mx__accent { background: linear-gradient(90deg, #ef4444, #f87171); }
+.mx--slate .mx__accent { background: linear-gradient(90deg, #64748b, #94a3b8); }
+.mx__head { display:flex; align-items:flex-start; gap:12px; padding:14px 16px 8px; }
+.mx__avatar {
+    width:44px; height:44px; border-radius:10px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700; font-size:.95rem; color:#fff;
+    background: linear-gradient(135deg, #dc2626, #f97316);
 }
-.mt-status--green .mt__avatar { background: #f0fff4; color: #28a745; }
-.mt-status--slate .mt__avatar { background: #f5f5f5; color: #6c757d; }
-.mt__head-info { flex: 1; min-width: 0; }
-.mt__id   { font-size: .68rem; color: #aaa; font-weight: 600; letter-spacing: .04em; }
-.mt__title{ font-size: .95rem; font-weight: 700; color: #222; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mt__sub  { font-size: .75rem; color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mt__badges { display: flex; flex-direction: column; gap: .2rem; align-items: flex-end; flex-shrink: 0; }
-
-.mt__meta { padding: .4rem .75rem; flex: 1; }
-.mt__meta-row { display: flex; justify-content: space-between; padding: .18rem 0; border-bottom: 1px solid #f0f0f0; font-size: .78rem; }
-.mt__meta-row--full { border-bottom: none; }
-.mt__meta-label { color: #888; }
-.mt__meta-value { color: #333; text-align: right; max-width: 55%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-
-.mt__foot { padding: .5rem .75rem; display: flex; gap: .35rem; border-top: 1px solid #f0f0f0; flex-wrap: wrap; }
-
-/* ---- Toggle view ---- */
-.multa-table { display: none; }
-.multa-index-body[data-view="cards"] .multa-cards { display: flex; }
-.multa-index-body[data-view="table"] .multa-cards  { display: none; }
-.multa-index-body[data-view="table"] .multa-table  { display: block; }
+.mx__head-info { flex:1; min-width:0; }
+.mx__id { font-size:.72rem; color:#94a3b8; font-weight:600; letter-spacing:.04em; }
+.mx__title { font-size:.97rem; font-weight:700; color:#0f2740; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mx__sub { font-size:.78rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mx__badges { display:flex; flex-direction:column; gap:4px; }
+.mx__badge {
+    display:inline-block; padding:2px 8px; border-radius:20px;
+    font-size:.7rem; font-weight:700; text-transform:uppercase; white-space:nowrap;
+}
+.mx__badge--green { background:rgba(16,185,129,.15); color:#047857; }
+.mx__badge--red { background:rgba(239,68,68,.13); color:#b91c1c; }
+.mx__badge--slate { background:rgba(100,116,139,.12); color:#475569; }
+.mx__badge--blue { background:rgba(59,130,246,.12); color:#1d4ed8; }
+.mx__badge--amber { background:rgba(245,158,11,.18); color:#92400e; }
+.mx__meta { display:flex; flex-direction:column; gap:4px; padding:6px 16px 10px; flex:1; }
+.mx__meta-row { display:flex; align-items:baseline; gap:6px; font-size:.8rem; }
+.mx__meta-row--full { flex-wrap:wrap; }
+.mx__meta-label { color:#64748b; min-width:90px; flex-shrink:0; }
+.mx__meta-value { color:#1e293b; font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.mx__foot {
+    display:flex; gap:6px; align-items:center;
+    padding:10px 16px; border-top:1px solid #f1f5f9;
+    background:#fafbfc; flex-wrap:wrap;
+}
+.mx-table { display:none; }
+.table-multa-index td { vertical-align:middle; }
+.mx-index-body[data-view="table"] .mx-cards { display:none; }
+.mx-index-body[data-view="table"] .mx-table  { display:block; }
+.mx-index-body[data-view="cards"] .mx-cards  { display:grid; }
+.mx-index-body[data-view="cards"] .mx-table  { display:none; }
+@media (max-width:575px) {
+    .mx-cards { grid-template-columns: 1fr; }
+}
 </style>
 @stop
 
 @section('js')
 <script>
 (function () {
-    const body    = document.querySelector('.multa-index-body');
-    const buttons = document.querySelectorAll('.multa-view-toggle [data-view]');
-    const STORAGE_KEY = 'multa_index_view';
+    const body = document.querySelector('.mx-index-body');
+    const btns = document.querySelectorAll('.mx-view-toggle [data-view]');
+    const store = 'multa_index_view';
 
     function setView(view) {
         if (!body) return;
         body.dataset.view = view;
-        buttons.forEach(b => b.classList.toggle('active', b.dataset.view === view));
-        try { localStorage.setItem(STORAGE_KEY, view); } catch(e) {}
+        btns.forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+        localStorage.setItem(store, view);
     }
 
-    buttons.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
-
-    const saved = (() => { try { return localStorage.getItem(STORAGE_KEY); } catch(e) { return null; } })();
-    setView(saved || 'cards');
+    btns.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
+    setView(localStorage.getItem(store) || 'cards');
 })();
 </script>
 @stop

@@ -65,6 +65,7 @@ it('mostra a aba de planos global apenas com os itens definidos para superadmin'
     expect(collect($itemPlanos['submenu'])->pluck('text')->values()->all())
         ->toBe([
             'Planos',
+            'Política de Acesso',
             'Regras',
             'Empresas',
             'Permissões',
@@ -89,7 +90,6 @@ it('bloqueia acesso direto as rotas globais para administrador que nao e superad
         'regra.index',
         'empresa.index',
         'permissao.index',
-        'tipo_usuario.index',
         'replicacao_base.index',
     ] as $routeName) {
         $this->get(route($routeName))->assertForbidden();

@@ -3,8 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\ItemPlano;
+use App\Models\Permissao;
 use App\Models\Plano;
 use App\Services\BreadcrumbService;
+use App\Services\PlanoPermissaoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -12,7 +14,10 @@ use Illuminate\View\View;
 
 class PlanoController extends Controller
 {
-    public function __construct(private readonly BreadcrumbService $breadcrumbService) {}
+    public function __construct(
+        private readonly BreadcrumbService $breadcrumbService,
+        private readonly PlanoPermissaoService $planoPermissaoService
+    ) {}
 
     public function hub(): View
     {
@@ -100,6 +105,61 @@ class PlanoController extends Controller
         $plano->load('itens');
 
         return view('plano.edit', compact('plano', 'breadcrumb', 'titulo', 'subtitulo'));
+    }
+
+    public function acessos(Plano $plano): View
+    {
+        $titulo = 'Acessos do Plano';
+        $subtitulo = 'Defina o que o administrador da empresa pode usar e conceder neste plano';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Catalogo', route('plano.index')),
+            new \App\DTO\BreadCrumbItem($plano->nome, route('plano.edit', $plano)),
+            new \App\DTO\BreadCrumbItem('Acessos', null),
+        ]);
+
+        $permissoes = Permissao::query()
+            ->where('guard_name', 'web')
+            ->orderBy('grupo')
+            ->orderBy('name')
+            ->get();
+
+        $permitidas = $plano->permissoes()->pluck('permissions.id')->map(fn ($id) => (int) $id)->all();
+        $gruposPermissao = $this->planoPermissaoService->gruposDePermissoesParaTela($permissoes);
+
+        return view('plano.acessos', compact(
+            'plano',
+            'breadcrumb',
+            'titulo',
+            'subtitulo',
+            'gruposPermissao',
+            'permitidas'
+        ));
+    }
+
+    public function salvarAcessos(Request $request, Plano $plano): RedirectResponse
+    {
+        $data = $request->validate([
+            'limite_permissoes_por_regra' => 'nullable|integer|min:1|max:500',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
+        ]);
+
+        $permissionIds = collect($data['permissions'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->unique()
+            ->values()
+            ->all();
+
+        $plano->update([
+            'limite_permissoes_por_regra' => $data['limite_permissoes_por_regra'] ?? null,
+        ]);
+        $plano->permissoes()->sync($permissionIds);
+
+        return redirect()
+            ->route('plano.acessos', $plano)
+            ->with('success', 'Politica de acesso do plano atualizada com sucesso.');
     }
 
     public function update(Request $request, Plano $plano): RedirectResponse
