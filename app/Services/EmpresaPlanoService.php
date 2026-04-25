@@ -8,6 +8,7 @@ use App\Models\EmpresaPlano;
 use App\Models\EmpresaPlanoPagamento;
 use App\Models\OnboardingStep;
 use App\Models\Plano;
+use App\Models\Regra;
 use App\Models\Veiculo;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -252,6 +253,7 @@ class EmpresaPlanoService
     {
         DB::transaction(function () use ($pagamento) {
             $acao = (string) (($pagamento->metadados['acao'] ?? null) ?: 'contratacao');
+            $empresa = $pagamento->empresa;
 
             $pagamento->update([
                 'status'  => 'pago',
@@ -301,7 +303,6 @@ class EmpresaPlanoService
 
             $pendentes->update(['status' => 'cancelado']);
 
-            $empresa = $pagamento->empresa;
             if ($acao === 'contratacao') {
                 $this->marcarOnboardingPagamentoRealizado($empresa);
             }
@@ -310,6 +311,39 @@ class EmpresaPlanoService
             $assinatura->load('plano');
             app(EmpresaAlertaService::class)->executarChecksPosPagemento($empresa, $assinatura);
         });
+
+        // Fora da transação: sync de permissões é pesado e não deve bloquear rollback
+        $this->garantirPermissoesEmpresa($pagamento->empresa);
+    }
+
+    /**
+     * Garante que todos os usuários da empresa têm o role correto com permissões sincronizadas.
+     *
+     * Ao ativar um plano pela primeira vez, o sistema faz o sync das permissões e
+     * atribui o role 'administrador' a qualquer usuário da empresa que ainda não tenha role.
+     */
+    private function garantirPermissoesEmpresa(Empresa $empresa): void
+    {
+        try {
+            // Sincroniza permissões globais do sistema (idempotente — só age se necessário)
+            app(PermissaoSyncService::class)->syncIfNeeded();
+
+            // Garante que todo usuário da empresa tem ao menos um role atribuído
+            $roleAdminId = Regra::where('guard_name', 'web')
+                ->whereRaw('LOWER(name) = ?', ['administrador'])
+                ->value('id');
+
+            if (!$roleAdminId) {
+                return;
+            }
+
+            // Atribui role administrador a usuários sem role definido
+            $empresa->users()
+                ->where(fn ($q) => $q->whereNull('role_id')->orWhere('role_id', 0))
+                ->update(['role_id' => $roleAdminId]);
+        } catch (\Throwable) {
+            // Nunca bloqueia a ativação do plano por falha de permissão
+        }
     }
 
     private function instrucoesPagamento(string $metodo, float $valor, bool $renovacaoAutomatica = false): string

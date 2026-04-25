@@ -8,7 +8,7 @@
 
 @push('styles')
 <style>
-.metodo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+.metodo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 @media (max-width: 560px) { .metodo-grid { grid-template-columns: 1fr; } }
 .metodo-card {
     border: 2px solid #e2e8f0; border-radius: 14px; padding: 1.25rem;
@@ -81,19 +81,14 @@
         </div>
 
         <div class="metodo-grid">
-            <div class="metodo-card" onclick="selecionarMetodo('boleto', this)">
-                <div class="metodo-icon"><i class="fas fa-barcode"></i></div>
-                <div class="metodo-nome">Boleto Bancário</div>
-                <div class="metodo-desc">Boleto enviado por e-mail. Compensação em até 3 dias úteis.</div>
-            </div>
             <div class="metodo-card" onclick="selecionarMetodo('pix', this)">
                 <div class="metodo-icon"><i class="fas fa-qrcode"></i></div>
                 <div class="metodo-nome">PIX</div>
                 <div class="metodo-desc">Pagamento instantâneo via chave PIX. Ativação mais rápida.</div>
             </div>
             <div class="metodo-card" onclick="selecionarMetodo('automatico', this)">
-                <div class="metodo-icon"><i class="fas fa-sync-alt"></i></div>
-                <div class="metodo-nome">Débito Automático</div>
+                <div class="metodo-icon"><i class="fas fa-credit-card"></i></div>
+                <div class="metodo-nome">Cartão de Crédito</div>
                 <div class="metodo-desc">Cobrança recorrente automática na data escolhida.</div>
             </div>
         </div>
