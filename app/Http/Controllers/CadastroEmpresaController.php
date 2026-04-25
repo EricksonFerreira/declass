@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\BoasVindasAdminMail;
+use App\Mail\BoasVindasEmpresaMail;
 use App\Models\Empresa;
 use App\Models\OnboardingStep;
 use App\Models\User;
@@ -9,6 +11,7 @@ use App\Services\ReplicacaoBaseService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -99,10 +102,31 @@ class CadastroEmpresaController extends Controller
             );
 
             return [
-                'email' => $user->email,
-                'senha' => $senhaPadrao,
+                'empresa' => $empresa,
+                'user'    => $user,
+                'email'   => $user->email,
+                'senha'   => $senhaPadrao,
             ];
         });
+
+        // Envia e-mail para o administrador com as credenciais de acesso.
+        try {
+            Mail::to($payload['user']->email)
+                ->send(new BoasVindasAdminMail($payload['empresa'], $payload['user'], $payload['senha']));
+        } catch (\Throwable) {
+            // Não bloqueia o cadastro se o envio de e-mail falhar.
+        }
+
+        // Envia e-mail para o e-mail da empresa (pode ser diferente do admin).
+        try {
+            $emailEmpresa = $payload['empresa']->email;
+            if ($emailEmpresa && $emailEmpresa !== $payload['user']->email) {
+                Mail::to($emailEmpresa)
+                    ->send(new BoasVindasEmpresaMail($payload['empresa'], $payload['user'], $payload['senha']));
+            }
+        } catch (\Throwable) {
+            // Não bloqueia o cadastro se o envio de e-mail falhar.
+        }
 
         return redirect()->route('cadastro.empresa.success')
             ->with('cadastro_empresa_email', $payload['email'])

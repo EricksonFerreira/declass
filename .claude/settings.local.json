@@ -64,7 +64,10 @@
       "Bash(php -l database/factories/EmpresaPlanoPagamentoFactory.php)",
       "Bash(grep -n 'route.*$s\\\\['\\\\''rota'\\\\''\\\\]\\\\|route.*rota' resources/views/onboarding/orientacoes.blade.php)",
       "Bash(php -l app/Services/EmpresaPlanoService.php)",
-      "Bash(php -l app/Services/PermissaoSyncService.php)"
+      "Bash(php -l app/Services/PermissaoSyncService.php)",
+      "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Http/Controllers/CadastroEmpresaController.php)",
+      "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Mail/BoasVindasAdminMail.php)",
+      "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Mail/BoasVindasEmpresaMail.php)"
     ]
   }
 }
