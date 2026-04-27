@@ -278,7 +278,7 @@
         'element' => '[data-view=\"cards\"]',
         'popover' => [
             'title'       => '🗂 Visualização em Cards',
-            'description' => 'Veja suas estações em formato de cards com as informações principais: nome, cidade, horários e status.',
+            'description' => 'Veja suas estações em cards com nome, cidade, horários e status. Clique em qualquer card para editar.',
             'side'        => 'bottom',
         ],
     ],
@@ -293,12 +293,11 @@
     [
         'element' => '.content-header a[href*=\"create\"]',
         'popover' => [
-            'title'       => '➕ Nova Estação',
-            'description' => 'Clique aqui para cadastrar sua primeira estação. Vamos guiar você pelo formulário agora.',
+            'title'       => '➕ Cadastrar primeira estação',
+            'description' => 'Clique em <strong>Nova Estação</strong> para começar. O formulário também tem um guia passo a passo para te ajudar!',
             'side'        => 'bottom',
             'align'       => 'end',
         ],
-        'onDeselected' => 'function() { window.location.href = "' . route('estacao.create') . '?tour=1"; }',
     ],
 ]" />
 @stop
