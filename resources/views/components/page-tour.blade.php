@@ -16,9 +16,12 @@
 .driver-popover-description{font-size:.85rem!important;line-height:1.6!important;color:#374151!important;margin-bottom:14px!important}
 .driver-popover-footer{display:flex!important;flex-direction:column!important;gap:10px!important;border-top:1px solid #f1f5f9!important;padding-top:12px!important;margin-top:0!important}
 .driver-popover-progress-text{font-size:.72rem!important;color:#94a3b8!important;text-align:center!important;order:-1!important}
-.driver-popover-navigation-btns{display:flex!important;justify-content:space-between!important;gap:8px!important}
-.driver-popover-footer button{border-radius:8px!important;font-weight:700!important;font-size:.82rem!important;padding:.4rem 1rem!important;flex:1!important}
+.driver-popover-navigation-btns{display:flex!important;justify-content:flex-end!important;gap:8px!important}
+.driver-popover-footer button{border-radius:8px!important;font-weight:700!important;font-size:.82rem!important;padding:.4rem 1rem!important;white-space:nowrap!important}
+.driver-popover-next-btn,.driver-popover-done-btn{min-width:110px!important}
 .driver-popover-close-btn{top:12px!important;right:14px!important;font-size:1.1rem!important;color:#94a3b8!important}
+.drv-skip-btn{background:none!important;border:none!important;color:#94a3b8!important;font-size:.78rem!important;font-weight:600!important;padding:.3rem .5rem!important;cursor:pointer!important;margin-right:auto!important;transition:color .15s!important}
+.drv-skip-btn:hover{color:#ef4444!important}
 #driver-page-overlay{opacity:.4!important}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
@@ -34,7 +37,16 @@
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { localStorage.setItem(SKIP_KEY, '1'); },
+            onDestroyStarted: (obj, { driver }) => { localStorage.setItem(SKIP_KEY, '1'); driver.destroy(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn';
+                btn.type = 'button';
+                btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { localStorage.setItem(SKIP_KEY, '1'); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
             steps: stepsData,
         });
     }

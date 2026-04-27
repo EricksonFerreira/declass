@@ -205,7 +205,7 @@
 }
 .driver-popover-navigation-btns {
     display: flex !important;
-    justify-content: space-between !important;
+    justify-content: flex-end !important;
     gap: 8px !important;
 }
 .driver-popover-footer button {
@@ -213,8 +213,25 @@
     font-weight: 700 !important;
     font-size: .82rem !important;
     padding: .4rem 1rem !important;
-    flex: 1 !important;
+    white-space: nowrap !important;
 }
+.driver-popover-next-btn,
+.driver-popover-done-btn {
+    min-width: 110px !important;
+}
+/* Botão Pular */
+.drv-skip-btn {
+    background: none !important;
+    border: none !important;
+    color: #94a3b8 !important;
+    font-size: .78rem !important;
+    font-weight: 600 !important;
+    padding: .3rem .5rem !important;
+    cursor: pointer !important;
+    margin-right: auto !important;
+    transition: color .15s !important;
+}
+.drv-skip-btn:hover { color: #ef4444 !important; }
 /* Close button */
 .driver-popover-close-btn {
     top: 12px !important;
@@ -381,7 +398,23 @@
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { localStorage.setItem(SKIP_KEY, '1'); },
+            onDestroyStarted: (obj, { driver }) => {
+                localStorage.setItem(SKIP_KEY, '1');
+                driver.destroy();
+            },
+            onPopoverRender: (popover, { driver }) => {
+                var existing = popover.wrapper.querySelector('.drv-skip-btn');
+                if (existing) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn';
+                btn.type = 'button';
+                btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () {
+                    localStorage.setItem(SKIP_KEY, '1');
+                    driver.destroy();
+                });
+                popover.footer.prepend(btn);
+            },
             steps: steps,
         });
     }
