@@ -83,7 +83,7 @@ class OnboardingStep extends Model
                 'key'      => 'step_pagamento_realizado',
                 'label'    => 'Realizar o primeiro pagamento',
                 'descricao'=> 'Efetue o pagamento para liberar todos os recursos.',
-                'rota'     => 'assinatura.meu-plano',
+                'rota'     => 'assinatura.onboarding-pagamento',
                 'icone'    => 'credit-card',
                 'feito'    => $this->step_pagamento_realizado,
                 'visivel'  => true,

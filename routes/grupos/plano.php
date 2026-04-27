@@ -31,6 +31,8 @@ Route::middleware('can:acessar-superadmin')->prefix('assinatura')->name('assinat
 Route::prefix('meu-plano')->name('assinatura.')->group(function () {
     // Visualização e histórico
     Route::get('/',                 [AssinaturaController::class, 'meuPlano'])->name('meu-plano');
+    // Tela de pagamento dedicada para o onboarding
+    Route::get('/onboarding-pagamento', [AssinaturaController::class, 'onboardingPagamento'])->name('onboarding-pagamento');
     // Seleção de plano → tela de confirmação de pagamento
     Route::get('/contratar',        [AssinaturaController::class, 'prepararContratacao'])->name('contratar');
     // Processar contratação (pode disparar downgrade)

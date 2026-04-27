@@ -219,6 +219,26 @@ class AssinaturaController extends Controller
 
     // ── Tela da própria empresa ─────────────────────────────────────────────
 
+    /** Tela dedicada de pagamento no fluxo de onboarding. */
+    public function onboardingPagamento(): View|RedirectResponse
+    {
+        $empresa = Auth::user()->empresa;
+        abort_unless($empresa, 403);
+
+        $pagamento = $empresa->pagamentosPlano()
+            ->where('status', 'pendente')
+            ->orderByDesc('created_at')
+            ->first();
+
+        if (!$pagamento) {
+            return redirect()->route('onboarding.orientacoes');
+        }
+
+        $pagamento->load('empresaPlano.plano');
+
+        return view('onboarding.pagamento-plano', compact('empresa', 'pagamento'));
+    }
+
     /** Exibe o plano atual, histórico de pagamentos e lista de planos disponíveis. */
     public function meuPlano(): View
     {

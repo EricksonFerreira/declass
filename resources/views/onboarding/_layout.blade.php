@@ -25,7 +25,7 @@
     }
     .onb-logo { font-family: 'Raleway', sans-serif; font-size: 1.3rem; font-weight: 900; letter-spacing: -.03em; }
     .onb-logo span { color: #38bdf8; }
-    .onb-header-meta { font-size: .8rem; color: rgba(255,255,255,.5); }
+    .onb-header-meta { font-size: .8rem; color: rgb(255, 255, 255); }
 
     /* ── Progresso de etapas ── */
     .onb-steps {
