@@ -93,6 +93,8 @@ class OnboardingStep extends Model
                 'label'    => 'Cadastrar uma estação / filial',
                 'descricao'=> 'Registre ao menos um ponto de retirada e devolução.',
                 'rota'     => 'estacao.index',
+                'params'   => [],
+                'query'    => ['tour' => '1'],
                 'icone'    => 'map-marker-alt',
                 'feito'    => $this->step_estacao_cadastrada,
                 'visivel'  => true,

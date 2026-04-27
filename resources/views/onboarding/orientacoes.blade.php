@@ -139,7 +139,13 @@
                             <i class="fas fa-lock"></i> Disponível após confirmar o pagamento
                         </span>
                     @elseif (!$s['feito'] && $podeIr)
-                        <a href="{{ route($s['rota'], $s['params'] ?? []) }}" class="step-btn">
+                        @php
+                            $url = route($s['rota'], $s['params'] ?? []);
+                            if (!empty($s['query'])) {
+                                $url .= '?' . http_build_query($s['query']);
+                            }
+                        @endphp
+                        <a href="{{ $url }}" class="step-btn">
                             <i class="fas fa-arrow-right"></i> Fazer agora
                         </a>
                     @endif

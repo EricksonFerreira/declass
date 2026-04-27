@@ -975,4 +975,126 @@ $(function () {
     });
 });
 </script>
+
+{{-- Tour de onboarding no formulário (Driver.js) --}}
+@if (request()->boolean('tour'))
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+window.addEventListener('DOMContentLoaded', function () {
+    const driver = window.driver.js.driver;
+
+    const tourForm = driver({
+        animate: true,
+        smoothScroll: true,
+        showProgress: true,
+        progressText: '{{CURRENT}} de {{TOTAL}}',
+        nextBtnText: 'Próximo →',
+        prevBtnText: '← Anterior',
+        doneBtnText: 'Entendido, vou preencher ✓',
+        onDestroyStarted: () => { tourForm.destroy(); },
+        steps: [
+            {
+                popover: {
+                    title: '🏪 Cadastro de Estação',
+                    description: 'Uma <strong>estação</strong> é o ponto físico onde seus clientes retiram e devolvem os veículos. Pode ser uma filial, agência ou qualquer ponto de atendimento. Vamos preencher juntos!',
+                    side: 'over',
+                    align: 'center',
+                },
+            },
+            {
+                element: '[data-step="1"]',
+                popover: {
+                    title: '1️⃣ Informações Gerais',
+                    description: 'Comece pelo <strong>nome da estação</strong> (ex: "Filial Centro", "Aeroporto Recife") e o status. Ativo significa que ela aparece disponível para reservas.',
+                    side: 'bottom',
+                    align: 'start',
+                },
+                onHighlightStarted: () => goToStep(1),
+            },
+            {
+                element: '#nome',
+                popover: {
+                    title: '✏️ Nome da Estação',
+                    description: 'Use um nome claro e fácil de identificar. Seus clientes verão esse nome ao fazer reservas online.',
+                    side: 'bottom',
+                },
+                onHighlightStarted: () => goToStep(1),
+            },
+            {
+                element: '[data-step="2"]',
+                popover: {
+                    title: '2️⃣ Contato',
+                    description: 'Preencha o <strong>e-mail</strong> e o <strong>WhatsApp</strong> da estação. Esses dados aparecem para os clientes confirmarem reservas e tirarem dúvidas.',
+                    side: 'bottom',
+                    align: 'start',
+                },
+                onHighlightStarted: () => goToStep(2),
+            },
+            {
+                element: '[data-step="3"]',
+                popover: {
+                    title: '3️⃣ Localização',
+                    description: 'Informe o <strong>CEP</strong> para preencher o endereço automaticamente. A <strong>latitude e longitude</strong> são usadas para exibir a estação no mapa e calcular rotas para os clientes.',
+                    side: 'bottom',
+                    align: 'start',
+                },
+                onHighlightStarted: () => goToStep(3),
+            },
+            {
+                element: '#zip_code',
+                popover: {
+                    title: '🔍 CEP automático',
+                    description: 'Digite o CEP e o sistema preenche o endereço automaticamente. Depois ajuste a latitude e longitude se necessário.',
+                    side: 'right',
+                },
+                onHighlightStarted: () => goToStep(3),
+            },
+            {
+                element: '[data-step="4"]',
+                popover: {
+                    title: '4️⃣ Horários de Funcionamento',
+                    description: 'Configure os horários de <strong>abertura, fechamento e intervalo de almoço</strong> separadamente para dias de semana, sábados, domingos e feriados. Isso controla a disponibilidade das reservas.',
+                    side: 'bottom',
+                    align: 'start',
+                },
+                onHighlightStarted: () => goToStep(4),
+            },
+            {
+                element: '.ec-horarios-grid',
+                popover: {
+                    title: '🕐 Cards de Horário',
+                    description: 'Cada card representa um tipo de dia. Use o toggle <strong>"24h"</strong> para estações que funcionam o dia inteiro, ou <strong>"Sem almoço"</strong> para estações sem intervalo. Os campos "Fora de Expediente" são preenchidos automaticamente.',
+                    side: 'top',
+                },
+                onHighlightStarted: () => goToStep(4),
+            },
+            {
+                element: '[data-step="5"]',
+                popover: {
+                    title: '5️⃣ Operação',
+                    description: 'Configure as <strong>taxas de coleta e entrega</strong> (quando o cliente quer retirar ou devolver em local diferente) e outros parâmetros operacionais da estação.',
+                    side: 'bottom',
+                    align: 'start',
+                },
+                onHighlightStarted: () => goToStep(5),
+            },
+            {
+                element: '#wizardSteps',
+                popover: {
+                    title: '✅ Tudo pronto!',
+                    description: 'Navegue pelas abas, preencha todos os campos e clique em <strong>Salvar</strong> ao final. Após salvar a estação, você já pode cadastrar seus veículos!',
+                    side: 'bottom',
+                    align: 'center',
+                },
+                onHighlightStarted: () => goToStep(1),
+            },
+        ],
+    });
+
+    // Pequeno delay para garantir que o wizard inicializou
+    setTimeout(() => tourForm.drive(), 400);
+});
+</script>
+@endif
 @stop
