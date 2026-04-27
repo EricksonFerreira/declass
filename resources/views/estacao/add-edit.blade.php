@@ -402,19 +402,19 @@
                     <div class="form-row">
                         <div class="col-lg-3 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="checkin" label="Permite Check-in" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="checkin" label="Permitir retirada de veículo" :options="$checkin" placeholder="Selecione"
                                     :selected="old('checkin', $estacao->checkin ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="checkout" label="Permite Check-out" :options="$checkout" placeholder="Selecione"
+                                <x-form-select name="checkout" label="Permitir devolução de veículo" :options="$checkout" placeholder="Selecione"
                                     :selected="old('checkout', $estacao->checkout ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="cobrar_na_coleta" id="cobrar_na_coleta" label="Cobrar taxa fora de expediente (coleta)" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="cobrar_na_coleta" id="cobrar_na_coleta" label="Cobrar taxa na retirada fora do horário" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
@@ -432,7 +432,7 @@
                         </div>
                         <div class="col-lg-3 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="cobrar_na_entrega" id="cobrar_na_entrega" label="Cobrar taxa fora de expediente (entrega)" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="cobrar_na_entrega" id="cobrar_na_entrega" label="Cobrar taxa na devolução fora do horário" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
@@ -450,7 +450,7 @@
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="valido_no_intervalo" label="Válido no intervalo (almoço)" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="valido_no_intervalo" label="Permitir atendimento no horário de almoço" :options="$checkin" placeholder="Selecione"
                                     :selected="old('valido_no_intervalo', $estacao->valido_no_intervalo ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>

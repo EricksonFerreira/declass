@@ -35,7 +35,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         BreadcrumbService $breadcrumbService,
         DiaUtilService $diaUtilService
     ) {
-        $this->titulo = "Estações";
+        $this->titulo = "EstaÃ§Ãµes";
         $this->nomeFiltro = 'estacao';
         $this->estacaoService = $estacaoService;
         $this->breadcrumbService = $breadcrumbService;
@@ -53,7 +53,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
         $estacaos = $this->estacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['pais']);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Estações');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('EstaÃ§Ãµes');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -75,7 +75,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
     public function create()
     {
-        // Bloqueia criação de segunda estação se o plano não inclui multi-estação.
+        // Bloqueia criaÃ§Ã£o de segunda estaÃ§Ã£o se o plano nÃ£o inclui multi-estaÃ§Ã£o.
         $empresa = auth()->user()?->empresa;
         if ($empresa) {
             $plano = $empresa->planoAtivo()?->with('plano')->first()?->plano;
@@ -83,12 +83,12 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
                 $totalEstacoes = \App\Models\Estacao::where('empresa_id', $empresa->id)->count();
                 if ($totalEstacoes >= 1) {
                     return redirect()->route('estacao.index')
-                        ->with('error', 'Seu plano permite apenas uma estação. Faça upgrade para adicionar mais filiais.');
+                        ->with('error', 'Seu plano permite apenas uma estaÃ§Ã£o. FaÃ§a upgrade para adicionar mais filiais.');
                 }
             }
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Estações', 'estacao.index', 'Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('EstaÃ§Ãµes', 'estacao.index', 'Criar');
 
         $paises =  $this->paisService->getAllForSelectId();
         $status = [
@@ -97,13 +97,13 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         ];
 
         $checkin = [
-            'S' => 'Permite',
-            'N' => 'Não Permite'
+            'S' => 'Sim',
+            'N' => 'Não'
         ];
 
         $checkout = [
-            'S' => 'Permite',
-            'N' => 'Não Permite'
+            'S' => 'Sim',
+            'N' => 'Não'
         ];
         $diasUteis = $this->diaUtilService->getAllAtivos('id', 'nome', 'dia', 'asc' ,['dia']);
 
@@ -131,7 +131,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
         $this->estacaoService->salvarNovosHorariosDiarios($estacao);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Estações', 'estacao.index', "Editar: $estacao->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('EstaÃ§Ãµes', 'estacao.index', "Editar: $estacao->nome");
 
         $paises =  $this->paisService->getAllForSelectId();
         $status = [
@@ -140,8 +140,8 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         ];
 
         $checkin = $checkout = $cobrarColeta = $cobrarEntrega =  $validoIntervalo = [
-            'S' => 'Permite',
-            'N' => 'Não Permite'
+            'S' => 'Sim',
+            'N' => 'Não'
         ];
 
         $diasUteis        = $this->diaUtilService->getAllAtivos('id', 'nome', 'dia', 'asc',['dia']);
@@ -184,7 +184,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     public function horarios_diarios($id)
     {
         $estacao = $this->estacaoService->getById($id);
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Horários Diários');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('HorÃ¡rios DiÃ¡rios');
 
         $horarios_diarios = $estacao->horariosDiarios;
 
@@ -194,7 +194,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     public function salvar_horarios_diarios(SalvarHorariosDiariosRequest $request, $id)
     {
         $this->estacaoService->salvarHorariosDiarios($id, $request->all());
-        return redirect()->route('estacao.horarios_diarios', $id)->with('success', 'Horários diários salvos com sucesso.');
+        return redirect()->route('estacao.horarios_diarios', $id)->with('success', 'HorÃ¡rios diÃ¡rios salvos com sucesso.');
     }
 
 
@@ -220,10 +220,10 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
     public function setPerPage(Request $request)
     {
-        // Salva o valor de paginação na sessão
+        // Salva o valor de paginaÃ§Ã£o na sessÃ£o
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
-        // Redireciona de volta para a página de listagem
+        // Redireciona de volta para a pÃ¡gina de listagem
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -236,14 +236,14 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     public function obterFiltrosPrincipais()
     {
         $paises = $this->paisService->getAllForSelectId();
-        $dataPaises = FiltroTrait::formatOptions($paises, 'Selecione o país');
+        $dataPaises = FiltroTrait::formatOptions($paises, 'Selecione o paÃ­s');
 
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'email', 'label' => 'E-mail', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'celular', 'label' => 'Celular', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'cidade', 'label' => 'Cidade', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'pais_id', 'label' => 'País', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataPaises],
+            ['name' => 'pais_id', 'label' => 'PaÃ­s', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataPaises],
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
@@ -256,7 +256,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     public function obterFiltrosSecundarios()
     {
         return [
-            // Adicione filtros secundários aqui, se necessário
+            // Adicione filtros secundÃ¡rios aqui, se necessÃ¡rio
         ];
     }
 
@@ -271,7 +271,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Função para obter o método e a rota para o formulário.
+     * FunÃ§Ã£o para obter o mÃ©todo e a rota para o formulÃ¡rio.
      *
      * @param  Estacao|null  $estacao
      * @return array
@@ -292,14 +292,14 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Retorna os horários disponíveis de uma estação em JSON,
-     * para uso no date/time picker do formulário de movimentação.
+     * Retorna os horÃ¡rios disponÃ­veis de uma estaÃ§Ã£o em JSON,
+     * para uso no date/time picker do formulÃ¡rio de movimentaÃ§Ã£o.
      */
     public function disponibilidadeHorarios($id)
     {
         $estacao = Estacao::with('horarios')->findOrFail($id);
 
-        // Mapeia nome do HorarioDiario → números de dia da semana (JS: 0=Dom, 6=Sáb)
+        // Mapeia nome do HorarioDiario â†’ nÃºmeros de dia da semana (JS: 0=Dom, 6=SÃ¡b)
         $schedule = [];
 
         foreach ($estacao->horarios as $hd) {
@@ -308,7 +308,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
             if (str_contains($nome, 'semana')) {
                 $days = [1, 2, 3, 4, 5]; // Seg-Sex
-            } elseif (str_contains($nome, 'sábado') || str_contains($nome, 'sabado')) {
+            } elseif (str_contains($nome, 'sÃ¡bado') || str_contains($nome, 'sabado')) {
                 $days = [6];
             } elseif (str_contains($nome, 'domingo')) {
                 $days = [0];
@@ -338,3 +338,4 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         ]);
     }
 }
+
