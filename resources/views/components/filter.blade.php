@@ -128,17 +128,41 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-        $('#toggle-filters').tooltip();
-        $('#toggle-filters').on('click', function () {
-            var $af = $('#additional-filters');
-            $af.slideToggle('fast');
-            var open = $af.is(':visible');
-            $(this).html(open ? '<i class="fa fa-angle-double-up"></i>' : '<i class="fa fa-angle-double-down"></i>');
-            $(this).attr('title', open ? 'Ocultar filtros adicionais' : 'Exibir filtros adicionais')
-                   .tooltip('dispose').tooltip();
+(function () {
+    function initToggleFilters() {
+        var btn = document.getElementById('toggle-filters');
+        var af  = document.getElementById('additional-filters');
+        if (!btn || !af) return;
+
+        // Bootstrap tooltip via jQuery (carregado pelo AdminLTE depois do body)
+        function jqReady(fn) {
+            if (typeof window.$ !== 'undefined') { fn(); }
+            else { setTimeout(function () { jqReady(fn); }, 50); }
+        }
+        jqReady(function () { $(btn).tooltip(); });
+
+        btn.addEventListener('click', function () {
+            var visible = af.style.display !== 'none' && af.style.display !== '';
+            if (visible) {
+                af.style.display = 'none';
+            } else {
+                af.style.display = '';
+            }
+            var nowVisible = af.style.display !== 'none' && af.style.display !== '';
+            btn.innerHTML = nowVisible
+                ? '<i class="fa fa-angle-double-up"></i>'
+                : '<i class="fa fa-angle-double-down"></i>';
+            btn.setAttribute('title', nowVisible ? 'Ocultar filtros adicionais' : 'Exibir filtros adicionais');
+            jqReady(function () { $(btn).tooltip('dispose').tooltip(); });
         });
-    });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initToggleFilters);
+    } else {
+        initToggleFilters();
+    }
+})();
 </script>
 
 @if($usesSelect2)

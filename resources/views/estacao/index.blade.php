@@ -160,46 +160,17 @@
         </div>
     </div>
 
-    {{-- Tour guiado da tela de estações --}}
-    <x-page-tour tour-id="estacao-index" :steps="[
-        [
-            'element' => '.content-header',
-            'popover' => [
-                'title'       => '📍 Estações / Filiais',
-                'description' => 'Aqui ficam todas as suas estações — pontos de retirada e devolução de veículos. Cada locadora precisa ter ao menos uma estação para operar.',
-                'side'        => 'bottom',
-                'align'       => 'start',
-            ],
-        ],
-        [
-            'element' => '[data-view=\"cards\"]',
-            'popover' => [
-                'title'       => '🗂 Visualização em Cards',
-                'description' => 'Veja suas estações em cards com nome, cidade, horários e status. Clique em qualquer card para editar.',
-                'side'        => 'bottom',
-            ],
-        ],
-        [
-            'element' => '[data-view=\"table\"]',
-            'popover' => [
-                'title'       => '📋 Visualização em Tabela',
-                'description' => 'Prefere lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
-                'side'        => 'bottom',
-            ],
-        ],
-        [
-            'element' => '.content-header a[href*=\"create\"]',
-            'popover' => [
-                'title'       => '➕ Cadastrar primeira estação',
-                'description' => 'Clique em <strong>Nova Estação</strong> para começar. O formulário também tem um guia passo a passo para te ajudar!',
-                'side'        => 'bottom',
-                'align'       => 'end',
-            ],
-        ],
-    ]" />
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<style>
+.driver-popover{border-radius:14px!important;box-shadow:0 8px 40px rgba(10,22,40,.2)!important}
+.driver-popover-title{font-family:inherit!important;font-weight:800!important;font-size:.95rem!important;color:#0a1628!important}
+.driver-popover-description{font-size:.84rem!important;line-height:1.6!important;color:#374151!important}
+.driver-popover-footer button{border-radius:8px!important;font-weight:700!important;font-size:.8rem!important;padding:.35rem .85rem!important}
+#driver-page-overlay{opacity:.4!important}
+</style>
 <style>
 /* ── View toggle ── */
 .ec-view-toggle { display:flex; gap:4px; }
@@ -299,6 +270,70 @@
 
     btns.forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
     setView(localStorage.getItem(STORE) || 'cards');
+})();
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID  = 'estacao-index';
+    const SKIP_KEY = 'page_tour_done__' + TOUR_ID;
+    const forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+    const jaViu     = localStorage.getItem(SKIP_KEY);
+
+    if (jaViu && !forceTour) return;
+
+    const steps = [
+        {
+            element: '.content-header',
+            popover: {
+                title: '📍 Estações / Filiais',
+                description: 'Aqui ficam todas as suas estações — pontos de retirada e devolução de veículos. Cada locadora precisa ter ao menos uma estação para operar.',
+                side: 'bottom', align: 'start',
+            },
+        },
+        {
+            element: '[data-view="cards"]',
+            popover: {
+                title: '🗂 Visualização em Cards',
+                description: 'Veja suas estações em cards com nome, cidade, horários e status. Clique em qualquer card para editar.',
+                side: 'bottom',
+            },
+        },
+        {
+            element: '[data-view="table"]',
+            popover: {
+                title: '📋 Visualização em Tabela',
+                description: 'Prefere lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
+                side: 'bottom',
+            },
+        },
+        {
+            element: '.content-header a[href*="create"]',
+            popover: {
+                title: '➕ Cadastrar primeira estação',
+                description: 'Clique em <strong>Nova Estação</strong> para começar. O formulário também tem um guia passo a passo para te ajudar!',
+                side: 'bottom', align: 'end',
+            },
+        },
+    ];
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(SKIP_KEY);
+        buildTour().drive();
+    };
+
+    function buildTour() {
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { localStorage.setItem(SKIP_KEY, '1'); },
+            steps: steps,
+        });
+    }
+
+    setTimeout(() => buildTour().drive(), 350);
 })();
 </script>
 @stop
