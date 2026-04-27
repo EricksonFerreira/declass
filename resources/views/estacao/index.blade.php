@@ -398,13 +398,9 @@
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: (obj, { driver }) => {
-                localStorage.setItem(SKIP_KEY, '1');
-                driver.destroy();
-            },
+            onDestroyStarted: () => { localStorage.setItem(SKIP_KEY, '1'); },
             onPopoverRender: (popover, { driver }) => {
-                var existing = popover.wrapper.querySelector('.drv-skip-btn');
-                if (existing) return;
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
                 var btn = document.createElement('button');
                 btn.className = 'drv-skip-btn';
                 btn.type = 'button';
