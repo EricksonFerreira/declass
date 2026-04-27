@@ -134,7 +134,7 @@ class AppServiceProvider extends ServiceProvider
             }
 
             // Tabelas globais do sistema (não devem ser tenant-scoped, nem auto-preencher empresa_id).
-            if (in_array($table, ['permissions', 'roles', 'empresas'], true)) {
+            if (in_array($table, ['permissions', 'roles', 'empresas', 'paises'], true)) {
                 continue;
             }
 

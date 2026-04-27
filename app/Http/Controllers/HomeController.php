@@ -20,6 +20,7 @@ class HomeController extends Controller
 {
     private const STATUS_APROVADOS = ['completa', 'aprovado', 'approved', 'succeeded', 'success'];
     private const STATUS_PENDENTES = ['pendente', 'pending', 'aguardando', 'processando', 'processing'];
+    private const ALERTAS_OCULTOS = ['modulo_nfse_indisponivel', 'site_vendas_indisponivel'];
 
     protected $titulo;
     protected $breadcrumbService;
@@ -44,6 +45,7 @@ public function home()
     if ($empresaUser) {
         $alertas = EmpresaAlerta::where('empresa_id', $empresaUser->id)
             ->where('resolvido', false)
+            ->whereNotIn('tipo', self::ALERTAS_OCULTOS)
             ->orderByRaw("FIELD(nivel, 'critico', 'aviso', 'info')")
             ->get();
     }
