@@ -68,11 +68,20 @@ class CadastroEmpresaController extends Controller
                 'telefone' => $data['empresa_telefone'] ?? null,
             ]);
 
-            // Replica regras/permissoes da empresa base (1), quando existir estrutura multi-tenant.
+            // Replica cadastros base da empresa 1 para a nova empresa.
             try {
-                $replicacaoBaseService->replicar(1, [$empresa->id], ['regras', 'permissoes', 'regras_permissoes']);
+                $replicacaoBaseService->replicar(1, [$empresa->id], [
+                    'horarios_diarios',
+                    'dias_uteis',
+                    'status_movimentacao',
+                    'status_reserva',
+                    'status_veiculos',
+                ]);
             } catch (\Throwable $e) {
-                // Nao bloqueia o cadastro se a replicacao nao estiver disponivel.
+                Log::warning('Replicacao parcial ao criar empresa.', [
+                    'empresa_id' => $empresa->id,
+                    'erro'       => $e->getMessage(),
+                ]);
             }
 
             // Cria o perfil "Administrador" para esta empresa com todas as permissões disponíveis.

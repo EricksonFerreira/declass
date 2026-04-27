@@ -303,11 +303,16 @@ class PermissaoSyncService
     }
 
     /**
-     * Módulos de gestão de plataforma: exclusivos do administrador do sistema.
+     * Módulos de gestão de plataforma: exclusivos do superadmin.
      * Nenhum usuário de empresa cliente deve ter acesso a estes módulos.
      */
     private function isPlatformModule(string $permissionName): bool
     {
+        // Módulos de status são somente-leitura para empresa; gerenciamento é do superadmin.
+        if ($this->isStatusManagementAction($permissionName)) {
+            return true;
+        }
+
         return in_array($this->modulePrefix($permissionName), [
             'empresa',
             'replicacao_base',
@@ -317,7 +322,32 @@ class PermissaoSyncService
             'plano',
             'planos',
             'assinatura',
+            // Cadastros globais da plataforma
+            'job',
+            'sitemap',
+            'pais',
+            'dia_util',
+            'dias_uteis',
+            'horario_diario',
         ], true);
+    }
+
+    /**
+     * Ações de gestão (criar/editar/excluir) nos módulos de status.
+     * Usuários de empresa só podem visualizar esses registros, não gerenciá-los.
+     */
+    private function isStatusManagementAction(string $permissionName): bool
+    {
+        $statusModules = ['status_veiculo', 'status_movimentacao', 'status_reserva', 'status_veiculos'];
+        $prefix = $this->modulePrefix($permissionName);
+
+        if (!in_array($prefix, $statusModules, true)) {
+            return false;
+        }
+
+        // Ações de leitura são permitidas para empresa — apenas gestão é bloqueada
+        $action = $this->actionFromPermissionName($permissionName);
+        return !in_array($action, ['index', 'show', 'filtro', 'setPerPage', 'removerFiltro'], true);
     }
 
     private function isFinancialModule(string $permissionName): bool

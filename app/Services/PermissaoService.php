@@ -76,6 +76,30 @@ class PermissaoService extends AbstractBaseService
         'assinatura',
         'migrations',
         'fipe',
+        'job',
+        'sitemap',
+        'pais',
+        'dia_util',
+        'dias_uteis',
+        'horario_diario',
+        'powerbi',
+        'stripe',
+        'cashier',
+        'webhook',
+        'subscription',
+        'profile',
+        'onboarding',
+    ];
+
+    /**
+     * Módulos de status: usuários de empresa só vêem index/show, não gerenciam.
+     * A tela de tipo de usuário só exibe as ações de leitura para esses módulos.
+     */
+    private array $modulosStatusReadOnly = [
+        'status_veiculo',
+        'status_movimentacao',
+        'status_reserva',
+        'status_veiculos',
     ];
 
     public function getAllForUserContext(?User $user)
@@ -122,10 +146,18 @@ class PermissaoService extends AbstractBaseService
             })->values();
         }
 
-        // Sempre remove permissões de módulos de plataforma independente do plano.
+        // Remove módulos de plataforma e filtra ações de gestão nos módulos de status.
         return $permissoes->filter(function (Permissao $p) {
             $prefixo = strtolower(explode('.', $p->name)[0]);
-            return !in_array($prefixo, $this->modulosPlataforma, true);
+            if (in_array($prefixo, $this->modulosPlataforma, true)) {
+                return false;
+            }
+            // Para módulos de status: só permite ações de leitura
+            if (in_array($prefixo, $this->modulosStatusReadOnly, true)) {
+                $acao = (string) str($p->name)->afterLast('.');
+                return in_array($acao, ['index', 'show', 'filtro', 'setPerPage', 'removerFiltro'], true);
+            }
+            return true;
         })->values();
     }
 

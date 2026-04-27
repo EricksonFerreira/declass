@@ -54,7 +54,11 @@
             'relatorio'      => ['label' => 'Relatórios',           'icon' => 'fas fa-chart-bar',           'cor' => '#0369a1'],
             'cliente'        => ['label' => 'Clientes',             'icon' => 'fas fa-user',                'cor' => '#7c3aed'],
             'condutor'       => ['label' => 'Condutores',           'icon' => 'fas fa-id-card',             'cor' => '#7c3aed'],
-            'contrato'       => ['label' => 'Contratos',            'icon' => 'fas fa-file-signature',      'cor' => '#0369a1'],
+            'contrato'         => ['label' => 'Contratos',               'icon' => 'fas fa-file-signature',   'cor' => '#0369a1'],
+            'status_veiculo'   => ['label' => 'Status de Veículo',       'icon' => 'fas fa-car',              'cor' => '#64748b'],
+            'status_veiculos'  => ['label' => 'Status de Veículo',       'icon' => 'fas fa-car',              'cor' => '#64748b'],
+            'status_movimentacao'=> ['label'=> 'Status de Movimentação', 'icon' => 'fas fa-exchange-alt',     'cor' => '#64748b'],
+            'status_reserva'   => ['label' => 'Status de Reserva',       'icon' => 'fas fa-calendar-check',  'cor' => '#64748b'],
         ];
 
         // Prefixos que nunca devem aparecer (já filtrados no service, mas garantia extra).
