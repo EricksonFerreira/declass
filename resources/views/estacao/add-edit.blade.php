@@ -155,27 +155,49 @@
                                         label="Endereço / Logradouro" value="{{ old('endereco', $estacao->endereco ?? '') }}" required />
                                 </div>
                             </div>
+                            <div class="col-lg-6 col-md-12">
+                                <div class="form-group form-group-estacao location-field">
+                                    <label for="coordenadas_mapa" class="mb-1">
+                                        <i class="fas fa-search-location mr-1 text-muted"></i>
+                                        Coordenadas do mapa
+                                    </label>
+                                    <input type="text" class="form-control form-control-sm" id="coordenadas_mapa"
+                                        placeholder="-8.05428, -34.88130"
+                                        value="{{ old('latitude', $estacao->latitude ?? '') && old('longitude', $estacao->longitude ?? '') ? old('latitude', $estacao->latitude ?? '') . ', ' . old('longitude', $estacao->longitude ?? '') : '' }}">
+                                    <small class="text-muted d-block mt-1">
+                                        Cole aqui a coordenada completa e o sistema separa automaticamente latitude e longitude.
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-estacao location-field">
                                     <x-form-input type="text" class="form-control form-control-sm" id="latitude" name="latitude"
                                         label="Latitude" value="{{ old('latitude', $estacao->latitude ?? '') }}" required />
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="fas fa-search mr-1"></i>
+                                        É o valor da esquerda.
+                                    </small>
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-estacao location-field">
                                     <x-form-input type="text" class="form-control form-control-sm" id="longitude" name="longitude"
                                         label="Longitude" value="{{ old('longitude', $estacao->longitude ?? '') }}" required />
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="fas fa-search mr-1"></i>
+                                        É o valor da direita.
+                                    </small>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-row">
-                            <div class="col-12">
-                                <small class="text-muted d-block mt-1">
-                                    Dica: você pode obter a latitude e longitude no
+                            <div class="col-lg-6 col-md-12 d-flex align-items-end">
+                                <small class="text-muted d-block mb-2">
+                                    Dica: no
                                     <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">
                                         Google Maps
                                     </a>,
-                                    clicando com o botão direito no ponto desejado e copiando as coordenadas exibidas.
+                                    clique com o botão direito no ponto desejado e copie as coordenadas exibidas.
                                 </small>
                             </div>
                         </div>
@@ -818,6 +840,9 @@ $(function () {
     const $cidade  = $('#cidade');
     const $endereco= $('#endereco');
     const $zipFb   = $('#zip-feedback');
+    const $coordenadasMapa = $('#coordenadas_mapa');
+    const $latitude = $('#latitude');
+    const $longitude = $('#longitude');
     const paisBrasilId = @json($paisBrasilId ?? null);
 
     function setZipFeedback(msg, type = 'info') {
@@ -855,6 +880,28 @@ $(function () {
     $zipCode.on('input', function() {
         const nums = ($(this).val() || '').replace(/\D/g,'');
         if (nums.length === 8) preencherCep(nums);
+    });
+
+    function preencherCoordenadasManual(valor) {
+        if (!valor) return;
+
+        const normalizado = String(valor)
+            .trim()
+            .replace(/[;]/g, ',')
+            .replace(/\s+/g, ' ');
+
+        const match = normalizado.match(/(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/);
+        if (!match) return;
+
+        $latitude.val(match[1]);
+        $longitude.val(match[2]);
+    }
+
+    $coordenadasMapa.on('blur change paste', function() {
+        const valorAtual = $(this).val();
+        setTimeout(function() {
+            preencherCoordenadasManual(valorAtual || $coordenadasMapa.val());
+        }, 0);
     });
 
     // ── Toggle 24h ──
