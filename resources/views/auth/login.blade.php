@@ -349,6 +349,31 @@
         }
 
         .btn:active { transform: translateY(0); background: color-mix(in srgb, var(--brand) 72%, #000 28%); }
+        .btn:disabled,
+        .btn.is-loading {
+            cursor: not-allowed;
+            pointer-events: none;
+            background: color-mix(in srgb, var(--brand) 52%, #94a3b8 48%);
+            color: rgba(255,255,255,.96);
+            transform: none;
+            box-shadow: none;
+            opacity: .92;
+        }
+        .btn__spinner {
+            width: 14px;
+            height: 14px;
+            border-radius: 999px;
+            border: 2px solid rgba(255,255,255,.35);
+            border-top-color: #fff;
+            animation: login-spin .7s linear infinite;
+            display: none;
+            flex-shrink: 0;
+        }
+        .btn.is-loading .btn__spinner { display: inline-flex; }
+        .btn.is-loading .btn__icon { display: none; }
+        @keyframes login-spin {
+            to { transform: rotate(360deg); }
+        }
 
         .powered{
             display:flex;
@@ -401,7 +426,7 @@
                     <p class="fhead__sub">Entre com suas credenciais para acessar o sistema</p>
                 </div>
 
-                <form method="POST" action="{{ route('login') }}" novalidate>
+                <form method="POST" action="{{ route('login') }}" novalidate id="loginForm">
                     @csrf
 
                     {{-- E-mail --}}
@@ -478,9 +503,10 @@
                     </label>
 
                     {{-- Submit --}}
-                    <button type="submit" class="btn">
-                        Entrar
-                        <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                    <button type="submit" class="btn" id="loginSubmitBtn">
+                        <span class="btn__spinner" aria-hidden="true"></span>
+                        <span class="btn__label" data-default-label="Entrar">Entrar</span>
+                        <svg class="btn__icon" width="13" height="13" viewBox="0 0 13 13" fill="none">
                             <path d="M1 6.5h11M7 2l4.5 4.5L7 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
                     </button>
@@ -515,6 +541,25 @@
         pwd.type       = visible ? 'password' : 'text';
         show.style.display = visible ? '' : 'none';
         hide.style.display = visible ? 'none' : '';
+    });
+}());
+
+(function () {
+    var form = document.getElementById('loginForm');
+    var submitBtn = document.getElementById('loginSubmitBtn');
+    if (!form || !submitBtn) return;
+
+    form.addEventListener('submit', function () {
+        if (submitBtn.disabled) return;
+
+        submitBtn.disabled = true;
+        submitBtn.classList.add('is-loading');
+        submitBtn.setAttribute('aria-busy', 'true');
+
+        var label = submitBtn.querySelector('.btn__label');
+        if (label) {
+            label.textContent = 'Processando...';
+        }
     });
 }());
 </script>
