@@ -149,12 +149,14 @@
                             </div>
                         </div>
                         <div class="form-row">
-                            <div class="col-lg-6 col-md-12">
+                            <div class="col-12">
                                 <div class="form-group form-group-estacao location-field">
                                     <x-form-input type="text" class="form-control form-control-sm" id="endereco" name="endereco"
                                         label="Endereço / Logradouro" value="{{ old('endereco', $estacao->endereco ?? '') }}" required />
                                 </div>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="col-lg-6 col-md-12">
                                 <div class="form-group form-group-estacao location-field">
                                     <label for="coordenadas_mapa" class="mb-1">
@@ -169,12 +171,10 @@
                                     </small>
                                 </div>
                             </div>
-                        </div>
-                        <div class="form-row">
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-estacao location-field">
                                     <x-form-input type="text" class="form-control form-control-sm" id="latitude" name="latitude"
-                                        label="Latitude" value="{{ old('latitude', $estacao->latitude ?? '') }}" required />
+                                        label="Latitude" value="{{ old('latitude', $estacao->latitude ?? '') }}" readonly required />
                                     <small class="text-muted d-block mt-1">
                                         <i class="fas fa-search mr-1"></i>
                                         É o valor da esquerda.
@@ -184,13 +184,15 @@
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-estacao location-field">
                                     <x-form-input type="text" class="form-control form-control-sm" id="longitude" name="longitude"
-                                        label="Longitude" value="{{ old('longitude', $estacao->longitude ?? '') }}" required />
+                                        label="Longitude" value="{{ old('longitude', $estacao->longitude ?? '') }}" readonly required />
                                     <small class="text-muted d-block mt-1">
                                         <i class="fas fa-search mr-1"></i>
                                         É o valor da direita.
                                     </small>
                                 </div>
                             </div>
+                        </div>
+                        <div class="form-row">
                             <div class="col-lg-6 col-md-12 d-flex align-items-end">
                                 <small class="text-muted d-block mb-2">
                                     Dica: no
