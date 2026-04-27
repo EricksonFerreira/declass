@@ -4,24 +4,55 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ config('adminlte.title', 'Sistema') }} — Recuperar senha</title>
+    @php
+        $loginEmpresa = null;
+        $loginTitle = config('adminlte.title', 'Sistema');
+        $loginBrandColor = '#1e4fd8';
+        $loginFaviconUrl = asset('favicons/favicon.ico');
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('empresas')) {
+                $host = \App\Support\DomainNormalizer::normalize(request()->getHost());
+                if ($host) {
+                    $loginEmpresa = \App\Models\Empresa::query()
+                        ->withoutGlobalScopes()
+                        ->where('ativo', 'S')
+                        ->whereNotNull('dominio')
+                        ->get()
+                        ->first(function (\App\Models\Empresa $empresa) use ($host) {
+                            return \App\Support\DomainNormalizer::normalize($empresa->dominio) === $host;
+                        });
+                }
+            }
+        } catch (\Throwable $e) {
+            $loginEmpresa = null;
+        }
+
+        if ($loginEmpresa) {
+            $loginTitle = (string) ($loginEmpresa->nome ?: $loginTitle);
+            $loginBrandColor = (string) ($loginEmpresa->cor_primaria ?: $loginBrandColor);
+            $loginFaviconUrl = $loginEmpresa->logo_url ?: $loginFaviconUrl;
+        }
+    @endphp
+    <title>{{ $loginTitle }} — Recuperar senha</title>
+    <link rel="icon" type="image/x-icon" href="{{ $loginFaviconUrl }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
         *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:#f0f2f6;color:#111827;-webkit-font-smoothing:antialiased}
+        html,body{min-height:100%;font-family:'Inter',system-ui,sans-serif;background:color-mix(in srgb, {{ $loginBrandColor }} 6%, #f0f2f6 94%);color:#111827;-webkit-font-smoothing:antialiased}
         .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
         .wrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:1.5rem}
-        .logo{display:flex;align-items:center;gap:.6rem}
-        .logo__mark{width:38px;height:38px;border-radius:11px;background:#1e4fd8;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px rgba(30,79,216,.35)}
-        .logo__name{font-size:1.15rem;font-weight:600;color:#111827;letter-spacing:-.02em}
+        .logo{display:flex;align-items:center;justify-content:center}
+        .logo__mark{width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .logo__mark img{width:44px;height:44px;object-fit:contain;display:block}
         .card{background:#fff;border-radius:18px;width:100%;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 6px rgba(0,0,0,.04),0 16px 48px rgba(0,0,0,.09);overflow:hidden}
         .card__body{padding:2.25rem 2.375rem 2rem}
         .card__footer{border-top:1px solid #f3f4f6;padding:1.1rem 2.375rem;text-align:center;font-size:.8rem;color:#9ca3af}
-        .card__footer a{color:#1e4fd8;font-weight:600;text-decoration:none}
+        .card__footer a{color:{{ $loginBrandColor }};font-weight:600;text-decoration:none}
         .card__footer a:hover{text-decoration:underline}
         .fhead{margin-bottom:1.5rem}
-        .fhead__icon{width:44px;height:44px;border-radius:12px;background:#eff4ff;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:#1e4fd8}
+        .fhead__icon{width:44px;height:44px;border-radius:12px;background:#eff4ff;display:flex;align-items:center;justify-content:center;margin-bottom:1rem;color:{{ $loginBrandColor }}}
         .fhead__title{font-size:1.2rem;font-weight:600;color:#111827;letter-spacing:-.025em;line-height:1.3;margin-bottom:.3rem}
         .fhead__sub{font-size:.815rem;color:#6b7280;line-height:1.6}
         .flash{display:flex;align-items:flex-start;gap:.6rem;padding:.85rem 1rem;border-radius:10px;font-size:.815rem;margin-bottom:1.25rem;background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
@@ -30,17 +61,17 @@
         .field__error{font-size:.74rem;color:#e53e3e;line-height:1.4}
         .input-wrap{position:relative;display:flex;align-items:center}
         .input-wrap__icon{position:absolute;left:.85rem;color:#cbd5e1;display:flex;align-items:center;pointer-events:none;transition:color .15s}
-        .input-wrap:focus-within .input-wrap__icon{color:#1e4fd8}
+        .input-wrap:focus-within .input-wrap__icon{color:{{ $loginBrandColor }}}
         .input{width:100%;height:43px;padding:0 .875rem 0 2.55rem;font-size:.855rem;font-family:'Inter',sans-serif;color:#111827;background:#f8f9fc;border:1.5px solid #e9eaee;border-radius:10px;outline:none;transition:border-color .15s,background .15s,box-shadow .15s;-webkit-appearance:none}
         .input::placeholder{color:#c5ccd7}
         .input:hover{border-color:#d1d5db;background:#f3f4f8}
-        .input:focus{border-color:#1e4fd8;background:#fff;box-shadow:0 0 0 3.5px rgba(30,79,216,.1)}
+        .input:focus{border-color:{{ $loginBrandColor }};background:#fff;box-shadow:0 0 0 3.5px color-mix(in srgb, {{ $loginBrandColor }} 14%, transparent)}
         .field--error .input{border-color:#f05252;background:#fef7f7}
         .field--error .input:focus{box-shadow:0 0 0 3.5px rgba(240,82,82,.1)}
         .field--error .input-wrap__icon{color:#f05252}
-        .btn{width:100%;height:44px;margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:.45rem;background:#1e4fd8;color:#fff;font-size:.875rem;font-weight:600;font-family:'Inter',sans-serif;letter-spacing:.01em;border:none;border-radius:10px;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s;box-shadow:0 1px 3px rgba(30,79,216,.3),0 4px 14px rgba(30,79,216,.2)}
-        .btn:hover{background:#1338b0;transform:translateY(-1px);box-shadow:0 2px 6px rgba(30,79,216,.35),0 8px 22px rgba(30,79,216,.22)}
-        .btn:active{transform:translateY(0);background:#1030a0}
+        .btn{width:100%;height:44px;margin-top:1.5rem;display:flex;align-items:center;justify-content:center;gap:.45rem;background:{{ $loginBrandColor }};color:#fff;font-size:.875rem;font-weight:600;font-family:'Inter',sans-serif;letter-spacing:.01em;border:none;border-radius:10px;cursor:pointer;transition:background .15s,transform .1s,box-shadow .15s;box-shadow:0 1px 3px color-mix(in srgb, {{ $loginBrandColor }} 30%, transparent),0 4px 14px color-mix(in srgb, {{ $loginBrandColor }} 20%, transparent)}
+        .btn:hover{background:color-mix(in srgb, {{ $loginBrandColor }} 88%, #000 12%);transform:translateY(-1px);box-shadow:0 2px 6px color-mix(in srgb, {{ $loginBrandColor }} 35%, transparent),0 8px 22px color-mix(in srgb, {{ $loginBrandColor }} 22%, transparent)}
+        .btn:active{transform:translateY(0);background:color-mix(in srgb, {{ $loginBrandColor }} 82%, #000 18%)}
     </style>
 </head>
 <body>
@@ -49,12 +80,8 @@
 
         <div class="logo">
             <div class="logo__mark">
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                    <path d="M10 1L18.5 6v8L10 19 1.5 14V6L10 1z" fill="white" fill-opacity=".95"/>
-                    <path d="M10 5.5L15 8.5v6L10 17 5 14.5v-6L10 5.5z" fill="white" fill-opacity=".28"/>
-                </svg>
+                <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Ícone DeCars">
             </div>
-            <span class="logo__name">{{ config('adminlte.title', 'Sistema') }}</span>
         </div>
 
         <div class="card">
@@ -73,7 +100,6 @@
                     <p class="fhead__sub">Informe seu e-mail e enviaremos um link para você criar uma nova senha.</p>
                 </div>
 
-                {{-- Flash de sucesso --}}
                 @if (session('status'))
                     <div class="flash">
                         <svg width="15" height="15" viewBox="0 0 15 15" fill="none" style="flex-shrink:0;margin-top:1px">
