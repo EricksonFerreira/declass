@@ -322,3 +322,8 @@
     </ul>
 
 </nav>
+
+{{-- Bolinha de onboarding flutuante (aparece em todas as telas admin enquanto setup não concluído) --}}
+@auth
+<x-onboarding-bubble />
+@endauth

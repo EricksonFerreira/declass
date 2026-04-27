@@ -264,66 +264,41 @@
 })();
 </script>
 
-{{-- Tour de onboarding (Driver.js) --}}
-@if (request()->boolean('tour'))
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
-<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
-<script>
-window.addEventListener('DOMContentLoaded', function () {
-    const driver = window.driver.js.driver;
-
-    const tourIndex = driver({
-        animate: true,
-        smoothScroll: true,
-        showProgress: true,
-        progressText: '{{CURRENT}} de {{TOTAL}}',
-        nextBtnText: 'Próximo →',
-        prevBtnText: '← Anterior',
-        doneBtnText: 'Cadastrar minha estação ✓',
-        onDestroyStarted: () => { tourIndex.destroy(); },
-        onDestroyed: () => {
-            window.location.href = "{{ route('estacao.create') }}?tour=1";
-        },
-        steps: [
-            {
-                element: '.content-header',
-                popover: {
-                    title: '📍 Estações / Filiais',
-                    description: 'Aqui ficam todas as suas estações — pontos de retirada e devolução de veículos. Cada locadora precisa ter ao menos uma estação para operar.',
-                    side: 'bottom',
-                    align: 'start',
-                },
-            },
-            {
-                element: '[data-view="cards"]',
-                popover: {
-                    title: '🗂 Visualização em Cards',
-                    description: 'Veja suas estações em formato de cards com as informações principais: nome, cidade, horários e status.',
-                    side: 'bottom',
-                },
-            },
-            {
-                element: '[data-view="table"]',
-                popover: {
-                    title: '📋 Visualização em Tabela',
-                    description: 'Prefere lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
-                    side: 'bottom',
-                },
-            },
-            {
-                element: '.content-header a[href*="create"]',
-                popover: {
-                    title: '➕ Nova Estação',
-                    description: 'Clique aqui para cadastrar sua primeira estação. Vamos guiar você pelo formulário agora.',
-                    side: 'bottom',
-                    align: 'end',
-                },
-            },
+<x-page-tour tour-id="estacao-index" :steps="[
+    [
+        'element' => '.content-header',
+        'popover' => [
+            'title'       => '📍 Estações / Filiais',
+            'description' => 'Aqui ficam todas as suas estações — pontos de retirada e devolução de veículos. Cada locadora precisa ter ao menos uma estação para operar.',
+            'side'        => 'bottom',
+            'align'       => 'start',
         ],
-    });
-
-    tourIndex.drive();
-});
-</script>
-@endif
+    ],
+    [
+        'element' => '[data-view=\"cards\"]',
+        'popover' => [
+            'title'       => '🗂 Visualização em Cards',
+            'description' => 'Veja suas estações em formato de cards com as informações principais: nome, cidade, horários e status.',
+            'side'        => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-view=\"table\"]',
+        'popover' => [
+            'title'       => '📋 Visualização em Tabela',
+            'description' => 'Prefere lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
+            'side'        => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.content-header a[href*=\"create\"]',
+        'popover' => [
+            'title'       => '➕ Nova Estação',
+            'description' => 'Clique aqui para cadastrar sua primeira estação. Vamos guiar você pelo formulário agora.',
+            'side'        => 'bottom',
+            'align'       => 'end',
+        ],
+        'onDeselected' => 'function() { window.location.href = "' . route('estacao.create') . '?tour=1"; }',
+    ],
+]" />
 @stop

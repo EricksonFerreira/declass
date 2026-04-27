@@ -988,7 +988,7 @@ window.addEventListener('DOMContentLoaded', function () {
         animate: true,
         smoothScroll: true,
         showProgress: true,
-        progressText: '{{CURRENT}} de {{TOTAL}}',
+        progressText: '@{{CURRENT}} de @{{TOTAL}}',
         nextBtnText: 'Próximo →',
         prevBtnText: '← Anterior',
         doneBtnText: 'Entendido, vou preencher ✓',
