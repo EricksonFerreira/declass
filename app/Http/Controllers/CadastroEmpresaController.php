@@ -6,7 +6,6 @@ use App\Mail\BoasVindasAdminMail;
 use App\Mail\BoasVindasEmpresaMail;
 use App\Models\Empresa;
 use App\Models\OnboardingStep;
-use App\Models\Permissao;
 use App\Models\Regra;
 use App\Models\User;
 use App\Services\PermissaoSyncService;
@@ -84,28 +83,11 @@ class CadastroEmpresaController extends Controller
                 ]);
             }
 
-            // Cria o perfil "Administrador" para esta empresa com todas as permissões disponíveis.
-            // Módulos de plataforma são excluídos — o administrador da empresa só pode o que o plano permite.
-            $prefixosBloqueados = [
-                'empresa', 'replicacao_base', 'regra', 'permissao', 'tipo_usuario',
-                'plano', 'planos', 'assinatura', 'migrations', 'fipe',
-                'powerbi', 'stripe', 'cashier', 'webhook', 'cancel', 'success',
-                'subscription', 'profile', 'onboarding',
-            ];
-
-            $todasPermissoes = Permissao::where('guard_name', 'web')->get()
-                ->filter(function (Permissao $p) use ($prefixosBloqueados) {
-                    $prefixo = strtolower(explode('.', $p->name)[0]);
-                    return !in_array($prefixo, $prefixosBloqueados, true);
-                });
-
-            $roleAdmin = Regra::create([
-                'name'       => 'Administrador',
-                'guard_name' => 'web',
-            ]);
-            $roleAdmin->permissoes()->sync($todasPermissoes->pluck('id')->all());
-
-            $roleId = $roleAdmin->id;
+            // Busca o role global "Administrador" criado pelo syncIfNeeded.
+            // Roles são globais (sem empresa_id), portanto não criamos um novo — apenas reutilizamos.
+            $roleId = Regra::where('guard_name', 'web')
+                ->whereRaw('LOWER(name) = ?', ['administrador'])
+                ->value('id');
 
             $user = User::create([
                 'nome'              => $data['admin_nome'],

@@ -317,18 +317,21 @@ class EmpresaPlanoService
     }
 
     /**
-     * Garante que todos os usuários da empresa têm o role correto com permissões sincronizadas.
+     * Garante que os usuários da empresa têm o role correto após ativação/mudança de plano.
      *
-     * Ao ativar um plano pela primeira vez, o sistema faz o sync das permissões e
-     * atribui o role 'administrador' a qualquer usuário da empresa que ainda não tenha role.
+     * - Sincroniza permissões globais (idempotente)
+     * - Garante que o admin original (primeiro usuário) sempre tem o role 'administrador'
+     * - Atribui 'administrador' como fallback a qualquer usuário sem role definido
+     *
+     * O plano em si restringe o acesso via middleware e filtros — não via roles diferentes.
+     * Portanto o role 'administrador' é sempre o mesmo; o que muda entre planos é o que
+     * esse role pode acessar, controlado por CheckPermissaoPorRota e PermissaoService.
      */
     private function garantirPermissoesEmpresa(Empresa $empresa): void
     {
         try {
-            // Sincroniza permissões globais do sistema (idempotente — só age se necessário)
             app(PermissaoSyncService::class)->syncIfNeeded();
 
-            // Garante que todo usuário da empresa tem ao menos um role atribuído
             $roleAdminId = Regra::where('guard_name', 'web')
                 ->whereRaw('LOWER(name) = ?', ['administrador'])
                 ->value('id');
@@ -337,7 +340,13 @@ class EmpresaPlanoService
                 return;
             }
 
-            // Atribui role administrador a usuários sem role definido
+            // O admin original é o usuário mais antigo da empresa (menor id).
+            $adminOriginal = $empresa->users()->orderBy('id')->first();
+            if ($adminOriginal && ((int) $adminOriginal->role_id !== (int) $roleAdminId)) {
+                $adminOriginal->update(['role_id' => $roleAdminId]);
+            }
+
+            // Demais usuários sem role recebem 'administrador' como fallback.
             $empresa->users()
                 ->where(fn ($q) => $q->whereNull('role_id')->orWhere('role_id', 0))
                 ->update(['role_id' => $roleAdminId]);
