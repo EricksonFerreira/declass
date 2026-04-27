@@ -346,12 +346,12 @@
 <script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
 (function () {
-    const TOUR_ID  = 'estacao-index';
-    const SKIP_KEY = 'page_tour_done__' + TOUR_ID;
-    const forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
-    const jaViu     = localStorage.getItem(SKIP_KEY);
-
-    if (jaViu && !forceTour) return;
+    const TOUR_ID    = 'estacao-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
 
     const steps = [
         {
@@ -388,17 +388,19 @@
         },
     ];
 
-    window.restartPageTour = function () {
-        localStorage.removeItem(SKIP_KEY);
-        buildTour().drive();
-    };
+    function marcarFeito() {
+        fetch(CONCLUIR_URL, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        });
+    }
 
     function buildTour() {
         return window.driver.js.driver({
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { localStorage.setItem(SKIP_KEY, '1'); },
+            onDestroyStarted: () => { marcarFeito(); },
             onPopoverRender: (popover, { driver }) => {
                 if (popover.wrapper.querySelector('.drv-skip-btn')) return;
                 var btn = document.createElement('button');
@@ -406,7 +408,7 @@
                 btn.type = 'button';
                 btn.textContent = 'Pular tour';
                 btn.addEventListener('click', function () {
-                    localStorage.setItem(SKIP_KEY, '1');
+                    marcarFeito();
                     driver.destroy();
                 });
                 popover.footer.prepend(btn);
@@ -415,7 +417,19 @@
         });
     }
 
-    setTimeout(() => buildTour().drive(), 350);
+    window.restartPageTour = function () {
+        fetch(RESETAR_URL, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        }).then(() => buildTour().drive());
+    };
+
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) return;
+            setTimeout(() => buildTour().drive(), 350);
+        });
 })();
 </script>
 @stop

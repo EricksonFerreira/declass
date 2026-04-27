@@ -5,9 +5,9 @@
 ])
 {{--
     Componente reutilizável de tour guiado (Driver.js).
-    Emite CSS + JS inline — compatível com AdminLTE que usa @yield('css'/'js').
-    Uso: coloque <x-page-tour tour-id="minha-tela" :steps="[...]" />
-    dentro do @section('js') da view.
+    Persiste estado por usuário no banco via TourController.
+    Uso: <x-page-tour tour-id="minha-tela" :steps="[...]" />
+    Coloque dentro do @section('css') / @section('js') da view.
 --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
 <style>
@@ -28,23 +28,35 @@
 <script>
 (function () {
     const TOUR_ID   = @json($tourId);
-    const SKIP_KEY  = 'page_tour_done__' + TOUR_ID;
     const autorun   = @json($autorun);
     const stepsData = @json($steps);
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+
+    function marcarFeito() {
+        fetch(CONCLUIR_URL, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        });
+    }
 
     function buildDriver() {
         return window.driver.js.driver({
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { localStorage.setItem(SKIP_KEY, '1'); },
+            onDestroyStarted: () => { marcarFeito(); },
             onPopoverRender: (popover, { driver }) => {
                 if (popover.wrapper.querySelector('.drv-skip-btn')) return;
                 var btn = document.createElement('button');
                 btn.className = 'drv-skip-btn';
                 btn.type = 'button';
                 btn.textContent = 'Pular tour';
-                btn.addEventListener('click', function () { localStorage.setItem(SKIP_KEY, '1'); driver.destroy(); });
+                btn.addEventListener('click', function () {
+                    marcarFeito();
+                    driver.destroy();
+                });
                 popover.footer.prepend(btn);
             },
             steps: stepsData,
@@ -52,16 +64,22 @@
     }
 
     window.restartPageTour = function () {
-        localStorage.removeItem(SKIP_KEY);
-        buildDriver().drive();
+        fetch('/admin/tour/resetar/' + TOUR_ID, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        }).then(() => buildDriver().drive());
     };
 
     function init() {
-        const jaViu     = localStorage.getItem(SKIP_KEY);
         const forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
         if (!autorun && !forceTour) return;
-        if (jaViu && !forceTour) return;
-        setTimeout(() => buildDriver().drive(), 350);
+
+        fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(data => {
+                if (data.feito && !forceTour) return;
+                setTimeout(() => buildDriver().drive(), 350);
+            });
     }
 
     if (document.readyState === 'loading') {

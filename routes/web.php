@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EmpresaContextController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\TourController;
 use App\Http\Controllers\IndicadoresController;
 use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\PagamentoController;
@@ -24,6 +25,11 @@ use Illuminate\Support\Facades\Route;
 // Webhook Stripe — sem CSRF, sem auth
 Route::middleware('auth')->prefix('admin')->group(function () {
     Route::patch('alerta/{alerta}/resolver', [EmpresaAlertaController::class, 'resolver'])->name('alerta.resolver');
+
+    // Tour guiado — status e conclusão por tela
+    Route::get('tour/status/{chave}',    [TourController::class, 'status'])->name('tour.status');
+    Route::post('tour/concluir/{chave}', [TourController::class, 'concluir'])->name('tour.concluir');
+    Route::post('tour/resetar/{chave}',  [TourController::class, 'resetar'])->name('tour.resetar');
 });
 
 Route::post('/webhook/stripe', [StripeWebhookController::class, 'handle'])
