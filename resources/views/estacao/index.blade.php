@@ -159,6 +159,44 @@
 
         </div>
     </div>
+
+    {{-- Tour guiado da tela de estações --}}
+    <x-page-tour tour-id="estacao-index" :steps="[
+        [
+            'element' => '.content-header',
+            'popover' => [
+                'title'       => '📍 Estações / Filiais',
+                'description' => 'Aqui ficam todas as suas estações — pontos de retirada e devolução de veículos. Cada locadora precisa ter ao menos uma estação para operar.',
+                'side'        => 'bottom',
+                'align'       => 'start',
+            ],
+        ],
+        [
+            'element' => '[data-view=\"cards\"]',
+            'popover' => [
+                'title'       => '🗂 Visualização em Cards',
+                'description' => 'Veja suas estações em cards com nome, cidade, horários e status. Clique em qualquer card para editar.',
+                'side'        => 'bottom',
+            ],
+        ],
+        [
+            'element' => '[data-view=\"table\"]',
+            'popover' => [
+                'title'       => '📋 Visualização em Tabela',
+                'description' => 'Prefere lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
+                'side'        => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.content-header a[href*=\"create\"]',
+            'popover' => [
+                'title'       => '➕ Cadastrar primeira estação',
+                'description' => 'Clique em <strong>Nova Estação</strong> para começar. O formulário também tem um guia passo a passo para te ajudar!',
+                'side'        => 'bottom',
+                'align'       => 'end',
+            ],
+        ],
+    ]" />
 @stop
 
 @section('css')
@@ -264,41 +302,3 @@
 })();
 </script>
 @stop
-
-{{-- Tour guiado da tela de estações --}}
-<x-page-tour tour-id="estacao-index" :steps="[
-    [
-        'element' => '.content-header',
-        'popover' => [
-            'title'       => '📍 Estações / Filiais',
-            'description' => 'Aqui ficam todas as suas estações — pontos de retirada e devolução de veículos. Cada locadora precisa ter ao menos uma estação para operar.',
-            'side'        => 'bottom',
-            'align'       => 'start',
-        ],
-    ],
-    [
-        'element' => '[data-view=\"cards\"]',
-        'popover' => [
-            'title'       => '🗂 Visualização em Cards',
-            'description' => 'Veja suas estações em cards com nome, cidade, horários e status. Clique em qualquer card para editar.',
-            'side'        => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-view=\"table\"]',
-        'popover' => [
-            'title'       => '📋 Visualização em Tabela',
-            'description' => 'Prefere lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
-            'side'        => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.content-header a[href*=\"create\"]',
-        'popover' => [
-            'title'       => '➕ Cadastrar primeira estação',
-            'description' => 'Clique em <strong>Nova Estação</strong> para começar. O formulário também tem um guia passo a passo para te ajudar!',
-            'side'        => 'bottom',
-            'align'       => 'end',
-        ],
-    ],
-]" />

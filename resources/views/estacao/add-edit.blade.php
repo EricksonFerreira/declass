@@ -447,6 +447,13 @@
 @stop
 
 @section('css')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<style>
+.driver-popover{border-radius:14px!important;box-shadow:0 8px 40px rgba(10,22,40,.2)!important}
+.driver-popover-title{font-family:inherit!important;font-weight:800!important;font-size:.95rem!important;color:#0a1628!important}
+.driver-popover-description{font-size:.84rem!important;line-height:1.6!important;color:#374151!important}
+.driver-popover-footer button{border-radius:8px!important;font-weight:700!important;font-size:.8rem!important;padding:.35rem .85rem!important}
+</style>
 <style>
 .card-estacao { border-radius: 14px; overflow: hidden; }
 .card-header-estacao {
@@ -738,6 +745,7 @@
 @stop
 
 @section('js')
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
 <script>
 $(function () {
@@ -974,31 +982,18 @@ $(function () {
         }
     });
 });
-</script>
 
-@stop
+    // ── Tour guiado do formulário de estação ──
+    (function () {
+        const TOUR_ID  = 'estacao-form';
+        const SKIP_KEY = 'page_tour_done__' + TOUR_ID;
+        const forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
+        const jaViu     = localStorage.getItem(SKIP_KEY);
 
-{{-- Tour do formulário de estação com callbacks JS para navegar o wizard --}}
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
-<style>
-.driver-popover{border-radius:14px!important;box-shadow:0 8px 40px rgba(10,22,40,.2)!important}
-.driver-popover-title{font-family:inherit!important;font-weight:800!important;font-size:.95rem!important;color:#0a1628!important}
-.driver-popover-description{font-size:.84rem!important;line-height:1.6!important;color:#374151!important}
-.driver-popover-footer button{border-radius:8px!important;font-weight:700!important;font-size:.8rem!important;padding:.35rem .85rem!important}
-</style>
-<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
-<script>
-(function () {
-    const TOUR_ID  = 'estacao-form';
-    const SKIP_KEY = 'page_tour_done__' + TOUR_ID;
-    const forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
-    const jaViu     = localStorage.getItem(SKIP_KEY);
+        if (jaViu && !forceTour) return;
+        if (typeof window.driver === 'undefined' || !window.driver.js) return;
 
-    if (jaViu && !forceTour) return;
-
-    window.addEventListener('DOMContentLoaded', function () {
         const driverFn = window.driver.js.driver;
-
         const tour = driverFn({
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
@@ -1097,6 +1092,7 @@ $(function () {
         });
 
         setTimeout(() => tour.drive(), 400);
-    });
-})();
+    })();
 </script>
+
+@stop
