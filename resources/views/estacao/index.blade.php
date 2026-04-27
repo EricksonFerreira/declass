@@ -263,7 +263,9 @@
     setView(localStorage.getItem(STORE) || 'cards');
 })();
 </script>
+@stop
 
+{{-- Tour guiado da tela de estações --}}
 <x-page-tour tour-id="estacao-index" :steps="[
     [
         'element' => '.content-header',
@@ -300,4 +302,3 @@
         ],
     ],
 ]" />
-@stop

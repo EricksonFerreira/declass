@@ -6,11 +6,50 @@
     $steps      = $step->stepsParaExibir($planoAtivo);
     $pendentes  = collect($steps)->where('feito', false);
     if ($pendentes->isEmpty()) return;
-    $pagFeito   = $step->step_pagamento_realizado;
+    $pagFeito    = $step->step_pagamento_realizado;
     $stepsLivres = ['step_empresa_configurada', 'step_plano_contratado', 'step_pagamento_realizado'];
 @endphp
 
-{{-- Bolinha flutuante de onboarding --}}
+<style>
+#onb-bubble{position:fixed;bottom:24px;right:24px;z-index:9990;width:54px;height:54px;border-radius:50%;background:#0a1628;color:#fff;font-size:1.2rem;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 20px rgba(10,22,40,.35);transition:transform .2s,box-shadow .2s;user-select:none}
+#onb-bubble:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(10,22,40,.45)}
+#onb-bubble-ring{position:absolute;inset:-4px;border-radius:50%;border:2px solid rgba(10,22,40,.25);animation:onb-pulse 2.4s ease-in-out infinite}
+@keyframes onb-pulse{0%,100%{transform:scale(1);opacity:.6}50%{transform:scale(1.18);opacity:0}}
+#onb-bubble-badge{position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:.65rem;font-weight:800;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:2px solid #fff}
+#onb-panel{position:fixed;bottom:90px;right:24px;z-index:9991;width:340px;background:#fff;border-radius:16px;box-shadow:0 8px 40px rgba(10,22,40,.18);border:1px solid #e2e8f0;display:none;flex-direction:column;max-height:80vh;overflow:hidden}
+#onb-panel.open{display:flex;animation:onb-slide-up .22s ease}
+@keyframes onb-slide-up{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+#onb-panel-header{background:#0a1628;color:#fff;padding:.9rem 1rem;display:flex;justify-content:space-between;align-items:flex-start;border-radius:16px 16px 0 0;flex-shrink:0}
+#onb-panel-title{font-weight:700;font-size:.88rem}
+#onb-panel-sub{font-size:.73rem;color:rgba(255,255,255,.6);margin-top:.2rem}
+#onb-panel-close{background:none;border:none;color:rgba(255,255,255,.6);font-size:1.3rem;cursor:pointer;line-height:1;padding:0;margin-left:.5rem;transition:color .15s}
+#onb-panel-close:hover{color:#fff}
+#onb-panel-progress{height:4px;background:#e2e8f0;flex-shrink:0}
+#onb-panel-progress-bar{height:100%;background:#22c55e;transition:width .4s ease}
+#onb-panel-steps{overflow-y:auto;padding:.6rem .75rem;display:flex;flex-direction:column;gap:.4rem;flex:1}
+.onb-step-row{display:flex;align-items:center;gap:.65rem;padding:.55rem .65rem;border-radius:10px;border:1px solid #e2e8f0;background:#f8fafc}
+.onb-step-feito{border-color:#bbf7d0;background:#f0fdf4}
+.onb-step-pending{border-color:#e2e8f0;background:#fff}
+.onb-step-bloq{opacity:.5}
+.onb-step-icon{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:.75rem;background:#f1f5f9;color:#94a3b8}
+.onb-step-feito .onb-step-icon{background:#dcfce7;color:#16a34a}
+.onb-step-pending .onb-step-icon{background:#f1f5f9;color:#0a1628}
+.onb-step-info{flex:1;min-width:0}
+.onb-step-label{font-size:.78rem;font-weight:700;color:#0f172a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.onb-step-feito .onb-step-label{color:#15803d;font-weight:600}
+.onb-step-hint{font-size:.68rem;color:#94a3b8;margin-top:.1rem}
+.onb-step-btn{flex-shrink:0;font-size:.71rem;font-weight:700;color:#0a1628;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:6px;padding:.2rem .5rem;text-decoration:none;white-space:nowrap;transition:background .15s}
+.onb-step-btn:hover{background:#e2e8f0;text-decoration:none;color:#0a1628}
+.onb-step-check{color:#22c55e;font-size:.85rem;flex-shrink:0}
+#onb-panel-footer{display:flex;justify-content:space-between;align-items:center;padding:.6rem .75rem;border-top:1px solid #f1f5f9;background:#f8fafc;border-radius:0 0 16px 16px;flex-shrink:0}
+#onb-panel-link{font-size:.75rem;color:#64748b;text-decoration:none}
+#onb-panel-link:hover{color:#0a1628}
+#onb-panel-dismiss{font-size:.72rem;color:#94a3b8;background:none;border:none;cursor:pointer;padding:0;transition:color .15s}
+#onb-panel-dismiss:hover{color:#ef4444}
+@media(max-width:480px){#onb-panel{right:12px;left:12px;width:auto;bottom:80px}#onb-bubble{bottom:16px;right:16px}}
+</style>
+
+{{-- Bolinha --}}
 <div id="onb-bubble" title="Configuração da locadora">
     <div id="onb-bubble-ring"></div>
     <i class="fas fa-rocket"></i>
@@ -26,11 +65,9 @@
         </div>
         <button type="button" id="onb-panel-close" aria-label="Fechar">&times;</button>
     </div>
-
     <div id="onb-panel-progress">
         <div id="onb-panel-progress-bar" style="width:{{ $pct }}%"></div>
     </div>
-
     <div id="onb-panel-steps">
         @foreach ($steps as $s)
             @php
@@ -67,7 +104,6 @@
             </div>
         @endforeach
     </div>
-
     <div id="onb-panel-footer">
         <a href="{{ route('onboarding.orientacoes') }}" id="onb-panel-link">
             <i class="fas fa-list-check mr-1"></i> Ver guia completo
@@ -82,130 +118,6 @@
     </div>
 </div>
 
-@push('css')
-<style>
-/* ── Bolinha flutuante ── */
-#onb-bubble {
-    position: fixed; bottom: 24px; right: 24px; z-index: 9990;
-    width: 54px; height: 54px; border-radius: 50%;
-    background: #0a1628; color: #fff; font-size: 1.2rem;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; box-shadow: 0 4px 20px rgba(10,22,40,.35);
-    transition: transform .2s, box-shadow .2s;
-    user-select: none;
-}
-#onb-bubble:hover { transform: scale(1.08); box-shadow: 0 6px 28px rgba(10,22,40,.45); }
-#onb-bubble-ring {
-    position: absolute; inset: -4px; border-radius: 50%;
-    border: 2px solid rgba(10,22,40,.25);
-    animation: onb-pulse 2.4s ease-in-out infinite;
-}
-@keyframes onb-pulse {
-    0%,100% { transform: scale(1); opacity: .6; }
-    50%      { transform: scale(1.18); opacity: 0; }
-}
-#onb-bubble-badge {
-    position: absolute; top: -4px; right: -4px;
-    background: #ef4444; color: #fff; font-size: .65rem; font-weight: 800;
-    width: 18px; height: 18px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    border: 2px solid #fff;
-}
-
-/* ── Painel popup ── */
-#onb-panel {
-    position: fixed; bottom: 90px; right: 24px; z-index: 9991;
-    width: 340px; background: #fff; border-radius: 16px;
-    box-shadow: 0 8px 40px rgba(10,22,40,.18); border: 1px solid #e2e8f0;
-    display: none; flex-direction: column;
-    animation: onb-slide-up .22s ease;
-    max-height: 80vh; overflow: hidden;
-}
-#onb-panel.open { display: flex; }
-@keyframes onb-slide-up {
-    from { opacity: 0; transform: translateY(12px); }
-    to   { opacity: 1; transform: translateY(0); }
-}
-
-#onb-panel-header {
-    background: #0a1628; color: #fff; padding: .9rem 1rem;
-    display: flex; justify-content: space-between; align-items: flex-start;
-    border-radius: 16px 16px 0 0; flex-shrink: 0;
-}
-#onb-panel-title  { font-weight: 700; font-size: .88rem; }
-#onb-panel-sub    { font-size: .73rem; color: rgba(255,255,255,.6); margin-top: .2rem; }
-#onb-panel-close  {
-    background: none; border: none; color: rgba(255,255,255,.6);
-    font-size: 1.3rem; cursor: pointer; line-height: 1; padding: 0; margin-left: .5rem;
-    transition: color .15s;
-}
-#onb-panel-close:hover { color: #fff; }
-
-#onb-panel-progress {
-    height: 4px; background: #e2e8f0; flex-shrink: 0;
-}
-#onb-panel-progress-bar {
-    height: 100%; background: #22c55e; transition: width .4s ease;
-}
-
-#onb-panel-steps {
-    overflow-y: auto; padding: .6rem .75rem;
-    display: flex; flex-direction: column; gap: .4rem;
-    flex: 1;
-}
-
-.onb-step-row {
-    display: flex; align-items: center; gap: .65rem;
-    padding: .55rem .65rem; border-radius: 10px;
-    border: 1px solid #e2e8f0; background: #f8fafc;
-}
-.onb-step-feito   { border-color: #bbf7d0; background: #f0fdf4; }
-.onb-step-pending { border-color: #e2e8f0; background: #fff; }
-.onb-step-bloq    { opacity: .5; }
-
-.onb-step-icon {
-    width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .75rem; background: #f1f5f9; color: #94a3b8;
-}
-.onb-step-feito   .onb-step-icon { background: #dcfce7; color: #16a34a; }
-.onb-step-pending .onb-step-icon { background: #f1f5f9; color: #0a1628; }
-
-.onb-step-info   { flex: 1; min-width: 0; }
-.onb-step-label  { font-size: .78rem; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.onb-step-feito  .onb-step-label { color: #15803d; font-weight: 600; }
-.onb-step-hint   { font-size: .68rem; color: #94a3b8; margin-top: .1rem; }
-
-.onb-step-btn {
-    flex-shrink: 0; font-size: .71rem; font-weight: 700; color: #0a1628;
-    background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 6px;
-    padding: .2rem .5rem; text-decoration: none; white-space: nowrap;
-    transition: background .15s;
-}
-.onb-step-btn:hover { background: #e2e8f0; text-decoration: none; color: #0a1628; }
-.onb-step-check { color: #22c55e; font-size: .85rem; flex-shrink: 0; }
-
-#onb-panel-footer {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: .6rem .75rem; border-top: 1px solid #f1f5f9;
-    background: #f8fafc; border-radius: 0 0 16px 16px; flex-shrink: 0;
-}
-#onb-panel-link { font-size: .75rem; color: #64748b; text-decoration: none; }
-#onb-panel-link:hover { color: #0a1628; }
-#onb-panel-dismiss {
-    font-size: .72rem; color: #94a3b8; background: none; border: none;
-    cursor: pointer; padding: 0; transition: color .15s;
-}
-#onb-panel-dismiss:hover { color: #ef4444; }
-
-@media (max-width: 480px) {
-    #onb-panel { right: 12px; left: 12px; width: auto; bottom: 80px; }
-    #onb-bubble { bottom: 16px; right: 16px; }
-}
-</style>
-@endpush
-
-@push('js')
 <script>
 (function () {
     const bubble = document.getElementById('onb-bubble');
@@ -216,18 +128,17 @@
     function openPanel()  { panel.classList.add('open'); panel.setAttribute('aria-hidden','false'); sessionStorage.setItem(STORE,'1'); }
     function closePanel() { panel.classList.remove('open'); panel.setAttribute('aria-hidden','true'); sessionStorage.removeItem(STORE); }
 
-    bubble.addEventListener('click', () => panel.classList.contains('open') ? closePanel() : openPanel());
+    bubble.addEventListener('click', function(e) {
+        e.stopPropagation();
+        panel.classList.contains('open') ? closePanel() : openPanel();
+    });
     close.addEventListener('click', closePanel);
-
-    // Fecha ao clicar fora
-    document.addEventListener('click', e => {
+    document.addEventListener('click', function(e) {
         if (!panel.contains(e.target) && e.target !== bubble && !bubble.contains(e.target)) {
             closePanel();
         }
     });
 
-    // Reabre se estava aberto antes de navegar
     if (sessionStorage.getItem(STORE)) openPanel();
 })();
 </script>
-@endpush
