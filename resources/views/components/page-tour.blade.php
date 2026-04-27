@@ -27,14 +27,17 @@
 <script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
 (function () {
-    const TOUR_ID   = @json($tourId);
-    const autorun   = @json($autorun);
-    const stepsData = @json($steps);
+    const TOUR_ID    = @json($tourId);
+    const autorun    = @json($autorun);
+    const stepsData  = @json($steps);
     const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
     const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
     const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
 
     function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
         fetch(CONCLUIR_URL, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
@@ -42,11 +45,12 @@
     }
 
     function buildDriver() {
+        var _pulou = false;
         return window.driver.js.driver({
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { marcarFeito(); },
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
             onPopoverRender: (popover, { driver }) => {
                 if (popover.wrapper.querySelector('.drv-skip-btn')) return;
                 var btn = document.createElement('button');
@@ -54,6 +58,7 @@
                 btn.type = 'button';
                 btn.textContent = 'Pular tour';
                 btn.addEventListener('click', function () {
+                    _pulou = true;
                     marcarFeito();
                     driver.destroy();
                 });
@@ -64,7 +69,8 @@
     }
 
     window.restartPageTour = function () {
-        fetch('/admin/tour/resetar/' + TOUR_ID, {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
         }).then(() => buildDriver().drive());
@@ -74,10 +80,16 @@
         const forceTour = new URLSearchParams(window.location.search).get('tour') === '1';
         if (!autorun && !forceTour) return;
 
+        // Cache local evita race condition entre POST concluir e próximo carregamento
+        if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+
         fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(data => {
-                if (data.feito && !forceTour) return;
+                if (data.feito && !forceTour) {
+                    localStorage.setItem(CACHE_KEY, '1');
+                    return;
+                }
                 setTimeout(() => buildDriver().drive(), 350);
             });
     }

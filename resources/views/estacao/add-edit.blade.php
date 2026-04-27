@@ -1005,26 +1005,30 @@ $(function () {
 
         if (typeof window.driver === 'undefined' || !window.driver.js) return;
 
+        const CACHE_KEY = 'tour_feito__' + TOUR_ID;
+
         function marcarFeito() {
+            localStorage.setItem(CACHE_KEY, '1');
             fetch(CONCLUIR_URL, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
             });
         }
 
+        var _pulou = false;
         const driverFn = window.driver.js.driver;
         const tour = driverFn({
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { marcarFeito(); },
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
             onPopoverRender: (popover, { driver }) => {
                 if (popover.wrapper.querySelector('.drv-skip-btn')) return;
                 var btn = document.createElement('button');
                 btn.className = 'drv-skip-btn';
                 btn.type = 'button';
                 btn.textContent = 'Pular tour';
-                btn.addEventListener('click', function () { marcarFeito(); driver.destroy(); });
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
                 popover.footer.prepend(btn);
             },
             steps: [
@@ -1120,16 +1124,22 @@ $(function () {
         });
 
         window.restartPageTour = function () {
+            localStorage.removeItem(CACHE_KEY);
             fetch(RESETAR_URL, {
                 method: 'POST',
                 headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
             }).then(() => tour.drive());
         };
 
+        if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+
         fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(data => {
-                if (data.feito && !forceTour) return;
+                if (data.feito && !forceTour) {
+                    localStorage.setItem(CACHE_KEY, '1');
+                    return;
+                }
                 setTimeout(() => tour.drive(), 400);
             });
     })();

@@ -388,7 +388,11 @@
         },
     ];
 
+    const CACHE_KEY = 'tour_feito__' + TOUR_ID;
+
     function marcarFeito() {
+        // Cache local imediato para evitar race condition
+        localStorage.setItem(CACHE_KEY, '1');
         fetch(CONCLUIR_URL, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
@@ -396,11 +400,14 @@
     }
 
     function buildTour() {
+        var _pulou = false;
         return window.driver.js.driver({
             animate: true, smoothScroll: true, showProgress: true,
             progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { marcarFeito(); },
+            onDestroyStarted: () => {
+                if (!_pulou) marcarFeito();
+            },
             onPopoverRender: (popover, { driver }) => {
                 if (popover.wrapper.querySelector('.drv-skip-btn')) return;
                 var btn = document.createElement('button');
@@ -408,6 +415,7 @@
                 btn.type = 'button';
                 btn.textContent = 'Pular tour';
                 btn.addEventListener('click', function () {
+                    _pulou = true;
                     marcarFeito();
                     driver.destroy();
                 });
@@ -418,16 +426,23 @@
     }
 
     window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
         fetch(RESETAR_URL, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
         }).then(() => buildTour().drive());
     };
 
+    // Cache local evita mostrar o tour enquanto o POST ainda não chegou ao banco
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+
     fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
         .then(r => r.json())
         .then(data => {
-            if (data.feito && !forceTour) return;
+            if (data.feito && !forceTour) {
+                localStorage.setItem(CACHE_KEY, '1'); // sincroniza cache
+                return;
+            }
             setTimeout(() => buildTour().drive(), 350);
         });
 })();
