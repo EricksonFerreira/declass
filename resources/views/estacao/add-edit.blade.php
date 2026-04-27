@@ -132,7 +132,7 @@
                             <div class="col-lg-3 col-md-4">
                                 <div class="form-group form-group-estacao location-field">
                                     <x-form-select name="pais_id" label="País" :options="$paises" placeholder="Selecione"
-                                        :selected="old('pais_id', $estacao->pais_id ?? null)" class="form-control form-control-sm" required />
+                                        :selected="old('pais_id', $estacao->pais_id ?? $paisBrasilId ?? null)" class="form-control form-control-sm" required />
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-4">
@@ -166,6 +166,17 @@
                                     <x-form-input type="text" class="form-control form-control-sm" id="longitude" name="longitude"
                                         label="Longitude" value="{{ old('longitude', $estacao->longitude ?? '') }}" required />
                                 </div>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="col-12">
+                                <small class="text-muted d-block mt-1">
+                                    Dica: você pode obter a latitude e longitude no
+                                    <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer">
+                                        Google Maps
+                                    </a>,
+                                    clicando com o botão direito no ponto desejado e copiando as coordenadas exibidas.
+                                </small>
                             </div>
                         </div>
                     </div>
