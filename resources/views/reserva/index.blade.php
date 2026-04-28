@@ -262,6 +262,55 @@
 @stop
 
 @section('css')
+<x-page-tour tour-id="reserva-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Reservas',
+            'description' => 'Aqui você visualiza todas as reservas cadastradas no sistema. Use os filtros e a busca para encontrar reservas específicas.',
+        ],
+    ],
+    [
+        'element' => '.reserva-view-toggle',
+        'popover' => [
+            'title' => 'Alternar visualização',
+            'description' => 'Escolha entre a visualização em <b>Cards</b> (mais visual) ou em <b>Tabela</b> (mais compacta). A preferência é salva automaticamente.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.reserva-cards .rc:first-child',
+        'popover' => [
+            'title' => 'Card de reserva',
+            'description' => 'Cada card mostra: cliente, status, estações de retirada e devolução, duração, veículo e valor total. Clique no card para abrir os detalhes.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.rc__badges',
+        'popover' => [
+            'title' => 'Status de pagamento e reserva',
+            'description' => 'O primeiro badge indica se o pagamento foi efetuado. O segundo mostra o status atual da reserva (Criada, Confirmada, Cancelada…).',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '.rc__route',
+        'popover' => [
+            'title' => 'Rota da reserva',
+            'description' => 'Veja a estação de retirada (ponto verde) e devolução (ponto vermelho), com datas e a duração total em dias.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"reserva/create\"]',
+        'popover' => [
+            'title' => 'Nova reserva',
+            'description' => 'Clique aqui para criar uma nova reserva. Você será guiado por um formulário passo a passo.',
+            'side' => 'bottom',
+        ],
+    ],
+]" />
 <style>
     /* ── toggle view ── */
     .reserva-view-toggle {

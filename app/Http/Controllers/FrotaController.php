@@ -21,7 +21,7 @@ class FrotaController extends BaseController implements FiltroInterface, Resourc
 
     public function __construct(FrotaService $frotaService, BreadcrumbService $breadcrumbService)
     {
-        $this->titulo = "Frotas";
+        $this->titulo = "Veículos";
         $this->nomeFiltro = 'frota';
         $this->frotaService = $frotaService;
         $this->breadcrumbService = $breadcrumbService;
@@ -36,7 +36,7 @@ class FrotaController extends BaseController implements FiltroInterface, Resourc
 
         $frotas = $this->frotaService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Frotas');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Veículos');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -61,7 +61,7 @@ class FrotaController extends BaseController implements FiltroInterface, Resourc
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Frotas','frota.index','Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Veículos','frota.index','Criar');
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
         return view('frota.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
@@ -81,7 +81,7 @@ class FrotaController extends BaseController implements FiltroInterface, Resourc
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Frotas','frota.index',"Editar: $frota->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Veículos','frota.index',"Editar: $frota->nome");
         [$metodo,$rota] = $this->getFormMethodAndRoute($frota);
 
         return view('frota.add-edit', compact('frota','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);

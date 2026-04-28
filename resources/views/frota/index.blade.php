@@ -62,3 +62,47 @@
 @section('js')
     <script></script>
 @stop
+
+@section('css')
+<x-page-tour tour-id="frota-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Veículos',
+            'description' => 'Aqui você gerencia todos os grupos de veículos (frotas) cadastrados no sistema. Cada grupo agrupa modelos com características similares para facilitar as reservas.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"frota/create\"]',
+        'popover' => [
+            'title' => 'Adicionar veículo',
+            'description' => 'Clique aqui para cadastrar um novo grupo de veículos. Você informará o nome e o status (ativo/inativo).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de veículos',
+            'description' => 'Exibe o nome do grupo de veículos e seu status. Grupos ativos aparecem com badge verde; inativos, com vermelho.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações disponíveis',
+            'description' => 'Para cada grupo você pode <b>Editar</b> as informações ou <b>Excluir</b> o cadastro. A exclusão só é permitida se o grupo não estiver vinculado a reservas.',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:nth-child(2)',
+        'popover' => [
+            'title' => 'Status do grupo',
+            'description' => 'Grupos <b>Ativos</b> aparecem nas opções de reserva. Grupos <b>Inativos</b> ficam ocultos no processo de criação de reservas.',
+            'side' => 'right',
+        ],
+    ],
+]" />
+@stop

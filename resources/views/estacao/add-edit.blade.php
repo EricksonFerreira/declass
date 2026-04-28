@@ -65,6 +65,13 @@
                 @endforeach
             </div>
 
+            <x-campos-obrigatorios-pendentes
+                alert-class="js-estacao-validacao-alerta mb-3"
+                action-class="js-estacao-ir-passo-base"
+                summary-class="js-estacao-validacao-resumo"
+                list-class="js-estacao-validacao-lista"
+            />
+
             <form id="formulario" method="POST" action="{{ $rota }}">
                 @if ($metodo == 'PUT') @method('PUT') @endif
                 @csrf
@@ -800,6 +807,11 @@ $(function () {
     $('#telefone').mask('(00) 00000-0000');
     $('#zip_code').mask('00000-000');
     const isEdit = @json($isEdit);
+    const $formulario = $('#formulario');
+    const $alertaPendencias = $('.js-estacao-validacao-alerta');
+    const $resumoPendencias = $('.js-estacao-validacao-resumo');
+    const $listaPendencias = $('.js-estacao-validacao-lista');
+    let ultimoPassoPendente = {{ $startStep }};
 
     // ── Wizard step navigation ──
     const TOTAL_STEPS = 5;
@@ -830,11 +842,161 @@ $(function () {
         }
     }
 
+    function limparPendencias() {
+        $alertaPendencias.addClass('d-none').removeClass('is-live');
+        $resumoPendencias.empty();
+        $listaPendencias.empty();
+    }
+
+    function obterNomePasso(passo) {
+        const mapa = {
+            1: 'Informações básicas',
+            2: 'Contato',
+            3: 'Localização',
+            4: 'Horários',
+            5: 'Operação'
+        };
+
+        return mapa[passo] || 'Etapa';
+    }
+
+    function extrairTextoLabel($field) {
+        const id = $field.attr('id');
+        let texto = '';
+
+        if (id) {
+            texto = $(`label[for="${id}"]`).first().text().trim();
+        }
+
+        if (!texto) {
+            texto = $field.closest('.form-group').find('label').first().text().trim();
+        }
+
+        return texto.replace(/\s*\*+\s*/g, '').trim();
+    }
+
+    function montarLinhaPendencia(item) {
+        const passo = obterNomePasso(item.step);
+        const detalhe = item.message ? `<div class="pre-requisitos-alerta__detail-message">${item.message}</div>` : '';
+
+        return `
+            <div class="pre-requisitos-alerta__detail-item">
+                <div>
+                    <div class="pre-requisitos-alerta__detail-label">${item.label}</div>
+                    <div class="pre-requisitos-alerta__detail-message">Etapa: ${passo}</div>
+                    ${detalhe}
+                </div>
+            </div>
+        `;
+    }
+
+    function mostrarPendencias(pendencias) {
+        if (!pendencias.length) {
+            limparPendencias();
+            return;
+        }
+
+        const passosPendentes = [...new Set(pendencias.map(function(item) {
+            return item.step;
+        }))].sort(function(a, b) { return a - b; });
+
+        ultimoPassoPendente = passosPendentes[0] || 1;
+        $resumoPendencias.text('Encontramos ' + pendencias.length + ' campo(s) obrigatório(s) pendente(s).');
+        $listaPendencias.html(pendencias.map(montarLinhaPendencia).join(''));
+        $alertaPendencias.removeClass('d-none').addClass('is-live');
+
+        goToStep(ultimoPassoPendente);
+
+        if ($alertaPendencias.length) {
+            $alertaPendencias[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        const $primeiroCampo = pendencias[0]?.focusTarget || pendencias[0]?.field;
+        if ($primeiroCampo && $primeiroCampo.length) {
+            setTimeout(function() {
+                $primeiroCampo.trigger('focus');
+            }, 180);
+        }
+    }
+
+    function coletarPendenciasBase($escopo) {
+        const pendencias = [];
+
+        $escopo.find(':input[required]:enabled').each(function() {
+            const $field = $(this);
+            const element = $field.get(0);
+            const $pane = $field.closest('.ec-step-pane');
+            const step = parseInt($pane.data('pane') || currentStep, 10);
+
+            if ($field.attr('type') === 'hidden') {
+                return;
+            }
+
+            if (element && typeof element.checkValidity === 'function' && element.checkValidity()) {
+                $field.removeClass('is-invalid');
+                return;
+            }
+
+            $field.addClass('is-invalid');
+
+            pendencias.push({
+                step: step,
+                label: extrairTextoLabel($field) || 'Campo obrigatório',
+                message: 'Preencha este campo para continuar.',
+                field: $field,
+                focusTarget: $field
+            });
+        });
+
+        return pendencias;
+    }
+
+    function coletarPendenciasHorarios() {
+        const pendencias = [];
+
+        $('.ec-horario-card').each(function() {
+            const $card = $(this);
+            if ($card.hasClass('is-24h')) return;
+
+            const semAlmoco = $card.find('.input-almoco-check').is(':checked');
+            const tituloCard = $card.find('.ec-horario-card__title').first().text().trim() || 'Horário';
+
+            $card.find('.ec-horario-fields input[type="time"]').each(function() {
+                const $input = $(this);
+
+                if (semAlmoco && $input.hasClass('input-almoco')) {
+                    $input.removeClass('is-invalid');
+                    return;
+                }
+
+                const valor = ($input.val() || '').trim();
+                if (valor && valor !== '00:00') {
+                    $input.removeClass('is-invalid');
+                    return;
+                }
+
+                $input.addClass('is-invalid');
+
+                const nomeCampo = $input.closest('.ec-time-field').find('label').first().text().trim() || 'Horário';
+                pendencias.push({
+                    step: 4,
+                    label: `${tituloCard} — ${nomeCampo}`,
+                    message: 'Informe este horário antes de salvar a estação.',
+                    field: $input,
+                    focusTarget: $input
+                });
+            });
+        });
+
+        return pendencias;
+    }
+
     goToStep(currentStep);
 
     $('#btnNext').on('click', function () { goToStep(currentStep + 1); });
     $('#btnPrev').on('click', function () { goToStep(currentStep - 1); });
     $('.ec-step-btn').on('click', function () { goToStep(parseInt($(this).data('step'))); });
+    $('.js-estacao-ir-passo-base').on('click', function () { goToStep(ultimoPassoPendente || 1); });
 
     // ── CEP auto-fill ──
     const $zipCode = $('#zip_code');
@@ -1044,14 +1206,27 @@ $(function () {
             }
         });
 
-        if (!ok) {
+        const pendenciasHorarios = coletarPendenciasHorarios();
+        const pendencias = coletarPendenciasBase($formulario).concat(pendenciasHorarios);
+
+        if (!ok || pendencias.length) {
             e.preventDefault();
-            $('#error-horarios').removeClass('d-none');
-            goToStep(4);
+            $('#error-horarios').toggleClass('d-none', pendenciasHorarios.length === 0);
+            mostrarPendencias(pendencias);
         } else {
             $('#error-horarios').addClass('d-none');
+            limparPendencias();
         }
     });
+
+    @if ($errors->any())
+        setTimeout(function() {
+            const pendenciasIniciais = coletarPendenciasBase($formulario).concat(coletarPendenciasHorarios());
+            if (pendenciasIniciais.length) {
+                mostrarPendencias(pendenciasIniciais);
+            }
+        }, 120);
+    @endif
 });
 
     // ── Tour guiado do formulário de estação ──

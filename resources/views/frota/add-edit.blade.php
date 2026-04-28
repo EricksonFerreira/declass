@@ -35,3 +35,39 @@
 @section('js')
     <script></script>
 @stop
+
+@section('css')
+<x-page-tour tour-id="frota-add-edit" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Cadastro de Veículo',
+            'description' => 'Aqui você cria ou edita um grupo de veículos. Grupos organizam modelos similares para facilitar a disponibilidade nas reservas.',
+        ],
+    ],
+    [
+        'element' => '#nome',
+        'popover' => [
+            'title' => 'Nome do grupo',
+            'description' => 'Informe um nome descritivo para o grupo, como "Econômico", "SUV" ou "Premium". Este nome aparecerá na listagem de reservas.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[name=\"ativo\"]',
+        'popover' => [
+            'title' => 'Status',
+            'description' => 'Defina se o grupo estará <b>Ativo</b> (disponível para reservas) ou <b>Inativo</b> (oculto no processo de reserva).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'button[type=\"submit\"]',
+        'popover' => [
+            'title' => 'Salvar',
+            'description' => 'Clique em Salvar para gravar o grupo de veículos. Você será redirecionado para a lista após a confirmação.',
+            'side' => 'top',
+        ],
+    ],
+]" />
+@stop

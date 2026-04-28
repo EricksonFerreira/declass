@@ -776,6 +776,64 @@
 @stop
 
 @section('css')
+    <x-page-tour tour-id="reserva-add-edit" :steps="[
+        [
+            'element' => '.reserva-top-header',
+            'popover' => [
+                'title' => 'Pré-requisitos da reserva',
+                'description' => 'Antes de criar uma reserva, o sistema verifica se você tem estações, grupos de frota, modelos e veículos cadastrados. Caso esteja faltando algo, um alerta aparecerá aqui.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.reserva-wizard-top',
+            'popover' => [
+                'title' => 'Formulário em etapas',
+                'description' => 'O cadastro de reserva é dividido em etapas. Complete cada passo antes de avançar para o próximo.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '[data-reserva-step-btn]',
+            'popover' => [
+                'title' => 'Navegação entre etapas',
+                'description' => 'Use estes botões para navegar entre as etapas do formulário. Etapas concluídas ficam marcadas.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#cliente_id, [name=\"cliente_id\"]',
+            'popover' => [
+                'title' => 'Cliente',
+                'description' => 'Selecione o cliente para esta reserva. O sistema buscará pelo nome ou e-mail.',
+                'side' => 'right',
+            ],
+        ],
+        [
+            'element' => '#estacao_retirada_id, [name=\"estacao_retirada_id\"]',
+            'popover' => [
+                'title' => 'Estação de retirada',
+                'description' => 'Escolha onde o cliente irá retirar o veículo.',
+                'side' => 'right',
+            ],
+        ],
+        [
+            'element' => '#data_inicio, [name=\"data_inicio\"]',
+            'popover' => [
+                'title' => 'Data e hora de início',
+                'description' => 'Informe a data e hora de retirada do veículo. O sistema calculará automaticamente a duração e o valor total.',
+                'side' => 'right',
+            ],
+        ],
+        [
+            'element' => '.reserva-side-card, .reserva-summary',
+            'popover' => [
+                'title' => 'Resumo da reserva',
+                'description' => 'Este painel lateral exibe o resumo em tempo real: veículo, período, valor diário e total calculado.',
+                'side' => 'left',
+            ],
+        ],
+    ]" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <style>
