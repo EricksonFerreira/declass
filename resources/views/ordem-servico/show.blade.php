@@ -301,72 +301,6 @@
 @stop
 
 @section('css')
-<x-page-tour tour-id="ordem-servico-show" :steps="[
-    [
-        'element' => '.rs-hero',
-        'popover' => [
-            'title' => 'Cabeçalho da OS',
-            'description' => 'Exibe o número da OS, status atual, veículo vinculado, usuário que abriu e data de criação. Use os botões à direita para exportar em PDF ou voltar à lista.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.rs-status-badge',
-        'popover' => [
-            'title' => 'Status da OS',
-            'description' => '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — manutenção em curso. <b>Concluída</b> (verde) — finalizada com relatório. <b>Cancelada</b> (vermelho) — encerrada sem execução.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.rs-hero__kpis',
-        'popover' => [
-            'title' => 'Indicadores da OS',
-            'description' => 'Mostra a quantidade de itens (danos + serviços) vinculados à OS e o número da reserva associada ao veículo, quando houver.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.rs-main .rs-card:nth-child(1)',
-        'popover' => [
-            'title' => 'Dados da OS',
-            'description' => 'Detalhes completos: veículo, placa, data de abertura, data de encerramento (quando concluída), usuário responsável e observações gerais informadas na criação.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.rs-main .rs-card:nth-child(2)',
-        'popover' => [
-            'title' => 'Itens da OS',
-            'description' => 'Lista todos os danos e serviços vinculados. Cada item mostra a descrição, o resultado registrado após a conclusão e os anexos de evidência.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.rs-sidebar',
-        'popover' => [
-            'title' => 'Painel de ações',
-            'description' => 'Aqui você avança o fluxo da OS: <b>Marcar em andamento</b> → <b>Concluir</b> (com relatório geral e resultados por item) → ou <b>Cancelar</b>. O formulário de conclusão exige relatório e permite anexar arquivos.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '#relatorio_geral',
-        'popover' => [
-            'title' => 'Relatório de conclusão',
-            'description' => 'Descreva tudo o que foi feito: peças substituídas, procedimentos realizados e condições do veículo após o serviço. Campo obrigatório para concluir a OS.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '#anexos',
-        'popover' => [
-            'title' => 'Anexos da conclusão',
-            'description' => 'Envie fotos, laudos e documentos que comprovem a execução do serviço. Formatos aceitos: PDF, imagens, Word e Excel. Máximo 10 MB por arquivo.',
-            'side' => 'top',
-        ],
-    ],
-]" />
 <style>
     .os-show-page {
         max-width: 1400px;
@@ -689,3 +623,72 @@
     }
 </style>
 @stop
+
+@push('js')
+<x-page-tour tour-id="ordem-servico-show" :steps="[
+    [
+        'element' => '.rs-hero',
+        'popover' => [
+            'title' => 'Cabeçalho da OS',
+            'description' => 'Exibe o número da OS, status atual, veículo vinculado, usuário que abriu e data de criação. Use os botões à direita para exportar em PDF ou voltar à lista.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.rs-status-badge',
+        'popover' => [
+            'title' => 'Status da OS',
+            'description' => '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — manutenção em curso. <b>Concluída</b> (verde) — finalizada com relatório. <b>Cancelada</b> (vermelho) — encerrada sem execução.',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '.rs-hero__kpis',
+        'popover' => [
+            'title' => 'Indicadores da OS',
+            'description' => 'Mostra a quantidade de itens (danos + serviços) vinculados à OS e o número da reserva associada ao veículo, quando houver.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.rs-main .rs-card:nth-child(1)',
+        'popover' => [
+            'title' => 'Dados da OS',
+            'description' => 'Detalhes completos: veículo, placa, data de abertura, data de encerramento (quando concluída), usuário responsável e observações gerais informadas na criação.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.rs-main .rs-card:nth-child(2)',
+        'popover' => [
+            'title' => 'Itens da OS',
+            'description' => 'Lista todos os danos e serviços vinculados. Cada item mostra a descrição, o resultado registrado após a conclusão e os anexos de evidência.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.rs-sidebar',
+        'popover' => [
+            'title' => 'Painel de ações',
+            'description' => 'Aqui você avança o fluxo da OS: <b>Marcar em andamento</b> → <b>Concluir</b> (com relatório geral e resultados por item) → ou <b>Cancelar</b>. O formulário de conclusão exige relatório e permite anexar arquivos.',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '#relatorio_geral',
+        'popover' => [
+            'title' => 'Relatório de conclusão',
+            'description' => 'Descreva tudo o que foi feito: peças substituídas, procedimentos realizados e condições do veículo após o serviço. Campo obrigatório para concluir a OS.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '#anexos',
+        'popover' => [
+            'title' => 'Anexos da conclusão',
+            'description' => 'Envie fotos, laudos e documentos que comprovem a execução do serviço. Formatos aceitos: PDF, imagens, Word e Excel. Máximo 10 MB por arquivo.',
+            'side' => 'top',
+        ],
+    ],
+]" />
+@endpush

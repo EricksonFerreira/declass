@@ -332,64 +332,6 @@
 />
 
 @section('css')
-<x-page-tour tour-id="multa-add-edit" :steps="[
-    [
-        'element' => '.multa-wizard-top',
-        'popover' => [
-            'title' => 'Formulário em 3 etapas',
-            'description' => 'O cadastro de multa é dividido em: <b>1 – Infração</b> (dados do auto), <b>2 – Valores</b> (montantes e financeiro) e <b>3 – Documentos</b> (comprovantes). Complete cada etapa antes de avançar.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-multa-step-btn="1"]',
-        'popover' => [
-            'title' => 'Etapa 1 — Infração',
-            'description' => 'Informe os dados do auto de infração: placa no momento, número do auto, órgão autuador, data/hora da infração, data de vencimento, local e descrição da ocorrência.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#veiculo_display',
-        'popover' => [
-            'title' => 'Vínculo com veículo',
-            'description' => 'Clique na lupa para buscar o veículo. Ao selecionar e informar a data da infração, o sistema verifica automaticamente se havia uma reserva ativa e preenche o vínculo com o cliente responsável.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#multa_reserva_id_input',
-        'popover' => [
-            'title' => 'Reserva vinculada',
-            'description' => 'Quando o sistema encontra uma reserva ativa no momento da infração ela é vinculada automaticamente, facilitando a cobrança ao cliente certo. Você pode também informar o ID manualmente.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '[data-multa-step-btn="2"]',
-        'popover' => [
-            'title' => 'Etapa 2 — Valores',
-            'description' => 'Preencha o <b>valor original</b> e o <b>valor de desconto</b> (se houver). O <b>valor final</b> é calculado automaticamente. Defina também quem paga (empresa ou cliente), forma de pagamento e status da multa.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-multa-step-btn="3"]',
-        'popover' => [
-            'title' => 'Etapa 3 — Documentos',
-            'description' => 'Anexe o <b>comprovante da infração</b> (imagem ou PDF) e o <b>PDF do auto de infração</b> original. Finalize aqui para salvar a multa.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#multaWizardNext, #btnSalvarMulta',
-        'popover' => [
-            'title' => 'Navegação e salvamento',
-            'description' => 'Use <b>Continuar</b> para avançar entre as etapas (com validação automática de campos obrigatórios) e <b>Salvar multa</b> na última etapa para gravar o registro.',
-            'side' => 'top',
-        ],
-    ],
-]" />
 <style>
 .multa-section-title {
     font-size: .7rem;
@@ -485,6 +427,64 @@
 @stop
 
 @push('js')
+<x-page-tour tour-id="multa-add-edit" :steps="[
+    [
+        'element' => '.multa-wizard-top',
+        'popover' => [
+            'title' => 'Formulário em 3 etapas',
+            'description' => 'O cadastro de multa é dividido em: <b>1 – Infração</b> (dados do auto), <b>2 – Valores</b> (montantes e financeiro) e <b>3 – Documentos</b> (comprovantes). Complete cada etapa antes de avançar.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-multa-step-btn="1"]',
+        'popover' => [
+            'title' => 'Etapa 1 — Infração',
+            'description' => 'Informe os dados do auto de infração: placa no momento, número do auto, órgão autuador, data/hora da infração, data de vencimento, local e descrição da ocorrência.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#veiculo_display',
+        'popover' => [
+            'title' => 'Vínculo com veículo',
+            'description' => 'Clique na lupa para buscar o veículo. Ao selecionar e informar a data da infração, o sistema verifica automaticamente se havia uma reserva ativa e preenche o vínculo com o cliente responsável.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#multa_reserva_id_input',
+        'popover' => [
+            'title' => 'Reserva vinculada',
+            'description' => 'Quando o sistema encontra uma reserva ativa no momento da infração ela é vinculada automaticamente, facilitando a cobrança ao cliente certo. Você pode também informar o ID manualmente.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '[data-multa-step-btn="2"]',
+        'popover' => [
+            'title' => 'Etapa 2 — Valores',
+            'description' => 'Preencha o <b>valor original</b> e o <b>valor de desconto</b> (se houver). O <b>valor final</b> é calculado automaticamente. Defina também quem paga (empresa ou cliente), forma de pagamento e status da multa.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-multa-step-btn="3"]',
+        'popover' => [
+            'title' => 'Etapa 3 — Documentos',
+            'description' => 'Anexe o <b>comprovante da infração</b> (imagem ou PDF) e o <b>PDF do auto de infração</b> original. Finalize aqui para salvar a multa.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#multaWizardNext, #btnSalvarMulta',
+        'popover' => [
+            'title' => 'Navegação e salvamento',
+            'description' => 'Use <b>Continuar</b> para avançar entre as etapas (com validação automática de campos obrigatórios) e <b>Salvar multa</b> na última etapa para gravar o registro.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 <script>
     // ── Tooltips ──
     $('[data-toggle="tooltip"]').tooltip();
