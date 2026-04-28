@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -165,4 +165,37 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="tipo-checklist-add-edit" :steps="[
+    [
+        'element' => '.card-tipo-checklist',
+        'popover' => [
+            'title' => 'Cadastro de Tipo de Checklist',
+            'description' => 'Aqui você cria ou edita um tipo de checklist. Os tipos categorizam as configurações de inspeção (Retirada, Devolução, Manutenção…).',
+        ],
+    ],
+    [
+        'element' => '#nome',
+        'popover' => [
+            'title' => 'Nome do tipo',
+            'description' => 'Informe um nome que identifique o momento ou finalidade do checklist (ex.: "Inspeção de Retirada", "Vistoria de Devolução", "Checklist de Manutenção").',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#ativo',
+        'popover' => [
+            'title' => 'Status',
+            'description' => '<b>Ativo</b>: o tipo aparece como opção ao criar configurações de checklist. <b>Inativo</b>: oculto das opções, mas mantém configurações existentes.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.btn-save-tipo-checklist',
+        'popover' => [
+            'title' => 'Salvar',
+            'description' => 'Clique para gravar o tipo de checklist. Ele ficará disponível imediatamente para uso nas configurações de checklist.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -61,4 +61,40 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="tipo-checklist-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Tipos de Checklist',
+            'description' => 'Aqui você gerencia os tipos de checklist (ex.: Retirada, Devolução, Manutenção). Os tipos classificam as configurações de checklist e determinam em qual etapa do fluxo cada uma é aplicada.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"tipo-checklist/create\"], a[href*=\"tipo_checklist/create\"]',
+        'popover' => [
+            'title' => 'Adicionar tipo',
+            'description' => 'Clique aqui para criar um novo tipo de checklist informando o nome e o status.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de tipos',
+            'description' => 'Lista todos os tipos de checklist com nome e status. Tipos ativos podem ser usados nas configurações de checklist.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Editar</b> para renomear ou alterar o status do tipo, e <b>Excluir</b> para removê-lo (somente se não houver configurações vinculadas).',
+            'side' => 'left',
+        ],
+    ],
+]" />
+@stop
+
+@section('css')
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -70,4 +70,56 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="dano-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Tipos de Dano',
+            'description' => 'Aqui você gerencia o catálogo de tipos de dano utilizados no check-in e checkout das reservas. Cada tipo pertence a uma categoria e tem uma localização (interior ou exterior).',
+        ],
+    ],
+    [
+        'element' => 'a[href*=\"dano/create\"], .btn-create-resource',
+        'popover' => [
+            'title' => 'Adicionar tipo de dano',
+            'description' => 'Clique aqui para cadastrar um novo tipo de dano informando o nome, a categoria e a localização no veículo.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de tipos de dano',
+            'description' => 'Lista todos os tipos de dano com nome, categoria, localização (interior/exterior) e status (ativo/inativo).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:nth-child(3)',
+        'popover' => [
+            'title' => 'Localização do dano',
+            'description' => '<b>Exterior</b> (badge escuro) — danos visíveis na carroceria. <b>Interior</b> (badge âmbar) — danos no habitáculo e componentes internos.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:nth-child(4)',
+        'popover' => [
+            'title' => 'Status',
+            'description' => 'Tipos <b>Ativos</b> (verde) aparecem nas opções de registro de dano durante o check-in e checkout. Tipos <b>Inativos</b> (vermelho) ficam ocultos.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Editar</b> para alterar nome, categoria ou localização. Use <b>Excluir</b> para remover o tipo (somente se não estiver vinculado a danos registrados).',
+            'side' => 'left',
+        ],
+    ],
+]" />
+@stop
+
+@section('css')
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -259,9 +259,6 @@
             });
         })();
     </script>
-@stop
-
-@section('css')
 <x-page-tour tour-id="reserva-index" :steps="[
     [
         'element' => '.page-title',
@@ -311,6 +308,9 @@
         ],
     ],
 ]" />
+@stop
+
+@section('css')
 <style>
     /* ── toggle view ── */
     .reserva-view-toggle {

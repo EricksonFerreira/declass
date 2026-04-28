@@ -476,6 +476,72 @@
 @stop
 
 @section('css')
+<x-page-tour tour-id="multa-show" :steps="[
+    [
+        'element' => '.module-card',
+        'popover' => [
+            'title' => 'Cabeçalho da multa',
+            'description' => 'Exibe o número da multa, status atual, placa no momento da infração e a data/hora do evento. Use os botões à direita para editar ou voltar à lista.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.module-header-sub .badge:first-child',
+        'popover' => [
+            'title' => 'Status atual',
+            'description' => 'Indica a situação da multa: <b>Aberta</b> (vermelho), <b>Paga</b> (verde), <b>Contestada</b> (âmbar) ou <b>Cancelada</b> (cinza). Atualizado conforme pagamento ou contestação.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.col-lg-8 .config-card:nth-child(1)',
+        'popover' => [
+            'title' => 'Identificação da Infração',
+            'description' => 'Dados completos do auto: número, órgão autuador, data/hora da infração, vencimento, pontuação na CNH, placa, local e descrição.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.col-lg-8 .config-card:nth-child(2)',
+        'popover' => [
+            'title' => 'Vínculos',
+            'description' => 'Mostra o veículo, a reserva associada, o cliente, o condutor e o responsável pelo lançamento. Clique nos links para navegar direto para a reserva ou veículo.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.col-lg-8 .config-card:nth-child(3)',
+        'popover' => [
+            'title' => 'Financeiro',
+            'description' => 'Exibe o valor original, o desconto e o <b>valor final</b> em destaque. Mostra quem é responsável pelo pagamento (cliente ou empresa) e o status do pagamento.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '#btnConfirmarPagamentoMulta',
+        'popover' => [
+            'title' => 'Registrar Pagamento',
+            'description' => 'Clique aqui para confirmar o pagamento da multa. Você informará a forma de pagamento e uma referência (número de comprovante ou protocolo). O registro fica no histórico.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '.col-lg-4',
+        'popover' => [
+            'title' => 'Painel lateral',
+            'description' => 'Mostra o <b>resumo de status</b> (multa, desconto, valor final e pagamento), os <b>documentos anexados</b> (comprovante e PDF do auto) e as <b>ações rápidas</b> (editar, ver reserva, ver veículo).',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '.timeline',
+        'popover' => [
+            'title' => 'Histórico de alterações',
+            'description' => 'Registro cronológico de todas as mudanças feitas na multa: quem alterou, quando, qual campo foi modificado e os valores anterior e novo.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 <style>
 .module-card { background: linear-gradient(135deg,#1e293b 0%,#334155 100%); border-radius:16px; overflow:hidden; }
 .module-card-header { display:flex; align-items:center; justify-content:space-between; padding:1.5rem; gap:1rem; flex-wrap:wrap; }

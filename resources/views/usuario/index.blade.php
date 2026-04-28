@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -315,4 +315,45 @@
             }
         });
     </script>
+<x-page-tour tour-id="usuario-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Usuários',
+            'description' => 'Aqui você gerencia todos os usuários do sistema: clientes, colaboradores, gerentes e administradores. Cada usuário tem uma regra de acesso que define o que ele pode ver e fazer.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"usuario/create\"]',
+        'popover' => [
+            'title' => 'Adicionar usuário',
+            'description' => 'Clique aqui para cadastrar um novo usuário. O formulário é dividido em etapas: Dados Pessoais, Contato e Endereço, Perfil e Acesso, Carta de Condução e Segurança (senha).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.tabela-usuarios thead tr',
+        'popover' => [
+            'title' => 'Tabela de usuários',
+            'description' => 'Exibe nome, e-mail, telefone, regra de acesso, cidade e data de cadastro. Clique no cabeçalho para ordenar.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.tabela-usuarios tbody tr:first-child td',
+        'popover' => [
+            'title' => 'Regra de acesso',
+            'description' => 'O badge colorido indica o perfil do usuário (Cliente, Colaborador, Gerente, Administrador). A regra controla quais módulos e ações cada usuário pode acessar.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.tabela-usuarios tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações disponíveis',
+            'description' => 'Para cada usuário: <b>Pagamento</b> (gerenciar cartões Stripe), <b>Editar</b> (alterar dados), <b>Resetar senha</b> (voltar para senha padrão) e <b>Excluir</b>.',
+            'side' => 'left',
+        ],
+    ],
+]" />
 @stop

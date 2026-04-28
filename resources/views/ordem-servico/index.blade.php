@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -251,4 +251,53 @@
     applyFilter();
 })();
 </script>
+<x-page-tour tour-id="ordem-servico-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Ordens de Serviço',
+            'description' => 'Aqui você gerencia todas as ordens de serviço abertas para manutenção e reparo dos veículos da frota. Cada OS pode ser vinculada a danos detectados nas reservas.',
+        ],
+    ],
+    [
+        'element' => 'a[href*=\"ordem-servico/create\"], .btn-create-resource',
+        'popover' => [
+            'title' => 'Abrir nova Ordem de Serviço',
+            'description' => 'Clique aqui para criar uma nova OS. Você selecionará o veículo, os danos pendentes vinculados a ele e as observações ou serviços adicionais necessários.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.os-filter-tabs',
+        'popover' => [
+            'title' => 'Filtrar por status',
+            'description' => 'Filtre rapidamente as OS por: <b>Todas</b>, <b>Abertas</b> (aguardando início), <b>Em andamento</b> (execução em curso), <b>Concluídas</b> ou <b>Canceladas</b>.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#osSearch',
+        'popover' => [
+            'title' => 'Busca rápida',
+            'description' => 'Digite qualquer informação — número da OS, placa, nome do veículo ou responsável — para filtrar os registros em tempo real sem recarregar a página.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de Ordens de Serviço',
+            'description' => 'Exibe número da OS, veículo, responsável pela abertura, data de abertura/encerramento, itens vinculados e status atual.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td',
+        'popover' => [
+            'title' => 'Status da OS',
+            'description' => '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — em execução. <b>Concluída</b> (verde) — serviço finalizado com relatório. <b>Cancelada</b> (cinza) — OS encerrada sem conclusão.',
+            'side' => 'right',
+        ],
+    ],
+]" />
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', 'Detalhes da Reserva')
 
@@ -1424,72 +1424,6 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 @endpush
 
 @section('css')
-<x-page-tour tour-id="reserva-show" :steps="[
-    [
-        'element' => '.rs-hero',
-        'popover' => [
-            'title' => 'Cabeçalho da reserva',
-            'description' => 'Aqui ficam as informações principais: número da reserva, cliente, empresa, data de criação, status atual, valor total e duração.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.rs-status-badge',
-        'popover' => [
-            'title' => 'Status da reserva',
-            'description' => 'Indica a situação atual: Criada, Confirmada, Cancelada, etc. O status muda conforme o fluxo de check-in e checkout é realizado.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.rs-hero__kpis',
-        'popover' => [
-            'title' => 'Indicadores financeiros',
-            'description' => 'Mostra o valor total da reserva, a duração em dias e o percentual de desconto aplicado, quando houver.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#reservaMainTabs, .rs-nav-tabs',
-        'popover' => [
-            'title' => 'Abas de detalhes',
-            'description' => 'Navegue pelas abas para acessar: Visão Geral, Check-in (contrato), Check-out (danos e devoluções), Pagamentos, NFS-e, Multas e Caução.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#tab-visao-geral',
-        'popover' => [
-            'title' => 'Visão Geral',
-            'description' => 'Exibe os dados completos da reserva: cliente, veículo, datas, opcionais contratados e valores detalhados.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#tab-checkin',
-        'popover' => [
-            'title' => 'Check-in',
-            'description' => 'Gerencie o contrato de check-in. Você pode gerar, enviar para assinatura e acompanhar o status do documento.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#tab-checkout',
-        'popover' => [
-            'title' => 'Check-out',
-            'description' => 'Registre a devolução do veículo, danos identificados e cobranças por avarias.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.rs-actions-bar, .rs-action-group',
-        'popover' => [
-            'title' => 'Painel de ações',
-            'description' => 'Botões para as principais operações: confirmar, cancelar, processar pagamento, emitir NFS-e, iniciar check-in e checkout.',
-            'side' => 'bottom',
-        ],
-    ],
-]" />
 <style>
     .content-wrapper {
         background: #f0f4f9;
@@ -3377,4 +3311,70 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         });
     });
     </script>
+<x-page-tour tour-id="reserva-show" :steps="[
+    [
+        'element' => '.rs-hero',
+        'popover' => [
+            'title' => 'Cabeçalho da reserva',
+            'description' => 'Aqui ficam as informações principais: número da reserva, cliente, empresa, data de criação, status atual, valor total e duração.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.rs-status-badge',
+        'popover' => [
+            'title' => 'Status da reserva',
+            'description' => 'Indica a situação atual: Criada, Confirmada, Cancelada, etc. O status muda conforme o fluxo de check-in e checkout é realizado.',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '.rs-hero__kpis',
+        'popover' => [
+            'title' => 'Indicadores financeiros',
+            'description' => 'Mostra o valor total da reserva, a duração em dias e o percentual de desconto aplicado, quando houver.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#reservaMainTabs, .rs-nav-tabs',
+        'popover' => [
+            'title' => 'Abas de detalhes',
+            'description' => 'Navegue pelas abas para acessar: Visão Geral, Check-in (contrato), Check-out (danos e devoluções), Pagamentos, NFS-e, Multas e Caução.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#tab-visao-geral',
+        'popover' => [
+            'title' => 'Visão Geral',
+            'description' => 'Exibe os dados completos da reserva: cliente, veículo, datas, opcionais contratados e valores detalhados.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#tab-checkin',
+        'popover' => [
+            'title' => 'Check-in',
+            'description' => 'Gerencie o contrato de check-in. Você pode gerar, enviar para assinatura e acompanhar o status do documento.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#tab-checkout',
+        'popover' => [
+            'title' => 'Check-out',
+            'description' => 'Registre a devolução do veículo, danos identificados e cobranças por avarias.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.rs-actions-bar, .rs-action-group',
+        'popover' => [
+            'title' => 'Painel de ações',
+            'description' => 'Botões para as principais operações: confirmar, cancelar, processar pagamento, emitir NFS-e, iniciar check-in e checkout.',
+            'side' => 'bottom',
+        ],
+    ],
+]" />
 @stop

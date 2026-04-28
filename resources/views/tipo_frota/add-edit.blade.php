@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -221,4 +221,45 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="tipo-frota-add-edit" :steps="[
+    [
+        'element' => '.card-tipo-frota',
+        'popover' => [
+            'title' => 'Cadastro de Tipo de Frota',
+            'description' => 'Aqui você cria ou edita um tipo de frota. O tipo classifica grupos de veículos (Hatch, Sedan, SUV…) e pode ter características padrão vinculadas.',
+        ],
+    ],
+    [
+        'element' => '#codigo',
+        'popover' => [
+            'title' => 'Código',
+            'description' => 'Informe um código curto e único para identificar o tipo (ex.: HB para Hatchback, SU para SUV). Usado em relatórios e integrações.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#nome',
+        'popover' => [
+            'title' => 'Nome do tipo',
+            'description' => 'Nome completo do tipo de frota exibido nas listagens e configurações de grupo (ex.: "Hatchback", "SUV de Grande Porte").',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.tipo-frota-caracteristicas-wrap',
+        'popover' => [
+            'title' => 'Características padrão',
+            'description' => 'Marque as características que todos os grupos deste tipo normalmente possuem (ar-condicionado, direção hidráulica…). Servem como sugestão ao criar novos grupos.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '.btn-save-tipo-frota',
+        'popover' => [
+            'title' => 'Salvar',
+            'description' => 'Clique para gravar o tipo de frota. Você será redirecionado para a lista após a confirmação.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -61,9 +61,6 @@
 
 @section('js')
     <script></script>
-@stop
-
-@section('css')
 <x-page-tour tour-id="frota-index" :steps="[
     [
         'element' => '.page-title',
@@ -105,4 +102,7 @@
         ],
     ],
 ]" />
+@stop
+
+@section('css')
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -257,4 +257,69 @@
     }
 })();
 </script>
+<x-page-tour tour-id="ordem-servico-create" :steps="[
+    [
+        'element' => '.os-main-card',
+        'popover' => [
+            'title' => 'Abrir Ordem de Serviço',
+            'description' => 'Preencha os dados desta OS: veículo, danos pendentes que serão tratados, observações gerais e serviços adicionais não atrelados a danos específicos.',
+        ],
+    ],
+    [
+        'element' => '#veiculo_id',
+        'popover' => [
+            'title' => 'Selecionar veículo',
+            'description' => 'Escolha o veículo que será colocado em manutenção. Você pode usar o campo de seleção ou a lupa de <b>busca avançada</b> para filtrar por marca, grupo ou placa.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#btnBuscarVeiculoOS',
+        'popover' => [
+            'title' => 'Busca avançada de veículo',
+            'description' => 'Abre um modal com filtros avançados (marca, grupo, tipo, status) para localizar o veículo com mais precisão, especialmente útil em frotas grandes.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '#danos_container',
+        'popover' => [
+            'title' => 'Danos vinculados',
+            'description' => 'Lista os danos pendentes registrados para o veículo selecionado. Marque os danos que serão tratados nesta OS. Danos em aberto ficam vinculados ao monitoramento de avarias.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '#observacoes',
+        'popover' => [
+            'title' => 'Observações gerais',
+            'description' => 'Adicione notas sobre o estado do veículo, orientações para a equipe de manutenção ou qualquer informação relevante para a execução do serviço.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '#servicos_livres',
+        'popover' => [
+            'title' => 'Serviços adicionais',
+            'description' => 'Informe serviços que não estão atrelados a um dano específico (ex.: troca de óleo, revisão preventiva). Digite um serviço por linha.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '.os-side-card',
+        'popover' => [
+            'title' => 'Dicas de preenchimento',
+            'description' => 'O painel lateral orienta os 4 passos do processo: selecionar veículo, vincular danos, adicionar observações e confirmar abertura. Siga-os para garantir uma OS completa.',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '.os-actions button[type=\"submit\"]',
+        'popover' => [
+            'title' => 'Abrir Ordem de Serviço',
+            'description' => 'Clique aqui para registrar a OS. O veículo ficará em manutenção e os danos selecionados passarão para o status "em andamento" no monitoramento de avarias.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

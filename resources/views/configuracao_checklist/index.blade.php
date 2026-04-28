@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -64,4 +64,40 @@
 @section('js')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+<x-page-tour tour-id="configuracao-checklist-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Configurações de Checklist',
+            'description' => 'Aqui você gerencia as configurações de checklist: conjuntos de itens agrupados por tipo que definem o que deve ser verificado no check-in e checkout de cada reserva.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"configuracao-checklist/create\"], a[href*=\"configuracao_checklist/create\"]',
+        'popover' => [
+            'title' => 'Adicionar configuração',
+            'description' => 'Clique aqui para criar uma nova configuração de checklist, selecionando o tipo e os itens que devem ser verificados.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de configurações',
+            'description' => 'Lista as configurações existentes com nome, tipo de checklist, quantidade de itens e status (ativa/inativa).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Editar</b> para alterar os itens da configuração e <b>Excluir</b> para remover.',
+            'side' => 'left',
+        ],
+    ],
+]" />
+@stop
+
+@section('css')
 @stop

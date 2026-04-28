@@ -624,6 +624,64 @@
 @stop
 
 @section('css')
+<x-page-tour tour-id="sinistro-show" :steps="[
+    [
+        'element' => '.module-card',
+        'popover' => [
+            'title' => 'Cabeçalho do sinistro',
+            'description' => 'Exibe o número do sinistro, ícone do tipo de evento (colisão, furto, incêndio…), status atual, tipo, placa e data/hora do ocorrido.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.module-header-sub .badge:first-child',
+        'popover' => [
+            'title' => 'Status atual',
+            'description' => 'Indica a situação do sinistro: <b>Aberto</b>, <b>Aguardando Documentos</b>, <b>Aprovado</b>, <b>Encerrado</b>, <b>Indenizado</b> ou <b>Cancelado</b>. Atualizado conforme o processo avança.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.col-lg-8 .config-card:nth-child(1)',
+        'popover' => [
+            'title' => 'Identificação do Ocorrido',
+            'description' => 'Dados completos do evento: tipo, data, local, placa, número do BO, órgão emissor, terceiros envolvidos, vítimas e descrição detalhada.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.col-lg-8 .config-card:nth-child(2)',
+        'popover' => [
+            'title' => 'Vínculos',
+            'description' => 'Mostra o veículo, a reserva associada, o cliente, o condutor e o responsável pelo registro. Clique nos links para navegar direto para o veículo ou reserva.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.col-lg-8 .config-card:nth-child(3)',
+        'popover' => [
+            'title' => 'Seguro',
+            'description' => 'Seguradora, número de apólice, franquia, prejuízo estimado, valor aprovado pela seguradora e responsabilidade do cliente. O custo residual é calculado automaticamente.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.col-lg-8 .config-card:nth-child(4)',
+        'popover' => [
+            'title' => 'Controle de Custos e Pagamentos',
+            'description' => 'Define quem arca com o custo residual (empresa, cliente ou ambos) e registra os pagamentos. Você pode confirmar o pagamento da empresa ou lançar cobrança ao cliente via Stripe.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.col-lg-4',
+        'popover' => [
+            'title' => 'Painel lateral',
+            'description' => 'Apresenta evidências anexadas (BO, fotos, laudo), o resumo financeiro consolidado, as ações disponíveis (editar, exportar) e o histórico de alterações do sinistro.',
+            'side' => 'left',
+        ],
+    ],
+]" />
 <style>
 .module-card { background:linear-gradient(135deg,#1e293b 0%,#334155 100%);border-radius:16px;overflow:hidden; }
 .module-card-header { display:flex;align-items:center;justify-content:space-between;padding:1.5rem;gap:1rem;flex-wrap:wrap; }

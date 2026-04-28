@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -1279,4 +1279,62 @@
             abrirAbaComErro();
         });
     </script>
+<x-page-tour tour-id="usuario-add-edit" :steps="[
+    [
+        'element' => '#wizardSteps',
+        'popover' => [
+            'title' => 'Formulário em etapas',
+            'description' => 'O cadastro de usuário é dividido em até 5 etapas: <b>Dados</b>, <b>Contato</b>, <b>Acesso</b>, <b>Carta de Condução</b> e <b>Segurança</b> (só no cadastro). Complete cada uma antes de avançar.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-bs-target=\"#tab-geral\"], a[href=\"#tab-geral\"]',
+        'popover' => [
+            'title' => 'Etapa 1 — Dados Pessoais',
+            'description' => 'Preencha nome completo, CPF/documento, data de nascimento, sexo e foto de perfil do usuário.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-bs-target=\"#tab-contato\"], a[href=\"#tab-contato\"]',
+        'popover' => [
+            'title' => 'Etapa 2 — Contato e Endereço',
+            'description' => 'Informe e-mail, telefone celular, WhatsApp e endereço completo. O e-mail será usado para login no sistema.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-bs-target=\"#tab-acesso\"], a[href=\"#tab-acesso\"]',
+        'popover' => [
+            'title' => 'Etapa 3 — Perfil e Acesso',
+            'description' => 'Defina a <b>regra de acesso</b> (Cliente, Colaborador, Gerente, Admin) e as <b>estações</b> que este usuário pode operar. A regra determina quais módulos o usuário visualiza.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-bs-target=\"#tab-carta\"], a[href=\"#tab-carta\"]',
+        'popover' => [
+            'title' => 'Etapa 4 — Carta de Condução',
+            'description' => 'Registre o número da CNH, categoria (A, B, AB…), data de emissão e vencimento. Essencial para usuários que farão retirada de veículos.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '[data-bs-target=\"#tab-seguranca\"], a[href=\"#tab-seguranca\"]',
+        'popover' => [
+            'title' => 'Etapa 5 — Segurança (somente no cadastro)',
+            'description' => 'Defina a senha inicial do usuário. A senha deve ter no mínimo 8 caracteres com letras maiúsculas, minúsculas, número e caractere especial.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.usuario-save-dock, .ec-nav-btn--save',
+        'popover' => [
+            'title' => 'Salvar usuário',
+            'description' => 'O botão flutuante <b>Salvar</b> fica sempre visível. Ao clicar, o sistema valida todos os campos obrigatórios e indica em qual etapa há erros pendentes.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

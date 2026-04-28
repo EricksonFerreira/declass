@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -332,4 +332,61 @@
     setView(localStorage.getItem(store) || 'cards');
 })();
 </script>
+<x-page-tour tour-id="multa-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Multas',
+            'description' => 'Aqui você acompanha todas as multas registradas: infrações de trânsito vinculadas a veículos e reservas, com controle de valores, prazos e pagamentos.',
+        ],
+    ],
+    [
+        'element' => '#formFiltrosMulta',
+        'popover' => [
+            'title' => 'Filtros',
+            'description' => 'Filtre por <b>período</b> da infração, <b>placa</b> do veículo, <b>status da multa</b> (aberta, paga, contestada…) e <b>status do desconto</b>. Clique na lupa para aplicar e no X para limpar.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'a[href*=\"multa/create\"], .btn-create-resource',
+        'popover' => [
+            'title' => 'Registrar nova multa',
+            'description' => 'Clique aqui para abrir o formulário de cadastro de multa. Você passará pelas etapas: <b>Infração</b>, <b>Valores</b> e <b>Documentos</b>.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.mx-view-toggle',
+        'popover' => [
+            'title' => 'Alternar visualização',
+            'description' => 'Escolha entre <b>Cards</b> (visual detalhado) ou <b>Tabela</b> (compacta). A preferência é salva automaticamente.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.mx-cards .mx:first-child',
+        'popover' => [
+            'title' => 'Card de multa',
+            'description' => 'Cada card exibe: placa no momento, número do auto, órgão autuador, cliente vinculado, data da infração, vencimento e valor final da multa.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.mx-cards .mx:first-child .mx__badge',
+        'popover' => [
+            'title' => 'Status da multa',
+            'description' => '<b>Aberta</b> (vermelho) — prazo em aberto. <b>Paga</b> (verde) — quitada. <b>Contestada</b> (âmbar) — em análise. <b>Cancelada</b> (cinza) — inválida ou removida.',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '.mx-cards .mx:first-child .mx__foot',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Ver</b> para acessar todos os detalhes e registrar pagamento, <b>Editar</b> para corrigir dados e <b>Excluir</b> para remover o registro.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

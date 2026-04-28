@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -1381,4 +1381,54 @@
             aplicarFiltrosModelos();
         });
     </script>
+<x-page-tour tour-id="grupo-frota-add-edit" :steps="[
+    [
+        'element' => '#grupoFrotaWizardSteps',
+        'popover' => [
+            'title' => 'Formulário em 4 abas',
+            'description' => 'O cadastro de grupo de frota está dividido em: <b>Geral</b> (dados básicos e imagens), <b>Características</b> (itens de equipamento), <b>Opcionais</b> (serviços adicionais) e <b>Modelos</b> (veículos do grupo).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#geral-tab',
+        'popover' => [
+            'title' => 'Aba Geral',
+            'description' => 'Informe o <b>nome</b> do grupo, <b>código</b> interno, <b>código SIPP</b> (padrão internacional), <b>valor diário</b>, <b>status</b> e faça o upload da imagem de capa e galeria de fotos.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#caracteristicas-tab',
+        'popover' => [
+            'title' => 'Aba Características',
+            'description' => 'Marque as características do grupo (ar-condicionado, câmbio automático, GPS…) e informe o valor de cada item quando aplicável. Esses dados aparecem na ficha do veículo.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#opcionais-tab',
+        'popover' => [
+            'title' => 'Aba Opcionais',
+            'description' => 'Selecione os serviços e itens opcionais disponíveis para contratação neste grupo (seguro, cadeirinha, GPS extra…). Opcionais marcados aparecem nas reservas.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#modelos-tab',
+        'popover' => [
+            'title' => 'Aba Modelos',
+            'description' => 'Vincule os modelos de veículos que pertencem a este grupo. Use o filtro por marca e nome para localizar rapidamente. Modelos vinculados são usados na disponibilidade das reservas.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#btnSalvarFlutuante, #btnSalvar',
+        'popover' => [
+            'title' => 'Salvar grupo de frota',
+            'description' => 'O botão flutuante fica sempre visível. Ao clicar, o sistema valida os campos obrigatórios e indica em qual aba há pendências antes de gravar.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

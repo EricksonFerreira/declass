@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -439,4 +439,53 @@
             $('#modalImagemGrupoFrota').modal('show');
         });
     </script>
+<x-page-tour tour-id="grupo-frota-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Grupos de Frota',
+            'description' => 'Aqui você gerencia os grupos de frota (categorias de veículos). Cada grupo agrupa modelos similares, define preço diário, características, opcionais e imagens usados nas reservas.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"grupo-frota/create\"], a[href*=\"grupo_frota/create\"]',
+        'popover' => [
+            'title' => 'Adicionar grupo de frota',
+            'description' => 'Clique aqui para criar um novo grupo. Você passará pelas abas: <b>Geral</b> (nome, código, preço), <b>Características</b>, <b>Opcionais</b> e <b>Modelos</b> vinculados.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.table-grupo-frota-index thead tr',
+        'popover' => [
+            'title' => 'Tabela de grupos',
+            'description' => 'Exibe imagem de capa, nome, código SIPP, valor diário, quantidade de modelos e características vinculadas, e status.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.grupo-frota-thumb',
+        'popover' => [
+            'title' => 'Imagem do grupo',
+            'description' => 'Foto de capa do grupo exibida na listagem de reservas. Clique na miniatura para ampliar. Grupos sem imagem exibem um ícone padrão.',
+            'side' => 'right',
+        ],
+    ],
+    [
+        'element' => '.badge-resumo',
+        'popover' => [
+            'title' => 'Resumo de vínculos',
+            'description' => 'Badges indicam quantos <b>modelos</b>, <b>características</b> e <b>opcionais</b> estão vinculados ao grupo. Clique no ícone de detalhes para ver a lista completa.',
+            'side' => 'left',
+        ],
+    ],
+    [
+        'element' => '.table-grupo-frota-index tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Detalhes</b> para ver tudo vinculado ao grupo, <b>Editar</b> para alterar dados e <b>Excluir</b> para remover (somente se não houver reservas vinculadas).',
+            'side' => 'left',
+        ],
+    ],
+]" />
 @stop

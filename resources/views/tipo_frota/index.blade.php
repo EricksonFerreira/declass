@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -61,4 +61,40 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="tipo-frota-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Tipos de Frota',
+            'description' => 'Aqui você gerencia os tipos de frota (ex.: Hatch, Sedan, SUV, Pickup). Os tipos classificam os grupos de frota e podem definir características padrão compartilhadas.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"tipo-frota/create\"], a[href*=\"tipo_frota/create\"]',
+        'popover' => [
+            'title' => 'Adicionar tipo de frota',
+            'description' => 'Clique aqui para criar um novo tipo informando o código, o nome e as características padrão associadas a ele.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de tipos',
+            'description' => 'Exibe o código, o nome do tipo de frota, as características vinculadas e o status (ativo/inativo).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Editar</b> para alterar código, nome ou características, e <b>Excluir</b> para remover o tipo (somente se não houver grupos de frota vinculados).',
+            'side' => 'left',
+        ],
+    ],
+]" />
+@stop
+
+@section('css')
 @stop

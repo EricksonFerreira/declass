@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -61,4 +61,40 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="item-checklist-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Itens de Checklist',
+            'description' => 'Aqui você gerencia o catálogo de itens de inspeção (pneus, lataria, vidros, documentos, combustível…). Esses itens são selecionados nas configurações de checklist.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"item-checklist/create\"], a[href*=\"item_checklist/create\"]',
+        'popover' => [
+            'title' => 'Adicionar item',
+            'description' => 'Clique aqui para cadastrar um novo item de inspeção informando o nome e o status.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de itens',
+            'description' => 'Lista todos os itens disponíveis para uso em configurações de checklist com nome e status (ativo/inativo).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Editar</b> para alterar o nome ou status do item, e <b>Excluir</b> para removê-lo do catálogo.',
+            'side' => 'left',
+        ],
+    ],
+]" />
+@stop
+
+@section('css')
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -309,4 +309,45 @@
             $('[name="item_checklist_id[]"]').prop('checked', checked);
         }
     </script>
+<x-page-tour tour-id="configuracao-checklist-add-edit" :steps="[
+    [
+        'element' => '.card-config-checklist',
+        'popover' => [
+            'title' => 'Configuração de Checklist',
+            'description' => 'Aqui você define quais itens compõem um checklist. As configurações são usadas no check-in e checkout para garantir a inspeção padronizada de cada veículo.',
+        ],
+    ],
+    [
+        'element' => '#formulario-config-checklist [name=\"nome\"]',
+        'popover' => [
+            'title' => 'Nome da configuração',
+            'description' => 'Dê um nome descritivo à configuração (ex.: "Checklist Padrão Retirada", "Inspeção Completa Devolução"). Este nome aparece na seleção durante o check-in.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#formulario-config-checklist [name=\"tipo_checklist_id\"]',
+        'popover' => [
+            'title' => 'Tipo de checklist',
+            'description' => 'Selecione a categoria desta configuração (Retirada, Devolução, Manutenção…). O tipo determina em qual momento do fluxo este checklist é aplicado.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.checklist-items-grid',
+        'popover' => [
+            'title' => 'Itens do checklist',
+            'description' => 'Marque os itens que devem ser verificados nesta configuração (pneus, lataria, vidros, documentos…). Itens marcados aparecerão na tela de inspeção.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '.btn-save-config-checklist',
+        'popover' => [
+            'title' => 'Salvar configuração',
+            'description' => 'Clique para gravar. A configuração ficará disponível para uso nos check-ins e checkouts das reservas.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

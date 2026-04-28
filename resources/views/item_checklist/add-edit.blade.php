@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -164,4 +164,37 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="item-checklist-add-edit" :steps="[
+    [
+        'element' => '.card-item-checklist',
+        'popover' => [
+            'title' => 'Cadastro de Item de Checklist',
+            'description' => 'Aqui você cria ou edita um item do catálogo de inspeção. Itens ativos ficam disponíveis para seleção nas configurações de checklist.',
+        ],
+    ],
+    [
+        'element' => '#nome',
+        'popover' => [
+            'title' => 'Nome do item',
+            'description' => 'Informe o nome do ponto de inspeção de forma clara e objetiva (ex.: "Pneu dianteiro esquerdo", "Extintor de incêndio", "Documento CRLV").',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#ativo',
+        'popover' => [
+            'title' => 'Status',
+            'description' => '<b>Ativo</b>: o item aparece nas configurações de checklist. <b>Inativo</b>: oculto das opções de seleção, mas mantém o histórico de usos anteriores.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.btn-save-item-checklist',
+        'popover' => [
+            'title' => 'Salvar',
+            'description' => 'Clique para gravar o item. Ele ficará disponível imediatamente nas configurações de checklist.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

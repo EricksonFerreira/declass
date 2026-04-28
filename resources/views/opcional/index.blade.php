@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -67,4 +67,40 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="opcional-index" :steps="[
+    [
+        'element' => '.page-title',
+        'popover' => [
+            'title' => 'Lista de Opcionais',
+            'description' => 'Aqui você gerencia os serviços e itens opcionais disponíveis para contratação nas reservas (seguro, GPS, cadeirinha, motorista adicional…). Cada opcional tem um tipo e forma de cobrança.',
+        ],
+    ],
+    [
+        'element' => '.btn-create-resource, a[href*=\"opcional/create\"]',
+        'popover' => [
+            'title' => 'Adicionar opcional',
+            'description' => 'Clique aqui para criar um novo opcional informando nome, tipo, forma de cobrança (por dia ou valor integral) e preço.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table thead tr',
+        'popover' => [
+            'title' => 'Tabela de opcionais',
+            'description' => 'Lista todos os opcionais com nome, tipo, valor e status. Opcionais ativos ficam disponíveis para seleção nos grupos de frota e reservas.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => 'table tbody tr:first-child td:last-child',
+        'popover' => [
+            'title' => 'Ações',
+            'description' => 'Use <b>Editar</b> para alterar dados do opcional e <b>Excluir</b> para remover (somente se não estiver vinculado a reservas ativas).',
+            'side' => 'left',
+        ],
+    ],
+]" />
+@stop
+
+@section('css')
 @stop

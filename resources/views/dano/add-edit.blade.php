@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -215,4 +215,53 @@
 
 @section('js')
     <script></script>
+<x-page-tour tour-id="dano-add-edit" :steps="[
+    [
+        'element' => '.card-dano',
+        'popover' => [
+            'title' => 'Cadastro de Tipo de Dano',
+            'description' => 'Aqui você cria ou edita um tipo de dano do catálogo. Os tipos cadastrados são exibidos como opções durante o check-in e checkout das reservas.',
+        ],
+    ],
+    [
+        'element' => '#nome',
+        'popover' => [
+            'title' => 'Nome do tipo de dano',
+            'description' => 'Informe um nome descritivo e preciso, como "Amassado na porta", "Arranhão no para-choque" ou "Vidro rachado". Esse nome aparecerá na lista de seleção durante o registro de avarias.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#categoria',
+        'popover' => [
+            'title' => 'Categoria',
+            'description' => 'Selecione a categoria que agrupa este tipo de dano (ex.: Lataria, Vidros, Interior). As categorias são gerenciadas em <b>Categorias de Dano</b> no menu.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#localizacao',
+        'popover' => [
+            'title' => 'Localização',
+            'description' => '<b>Exterior</b> para danos na parte externa do veículo (carroceria, vidros, rodas). <b>Interior</b> para danos internos (banco, painel, teto, tapete).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#ativo',
+        'popover' => [
+            'title' => 'Status',
+            'description' => 'Defina se este tipo estará <b>Ativo</b> (disponível no check-in/checkout) ou <b>Inativo</b> (oculto nas opções de registro).',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.btn-save-dano',
+        'popover' => [
+            'title' => 'Salvar',
+            'description' => 'Clique em Salvar para gravar o tipo de dano. O botão fica desabilitado se não houver categorias cadastradas — nesse caso, cadastre uma categoria primeiro.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -304,4 +304,61 @@
             });
         });
     </script>
+<x-page-tour tour-id="opcional-add-edit" :steps="[
+    [
+        'element' => '.card-opcional',
+        'popover' => [
+            'title' => 'Cadastro de Opcional',
+            'description' => 'Aqui você cria ou edita um opcional. Opcionais são serviços ou itens adicionais que o cliente pode contratar junto com a reserva (seguro, GPS, cadeirinha…).',
+        ],
+    ],
+    [
+        'element' => '#nome',
+        'popover' => [
+            'title' => 'Nome do opcional',
+            'description' => 'Informe o nome que será exibido ao cliente durante a reserva (ex.: "Seguro Completo", "GPS Portátil", "Cadeirinha Infantil").',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#tipo_opcional_id',
+        'popover' => [
+            'title' => 'Tipo de opcional',
+            'description' => 'Selecione a categoria que classifica este opcional. Os tipos são configurados no menu <b>Tipos de Opcional</b>.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#tipo_cobranca',
+        'popover' => [
+            'title' => 'Forma de cobrança',
+            'description' => '<b>Por dia</b>: o preço é multiplicado pela quantidade de dias da reserva. <b>Valor integral</b>: cobrança única independente da duração. A seleção exibe o campo de preço correto.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#preco_por_dia, #preco_integral',
+        'popover' => [
+            'title' => 'Preço',
+            'description' => 'Informe o valor do opcional. O campo exibido depende da forma de cobrança selecionada — por dia ou valor único.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#descricao',
+        'popover' => [
+            'title' => 'Descrição',
+            'description' => 'Texto explicativo exibido ao cliente durante a reserva, descrevendo o que o opcional inclui e seus benefícios.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '.btn-save-opcional',
+        'popover' => [
+            'title' => 'Salvar',
+            'description' => 'Clique para gravar o opcional. Após salvar ele ficará disponível para vincular aos grupos de frota.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop
