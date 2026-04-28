@@ -259,7 +259,7 @@
             });
         })();
     </script>
-<x-page-tour tour-id="reserva-index" :steps="[
+<x-page-tour tour-id="reserva-index-v2" :steps="[
     [
         'element' => '.page-title',
         'popover' => [
