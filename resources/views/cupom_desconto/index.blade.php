@@ -74,4 +74,46 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="cupom-desconto-index" :steps="[
+        [
+            'element' => '.page-title',
+            'popover' => [
+                'title' => 'Lista de cupons de desconto',
+                'description' => 'Aqui você consulta e administra os cupons promocionais disponíveis para aplicação nas reservas.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-create-resource, a[href*=\"cupom_desconto/create\"]',
+            'popover' => [
+                'title' => 'Novo cupom',
+                'description' => 'Use este botão para cadastrar um novo cupom com código, percentual e status de uso.',
+                'side' => 'left',
+            ],
+        ],
+        [
+            'element' => '.card-header',
+            'popover' => [
+                'title' => 'Controle da listagem',
+                'description' => 'O cabeçalho mostra total de registros, paginação e a quantidade de itens exibidos por página.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table thead tr',
+            'popover' => [
+                'title' => 'Tabela de cupons',
+                'description' => 'A grade mostra nome, código promocional, valor percentual e situação atual de cada cupom.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table tbody tr:first-child td:last-child',
+            'popover' => [
+                'title' => 'Ações do cupom',
+                'description' => 'Em cada linha você pode editar os dados do cupom ou excluir o cadastro quando necessário.',
+                'side' => 'left',
+            ],
+        ],
+    ]" />
 @stop

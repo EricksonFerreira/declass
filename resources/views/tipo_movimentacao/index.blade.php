@@ -63,4 +63,46 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="tipo-movimentacao-index" :steps="[
+        [
+            'element' => '.page-title',
+            'popover' => [
+                'title' => 'Lista de tipos de movimentação',
+                'description' => 'Aqui você mantém os tipos usados para classificar movimentações, como transferência, reserva, retorno e manutenção.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-create-resource, a[href*=\"tipo_movimentacao/create\"]',
+            'popover' => [
+                'title' => 'Novo tipo',
+                'description' => 'Clique aqui para cadastrar um novo tipo que ficará disponível no formulário de movimentações.',
+                'side' => 'left',
+            ],
+        ],
+        [
+            'element' => '.card-header',
+            'popover' => [
+                'title' => 'Controle da listagem',
+                'description' => 'O cabeçalho mostra total de registros, paginação e seletor da quantidade exibida por página.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table thead tr',
+            'popover' => [
+                'title' => 'Tabela de tipos',
+                'description' => 'A lista apresenta o nome do tipo, sua descrição funcional e o status ativo ou inativo do cadastro.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table tbody tr:first-child td:last-child',
+            'popover' => [
+                'title' => 'Ações por registro',
+                'description' => 'Cada linha permite editar o tipo existente ou excluir o cadastro quando ele não for mais utilizado.',
+                'side' => 'left',
+            ],
+        ],
+    ]" />
 @stop

@@ -227,4 +227,54 @@
             }
         });
     </script>
+    <x-page-tour tour-id="tempo-entre-estacao-add-edit" :steps="[
+        [
+            'element' => '.card-header-tempo-estacao',
+            'popover' => [
+                'title' => 'Cadastro de tempo entre estações',
+                'description' => 'Nesta tela você define o tempo estimado de deslocamento entre uma estação de origem e uma estação de destino.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#formulario-tempo-estacao',
+            'popover' => [
+                'title' => 'Formulário do trajeto',
+                'description' => 'Preencha origem, destino, tempo e status para cadastrar corretamente o deslocamento.',
+                'side' => 'top',
+            ],
+        ],
+        [
+            'element' => 'select[name=\"estacao_origem_id\"]',
+            'popover' => [
+                'title' => 'Estação de origem',
+                'description' => 'Escolha a estação de partida. O sistema atualiza automaticamente as opções válidas de destino.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'select[name=\"estacao_destino_id\"]',
+            'popover' => [
+                'title' => 'Estação de destino',
+                'description' => 'Selecione para onde o veículo será deslocado, considerando os destinos disponíveis para a origem escolhida.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#tempo_deslocamento',
+            'popover' => [
+                'title' => 'Tempo previsto',
+                'description' => 'Informe a duração estimada do trajeto para apoiar reservas, check-ins e movimentações internas.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-save-tempo-estacao',
+            'popover' => [
+                'title' => 'Salvar configuração',
+                'description' => 'Após revisar os dados, salve para disponibilizar o tempo entre estações no sistema.',
+                'side' => 'top',
+            ],
+        ],
+    ]" />
 @stop

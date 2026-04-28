@@ -189,4 +189,54 @@
         });
     });
 </script>
+<x-page-tour tour-id="cupom-desconto-add-edit" :steps="[
+    [
+        'element' => '.card-header-cupom-desconto',
+        'popover' => [
+            'title' => 'Cadastro do cupom',
+            'description' => 'Nesta tela você define os dados principais do cupom promocional usado para descontos em reservas.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#formulario-cupom',
+        'popover' => [
+            'title' => 'Formulário do cupom',
+            'description' => 'Preencha nome, código, valor percentual e status antes de salvar o cadastro.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '#nome',
+        'popover' => [
+            'title' => 'Nome interno',
+            'description' => 'Informe um nome que facilite identificar a campanha ou regra promocional do cupom.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#codigo',
+        'popover' => [
+            'title' => 'Código promocional',
+            'description' => 'Este é o código que será informado no uso do cupom. Mantenha-o curto e fácil de divulgar.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#valor',
+        'popover' => [
+            'title' => 'Percentual de desconto',
+            'description' => 'Defina o valor do desconto. O campo aplica máscara para facilitar o preenchimento em percentual.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.btn-save-cupom-desconto',
+        'popover' => [
+            'title' => 'Salvar cupom',
+            'description' => 'Clique aqui para gravar o cupom e deixá-lo disponível conforme o status configurado.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @stop

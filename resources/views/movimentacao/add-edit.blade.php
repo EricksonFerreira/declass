@@ -1602,4 +1602,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
 })();
 </script>
+<x-page-tour tour-id="movimentacao-add-edit" :steps="[
+    [
+        'element' => '.mv-guide',
+        'popover' => [
+            'title' => 'Guia de cenários',
+            'description' => 'Os atalhos iniciais ajudam a escolher o cenário mais comum, como transferência entre estações, saída para reserva ou manutenção.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '.mv-wizard-top',
+        'popover' => [
+            'title' => 'Formulário em 4 etapas',
+            'description' => 'O cadastro é dividido em Tipo e Status, Veículo e Locais, Vínculos, e Datas e Observações. Avance etapa por etapa.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#tipo_movimentacao_id',
+        'popover' => [
+            'title' => 'Tipo da movimentação',
+            'description' => 'Defina a natureza do deslocamento do veículo. A lupa ajuda a consultar os tipos disponíveis e suas descrições.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#status_movimentacao_id',
+        'popover' => [
+            'title' => 'Status da movimentação',
+            'description' => 'Selecione o status inicial do registro para refletir a etapa atual do processo operacional.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#mv_veiculo_display',
+        'popover' => [
+            'title' => 'Veículo vinculado',
+            'description' => 'Use a busca para localizar o veículo e aproveitar os controles de quilometragem e disponibilidade relacionados a ele.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#mv_origem_display, #mv_destino_display',
+        'popover' => [
+            'title' => 'Origem e destino',
+            'description' => 'Informe as estações de saída e chegada. Esses vínculos controlam horários permitidos e o trajeto da movimentação.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#mv_usuario_display, #mv_reserva_display, #mv_os_display',
+        'popover' => [
+            'title' => 'Vínculos complementares',
+            'description' => 'Associe o usuário responsável e, quando existir, a reserva ou a ordem de serviço relacionada à movimentação.',
+            'side' => 'bottom',
+        ],
+    ],
+    [
+        'element' => '#mv_data_saida_date, #mv_data_chegada_prevista_date, #mv_horario_aviso',
+        'popover' => [
+            'title' => 'Datas e horários',
+            'description' => 'Preencha saída, chegada prevista e chegada real conforme o funcionamento das estações selecionadas.',
+            'side' => 'top',
+        ],
+    ],
+    [
+        'element' => '#formMov button[type=\"submit\"]',
+        'popover' => [
+            'title' => 'Salvar movimentação',
+            'description' => 'Ao finalizar o preenchimento, salve para registrar a movimentação e disponibilizá-la na listagem.',
+            'side' => 'top',
+        ],
+    ],
+]" />
 @endpush

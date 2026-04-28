@@ -41,10 +41,33 @@
         fetch(CONCLUIR_URL, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+        }).catch(() => {});
+    }
+
+    function getAvailableSteps() {
+        return (stepsData || []).filter(function (step) {
+            if (!step || !step.element) return false;
+
+            return String(step.element)
+                .split(',')
+                .map(function (selector) { return selector.trim(); })
+                .filter(Boolean)
+                .some(function (selector) {
+                    try {
+                        return !!document.querySelector(selector);
+                    } catch (error) {
+                        return false;
+                    }
+                });
         });
     }
 
     function buildDriver() {
+        if (typeof window.driver === 'undefined' || !window.driver.js) return null;
+
+        var availableSteps = getAvailableSteps();
+        if (!availableSteps.length) return null;
+
         var _pulou = false;
         return window.driver.js.driver({
             animate: true, smoothScroll: true, showProgress: true,
@@ -64,8 +87,14 @@
                 });
                 popover.footer.prepend(btn);
             },
-            steps: stepsData,
+            steps: availableSteps,
         });
+    }
+
+    function startTour() {
+        var tour = buildDriver();
+        if (!tour) return;
+        setTimeout(function () { tour.drive(); }, 350);
     }
 
     window.restartPageTour = function () {
@@ -73,7 +102,7 @@
         fetch(RESETAR_URL, {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
-        }).then(() => buildDriver().drive());
+        }).catch(() => {}).then(() => startTour());
     };
 
     function init() {
@@ -90,7 +119,10 @@
                     localStorage.setItem(CACHE_KEY, '1');
                     return;
                 }
-                setTimeout(() => buildDriver().drive(), 350);
+                startTour();
+            })
+            .catch(() => {
+                if (!localStorage.getItem(CACHE_KEY) || forceTour) startTour();
             });
     }
 

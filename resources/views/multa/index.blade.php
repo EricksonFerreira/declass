@@ -8,49 +8,56 @@
 @stop
 
 @section('content')
+    <div class="veiculo-filter-sticky mb-2">
+        <form method="GET" action="{{ route('multa.index') }}" class="veiculo-like-filter" id="formFiltrosMulta">
+            <div class="veiculo-like-filter__group">
+                <input type="date" name="data_inicio" class="form-control form-control-sm veiculo-like-filter__field"
+                    value="{{ $filtros['data_inicio'] ?? '' }}" title="Data infração de">
+                <input type="date" name="data_fim" class="form-control form-control-sm veiculo-like-filter__field"
+                    value="{{ $filtros['data_fim'] ?? '' }}" title="Data infração até">
+                <input type="text" name="placa" class="form-control form-control-sm veiculo-like-filter__field veiculo-like-filter__field--plate"
+                    value="{{ $filtros['placa'] ?? '' }}" placeholder="Placa">
+                <select name="status_multa" class="form-control form-control-sm veiculo-like-filter__field">
+                    <option value="">Status multa</option>
+                    @foreach(\App\Models\Multa::STATUS_MULTA as $key => $label)
+                        <option value="{{ $key }}" {{ ($filtros['status_multa'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+                <select name="status_desconto" class="form-control form-control-sm veiculo-like-filter__field">
+                    <option value="">Status desconto</option>
+                    @foreach(\App\Models\Multa::STATUS_DESCONTO as $key => $label)
+                        <option value="{{ $key }}" {{ ($filtros['status_desconto'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div class="veiculo-like-filter__actions">
+                <button type="submit" class="btn btn-xs btn-primary">
+                    <i class="fas fa-search mr-1"></i>Filtrar
+                </button>
+                <a href="{{ route('multa.index') }}" class="btn btn-xs btn-outline-secondary">
+                    <i class="fas fa-times mr-1"></i>Limpar
+                </a>
+            </div>
+        </form>
+    </div>
+
     <div class="card p-2">
         <div class="card-header px-0 pt-0 pb-1">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <h3 class="card-title text-sm text-bold mb-0">
-                    REGISTROS <span class="badge badge-danger">{{ $multas->total() }}</span>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title text-sm text-bold">
+                    REGISTROS <span class="badge badge-success">{{ $multas->total() }}</span>
                 </h3>
 
-                <div class="d-flex flex-row align-items-center flex-wrap" style="gap:6px;">
-                    <form method="GET" action="{{ route('multa.index') }}" class="d-flex align-items-center flex-wrap" style="gap:6px;" id="formFiltrosMulta">
-                        <input type="date" name="data_inicio" class="form-control form-control-sm" style="width:130px"
-                               value="{{ $filtros['data_inicio'] ?? '' }}" title="Data infração de">
-                        <input type="date" name="data_fim" class="form-control form-control-sm" style="width:130px"
-                               value="{{ $filtros['data_fim'] ?? '' }}" title="Data infração até">
-                        <input type="text" name="placa" class="form-control form-control-sm" style="width:100px"
-                               value="{{ $filtros['placa'] ?? '' }}" placeholder="Placa">
-                        <select name="status_multa" class="form-control form-control-sm" style="width:130px">
-                            <option value="">Status multa</option>
-                            @foreach(\App\Models\Multa::STATUS_MULTA as $key => $label)
-                                <option value="{{ $key }}" {{ ($filtros['status_multa'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        <select name="status_desconto" class="form-control form-control-sm" style="width:140px">
-                            <option value="">Status desconto</option>
-                            @foreach(\App\Models\Multa::STATUS_DESCONTO as $key => $label)
-                                <option value="{{ $key }}" {{ ($filtros['status_desconto'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
-                            @endforeach
-                        </select>
-                        <button type="submit" class="btn btn-xs btn-primary">
-                            <i class="fas fa-search"></i>
-                        </button>
-                        <a href="{{ route('multa.index') }}" class="btn btn-xs btn-secondary">
-                            <i class="fas fa-times"></i>
-                        </a>
-                    </form>
-
+                <div class="align-bottom d-flex flex-row justify-between" style="gap:6px;flex-wrap:wrap;">
                     @can('multa.export')
                     <a href="{{ route('multa.export', request()->query()) }}" class="btn btn-xs btn-outline-success" title="Exportar CSV">
                         <i class="fas fa-file-csv mr-1"></i>CSV
                     </a>
                     @endcan
 
-                    <div class="mx-view-toggle">
-                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
+                    <div class="veiculo-view-toggle mx-view-toggle">
+                        <button type="button" class="btn btn-xs btn-outline-secondary active" data-view="cards">
                             <i class="fas fa-th-large mr-1"></i>Cards
                         </button>
                         <button type="button" class="btn btn-xs btn-outline-secondary" data-view="table">
@@ -59,7 +66,7 @@
                     </div>
 
                     <div class="d-flex align-items-end">
-                        {{ $multas->links() }}
+                        {{ $multas->withQueryString()->links() }}
                     </div>
                 </div>
             </div>
@@ -238,69 +245,111 @@
                     </tbody>
                 </table>
             </div>
-
-            <div class="px-2 pb-2">
-                {{ $multas->withQueryString()->links() }}
-            </div>
         </div>
     </div>
 @stop
 
 @section('css')
 <style>
-.mx-view-toggle { display:flex; gap:4px; }
+.veiculo-filter-sticky {
+    position: sticky;
+    top: 10px;
+    z-index: 1030;
+}
+
+.veiculo-like-filter {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 10px 12px;
+    box-shadow: 0 2px 8px rgba(11, 18, 32, .05);
+}
+
+.veiculo-like-filter__group,
+.veiculo-like-filter__actions {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.veiculo-like-filter__field {
+    width: 140px;
+    border-radius: 8px;
+    border-color: #d0daea;
+}
+
+.veiculo-like-filter__field--plate {
+    width: 100px;
+}
+
+.mx-view-toggle { display:flex; gap:5px; }
+.veiculo-view-toggle .btn.active,
+.mx-view-toggle .btn.active {
+    background: #0f172a;
+    color: #fff;
+    border-color: #0f172a;
+}
 .mx-cards {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
     gap: 16px;
-    padding: 10px 0;
+    padding: 10px 8px 16px;
 }
 .mx {
     position: relative;
     display: flex;
     flex-direction: column;
     background: #fff;
-    border: 1px solid #e5eaf2;
-    border-radius: 14px;
+    border: 1px solid #e2e9f4;
+    border-radius: 18px;
     overflow: hidden;
     cursor: pointer;
-    transition: box-shadow .18s, transform .15s;
+    box-shadow: 0 2px 10px rgba(11,18,32,.06);
+    transition: transform .2s ease, box-shadow .2s ease;
 }
-.mx:hover { box-shadow: 0 6px 24px rgba(0,0,0,.10); transform: translateY(-2px); }
-.mx__accent { height: 5px; width: 100%; }
+.mx:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(11,18,32,.13); }
+.mx__accent { height: 3px; width: 100%; background: #e2e9f4; }
 .mx--green .mx__accent { background: linear-gradient(90deg, #10b981, #34d399); }
 .mx--red .mx__accent { background: linear-gradient(90deg, #ef4444, #f87171); }
 .mx--slate .mx__accent { background: linear-gradient(90deg, #64748b, #94a3b8); }
-.mx__head { display:flex; align-items:flex-start; gap:12px; padding:14px 16px 8px; }
+.mx__head { display:flex; align-items:flex-start; gap:11px; padding:14px 16px 12px; border-bottom: 1px solid #f1f5f9; }
 .mx__avatar {
-    width:44px; height:44px; border-radius:10px; flex-shrink:0;
+    width:42px; height:42px; border-radius:12px; flex-shrink:0;
     display:flex; align-items:center; justify-content:center;
-    font-weight:700; font-size:.95rem; color:#fff;
-    background: linear-gradient(135deg, #dc2626, #f97316);
+    font-size:.82rem; font-weight:800; color:#fff; letter-spacing:.04em;
+    background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
 }
 .mx__head-info { flex:1; min-width:0; }
-.mx__id { font-size:.72rem; color:#94a3b8; font-weight:600; letter-spacing:.04em; }
-.mx__title { font-size:.97rem; font-weight:700; color:#0f2740; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mx__sub { font-size:.78rem; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.mx__badges { display:flex; flex-direction:column; gap:4px; }
+.mx__id { font-size:.68rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:#94a3b8; margin-bottom:2px; }
+.mx__title { font-size:.92rem; font-weight:700; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mx__sub { font-size:.74rem; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px; }
+.mx__badges { display:flex; flex-direction:column; gap:6px; align-items:flex-end; margin-left:6px; }
 .mx__badge {
-    display:inline-block; padding:2px 8px; border-radius:20px;
-    font-size:.7rem; font-weight:700; text-transform:uppercase; white-space:nowrap;
+    display:inline-flex; align-items:center; gap:6px; padding:5px 8px;
+    border-radius:999px; font-size:.70rem; font-weight:700; line-height:1; white-space:nowrap;
+    border:1px solid transparent;
 }
-.mx__badge--green { background:rgba(16,185,129,.15); color:#047857; }
-.mx__badge--red { background:rgba(239,68,68,.13); color:#b91c1c; }
-.mx__badge--slate { background:rgba(100,116,139,.12); color:#475569; }
-.mx__badge--blue { background:rgba(59,130,246,.12); color:#1d4ed8; }
-.mx__badge--amber { background:rgba(245,158,11,.18); color:#92400e; }
-.mx__meta { display:flex; flex-direction:column; gap:4px; padding:6px 16px 10px; flex:1; }
-.mx__meta-row { display:flex; align-items:baseline; gap:6px; font-size:.8rem; }
-.mx__meta-row--full { flex-wrap:wrap; }
-.mx__meta-label { color:#64748b; min-width:90px; flex-shrink:0; }
-.mx__meta-value { color:#1e293b; font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }
+.mx__badge--green { background: rgba(16,185,129,.12); color: #047857; border-color: rgba(16,185,129,.22); }
+.mx__badge--red { background: rgba(239,68,68,.12); color: #b91c1c; border-color: rgba(239,68,68,.22); }
+.mx__badge--slate { background: rgba(100,116,139,.12); color: #475569; border-color: rgba(100,116,139,.2); }
+.mx__badge--blue { background: rgba(59,130,246,.12); color: #1d4ed8; border-color: rgba(59,130,246,.2); }
+.mx__badge--amber { background: rgba(245,158,11,.14); color: #b45309; border-color: rgba(245,158,11,.28); }
+.mx__meta { padding: 12px 16px 10px; display:grid; grid-template-columns: 1fr 1fr; gap:10px 12px; flex:1; }
+.mx__meta-row { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.mx__meta-row--full { grid-column: 1 / -1; }
+.mx__meta-label { font-size:.70rem; color:#94a3b8; font-weight:700; text-transform:uppercase; letter-spacing:.06em; min-width: 0; }
+.mx__meta-value { font-size:.86rem; color:#0f172a; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:none; }
 .mx__foot {
-    display:flex; gap:6px; align-items:center;
-    padding:10px 16px; border-top:1px solid #f1f5f9;
-    background:#fafbfc; flex-wrap:wrap;
+    margin-top: auto;
+    padding: 12px 16px 14px;
+    border-top: 1px solid #f1f5f9;
+    display:flex; justify-content:flex-end; gap:8px; flex-wrap:wrap;
 }
 .mx-table { display:none; }
 .table-multa-index td { vertical-align:middle; }
@@ -310,6 +359,20 @@
 .mx-index-body[data-view="cards"] .mx-table  { display:none; }
 @media (max-width:575px) {
     .mx-cards { grid-template-columns: 1fr; }
+}
+@media (max-width: 991.98px) {
+    .mx-cards { grid-template-columns: 1fr; padding: 6px 4px 12px; }
+}
+.mx-index-body[data-view="table"] .mx-table {
+    max-height: calc(100vh - 360px);
+    overflow: auto;
+    border-radius: 6px;
+}
+.mx-index-body[data-view="table"] .mx-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: #f8fafc;
 }
 </style>
 @stop

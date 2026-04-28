@@ -203,4 +203,54 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="status-movimentacao-add-edit" :steps="[
+        [
+            'element' => '.card-header-status-movimentacao',
+            'popover' => [
+                'title' => 'Cadastro de status',
+                'description' => 'Nesta tela você configura como um status de movimentação será exibido e utilizado no sistema.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#formulario-status-movimentacao',
+            'popover' => [
+                'title' => 'Formulário principal',
+                'description' => 'Preencha os campos obrigatórios para criar ou atualizar um status de movimentação.',
+                'side' => 'top',
+            ],
+        ],
+        [
+            'element' => '#nome',
+            'popover' => [
+                'title' => 'Nome do status',
+                'description' => 'Defina um nome claro para identificar a etapa da movimentação, como Pendente, Em trânsito ou Concluído.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#cor',
+            'popover' => [
+                'title' => 'Cor visual',
+                'description' => 'Escolha a cor usada para destacar esse status nas listas, badges e cartões de movimentação.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'select[name=\"ativo\"]',
+            'popover' => [
+                'title' => 'Status do cadastro',
+                'description' => 'Controle se este status ficará disponível para uso nas movimentações futuras.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-save-status-movimentacao',
+            'popover' => [
+                'title' => 'Salvar',
+                'description' => 'Depois de preencher os campos, clique aqui para gravar o status da movimentação.',
+                'side' => 'top',
+            ],
+        ],
+    ]" />
 @stop

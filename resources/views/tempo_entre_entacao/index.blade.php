@@ -65,4 +65,46 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="tempo-entre-estacao-index" :steps="[
+        [
+            'element' => '.page-title',
+            'popover' => [
+                'title' => 'Tempos entre estações',
+                'description' => 'Aqui você cadastra e consulta os tempos estimados de deslocamento entre estações de origem e destino.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-create-resource, a[href*=\"tempo_entre_entacao/create\"]',
+            'popover' => [
+                'title' => 'Novo tempo de deslocamento',
+                'description' => 'Use este botão para informar uma nova combinação entre estação de origem, destino e tempo previsto.',
+                'side' => 'left',
+            ],
+        ],
+        [
+            'element' => '.card-header',
+            'popover' => [
+                'title' => 'Resumo da listagem',
+                'description' => 'O topo mostra total de registros, paginação e o seletor de quantidade exibida por página.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table thead tr',
+            'popover' => [
+                'title' => 'Tabela de trajetos',
+                'description' => 'Cada linha exibe a estação de origem, a estação de destino, o tempo configurado e o status do cadastro.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table tbody tr:first-child td:last-child',
+            'popover' => [
+                'title' => 'Editar ou excluir',
+                'description' => 'As ações permitem ajustar um trajeto cadastrado ou remover um vínculo que não será mais utilizado.',
+                'side' => 'left',
+            ],
+        ],
+    ]" />
 @stop

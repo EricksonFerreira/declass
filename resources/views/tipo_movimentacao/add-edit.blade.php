@@ -182,4 +182,54 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="tipo-movimentacao-add-edit" :steps="[
+        [
+            'element' => '.card-header-tipo-movimentacao',
+            'popover' => [
+                'title' => 'Cadastro do tipo',
+                'description' => 'Nesta tela você define o tipo de movimentação que poderá ser escolhido ao registrar deslocamentos de veículos.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#formulario-tipo-movimentacao',
+            'popover' => [
+                'title' => 'Formulário principal',
+                'description' => 'Preencha nome, status e descrição para deixar o tipo pronto para uso nas operações.',
+                'side' => 'top',
+            ],
+        ],
+        [
+            'element' => '#nome',
+            'popover' => [
+                'title' => 'Nome do tipo',
+                'description' => 'Use um nome objetivo para identificar a finalidade da movimentação no processo operacional.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'select[name=\"ativo\"]',
+            'popover' => [
+                'title' => 'Disponibilidade',
+                'description' => 'Defina se este tipo estará ativo para ser selecionado em novos registros de movimentação.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#descricao',
+            'popover' => [
+                'title' => 'Descrição do tipo',
+                'description' => 'Descreva quando esse tipo deve ser usado para orientar a equipe no cadastro das movimentações.',
+                'side' => 'top',
+            ],
+        ],
+        [
+            'element' => '.btn-save-tipo-movimentacao',
+            'popover' => [
+                'title' => 'Salvar',
+                'description' => 'Clique aqui para gravar o tipo de movimentação após revisar os dados informados.',
+                'side' => 'top',
+            ],
+        ],
+    ]" />
 @stop

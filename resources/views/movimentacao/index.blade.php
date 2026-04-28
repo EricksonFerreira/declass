@@ -608,4 +608,54 @@
 
         })();
     </script>
+    <x-page-tour tour-id="movimentacao-index" :steps="[
+        [
+            'element' => '.page-title',
+            'popover' => [
+                'title' => 'Lista de movimentações',
+                'description' => 'Aqui você acompanha todas as movimentações de veículos, com status, origem, destino, usuário e datas.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-create-resource, a[href*=\"movimentacao/create\"]',
+            'popover' => [
+                'title' => 'Nova movimentação',
+                'description' => 'Use este botão para registrar uma nova saída, transferência, retorno ou envio para manutenção.',
+                'side' => 'left',
+            ],
+        ],
+        [
+            'element' => '.mv-idx-statusbar',
+            'popover' => [
+                'title' => 'Filtro por status',
+                'description' => 'Os chips no topo permitem filtrar rapidamente a listagem pelas situações cadastradas para a movimentação.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '#btnViewTable, #btnViewCards',
+            'popover' => [
+                'title' => 'Modos de visualização',
+                'description' => 'Alterne entre a visão em tabela e a visão em cards para analisar os registros da forma mais prática.',
+                'side' => 'left',
+            ],
+        ],
+        [
+            'element' => '#viewTable table thead tr',
+            'popover' => [
+                'title' => 'Dados exibidos',
+                'description' => 'A tabela mostra tipo e status, usuário, veículo, origem, destino, datas e as ações disponíveis para cada movimentação.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-concluir-mov, #viewTable tbody tr:first-child td:last-child',
+            'popover' => [
+                'title' => 'Concluir e editar',
+                'description' => 'Você pode editar o registro, concluir a movimentação informando a chegada real ou excluir quando necessário.',
+                'side' => 'left',
+            ],
+        ],
+    ]" />
 @stop

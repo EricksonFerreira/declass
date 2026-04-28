@@ -1520,10 +1520,33 @@
 
     function marcarFeito() {
         localStorage.setItem(CACHE_KEY, '1');
-        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } }).catch(() => {});
+    }
+
+    function getAvailableSteps() {
+        return steps.filter(function (step) {
+            if (!step || !step.element) return false;
+
+            return String(step.element)
+                .split(',')
+                .map(function (selector) { return selector.trim(); })
+                .filter(Boolean)
+                .some(function (selector) {
+                    try {
+                        return !!document.querySelector(selector);
+                    } catch (error) {
+                        return false;
+                    }
+                });
+        });
     }
 
     function buildTour() {
+        if (typeof window.driver === 'undefined' || !window.driver.js) return null;
+
+        var availableSteps = getAvailableSteps();
+        if (!availableSteps.length) return null;
+
         var _pulou = false;
         return window.driver.js.driver({
             animate: true, smoothScroll: true, showProgress: true,
@@ -1537,14 +1560,21 @@
                 btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
                 popover.footer.prepend(btn);
             },
-            steps: steps,
+            steps: availableSteps,
         });
+    }
+
+    function startTour() {
+        var tour = buildTour();
+        if (!tour) return;
+        setTimeout(function () { tour.drive(); }, 350);
     }
 
     window.restartPageTour = function () {
         localStorage.removeItem(CACHE_KEY);
         fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
-            .then(() => buildTour().drive());
+            .catch(() => {})
+            .then(() => startTour());
     };
 
     if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
@@ -1552,7 +1582,10 @@
         .then(r => r.json())
         .then(data => {
             if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
-            setTimeout(() => buildTour().drive(), 350);
+            startTour();
+        })
+        .catch(() => {
+            if (!localStorage.getItem(CACHE_KEY) || forceTour) startTour();
         });
 })();
 </script>

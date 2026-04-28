@@ -10,36 +10,152 @@
 @section('content')
 
     @if (!empty($filters))
-        <x-filter
-            :filters="$filters"
-            :additionalFilters="$additionalFilters"
-            :itensFiltered="$itensFiltered"
-            :nomeFiltro="$nomeFiltro"
-        />
+        <div class="veiculo-filter-sticky">
+            <x-filter
+                :filters="$filters"
+                :additionalFilters="$additionalFilters"
+                :itensFiltered="$itensFiltered"
+                :nomeFiltro="$nomeFiltro"
+            />
+        </div>
     @endif
 
     <div class="card card-outline card-primary shadow-sm">
         <div class="card-header px-3 py-2">
-            <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
-                <h3 class="card-title mb-0 font-weight-bold">
-                    <i class="fas fa-users mr-1 text-primary"></i>
+            <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title text-sm text-bold">
                     REGISTROS
-                    <span class="badge badge-success ml-2">{{ $usuarios->total() }}</span>
+                    <span class="badge badge-success">{{ $usuarios->total() }}</span>
                 </h3>
 
-                <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
-                    <form action="{{ route('usuario.setPerPage') }}" method="POST" class="mb-0">
+                <div class="align-bottom d-flex flex-row justify-between" style="gap:6px;flex-wrap:wrap;">
+                    <form action="{{ route('usuario.setPerPage') }}" method="POST">
                         @csrf
                         <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                     </form>
 
-                    {{ $usuarios->links() }}
+                    <div class="veiculo-view-toggle ux-view-toggle">
+                        <button type="button" class="btn btn-xs btn-outline-secondary active" data-view="cards">
+                            <i class="fas fa-th-large mr-1"></i>Cards
+                        </button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="table">
+                            <i class="fas fa-table mr-1"></i>Tabela
+                        </button>
+                    </div>
+
+                    <div class="d-flex align-items-end">
+                        {{ $usuarios->links() }}
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="card-body p-0">
-            <div class="table-responsive">
+        <div class="card-body p-0 ux-index-body" data-view="cards">
+            <div class="ux-cards p-3">
+                @forelse ($usuarios as $usuario)
+                    @php
+                        $canMetodoPagamento = auth()->user()->hasPermissao('usuario.metodoPagamento');
+                        $canEditar = auth()->user()->hasPermissao('usuario.edit');
+                        $canAlterarSenha = auth()->user()->hasPermissao('usuario.alterarSenha');
+                        $canExcluir = auth()->user()->hasPermissao('usuario.destroy');
+                        $temAlgumaAcao = $canMetodoPagamento || $canEditar || $canAlterarSenha || $canExcluir;
+                        $nomeUsuario = trim((string) ($usuario->nome ?? 'Usuário'));
+                        $partesNome = preg_split('/\s+/', $nomeUsuario) ?: [];
+                        $iniciais = collect($partesNome)->filter()->take(2)
+                            ->map(fn($parte) => mb_strtoupper(mb_substr($parte, 0, 1)))->implode('');
+                        $iniciais = $iniciais ?: 'US';
+                    @endphp
+
+                    <article class="ux-card">
+                        <div class="ux-card__accent"></div>
+                        <div class="ux-card__head">
+                            <div class="ux-card__avatar">{{ $iniciais }}</div>
+                            <div class="ux-card__head-info">
+                                <div class="ux-card__id">USUÁRIO #{{ $usuario->id }}</div>
+                                <div class="ux-card__title">{{ $usuario->nome }}</div>
+                                <div class="ux-card__sub">{{ $usuario->email ?: 'Sem e-mail' }}</div>
+                            </div>
+                            <div class="ux-card__badges">
+                                @if ($usuario->tipoUsuario)
+                                    <span class="ux-card__badge ux-card__badge--blue">{{ $usuario->tipoUsuario->name }}</span>
+                                @endif
+                            </div>
+                        </div>
+
+                        <div class="ux-card__meta">
+                            <div class="ux-card__meta-row">
+                                <span class="ux-card__meta-label"><i class="fas fa-phone-alt mr-1"></i>Celular</span>
+                                <strong class="ux-card__meta-value">{{ $usuario->celular ?: 'Sem celular' }}</strong>
+                            </div>
+                            <div class="ux-card__meta-row">
+                                <span class="ux-card__meta-label"><i class="fas fa-map-marker-alt mr-1"></i>Cidade</span>
+                                <strong class="ux-card__meta-value">{{ $usuario->cidade ?: '—' }}</strong>
+                            </div>
+                            <div class="ux-card__meta-row ux-card__meta-row--full">
+                                <span class="ux-card__meta-label"><i class="fas fa-calendar mr-1"></i>Cadastro</span>
+                                <strong class="ux-card__meta-value">{{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '—' }}</strong>
+                            </div>
+                        </div>
+
+                        <div class="ux-card__foot">
+                            @if ($canMetodoPagamento)
+                                <a class="btn btn-xs btn-success" href="{{ route('usuario.metodoPagamento', $usuario->id) }}">
+                                    <i class="fas fa-credit-card mr-1"></i>Pagamento
+                                </a>
+                            @endif
+
+                            @if ($canEditar)
+                                <a class="btn btn-xs btn-warning" href="{{ route('usuario.edit', $usuario->id) }}">
+                                    <i class="fas fa-edit mr-1"></i>Editar
+                                </a>
+                            @endif
+
+                            @if ($canAlterarSenha)
+                                <form action="{{ route('usuario.salvarNovaSenha', $usuario->id) }}"
+                                    method="POST"
+                                    class="d-inline js-reset-senha-form"
+                                    id="resetSenhaCardForm-{{ $usuario->id }}">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="resetar_para_acesso" value="1">
+                                    <input type="hidden" name="password" value="Senh@123">
+                                    <input type="hidden" name="confirmacao_senha" value="Senh@123">
+                                    <button type="button"
+                                        class="btn btn-xs btn-info js-reset-senha"
+                                        data-user-name="{{ $usuario->nome }}"
+                                        data-form-id="resetSenhaCardForm-{{ $usuario->id }}">
+                                        <i class="fas fa-key mr-1"></i>Resetar senha
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if ($canExcluir)
+                                <form action="{{ route('usuario.destroy', $usuario->id) }}"
+                                    method="POST"
+                                    class="d-inline"
+                                    onsubmit="return confirm('Tem certeza que deseja excluir este usuário?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-xs btn-danger">
+                                        <i class="fas fa-trash mr-1"></i>Excluir
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if (!$temAlgumaAcao)
+                                <span class="text-muted">-</span>
+                            @endif
+                        </div>
+                    </article>
+                @empty
+                    <div class="text-center text-muted py-4 w-100">
+                        <i class="fas fa-users fa-2x mb-2 d-block"></i>
+                        Nenhum usuário encontrado.
+                    </div>
+                @endforelse
+            </div>
+
+            <div class="ux-table table-responsive">
                 <table class="table table-hover table-striped table-sm mb-0 tabela-usuarios">
                     <thead class="thead-light">
                         <tr>
@@ -172,6 +288,190 @@
 
 @section('css')
     <style>
+        .veiculo-filter-sticky {
+            position: sticky;
+            top: 10px;
+            z-index: 1030;
+        }
+
+        .ux-view-toggle {
+            display: flex;
+            gap: 5px;
+        }
+
+        .veiculo-view-toggle .btn.active,
+        .ux-view-toggle .btn.active {
+            background: #0f172a;
+            color: #fff;
+            border-color: #0f172a;
+        }
+
+        .ux-index-body[data-view="table"] .ux-cards { display: none; }
+        .ux-index-body[data-view="cards"] .ux-table { display: none; }
+
+        .ux-index-body[data-view="table"] .ux-table {
+            max-height: calc(100vh - 360px);
+            overflow: auto;
+            border-radius: 6px;
+        }
+
+        .ux-index-body[data-view="table"] .ux-table thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f8fafc;
+        }
+
+        .ux-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 16px;
+            padding: 10px 8px 16px;
+        }
+
+        .ux-card {
+            position: relative;
+            background: #fff;
+            border: 1px solid #e2e9f4;
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 2px 10px rgba(11,18,32,.06);
+            transition: transform .2s ease, box-shadow .2s ease;
+        }
+
+        .ux-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(11,18,32,.13);
+        }
+
+        .ux-card__accent {
+            height: 3px;
+            background: linear-gradient(90deg, #1e293b, #334155);
+        }
+
+        .ux-card__head {
+            display: flex;
+            align-items: flex-start;
+            gap: 11px;
+            padding: 14px 16px 12px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .ux-card__avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+            color: #fff;
+            font-size: .82rem;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            letter-spacing: .04em;
+        }
+
+        .ux-card__head-info { flex: 1; min-width: 0; }
+        .ux-card__id {
+            font-size: .68rem;
+            font-weight: 700;
+            letter-spacing: .1em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 2px;
+        }
+
+        .ux-card__title {
+            font-size: .92rem;
+            font-weight: 700;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ux-card__sub {
+            font-size: .74rem;
+            color: #94a3b8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 1px;
+        }
+
+        .ux-card__badges {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            align-items: flex-end;
+            margin-left: 6px;
+        }
+
+        .ux-card__badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .70rem;
+            font-weight: 700;
+            padding: 5px 8px;
+            border-radius: 999px;
+            line-height: 1;
+            white-space: nowrap;
+            border: 1px solid transparent;
+        }
+
+        .ux-card__badge--blue {
+            background: rgba(59,130,246,.12);
+            color: #1d4ed8;
+            border-color: rgba(59,130,246,.2);
+        }
+
+        .ux-card__meta {
+            padding: 12px 16px 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 12px;
+            flex: 1;
+        }
+
+        .ux-card__meta-row {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .ux-card__meta-row--full { grid-column: 1 / -1; }
+
+        .ux-card__meta-label {
+            font-size: .70rem;
+            color: #94a3b8;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: .06em;
+        }
+
+        .ux-card__meta-value {
+            font-size: .86rem;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ux-card__foot {
+            margin-top: auto;
+            padding: 12px 16px 14px;
+            border-top: 1px solid #f1f5f9;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
         .tabela-usuarios thead th {
             vertical-align: middle;
             white-space: nowrap;
@@ -201,6 +501,13 @@
 
         .tabela-usuarios .badge {
             font-size: 11px;
+        }
+
+        @media (max-width: 991.98px) {
+            .ux-cards {
+                grid-template-columns: 1fr;
+                padding: 6px 4px 12px;
+            }
         }
     </style>
 @stop
@@ -313,6 +620,23 @@
                     window.alert('Sucesso\n\n' + successMessage);
                 }
             }
+
+            const body = document.querySelector('.ux-index-body');
+            const btns = document.querySelectorAll('.ux-view-toggle [data-view]');
+            const store = 'usuario_index_view';
+
+            function setView(view) {
+                if (!body) return;
+                body.dataset.view = view;
+                btns.forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+                localStorage.setItem(store, view);
+            }
+
+            btns.forEach(btn => btn.addEventListener('click', function () {
+                setView(btn.dataset.view);
+            }));
+
+            setView(localStorage.getItem(store) || 'cards');
         });
     </script>
 <x-page-tour tour-id="usuario-index" :steps="[

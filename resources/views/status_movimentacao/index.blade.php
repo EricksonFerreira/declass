@@ -67,4 +67,46 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="status-movimentacao-index" :steps="[
+        [
+            'element' => '.page-title',
+            'popover' => [
+                'title' => 'Lista de status de movimentações',
+                'description' => 'Aqui você gerencia os status usados no fluxo de movimentações, como pendente, em andamento ou concluído.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-create-resource, a[href*=\"status_movimentacao/create\"]',
+            'popover' => [
+                'title' => 'Novo status',
+                'description' => 'Use este botão para cadastrar um novo status de movimentação com nome, cor visual e disponibilidade.',
+                'side' => 'left',
+            ],
+        ],
+        [
+            'element' => '.card-header',
+            'popover' => [
+                'title' => 'Resumo e paginação',
+                'description' => 'A área superior mostra a quantidade de registros, paginação e seletor de itens por página.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table thead tr',
+            'popover' => [
+                'title' => 'Tabela de status',
+                'description' => 'A listagem mostra nome, status ativo/inativo e a cor usada para destacar a situação nas movimentações.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table tbody tr:first-child td:last-child',
+            'popover' => [
+                'title' => 'Ações disponíveis',
+                'description' => 'Em cada registro você pode editar os dados do status ou remover o cadastro quando ele não estiver mais em uso.',
+                'side' => 'left',
+            ],
+        ],
+    ]" />
 @stop

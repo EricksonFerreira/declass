@@ -34,4 +34,46 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="opcional-grupo-veiculo-add-edit" :steps="[
+        [
+            'element' => '.page-title',
+            'popover' => [
+                'title' => 'Cadastro do vínculo',
+                'description' => 'Nesta tela você cria ou edita o vínculo de opcional para organização por grupos de veículos.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'form',
+            'popover' => [
+                'title' => 'Formulário principal',
+                'description' => 'Preencha o nome do vínculo e defina o status para disponibilizar esse cadastro no sistema.',
+                'side' => 'top',
+            ],
+        ],
+        [
+            'element' => '#nome',
+            'popover' => [
+                'title' => 'Nome do vínculo',
+                'description' => 'Use um nome claro para identificar a relação entre opcional e grupo de veículo.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'select[name=\"ativo\"]',
+            'popover' => [
+                'title' => 'Status do vínculo',
+                'description' => 'Defina se o vínculo ficará ativo e disponível para uso nas configurações relacionadas.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'button[type=\"submit\"]',
+            'popover' => [
+                'title' => 'Salvar',
+                'description' => 'Clique aqui para gravar o vínculo após concluir o preenchimento.',
+                'side' => 'top',
+            ],
+        ],
+    ]" />
 @stop

@@ -61,4 +61,46 @@
 
 @section('js')
     <script></script>
+    <x-page-tour tour-id="opcional-grupo-veiculo-index" :steps="[
+        [
+            'element' => '.page-title',
+            'popover' => [
+                'title' => 'Vínculos de opcionais por grupo',
+                'description' => 'Aqui você gerencia os vínculos que organizam opcionais por grupos de veículos para uso nas reservas.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => '.btn-create-resource, a[href*=\"opcional_grupo_veiculo/create\"]',
+            'popover' => [
+                'title' => 'Novo vínculo',
+                'description' => 'Clique aqui para criar um novo vínculo de opcional com grupo de veículo.',
+                'side' => 'left',
+            ],
+        ],
+        [
+            'element' => '.card-header',
+            'popover' => [
+                'title' => 'Resumo da tela',
+                'description' => 'A parte superior mostra o total de registros, paginação e seletor da quantidade exibida por página.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table thead tr',
+            'popover' => [
+                'title' => 'Tabela de vínculos',
+                'description' => 'A lista apresenta o nome do vínculo e se ele está ativo para ser utilizado nas regras do sistema.',
+                'side' => 'bottom',
+            ],
+        ],
+        [
+            'element' => 'table tbody tr:first-child td:last-child',
+            'popover' => [
+                'title' => 'Ações do vínculo',
+                'description' => 'Cada registro pode ser editado para ajuste do cadastro ou removido quando não for mais necessário.',
+                'side' => 'left',
+            ],
+        ],
+    ]" />
 @stop
