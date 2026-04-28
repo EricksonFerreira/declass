@@ -1577,7 +1577,6 @@
             .then(() => startTour());
     };
 
-    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
     fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
         .then(r => r.json())
         .then(data => {
@@ -1585,7 +1584,8 @@
             startTour();
         })
         .catch(() => {
-            if (!localStorage.getItem(CACHE_KEY) || forceTour) startTour();
+            if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+            startTour();
         });
 })();
 </script>
