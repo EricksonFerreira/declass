@@ -669,64 +669,66 @@
 @stop
 
 @push('js')
-<x-page-tour tour-id="sinistro-show" :steps="[
-    [
-        'element' => '.module-card',
-        'popover' => [
-            'title' => 'Cabeçalho do sinistro',
-            'description' => 'Exibe o número do sinistro, ícone do tipo de evento (colisão, furto, incêndio…), status atual, tipo, placa e data/hora do ocorrido.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.module-header-sub .badge:first-child',
-        'popover' => [
-            'title' => 'Status atual',
-            'description' => 'Indica a situação do sinistro: <b>Aberto</b>, <b>Aguardando Documentos</b>, <b>Aprovado</b>, <b>Encerrado</b>, <b>Indenizado</b> ou <b>Cancelado</b>. Atualizado conforme o processo avança.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.col-lg-8 .config-card:nth-child(1)',
-        'popover' => [
-            'title' => 'Identificação do Ocorrido',
-            'description' => 'Dados completos do evento: tipo, data, local, placa, número do BO, órgão emissor, terceiros envolvidos, vítimas e descrição detalhada.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.col-lg-8 .config-card:nth-child(2)',
-        'popover' => [
-            'title' => 'Vínculos',
-            'description' => 'Mostra o veículo, a reserva associada, o cliente, o condutor e o responsável pelo registro. Clique nos links para navegar direto para o veículo ou reserva.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.col-lg-8 .config-card:nth-child(3)',
-        'popover' => [
-            'title' => 'Seguro',
-            'description' => 'Seguradora, número de apólice, franquia, prejuízo estimado, valor aprovado pela seguradora e responsabilidade do cliente. O custo residual é calculado automaticamente.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.col-lg-8 .config-card:nth-child(4)',
-        'popover' => [
-            'title' => 'Controle de Custos e Pagamentos',
-            'description' => 'Define quem arca com o custo residual (empresa, cliente ou ambos) e registra os pagamentos. Você pode confirmar o pagamento da empresa ou lançar cobrança ao cliente via Stripe.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.col-lg-4',
-        'popover' => [
-            'title' => 'Painel lateral',
-            'description' => 'Apresenta evidências anexadas (BO, fotos, laudo), o resumo financeiro consolidado, as ações disponíveis (editar, exportar) e o histórico de alterações do sinistro.',
-            'side' => 'left',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'sinistro-show';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.module-card', popover: { title: 'Cabeçalho do sinistro', description: 'Exibe o número do sinistro, ícone do tipo de evento (colisão, furto, incêndio…), status atual, tipo, placa e data/hora do ocorrido.', side: 'bottom' } },
+        { element: '.module-header-sub .badge:first-child', popover: { title: 'Status atual', description: 'Indica a situação do sinistro: <b>Aberto</b>, <b>Aguardando Documentos</b>, <b>Aprovado</b>, <b>Encerrado</b>, <b>Indenizado</b> ou <b>Cancelado</b>. Atualizado conforme o processo avança.', side: 'bottom' } },
+        { element: '.col-lg-8 .config-card:nth-child(1)', popover: { title: 'Identificação do Ocorrido', description: 'Dados completos do evento: tipo, data, local, placa, número do BO, órgão emissor, terceiros envolvidos, vítimas e descrição detalhada.', side: 'right' } },
+        { element: '.col-lg-8 .config-card:nth-child(2)', popover: { title: 'Vínculos', description: 'Mostra o veículo, a reserva associada, o cliente, o condutor e o responsável pelo registro. Clique nos links para navegar direto para o veículo ou reserva.', side: 'right' } },
+        { element: '.col-lg-8 .config-card:nth-child(3)', popover: { title: 'Seguro', description: 'Seguradora, número de apólice, franquia, prejuízo estimado, valor aprovado pela seguradora e responsabilidade do cliente. O custo residual é calculado automaticamente.', side: 'right' } },
+        { element: '.col-lg-8 .config-card:nth-child(4)', popover: { title: 'Controle de Custos e Pagamentos', description: 'Define quem arca com o custo residual (empresa, cliente ou ambos) e registra os pagamentos. Você pode confirmar o pagamento da empresa ou lançar cobrança ao cliente via Stripe.', side: 'right' } },
+        { element: '.col-lg-4', popover: { title: 'Painel lateral', description: 'Apresenta evidências anexadas (BO, fotos, laudo), o resumo financeiro consolidado, as ações disponíveis (editar, exportar) e o histórico de alterações do sinistro.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 <script>
 (function () {
     function postPagamento(url, forma, referencia, paymentMethod, btnEl, successCb) {

@@ -552,7 +552,7 @@
         var _pulou = false;
         return window.driver.js.driver({
             animate: true, smoothScroll: true, showProgress: true,
-            progressText: 'Passo {{current}} de {{total}}',
+            progressText: 'Passo @{{current}} de @{{total}}',
             nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
             onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
             onPopoverRender: (popover, { driver }) => {
