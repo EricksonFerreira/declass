@@ -520,72 +520,67 @@
 @stop
 
 @push('js')
-<x-page-tour tour-id="multa-show" :steps="[
-    [
-        'element' => '.module-card',
-        'popover' => [
-            'title' => 'Cabeçalho da multa',
-            'description' => 'Exibe o número da multa, status atual, placa no momento da infração e a data/hora do evento. Use os botões à direita para editar ou voltar à lista.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.module-header-sub .badge:first-child',
-        'popover' => [
-            'title' => 'Status atual',
-            'description' => 'Indica a situação da multa: <b>Aberta</b> (vermelho), <b>Paga</b> (verde), <b>Contestada</b> (âmbar) ou <b>Cancelada</b> (cinza). Atualizado conforme pagamento ou contestação.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.col-lg-8 .config-card:nth-child(1)',
-        'popover' => [
-            'title' => 'Identificação da Infração',
-            'description' => 'Dados completos do auto: número, órgão autuador, data/hora da infração, vencimento, pontuação na CNH, placa, local e descrição.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.col-lg-8 .config-card:nth-child(2)',
-        'popover' => [
-            'title' => 'Vínculos',
-            'description' => 'Mostra o veículo, a reserva associada, o cliente, o condutor e o responsável pelo lançamento. Clique nos links para navegar direto para a reserva ou veículo.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.col-lg-8 .config-card:nth-child(3)',
-        'popover' => [
-            'title' => 'Financeiro',
-            'description' => 'Exibe o valor original, o desconto e o <b>valor final</b> em destaque. Mostra quem é responsável pelo pagamento (cliente ou empresa) e o status do pagamento.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '#btnConfirmarPagamentoMulta',
-        'popover' => [
-            'title' => 'Registrar Pagamento',
-            'description' => 'Clique aqui para confirmar o pagamento da multa. Você informará a forma de pagamento e uma referência (número de comprovante ou protocolo). O registro fica no histórico.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '.col-lg-4',
-        'popover' => [
-            'title' => 'Painel lateral',
-            'description' => 'Mostra o <b>resumo de status</b> (multa, desconto, valor final e pagamento), os <b>documentos anexados</b> (comprovante e PDF do auto) e as <b>ações rápidas</b> (editar, ver reserva, ver veículo).',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.timeline',
-        'popover' => [
-            'title' => 'Histórico de alterações',
-            'description' => 'Registro cronológico de todas as mudanças feitas na multa: quem alterou, quando, qual campo foi modificado e os valores anterior e novo.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'multa-show';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.module-card', popover: { title: 'Cabeçalho da multa', description: 'Exibe o número da multa, status atual, placa no momento da infração e a data/hora do evento. Use os botões à direita para editar ou voltar à lista.', side: 'bottom' } },
+        { element: '.module-header-sub .badge:first-child', popover: { title: 'Status atual', description: 'Indica a situação da multa: <b>Aberta</b> (vermelho), <b>Paga</b> (verde), <b>Contestada</b> (âmbar) ou <b>Cancelada</b> (cinza). Atualizado conforme pagamento ou contestação.', side: 'bottom' } },
+        { element: '.col-lg-8 .config-card:nth-child(1)', popover: { title: 'Identificação da Infração', description: 'Dados completos do auto: número, órgão autuador, data/hora da infração, vencimento, pontuação na CNH, placa, local e descrição.', side: 'right' } },
+        { element: '.col-lg-8 .config-card:nth-child(2)', popover: { title: 'Vínculos', description: 'Mostra o veículo, a reserva associada, o cliente, o condutor e o responsável pelo lançamento. Clique nos links para navegar direto para a reserva ou veículo.', side: 'right' } },
+        { element: '.col-lg-8 .config-card:nth-child(3)', popover: { title: 'Financeiro', description: 'Exibe o valor original, o desconto e o <b>valor final</b> em destaque. Mostra quem é responsável pelo pagamento (cliente ou empresa) e o status do pagamento.', side: 'right' } },
+        { element: '#btnConfirmarPagamentoMulta', popover: { title: 'Registrar Pagamento', description: 'Clique aqui para confirmar o pagamento da multa. Você informará a forma de pagamento e uma referência (número de comprovante ou protocolo). O registro fica no histórico.', side: 'top' } },
+        { element: '.col-lg-4', popover: { title: 'Painel lateral', description: 'Mostra o <b>resumo de status</b> (multa, desconto, valor final e pagamento), os <b>documentos anexados</b> (comprovante e PDF do auto) e as <b>ações rápidas</b> (editar, ver reserva, ver veículo).', side: 'left' } },
+        { element: '.timeline', popover: { title: 'Histórico de alterações', description: 'Registro cronológico de todas as mudanças feitas na multa: quem alterou, quando, qual campo foi modificado e os valores anterior e novo.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo {{current}} de {{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 <script>
 (function() {
     const btn = document.getElementById('btnConfirmarPagamentoMulta');

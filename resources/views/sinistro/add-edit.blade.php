@@ -521,64 +521,66 @@
 @stop
 
 @push('js')
-<x-page-tour tour-id="sinistro-add-edit" :steps="[
-    [
-        'element' => '.sn-wizard-top',
-        'popover' => [
-            'title' => 'Formulário em 4 etapas',
-            'description' => 'O cadastro de sinistro é dividido em: <b>1 – Ocorrido</b>, <b>2 – Terceiros</b>, <b>3 – Seguro</b> e <b>4 – Evidências</b>. Complete cada etapa antes de avançar.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-sn-step-btn="1"]',
-        'popover' => [
-            'title' => 'Etapa 1 — Ocorrido',
-            'description' => 'Informe os dados do evento: tipo de sinistro, data/hora, local, placa no momento, número do BO e uma descrição detalhada do ocorrido.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#veiculo_display',
-        'popover' => [
-            'title' => 'Vínculo com veículo',
-            'description' => 'Clique na lupa para buscar o veículo envolvido. Ao selecionar o veículo e informar a data/hora, o sistema busca automaticamente se havia uma reserva ativa e preenche o vínculo.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#reserva_id_input',
-        'popover' => [
-            'title' => 'Reserva vinculada',
-            'description' => 'Quando o sistema encontra uma reserva ativa no momento do ocorrido, ela é vinculada automaticamente. Você também pode informar o ID manualmente.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '[data-sn-step-btn="2"]',
-        'popover' => [
-            'title' => 'Etapa 2 — Terceiros',
-            'description' => 'Registre se havia terceiros envolvidos (nome, placa, telefone) e se houve vítimas. Essas informações são importantes para o processo na seguradora.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-sn-step-btn="3"]',
-        'popover' => [
-            'title' => 'Etapa 3 — Seguro',
-            'description' => 'Preencha os dados do seguro: seguradora, número da apólice, número do sinistro na seguradora, franquia, prejuízo estimado e valor aprovado. O sistema calcula o custo residual automaticamente.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-sn-step-btn="4"]',
-        'popover' => [
-            'title' => 'Etapa 4 — Evidências',
-            'description' => 'Anexe o arquivo do Boletim de Ocorrência, fotos do sinistro e laudo técnico. Formatos aceitos: PDF, JPG, PNG. Finalize aqui para salvar o sinistro.',
-            'side' => 'bottom',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'sinistro-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.sn-wizard-top', popover: { title: 'Formulário em 4 etapas', description: 'O cadastro de sinistro é dividido em: <b>1 – Ocorrido</b>, <b>2 – Terceiros</b>, <b>3 – Seguro</b> e <b>4 – Evidências</b>. Complete cada etapa antes de avançar.', side: 'bottom' } },
+        { element: '[data-sn-step-btn="1"]', popover: { title: 'Etapa 1 — Ocorrido', description: 'Informe os dados do evento: tipo de sinistro, data/hora, local, placa no momento, número do BO e uma descrição detalhada do ocorrido.', side: 'bottom' } },
+        { element: '#veiculo_display', popover: { title: 'Vínculo com veículo', description: 'Clique na lupa para buscar o veículo envolvido. Ao selecionar o veículo e informar a data/hora, o sistema busca automaticamente se havia uma reserva ativa e preenche o vínculo.', side: 'bottom' } },
+        { element: '#reserva_id_input', popover: { title: 'Reserva vinculada', description: 'Quando o sistema encontra uma reserva ativa no momento do ocorrido, ela é vinculada automaticamente. Você também pode informar o ID manualmente.', side: 'right' } },
+        { element: '[data-sn-step-btn="2"]', popover: { title: 'Etapa 2 — Terceiros', description: 'Registre se havia terceiros envolvidos (nome, placa, telefone) e se houve vítimas. Essas informações são importantes para o processo na seguradora.', side: 'bottom' } },
+        { element: '[data-sn-step-btn="3"]', popover: { title: 'Etapa 3 — Seguro', description: 'Preencha os dados do seguro: seguradora, número da apólice, número do sinistro na seguradora, franquia, prejuízo estimado e valor aprovado. O sistema calcula o custo residual automaticamente.', side: 'bottom' } },
+        { element: '[data-sn-step-btn="4"]', popover: { title: 'Etapa 4 — Evidências', description: 'Anexe o arquivo do Boletim de Ocorrência, fotos do sinistro e laudo técnico. Formatos aceitos: PDF, JPG, PNG. Finalize aqui para salvar o sinistro.', side: 'bottom' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo {{current}} de {{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 <script>
     function toggleTerceiros(checked) {
         document.getElementById('dadosTerceiros').classList.toggle('d-none', !checked);

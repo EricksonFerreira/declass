@@ -625,70 +625,65 @@
 @stop
 
 @push('js')
-<x-page-tour tour-id="ordem-servico-show" :steps="[
-    [
-        'element' => '.rs-hero',
-        'popover' => [
-            'title' => 'Cabeçalho da OS',
-            'description' => 'Exibe o número da OS, status atual, veículo vinculado, usuário que abriu e data de criação. Use os botões à direita para exportar em PDF ou voltar à lista.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.rs-status-badge',
-        'popover' => [
-            'title' => 'Status da OS',
-            'description' => '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — manutenção em curso. <b>Concluída</b> (verde) — finalizada com relatório. <b>Cancelada</b> (vermelho) — encerrada sem execução.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.rs-hero__kpis',
-        'popover' => [
-            'title' => 'Indicadores da OS',
-            'description' => 'Mostra a quantidade de itens (danos + serviços) vinculados à OS e o número da reserva associada ao veículo, quando houver.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.rs-main .rs-card:nth-child(1)',
-        'popover' => [
-            'title' => 'Dados da OS',
-            'description' => 'Detalhes completos: veículo, placa, data de abertura, data de encerramento (quando concluída), usuário responsável e observações gerais informadas na criação.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.rs-main .rs-card:nth-child(2)',
-        'popover' => [
-            'title' => 'Itens da OS',
-            'description' => 'Lista todos os danos e serviços vinculados. Cada item mostra a descrição, o resultado registrado após a conclusão e os anexos de evidência.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.rs-sidebar',
-        'popover' => [
-            'title' => 'Painel de ações',
-            'description' => 'Aqui você avança o fluxo da OS: <b>Marcar em andamento</b> → <b>Concluir</b> (com relatório geral e resultados por item) → ou <b>Cancelar</b>. O formulário de conclusão exige relatório e permite anexar arquivos.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '#relatorio_geral',
-        'popover' => [
-            'title' => 'Relatório de conclusão',
-            'description' => 'Descreva tudo o que foi feito: peças substituídas, procedimentos realizados e condições do veículo após o serviço. Campo obrigatório para concluir a OS.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '#anexos',
-        'popover' => [
-            'title' => 'Anexos da conclusão',
-            'description' => 'Envie fotos, laudos e documentos que comprovem a execução do serviço. Formatos aceitos: PDF, imagens, Word e Excel. Máximo 10 MB por arquivo.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'ordem-servico-show';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.rs-hero', popover: { title: 'Cabeçalho da OS', description: 'Exibe o número da OS, status atual, veículo vinculado, usuário que abriu e data de criação. Use os botões à direita para exportar em PDF ou voltar à lista.', side: 'bottom' } },
+        { element: '.rs-status-badge', popover: { title: 'Status da OS', description: '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — manutenção em curso. <b>Concluída</b> (verde) — finalizada com relatório. <b>Cancelada</b> (vermelho) — encerrada sem execução.', side: 'left' } },
+        { element: '.rs-hero__kpis', popover: { title: 'Indicadores da OS', description: 'Mostra a quantidade de itens (danos + serviços) vinculados à OS e o número da reserva associada ao veículo, quando houver.', side: 'bottom' } },
+        { element: '.rs-main .rs-card:nth-child(1)', popover: { title: 'Dados da OS', description: 'Detalhes completos: veículo, placa, data de abertura, data de encerramento (quando concluída), usuário responsável e observações gerais informadas na criação.', side: 'right' } },
+        { element: '.rs-main .rs-card:nth-child(2)', popover: { title: 'Itens da OS', description: 'Lista todos os danos e serviços vinculados. Cada item mostra a descrição, o resultado registrado após a conclusão e os anexos de evidência.', side: 'right' } },
+        { element: '.rs-sidebar', popover: { title: 'Painel de ações', description: 'Aqui você avança o fluxo da OS: <b>Marcar em andamento</b> → <b>Concluir</b> (com relatório geral e resultados por item) → ou <b>Cancelar</b>. O formulário de conclusão exige relatório e permite anexar arquivos.', side: 'left' } },
+        { element: '#relatorio_geral', popover: { title: 'Relatório de conclusão', description: 'Descreva tudo o que foi feito: peças substituídas, procedimentos realizados e condições do veículo após o serviço. Campo obrigatório para concluir a OS.', side: 'top' } },
+        { element: '#anexos', popover: { title: 'Anexos da conclusão', description: 'Envie fotos, laudos e documentos que comprovem a execução do serviço. Formatos aceitos: PDF, imagens, Word e Excel. Máximo 10 MB por arquivo.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo {{current}} de {{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @endpush
