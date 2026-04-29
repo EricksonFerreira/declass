@@ -1472,10 +1472,20 @@
             font-size: .82rem;
         }
 
+        .reserva-page .bootstrap-select .dropdown-item:hover {
+            background-color: #1e293b;
+            color: #fff;
+        }
         .reserva-page .bootstrap-select .dropdown-item.active,
         .reserva-page .bootstrap-select .dropdown-item:active {
-            background-color: var(--empresa-cor-primaria, #2563eb);
-            color: #fff;
+            background-color: #0f172a !important;
+            color: #fff !important;
+        }
+        .reserva-page .bootstrap-select .dropdown-item.selected,
+        .reserva-page .bootstrap-select .dropdown-item.selected.active {
+            background-color: #0f172a !important;
+            color: #fff !important;
+            font-weight: 700;
         }
 
         .reserva-page .bootstrap-select .bs-searchbox input {
