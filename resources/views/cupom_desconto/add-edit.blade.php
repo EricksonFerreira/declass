@@ -189,54 +189,63 @@
         });
     });
 </script>
-<x-page-tour tour-id="cupom-desconto-add-edit" :steps="[
-    [
-        'element' => '.card-header-cupom-desconto',
-        'popover' => [
-            'title' => 'Cadastro do cupom',
-            'description' => 'Nesta tela você define os dados principais do cupom promocional usado para descontos em reservas.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#formulario-cupom',
-        'popover' => [
-            'title' => 'Formulário do cupom',
-            'description' => 'Preencha nome, código, valor percentual e status antes de salvar o cadastro.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '#nome',
-        'popover' => [
-            'title' => 'Nome interno',
-            'description' => 'Informe um nome que facilite identificar a campanha ou regra promocional do cupom.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#codigo',
-        'popover' => [
-            'title' => 'Código promocional',
-            'description' => 'Este é o código que será informado no uso do cupom. Mantenha-o curto e fácil de divulgar.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#valor',
-        'popover' => [
-            'title' => 'Percentual de desconto',
-            'description' => 'Defina o valor do desconto. O campo aplica máscara para facilitar o preenchimento em percentual.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.btn-save-cupom-desconto',
-        'popover' => [
-            'title' => 'Salvar cupom',
-            'description' => 'Clique aqui para gravar o cupom e deixá-lo disponível conforme o status configurado.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'cupom-desconto-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.card-header-cupom-desconto', popover: { title: 'Cadastro do cupom', description: 'Nesta tela você define os dados principais do cupom promocional usado para descontos em reservas.', side: 'bottom' } },
+        { element: '#formulario-cupom', popover: { title: 'Formulário do cupom', description: 'Preencha nome, código, valor percentual e status antes de salvar o cadastro.', side: 'top' } },
+        { element: '#nome', popover: { title: 'Nome interno', description: 'Informe um nome que facilite identificar a campanha ou regra promocional do cupom.', side: 'bottom' } },
+        { element: '#codigo', popover: { title: 'Código promocional', description: 'Este é o código que será informado no uso do cupom. Mantenha-o curto e fácil de divulgar.', side: 'bottom' } },
+        { element: '#valor', popover: { title: 'Percentual de desconto', description: 'Defina o valor do desconto. O campo aplica máscara para facilitar o preenchimento em percentual.', side: 'bottom' } },
+        { element: '.btn-save-cupom-desconto', popover: { title: 'Salvar cupom', description: 'Clique aqui para gravar o cupom e deixá-lo disponível conforme o status configurado.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

@@ -63,46 +63,62 @@
 
 @section('js')
     <script></script>
-    <x-page-tour tour-id="tipo-movimentacao-index" :steps="[
-        [
-            'element' => '.page-title',
-            'popover' => [
-                'title' => 'Lista de tipos de movimentação',
-                'description' => 'Aqui você mantém os tipos usados para classificar movimentações, como transferência, reserva, retorno e manutenção.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '.btn-create-resource, a[href*=\"tipo_movimentacao/create\"]',
-            'popover' => [
-                'title' => 'Novo tipo',
-                'description' => 'Clique aqui para cadastrar um novo tipo que ficará disponível no formulário de movimentações.',
-                'side' => 'left',
-            ],
-        ],
-        [
-            'element' => '.card-header',
-            'popover' => [
-                'title' => 'Controle da listagem',
-                'description' => 'O cabeçalho mostra total de registros, paginação e seletor da quantidade exibida por página.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'table thead tr',
-            'popover' => [
-                'title' => 'Tabela de tipos',
-                'description' => 'A lista apresenta o nome do tipo, sua descrição funcional e o status ativo ou inativo do cadastro.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'table tbody tr:first-child td:last-child',
-            'popover' => [
-                'title' => 'Ações por registro',
-                'description' => 'Cada linha permite editar o tipo existente ou excluir o cadastro quando ele não for mais utilizado.',
-                'side' => 'left',
-            ],
-        ],
-    ]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'tipo-movimentacao-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.page-title', popover: { title: 'Lista de tipos de movimentação', description: 'Aqui você mantém os tipos usados para classificar movimentações, como transferência, reserva, retorno e manutenção.' } },
+        { element: '.btn-create-resource, a[href*="tipo_movimentacao/create"]', popover: { title: 'Novo tipo', description: 'Clique aqui para cadastrar um novo tipo que ficará disponível no formulário de movimentações.', side: 'left' } },
+        { element: '.card-header', popover: { title: 'Controle da listagem', description: 'O cabeçalho mostra total de registros, paginação e seletor da quantidade exibida por página.', side: 'bottom' } },
+        { element: 'table thead tr', popover: { title: 'Tabela de tipos', description: 'A lista apresenta o nome do tipo, sua descrição funcional e o status ativo ou inativo do cadastro.', side: 'bottom' } },
+        { element: 'table tbody tr:first-child td:last-child', popover: { title: 'Ações por registro', description: 'Cada linha permite editar o tipo existente ou excluir o cadastro quando ele não for mais utilizado.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

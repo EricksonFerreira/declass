@@ -608,54 +608,63 @@
 
         })();
     </script>
-    <x-page-tour tour-id="movimentacao-index" :steps="[
-        [
-            'element' => '.page-title',
-            'popover' => [
-                'title' => 'Lista de movimentações',
-                'description' => 'Aqui você acompanha todas as movimentações de veículos, com status, origem, destino, usuário e datas.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '.btn-create-resource, a[href*=\"movimentacao/create\"]',
-            'popover' => [
-                'title' => 'Nova movimentação',
-                'description' => 'Use este botão para registrar uma nova saída, transferência, retorno ou envio para manutenção.',
-                'side' => 'left',
-            ],
-        ],
-        [
-            'element' => '.mv-idx-statusbar',
-            'popover' => [
-                'title' => 'Filtro por status',
-                'description' => 'Os chips no topo permitem filtrar rapidamente a listagem pelas situações cadastradas para a movimentação.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '#btnViewTable, #btnViewCards',
-            'popover' => [
-                'title' => 'Modos de visualização',
-                'description' => 'Alterne entre a visão em tabela e a visão em cards para analisar os registros da forma mais prática.',
-                'side' => 'left',
-            ],
-        ],
-        [
-            'element' => '#viewTable table thead tr',
-            'popover' => [
-                'title' => 'Dados exibidos',
-                'description' => 'A tabela mostra tipo e status, usuário, veículo, origem, destino, datas e as ações disponíveis para cada movimentação.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '.btn-concluir-mov, #viewTable tbody tr:first-child td:last-child',
-            'popover' => [
-                'title' => 'Concluir e editar',
-                'description' => 'Você pode editar o registro, concluir a movimentação informando a chegada real ou excluir quando necessário.',
-                'side' => 'left',
-            ],
-        ],
-    ]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'movimentacao-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.page-title', popover: { title: 'Lista de movimentações', description: 'Aqui você acompanha todas as movimentações de veículos, com status, origem, destino, usuário e datas.' } },
+        { element: '.btn-create-resource, a[href*="movimentacao/create"]', popover: { title: 'Nova movimentação', description: 'Use este botão para registrar uma nova saída, transferência, retorno ou envio para manutenção.', side: 'left' } },
+        { element: '.mv-idx-statusbar', popover: { title: 'Filtro por status', description: 'Os chips no topo permitem filtrar rapidamente a listagem pelas situações cadastradas para a movimentação.', side: 'bottom' } },
+        { element: '#btnViewTable, #btnViewCards', popover: { title: 'Modos de visualização', description: 'Alterne entre a visão em tabela e a visão em cards para analisar os registros da forma mais prática.', side: 'left' } },
+        { element: '#viewTable table thead tr', popover: { title: 'Dados exibidos', description: 'A tabela mostra tipo e status, usuário, veículo, origem, destino, datas e as ações disponíveis para cada movimentação.', side: 'bottom' } },
+        { element: '.btn-concluir-mov, #viewTable tbody tr:first-child td:last-child', popover: { title: 'Concluir e editar', description: 'Você pode editar o registro, concluir a movimentação informando a chegada real ou excluir quando necessário.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

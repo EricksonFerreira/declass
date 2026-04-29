@@ -182,54 +182,63 @@
 
 @section('js')
     <script></script>
-    <x-page-tour tour-id="tipo-movimentacao-add-edit" :steps="[
-        [
-            'element' => '.card-header-tipo-movimentacao',
-            'popover' => [
-                'title' => 'Cadastro do tipo',
-                'description' => 'Nesta tela você define o tipo de movimentação que poderá ser escolhido ao registrar deslocamentos de veículos.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '#formulario-tipo-movimentacao',
-            'popover' => [
-                'title' => 'Formulário principal',
-                'description' => 'Preencha nome, status e descrição para deixar o tipo pronto para uso nas operações.',
-                'side' => 'top',
-            ],
-        ],
-        [
-            'element' => '#nome',
-            'popover' => [
-                'title' => 'Nome do tipo',
-                'description' => 'Use um nome objetivo para identificar a finalidade da movimentação no processo operacional.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'select[name=\"ativo\"]',
-            'popover' => [
-                'title' => 'Disponibilidade',
-                'description' => 'Defina se este tipo estará ativo para ser selecionado em novos registros de movimentação.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '#descricao',
-            'popover' => [
-                'title' => 'Descrição do tipo',
-                'description' => 'Descreva quando esse tipo deve ser usado para orientar a equipe no cadastro das movimentações.',
-                'side' => 'top',
-            ],
-        ],
-        [
-            'element' => '.btn-save-tipo-movimentacao',
-            'popover' => [
-                'title' => 'Salvar',
-                'description' => 'Clique aqui para gravar o tipo de movimentação após revisar os dados informados.',
-                'side' => 'top',
-            ],
-        ],
-    ]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'tipo-movimentacao-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.card-header-tipo-movimentacao', popover: { title: 'Cadastro do tipo', description: 'Nesta tela você define o tipo de movimentação que poderá ser escolhido ao registrar deslocamentos de veículos.', side: 'bottom' } },
+        { element: '#formulario-tipo-movimentacao', popover: { title: 'Formulário principal', description: 'Preencha nome, status e descrição para deixar o tipo pronto para uso nas operações.', side: 'top' } },
+        { element: '#nome', popover: { title: 'Nome do tipo', description: 'Use um nome objetivo para identificar a finalidade da movimentação no processo operacional.', side: 'bottom' } },
+        { element: 'select[name="ativo"]', popover: { title: 'Disponibilidade', description: 'Defina se este tipo estará ativo para ser selecionado em novos registros de movimentação.', side: 'bottom' } },
+        { element: '#descricao', popover: { title: 'Descrição do tipo', description: 'Descreva quando esse tipo deve ser usado para orientar a equipe no cadastro das movimentações.', side: 'top' } },
+        { element: '.btn-save-tipo-movimentacao', popover: { title: 'Salvar', description: 'Clique aqui para gravar o tipo de movimentação após revisar os dados informados.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

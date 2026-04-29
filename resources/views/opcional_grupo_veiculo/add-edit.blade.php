@@ -34,46 +34,62 @@
 
 @section('js')
     <script></script>
-    <x-page-tour tour-id="opcional-grupo-veiculo-add-edit" :steps="[
-        [
-            'element' => '.page-title',
-            'popover' => [
-                'title' => 'Cadastro do vínculo',
-                'description' => 'Nesta tela você cria ou edita o vínculo de opcional para organização por grupos de veículos.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'form',
-            'popover' => [
-                'title' => 'Formulário principal',
-                'description' => 'Preencha o nome do vínculo e defina o status para disponibilizar esse cadastro no sistema.',
-                'side' => 'top',
-            ],
-        ],
-        [
-            'element' => '#nome',
-            'popover' => [
-                'title' => 'Nome do vínculo',
-                'description' => 'Use um nome claro para identificar a relação entre opcional e grupo de veículo.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'select[name=\"ativo\"]',
-            'popover' => [
-                'title' => 'Status do vínculo',
-                'description' => 'Defina se o vínculo ficará ativo e disponível para uso nas configurações relacionadas.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'button[type=\"submit\"]',
-            'popover' => [
-                'title' => 'Salvar',
-                'description' => 'Clique aqui para gravar o vínculo após concluir o preenchimento.',
-                'side' => 'top',
-            ],
-        ],
-    ]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'opcional-grupo-veiculo-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.page-title', popover: { title: 'Cadastro do vínculo', description: 'Nesta tela você cria ou edita o vínculo de opcional para organização por grupos de veículos.', side: 'bottom' } },
+        { element: 'form', popover: { title: 'Formulário principal', description: 'Preencha o nome do vínculo e defina o status para disponibilizar esse cadastro no sistema.', side: 'top' } },
+        { element: '#nome', popover: { title: 'Nome do vínculo', description: 'Use um nome claro para identificar a relação entre opcional e grupo de veículo.', side: 'bottom' } },
+        { element: 'select[name="ativo"]', popover: { title: 'Status do vínculo', description: 'Defina se o vínculo ficará ativo e disponível para uso nas configurações relacionadas.', side: 'bottom' } },
+        { element: 'button[type="submit"]', popover: { title: 'Salvar', description: 'Clique aqui para gravar o vínculo após concluir o preenchimento.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

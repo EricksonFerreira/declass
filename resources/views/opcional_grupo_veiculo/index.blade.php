@@ -61,46 +61,62 @@
 
 @section('js')
     <script></script>
-    <x-page-tour tour-id="opcional-grupo-veiculo-index" :steps="[
-        [
-            'element' => '.page-title',
-            'popover' => [
-                'title' => 'Vínculos de opcionais por grupo',
-                'description' => 'Aqui você gerencia os vínculos que organizam opcionais por grupos de veículos para uso nas reservas.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '.btn-create-resource, a[href*=\"opcional_grupo_veiculo/create\"]',
-            'popover' => [
-                'title' => 'Novo vínculo',
-                'description' => 'Clique aqui para criar um novo vínculo de opcional com grupo de veículo.',
-                'side' => 'left',
-            ],
-        ],
-        [
-            'element' => '.card-header',
-            'popover' => [
-                'title' => 'Resumo da tela',
-                'description' => 'A parte superior mostra o total de registros, paginação e seletor da quantidade exibida por página.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'table thead tr',
-            'popover' => [
-                'title' => 'Tabela de vínculos',
-                'description' => 'A lista apresenta o nome do vínculo e se ele está ativo para ser utilizado nas regras do sistema.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'table tbody tr:first-child td:last-child',
-            'popover' => [
-                'title' => 'Ações do vínculo',
-                'description' => 'Cada registro pode ser editado para ajuste do cadastro ou removido quando não for mais necessário.',
-                'side' => 'left',
-            ],
-        ],
-    ]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'opcional-grupo-veiculo-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.page-title', popover: { title: 'Vínculos de opcionais por grupo', description: 'Aqui você gerencia os vínculos que organizam opcionais por grupos de veículos para uso nas reservas.' } },
+        { element: '.btn-create-resource, a[href*="opcional_grupo_veiculo/create"]', popover: { title: 'Novo vínculo', description: 'Clique aqui para criar um novo vínculo de opcional com grupo de veículo.', side: 'left' } },
+        { element: '.card-header', popover: { title: 'Resumo da tela', description: 'A parte superior mostra o total de registros, paginação e seletor da quantidade exibida por página.', side: 'bottom' } },
+        { element: 'table thead tr', popover: { title: 'Tabela de vínculos', description: 'A lista apresenta o nome do vínculo e se ele está ativo para ser utilizado nas regras do sistema.', side: 'bottom' } },
+        { element: 'table tbody tr:first-child td:last-child', popover: { title: 'Ações do vínculo', description: 'Cada registro pode ser editado para ajuste do cadastro ou removido quando não for mais necessário.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

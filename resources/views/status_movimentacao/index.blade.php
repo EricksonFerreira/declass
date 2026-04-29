@@ -67,46 +67,62 @@
 
 @section('js')
     <script></script>
-    <x-page-tour tour-id="status-movimentacao-index" :steps="[
-        [
-            'element' => '.page-title',
-            'popover' => [
-                'title' => 'Lista de status de movimentações',
-                'description' => 'Aqui você gerencia os status usados no fluxo de movimentações, como pendente, em andamento ou concluído.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '.btn-create-resource, a[href*=\"status_movimentacao/create\"]',
-            'popover' => [
-                'title' => 'Novo status',
-                'description' => 'Use este botão para cadastrar um novo status de movimentação com nome, cor visual e disponibilidade.',
-                'side' => 'left',
-            ],
-        ],
-        [
-            'element' => '.card-header',
-            'popover' => [
-                'title' => 'Resumo e paginação',
-                'description' => 'A área superior mostra a quantidade de registros, paginação e seletor de itens por página.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'table thead tr',
-            'popover' => [
-                'title' => 'Tabela de status',
-                'description' => 'A listagem mostra nome, status ativo/inativo e a cor usada para destacar a situação nas movimentações.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'table tbody tr:first-child td:last-child',
-            'popover' => [
-                'title' => 'Ações disponíveis',
-                'description' => 'Em cada registro você pode editar os dados do status ou remover o cadastro quando ele não estiver mais em uso.',
-                'side' => 'left',
-            ],
-        ],
-    ]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'status-movimentacao-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.page-title', popover: { title: 'Lista de status de movimentações', description: 'Aqui você gerencia os status usados no fluxo de movimentações, como pendente, em andamento ou concluído.' } },
+        { element: '.btn-create-resource, a[href*="status_movimentacao/create"]', popover: { title: 'Novo status', description: 'Use este botão para cadastrar um novo status de movimentação com nome, cor visual e disponibilidade.', side: 'left' } },
+        { element: '.card-header', popover: { title: 'Resumo e paginação', description: 'A área superior mostra a quantidade de registros, paginação e seletor de itens por página.', side: 'bottom' } },
+        { element: 'table thead tr', popover: { title: 'Tabela de status', description: 'A listagem mostra nome, status ativo/inativo e a cor usada para destacar a situação nas movimentações.', side: 'bottom' } },
+        { element: 'table tbody tr:first-child td:last-child', popover: { title: 'Ações disponíveis', description: 'Em cada registro você pode editar os dados do status ou remover o cadastro quando ele não estiver mais em uso.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

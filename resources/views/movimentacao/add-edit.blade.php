@@ -1602,78 +1602,66 @@ document.addEventListener('DOMContentLoaded', function() {
 
 })();
 </script>
-<x-page-tour tour-id="movimentacao-add-edit" :steps="[
-    [
-        'element' => '.mv-guide',
-        'popover' => [
-            'title' => 'Guia de cenários',
-            'description' => 'Os atalhos iniciais ajudam a escolher o cenário mais comum, como transferência entre estações, saída para reserva ou manutenção.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.mv-wizard-top',
-        'popover' => [
-            'title' => 'Formulário em 4 etapas',
-            'description' => 'O cadastro é dividido em Tipo e Status, Veículo e Locais, Vínculos, e Datas e Observações. Avance etapa por etapa.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#tipo_movimentacao_id',
-        'popover' => [
-            'title' => 'Tipo da movimentação',
-            'description' => 'Defina a natureza do deslocamento do veículo. A lupa ajuda a consultar os tipos disponíveis e suas descrições.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#status_movimentacao_id',
-        'popover' => [
-            'title' => 'Status da movimentação',
-            'description' => 'Selecione o status inicial do registro para refletir a etapa atual do processo operacional.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#mv_veiculo_display',
-        'popover' => [
-            'title' => 'Veículo vinculado',
-            'description' => 'Use a busca para localizar o veículo e aproveitar os controles de quilometragem e disponibilidade relacionados a ele.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#mv_origem_display, #mv_destino_display',
-        'popover' => [
-            'title' => 'Origem e destino',
-            'description' => 'Informe as estações de saída e chegada. Esses vínculos controlam horários permitidos e o trajeto da movimentação.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#mv_usuario_display, #mv_reserva_display, #mv_os_display',
-        'popover' => [
-            'title' => 'Vínculos complementares',
-            'description' => 'Associe o usuário responsável e, quando existir, a reserva ou a ordem de serviço relacionada à movimentação.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#mv_data_saida_date, #mv_data_chegada_prevista_date, #mv_horario_aviso',
-        'popover' => [
-            'title' => 'Datas e horários',
-            'description' => 'Preencha saída, chegada prevista e chegada real conforme o funcionamento das estações selecionadas.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '#formMov button[type=\"submit\"]',
-        'popover' => [
-            'title' => 'Salvar movimentação',
-            'description' => 'Ao finalizar o preenchimento, salve para registrar a movimentação e disponibilizá-la na listagem.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'movimentacao-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.mv-guide', popover: { title: 'Guia de cenários', description: 'Os atalhos iniciais ajudam a escolher o cenário mais comum, como transferência entre estações, saída para reserva ou manutenção.', side: 'bottom' } },
+        { element: '.mv-wizard-top', popover: { title: 'Formulário em 4 etapas', description: 'O cadastro é dividido em Tipo e Status, Veículo e Locais, Vínculos, e Datas e Observações. Avance etapa por etapa.', side: 'bottom' } },
+        { element: '#tipo_movimentacao_id', popover: { title: 'Tipo da movimentação', description: 'Defina a natureza do deslocamento do veículo. A lupa ajuda a consultar os tipos disponíveis e suas descrições.', side: 'bottom' } },
+        { element: '#status_movimentacao_id', popover: { title: 'Status da movimentação', description: 'Selecione o status inicial do registro para refletir a etapa atual do processo operacional.', side: 'bottom' } },
+        { element: '#mv_veiculo_display', popover: { title: 'Veículo vinculado', description: 'Use a busca para localizar o veículo e aproveitar os controles de quilometragem e disponibilidade relacionados a ele.', side: 'bottom' } },
+        { element: '#mv_origem_display, #mv_destino_display', popover: { title: 'Origem e destino', description: 'Informe as estações de saída e chegada. Esses vínculos controlam horários permitidos e o trajeto da movimentação.', side: 'bottom' } },
+        { element: '#mv_usuario_display, #mv_reserva_display, #mv_os_display', popover: { title: 'Vínculos complementares', description: 'Associe o usuário responsável e, quando existir, a reserva ou a ordem de serviço relacionada à movimentação.', side: 'bottom' } },
+        { element: '#mv_data_saida_date, #mv_data_chegada_prevista_date, #mv_horario_aviso', popover: { title: 'Datas e horários', description: 'Preencha saída, chegada prevista e chegada real conforme o funcionamento das estações selecionadas.', side: 'top' } },
+        { element: '#mvSubmit', popover: { title: 'Salvar movimentação', description: 'Ao finalizar o preenchimento, salve para registrar a movimentação e disponibilizá-la na listagem.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @endpush

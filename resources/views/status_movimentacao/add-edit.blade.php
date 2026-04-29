@@ -203,54 +203,63 @@
 
 @section('js')
     <script></script>
-    <x-page-tour tour-id="status-movimentacao-add-edit" :steps="[
-        [
-            'element' => '.card-header-status-movimentacao',
-            'popover' => [
-                'title' => 'Cadastro de status',
-                'description' => 'Nesta tela você configura como um status de movimentação será exibido e utilizado no sistema.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '#formulario-status-movimentacao',
-            'popover' => [
-                'title' => 'Formulário principal',
-                'description' => 'Preencha os campos obrigatórios para criar ou atualizar um status de movimentação.',
-                'side' => 'top',
-            ],
-        ],
-        [
-            'element' => '#nome',
-            'popover' => [
-                'title' => 'Nome do status',
-                'description' => 'Defina um nome claro para identificar a etapa da movimentação, como Pendente, Em trânsito ou Concluído.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '#cor',
-            'popover' => [
-                'title' => 'Cor visual',
-                'description' => 'Escolha a cor usada para destacar esse status nas listas, badges e cartões de movimentação.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => 'select[name=\"ativo\"]',
-            'popover' => [
-                'title' => 'Status do cadastro',
-                'description' => 'Controle se este status ficará disponível para uso nas movimentações futuras.',
-                'side' => 'bottom',
-            ],
-        ],
-        [
-            'element' => '.btn-save-status-movimentacao',
-            'popover' => [
-                'title' => 'Salvar',
-                'description' => 'Depois de preencher os campos, clique aqui para gravar o status da movimentação.',
-                'side' => 'top',
-            ],
-        ],
-    ]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'status-movimentacao-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.card-header-status-movimentacao', popover: { title: 'Cadastro de status', description: 'Nesta tela você configura como um status de movimentação será exibido e utilizado no sistema.', side: 'bottom' } },
+        { element: '#formulario-status-movimentacao', popover: { title: 'Formulário principal', description: 'Preencha os campos obrigatórios para criar ou atualizar um status de movimentação.', side: 'top' } },
+        { element: '#nome', popover: { title: 'Nome do status', description: 'Defina um nome claro para identificar a etapa da movimentação, como Pendente, Em trânsito ou Concluído.', side: 'bottom' } },
+        { element: '#cor', popover: { title: 'Cor visual', description: 'Escolha a cor usada para destacar esse status nas listas, badges e cartões de movimentação.', side: 'bottom' } },
+        { element: 'select[name="ativo"]', popover: { title: 'Status do cadastro', description: 'Controle se este status ficará disponível para uso nas movimentações futuras.', side: 'bottom' } },
+        { element: '.btn-save-status-movimentacao', popover: { title: 'Salvar', description: 'Depois de preencher os campos, clique aqui para gravar o status da movimentação.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop
