@@ -61,4 +61,69 @@
 
 @section('js')
     <script></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'caracteristica-grupo-frota-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.page-title', popover: { title: 'Lista de grupos de características de frota', description: 'Aqui você gerencia os grupos que categorizam as características vinculadas a cada tipo de frota cadastrado.' } },
+        { element: '.btn-create-resource', popover: { title: 'Novo grupo', description: 'Clique para criar um novo grupo de características de frota com nome e status.', side: 'left' } },
+        { element: '.card-header', popover: { title: 'Controle da listagem', description: 'O cabeçalho exibe o total de registros, a paginação e o controle de itens por página.', side: 'bottom' } },
+        { element: 'table thead tr', popover: { title: 'Tabela de grupos', description: 'A listagem mostra o nome do grupo de características de frota e seu status ativo ou inativo.', side: 'bottom' } },
+        { element: 'table tbody tr:first-child td:last-child', popover: { title: 'Ações por registro', description: 'Em cada linha você pode editar os dados do grupo ou removê-lo do sistema.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            allowClose: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop
