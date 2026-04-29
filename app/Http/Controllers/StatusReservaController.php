@@ -25,6 +25,7 @@ class StatusReservaController extends BaseController implements FiltroInterface,
         $this->nomeFiltro = 'status_reserva';
         $this->status_reservaService = $status_reservaService;
         $this->breadcrumbService = $breadcrumbService;
+        $this->middleware('can:acessar-superadmin')->only(['create', 'store', 'edit', 'update', 'destroy']);
     }
 
     public function index()

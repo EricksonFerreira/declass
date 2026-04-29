@@ -1020,6 +1020,12 @@ return [
                         ],
                     ],
                 ],
+                [
+                    'text' => 'Status de Reserva',
+                    'icon' => 'fas fa-tags',
+                    'route' => 'status_reserva.index',
+                    'can'   => 'acessar-superadmin',
+                ],
             ],
         ],
 

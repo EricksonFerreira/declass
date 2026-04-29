@@ -4,7 +4,13 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" :createUrl="route('status_reserva.create')" />
+    <x-page-title :title="$titulo">
+        @can('acessar-superadmin')
+            <a href="{{ route('status_reserva.create') }}" class="btn btn-xs btn-primary btn-create-resource">
+                <i class="fa fa-plus" style="font-size:10px"></i> Adicionar
+            </a>
+        @endcan
+    </x-page-title>
 @stop
 
 @section('content')
@@ -28,7 +34,6 @@
             </div>
         </div>
         <div class="card-body px-0 pt-0 pb-1 table-responsive">
-
             <table class="table table-striped table-bordered table-sm">
                 <thead>
                     <tr>
@@ -37,30 +42,40 @@
                         <th>Descrição</th>
                         <th>Cor</th>
                         <th>Status</th>
-                        <th style="width: 180px;">Ações</th>
+                        @can('acessar-superadmin')
+                            <th style="width: 160px;">Ações</th>
+                        @endcan
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($status_reservas as $status_reserva)
+                    @foreach ($status_reservas as $sr)
                         <tr>
-                            <td>{{ $status_reserva->id }}</td>
-                            <td>{{ $status_reserva->nome }}</td>
-                            <td>{{ $status_reserva->descricao }}</td>
+                            <td>{{ $sr->id }}</td>
                             <td>
-                                <span class="badge badge-xs bg-{{ $status_reserva->cor }}">
-                                    COR
+                                <span class="badge sr-badge"
+                                      style="background-color: {{ $sr->cor ?? '#6c757d' }}; color: #fff; font-size: .85rem; padding: 4px 10px;">
+                                    {{ $sr->nome }}
                                 </span>
                             </td>
+                            <td>{{ $sr->descricao }}</td>
                             <td>
-                                <span class="badge badge-xs bg-{{ $status_reserva->ativo == 'S' ? 'success' : 'danger' }}">
-                                    {{ $status_reserva->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
+                                <div class="d-flex align-items-center" style="gap: 8px;">
+                                    <div style="width:24px;height:24px;border-radius:50%;background-color:{{ $sr->cor ?? '#6c757d' }};border:1px solid rgba(0,0,0,.15);flex-shrink:0;"></div>
+                                    <code style="font-size:.8rem;">{{ $sr->cor ?? '—' }}</code>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-xs bg-{{ $sr->ativo == 'S' ? 'success' : 'danger' }}">
+                                    {{ $sr->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
                                 </span>
                             </td>
-                            <td style="width: 180px;">
-                                <a href="{{ route('status_reserva.edit', $status_reserva->id) }}"
-                                    class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>
-                                <x-delete-button :action="route('status_reserva.destroy', $status_reserva->id)" />
-                            </td>
+                            @can('acessar-superadmin')
+                                <td>
+                                    <a href="{{ route('status_reserva.edit', $sr->id) }}"
+                                        class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>
+                                    <x-delete-button :action="route('status_reserva.destroy', $sr->id)" />
+                                </td>
+                            @endcan
                         </tr>
                     @endforeach
                 </tbody>
@@ -70,5 +85,5 @@
 @stop
 
 @section('js')
-    <script></script>
+<script></script>
 @stop
