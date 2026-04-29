@@ -472,7 +472,7 @@ class MovimentacaoService extends AbstractBaseService
 
         if ($table && Schema::hasColumn($table, 'nome')) {
             $cancelStatusId = (int) (DB::table($table)
-                ->whereRaw('LOWER(COALESCE(nome, \"\")) LIKE ?', ['%cancel%'])
+                ->whereRaw("LOWER(COALESCE(nome, '')) LIKE ?", ['%cancel%'])
                 ->value('id') ?? 3);
         }
 
