@@ -844,12 +844,19 @@
             background: var(--empresa-cor-primaria, #2563eb);
             border-color: var(--empresa-cor-primaria, #2563eb);
             color: var(--empresa-cor-primaria-contraste, #fff);
+            text-shadow: 0 1px 2px rgba(0,0,0,.25);
             box-shadow: 0 10px 22px color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 22%, transparent 78%);
         }
-        .reserva-wizard-step.is-active .num {
-            background: rgba(255,255,255,.18);
+        .reserva-wizard-step.is-active .txt {
             color: var(--empresa-cor-primaria-contraste, #fff);
-            border-color: rgba(255,255,255,.24);
+            text-shadow: 0 1px 2px rgba(0,0,0,.35);
+            font-weight: 800;
+        }
+        .reserva-wizard-step.is-active .num {
+            background: rgba(0,0,0,.18);
+            color: #fff;
+            border-color: rgba(0,0,0,.12);
+            text-shadow: 0 1px 2px rgba(0,0,0,.4);
         }
 
         .reserva-wizard-footer {
@@ -1336,11 +1343,15 @@
             border-radius: 10px;
             font-weight: 700;
             letter-spacing: .02em;
-            padding: 9px 14px;
-            margin-top: 8px;
-            background: var(--empresa-cor-primaria, #2563eb) !important;
-            border-color: var(--empresa-cor-primaria, #2563eb) !important;
-            box-shadow: 0 8px 20px color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 30%, transparent 70%);
+            padding: 9px 20px;
+            background: #16a34a !important;
+            border-color: #15803d !important;
+            color: #fff !important;
+            box-shadow: 0 8px 20px rgba(22, 163, 74, .35);
+        }
+        .reserva-page .reserva-submit-btn:hover {
+            background: #15803d !important;
+            border-color: #166534 !important;
         }
 
         .reserva-page .reserva-sidebar .card {
