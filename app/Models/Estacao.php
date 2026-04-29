@@ -219,53 +219,70 @@ class Estacao extends Model
             return [];
         }
 
-        if (!Schema::hasTable('movimentacoes') || !Schema::hasTable('veiculos') || !Schema::hasTable('status_movimentacao')) {
+        // Se não existem tabelas de controle, todos os dias com veículo ativo são válidos
+        if (!Schema::hasTable('veiculos')) {
+            return $dias;
+        }
+
+        $totalVeiculos = DB::table('veiculos')
+            ->where('local_disponibilidade', $this->id)
+            ->where('ativo', 'S')
+            ->count();
+
+        // Sem veículos ativos nesta estação: nenhum dia disponível
+        if ($totalVeiculos === 0) {
             return [];
         }
 
-        $dataInicial = Carbon::parse($dias[0]['data'])->startOfDay();
-        $dataFinal = Carbon::parse(end($dias)['data'])->endOfDay();
+        // Se não há tabela de movimentações, todos os dias são livres
+        if (!Schema::hasTable('movimentacoes') || !Schema::hasTable('status_movimentacao')) {
+            return $dias;
+        }
 
-        $movimentacoes = DB::table('movimentacoes')
-            ->join('veiculos', 'veiculos.id', '=', 'movimentacoes.veiculo_id')
-            ->join('status_movimentacao as sm', 'sm.id', '=', 'movimentacoes.status_movimentacao_id')
-            ->where('veiculos.local_disponibilidade', $this->id)
-            ->where('veiculos.ativo', 'S')
-            ->where(function ($query) {
-                $query->whereRaw('LOWER(sm.nome) LIKE ?', ['%conclu%'])
-                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%indispon%'])
-                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%transit%'])
-                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%manuten%'])
-                    ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%espera%']);
+        $dataInicial = Carbon::parse($dias[0]['data'])->startOfDay();
+        $dataFinal   = Carbon::parse(end($dias)['data'])->endOfDay();
+
+        // Busca movimentações ativas (saída sem chegada real) que bloqueiam veículos por período
+        // Considera bloqueante: reserva em andamento (data_saida preenchida, data_chegada_real nula ou futura)
+        $movimentacoes = DB::table('movimentacoes as m')
+            ->join('veiculos as v', 'v.id', '=', 'm.veiculo_id')
+            ->join('status_movimentacao as sm', 'sm.id', '=', 'm.status_movimentacao_id')
+            ->where('v.local_disponibilidade', $this->id)
+            ->where('v.ativo', 'S')
+            ->where(function ($q) {
+                // Status que indicam veículo ocupado/indisponível
+                $q->whereRaw('LOWER(sm.nome) LIKE ?', ['%reserv%'])
+                  ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%indispon%'])
+                  ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%transit%'])
+                  ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%manuten%'])
+                  ->orWhereRaw('LOWER(sm.nome) LIKE ?', ['%espera%']);
             })
-            ->where(function ($query) use ($dataFinal) {
-                $query->whereNull('data_saida')
-                    ->orWhere('data_saida', '<=', $dataFinal);
+            // Movimentação sobrepõe o período consultado
+            ->where(function ($q) use ($dataInicial) {
+                $q->whereNull('m.data_chegada_real')
+                  ->orWhere('m.data_chegada_real', '>=', $dataInicial);
             })
-            ->where(function ($query) use ($dataInicial) {
-                $query->whereNull('data_chegada_real')
-                    ->orWhere('data_chegada_real', '>=', $dataInicial);
+            ->where(function ($q) use ($dataFinal) {
+                $q->whereNull('m.data_saida')
+                  ->orWhere('m.data_saida', '<=', $dataFinal);
             })
-            ->select(['data_saida', 'data_chegada_real'])
+            ->select(['m.veiculo_id', 'm.data_saida', 'm.data_chegada_real'])
             ->get();
 
-        $bloqueados = [];
-        foreach ($movimentacoes as $movimentacao) {
-            $inicio = !empty($movimentacao->data_saida)
-                ? Carbon::parse($movimentacao->data_saida)->startOfDay()
+        // Monta mapa: data => quantidade de veículos bloqueados naquele dia
+        $bloqueadosPorDia = [];
+        foreach ($movimentacoes as $mov) {
+            $inicio = !empty($mov->data_saida)
+                ? Carbon::parse($mov->data_saida)->startOfDay()
                 : $dataInicial->copy();
 
-            $fim = !empty($movimentacao->data_chegada_real)
-                ? Carbon::parse($movimentacao->data_chegada_real)->startOfDay()
-                : $dataFinal->copy();
+            // Movimentação sem chegada real: bloqueia até o fim do período
+            $fim = !empty($mov->data_chegada_real)
+                ? Carbon::parse($mov->data_chegada_real)->startOfDay()
+                : $dataFinal->copy()->startOfDay();
 
-            if ($inicio->lt($dataInicial)) {
-                $inicio = $dataInicial->copy();
-            }
-
-            if ($fim->gt($dataFinal)) {
-                $fim = $dataFinal->copy();
-            }
+            $inicio = $inicio->lt($dataInicial) ? $dataInicial->copy() : $inicio;
+            $fim    = $fim->gt($dataFinal)       ? $dataFinal->copy()->startOfDay()  : $fim;
 
             if ($inicio->gt($fim)) {
                 continue;
@@ -273,12 +290,17 @@ class Estacao extends Model
 
             $cursor = $inicio->copy();
             while ($cursor->lte($fim)) {
-                $bloqueados[$cursor->toDateString()] = true;
+                $ds = $cursor->toDateString();
+                $bloqueadosPorDia[$ds] = ($bloqueadosPorDia[$ds] ?? 0) + 1;
                 $cursor->addDay();
             }
         }
 
-        return array_values(array_filter($dias, static fn (array $item): bool => !isset($bloqueados[$item['data']])));
+        // Um dia é disponível se há pelo menos 1 veículo livre (total - bloqueados > 0)
+        return array_values(array_filter(
+            $dias,
+            fn (array $item): bool => ($bloqueadosPorDia[$item['data']] ?? 0) < $totalVeiculos
+        ));
     }
 
 }
