@@ -385,67 +385,64 @@
     setView(localStorage.getItem(store) || 'cards');
 })();
 </script>
-<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
-initInlinePageTour({
-    tourId: 'sinistro-index',
-    steps: @json([
-    [
-        'element' => '.page-title',
-        'popover' => [
-            'title' => 'Lista de Sinistros',
-            'description' => 'Aqui você gerencia todos os sinistros registrados: colisões, furtos, incêndios, alagamentos e vandalismo. Clique em qualquer card ou linha para ver os detalhes.',
-        ],
-    ],
-    [
-        'element' => '#formFiltrosSinistro',
-        'popover' => [
-            'title' => 'Filtros',
-            'description' => 'Filtre sinistros por <b>período</b> de ocorrido, <b>placa</b> do veículo, <b>tipo</b> (colisão, furto…) e <b>status</b> (aberto, aprovado, encerrado…). Clique na lupa para aplicar ou no X para limpar.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'a[href*=\"sinistro/create\"], .btn-create-resource',
-        'popover' => [
-            'title' => 'Registrar novo sinistro',
-            'description' => 'Clique aqui para abrir o formulário de cadastro de sinistro em 4 etapas: Ocorrido, Terceiros, Seguro e Evidências.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.sx-view-toggle',
-        'popover' => [
-            'title' => 'Alternar visualização',
-            'description' => 'Escolha entre <b>Cards</b> (visual detalhado) ou <b>Tabela</b> (compacta). A preferência é salva automaticamente.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.sx-cards .sx:first-child',
-        'popover' => [
-            'title' => 'Card de sinistro',
-            'description' => 'Cada card exibe: placa no momento, tipo, vínculo com reserva, veículo, cliente, data do ocorrido, local e prejuízo estimado.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.sx-cards .sx:first-child .sx__badge',
-        'popover' => [
-            'title' => 'Status do sinistro',
-            'description' => 'Indica a situação atual: <b>Aberto</b> (vermelho), <b>Aguardando Documentos</b> (âmbar), <b>Aprovado</b> (azul), <b>Encerrado / Indenizado</b> (verde), <b>Cancelado</b> (cinza).',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.sx-cards .sx:first-child .sx__foot',
-        'popover' => [
-            'title' => 'Ações do card',
-            'description' => 'Use <b>Ver</b> para acessar os detalhes completos, <b>Editar</b> para alterar os dados e <b>Excluir</b> para remover o registro.',
-            'side' => 'top',
-        ],
-    ],
-    ]),
-});
+(function () {
+    const TOUR_ID     = 'sinistro-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.page-title', popover: { title: 'Lista de Sinistros', description: 'Aqui você gerencia todos os sinistros registrados: colisões, furtos, incêndios, alagamentos e vandalismo. Clique em qualquer card ou linha para ver os detalhes.' } },
+        { element: '#formFiltrosSinistro', popover: { title: 'Filtros', description: 'Filtre sinistros por <b>período</b> de ocorrido, <b>placa</b> do veículo, <b>tipo</b> (colisão, furto…) e <b>status</b> (aberto, aprovado, encerrado…). Clique na lupa para aplicar ou no X para limpar.', side: 'bottom' } },
+        { element: 'a[href*="sinistro/create"], .btn-create-resource', popover: { title: 'Registrar novo sinistro', description: 'Clique aqui para abrir o formulário de cadastro de sinistro em 4 etapas: Ocorrido, Terceiros, Seguro e Evidências.', side: 'bottom' } },
+        { element: '.sx-view-toggle', popover: { title: 'Alternar visualização', description: 'Escolha entre <b>Cards</b> (visual detalhado) ou <b>Tabela</b> (compacta). A preferência é salva automaticamente.', side: 'bottom' } },
+        { element: '.sx-cards .sx:first-child', popover: { title: 'Card de sinistro', description: 'Cada card exibe: placa no momento, tipo, vínculo com reserva, veículo, cliente, data do ocorrido, local e prejuízo estimado.', side: 'right' } },
+        { element: '.sx-cards .sx:first-child .sx__badge', popover: { title: 'Status do sinistro', description: 'Indica a situação atual: <b>Aberto</b> (vermelho), <b>Aguardando Documentos</b> (âmbar), <b>Aprovado</b> (azul), <b>Encerrado / Indenizado</b> (verde), <b>Cancelado</b> (cinza).', side: 'left' } },
+        { element: '.sx-cards .sx:first-child .sx__foot', popover: { title: 'Ações do card', description: 'Use <b>Ver</b> para acessar os detalhes completos, <b>Editar</b> para alterar os dados e <b>Excluir</b> para remover o registro.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo {{current}} de {{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
 </script>
 @stop

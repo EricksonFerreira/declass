@@ -79,7 +79,8 @@
       "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Models/OnboardingStep.php)",
       "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Services/PermissaoService.php)",
       "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Services/PermissaoSyncService.php)",
-      "Bash(php -r \"echo Schema::hasColumn\\('roles','empresa_id'\\);\")"
+      "Bash(php -r \"echo Schema::hasColumn\\('roles','empresa_id'\\);\")",
+      "Bash(grep -v \"//\")"
     ]
   }
 }
