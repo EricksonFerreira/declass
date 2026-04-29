@@ -126,6 +126,15 @@ class Estacao extends Model
             }
         }
 
+        // Se nenhum dia útil foi configurado, assume seg–sáb como padrão
+        // para não bloquear reservas em estações sem configuração de agenda.
+        $algumDiaAtivo = in_array(true, $dias, true);
+        if (!$algumDiaAtivo) {
+            foreach ([1, 2, 3, 4, 5, 6] as $d) {
+                $dias[$d] = true;
+            }
+        }
+
         return $dias;
     }
 
