@@ -399,7 +399,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ]);
         $this->reservaService->adicionaLog($reserva->id, auth()->user()->id, $json);
 
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        return redirect()->route('reserva.show', $reserva->id)
+            ->with('success', 'Reserva criada com sucesso.');
     }
 
 
