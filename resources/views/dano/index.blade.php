@@ -70,7 +70,11 @@
 
 @section('js')
     <script></script>
-<x-page-tour tour-id="dano-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'dano-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -118,7 +122,9 @@
             'side' => 'left',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop
 
 @section('css')

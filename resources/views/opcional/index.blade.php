@@ -67,7 +67,11 @@
 
 @section('js')
     <script></script>
-<x-page-tour tour-id="opcional-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'opcional-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -99,7 +103,9 @@
             'side' => 'left',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop
 
 @section('css')

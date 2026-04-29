@@ -61,7 +61,11 @@
 
 @section('js')
     <script></script>
-<x-page-tour tour-id="tipo-frota-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'tipo-frota-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -93,7 +97,9 @@
             'side' => 'left',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop
 
 @section('css')

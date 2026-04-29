@@ -639,7 +639,11 @@
             setView(localStorage.getItem(store) || 'cards');
         });
     </script>
-<x-page-tour tour-id="usuario-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'usuario-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -679,5 +683,7 @@
             'side' => 'left',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop

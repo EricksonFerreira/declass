@@ -251,7 +251,11 @@
     applyFilter();
 })();
 </script>
-<x-page-tour tour-id="ordem-servico-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'ordem-servico-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -299,5 +303,7 @@
             'side' => 'right',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop

@@ -259,7 +259,11 @@
             });
         })();
     </script>
-<x-page-tour tour-id="reserva-index-v2" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'reserva-index-v2',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -307,7 +311,9 @@
             'side' => 'bottom',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop
 
 @section('css')

@@ -395,7 +395,11 @@
     setView(localStorage.getItem(store) || 'cards');
 })();
 </script>
-<x-page-tour tour-id="multa-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'multa-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -451,5 +455,7 @@
             'side' => 'top',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop

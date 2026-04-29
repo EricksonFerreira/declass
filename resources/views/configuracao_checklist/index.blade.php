@@ -64,7 +64,11 @@
 @section('js')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<x-page-tour tour-id="configuracao-checklist-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'configuracao-checklist-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -96,7 +100,9 @@
             'side' => 'left',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop
 
 @section('css')

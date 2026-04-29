@@ -439,7 +439,11 @@
             $('#modalImagemGrupoFrota').modal('show');
         });
     </script>
-<x-page-tour tour-id="grupo-frota-index" :steps="[
+<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<script>
+initInlinePageTour({
+    tourId: 'grupo-frota-index',
+    steps: @json([
     [
         'element' => '.page-title',
         'popover' => [
@@ -487,5 +491,7 @@
             'side' => 'left',
         ],
     ],
-]" />
+    ]),
+});
+</script>
 @stop
