@@ -309,45 +309,69 @@
             $('[name="item_checklist_id[]"]').prop('checked', checked);
         }
     </script>
-<x-page-tour tour-id="configuracao-checklist-add-edit" :steps="[
-    [
-        'element' => '.card-config-checklist',
-        'popover' => [
-            'title' => 'Configuração de Checklist',
-            'description' => 'Aqui você define quais itens compõem um checklist. As configurações são usadas no check-in e checkout para garantir a inspeção padronizada de cada veículo.',
-        ],
-    ],
-    [
-        'element' => '#formulario-config-checklist [name=\"nome\"]',
-        'popover' => [
-            'title' => 'Nome da configuração',
-            'description' => 'Dê um nome descritivo à configuração (ex.: "Checklist Padrão Retirada", "Inspeção Completa Devolução"). Este nome aparece na seleção durante o check-in.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#formulario-config-checklist [name=\"tipo_checklist_id\"]',
-        'popover' => [
-            'title' => 'Tipo de checklist',
-            'description' => 'Selecione a categoria desta configuração (Retirada, Devolução, Manutenção…). O tipo determina em qual momento do fluxo este checklist é aplicado.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.checklist-items-grid',
-        'popover' => [
-            'title' => 'Itens do checklist',
-            'description' => 'Marque os itens que devem ser verificados nesta configuração (pneus, lataria, vidros, documentos…). Itens marcados aparecerão na tela de inspeção.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '.btn-save-config-checklist',
-        'popover' => [
-            'title' => 'Salvar configuração',
-            'description' => 'Clique para gravar. A configuração ficará disponível para uso nos check-ins e checkouts das reservas.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'configuracao-checklist-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.card-config-checklist', popover: { title: 'Configuração de Checklist', description: 'Aqui você define quais itens compõem um checklist. As configurações são usadas no check-in e checkout para garantir a inspeção padronizada de cada veículo.' } },
+        { element: '#formulario-config-checklist [name="nome"]', popover: { title: 'Nome da configuração', description: 'Dê um nome descritivo à configuração, como "Checklist Padrão Retirada" ou "Inspeção Completa Devolução". Este nome aparece na seleção durante o check-in.', side: 'bottom' } },
+        { element: '#formulario-config-checklist [name="tipo_checklist_id"]', popover: { title: 'Tipo de checklist', description: 'Selecione a categoria desta configuração (Retirada, Devolução, Manutenção). O tipo determina em qual momento do fluxo este checklist é aplicado.', side: 'bottom' } },
+        { element: '.checklist-items-grid', popover: { title: 'Itens do checklist', description: 'Marque os itens que devem ser verificados nesta configuração (pneus, lataria, vidros, documentos). Itens marcados aparecerão na tela de inspeção.', side: 'top' } },
+        { element: '.btn-save-config-checklist', popover: { title: 'Salvar configuração', description: 'Clique para gravar. A configuração ficará disponível para uso nos check-ins e checkouts das reservas.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            allowClose: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

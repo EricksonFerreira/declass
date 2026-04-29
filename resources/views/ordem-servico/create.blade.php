@@ -257,69 +257,72 @@
     }
 })();
 </script>
-<x-page-tour tour-id="ordem-servico-create" :steps="[
-    [
-        'element' => '.os-main-card',
-        'popover' => [
-            'title' => 'Abrir Ordem de Serviço',
-            'description' => 'Preencha os dados desta OS: veículo, danos pendentes que serão tratados, observações gerais e serviços adicionais não atrelados a danos específicos.',
-        ],
-    ],
-    [
-        'element' => '#veiculo_id',
-        'popover' => [
-            'title' => 'Selecionar veículo',
-            'description' => 'Escolha o veículo que será colocado em manutenção. Você pode usar o campo de seleção ou a lupa de <b>busca avançada</b> para filtrar por marca, grupo ou placa.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#btnBuscarVeiculoOS',
-        'popover' => [
-            'title' => 'Busca avançada de veículo',
-            'description' => 'Abre um modal com filtros avançados (marca, grupo, tipo, status) para localizar o veículo com mais precisão, especialmente útil em frotas grandes.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '#danos_container',
-        'popover' => [
-            'title' => 'Danos vinculados',
-            'description' => 'Lista os danos pendentes registrados para o veículo selecionado. Marque os danos que serão tratados nesta OS. Danos em aberto ficam vinculados ao monitoramento de avarias.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '#observacoes',
-        'popover' => [
-            'title' => 'Observações gerais',
-            'description' => 'Adicione notas sobre o estado do veículo, orientações para a equipe de manutenção ou qualquer informação relevante para a execução do serviço.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '#servicos_livres',
-        'popover' => [
-            'title' => 'Serviços adicionais',
-            'description' => 'Informe serviços que não estão atrelados a um dano específico (ex.: troca de óleo, revisão preventiva). Digite um serviço por linha.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '.os-side-card',
-        'popover' => [
-            'title' => 'Dicas de preenchimento',
-            'description' => 'O painel lateral orienta os 4 passos do processo: selecionar veículo, vincular danos, adicionar observações e confirmar abertura. Siga-os para garantir uma OS completa.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.os-actions button[type=\"submit\"]',
-        'popover' => [
-            'title' => 'Abrir Ordem de Serviço',
-            'description' => 'Clique aqui para registrar a OS. O veículo ficará em manutenção e os danos selecionados passarão para o status "em andamento" no monitoramento de avarias.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'ordem-servico-create';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.os-main-card', popover: { title: 'Abrir Ordem de Serviço', description: 'Preencha os dados desta OS: veículo, danos pendentes que serão tratados, observações gerais e serviços adicionais não atrelados a danos específicos.' } },
+        { element: '#veiculo_id', popover: { title: 'Selecionar veículo', description: 'Escolha o veículo que será colocado em manutenção. Você pode usar o campo de seleção ou a lupa de busca avançada para filtrar por marca, grupo ou placa.', side: 'bottom' } },
+        { element: '#btnBuscarVeiculoOS', popover: { title: 'Busca avançada de veículo', description: 'Abre um modal com filtros avançados (marca, grupo, tipo, status) para localizar o veículo com mais precisão, especialmente útil em frotas grandes.', side: 'right' } },
+        { element: '#danos_container', popover: { title: 'Danos vinculados', description: 'Lista os danos pendentes registrados para o veículo selecionado. Marque os danos que serão tratados nesta OS.', side: 'top' } },
+        { element: '#observacoes', popover: { title: 'Observações gerais', description: 'Adicione notas sobre o estado do veículo, orientações para a equipe de manutenção ou qualquer informação relevante para a execução do serviço.', side: 'top' } },
+        { element: '#servicos_livres', popover: { title: 'Serviços adicionais', description: 'Informe serviços que não estão atrelados a um dano específico, como troca de óleo ou revisão preventiva. Digite um serviço por linha.', side: 'top' } },
+        { element: '.os-side-card', popover: { title: 'Dicas de preenchimento', description: 'O painel lateral orienta os 4 passos do processo: selecionar veículo, vincular danos, adicionar observações e confirmar abertura.', side: 'left' } },
+        { element: '.os-actions button[type="submit"]', popover: { title: 'Abrir Ordem de Serviço', description: 'Clique aqui para registrar a OS. O veículo ficará em manutenção e os danos selecionados passarão para o status "em andamento".', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            allowClose: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

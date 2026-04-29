@@ -215,53 +215,70 @@
 
 @section('js')
     <script></script>
-<x-page-tour tour-id="dano-add-edit" :steps="[
-    [
-        'element' => '.card-dano',
-        'popover' => [
-            'title' => 'Cadastro de Tipo de Dano',
-            'description' => 'Aqui você cria ou edita um tipo de dano do catálogo. Os tipos cadastrados são exibidos como opções durante o check-in e checkout das reservas.',
-        ],
-    ],
-    [
-        'element' => '#nome',
-        'popover' => [
-            'title' => 'Nome do tipo de dano',
-            'description' => 'Informe um nome descritivo e preciso, como "Amassado na porta", "Arranhão no para-choque" ou "Vidro rachado". Esse nome aparecerá na lista de seleção durante o registro de avarias.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#categoria',
-        'popover' => [
-            'title' => 'Categoria',
-            'description' => 'Selecione a categoria que agrupa este tipo de dano (ex.: Lataria, Vidros, Interior). As categorias são gerenciadas em <b>Categorias de Dano</b> no menu.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#localizacao',
-        'popover' => [
-            'title' => 'Localização',
-            'description' => '<b>Exterior</b> para danos na parte externa do veículo (carroceria, vidros, rodas). <b>Interior</b> para danos internos (banco, painel, teto, tapete).',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#ativo',
-        'popover' => [
-            'title' => 'Status',
-            'description' => 'Defina se este tipo estará <b>Ativo</b> (disponível no check-in/checkout) ou <b>Inativo</b> (oculto nas opções de registro).',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.btn-save-dano',
-        'popover' => [
-            'title' => 'Salvar',
-            'description' => 'Clique em Salvar para gravar o tipo de dano. O botão fica desabilitado se não houver categorias cadastradas — nesse caso, cadastre uma categoria primeiro.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'dano-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.card-dano', popover: { title: 'Cadastro de Tipo de Dano', description: 'Aqui você cria ou edita um tipo de dano do catálogo. Os tipos cadastrados são exibidos como opções durante o check-in e checkout das reservas.' } },
+        { element: '#nome', popover: { title: 'Nome do tipo de dano', description: 'Informe um nome descritivo e preciso, como "Amassado na porta" ou "Vidro rachado". Esse nome aparecerá na lista de seleção durante o registro de avarias.', side: 'bottom' } },
+        { element: '#categoria', popover: { title: 'Categoria', description: 'Selecione a categoria que agrupa este tipo de dano (ex.: Lataria, Vidros, Interior). As categorias são gerenciadas em Categorias de Dano no menu.', side: 'bottom' } },
+        { element: '#localizacao', popover: { title: 'Localização', description: 'Exterior para danos na parte externa do veículo (carroceria, vidros, rodas). Interior para danos internos (banco, painel, teto, tapete).', side: 'bottom' } },
+        { element: '#ativo', popover: { title: 'Status', description: 'Defina se este tipo estará Ativo (disponível no check-in/checkout) ou Inativo (oculto nas opções de registro).', side: 'bottom' } },
+        { element: '.btn-save-dano', popover: { title: 'Salvar', description: 'Clique em Salvar para gravar o tipo de dano. O botão fica desabilitado se não houver categorias cadastradas — nesse caso, cadastre uma categoria primeiro.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            allowClose: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

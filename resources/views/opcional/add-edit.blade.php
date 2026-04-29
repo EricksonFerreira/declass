@@ -304,61 +304,71 @@
             });
         });
     </script>
-<x-page-tour tour-id="opcional-add-edit" :steps="[
-    [
-        'element' => '.card-opcional',
-        'popover' => [
-            'title' => 'Cadastro de Opcional',
-            'description' => 'Aqui você cria ou edita um opcional. Opcionais são serviços ou itens adicionais que o cliente pode contratar junto com a reserva (seguro, GPS, cadeirinha…).',
-        ],
-    ],
-    [
-        'element' => '#nome',
-        'popover' => [
-            'title' => 'Nome do opcional',
-            'description' => 'Informe o nome que será exibido ao cliente durante a reserva (ex.: "Seguro Completo", "GPS Portátil", "Cadeirinha Infantil").',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#tipo_opcional_id',
-        'popover' => [
-            'title' => 'Tipo de opcional',
-            'description' => 'Selecione a categoria que classifica este opcional. Os tipos são configurados no menu <b>Tipos de Opcional</b>.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#tipo_cobranca',
-        'popover' => [
-            'title' => 'Forma de cobrança',
-            'description' => '<b>Por dia</b>: o preço é multiplicado pela quantidade de dias da reserva. <b>Valor integral</b>: cobrança única independente da duração. A seleção exibe o campo de preço correto.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#preco_por_dia, #preco_integral',
-        'popover' => [
-            'title' => 'Preço',
-            'description' => 'Informe o valor do opcional. O campo exibido depende da forma de cobrança selecionada — por dia ou valor único.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#descricao',
-        'popover' => [
-            'title' => 'Descrição',
-            'description' => 'Texto explicativo exibido ao cliente durante a reserva, descrevendo o que o opcional inclui e seus benefícios.',
-            'side' => 'top',
-        ],
-    ],
-    [
-        'element' => '.btn-save-opcional',
-        'popover' => [
-            'title' => 'Salvar',
-            'description' => 'Clique para gravar o opcional. Após salvar ele ficará disponível para vincular aos grupos de frota.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'opcional-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '.card-opcional', popover: { title: 'Cadastro de Opcional', description: 'Aqui você cria ou edita um opcional. Opcionais são serviços ou itens adicionais que o cliente pode contratar junto com a reserva, como seguro, GPS ou cadeirinha.' } },
+        { element: '#nome', popover: { title: 'Nome do opcional', description: 'Informe o nome que será exibido ao cliente durante a reserva, como "Seguro Completo", "GPS Portátil" ou "Cadeirinha Infantil".', side: 'bottom' } },
+        { element: '#tipo_opcional_id', popover: { title: 'Tipo de opcional', description: 'Selecione a categoria que classifica este opcional. Os tipos são configurados no menu Tipos de Opcional.', side: 'bottom' } },
+        { element: '#tipo_cobranca', popover: { title: 'Forma de cobrança', description: 'Por dia: o preço é multiplicado pela quantidade de dias da reserva. Valor integral: cobrança única independente da duração.', side: 'bottom' } },
+        { element: '#preco_por_dia, #preco_integral', popover: { title: 'Preço', description: 'Informe o valor do opcional. O campo exibido depende da forma de cobrança selecionada — por dia ou valor único.', side: 'bottom' } },
+        { element: '#descricao', popover: { title: 'Descrição', description: 'Texto explicativo exibido ao cliente durante a reserva, descrevendo o que o opcional inclui e seus benefícios.', side: 'top' } },
+        { element: '.btn-save-opcional', popover: { title: 'Salvar', description: 'Clique para gravar o opcional. Após salvar ele ficará disponível para vincular aos grupos de frota.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            allowClose: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop
