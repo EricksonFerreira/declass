@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StatusReservaEnum;
 use App\Http\Requests\Reserva\StoreReservaRequest;
 use App\Models\CupomDesconto;
 use App\Models\Empresa;
@@ -560,7 +561,7 @@ class SiteReservaController extends Controller
                 ->withErrors(['reserva' => 'Esta reserva nao pertence ao usuario autenticado.']);
         }
 
-        if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== 1) {
+        if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== StatusReservaEnum::Pendente->value) {
             return redirect()
                 ->route('site.reserva.success', ['reserva' => $reservaItem->id])
                 ->withErrors(['reserva' => 'Reserva nao pode ser paga no status atual.']);
@@ -1093,7 +1094,7 @@ class SiteReservaController extends Controller
             return redirect($this->adminLoginFallbackUrl());
         }
 
-        if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== 1) {
+        if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== StatusReservaEnum::Pendente->value) {
             return redirect()
                 ->route('site.reserva.success', ['reserva' => $reservaItem->id])
                 ->withErrors(['reserva' => 'Reserva nao pode ser paga no status atual.']);
@@ -1176,7 +1177,7 @@ class SiteReservaController extends Controller
 
         DB::table('reservas')->where('id', $reservaItem->id)
             ->update([
-                'status_reserva_id' => 2,
+                'status_reserva_id' => StatusReservaEnum::Confirmada->value,
                 'pagamento_efetuado' => 'S',
                 'valor_total_tarifa_base' => $valorTarifaBase,
                 'valor_opcionais' => $valorOpcionais,

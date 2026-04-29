@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StatusReservaEnum;
 use App\Exceptions\ReservaJobException;
 use App\Models\Reserva;
 use App\Models\Empresa;
@@ -82,7 +83,7 @@ class ReservaService extends AbstractBaseService
                 'user_id' => $data['user_id'],
                 'tarifa_base' => $data['tarifa_base'],
                 'quantidade_dias' => $data['quantidade_dias'],
-                'status_reserva_id' => $this->resolverStatusReservaCriada(),
+                'status_reserva_id' => StatusReservaEnum::Pendente->value,
                 'cupom_desconto_id' => $data['cupom_desconto']['id'] ?? null,
                 'observacoes' => $data['observacoes'] ?? null,
                 'created_at' => now(),
@@ -140,7 +141,7 @@ class ReservaService extends AbstractBaseService
             'user_id' => $data['user_id'],
             'tarifa_base' => $data['tarifa_base'],
             'quantidade_dias' => $data['quantidade_dias'],
-            'status_reserva_id' => 1, // Pendente
+            'status_reserva_id' => StatusReservaEnum::Pendente->value,
             'cupom_desconto_id' => $data['cupom_desconto']['id'] ?? null,
             'valor_desconto' => $data['cupom_desconto']['valor'] ?? null,
             'observacoes' => $data['observacoes'] ?? null,
@@ -168,7 +169,7 @@ class ReservaService extends AbstractBaseService
 
         DB::beginTransaction();
         try {
-            $reserva->status_reserva_id = 3; // Cancelada
+            $reserva->status_reserva_id = StatusReservaEnum::Cancelada->value;
 
             if (Schema::hasColumn($this->model->getTable(), 'data_cancelamento')) {
                 $reserva->data_cancelamento = now();
@@ -890,17 +891,6 @@ class ReservaService extends AbstractBaseService
         return $data;
     }
 
-    private function resolverStatusReservaCriada(): int
-    {
-        // Tenta encontrar pelo nome na empresa atual (multi-tenant)
-        $status = \DB::table('status_reserva')
-            ->whereRaw("LOWER(nome) LIKE '%criada%' OR LOWER(nome) LIKE '%pendente%'")
-            ->orderBy('id')
-            ->first();
-
-        return $status ? (int) $status->id : 1;
-    }
-
     private function resolverOrigemCadastroReserva(array $data): string
     {
         if (!empty($data['origem_cadastro'])) {
@@ -958,7 +948,7 @@ class ReservaService extends AbstractBaseService
         $reservas = $this->model
             ->with(['usuario', 'empresa'])
             ->where('data_inicio', '<', $now)
-            ->whereIn('status_reserva_id', [2, 6])
+            ->whereIn('status_reserva_id', [StatusReservaEnum::Confirmada->value, StatusReservaEnum::NoShow->value])
             ->get();
 
         foreach ($reservas as $reserva) {
@@ -967,8 +957,8 @@ class ReservaService extends AbstractBaseService
                 continue;
             }
 
-            if ((int) $reserva->status_reserva_id === 2) {
-                $reserva->status_reserva_id = 6; // Atrasada
+            if ((int) $reserva->status_reserva_id === StatusReservaEnum::Confirmada->value) {
+                $reserva->status_reserva_id = StatusReservaEnum::NoShow->value;
                 $reserva->save();
             }
 
@@ -977,7 +967,7 @@ class ReservaService extends AbstractBaseService
                 continue;
             }
 
-            if ((int) $reserva->status_reserva_id === 6 && $minutosAtraso >= $limite) {
+            if ((int) $reserva->status_reserva_id === StatusReservaEnum::NoShow->value && $minutosAtraso >= $limite) {
                 $this->cancelarReservaPorAtraso($reserva, $limite);
             }
         }

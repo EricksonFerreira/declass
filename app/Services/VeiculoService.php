@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StatusReservaEnum;
 use App\Models\DisponibilidadeInicialVeiculo;
 use App\Models\Movimentacao;
 use App\Models\Veiculo;
@@ -227,7 +228,7 @@ class VeiculoService extends AbstractBaseService
                 }
 
                 $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                    ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
                     ->where('reservas.data_inicio', '<', $data_fim)
                     ->where('reservas.data_fim', '>', $data_inicio);
             })
@@ -303,7 +304,7 @@ class VeiculoService extends AbstractBaseService
             })
             ->whereDoesntHave('movimentacoes', function ($query) use ($data_inicio, $data_fim, $dataInicioComFolga) {
                 $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                    ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
                     ->where('reservas.data_inicio', '<', $data_fim)
                     ->where('reservas.data_fim', '>', $dataInicioComFolga);
             })
@@ -394,7 +395,7 @@ class VeiculoService extends AbstractBaseService
                 }
 
                 $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                    ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
                     ->where('reservas.data_inicio', '<', $dataFim)
                     ->where('reservas.data_fim', '>', $dataInicioComFolga);
             })
@@ -473,7 +474,7 @@ class VeiculoService extends AbstractBaseService
             }
 
             $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
                 ->where('reservas.data_inicio', '<', $dataFim)
                 ->where('reservas.data_fim', '>', $dataInicioComFolga);
         });
@@ -642,7 +643,7 @@ class VeiculoService extends AbstractBaseService
             ->whereDoesntHave('movimentacoes', function ($q) use ($dataInicio, $dataFim, $reservaId) {
                 $q->where('movimentacoes.reserva_id', '!=', $reservaId)
                   ->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                  ->whereIn('reservas.status_reserva_id', [1, 2, 4, 6])
+                  ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
                   ->where('reservas.data_inicio', '<', $dataFim)
                   ->where('reservas.data_fim', '>', $dataInicio);
             })

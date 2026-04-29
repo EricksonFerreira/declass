@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\DTO\BreadCrumbItem;
+use App\Enums\StatusReservaEnum;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Veiculo\StoreVeiculoRequest;
@@ -356,7 +357,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $dispReservas = Reserva::query()
             ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim', 'status_reserva_id', 'user_id'])
             ->where('veiculo_id', (int) $veiculo->id)
-            ->whereIn('status_reserva_id', [1, 2, 4, 6])
+            ->whereIn('status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
             ->where('data_inicio', '<', $dispFimMes->toDateTimeString())
             ->where('data_fim', '>', $dispInicioMesComFolga->toDateTimeString())
             ->orderBy('data_inicio')
@@ -975,7 +976,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $reservasPorVeiculo = Reserva::query()
                 ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim'])
                 ->whereIn('veiculo_id', $veiculoIds)
-                ->whereIn('status_reserva_id', [1, 2, 4, 6])
+                ->whereIn('status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
                 ->where('data_inicio', '<', $fimMes->toDateTimeString())
                 ->where('data_fim', '>', $inicioMesComFolga->toDateTimeString())
                 ->orderBy('data_inicio')

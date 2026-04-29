@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusReservaEnum;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
@@ -36,55 +37,44 @@ class Reserva extends Model
         'taxa_entrega',
     ];
 
-    private function statusNome(): string
-    {
-        return strtolower(trim((string) ($this->statusReserva?->nome ?? '')));
-    }
-
     public function podeEditar(): bool
     {
-        $nome = $this->statusNome();
-        return str_contains($nome, 'criada') || str_contains($nome, 'pendente') || $this->status_reserva_id === 1;
+        return $this->status_reserva_id === StatusReservaEnum::Pendente->value;
     }
 
     public function podeEfetuarPagamento(): bool
     {
-        $nome = $this->statusNome();
-        return str_contains($nome, 'criada') || str_contains($nome, 'pendente') || $this->status_reserva_id === 1;
+        return $this->status_reserva_id === StatusReservaEnum::Pendente->value;
     }
 
     public function podeCriarContrato(): bool
     {
-        $nome = $this->statusNome();
-        return (str_contains($nome, 'confirm') || $this->status_reserva_id === 2)
+        return $this->status_reserva_id === StatusReservaEnum::Confirmada->value
             && $this->contratoCheckin()->doesntExist();
     }
 
     public function podeAssinarContrato(): bool
     {
-        $nome = $this->statusNome();
-        return (str_contains($nome, 'confirm') || $this->status_reserva_id === 2)
+        return $this->status_reserva_id === StatusReservaEnum::Confirmada->value
             && $this->contratoCheckin()->exists();
     }
-    
-    public function podeVerContrato()
+
+    public function podeVerContrato(): bool
     {
-        return  $this->contratoCheckin()->exists();
+        return $this->contratoCheckin()->exists();
     }
 
     public function podeFazerCancelamento(): bool
     {
-        $nome = $this->statusNome();
-        return str_contains($nome, 'criada') || str_contains($nome, 'pendente')
-            || str_contains($nome, 'confirm')
-            || in_array($this->status_reserva_id, [1, 2]);
+        return in_array($this->status_reserva_id, [
+            StatusReservaEnum::Pendente->value,
+            StatusReservaEnum::Confirmada->value,
+        ]);
     }
 
     public function podeFazerCheckout(): bool
     {
-        $nome = $this->statusNome();
-        return str_contains($nome, 'checkin') || str_contains($nome, 'retirad')
-            || $this->status_reserva_id === 4;
+        return $this->status_reserva_id === StatusReservaEnum::Checkin->value;
     }
     
 

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\DTO\BreadCrumbItem;
+use App\Enums\StatusReservaEnum;
 use App\Exceptions\CartaoNaoCadastradoException;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
@@ -1790,7 +1791,7 @@ private function montarDiasSemanaFlags($diasUteis): array
     {
 
         $reserva = $this->reservaService->getById($id);
-        if ($reserva->status_reserva_id != 1) { // Verifica se a reserva está com status Criada
+        if ($reserva->status_reserva_id != StatusReservaEnum::Pendente->value) {
             return redirect()->route('reserva.show', $id)->with('error', 'Reserva não pode ser paga');
         }
 
@@ -1915,7 +1916,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             return redirect()->route('reserva.show', $id)->with('error', $resultado['message'] ?? 'Pagamento não efetuado');
         }
 
-        DB::table('reservas')->where('id', $id)->update(['status_reserva_id' => 2, 'pagamento_efetuado' => 'S']);
+        DB::table('reservas')->where('id', $id)->update(['status_reserva_id' => StatusReservaEnum::Confirmada->value, 'pagamento_efetuado' => 'S']);
 
         Transacao::create([
             'user_id' => $reserva->user_id,
@@ -2622,17 +2623,9 @@ private function montarDiasSemanaFlags($diasUteis): array
             'Cancelada por exclusao do contrato de check-in'
         );
 
-        // Volta o status da reserva para "Confirmada" (empresa) e remove vinculo do veiculo para bloquear checkout.
-        $statusConfirmada = \App\Models\StatusReserva::query()
-            ->where('empresa_id', $reserva->empresa_id)
-            ->where(function ($q) {
-                $q->where('nome', 'Confirmada')
-                  ->orWhere('nome', 'like', 'Confirmad%');
-            })
-            ->first();
-
+        // Volta o status da reserva para "Confirmada" e remove vinculo do veiculo para bloquear checkout.
         $updates = [
-            'status_reserva_id' => $statusConfirmada?->id ?? 2,
+            'status_reserva_id' => StatusReservaEnum::Confirmada->value,
         ];
         if (Schema::hasColumn('reservas', 'veiculo_id')) {
             $updates['veiculo_id'] = null;

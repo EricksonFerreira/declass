@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StatusReservaEnum;
 use App\Services\BreadcrumbService;
 use App\Support\EmpresaContext;
 use Illuminate\Http\Request;
@@ -373,7 +374,7 @@ class FinanceiroController extends Controller
         }
 
         if (Schema::hasColumn('reservas', 'status_reserva_id')) {
-            return $query->where('reservas.status_reserva_id', '!=', 3);
+            return $query->where('reservas.status_reserva_id', '!=', StatusReservaEnum::Cancelada->value);
         }
 
         return $query;
