@@ -428,6 +428,7 @@
 
 @push('js')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
 <script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
 (function () {

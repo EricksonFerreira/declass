@@ -164,6 +164,7 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
 <style>
 /* Popover container */
 .driver-popover {

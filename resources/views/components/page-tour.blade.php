@@ -10,6 +10,7 @@
     Coloque dentro do @section('css') / @section('js') da view.
 --}}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
 <style>
 .driver-popover{border-radius:16px!important;box-shadow:0 18px 50px rgba(10,22,40,.22)!important;min-width:320px!important;max-width:380px!important;padding:18px 18px 14px!important;border:1px solid rgba(226,232,240,.95)!important}
 .driver-popover-title{font-family:inherit!important;font-weight:800!important;font-size:1rem!important;color:#0a1628!important;margin-bottom:6px!important}

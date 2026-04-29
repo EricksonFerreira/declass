@@ -1497,6 +1497,7 @@
 @stop
 @section('js')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
 <script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
 (function () {
@@ -1555,10 +1556,15 @@
             onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
             onPopoverRender: (popover, { driver }) => {
                 if (popover.wrapper.querySelector('.drv-skip-btn')) return;
-                var btn = document.createElement('button');
-                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
-                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
-                popover.footer.prepend(btn);
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
             },
             steps: availableSteps,
         });

@@ -65,6 +65,7 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
 <script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
 (function () {
