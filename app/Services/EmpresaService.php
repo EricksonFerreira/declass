@@ -11,12 +11,17 @@ class EmpresaService extends AbstractBaseService
 {
     protected Model $model;
     private ReplicacaoBaseService $replicacaoBaseService;
+    private DefaultFrotaTemplateService $defaultFrotaTemplateService;
     private ?array $empresaColumnsCache = null;
 
-    public function __construct(Empresa $empresa, ReplicacaoBaseService $replicacaoBaseService)
-    {
+    public function __construct(
+        Empresa $empresa,
+        ReplicacaoBaseService $replicacaoBaseService,
+        DefaultFrotaTemplateService $defaultFrotaTemplateService,
+    ) {
         $this->model = $empresa;
         $this->replicacaoBaseService = $replicacaoBaseService;
+        $this->defaultFrotaTemplateService = $defaultFrotaTemplateService;
     }
 
     public function setModel(Model $model): void
@@ -125,6 +130,7 @@ class EmpresaService extends AbstractBaseService
     {
         $this->replicateGlobalRowsToEmpresa('dias_uteis', $empresaId, ['dia']);
         $this->replicateGlobalRowsToEmpresa('horarios_diarios', $empresaId, ['nome']);
+        $this->defaultFrotaTemplateService->seed($empresaId);
     }
 
     /**

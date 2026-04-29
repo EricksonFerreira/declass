@@ -1381,54 +1381,70 @@
             aplicarFiltrosModelos();
         });
     </script>
-<x-page-tour tour-id="grupo-frota-add-edit" :steps="[
-    [
-        'element' => '#grupoFrotaWizardSteps',
-        'popover' => [
-            'title' => 'Formulário em 4 abas',
-            'description' => 'O cadastro de grupo de frota está dividido em: <b>Geral</b> (dados básicos e imagens), <b>Características</b> (itens de equipamento), <b>Opcionais</b> (serviços adicionais) e <b>Modelos</b> (veículos do grupo).',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#geral-tab',
-        'popover' => [
-            'title' => 'Aba Geral',
-            'description' => 'Informe o <b>nome</b> do grupo, <b>código</b> interno, <b>código SIPP</b> (padrão internacional), <b>valor diário</b>, <b>status</b> e faça o upload da imagem de capa e galeria de fotos.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#caracteristicas-tab',
-        'popover' => [
-            'title' => 'Aba Características',
-            'description' => 'Marque as características do grupo (ar-condicionado, câmbio automático, GPS…) e informe o valor de cada item quando aplicável. Esses dados aparecem na ficha do veículo.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#opcionais-tab',
-        'popover' => [
-            'title' => 'Aba Opcionais',
-            'description' => 'Selecione os serviços e itens opcionais disponíveis para contratação neste grupo (seguro, cadeirinha, GPS extra…). Opcionais marcados aparecem nas reservas.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#modelos-tab',
-        'popover' => [
-            'title' => 'Aba Modelos',
-            'description' => 'Vincule os modelos de veículos que pertencem a este grupo. Use o filtro por marca e nome para localizar rapidamente. Modelos vinculados são usados na disponibilidade das reservas.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#btnSalvarFlutuante, #btnSalvar',
-        'popover' => [
-            'title' => 'Salvar grupo de frota',
-            'description' => 'O botão flutuante fica sempre visível. Ao clicar, o sistema valida os campos obrigatórios e indica em qual aba há pendências antes de gravar.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'grupo-frota-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '#grupoFrotaWizardSteps', popover: { title: 'Formulário em 4 abas', description: 'O cadastro de grupo de frota está dividido em: Geral (dados básicos e imagens), Características (itens de equipamento), Opcionais (serviços adicionais) e Modelos (veículos do grupo).', side: 'bottom' } },
+        { element: '#geral-tab', popover: { title: 'Aba Geral', description: 'Informe o nome do grupo, código interno, código SIPP (padrão internacional), valor diário, status e faça o upload da imagem de capa e galeria de fotos.', side: 'bottom' } },
+        { element: '#caracteristicas-tab', popover: { title: 'Aba Características', description: 'Marque as características do grupo (ar-condicionado, câmbio automático, GPS…) e informe o valor de cada item quando aplicável. Esses dados aparecem na ficha do veículo.', side: 'bottom' } },
+        { element: '#opcionais-tab', popover: { title: 'Aba Opcionais', description: 'Selecione os serviços e itens opcionais disponíveis para contratação neste grupo (seguro, cadeirinha, GPS extra…). Opcionais marcados aparecem nas reservas.', side: 'bottom' } },
+        { element: '#modelos-tab', popover: { title: 'Aba Modelos', description: 'Vincule os modelos de veículos que pertencem a este grupo. Use o filtro por marca e nome para localizar rapidamente. Modelos vinculados são usados na disponibilidade das reservas.', side: 'bottom' } },
+        { element: '#btnSalvarFlutuante', popover: { title: 'Salvar grupo de frota', description: 'O botão flutuante fica sempre visível. Ao clicar, o sistema valida os campos obrigatórios e indica em qual aba há pendências antes de gravar.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            allowClose: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

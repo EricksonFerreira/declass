@@ -1279,62 +1279,71 @@
             abrirAbaComErro();
         });
     </script>
-<x-page-tour tour-id="usuario-add-edit" :steps="[
-    [
-        'element' => '#wizardSteps',
-        'popover' => [
-            'title' => 'Formulário em etapas',
-            'description' => 'O cadastro de usuário é dividido em até 5 etapas: <b>Dados</b>, <b>Contato</b>, <b>Acesso</b>, <b>Carta de Condução</b> e <b>Segurança</b> (só no cadastro). Complete cada uma antes de avançar.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-bs-target=\"#tab-geral\"], a[href=\"#tab-geral\"]',
-        'popover' => [
-            'title' => 'Etapa 1 — Dados Pessoais',
-            'description' => 'Preencha nome completo, CPF/documento, data de nascimento, sexo e foto de perfil do usuário.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-bs-target=\"#tab-contato\"], a[href=\"#tab-contato\"]',
-        'popover' => [
-            'title' => 'Etapa 2 — Contato e Endereço',
-            'description' => 'Informe e-mail, telefone celular, WhatsApp e endereço completo. O e-mail será usado para login no sistema.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-bs-target=\"#tab-acesso\"], a[href=\"#tab-acesso\"]',
-        'popover' => [
-            'title' => 'Etapa 3 — Perfil e Acesso',
-            'description' => 'Defina a <b>regra de acesso</b> (Cliente, Colaborador, Gerente, Admin) e as <b>estações</b> que este usuário pode operar. A regra determina quais módulos o usuário visualiza.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-bs-target=\"#tab-carta\"], a[href=\"#tab-carta\"]',
-        'popover' => [
-            'title' => 'Etapa 4 — Carta de Condução',
-            'description' => 'Registre o número da CNH, categoria (A, B, AB…), data de emissão e vencimento. Essencial para usuários que farão retirada de veículos.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '[data-bs-target=\"#tab-seguranca\"], a[href=\"#tab-seguranca\"]',
-        'popover' => [
-            'title' => 'Etapa 5 — Segurança (somente no cadastro)',
-            'description' => 'Defina a senha inicial do usuário. A senha deve ter no mínimo 8 caracteres com letras maiúsculas, minúsculas, número e caractere especial.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.usuario-save-dock, .ec-nav-btn--save',
-        'popover' => [
-            'title' => 'Salvar usuário',
-            'description' => 'O botão flutuante <b>Salvar</b> fica sempre visível. Ao clicar, o sistema valida todos os campos obrigatórios e indica em qual etapa há erros pendentes.',
-            'side' => 'top',
-        ],
-    ],
-]" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<link rel="stylesheet" href="/css/driver-tour.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+<script>
+(function () {
+    const TOUR_ID     = 'usuario-add-edit';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+        { element: '#wizardSteps', popover: { title: 'Formulário em etapas', description: 'O cadastro de usuário é dividido em até 5 etapas: Dados, Contato, Acesso, Carta de Condução e Segurança (só no cadastro). Complete cada uma antes de avançar.', side: 'bottom' } },
+        { element: 'a[href="#tab-geral"]', popover: { title: 'Etapa 1 — Dados Pessoais', description: 'Preencha nome completo, CPF/documento, data de nascimento, sexo e foto de perfil do usuário.', side: 'bottom' } },
+        { element: 'a[href="#tab-contato"]', popover: { title: 'Etapa 2 — Contato e Endereço', description: 'Informe e-mail, telefone celular, WhatsApp e endereço completo. O e-mail será usado para login no sistema.', side: 'bottom' } },
+        { element: 'a[href="#tab-acesso"]', popover: { title: 'Etapa 3 — Perfil e Acesso', description: 'Defina a regra de acesso (Cliente, Colaborador, Gerente, Admin) e as estações que este usuário pode operar. A regra determina quais módulos o usuário visualiza.', side: 'bottom' } },
+        { element: 'a[href="#tab-carta"]', popover: { title: 'Etapa 4 — Carta de Condução', description: 'Registre o número da CNH, categoria (A, B, AB…), data de emissão e vencimento. Essencial para usuários que farão retirada de veículos.', side: 'bottom' } },
+        { element: 'a[href="#tab-seguranca"]', popover: { title: 'Etapa 5 — Segurança (somente no cadastro)', description: 'Defina a senha inicial do usuário. A senha deve ter no mínimo 8 caracteres com letras maiúsculas, minúsculas, número e caractere especial.', side: 'bottom' } },
+        { element: '.usuario-save-dock', popover: { title: 'Salvar usuário', description: 'O botão flutuante Salvar fica sempre visível. Ao clicar, o sistema valida todos os campos obrigatórios e indica em qual etapa há erros pendentes.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            allowClose: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btnTour = document.createElement('button');
+                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
+                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                var btnStep = document.createElement('button');
+                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
+                btnStep.addEventListener('click', function () { driver.moveNext(); });
+                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
+                if (nav) { nav.prepend(btnStep); }
+                popover.footer.prepend(btnTour);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
+</script>
 @stop

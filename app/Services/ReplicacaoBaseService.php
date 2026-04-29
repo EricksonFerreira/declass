@@ -172,6 +172,8 @@ class ReplicacaoBaseService
                         $resultadoModulo['inseridos'] += (int) $bundleResultado['inseridos'];
                         $resultadoModulo['ignorados'] += (int) $bundleResultado['ignorados'];
                     }
+                } elseif ($modulo === 'grupos_frota') {
+                    $resultadoModulo = $this->replicarGruposFrota($empresaOrigemId, $destinos);
                 } else {
                     $resultadoModulo = $this->replicarModulo($table, $empresaOrigemId, $destinos);
                 }
@@ -516,6 +518,190 @@ class ReplicacaoBaseService
         return $nome === '' ? '' : 'nome:' . $nome
             . '|marca:' . (data_get($row, 'marca_id') ?? 'null')
             . '|segmento:' . (data_get($row, 'segmento_id') ?? 'null');
+    }
+
+    /**
+     * Replica grupos_frota remapeando tipo_frota_id pelo nome do tipo para
+     * que os IDs da empresa destino sejam consistentes.
+     * Também replica os vínculos grupo↔modelo (grupo_frota_modelo) quando a tabela existe.
+     *
+     * @param array<int, int> $destinos
+     * @return array{inseridos:int, ignorados:int}
+     */
+    private function replicarGruposFrota(int $origem, array $destinos): array
+    {
+        if (
+            empty($destinos)
+            || !Schema::hasTable('grupos_frota')
+            || !Schema::hasColumn('grupos_frota', 'empresa_id')
+        ) {
+            return ['inseridos' => 0, 'ignorados' => 0];
+        }
+
+        $columns     = Schema::getColumnListing('grupos_frota');
+        $hasCreatedAt = in_array('created_at', $columns, true);
+        $hasUpdatedAt = in_array('updated_at', $columns, true);
+        $hasCodigo    = in_array('codigo', $columns, true);
+        $hasTipoId    = in_array('tipo_frota_id', $columns, true);
+
+        $copyColumns = array_values(array_diff($columns, ['id', 'empresa_id', 'created_at', 'updated_at', 'tipo_frota_id']));
+
+        $gruposOrigem = DB::table('grupos_frota')->where('empresa_id', $origem)->get();
+
+        // Mapa tipo_frota_id origem → nome (para re-resolver no destino)
+        $tipoNomePorId = [];
+        if ($hasTipoId && Schema::hasTable('tipo_frota')) {
+            $tipoNomePorId = DB::table('tipo_frota')
+                ->where('empresa_id', $origem)
+                ->pluck('nome', 'id')
+                ->all();
+        }
+
+        $inseridos = 0;
+        $ignorados = 0;
+
+        foreach ($destinos as $destinoId) {
+            // Mapa nome → id dos tipos na empresa destino
+            $tipoIdPorNomeDestino = [];
+            if ($hasTipoId && Schema::hasTable('tipo_frota')) {
+                $tipoIdPorNomeDestino = DB::table('tipo_frota')
+                    ->where('empresa_id', $destinoId)
+                    ->pluck('id', 'nome')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+            }
+
+            // Mapa de grupo origem_id → destino_id para replicar vínculos
+            $mapaGrupos = [];
+
+            foreach ($gruposOrigem as $grupo) {
+                $payload = [];
+                foreach ($copyColumns as $col) {
+                    $payload[$col] = $grupo->{$col} ?? null;
+                }
+
+                // Resolve tipo_frota_id pelo nome
+                if ($hasTipoId) {
+                    $tipoOrigemId = isset($grupo->tipo_frota_id) ? (int) $grupo->tipo_frota_id : null;
+                    $tipoNome     = $tipoOrigemId !== null ? ($tipoNomePorId[$tipoOrigemId] ?? null) : null;
+                    $tipoDestinoId = $tipoNome !== null ? ($tipoIdPorNomeDestino[$tipoNome] ?? null) : null;
+                    $payload['tipo_frota_id'] = $tipoDestinoId;
+                }
+
+                // Chave de unicidade: empresa + codigo (ou nome)
+                $existsQuery = DB::table('grupos_frota')->where('empresa_id', $destinoId);
+                if ($hasCodigo && !empty($payload['codigo'])) {
+                    $existsQuery->where('codigo', $payload['codigo']);
+                } else {
+                    $existsQuery->where('nome', $payload['nome']);
+                }
+
+                $existente = $existsQuery->first();
+                if ($existente) {
+                    $mapaGrupos[(int) $grupo->id] = (int) $existente->id;
+                    $ignorados++;
+                    continue;
+                }
+
+                $insertData = $payload;
+                $insertData['empresa_id'] = $destinoId;
+                if ($hasCreatedAt) { $insertData['created_at'] = now(); }
+                if ($hasUpdatedAt) { $insertData['updated_at'] = now(); }
+
+                $novoId = (int) DB::table('grupos_frota')->insertGetId($insertData);
+                $mapaGrupos[(int) $grupo->id] = $novoId;
+                $inseridos++;
+            }
+
+            // Replica vínculos grupo_frota_modelo
+            $resultadoVinculos = $this->replicarGrupoFrotaModeloVinculos($origem, $destinoId, $mapaGrupos);
+            $inseridos += $resultadoVinculos['inseridos'];
+            $ignorados += $resultadoVinculos['ignorados'];
+        }
+
+        return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
+    }
+
+    /**
+     * Replica vínculos grupo_frota_modelo remapeando IDs de grupos e modelos.
+     *
+     * @param array<int, int> $mapaGrupos  grupo_id origem => grupo_id destino
+     * @return array{inseridos:int, ignorados:int}
+     */
+    private function replicarGrupoFrotaModeloVinculos(int $origem, int $destino, array $mapaGrupos): array
+    {
+        if (
+            empty($mapaGrupos)
+            || !Schema::hasTable('grupo_frota_modelo')
+            || !Schema::hasTable('modelos')
+            || !Schema::hasColumn('modelos', 'empresa_id')
+        ) {
+            return ['inseridos' => 0, 'ignorados' => 0];
+        }
+
+        $grupoIdsOrigem = array_keys($mapaGrupos);
+
+        $vinculos = DB::table('grupo_frota_modelo')
+            ->whereIn('grupo_frota_id', $grupoIdsOrigem)
+            ->get();
+
+        if ($vinculos->isEmpty()) {
+            return ['inseridos' => 0, 'ignorados' => 0];
+        }
+
+        // Mapa modelo nome+marca_nome → modelo_id destino
+        $modelosOrigem = DB::table('modelos as m')
+            ->join('marcas as ma', 'ma.id', '=', 'm.marca_id')
+            ->where('m.empresa_id', $origem)
+            ->select(['m.id as modelo_id', 'm.nome as modelo_nome', 'ma.nome as marca_nome'])
+            ->get();
+
+        $modelosDestino = DB::table('modelos as m')
+            ->join('marcas as ma', 'ma.id', '=', 'm.marca_id')
+            ->where('m.empresa_id', $destino)
+            ->select(['m.id as modelo_id', 'm.nome as modelo_nome', 'ma.nome as marca_nome'])
+            ->get()
+            ->keyBy(fn ($r) => $r->modelo_nome . '|' . $r->marca_nome);
+
+        $mapaModelos = [];
+        foreach ($modelosOrigem as $mo) {
+            $chave = $mo->modelo_nome . '|' . $mo->marca_nome;
+            $md    = $modelosDestino->get($chave);
+            if ($md) {
+                $mapaModelos[(int) $mo->modelo_id] = (int) $md->modelo_id;
+            }
+        }
+
+        $inseridos = 0;
+        $ignorados = 0;
+
+        foreach ($vinculos as $v) {
+            $grupoDestinoId  = $mapaGrupos[(int) $v->grupo_frota_id] ?? null;
+            $modeloDestinoId = $mapaModelos[(int) $v->modelo_id] ?? null;
+
+            if ($grupoDestinoId === null || $modeloDestinoId === null) {
+                $ignorados++;
+                continue;
+            }
+
+            $existe = DB::table('grupo_frota_modelo')
+                ->where('grupo_frota_id', $grupoDestinoId)
+                ->where('modelo_id', $modeloDestinoId)
+                ->exists();
+
+            if ($existe) {
+                $ignorados++;
+                continue;
+            }
+
+            DB::table('grupo_frota_modelo')->insert([
+                'grupo_frota_id' => $grupoDestinoId,
+                'modelo_id'      => $modeloDestinoId,
+            ]);
+            $inseridos++;
+        }
+
+        return ['inseridos' => $inseridos, 'ignorados' => $ignorados];
     }
 
     /**

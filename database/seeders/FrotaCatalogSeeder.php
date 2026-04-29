@@ -71,118 +71,42 @@ class FrotaCatalogSeeder extends Seeder
             'ativo' => 'S',
         ]);
 
-        $tipoCarro = $this->upsertIfTable(TipoFrota::class, ['codigo' => 'CAR'], [
-            'codigo' => 'CAR',
-            'nome' => 'Carro',
-            'ativo' => 'S',
-        ]);
-
-        $tipoVan = $this->upsertIfTable(TipoFrota::class, ['codigo' => 'VAN'], [
-            'codigo' => 'VAN',
-            'nome' => 'Van',
-            'ativo' => 'S',
-        ]);
-
-        $segHatch = $this->upsertIfTable(Segmento::class, ['nome' => 'Hatch'], ['nome' => 'Hatch', 'ativo' => 'S']);
-        $segSedan = $this->upsertIfTable(Segmento::class, ['nome' => 'Sedan'], ['nome' => 'Sedan', 'ativo' => 'S']);
-        $segSuv = $this->upsertIfTable(Segmento::class, ['nome' => 'SUV'], ['nome' => 'SUV', 'ativo' => 'S']);
-        $segPickup = $this->upsertIfTable(Segmento::class, ['nome' => 'Pickup'], ['nome' => 'Pickup', 'ativo' => 'S']);
-
-        $marcaFiat = $this->upsertIfTable(Marca::class, ['nome' => 'Fiat'], ['nome' => 'Fiat', 'ativo' => 'S']);
-        $marcaVw = $this->upsertIfTable(Marca::class, ['nome' => 'Volkswagen'], ['nome' => 'Volkswagen', 'ativo' => 'S']);
-        $marcaGm = $this->upsertIfTable(Marca::class, ['nome' => 'Chevrolet'], ['nome' => 'Chevrolet', 'ativo' => 'S']);
-        $marcaToyota = $this->upsertIfTable(Marca::class, ['nome' => 'Toyota'], ['nome' => 'Toyota', 'ativo' => 'S']);
-
-        $modeloArgo = $this->upsertIfTable(Modelo::class, ['nome' => 'Argo'], [
-            'nome' => 'Argo',
-            'ativo' => 'S',
-            'marca_id' => $marcaFiat?->id,
-            'segmento_id' => $segHatch?->id,
-        ]);
-        $modeloCronos = $this->upsertIfTable(Modelo::class, ['nome' => 'Cronos'], [
-            'nome' => 'Cronos',
-            'ativo' => 'S',
-            'marca_id' => $marcaFiat?->id,
-            'segmento_id' => $segSedan?->id,
-        ]);
-        $modeloGol = $this->upsertIfTable(Modelo::class, ['nome' => 'Gol'], [
-            'nome' => 'Gol',
-            'ativo' => 'S',
-            'marca_id' => $marcaVw?->id,
-            'segmento_id' => $segHatch?->id,
-        ]);
-        $modeloTCross = $this->upsertIfTable(Modelo::class, ['nome' => 'T-Cross'], [
-            'nome' => 'T-Cross',
-            'ativo' => 'S',
-            'marca_id' => $marcaVw?->id,
-            'segmento_id' => $segSuv?->id,
-        ]);
-        $modeloOnix = $this->upsertIfTable(Modelo::class, ['nome' => 'Onix'], [
-            'nome' => 'Onix',
-            'ativo' => 'S',
-            'marca_id' => $marcaGm?->id,
-            'segmento_id' => $segHatch?->id,
-        ]);
-        $modeloTracker = $this->upsertIfTable(Modelo::class, ['nome' => 'Tracker'], [
-            'nome' => 'Tracker',
-            'ativo' => 'S',
-            'marca_id' => $marcaGm?->id,
-            'segmento_id' => $segSuv?->id,
-        ]);
-        $modeloCorolla = $this->upsertIfTable(Modelo::class, ['nome' => 'Corolla'], [
-            'nome' => 'Corolla',
-            'ativo' => 'S',
-            'marca_id' => $marcaToyota?->id,
-            'segmento_id' => $segSedan?->id,
-        ]);
-        $modeloHilux = $this->upsertIfTable(Modelo::class, ['nome' => 'Hilux'], [
-            'nome' => 'Hilux',
-            'ativo' => 'S',
-            'marca_id' => $marcaToyota?->id,
-            'segmento_id' => $segPickup?->id,
-        ]);
-
-        $grupoEconomico = $this->upsertIfTable(GrupoFrota::class, ['codigo' => 'ECO'], [
-            'tipo_frota_id' => $tipoCarro?->id,
-            'codigo' => 'ECO',
-            'nome' => 'Economico',
-            'valor_diario' => 99.90,
-            'ativo' => 'S',
-            'ordem' => 10,
-        ]);
-        $grupoCompacto = $this->upsertIfTable(GrupoFrota::class, ['codigo' => 'COM'], [
-            'tipo_frota_id' => $tipoCarro?->id,
-            'codigo' => 'COM',
-            'nome' => 'Compacto',
-            'valor_diario' => 129.90,
-            'ativo' => 'S',
-            'ordem' => 20,
-        ]);
-        $grupoSuv = $this->upsertIfTable(GrupoFrota::class, ['codigo' => 'SUV'], [
-            'tipo_frota_id' => $tipoCarro?->id,
-            'codigo' => 'SUV',
-            'nome' => 'SUV',
-            'valor_diario' => 199.90,
-            'ativo' => 'S',
-            'ordem' => 30,
-        ]);
-        $grupoPremium = $this->upsertIfTable(GrupoFrota::class, ['codigo' => 'PRE'], [
-            'tipo_frota_id' => $tipoCarro?->id,
-            'codigo' => 'PRE',
-            'nome' => 'Premium',
-            'valor_diario' => 299.90,
-            'ativo' => 'S',
-            'ordem' => 40,
-        ]);
-
-        if (Schema::hasTable('grupo_frota_modelo')) {
-            $this->attachModeloNoGrupo($grupoEconomico, [$modeloArgo, $modeloGol, $modeloOnix]);
-            $this->attachModeloNoGrupo($grupoCompacto, [$modeloCronos, $modeloCorolla]);
-            $this->attachModeloNoGrupo($grupoSuv, [$modeloTCross, $modeloTracker]);
-            $this->attachModeloNoGrupo($grupoPremium, [$modeloCorolla, $modeloTracker]);
+        // Usa o DefaultFrotaTemplateService para popular tipos, grupos,
+        // segmentos, marcas, modelos e vínculos de forma completa e alinhada
+        // com o padrão do mercado de locação.
+        if ($this->empresaId !== null) {
+            app(\App\Services\DefaultFrotaTemplateService::class)->seed($this->empresaId);
         }
 
-        // Veiculos
+        // Referências locais usadas nos veículos de exemplo abaixo
+        $tipoCarro = TipoFrota::where('codigo', 'CAR')->first();
+        $tipoVan   = TipoFrota::where('codigo', 'VAN')->first();
+
+        $segHatch  = Segmento::where('nome', 'Hatch')->first();
+        $segSedan  = Segmento::where('nome', 'Sedan')->first();
+        $segSuv    = Segmento::where('nome', 'SUV')->first();
+        $segPickup = Segmento::where('nome', 'Pickup')->first();
+
+        $marcaFiat   = Marca::where('nome', 'Fiat')->first();
+        $marcaVw     = Marca::where('nome', 'Volkswagen')->first();
+        $marcaGm     = Marca::where('nome', 'Chevrolet')->first();
+        $marcaToyota = Marca::where('nome', 'Toyota')->first();
+
+        $modeloArgo    = Modelo::where('nome', 'Argo')->first();
+        $modeloGol     = Modelo::where('nome', 'Gol')->first();
+        $modeloOnix    = Modelo::where('nome', 'Onix')->first();
+        $modeloCronos  = Modelo::where('nome', 'Cronos')->first();
+        $modeloCorolla = Modelo::where('nome', 'Corolla')->first();
+        $modeloTracker = Modelo::where('nome', 'Tracker')->first();
+        $modeloHilux   = Modelo::where('nome', 'Hilux')->first();
+
+        $grupoMini      = GrupoFrota::where('codigo', 'MINI')->first();
+        $grupoEconomico = GrupoFrota::where('codigo', 'ECO')->first();
+        $grupoCompacto  = GrupoFrota::where('codigo', 'COM')->first();
+        $grupoSuvC      = GrupoFrota::where('codigo', 'SUVC')->first();
+        $grupoPickup    = GrupoFrota::where('codigo', 'PICK')->first();
+
+        // Veiculos de exemplo
         $baseEstacaoId = $estacaoMatriz?->id ?? $estacaoAeroporto?->id ?? null;
 
         $this->upsertIfTable(Veiculo::class, ['placa_licenca' => 'ABC1D23'], [
@@ -229,7 +153,7 @@ class FrotaCatalogSeeder extends Seeder
             'nome' => 'Toyota Corolla 2.0',
             'ativo' => 'S',
             'tipo_frota_id' => $tipoCarro?->id,
-            'grupo_frota_id' => $grupoPremium?->id,
+            'grupo_frota_id' => $grupoCompacto?->id,
             'marca_id' => $marcaToyota?->id,
             'modelo_id' => $modeloCorolla?->id,
             'segmento_id' => $segSedan?->id,
@@ -249,7 +173,7 @@ class FrotaCatalogSeeder extends Seeder
             'nome' => 'Chevrolet Tracker 1.2 Turbo',
             'ativo' => 'S',
             'tipo_frota_id' => $tipoCarro?->id,
-            'grupo_frota_id' => $grupoSuv?->id,
+            'grupo_frota_id' => $grupoSuvC?->id,
             'marca_id' => $marcaGm?->id,
             'modelo_id' => $modeloTracker?->id,
             'segmento_id' => $segSuv?->id,
@@ -268,8 +192,8 @@ class FrotaCatalogSeeder extends Seeder
         $this->upsertIfTable(Veiculo::class, ['placa_licenca' => 'MNO4P56'], [
             'nome' => 'Toyota Hilux 2.8',
             'ativo' => 'S',
-            'tipo_frota_id' => $tipoVan?->id ?? $tipoCarro?->id,
-            'grupo_frota_id' => $grupoSuv?->id,
+            'tipo_frota_id' => $tipoCarro?->id,
+            'grupo_frota_id' => $grupoPickup?->id,
             'marca_id' => $marcaToyota?->id,
             'modelo_id' => $modeloHilux?->id,
             'segmento_id' => $segPickup?->id,
@@ -284,35 +208,6 @@ class FrotaCatalogSeeder extends Seeder
             'local_disponibilidade' => $baseEstacaoId,
             'data_hora_disponibilidade' => now(),
         ]);
-    }
-
-    private function attachModeloNoGrupo(?GrupoFrota $grupo, array $modelos): void
-    {
-        if (!$grupo) {
-            return;
-        }
-        if (!Schema::hasTable('grupo_frota_modelo')) {
-            return;
-        }
-
-        $modeloIds = collect($modelos)
-            ->filter()
-            ->map(fn($m) => (int) $m->id)
-            ->filter(fn($id) => $id > 0)
-            ->unique()
-            ->values()
-            ->all();
-
-        if (!$modeloIds) {
-            return;
-        }
-
-        // Evita duplicar: syncWithoutDetaching se pivot existir e relacionamento estiver OK.
-        try {
-            $grupo->modelos()->syncWithoutDetaching($modeloIds);
-        } catch (\Throwable $e) {
-            // fallback silencioso (schema pode estar diferente)
-        }
     }
 
     /**

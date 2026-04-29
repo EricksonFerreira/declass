@@ -103,7 +103,7 @@ class OnboardingStep extends Model
                 'key'      => 'step_frota_cadastrada',
                 'label'    => 'Cadastrar seu primeiro veículo',
                 'descricao'=> 'Adicione os veículos disponíveis para locação.',
-                'rota'     => 'veiculo.index',
+                'rota'     => 'veiculo.create',
                 'icone'    => 'car',
                 'feito'    => $this->step_frota_cadastrada,
                 'visivel'  => true,
