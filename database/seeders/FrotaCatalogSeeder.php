@@ -79,32 +79,37 @@ class FrotaCatalogSeeder extends Seeder
         }
 
         // Referências locais usadas nos veículos de exemplo abaixo
-        $tipoCarro = TipoFrota::where('codigo', 'CAR')->first();
-        $tipoVan   = TipoFrota::where('codigo', 'VAN')->first();
+        $tipoCarro = TipoFrota::withoutGlobalScopes()->where('codigo', 'CAR')->first();
+        $tipoVan   = TipoFrota::withoutGlobalScopes()->where('codigo', 'VAN')->first();
 
-        $segHatch  = Segmento::where('nome', 'Hatch')->first();
-        $segSedan  = Segmento::where('nome', 'Sedan')->first();
-        $segSuv    = Segmento::where('nome', 'SUV')->first();
-        $segPickup = Segmento::where('nome', 'Pickup')->first();
+        $segHatch  = Segmento::withoutGlobalScopes()->where('nome', 'Hatch')->first();
+        $segSedan  = Segmento::withoutGlobalScopes()->where('nome', 'Sedan')->first();
+        $segSuv    = Segmento::withoutGlobalScopes()->where('nome', 'SUV')->first();
+        $segPickup = Segmento::withoutGlobalScopes()->where('nome', 'Pickup')->first();
 
-        $marcaFiat   = Marca::where('nome', 'Fiat')->first();
-        $marcaVw     = Marca::where('nome', 'Volkswagen')->first();
-        $marcaGm     = Marca::where('nome', 'Chevrolet')->first();
-        $marcaToyota = Marca::where('nome', 'Toyota')->first();
+        $marcaFiat   = Marca::withoutGlobalScopes()->where('nome', 'Fiat')->first();
+        $marcaVw     = Marca::withoutGlobalScopes()->where('nome', 'Volkswagen')->first();
+        $marcaGm     = Marca::withoutGlobalScopes()->where('nome', 'Chevrolet')->first();
+        $marcaToyota = Marca::withoutGlobalScopes()->where('nome', 'Toyota')->first();
 
-        $modeloArgo    = Modelo::where('nome', 'Argo')->first();
-        $modeloGol     = Modelo::where('nome', 'Gol')->first();
-        $modeloOnix    = Modelo::where('nome', 'Onix')->first();
-        $modeloCronos  = Modelo::where('nome', 'Cronos')->first();
-        $modeloCorolla = Modelo::where('nome', 'Corolla')->first();
-        $modeloTracker = Modelo::where('nome', 'Tracker')->first();
-        $modeloHilux   = Modelo::where('nome', 'Hilux')->first();
+        $modeloArgo    = Modelo::withoutGlobalScopes()->where('nome', 'Argo')->first();
+        $modeloGol     = Modelo::withoutGlobalScopes()->where('nome', 'Gol')->first();
+        $modeloOnix    = Modelo::withoutGlobalScopes()->where('nome', 'Onix')->first();
+        $modeloCronos  = Modelo::withoutGlobalScopes()->where('nome', 'Cronos')->first();
+        $modeloCorolla = Modelo::withoutGlobalScopes()->where('nome', 'Corolla')->first();
+        $modeloTracker = Modelo::withoutGlobalScopes()->where('nome', 'Tracker')->first();
+        $modeloHilux   = Modelo::withoutGlobalScopes()->where('nome', 'Hilux')->first();
 
-        $grupoMini      = GrupoFrota::where('codigo', 'MINI')->first();
-        $grupoEconomico = GrupoFrota::where('codigo', 'ECO')->first();
-        $grupoCompacto  = GrupoFrota::where('codigo', 'COM')->first();
-        $grupoSuvC      = GrupoFrota::where('codigo', 'SUVC')->first();
-        $grupoPickup    = GrupoFrota::where('codigo', 'PICK')->first();
+        $grupoQuery = fn (string $cod) => GrupoFrota::withoutGlobalScopes()
+            ->where('codigo', $cod)
+            ->when($this->empresaId, fn ($q) => $q->where('empresa_id', $this->empresaId))
+            ->first();
+
+        $grupoMini      = $grupoQuery('MINI');
+        $grupoEconomico = $grupoQuery('ECO');
+        $grupoCompacto  = $grupoQuery('COM');
+        $grupoSuvC      = $grupoQuery('SUVC');
+        $grupoPickup    = $grupoQuery('PICK');
 
         // Veiculos de exemplo
         $baseEstacaoId = $estacaoMatriz?->id ?? $estacaoAeroporto?->id ?? null;
