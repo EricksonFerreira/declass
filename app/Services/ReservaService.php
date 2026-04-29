@@ -82,7 +82,7 @@ class ReservaService extends AbstractBaseService
                 'user_id' => $data['user_id'],
                 'tarifa_base' => $data['tarifa_base'],
                 'quantidade_dias' => $data['quantidade_dias'],
-                'status_reserva_id' => 1, // Pendente
+                'status_reserva_id' => $this->resolverStatusReservaCriada(),
                 'cupom_desconto_id' => $data['cupom_desconto']['id'] ?? null,
                 'observacoes' => $data['observacoes'] ?? null,
                 'created_at' => now(),
@@ -888,6 +888,17 @@ class ReservaService extends AbstractBaseService
                                                 $data['valor_opcionais'],
                                                 $data['percentual_desconto']);
         return $data;
+    }
+
+    private function resolverStatusReservaCriada(): int
+    {
+        // Tenta encontrar pelo nome na empresa atual (multi-tenant)
+        $status = \DB::table('status_reserva')
+            ->whereRaw("LOWER(nome) LIKE '%criada%' OR LOWER(nome) LIKE '%pendente%'")
+            ->orderBy('id')
+            ->first();
+
+        return $status ? (int) $status->id : 1;
     }
 
     private function resolverOrigemCadastroReserva(array $data): string
