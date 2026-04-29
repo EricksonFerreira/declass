@@ -70,62 +70,67 @@
 
 @section('js')
     <script></script>
-<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
-initInlinePageTour({
-    tourId: 'dano-index',
-    steps: @json([
-    [
-        'element' => '.page-title',
-        'popover' => [
-            'title' => 'Lista de Tipos de Dano',
-            'description' => 'Aqui você gerencia o catálogo de tipos de dano utilizados no check-in e checkout das reservas. Cada tipo pertence a uma categoria e tem uma localização (interior ou exterior).',
-        ],
-    ],
-    [
-        'element' => 'a[href*=\"dano/create\"], .btn-create-resource',
-        'popover' => [
-            'title' => 'Adicionar tipo de dano',
-            'description' => 'Clique aqui para cadastrar um novo tipo de dano informando o nome, a categoria e a localização no veículo.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'table thead tr',
-        'popover' => [
-            'title' => 'Tabela de tipos de dano',
-            'description' => 'Lista todos os tipos de dano com nome, categoria, localização (interior/exterior) e status (ativo/inativo).',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'table tbody tr:first-child td:nth-child(3)',
-        'popover' => [
-            'title' => 'Localização do dano',
-            'description' => '<b>Exterior</b> (badge escuro) — danos visíveis na carroceria. <b>Interior</b> (badge âmbar) — danos no habitáculo e componentes internos.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => 'table tbody tr:first-child td:nth-child(4)',
-        'popover' => [
-            'title' => 'Status',
-            'description' => 'Tipos <b>Ativos</b> (verde) aparecem nas opções de registro de dano durante o check-in e checkout. Tipos <b>Inativos</b> (vermelho) ficam ocultos.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => 'table tbody tr:first-child td:last-child',
-        'popover' => [
-            'title' => 'Ações',
-            'description' => 'Use <b>Editar</b> para alterar nome, categoria ou localização. Use <b>Excluir</b> para remover o tipo (somente se não estiver vinculado a danos registrados).',
-            'side' => 'left',
-        ],
-    ],
-    ]),
-});
+(function () {
+    const TOUR_ID     = 'dano-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+{ element: '.page-title', popover: { title: 'Lista de Tipos de Dano', description: 'Aqui você gerencia o catálogo de tipos de dano utilizados no check-in e checkout das reservas. Cada tipo pertence a uma categoria e tem uma localização (interior ou exterior).' } },
+        { element: 'a[href*="dano/create"], .btn-create-resource', popover: { title: 'Adicionar tipo de dano', description: 'Clique aqui para cadastrar um novo tipo de dano informando o nome, a categoria e a localização no veículo.', side: 'bottom' } },
+        { element: 'table thead tr', popover: { title: 'Tabela de tipos de dano', description: 'Lista todos os tipos de dano com nome, categoria, localização (interior/exterior) e status (ativo/inativo).', side: 'bottom' } },
+        { element: 'table tbody tr:first-child td:nth-child(3)', popover: { title: 'Localização do dano', description: '<b>Exterior</b> (badge escuro) — danos visíveis na carroceria. <b>Interior</b> (badge âmbar) — danos no habitáculo e componentes internos.', side: 'right' } },
+        { element: 'table tbody tr:first-child td:nth-child(4)', popover: { title: 'Status', description: 'Tipos <b>Ativos</b> (verde) aparecem nas opções de registro de dano durante o check-in e checkout. Tipos <b>Inativos</b> (vermelho) ficam ocultos.', side: 'right' } },
+        { element: 'table tbody tr:first-child td:last-child', popover: { title: 'Ações', description: 'Use <b>Editar</b> para alterar nome, categoria ou localização. Use <b>Excluir</b> para remover o tipo (somente se não estiver vinculado a danos registrados).', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
 </script>
 @stop
 
 @section('css')
 @stop
+

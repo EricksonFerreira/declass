@@ -251,59 +251,64 @@
     applyFilter();
 })();
 </script>
-<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
-initInlinePageTour({
-    tourId: 'ordem-servico-index',
-    steps: @json([
-    [
-        'element' => '.page-title',
-        'popover' => [
-            'title' => 'Lista de Ordens de Serviço',
-            'description' => 'Aqui você gerencia todas as ordens de serviço abertas para manutenção e reparo dos veículos da frota. Cada OS pode ser vinculada a danos detectados nas reservas.',
-        ],
-    ],
-    [
-        'element' => 'a[href*=\"ordem-servico/create\"], .btn-create-resource',
-        'popover' => [
-            'title' => 'Abrir nova Ordem de Serviço',
-            'description' => 'Clique aqui para criar uma nova OS. Você selecionará o veículo, os danos pendentes vinculados a ele e as observações ou serviços adicionais necessários.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.os-filter-tabs',
-        'popover' => [
-            'title' => 'Filtrar por status',
-            'description' => 'Filtre rapidamente as OS por: <b>Todas</b>, <b>Abertas</b> (aguardando início), <b>Em andamento</b> (execução em curso), <b>Concluídas</b> ou <b>Canceladas</b>.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '#osSearch',
-        'popover' => [
-            'title' => 'Busca rápida',
-            'description' => 'Digite qualquer informação — número da OS, placa, nome do veículo ou responsável — para filtrar os registros em tempo real sem recarregar a página.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'table thead tr',
-        'popover' => [
-            'title' => 'Tabela de Ordens de Serviço',
-            'description' => 'Exibe número da OS, veículo, responsável pela abertura, data de abertura/encerramento, itens vinculados e status atual.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'table tbody tr:first-child td',
-        'popover' => [
-            'title' => 'Status da OS',
-            'description' => '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — em execução. <b>Concluída</b> (verde) — serviço finalizado com relatório. <b>Cancelada</b> (cinza) — OS encerrada sem conclusão.',
-            'side' => 'right',
-        ],
-    ],
-    ]),
-});
+(function () {
+    const TOUR_ID     = 'ordem-servico-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+{ element: '.page-title', popover: { title: 'Lista de Ordens de Serviço', description: 'Aqui você gerencia todas as ordens de serviço abertas para manutenção e reparo dos veículos da frota. Cada OS pode ser vinculada a danos detectados nas reservas.' } },
+        { element: 'a[href*="ordem-servico/create"], .btn-create-resource', popover: { title: 'Abrir nova Ordem de Serviço', description: 'Clique aqui para criar uma nova OS. Você selecionará o veículo, os danos pendentes vinculados a ele e as observações ou serviços adicionais necessários.', side: 'bottom' } },
+        { element: '.os-filter-tabs', popover: { title: 'Filtrar por status', description: 'Filtre rapidamente as OS por: <b>Todas</b>, <b>Abertas</b> (aguardando início), <b>Em andamento</b> (execução em curso), <b>Concluídas</b> ou <b>Canceladas</b>.', side: 'bottom' } },
+        { element: '#osSearch', popover: { title: 'Busca rápida', description: 'Digite qualquer informação — número da OS, placa, nome do veículo ou responsável — para filtrar os registros em tempo real sem recarregar a página.', side: 'bottom' } },
+        { element: 'table thead tr', popover: { title: 'Tabela de Ordens de Serviço', description: 'Exibe número da OS, veículo, responsável pela abertura, data de abertura/encerramento, itens vinculados e status atual.', side: 'bottom' } },
+        { element: 'table tbody tr:first-child td', popover: { title: 'Status da OS', description: '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — em execução. <b>Concluída</b> (verde) — serviço finalizado com relatório. <b>Cancelada</b> (cinza) — OS encerrada sem conclusão.', side: 'right' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
 </script>
 @stop
+

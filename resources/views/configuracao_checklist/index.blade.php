@@ -64,46 +64,65 @@
 @section('js')
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
-<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
-initInlinePageTour({
-    tourId: 'configuracao-checklist-index',
-    steps: @json([
-    [
-        'element' => '.page-title',
-        'popover' => [
-            'title' => 'Lista de Configurações de Checklist',
-            'description' => 'Aqui você gerencia as configurações de checklist: conjuntos de itens agrupados por tipo que definem o que deve ser verificado no check-in e checkout de cada reserva.',
-        ],
-    ],
-    [
-        'element' => '.btn-create-resource, a[href*=\"configuracao-checklist/create\"], a[href*=\"configuracao_checklist/create\"]',
-        'popover' => [
-            'title' => 'Adicionar configuração',
-            'description' => 'Clique aqui para criar uma nova configuração de checklist, selecionando o tipo e os itens que devem ser verificados.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'table thead tr',
-        'popover' => [
-            'title' => 'Tabela de configurações',
-            'description' => 'Lista as configurações existentes com nome, tipo de checklist, quantidade de itens e status (ativa/inativa).',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'table tbody tr:first-child td:last-child',
-        'popover' => [
-            'title' => 'Ações',
-            'description' => 'Use <b>Editar</b> para alterar os itens da configuração e <b>Excluir</b> para remover.',
-            'side' => 'left',
-        ],
-    ],
-    ]),
-});
+(function () {
+    const TOUR_ID     = 'configuracao-checklist-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+{ element: '.page-title', popover: { title: 'Lista de Configurações de Checklist', description: 'Aqui você gerencia as configurações de checklist: conjuntos de itens agrupados por tipo que definem o que deve ser verificado no check-in e checkout de cada reserva.' } },
+        { element: '.btn-create-resource, a[href*="configuracao-checklist/create"], a[href*="configuracao_checklist/create"]', popover: { title: 'Adicionar configuração', description: 'Clique aqui para criar uma nova configuração de checklist, selecionando o tipo e os itens que devem ser verificados.', side: 'bottom' } },
+        { element: 'table thead tr', popover: { title: 'Tabela de configurações', description: 'Lista as configurações existentes com nome, tipo de checklist, quantidade de itens e status (ativa/inativa).', side: 'bottom' } },
+        { element: 'table tbody tr:first-child td:last-child', popover: { title: 'Ações', description: 'Use <b>Editar</b> para alterar os itens da configuração e <b>Excluir</b> para remover.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
 </script>
 @stop
 
 @section('css')
 @stop
+

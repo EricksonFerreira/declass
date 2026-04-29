@@ -639,51 +639,63 @@
             setView(localStorage.getItem(store) || 'cards');
         });
     </script>
-<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
-initInlinePageTour({
-    tourId: 'usuario-index',
-    steps: @json([
-    [
-        'element' => '.page-title',
-        'popover' => [
-            'title' => 'Lista de Usuários',
-            'description' => 'Aqui você gerencia todos os usuários do sistema: clientes, colaboradores, gerentes e administradores. Cada usuário tem uma regra de acesso que define o que ele pode ver e fazer.',
-        ],
-    ],
-    [
-        'element' => '.btn-create-resource, a[href*=\"usuario/create\"]',
-        'popover' => [
-            'title' => 'Adicionar usuário',
-            'description' => 'Clique aqui para cadastrar um novo usuário. O formulário é dividido em etapas: Dados Pessoais, Contato e Endereço, Perfil e Acesso, Carta de Condução e Segurança (senha).',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.tabela-usuarios thead tr',
-        'popover' => [
-            'title' => 'Tabela de usuários',
-            'description' => 'Exibe nome, e-mail, telefone, regra de acesso, cidade e data de cadastro. Clique no cabeçalho para ordenar.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.tabela-usuarios tbody tr:first-child td',
-        'popover' => [
-            'title' => 'Regra de acesso',
-            'description' => 'O badge colorido indica o perfil do usuário (Cliente, Colaborador, Gerente, Administrador). A regra controla quais módulos e ações cada usuário pode acessar.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.tabela-usuarios tbody tr:first-child td:last-child',
-        'popover' => [
-            'title' => 'Ações disponíveis',
-            'description' => 'Para cada usuário: <b>Pagamento</b> (gerenciar cartões Stripe), <b>Editar</b> (alterar dados), <b>Resetar senha</b> (voltar para senha padrão) e <b>Excluir</b>.',
-            'side' => 'left',
-        ],
-    ],
-    ]),
-});
+(function () {
+    const TOUR_ID     = 'usuario-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+{ element: '.page-title', popover: { title: 'Lista de Usuários', description: 'Aqui você gerencia todos os usuários do sistema: clientes, colaboradores, gerentes e administradores. Cada usuário tem uma regra de acesso que define o que ele pode ver e fazer.' } },
+        { element: '.btn-create-resource, a[href*="usuario/create"]', popover: { title: 'Adicionar usuário', description: 'Clique aqui para cadastrar um novo usuário. O formulário é dividido em etapas: Dados Pessoais, Contato e Endereço, Perfil e Acesso, Carta de Condução e Segurança (senha).', side: 'bottom' } },
+        { element: '.tabela-usuarios thead tr', popover: { title: 'Tabela de usuários', description: 'Exibe nome, e-mail, telefone, regra de acesso, cidade e data de cadastro. Clique no cabeçalho para ordenar.', side: 'bottom' } },
+        { element: '.tabela-usuarios tbody tr:first-child td', popover: { title: 'Regra de acesso', description: 'O badge colorido indica o perfil do usuário (Cliente, Colaborador, Gerente, Administrador). A regra controla quais módulos e ações cada usuário pode acessar.', side: 'right' } },
+        { element: '.tabela-usuarios tbody tr:first-child td:last-child', popover: { title: 'Ações disponíveis', description: 'Para cada usuário: <b>Pagamento</b> (gerenciar cartões Stripe), <b>Editar</b> (alterar dados), <b>Resetar senha</b> (voltar para senha padrão) e <b>Excluir</b>.', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
 </script>
 @stop
+

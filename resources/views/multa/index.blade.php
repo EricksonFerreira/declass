@@ -395,67 +395,65 @@
     setView(localStorage.getItem(store) || 'cards');
 })();
 </script>
-<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
-initInlinePageTour({
-    tourId: 'multa-index',
-    steps: @json([
-    [
-        'element' => '.page-title',
-        'popover' => [
-            'title' => 'Lista de Multas',
-            'description' => 'Aqui você acompanha todas as multas registradas: infrações de trânsito vinculadas a veículos e reservas, com controle de valores, prazos e pagamentos.',
-        ],
-    ],
-    [
-        'element' => '#formFiltrosMulta',
-        'popover' => [
-            'title' => 'Filtros',
-            'description' => 'Filtre por <b>período</b> da infração, <b>placa</b> do veículo, <b>status da multa</b> (aberta, paga, contestada…) e <b>status do desconto</b>. Clique na lupa para aplicar e no X para limpar.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => 'a[href*=\"multa/create\"], .btn-create-resource',
-        'popover' => [
-            'title' => 'Registrar nova multa',
-            'description' => 'Clique aqui para abrir o formulário de cadastro de multa. Você passará pelas etapas: <b>Infração</b>, <b>Valores</b> e <b>Documentos</b>.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.mx-view-toggle',
-        'popover' => [
-            'title' => 'Alternar visualização',
-            'description' => 'Escolha entre <b>Cards</b> (visual detalhado) ou <b>Tabela</b> (compacta). A preferência é salva automaticamente.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.mx-cards .mx:first-child',
-        'popover' => [
-            'title' => 'Card de multa',
-            'description' => 'Cada card exibe: placa no momento, número do auto, órgão autuador, cliente vinculado, data da infração, vencimento e valor final da multa.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.mx-cards .mx:first-child .mx__badge',
-        'popover' => [
-            'title' => 'Status da multa',
-            'description' => '<b>Aberta</b> (vermelho) — prazo em aberto. <b>Paga</b> (verde) — quitada. <b>Contestada</b> (âmbar) — em análise. <b>Cancelada</b> (cinza) — inválida ou removida.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.mx-cards .mx:first-child .mx__foot',
-        'popover' => [
-            'title' => 'Ações',
-            'description' => 'Use <b>Ver</b> para acessar todos os detalhes e registrar pagamento, <b>Editar</b> para corrigir dados e <b>Excluir</b> para remover o registro.',
-            'side' => 'top',
-        ],
-    ],
-    ]),
-});
+(function () {
+    const TOUR_ID     = 'multa-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+{ element: '.page-title', popover: { title: 'Lista de Multas', description: 'Aqui você acompanha todas as multas registradas: infrações de trânsito vinculadas a veículos e reservas, com controle de valores, prazos e pagamentos.' } },
+        { element: '#formFiltrosMulta', popover: { title: 'Filtros', description: 'Filtre por <b>período</b> da infração, <b>placa</b> do veículo, <b>status da multa</b> (aberta, paga, contestada…) e <b>status do desconto</b>. Clique na lupa para aplicar e no X para limpar.', side: 'bottom' } },
+        { element: 'a[href*="multa/create"], .btn-create-resource', popover: { title: 'Registrar nova multa', description: 'Clique aqui para abrir o formulário de cadastro de multa. Você passará pelas etapas: <b>Infração</b>, <b>Valores</b> e <b>Documentos</b>.', side: 'bottom' } },
+        { element: '.mx-view-toggle', popover: { title: 'Alternar visualização', description: 'Escolha entre <b>Cards</b> (visual detalhado) ou <b>Tabela</b> (compacta). A preferência é salva automaticamente.', side: 'bottom' } },
+        { element: '.mx-cards .mx:first-child', popover: { title: 'Card de multa', description: 'Cada card exibe: placa no momento, número do auto, órgão autuador, cliente vinculado, data da infração, vencimento e valor final da multa.', side: 'right' } },
+        { element: '.mx-cards .mx:first-child .mx__badge', popover: { title: 'Status da multa', description: '<b>Aberta</b> (vermelho) — prazo em aberto. <b>Paga</b> (verde) — quitada. <b>Contestada</b> (âmbar) — em análise. <b>Cancelada</b> (cinza) — inválida ou removida.', side: 'left' } },
+        { element: '.mx-cards .mx:first-child .mx__foot', popover: { title: 'Ações', description: 'Use <b>Ver</b> para acessar todos os detalhes e registrar pagamento, <b>Editar</b> para corrigir dados e <b>Excluir</b> para remover o registro.', side: 'top' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
 </script>
 @stop
+

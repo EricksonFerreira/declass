@@ -439,59 +439,64 @@
             $('#modalImagemGrupoFrota').modal('show');
         });
     </script>
-<script src="{{ asset('js/page-tour-inline.js') }}"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
+<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
 <script>
-initInlinePageTour({
-    tourId: 'grupo-frota-index',
-    steps: @json([
-    [
-        'element' => '.page-title',
-        'popover' => [
-            'title' => 'Lista de Grupos de Frota',
-            'description' => 'Aqui você gerencia os grupos de frota (categorias de veículos). Cada grupo agrupa modelos similares, define preço diário, características, opcionais e imagens usados nas reservas.',
-        ],
-    ],
-    [
-        'element' => '.btn-create-resource, a[href*=\"grupo-frota/create\"], a[href*=\"grupo_frota/create\"]',
-        'popover' => [
-            'title' => 'Adicionar grupo de frota',
-            'description' => 'Clique aqui para criar um novo grupo. Você passará pelas abas: <b>Geral</b> (nome, código, preço), <b>Características</b>, <b>Opcionais</b> e <b>Modelos</b> vinculados.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.table-grupo-frota-index thead tr',
-        'popover' => [
-            'title' => 'Tabela de grupos',
-            'description' => 'Exibe imagem de capa, nome, código SIPP, valor diário, quantidade de modelos e características vinculadas, e status.',
-            'side' => 'bottom',
-        ],
-    ],
-    [
-        'element' => '.grupo-frota-thumb',
-        'popover' => [
-            'title' => 'Imagem do grupo',
-            'description' => 'Foto de capa do grupo exibida na listagem de reservas. Clique na miniatura para ampliar. Grupos sem imagem exibem um ícone padrão.',
-            'side' => 'right',
-        ],
-    ],
-    [
-        'element' => '.badge-resumo',
-        'popover' => [
-            'title' => 'Resumo de vínculos',
-            'description' => 'Badges indicam quantos <b>modelos</b>, <b>características</b> e <b>opcionais</b> estão vinculados ao grupo. Clique no ícone de detalhes para ver a lista completa.',
-            'side' => 'left',
-        ],
-    ],
-    [
-        'element' => '.table-grupo-frota-index tbody tr:first-child td:last-child',
-        'popover' => [
-            'title' => 'Ações',
-            'description' => 'Use <b>Detalhes</b> para ver tudo vinculado ao grupo, <b>Editar</b> para alterar dados e <b>Excluir</b> para remover (somente se não houver reservas vinculadas).',
-            'side' => 'left',
-        ],
-    ],
-    ]),
-});
+(function () {
+    const TOUR_ID     = 'grupo-frota-index';
+    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
+    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
+    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
+    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
+    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
+    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+
+    const steps = [
+{ element: '.page-title', popover: { title: 'Lista de Grupos de Frota', description: 'Aqui você gerencia os grupos de frota (categorias de veículos). Cada grupo agrupa modelos similares, define preço diário, características, opcionais e imagens usados nas reservas.' } },
+        { element: '.btn-create-resource, a[href*="grupo-frota/create"], a[href*="grupo_frota/create"]', popover: { title: 'Adicionar grupo de frota', description: 'Clique aqui para criar um novo grupo. Você passará pelas abas: <b>Geral</b> (nome, código, preço), <b>Características</b>, <b>Opcionais</b> e <b>Modelos</b> vinculados.', side: 'bottom' } },
+        { element: '.table-grupo-frota-index thead tr', popover: { title: 'Tabela de grupos', description: 'Exibe imagem de capa, nome, código SIPP, valor diário, quantidade de modelos e características vinculadas, e status.', side: 'bottom' } },
+        { element: '.grupo-frota-thumb', popover: { title: 'Imagem do grupo', description: 'Foto de capa do grupo exibida na listagem de reservas. Clique na miniatura para ampliar. Grupos sem imagem exibem um ícone padrão.', side: 'right' } },
+        { element: '.badge-resumo', popover: { title: 'Resumo de vínculos', description: 'Badges indicam quantos <b>modelos</b>, <b>características</b> e <b>opcionais</b> estão vinculados ao grupo. Clique no ícone de detalhes para ver a lista completa.', side: 'left' } },
+        { element: '.table-grupo-frota-index tbody tr:first-child td:last-child', popover: { title: 'Ações', description: 'Use <b>Detalhes</b> para ver tudo vinculado ao grupo, <b>Editar</b> para alterar dados e <b>Excluir</b> para remover (somente se não houver reservas vinculadas).', side: 'left' } },
+    ];
+
+    function marcarFeito() {
+        localStorage.setItem(CACHE_KEY, '1');
+        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
+    }
+
+    function buildTour() {
+        var _pulou = false;
+        return window.driver.js.driver({
+            animate: true, smoothScroll: true, showProgress: true,
+            progressText: 'Passo @{{current}} de @{{total}}',
+            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
+            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
+            onPopoverRender: (popover, { driver }) => {
+                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
+                var btn = document.createElement('button');
+                btn.className = 'drv-skip-btn'; btn.type = 'button'; btn.textContent = 'Pular tour';
+                btn.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
+                popover.footer.prepend(btn);
+            },
+            steps: steps,
+        });
+    }
+
+    window.restartPageTour = function () {
+        localStorage.removeItem(CACHE_KEY);
+        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
+            .then(() => buildTour().drive());
+    };
+
+    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
+    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
+        .then(r => r.json())
+        .then(data => {
+            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
+            setTimeout(() => buildTour().drive(), 350);
+        });
+})();
 </script>
 @stop
+
