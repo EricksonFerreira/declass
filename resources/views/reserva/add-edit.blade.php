@@ -3795,7 +3795,17 @@
                         ? `<img src="${g.imagem_url}" style="width:40px;height:28px;object-fit:cover;border-radius:4px">`
                         : `<span class="text-muted"><i class="fas fa-car fa-lg"></i></span>`;
 
-                    const modelos   = (g.modelos || []).map(m => `<span class="badge badge-light border mr-1">${m.nome}</span>`).join('') || '<span class="text-muted">—</span>';
+                    const modelosArr = g.modelos || [];
+                    const totalModelos = modelosArr.length;
+                    const collapseId = 'pgf_modelos_' + g.id;
+                    const modelosBadges = modelosArr.map(m => `<span class="badge badge-light border mr-1 mb-1">${m.nome}</span>`).join('');
+                    const modelos = totalModelos === 0
+                        ? '<span class="text-muted">—</span>'
+                        : `<button type="button" class="btn btn-sm btn-outline-secondary pgf-toggle-modelos"
+                                data-target="${collapseId}" style="font-size:.75rem;padding:2px 8px">
+                                <i class="fas fa-tags mr-1"></i>${totalModelos} modelo(s)
+                           </button>
+                           <div id="${collapseId}" class="pgf-modelos-collapse mt-1" style="display:none">${modelosBadges}</div>`;
                     const marcas    = (g.marcas   || []).join(', ') || '—';
                     const segmentos = (g.segmentos || []).join(', ') || '—';
 
@@ -3836,6 +3846,18 @@
                         </tr>
                     `);
                     $tbody.append($tr);
+                });
+
+                // Toggle expandir/recolher modelos
+                $tbody.off('click', '.pgf-toggle-modelos').on('click', '.pgf-toggle-modelos', function () {
+                    const targetId = $(this).data('target');
+                    const $list = $('#' + targetId);
+                    const aberto = $list.is(':visible');
+                    $list.slideToggle(150);
+                    $(this).html(aberto
+                        ? `<i class="fas fa-tags mr-1"></i>${$list.children().length} modelo(s)`
+                        : `<i class="fas fa-chevron-up mr-1"></i>Recolher`
+                    );
                 });
             }
 
