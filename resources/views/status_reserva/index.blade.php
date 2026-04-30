@@ -52,8 +52,8 @@
                         <tr>
                             <td>{{ $sr->id }}</td>
                             <td>
-                                <span class="badge sr-badge"
-                                      style="background-color: {{ $sr->cor ?? '#6c757d' }}; color: #fff; font-size: .85rem; padding: 4px 10px;">
+                                <span class="badge sr-badge bg-{{$sr->cor}}"
+                                      style="font-size: .85rem; padding: 4px 10px;">
                                     {{ $sr->nome }}
                                 </span>
                             </td>
