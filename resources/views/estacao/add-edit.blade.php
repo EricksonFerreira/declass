@@ -132,7 +132,7 @@
                             <div class="col-lg-3 col-md-4">
                                 <div class="form-group form-group-estacao location-field">
                                     <x-form-input type="text" class="form-control form-control-sm" id="zip_code" name="zip_code"
-                                        label="CEP / Zip Code" value="{{ old('zip_code', $estacao->zip_code ?? '') }}" required />
+                                        label="CEP" value="{{ old('zip_code', $estacao->zip_code ?? '') }}" required />
                                     <small id="zip-feedback" class="location-zip-feedback d-none"></small>
                                 </div>
                             </div>
@@ -174,7 +174,7 @@
                                         placeholder="-8.05428, -34.88130"
                                         value="{{ old('latitude', $estacao->latitude ?? '') && old('longitude', $estacao->longitude ?? '') ? old('latitude', $estacao->latitude ?? '') . ', ' . old('longitude', $estacao->longitude ?? '') : '' }}">
                                     <small class="text-muted d-block mt-1">
-                                        Cole aqui a coordenada completa e o sistema separa automaticamente latitude e longitude.
+                                        Cole aqui as coordenadas completas e o sistema separa automaticamente latitude e longitude.
                                     </small>
                                 </div>
                             </div>
@@ -222,8 +222,8 @@
                     <div class="estacao-section-title"><i class="fas fa-clock mr-1"></i>Horários por Tipo de Dia</div>
                     <p class="text-muted small mb-3">
                         Defina os horários de abertura, fechamento e intervalo para cada tipo de dia.
-                        Use o botão de intervalo para sinalizar quando não há almoço.
-                        Os campos "Fora de Expediente" são preenchidos automaticamente.
+                        Use o botão <strong>Sem intervalo</strong> para sinalizar quando não há pausa para almoço.
+                        Os campos "Fora do expediente" são preenchidos automaticamente.
                     </p>
 
                     <div class="ec-horarios-grid">
@@ -339,7 +339,7 @@
 
                                         <div class="ec-time-group">
                                             <div class="ec-time-group__label" style="color:#9a3412;">
-                                                <i class="fas fa-utensils mr-1"></i> Intervalo / Almoço
+                                                <i class="fas fa-utensils mr-1"></i> Intervalo de almoço
                                             </div>
                                             <div class="ec-time-row">
                                                 <div class="ec-time-field">
@@ -358,7 +358,7 @@
 
                                         <div class="ec-time-group ec-time-group--fora">
                                             <div class="ec-time-group__label" style="color:#475569;">
-                                                <i class="fas fa-moon mr-1"></i> Fora do Expediente
+                                                <i class="fas fa-moon mr-1"></i> Fora do expediente
                                                 <small class="text-muted ml-1">(automático)</small>
                                             </div>
                                             <div class="ec-time-row">
@@ -423,13 +423,13 @@
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="cobrar_na_coleta" id="cobrar_na_coleta" label="Cobrar taxa na retirada fora do horário" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="cobrar_na_coleta" id="cobrar_na_coleta" label="Cobrar taxa de retirada fora do horário" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6 js-taxa-coleta-wrap {{ old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N') === 'S' ? '' : 'd-none' }}">
                             <div class="form-group form-group-estacao">
-                                <label class="mb-1">Valor da taxa (coleta) <span class="text-danger">*</span></label>
+                                <label class="mb-1">Valor da taxa de retirada <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
                                     <input type="number" name="valor_taxa_coleta" id="valor_taxa_coleta" step="0.01" min="0"
@@ -441,13 +441,13 @@
                         </div>
                         <div class="col-lg-4 col-md-6">
                             <div class="form-group form-group-estacao">
-                                <x-form-select name="cobrar_na_entrega" id="cobrar_na_entrega" label="Cobrar taxa na devolução fora do horário" :options="$checkin" placeholder="Selecione"
+                                <x-form-select name="cobrar_na_entrega" id="cobrar_na_entrega" label="Cobrar taxa de devolução fora do horário" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6 js-taxa-entrega-wrap {{ old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N') === 'S' ? '' : 'd-none' }}">
                             <div class="form-group form-group-estacao">
-                                <label class="mb-1">Valor da taxa (entrega) <span class="text-danger">*</span></label>
+                                <label class="mb-1">Valor da taxa de devolução <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
                                     <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
                                     <input type="number" name="valor_taxa_entrega" id="valor_taxa_entrega" step="0.01" min="0"
@@ -1324,7 +1324,7 @@ $(function () {
                     element: '#zip_code',
                     popover: {
                         title: '🔍 CEP automático',
-                        description: 'Digite o CEP e o sistema preenche o endereço automaticamente. Depois ajuste a latitude e longitude se necessário.',
+                        description: 'Digite o CEP e o sistema preenche o endereço automaticamente. Depois, ajuste a latitude e a longitude, se necessário.',
                         side: 'right',
                     },
                     onHighlightStarted: () => goToStep(3),
@@ -1341,8 +1341,8 @@ $(function () {
                 {
                     element: '.ec-horarios-grid',
                     popover: {
-                        title: '🕐 Cards de Horário',
-                        description: 'Cada card representa um tipo de dia. Use <strong>"24h"</strong> para quem funciona o dia inteiro ou <strong>"Sem almoço"</strong> para quem não tem intervalo. Os campos "Fora de Expediente" são preenchidos automaticamente.',
+                        title: '🕐 Cards de horário',
+                        description: 'Cada card representa um tipo de dia. Use <strong>"24h"</strong> para quem funciona o dia inteiro ou <strong>"Sem intervalo"</strong> para quem não faz pausa para almoço. Os campos "Fora do expediente" são preenchidos automaticamente.',
                         side: 'top',
                     },
                     onHighlightStarted: () => goToStep(4),

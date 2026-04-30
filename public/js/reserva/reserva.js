@@ -365,6 +365,21 @@ function getValorTotal() {
     return Number.isFinite(v) ? v : 0;
 }
 
+function getValorSemDesconto() {
+    const quantidadeDias = getQuantidadeDias() || 0;
+    let valorTotalOpcionais = 0;
+    getOpcionaisReserva().forEach(op => {
+        const qtd = op.quantidade || 1;
+        if (op.tipo_cobranca === 'por_dia') {
+            valorTotalOpcionais += Number(op.preco_por_dia || 0) * quantidadeDias * qtd;
+        } else {
+            valorTotalOpcionais += Number(op.preco_integral || 0) * qtd;
+        }
+    });
+    const v = (Number(getTarifaBase() || 0) * quantidadeDias) + valorTotalOpcionais + getTaxaColeta() + getTaxaEntrega();
+    return Number.isFinite(v) ? v : 0;
+}
+
 // Atualizar a função getValorDiario
 function getValorDiario() {
     const valorTotal = parseFloat(getValorTotal());
@@ -445,6 +460,14 @@ function atualizarMinhaReserva() {
         $liEntrega.removeClass('d-none');
     } else {
         $liEntrega.addClass('d-none');
+    }
+
+    const desconto2 = Number(getCupomDescontoValor() || 0);
+    const $semDesc = $('#minhaReserva_valor_sem_desconto');
+    if (desconto2 > 0) {
+        $semDesc.text(formatarMoeda(getValorSemDesconto())).removeClass('d-none');
+    } else {
+        $semDesc.addClass('d-none');
     }
 
     $('#valor_total_reserva').text(formatarMoeda(getValorTotal()));

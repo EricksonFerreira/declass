@@ -366,7 +366,7 @@
         {
             element: '[data-view="cards"]',
             popover: {
-                title: '🗂 Visualização em Cards',
+                title: '🗂 Visualização em cards',
                 description: 'Veja suas estações em cards com nome, cidade, horários e status. Clique em qualquer card para editar.',
                 side: 'bottom',
             },
@@ -375,7 +375,7 @@
             element: '[data-view="table"]',
             popover: {
                 title: '📋 Visualização em Tabela',
-                description: 'Prefere lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
+                description: 'Prefere uma lista compacta? Alterne para a tabela — útil quando você tem muitas estações cadastradas.',
                 side: 'bottom',
             },
         },

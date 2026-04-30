@@ -2416,12 +2416,14 @@
         let estacaoDevolucaoAlterada = false;
         $('#estacao_devolucao_id').on('change', function() {
             estacaoDevolucaoAlterada = true;
+            setEstacaoDevolucao($(this).val(), $(this).find('option:selected').text().trim());
             limparAgendaSelecionada('devolucao', false);
             if (typeof setTaxaEntrega === 'function') { setTaxaEntrega(0); atualizarMinhaReserva(); }
         });
         $('#estacao_retirada_id').on('change', function() {
             const retirada = $(this).val();
             const devolucaoAtual = $('#estacao_devolucao_id').val();
+            setEstacaoRetirada(retirada, $(this).find('option:selected').text().trim());
             limparAgendaSelecionada('retirada', false);
             if (typeof setTaxaColeta === 'function') { setTaxaColeta(0); atualizarMinhaReserva(); }
             if (!retirada) return;

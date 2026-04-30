@@ -93,6 +93,7 @@
             <div class="minha-reserva-card__total-hint" id="quantidade_dias">/ 0 dias</div>
         </div>
         <div class="minha-reserva-card__total-right">
+            <div id="minhaReserva_valor_sem_desconto" class="d-none" style="font-size:.78rem;color:#9ca3af;text-decoration:line-through;text-align:right;margin-bottom:1px"></div>
             <div class="minha-reserva-card__total-value" id="valor_total_reserva">0</div>
             <div class="minha-reserva-card__total-sub">
                 <span id="valor_diario_reserva">0</span> <span class="muted">/ por dia</span>
