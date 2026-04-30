@@ -1,4 +1,28 @@
-<div class="minha-reserva-card">
+<div class="minha-reserva-card" id="minhaReservaCard">
+    <div id="minhaReservaSkeletonOverlay" class="minha-reserva-skeleton-overlay" style="display:none">
+        <div class="minha-reserva-skeleton-box">
+            <div class="skl-line skl-line--sm skl-line--40"></div>
+            <div class="skl-line skl-line--lg skl-line--70 mt-2"></div>
+        </div>
+        <div class="minha-reserva-skeleton-box mt-3">
+            <div class="skl-line skl-line--sm skl-line--30"></div>
+            <div class="skl-line skl-line--md skl-line--90 mt-2"></div>
+            <div class="skl-line skl-line--md skl-line--80 mt-1"></div>
+        </div>
+        <div class="minha-reserva-skeleton-box mt-3">
+            <div class="skl-line skl-line--sm skl-line--25"></div>
+            <div class="skl-line skl-line--md skl-line--60 mt-2"></div>
+            <div class="skl-line skl-line--md skl-line--50 mt-1"></div>
+            <div class="skl-line skl-line--md skl-line--70 mt-1"></div>
+        </div>
+        <div class="minha-reserva-skeleton-box mt-3">
+            <div class="skl-line skl-line--xl skl-line--100"></div>
+        </div>
+        <div class="skl-spinner mt-3">
+            <i class="fas fa-circle-notch fa-spin"></i>
+            <span>Carregando reserva...</span>
+        </div>
+    </div>
     <div class="minha-reserva-card__header">
         <div class="minha-reserva-card__title">
             <span class="minha-reserva-card__icon"><i class="fas fa-receipt"></i></span>

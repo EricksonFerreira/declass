@@ -916,6 +916,47 @@
             font-weight: 700;
         }
 
+        /* ===== Skeleton overlay ===== */
+        .minha-reserva-skeleton-overlay {
+            position: absolute; inset: 0; z-index: 10;
+            background: rgba(255,255,255,.96);
+            border-radius: 18px;
+            padding: 1.2rem 1.1rem;
+            display: flex; flex-direction: column;
+        }
+        .minha-reserva-skeleton-box { }
+        .skl-line {
+            border-radius: 6px;
+            background: linear-gradient(90deg, #e2e8f0 25%, #f1f5f9 50%, #e2e8f0 75%);
+            background-size: 200% 100%;
+            animation: skl-shimmer 1.4s infinite;
+            height: 12px;
+        }
+        .skl-line--sm  { height: 10px; }
+        .skl-line--md  { height: 13px; }
+        .skl-line--lg  { height: 18px; }
+        .skl-line--xl  { height: 40px; border-radius: 10px; }
+        .skl-line--25  { width: 25%; }
+        .skl-line--30  { width: 30%; }
+        .skl-line--40  { width: 40%; }
+        .skl-line--50  { width: 50%; }
+        .skl-line--60  { width: 60%; }
+        .skl-line--70  { width: 70%; }
+        .skl-line--80  { width: 80%; }
+        .skl-line--90  { width: 90%; }
+        .skl-line--100 { width: 100%; }
+        .skl-spinner {
+            display: flex; align-items: center; gap: .5rem;
+            justify-content: center; margin-top: auto;
+            font-size: .8rem; color: #94a3b8;
+        }
+        .skl-spinner i { font-size: 1rem; color: #cbd5e1; }
+        @keyframes skl-shimmer {
+            0%   { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        #minhaReservaCard { position: relative; }
+
         /* ===== Minha Reserva (sidebar) ===== */
         .minha-reserva-card {
             border-radius: 18px;
@@ -3519,17 +3560,28 @@
             if (estacaoDevolucaoInicial) recarregarPickerDevolucao(estacaoDevolucaoInicial);
             else $('#data_fim_flatpickr').prop('disabled', true);
 
-            // Modo edição: pré-selecionar hora
+            // Modo edição: pré-selecionar hora e exibir skeleton até tudo carregar
             const dataInicioEdit = $('#data_inicio_data').val();
             const horaInicioEdit = @json($dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('H:i') : '');
             const dataFimEdit = $('#data_fim_data').val();
             const horaFimEdit = @json($dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('H:i') : '');
 
-            if (dataInicioEdit && estacaoRetiradaInicial) {
-                buscarHorariosAoSelecionarData('retirada', dataInicioEdit, horaInicioEdit || null);
-            }
-            if (dataFimEdit && estacaoDevolucaoInicial) {
-                buscarHorariosAoSelecionarData('devolucao', dataFimEdit, horaFimEdit || null);
+            if (isEdit && (dataInicioEdit || dataFimEdit)) {
+                const $overlay = $('#minhaReservaSkeletonOverlay');
+                $overlay.show();
+
+                const promises = [];
+                if (dataInicioEdit && estacaoRetiradaInicial) {
+                    promises.push(buscarHorariosAoSelecionarData('retirada', dataInicioEdit, horaInicioEdit || null));
+                }
+                if (dataFimEdit && estacaoDevolucaoInicial) {
+                    promises.push(buscarHorariosAoSelecionarData('devolucao', dataFimEdit, horaFimEdit || null));
+                }
+
+                Promise.allSettled(promises).then(function() {
+                    atualizarMinhaReserva();
+                    $overlay.fadeOut(300);
+                });
             }
         }());
 
