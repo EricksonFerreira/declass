@@ -2456,18 +2456,15 @@
 
         @php
             $estacoesIds = array_keys($estacoesRetirada + $estacoesDevolucao);
-            $foraDeHoraRows = \App\Models\ForaDeHora::whereIn('estacao_id', $estacoesIds)
-                ->get(['estacao_id', 'cobrar_na_coleta', 'valor_taxa_coleta', 'cobrar_na_entrega', 'valor_taxa_entrega'])
-                ->keyBy('estacao_id');
-            $estacoesTaxasMap = collect($estacoesIds)->mapWithKeys(function($id) use ($foraDeHoraRows) {
-                $row = $foraDeHoraRows[$id] ?? null;
-                return [$id => [
-                    'cobrar_na_coleta'    => $row?->cobrar_na_coleta    ?? 'N',
-                    'valor_taxa_coleta'   => $row?->valor_taxa_coleta   ?? 0,
-                    'cobrar_na_entrega'   => $row?->cobrar_na_entrega   ?? 'N',
-                    'valor_taxa_entrega'  => $row?->valor_taxa_entrega  ?? 0,
-                ]];
-            });
+            $estacoesTaxasMap = \App\Models\Estacao::whereIn('id', $estacoesIds)
+                ->get(['id', 'cobrar_na_coleta', 'valor_taxa_coleta', 'cobrar_na_entrega', 'valor_taxa_entrega'])
+                ->keyBy('id')
+                ->map(fn($e) => [
+                    'cobrar_na_coleta'   => $e->cobrar_na_coleta   ?? 'N',
+                    'valor_taxa_coleta'  => (float) ($e->valor_taxa_coleta  ?? 0),
+                    'cobrar_na_entrega'  => $e->cobrar_na_entrega  ?? 'N',
+                    'valor_taxa_entrega' => (float) ($e->valor_taxa_entrega ?? 0),
+                ]);
         @endphp
         const ESTACOES_TAXAS = @json($estacoesTaxasMap);
 

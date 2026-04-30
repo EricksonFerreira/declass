@@ -689,27 +689,13 @@ class ReservaService extends AbstractBaseService
     {
         $coluna = $tipo === 'devolucao' ? 'cobrar_na_entrega' : 'cobrar_na_coleta';
 
-        // Tenta primeiro na tabela fora_de_hora (configuração por estação)
-        if (Schema::hasTable('fora_de_hora') && Schema::hasColumn('fora_de_hora', $coluna)) {
-            $valor = DB::table('fora_de_hora')
-                ->where('estacao_id', $estacaoId)
-                ->value($coluna);
-
-            if ($valor !== null) {
-                return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
-            }
+        if (!Schema::hasTable('estacoes') || !Schema::hasColumn('estacoes', $coluna)) {
+            return false;
         }
 
-        // Fallback: coluna direta em estacoes (legado)
-        if (Schema::hasTable('estacoes') && Schema::hasColumn('estacoes', $coluna)) {
-            $valor = DB::table('estacoes')
-                ->where('id', $estacaoId)
-                ->value($coluna);
+        $valor = DB::table('estacoes')->where('id', $estacaoId)->value($coluna);
 
-            return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
-        }
-
-        return false;
+        return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
     }
 
     public function obterDatasRetiradaDisponiveisParaEstacao(int $estacaoId, ?string $dataBase = null, int $limite = 14): array
