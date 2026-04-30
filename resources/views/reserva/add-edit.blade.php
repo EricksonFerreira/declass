@@ -1792,13 +1792,16 @@
             }
 
             // Atualiza input readonly + hidden
-            document.getElementById('user_id').value      = usuarioId;
-            document.getElementById('user_display').value = label;
-            const btnLimpar = document.getElementById('btnLimparUsuarioReserva');
-            if (btnLimpar) btnLimpar.classList.remove('d-none');
+            const elUserId = document.getElementById('user_id');
+            const elDisplay = document.getElementById('user_display');
+            elUserId.value  = usuarioId;
+            if (elDisplay) elDisplay.value = label;
 
             setUser(usuarioId, label);
             atualizarMinhaReserva();
+
+            // Dispara change para o card de cliente reagir imediatamente
+            elUserId.dispatchEvent(new Event('change'));
         }
 
         function atualizarUsuariosSelectReserva() {
@@ -2236,10 +2239,7 @@
                             btn.addEventListener('click', function () {
                                 const id   = parseInt(this.dataset.id);
                                 const nome = this.dataset.nome;
-                                document.getElementById('user_id').value      = id;
-                                document.getElementById('user_display').value = nome;
-                                const btnLimpar = document.getElementById('btnLimparUsuarioReserva');
-                                if (btnLimpar) btnLimpar.classList.remove('d-none');
+                                adicionarUsuarioSelectReserva({ id, nome });
                                 $('#modalBuscarUsuarioReserva').modal('hide');
                             });
                         });
