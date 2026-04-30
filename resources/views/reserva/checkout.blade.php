@@ -303,7 +303,7 @@
                         <i class="fas fa-arrow-left mr-1"></i>Voltar
                     </button>
                     <div class="wizard-actions-right">
-                        <button type="button" class="btn-action btn-action-primary" id="wizardNext">
+                        <button type="button" class="btn-action btn-primary" id="wizardNext">
                             Continuar<i class="fas fa-arrow-right ml-1"></i>
                         </button>
                         <button type="button" class="btn-action btn-action-success d-none" id="wizardCreateBtn">
