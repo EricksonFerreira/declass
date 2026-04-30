@@ -424,6 +424,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'nfseAtual',
             'estacaoRetirada',
             'estacaoDevolucao',
+            'grupoFrota',
+            'cupomDesconto',
+            'opcionais',
             'transacoes' => function ($query) {
                 $query->with(['user', 'pagoPor'])->orderByDesc('id');
             },

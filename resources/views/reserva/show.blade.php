@@ -465,7 +465,7 @@
                                 @endif
                                 @if($percentualDesconto > 0)
                                     <div class="rs-summary__divider"></div>
-                                    <div class="rs-summary__row rs-summary__row--discount">
+                                    <div class="rs-summary__row rs-summary__row--discount" style="background:#f0fdf4;border-radius:5px;padding:3px 6px;margin:2px 0;color:#16a34a">
                                         <span>
                                             <i class="fas fa-tag mr-1"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)
                                             @if($cupomCodigo)
@@ -476,6 +476,9 @@
                                     </div>
                                 @endif
                                 <div class="rs-summary__total">
+                                    @if($percentualDesconto > 0)
+                                        <span style="text-decoration:line-through;color:#9ca3af;font-size:.8rem;font-weight:400;margin-right:6px">R$ {{ number_format($subtotal, 2, ',', '.') }}</span>
+                                    @endif
                                     <span>Total</span>
                                     <strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong>
                                 </div>
@@ -1108,7 +1111,7 @@
                                 @endif
                                 @if($percentualDesconto > 0)
                                     <div class="rs-summary__divider"></div>
-                                    <div class="rs-summary__row rs-summary__row--discount">
+                                    <div class="rs-summary__row rs-summary__row--discount" style="background:#f0fdf4;border-radius:5px;padding:3px 6px;margin:2px 0;color:#16a34a">
                                         <span>
                                             <i class="fas fa-tag mr-1"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)
                                             @if($cupomCodigo)
@@ -1119,6 +1122,9 @@
                                     </div>
                                 @endif
                                 <div class="rs-summary__total">
+                                    @if($percentualDesconto > 0)
+                                        <span style="text-decoration:line-through;color:#9ca3af;font-size:.8rem;font-weight:400;margin-right:6px">R$ {{ number_format($subtotal, 2, ',', '.') }}</span>
+                                    @endif
                                     <span>Total</span>
                                     <strong>R$ {{ number_format($valorTotal, 2, ',', '.') }}</strong>
                                 </div>
