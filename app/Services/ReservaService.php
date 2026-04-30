@@ -433,6 +433,11 @@ class ReservaService extends AbstractBaseService
     /**
      * @return array{ok:bool,taxa_extra:bool,message:?string,fora_expediente:bool}
      */
+    public function avaliarFuncionamentoEstacaoPublico(int $estacaoId, string $dataHora, string $tipo): array
+    {
+        return $this->avaliarFuncionamentoEstacao($estacaoId, $dataHora, $tipo);
+    }
+
     private function avaliarFuncionamentoEstacao(int $estacaoId, string $dataHora, string $tipo): array
     {
         if ($estacaoId <= 0 || trim($dataHora) === '') {

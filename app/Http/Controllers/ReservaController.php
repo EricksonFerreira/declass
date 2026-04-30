@@ -434,7 +434,33 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'multas' => fn ($q) => $q->orderByDesc('id')->take(5),
         ]);
 
-        return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo'));
+        // Calcular taxas fora de expediente se não estiverem salvas na reserva
+        $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
+        $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+
+        if ($taxaColeta == 0 && $reserva->estacaoRetirada && $reserva->data_inicio) {
+            $avaliacao = $this->reservaService->avaliarFuncionamentoEstacaoPublico(
+                (int) $reserva->estacao_retirada_id,
+                $reserva->data_inicio,
+                'retirada'
+            );
+            if (($avaliacao['taxa_extra'] ?? false) && ($avaliacao['ok'] ?? false)) {
+                $taxaColeta = (float) ($reserva->estacaoRetirada->valor_taxa_coleta ?? 0);
+            }
+        }
+
+        if ($taxaEntrega == 0 && $reserva->estacaoDevolucao && $reserva->data_fim) {
+            $avaliacao = $this->reservaService->avaliarFuncionamentoEstacaoPublico(
+                (int) $reserva->estacao_devolucao_id,
+                $reserva->data_fim,
+                'devolucao'
+            );
+            if (($avaliacao['taxa_extra'] ?? false) && ($avaliacao['ok'] ?? false)) {
+                $taxaEntrega = (float) ($reserva->estacaoDevolucao->valor_taxa_entrega ?? 0);
+            }
+        }
+
+        return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega'));
     }
 
     public function emitirNfse($id)

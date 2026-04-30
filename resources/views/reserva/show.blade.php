@@ -20,8 +20,8 @@
     }
 
     $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
-    $taxaColeta         = (float) ($reserva->taxa_coleta ?? 0);
-    $taxaEntrega        = (float) ($reserva->taxa_entrega ?? 0);
+    $taxaColeta         = (float) ($taxaColeta  ?? 0);
+    $taxaEntrega        = (float) ($taxaEntrega ?? 0);
     $subtotal           = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
     $valorDesconto      = $subtotal * ($percentualDesconto / 100);
     $valorTotal         = max(0, $subtotal - $valorDesconto);
