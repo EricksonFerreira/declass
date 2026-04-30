@@ -80,7 +80,8 @@
       "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Services/PermissaoService.php)",
       "Bash(php -l c:/Users/Erickson/Dev/laragon/www/xpandCars/app/Services/PermissaoSyncService.php)",
       "Bash(php -r \"echo Schema::hasColumn\\('roles','empresa_id'\\);\")",
-      "Bash(grep -v \"//\")"
+      "Bash(grep -v \"//\")",
+      "Bash(grep -i 'compact\\\\|$taxa\\\\|$grupo\\\\|$cupom\\\\|$tarifa\\\\|$valor\\\\|$dias\\\\|$percent')"
     ]
   }
 }

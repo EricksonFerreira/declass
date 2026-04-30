@@ -20,8 +20,14 @@
     }
 
     $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
-    $valorDesconto      = ($valorTarifaBase + $valorOpcionais) * ($percentualDesconto / 100);
-    $valorTotal         = max(0, ($valorTarifaBase + $valorOpcionais) - $valorDesconto);
+    $taxaColeta         = (float) ($reserva->taxa_coleta ?? 0);
+    $taxaEntrega        = (float) ($reserva->taxa_entrega ?? 0);
+    $subtotal           = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
+    $valorDesconto      = $subtotal * ($percentualDesconto / 100);
+    $valorTotal         = max(0, $subtotal - $valorDesconto);
+
+    $grupoFrotaNome     = $reserva->grupoFrota?->nome ?? null;
+    $cupomCodigo        = $reserva->cupomDesconto?->codigo ?? null;
 
     $createdAt        = $reserva->created_at ? \Carbon\Carbon::parse($reserva->created_at)->format('d/m/Y H:i') : '-';
     $inicioFormatado  = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') : '-';
@@ -424,8 +430,15 @@
                                 <h2>Resumo financeiro</h2>
                             </div>
                             <div class="rs-summary">
+                                @if($grupoFrotaNome)
+                                    <div class="rs-summary__row" style="color:#6b7280;font-size:.83rem">
+                                        <span><i class="fas fa-layer-group mr-1"></i>Grupo</span>
+                                        <span style="font-weight:600;color:#374151">{{ $grupoFrotaNome }}</span>
+                                    </div>
+                                    <div class="rs-summary__divider"></div>
+                                @endif
                                 <div class="rs-summary__row">
-                                    <span>Tarifa diaria</span>
+                                    <span>Tarifa diária</span>
                                     <span>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</span>
                                 </div>
                                 <div class="rs-summary__row">
@@ -438,10 +451,27 @@
                                         <span>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</span>
                                     </div>
                                 @endif
+                                @if($taxaColeta > 0)
+                                    <div class="rs-summary__row" style="color:#92400e;background:#fef3c7;border-radius:5px;padding:3px 6px;margin:2px 0">
+                                        <span><i class="fas fa-exclamation-triangle mr-1"></i>* Retirada fora do expediente</span>
+                                        <span>R$ {{ number_format($taxaColeta, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                                @if($taxaEntrega > 0)
+                                    <div class="rs-summary__row" style="color:#92400e;background:#fef3c7;border-radius:5px;padding:3px 6px;margin:2px 0">
+                                        <span><i class="fas fa-exclamation-triangle mr-1"></i>* Devolução fora do expediente</span>
+                                        <span>R$ {{ number_format($taxaEntrega, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
                                 @if($percentualDesconto > 0)
                                     <div class="rs-summary__divider"></div>
                                     <div class="rs-summary__row rs-summary__row--discount">
-                                        <span><i class="fas fa-tag"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)</span>
+                                        <span>
+                                            <i class="fas fa-tag mr-1"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)
+                                            @if($cupomCodigo)
+                                                <span class="badge badge-xs ml-1" style="background:#16a34a;color:#fff;font-size:.68rem">{{ $cupomCodigo }}</span>
+                                            @endif
+                                        </span>
                                         <span>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</span>
                                     </div>
                                 @endif
@@ -1043,8 +1073,15 @@
                                 <h2>Resumo Detalhado</h2>
                             </div>
                             <div class="rs-summary">
+                                @if($grupoFrotaNome)
+                                    <div class="rs-summary__row" style="color:#6b7280;font-size:.83rem">
+                                        <span><i class="fas fa-layer-group mr-1"></i>Grupo</span>
+                                        <span style="font-weight:600;color:#374151">{{ $grupoFrotaNome }}</span>
+                                    </div>
+                                    <div class="rs-summary__divider"></div>
+                                @endif
                                 <div class="rs-summary__row">
-                                    <span>Tarifa diaria</span>
+                                    <span>Tarifa diária</span>
                                     <span>R$ {{ number_format($tarifaBase, 2, ',', '.') }}</span>
                                 </div>
                                 <div class="rs-summary__row">
@@ -1057,10 +1094,27 @@
                                         <span>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</span>
                                     </div>
                                 @endif
+                                @if($taxaColeta > 0)
+                                    <div class="rs-summary__row" style="color:#92400e;background:#fef3c7;border-radius:5px;padding:3px 6px;margin:2px 0">
+                                        <span><i class="fas fa-exclamation-triangle mr-1"></i>* Retirada fora do expediente</span>
+                                        <span>R$ {{ number_format($taxaColeta, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
+                                @if($taxaEntrega > 0)
+                                    <div class="rs-summary__row" style="color:#92400e;background:#fef3c7;border-radius:5px;padding:3px 6px;margin:2px 0">
+                                        <span><i class="fas fa-exclamation-triangle mr-1"></i>* Devolução fora do expediente</span>
+                                        <span>R$ {{ number_format($taxaEntrega, 2, ',', '.') }}</span>
+                                    </div>
+                                @endif
                                 @if($percentualDesconto > 0)
                                     <div class="rs-summary__divider"></div>
                                     <div class="rs-summary__row rs-summary__row--discount">
-                                        <span><i class="fas fa-tag"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)</span>
+                                        <span>
+                                            <i class="fas fa-tag mr-1"></i>Desconto ({{ number_format($percentualDesconto, 0) }}%)
+                                            @if($cupomCodigo)
+                                                <span class="badge badge-xs ml-1" style="background:#16a34a;color:#fff;font-size:.68rem">{{ $cupomCodigo }}</span>
+                                            @endif
+                                        </span>
                                         <span>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</span>
                                     </div>
                                 @endif
