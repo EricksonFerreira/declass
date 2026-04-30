@@ -151,8 +151,8 @@
                 @else
 
                 <div class="ci-block">
-                    <div class="ci-block-label" style="background:linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%)">
-                        <i class="fas fa-credit-card"></i>
+                    <div class="ci-block-label">
+                        <i  style="background:linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%)" class="fas fa-credit-card"></i>
                         <div>
                             <strong>Pré-autorizar Calção no Cartão</strong>
                             <span>
