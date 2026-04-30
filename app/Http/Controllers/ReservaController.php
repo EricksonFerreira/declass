@@ -465,6 +465,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             }
         }
 
+        // Se percentual_desconto não foi salvo mas cupom existe, recuperar do cupom
+        if ((float) ($reserva->percentual_desconto ?? 0) == 0 && $reserva->cupom_desconto_id && $reserva->cupomDesconto) {
+            $reserva->percentual_desconto = (float) ($reserva->cupomDesconto->valor ?? 0);
+        }
+
         return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega'));
     }
 
