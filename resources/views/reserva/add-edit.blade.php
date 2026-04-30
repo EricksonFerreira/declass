@@ -998,11 +998,10 @@
             padding: 10px 16px;
             border-radius: 10px;
             flex-shrink: 0;
-            transition: background 0.2s, color 0.2s;
-            color: #64748b;
+            transition: background 0.2s, box-shadow 0.2s;
         }
 
-        .rw-step-btn:hover { background: #f4f6ff; }
+        .rw-step-btn:hover { background: rgba(15,23,40,.05); }
 
         .rw-step-num {
             width: 30px;
@@ -1031,30 +1030,29 @@
             transition: color 0.2s;
         }
 
+        /* ── Step ativo: navy escuro ── */
         .rw-step-btn.is-active {
-            background: color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 10%, #fff 90%);
-            box-shadow: 0 0 0 2px color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 20%, transparent 80%);
+            background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
+            box-shadow: 0 4px 14px rgba(12,20,40,.30);
         }
-
         .rw-step-btn.is-active .rw-step-num {
-            border-color: transparent;
-            background: var(--empresa-cor-primaria, #4338ca);
+            border-color: rgba(255,255,255,.25);
+            background: rgba(255,255,255,.15);
             color: #fff;
-            box-shadow: 0 3px 10px color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 42%, transparent 58%);
         }
+        .rw-step-btn.is-active .rw-step-label { color: #fff; font-weight: 800; }
 
-        .rw-step-btn.is-active .rw-step-label {
-            color: var(--empresa-cor-primaria, #4338ca);
-            font-weight: 800;
+        /* ── Step concluído: verde success ── */
+        .rw-step-btn.is-done {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            box-shadow: 0 4px 12px rgba(16,185,129,.28);
         }
-
         .rw-step-btn.is-done .rw-step-num {
-            border-color: transparent;
-            background: #10b981;
+            border-color: rgba(255,255,255,.25);
+            background: rgba(255,255,255,.20);
             color: #fff;
         }
-
-        .rw-step-btn.is-done .rw-step-label { color: #10b981; }
+        .rw-step-btn.is-done .rw-step-label { color: #fff; font-weight: 700; }
 
         .rw-step-divider {
             flex: 1;

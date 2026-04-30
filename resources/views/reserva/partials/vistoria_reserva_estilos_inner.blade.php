@@ -189,16 +189,16 @@
         display: flex;
         align-items: center;
         gap: 10px;
-        background: var(--empresa-cor-primaria, #4338ca);
+        background: transparent;
         border: none;
         cursor: pointer;
         padding: 10px 16px;
         border-radius: 10px;
         flex-shrink: 0;
-        transition: background 0.2s;
+        transition: background 0.2s, box-shadow 0.2s;
     }
 
-    .step-btn:hover { filter: brightness(0.98); }
+    .step-btn:hover { background: rgba(15,23,40,.05); }
 
     .step-num {
         width: 30px;
@@ -216,39 +216,40 @@
         transition: all 0.25s;
     }
 
-    .step-btn.active { background: #eff3ff; }
-
-    .step-btn.active .step-num {
-        border-color: transparent;
-        background: var(--ci-step-active-bg);
-        color: var(--ci-step-active-fg);
-        box-shadow: 0 3px 10px color-mix(in srgb, var(--ci-step-active-bg) 42%, transparent 58%);
-    }
-
-    .step-btn.completed .step-num {
-        border-color: transparent;
-        background: var(--c-green);
-        color: #fff;
-    }
-
     .step-label-text {
         font-size: 0.78rem;
         font-weight: 600;
-        color: var(--empresa-cor-secundaria, #ffffff);
+        color: #64748b;
         white-space: nowrap;
         display: flex;
         align-items: center;
         gap: 5px;
+        transition: color 0.2s;
     }
 
+    /* ── Step ativo: navy escuro ── */
     .step-btn.active {
-        background: var(--empresa-cor-primaria, #4338ca);
-        /* Cor padrão com leve transparência (quando suportado) */
-        background: color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 82%, transparent 18%);
-        box-shadow: 0 0 0 2px color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 18%, transparent 82%);
+        background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
+        box-shadow: 0 4px 14px rgba(12,20,40,.30);
     }
-    .step-btn.active .step-label-text { color: var(--ci-step-active-fg); font-weight: 800; }
-    .step-btn.completed .step-label-text { color: var(--c-green); }
+    .step-btn.active .step-num {
+        border-color: rgba(255,255,255,.25);
+        background: rgba(255,255,255,.15);
+        color: #fff;
+    }
+    .step-btn.active .step-label-text { color: #fff; font-weight: 800; }
+
+    /* ── Step concluído: verde success ── */
+    .step-btn.completed {
+        background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+        box-shadow: 0 4px 12px rgba(16,185,129,.28);
+    }
+    .step-btn.completed .step-num {
+        border-color: rgba(255,255,255,.25);
+        background: rgba(255,255,255,.20);
+        color: #fff;
+    }
+    .step-btn.completed .step-label-text { color: #fff; font-weight: 700; }
 
     .step-divider {
         flex: 1;

@@ -612,11 +612,6 @@
         color: var(--c-slate);
         margin: 0;
     }
-    /* ── Step indicator usando padrão rw-* (ativo/feito) ── */
-    .step-btn.completed { background: color-mix(in srgb, var(--c-green) 10%, #fff 90%); }
-    .step-btn.completed .step-num { background: var(--c-green); color: #fff; border-color: transparent; }
-    .step-btn.completed .step-label-text { color: var(--c-green); }
-
     .ci-photo-card {
         border: 1px solid rgba(0,0,0,.08);
         border-radius: 10px;
