@@ -63,6 +63,32 @@
                 @endcan
             @endif
 
+            {{-- Check-in --}}
+            @if(!$reserva->contratoCheckin && ($pagamentoEfetuado ?? false))
+                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="action-pill action-pill--success">
+                    <i class="fas fa-file-signature"></i>
+                    <span>Iniciar check-in</span>
+                </a>
+            @elseif($reserva->contratoCheckin && $reserva->contratoCheckin->assinado !== 'S')
+                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="action-pill action-pill--success">
+                    <i class="fas fa-file-signature"></i>
+                    <span>Continuar check-in</span>
+                </a>
+            @endif
+
+            {{-- Check-out --}}
+            @if($pagamentoEfetuado ?? false)
+                <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="action-pill action-pill--checkout">
+                    <i class="fas fa-flag-checkered"></i>
+                    <span>Fazer check-out</span>
+                </a>
+            @else
+                <span class="action-pill action-pill--disabled" title="Pagamento necessário para check-out">
+                    <i class="fas fa-lock"></i>
+                    <span>Check-out</span>
+                </span>
+            @endif
+
             @if($reserva->podeFazerCancelamento())
                 <button type="button" class="action-pill action-pill--danger" id="btnCancelarReserva">
                     <i class="fas fa-ban"></i>
@@ -214,6 +240,17 @@
     }
     .action-pill--success {
         background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    }
+    .action-pill--checkout {
+        background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    }
+    .action-pill--disabled {
+        background: #cbd5e1;
+        color: #64748b;
+        cursor: not-allowed;
+        pointer-events: none;
+        box-shadow: none;
+        transform: none !important;
     }
     .reservation-actions-card__menu {
         border: 0;
