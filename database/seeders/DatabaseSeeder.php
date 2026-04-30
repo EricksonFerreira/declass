@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             FrotaCatalogSeeder::class,
             PermissoesNovasFuncionalidadesSeeder::class,
             PlanoSeeder::class,
+            TiposDanosPorCategoriaELocalizacaoSeeder::class,
         ]);
     }
 }
