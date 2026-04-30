@@ -470,11 +470,12 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $reserva->percentual_desconto = (float) ($reserva->cupomDesconto->valor ?? 0);
         }
 
-        // Verificar se o plano da empresa permite emissão de NFS-e
+        // Verificar módulos do plano da empresa
         $empresa = \App\Models\Empresa::with('planoAtivo.plano')->find($reserva->empresa_id);
-        $moduloNfse = (bool) ($empresa?->planoAtivo?->plano?->modulo_nfse ?? false);
+        $moduloNfse   = (bool) ($empresa?->planoAtivo?->plano?->modulo_nfse   ?? false);
+        $moduloMultas = (bool) ($empresa?->planoAtivo?->plano?->modulo_multas ?? false);
 
-        return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse'));
+        return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
     }
 
     public function emitirNfse($id)

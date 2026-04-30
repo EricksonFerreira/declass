@@ -219,6 +219,7 @@
                     <span>Financeiro</span>
                 </a>
             </li>
+            @if($moduloMultas)
             <li class="nav-item">
                 <a class="nav-link" id="tab-multas" data-toggle="tab" href="#pane-multas" role="tab">
                     <i class="fas fa-exclamation-triangle"></i>
@@ -228,6 +229,7 @@
                     @endif
                 </a>
             </li>
+            @endif
             <li class="nav-item">
                 <a class="nav-link" id="tab-historico" data-toggle="tab" href="#pane-historico" role="tab">
                     <i class="fas fa-history"></i>
@@ -1200,6 +1202,7 @@
             </div>
 
             {{-- ══════════ TAB 5 — MULTAS ══════════ --}}
+            @if($moduloMultas)
             <div class="tab-pane fade" id="pane-multas" role="tabpanel">
                 <div class="rs-card">
                     <div class="rs-card__header rs-card__header--between">
@@ -1279,6 +1282,7 @@
                     @endif
                 </div>
             </div>
+            @endif {{-- moduloMultas --}}
 
             {{-- ══════════ TAB 6 — HISTÓRICO ══════════ --}}
             <div class="tab-pane fade" id="pane-historico" role="tabpanel">
