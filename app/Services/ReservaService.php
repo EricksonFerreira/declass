@@ -80,6 +80,8 @@ class ReservaService extends AbstractBaseService
                 'valor_total_tarifa_base' => $data['valor_total_tarifa_base'],
                 'valor_opcionais' => $data['valor_opcionais'],
                 'percentual_desconto' => $data['percentual_desconto'],
+                'taxa_coleta' => $data['taxa_coleta'],
+                'taxa_entrega' => $data['taxa_entrega'],
                 'user_id' => $data['user_id'],
                 'tarifa_base' => $data['tarifa_base'],
                 'quantidade_dias' => $data['quantidade_dias'],
@@ -143,7 +145,13 @@ class ReservaService extends AbstractBaseService
             'quantidade_dias' => $data['quantidade_dias'],
             'status_reserva_id' => StatusReservaEnum::Pendente->value,
             'cupom_desconto_id' => $data['cupom_desconto']['id'] ?? null,
-            'valor_desconto' => $data['cupom_desconto']['valor'] ?? null,
+            'percentual_desconto' => $data['percentual_desconto'],
+            'valor_total_final' => $data['valor_total_final'],
+            'valor_total_com_desconto' => $data['valor_total_com_desconto'],
+            'valor_total_tarifa_base' => $data['valor_total_tarifa_base'],
+            'valor_opcionais' => $data['valor_opcionais'],
+            'taxa_coleta' => $data['taxa_coleta'],
+            'taxa_entrega' => $data['taxa_entrega'],
             'observacoes' => $data['observacoes'] ?? null,
             'updated_at' => now(),
         ];
@@ -877,7 +885,7 @@ class ReservaService extends AbstractBaseService
     public function processarDadosReserva($reservaData)
     {
         $data = $this->converteObjetoReservaParaArray($reservaData);
-        $data['percentual_desconto'] = $data['valor_desconto'] ?? 0;
+        $data['percentual_desconto'] = (float) ($data['cupom_desconto']['valor'] ?? 0);
 
         $data['taxa_coleta']  = (float) ($data['taxa_coleta']  ?? 0);
         $data['taxa_entrega'] = (float) ($data['taxa_entrega'] ?? 0);
