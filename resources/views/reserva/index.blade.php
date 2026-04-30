@@ -85,7 +85,7 @@
                                 <span class="rc__badge {{ $pagamentoEfetuado ? 'rc__badge--green' : 'rc__badge--amber' }}">
                                     {{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}
                                 </span>
-                                <span class="rc__badge rc__badge--status rc__badge--{{ strtolower(str_replace(' ', '-', $statusNome)) }}" title="{{ $reserva->statusReserva?->descricao }}">
+                                <span class="rc__badge rc__badge--status rc__badge--{{ strtolower(str_replace(' ', '-', $statusNome)) }} bg-{{ $reserva->statusReserva?->cor}}" title="{{ $reserva->statusReserva?->descricao }}">
                                     {{ $reserva->statusReserva?->nome ?? 'Status' }}
                                 </span>
                             </div>
