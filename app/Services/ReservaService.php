@@ -874,15 +874,18 @@ class ReservaService extends AbstractBaseService
         $data = $this->converteObjetoReservaParaArray($reservaData);
         $data['percentual_desconto'] = $data['valor_desconto'] ?? 0;
 
+        $data['taxa_coleta']  = (float) ($data['taxa_coleta']  ?? 0);
+        $data['taxa_entrega'] = (float) ($data['taxa_entrega'] ?? 0);
+
         $data['valor_opcionais'] = $this->calculaValorOpcionais($data['opcionais'], $data['quantidade_dias']);
         $data['valor_total_tarifa_base'] = $this->calcularValorTotalPorDias($data['tarifa_base'], $data['quantidade_dias']);
-        $data['valor_total_com_desconto'] = self::obtemValorTotalDesconto(
-                                                ($data['valor_total_tarifa_base'] + $data['valor_opcionais']),
-                                                $data['percentual_desconto']);
-        $data['valor_total_final'] = self::calcularValorTotalReserva(
-                                                $data['valor_total_tarifa_base'],
-                                                $data['valor_opcionais'],
-                                                $data['percentual_desconto']);
+
+        $subtotal = $data['valor_total_tarifa_base'] + $data['valor_opcionais'] + $data['taxa_coleta'] + $data['taxa_entrega'];
+
+        $data['valor_total_com_desconto'] = self::obtemValorTotalDesconto($subtotal, $data['percentual_desconto']);
+        $data['valor_total_final'] = $subtotal - ($subtotal * ($data['percentual_desconto'] / 100));
+        $data['valor_total_final'] = max(0, (float) $data['valor_total_final']);
+
         return $data;
     }
 
