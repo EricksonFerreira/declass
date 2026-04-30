@@ -1405,6 +1405,43 @@
         @include('reserva.partials.modal_edicao_no_show')
     @endcan
 
+    {{-- ── Modal Detalhes do Historico ── --}}
+    <div class="modal fade" id="modalDetalhesLog" tabindex="-1" data-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        <span id="logModalAcao"></span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
+                        <span class="mr-3 small"><i class="fas fa-user mr-1"></i> <strong id="logModalUsuario"></strong></span>
+                        <span class="mr-3 small"><i class="fas fa-clock mr-1"></i> <span id="logModalData"></span></span>
+                        <span class="ml-auto"><span class="badge" id="logModalNivel"></span></span>
+                    </div>
+                    <div id="logModalDetalhes"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        #logModalDetalhes .card { border-radius:8px; overflow:hidden; }
+        #logModalDetalhes .card-header { font-size:.8rem; }
+        #logModalDetalhes .table td { vertical-align:middle; }
+        #logModalDetalhes del { color:#dc2626; text-decoration:line-through; }
+        #logModalDetalhes ins { color:#16a34a; text-decoration:none; font-weight:700; }
+    </style>
+
     {{-- Lightbox overlay --}}
     <div id="rs-lightbox" class="rs-lightbox d-none" role="dialog" aria-modal="true">
         <div class="rs-lightbox__backdrop" id="rs-lightbox-backdrop"></div>
@@ -2912,6 +2949,10 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     .rs-tl-bloco { margin-top:6px; }
     .rs-tl-bloco__title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:3px; padding-bottom:2px; border-bottom:1px solid #e2e8f0; }
     .rs-tl-pre { margin:0; font-size:.72rem; background:#f1f5f9; border-radius:4px; padding:3px 6px; white-space:pre-wrap; word-break:break-all; }
+    .rs-tl-item--clickable { cursor:pointer; transition:background .15s ease; border-radius:8px; margin-left:-8px; padding-left:8px; padding-right:8px; }
+    .rs-tl-item--clickable:hover { background:#f1f5f9; }
+    .rs-tl-chevron { display:flex; align-items:center; color:#94a3b8; font-size:.75rem; flex-shrink:0; padding-left:4px; }
+    .rs-tl-details-badge { display:inline-flex; align-items:center; color:#3b82f6; font-weight:600; }
 
     /* ── Contrato legado ── */
     .rs-contrato-badge {
@@ -3143,6 +3184,115 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             danger:  'fas fa-times-circle',
         };
 
+        /* ── Abre modal com detalhes do log ── */
+        function openLogModal(log) {
+            const modal   = document.getElementById('modalDetalhesLog');
+            if (!modal) return;
+
+            document.getElementById('logModalAcao').textContent  = log.acao || '';
+            document.getElementById('logModalUsuario').textContent = log.usuario || '';
+            document.getElementById('logModalData').textContent    = log.data || '';
+            document.getElementById('logModalNivel').textContent   = (log.nivel || 'info').toUpperCase();
+
+            const badge = document.getElementById('logModalNivel');
+            badge.className = 'badge badge-' + ({
+                info: 'info', success: 'success', warning: 'warning', danger: 'danger',
+            }[log.nivel] || 'secondary');
+
+            const det = log.detalhes || {};
+            const container = document.getElementById('logModalDetalhes');
+            container.innerHTML = '';
+
+            const BLOCK_KEYS = ['antes', 'depois', 'data', 'payload'];
+            const hasBlocks = BLOCK_KEYS.some(function (k) { return typeof det[k] === 'object' && det[k] !== null; });
+
+            const entries = Object.entries(det).filter(function (_ref) { var k = _ref[0]; return k !== 'acao'; });
+
+            if (!entries.length) {
+                container.innerHTML = '<p class="text-muted text-center mb-0"><i class="fas fa-info-circle mr-1"></i>Nenhum detalhe adicional.</p>';
+            } else {
+                entries.forEach(function (_ref2) {
+                    var k = _ref2[0], v = _ref2[1];
+                    var label = k.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+
+                    if (BLOCK_KEYS.includes(k) && typeof v === 'object' && v !== null) {
+                        var card = document.createElement('div');
+                        card.className = 'card mb-3 border';
+                        card.innerHTML = '<div class="card-header py-2 px-3 font-weight-bold small bg-light">' + label + '</div>';
+                        var body = document.createElement('div');
+                        body.className = 'card-body p-0';
+
+                        if (Array.isArray(v)) {
+                            body.innerHTML = '<div class="p-2"><pre class="mb-0 small" style="max-height:200px;overflow:auto;white-space:pre-wrap">' + JSON.stringify(v, null, 2) + '</pre></div>';
+                        } else {
+                            var table = document.createElement('table');
+                            table.className = 'table table-sm table-bordered mb-0 small';
+                            var tbody = document.createElement('tbody');
+                            Object.entries(v).forEach(function (_ref3) {
+                                var sk = _ref3[0], sv = _ref3[1];
+                                var slabel = sk.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+                                var sval = (sv === null || sv === undefined) ? '—' : (typeof sv === 'object' ? JSON.stringify(sv) : sv);
+                                var tr = document.createElement('tr');
+                                tr.innerHTML = '<td class="font-weight-bold text-nowrap" style="width:35%">' + slabel + '</td><td>' + sval + '</td>';
+                                tbody.appendChild(tr);
+                            });
+                            table.appendChild(tbody);
+                            body.appendChild(table);
+                        }
+                        card.appendChild(body);
+                        container.appendChild(card);
+
+                        if (k === 'antes' && typeof det.depois === 'object' && det.depois !== null) {
+                            var diffCard = document.createElement('div');
+                            diffCard.className = 'card mb-3 border border-success';
+                            diffCard.innerHTML = '<div class="card-header py-2 px-3 font-weight-bold small bg-success text-white"><i class="fas fa-exchange-alt mr-1"></i>Comparacao (antes vs depois)</div>';
+                            var diffBody = document.createElement('div');
+                            diffBody.className = 'card-body p-0';
+                            var diffTable = document.createElement('table');
+                            diffTable.className = 'table table-sm table-bordered mb-0 small';
+                            var diffThead = document.createElement('thead');
+                            diffThead.className = 'thead-light';
+                            diffThead.innerHTML = '<tr><th style="width:30%">Campo</th><th style="width:35%">Antes</th><th style="width:35%">Depois</th></tr>';
+                            diffTable.appendChild(diffThead);
+                            var diffTbody = document.createElement('tbody');
+                            var allKeys = new Set([].concat(Object.keys(v), Object.keys(det.depois)));
+                            allKeys.forEach(function (sk) {
+                                var svBefore = v[sk];
+                                var svAfter  = det.depois[sk];
+                                var sBefore = (svBefore === null || svBefore === undefined) ? '—' : (typeof svBefore === 'object' ? JSON.stringify(svBefore) : String(svBefore));
+                                var sAfter  = (svAfter === null || svAfter === undefined) ? '—' : (typeof svAfter === 'object' ? JSON.stringify(svAfter) : String(svAfter));
+                                var slabel  = sk.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+                                var changed = String(svBefore) !== String(svAfter);
+                                var tr = document.createElement('tr');
+                                tr.innerHTML = '<td class="font-weight-bold">' + slabel + '</td>'
+                                    + '<td class="' + (changed ? 'text-danger' : '') + '">' + (changed ? '<del>' + sBefore + '</del>' : sBefore) + '</td>'
+                                    + '<td class="' + (changed ? 'text-success font-weight-bold' : '') + '">' + (changed ? '<ins>' + sAfter + '</ins>' : sAfter) + '</td>';
+                                diffTbody.appendChild(tr);
+                            });
+                            diffTable.appendChild(diffTbody);
+                            diffBody.appendChild(diffTable);
+                            diffCard.appendChild(diffBody);
+                            container.appendChild(diffCard);
+                        }
+                    } else {
+                        var row = document.createElement('div');
+                        row.className = 'd-flex justify-content-between align-items-start py-1 px-3 border-bottom small';
+                        row.innerHTML = '<span class="font-weight-bold text-nowrap mr-2">' + label + ':</span><span class="text-right text-break">' + formatLogValue(v) + '</span>';
+                        container.appendChild(row);
+                    }
+                });
+            }
+
+            $(modal).modal('show');
+        }
+
+        function formatLogValue(v) {
+            if (v === null || v === undefined) return '<span class="text-muted">—</span>';
+            if (typeof v === 'boolean') return v ? '<span class="text-success">Sim</span>' : '<span class="text-danger">Nao</span>';
+            if (typeof v === 'object') return '<pre class="mb-0 small" style="max-height:120px;overflow:auto;white-space:pre-wrap">' + JSON.stringify(v, null, 2) + '</pre>';
+            return String(v);
+        }
+
         /* ── Render timeline ── */
         function renderHistorico(logs) {
             const container = document.getElementById('historicoTimeline');
@@ -3157,69 +3307,20 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 return;
             }
 
-            function formatVal(v) {
-                if (v === null || v === undefined) return '—';
-                if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
-                if (typeof v === 'object') {
-                    const entries = Object.entries(v);
-                    if (!entries.length) return '—';
-                    return '<table class="rs-tl-subtable">' + entries.map(([sk, sv]) => {
-                        const slabel = sk.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                        const sval = (sv === null || sv === undefined) ? '—' : (typeof sv === 'object' ? JSON.stringify(sv) : sv);
-                        return `<tr><td>${slabel}</td><td>${sval}</td></tr>`;
-                    }).join('') + '</table>';
-                }
-                return v;
+            function hasDetalhes(det) {
+                return det && typeof det === 'object' && Object.keys(det).length > 0;
             }
 
-            function renderDetalhes(det) {
-                const BLOCK_KEYS = ['antes', 'depois', 'data', 'payload'];
-                const simples = [];
-                const blocos  = [];
-
-                Object.entries(det).filter(([k]) => k !== 'acao').forEach(([k, v]) => {
-                    const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                    if (BLOCK_KEYS.includes(k) && typeof v === 'object' && v !== null) {
-                        blocos.push({ label, v });
-                    } else {
-                        simples.push({ label, v });
-                    }
-                });
-
-                let html = '';
-
-                if (simples.length) {
-                    html += '<table class="rs-tl-table">' + simples.map(({ label, v }) =>
-                        `<tr><td class="rs-tl-table__key">${label}:</td><td>${formatVal(v)}</td></tr>`
-                    ).join('') + '</table>';
-                }
-
-                blocos.forEach(({ label, v }) => {
-                    const entries = Object.entries(v);
-                    if (!entries.length) return;
-                    html += `<div class="rs-tl-bloco">
-                        <div class="rs-tl-bloco__title">${label}</div>
-                        <table class="rs-tl-table">` +
-                        entries.map(([sk, sv]) => {
-                            const slabel = sk.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                            const sval = (sv === null || sv === undefined) ? '—'
-                                       : (typeof sv === 'object' ? `<pre class="rs-tl-pre">${JSON.stringify(sv, null, 2)}</pre>` : sv);
-                            return `<tr><td class="rs-tl-table__key">${slabel}:</td><td>${sval}</td></tr>`;
-                        }).join('') +
-                        `</table></div>`;
-                });
-
-                return html;
-            }
-
-            container.innerHTML = logs.map(function (log) {
-                const nivel  = log.nivel || 'info';
-                const icon   = nivelIcone[nivel] || nivelIcone.info;
-                const det    = log.detalhes || {};
-                const detHtml = renderDetalhes(det);
+            container.innerHTML = logs.map(function (log, idx) {
+                const nivel    = log.nivel || 'info';
+                const icon     = nivelIcone[nivel] || nivelIcone.info;
+                const det      = log.detalhes || {};
+                const hasDet   = hasDetalhes(det);
+                const detCount = hasDet ? Object.keys(det).length : 0;
+                const logJson  = hasDet ? JSON.stringify(log).replace(/"/g, '&quot;') : '';
 
                 return `
-                <div class="rs-tl-item">
+                <div class="rs-tl-item ${hasDet ? 'rs-tl-item--clickable' : ''}" ${hasDet ? 'data-log=\'' + logJson + '\'' : ''}>
                     <div class="rs-tl-icon rs-tl-icon--${nivel}"><i class="${icon}"></i></div>
                     <div class="rs-tl-body">
                         <div class="rs-tl-acao">${log.acao || 'Ação registrada'}</div>
@@ -3227,11 +3328,23 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                             <i class="fas fa-user mr-1"></i>${log.usuario}
                             &nbsp;&middot;&nbsp;
                             <i class="fas fa-clock mr-1"></i>${log.data}
+                            ${hasDet ? '&nbsp;&middot;&nbsp;<span class="rs-tl-details-badge"><i class="fas fa-list mr-1"></i>' + detCount + ' detalhe(s)</span>' : ''}
                         </div>
-                        ${detHtml ? `<div class="rs-tl-detalhes">${detHtml}</div>` : ''}
                     </div>
+                    ${hasDet ? '<div class="rs-tl-chevron"><i class="fas fa-chevron-right"></i></div>' : ''}
                 </div>`;
             }).join('');
+
+            container.querySelectorAll('.rs-tl-item--clickable').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    try {
+                        var logData = JSON.parse(this.dataset.log);
+                        openLogModal(logData);
+                    } catch (e) {
+                        // ignore parse errors
+                    }
+                });
+            });
 
             container.classList.remove('d-none');
         }

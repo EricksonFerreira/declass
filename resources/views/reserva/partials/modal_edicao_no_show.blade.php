@@ -114,6 +114,7 @@
     let reservaData = null;
     let estacoesMap = {};
     let changesData = null;
+    let initialFormData = null;
 
     const $modal = $(modal);
 
@@ -172,6 +173,8 @@
                 document.getElementById('editOpcionaisSection').classList.remove('d-none');
                 renderOpcionais(data.opcionais_pivot);
             }
+
+            initialFormData = collectFormData();
 
             showView('editFormView');
             document.getElementById('editBtnCloseText').textContent = 'Cancelar';
@@ -313,14 +316,14 @@
 
             if (res.status === 200 && res.data.success) {
                 changesData = {
-                    antes: payload,
+                    antes: initialFormData,
                     depois: payload,
                 };
                 document.getElementById('editSuccessAlert').classList.remove('alert-danger');
                 document.getElementById('editSuccessAlert').classList.add('alert-success');
                 document.getElementById('editSuccessMessage').textContent = res.data.message || 'As alteracoes foram aplicadas.';
 
-                renderChanges(payload, payload);
+                renderChanges(initialFormData, payload);
                 showView('editResultView');
                 document.getElementById('editBtnCloseText').textContent = 'Fechar';
                 document.getElementById('editBtnSave').classList.add('d-none');
