@@ -811,6 +811,13 @@
         #data_inicio_flatpickr, #data_fim_flatpickr,
         #data_inicio_hora, #data_fim_hora_fp { background: #fff; cursor: pointer; }
         #data_inicio_hora[disabled], #data_fim_hora_fp[disabled] { cursor: not-allowed; background: #f4f6f9; }
+        #data_inicio_hora.taxa-extra-sel, #data_fim_hora_fp.taxa-extra-sel {
+            border-color: #f59e0b !important;
+            border-width: 2px;
+            background: #fffbeb;
+            color: #92400e;
+            font-weight: 600;
+        }
         #data_inicio_flatpickr.is-invalid, #data_fim_flatpickr.is-invalid { border-color: #dc3545; }
 
         .reserva-page {
