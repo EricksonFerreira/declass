@@ -422,6 +422,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $reserva->load([
             'criadoPor',
             'nfseAtual',
+            'estacaoRetirada',
+            'estacaoDevolucao',
             'transacoes' => function ($query) {
                 $query->with(['user', 'pagoPor'])->orderByDesc('id');
             },
