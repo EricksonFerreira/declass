@@ -36,7 +36,7 @@ class VeiculoDanoService extends AbstractBaseService
     {
         return $this->model->where('veiculo_id', $veiculo_id)
             ->where('reserva_id', $reserva_id)
-            ->with('imagem')
+            ->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
             ->orderBy('id')
             ->get()
             ->map(fn (VeiculoDanos $d) => $this->mapearDanoParaJson($d))
@@ -51,7 +51,7 @@ class VeiculoDanoService extends AbstractBaseService
                 $query->where('reserva_id', '!=', $reserva_id)
                     ->orWhereNull('reserva_id');
             })
-            ->with('imagem')
+            ->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
             ->orderBy('id')
             ->get()
             ->map(fn (VeiculoDanos $d) => $this->mapearDanoParaJson($d))
@@ -88,9 +88,16 @@ class VeiculoDanoService extends AbstractBaseService
             'localizacao' => $loc,
             'descricao' => $d->observacoes,
             'tipo_dano' => $d->tipo_dano,
+            'categoria' => $d->dano?->categoria?->nome,
+            'local_dano' => $d->local_dano,
+            'localizacao_problema' => $d->localizacao_problema,
+            'custo_estimado' => $d->custo_estimado,
+            'quilometragem_veiculo' => $d->quilometragem_veiculo,
+            'created_at' => $d->created_at?->format('d/m/Y H:i'),
             'imagens' => $imagens,
             'correcao_descricao' => $d->correcao_descricao,
-            'correcao_data' => $d->correcao_data?->format('Y-m-d H:i'),
+            'correcao_data' => $d->correcao_data?->format('d/m/Y H:i'),
+            'correcao_usuario' => $d->usuarioCorrecao?->nome,
             'correcao_realizada' => $d->correcao_data !== null,
         ];
     }

@@ -289,6 +289,141 @@
                     </div>
                 </div>
 
+                <div class="col-12" data-empresa-step="5">
+                    @php
+                        $calcaoAtivo = old('calcao_ativo', isset($calcaoConfigEmpresa) && $calcaoConfigEmpresa?->ativo ? 'S' : 'N');
+                        $calcaoTipoRegra = old('calcao_tipo_regra_valor', $calcaoConfigEmpresa->tipo_regra_valor ?? 'fixo');
+                    @endphp
+                    <div class="empresa-subsection empresa-subsection--calcao">
+                        <div class="empresa-subsection__head">
+                            <div>
+                                <h5>Calção</h5>
+                                <p>Defina uma regra padrão simples para o calção da empresa e, se precisar, exceções por grupo de frota.</p>
+                            </div>
+                            <div class="empresa-subsection__badge">
+                                <i class="fas fa-shield-alt"></i> Regra aplicada na reserva
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-lg-3">
+                                <div class="form-group form-group-empresa">
+                                    <label for="calcao_ativo">Usar calção</label>
+                                    <select class="form-control form-control-sm" id="calcao_ativo" name="calcao_ativo">
+                                        <option value="N" {{ $calcaoAtivo === 'N' ? 'selected' : '' }}>Não</option>
+                                        <option value="S" {{ $calcaoAtivo === 'S' ? 'selected' : '' }}>Sim</option>
+                                    </select>
+                                    <small class="text-muted d-block mt-1">Se desativado, a reserva não exigirá calção.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="calcao-config-wrap" class="{{ $calcaoAtivo === 'S' ? '' : 'd-none' }}">
+                            <div class="row">
+                                <div class="col-lg-3">
+                                    <div class="form-group form-group-empresa">
+                                        <label for="calcao_tipo_regra_valor">Tipo de cálculo</label>
+                                        <select class="form-control form-control-sm" id="calcao_tipo_regra_valor" name="calcao_tipo_regra_valor">
+                                            <option value="fixo" {{ $calcaoTipoRegra === 'fixo' ? 'selected' : '' }}>Valor fixo</option>
+                                            <option value="percentual" {{ $calcaoTipoRegra === 'percentual' ? 'selected' : '' }}>Percentual da reserva</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    <div class="form-group form-group-empresa">
+                                        <label for="calcao_valor">Valor padrão</label>
+                                        <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="calcao_valor" name="calcao_valor"
+                                               value="{{ old('calcao_valor', $calcaoConfigEmpresa->valor ?? '') }}">
+                                        <small class="text-muted d-block mt-1">Informe em reais ou em %.</small>
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    <div class="form-group form-group-empresa">
+                                        <label for="calcao_valor_minimo">Valor mínimo</label>
+                                        <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="calcao_valor_minimo" name="calcao_valor_minimo"
+                                               value="{{ old('calcao_valor_minimo', $calcaoConfigEmpresa->valor_minimo ?? '') }}">
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    <div class="form-group form-group-empresa">
+                                        <label for="calcao_valor_maximo">Valor máximo</label>
+                                        <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="calcao_valor_maximo" name="calcao_valor_maximo"
+                                               value="{{ old('calcao_valor_maximo', $calcaoConfigEmpresa->valor_maximo ?? '') }}">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="empresa-calcao-help">
+                                <strong>Como funciona:</strong> primeiro o sistema procura uma regra por modelo, depois por grupo e, por último, usa esta regra padrão da empresa.
+                            </div>
+
+                            @if(isset($empresa) && isset($gruposFrota) && $gruposFrota->isNotEmpty())
+                                <div class="empresa-calcao-excecoes mt-3">
+                                    <div class="empresa-calcao-excecoes__title">Exceções por grupo de frota</div>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm table-hover empresa-calcao-table mb-0">
+                                            <thead>
+                                                <tr>
+                                                    <th>Grupo</th>
+                                                    <th>Usar exceção</th>
+                                                    <th>Tipo</th>
+                                                    <th>Valor</th>
+                                                    <th>Mínimo</th>
+                                                    <th>Máximo</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach($gruposFrota as $grupo)
+                                                    @php
+                                                        $configGrupo = $calcaoConfigsGrupo[$grupo->id] ?? null;
+                                                        $grupoOld = old('calcao_grupos.' . $grupo->id, []);
+                                                        $grupoAtivo = $grupoOld['ativo'] ?? (($configGrupo && $configGrupo->ativo) ? 'S' : 'N');
+                                                        $grupoTipo = $grupoOld['tipo_regra_valor'] ?? ($configGrupo->tipo_regra_valor ?? 'fixo');
+                                                        $grupoValor = $grupoOld['valor'] ?? ($configGrupo->valor ?? '');
+                                                        $grupoMin = $grupoOld['valor_minimo'] ?? ($configGrupo->valor_minimo ?? '');
+                                                        $grupoMax = $grupoOld['valor_maximo'] ?? ($configGrupo->valor_maximo ?? '');
+                                                    @endphp
+                                                    <tr>
+                                                        <td class="align-middle font-weight-600">{{ $grupo->nome }}</td>
+                                                        <td>
+                                                            <select class="form-control form-control-sm" name="calcao_grupos[{{ $grupo->id }}][ativo]">
+                                                                <option value="N" {{ $grupoAtivo === 'N' ? 'selected' : '' }}>Não</option>
+                                                                <option value="S" {{ $grupoAtivo === 'S' ? 'selected' : '' }}>Sim</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <select class="form-control form-control-sm" name="calcao_grupos[{{ $grupo->id }}][tipo_regra_valor]">
+                                                                <option value="fixo" {{ $grupoTipo === 'fixo' ? 'selected' : '' }}>Fixo</option>
+                                                                <option value="percentual" {{ $grupoTipo === 'percentual' ? 'selected' : '' }}>%</option>
+                                                            </select>
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm"
+                                                                   name="calcao_grupos[{{ $grupo->id }}][valor]" value="{{ $grupoValor }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm"
+                                                                   name="calcao_grupos[{{ $grupo->id }}][valor_minimo]" value="{{ $grupoMin }}">
+                                                        </td>
+                                                        <td>
+                                                            <input type="number" step="0.01" min="0" class="form-control form-control-sm"
+                                                                   name="calcao_grupos[{{ $grupo->id }}][valor_maximo]" value="{{ $grupoMax }}">
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            @elseif(!isset($empresa))
+                                <div class="empresa-calcao-help mt-2">
+                                    As exceções por grupo podem ser definidas após salvar a empresa, quando os grupos já estiverem disponíveis.
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-12 mt-2" data-empresa-step="6">
                     <div class="empresa-section-title" id="sec-credenciais">Credenciais do Provedor</div>
                 </div>
@@ -745,6 +880,74 @@
         border: 1px solid #d8e1ec;
         margin-bottom: .45rem;
     }
+
+    .empresa-subsection {
+        border: 1px solid #e5eaf2;
+        border-radius: 14px;
+        padding: 16px;
+        background: linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
+        margin-bottom: 10px;
+    }
+
+    .empresa-subsection__head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+
+    .empresa-subsection__head h5 {
+        margin: 0 0 4px;
+        font-weight: 700;
+        color: #0f2740;
+    }
+
+    .empresa-subsection__head p {
+        margin: 0;
+        color: #64748b;
+        font-size: .9rem;
+    }
+
+    .empresa-subsection__badge {
+        align-self: flex-start;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1d4ed8;
+        font-size: .78rem;
+        font-weight: 700;
+    }
+
+    .empresa-calcao-help {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #fffbeb;
+        border: 1px solid #fde68a;
+        color: #92400e;
+        font-size: .85rem;
+    }
+
+    .empresa-calcao-excecoes__title {
+        font-size: .9rem;
+        font-weight: 700;
+        color: #0f2740;
+        margin-bottom: 10px;
+    }
+
+    .empresa-calcao-table thead th {
+        border-top: 0;
+        background: #f8fafc;
+        color: #334155;
+        font-size: .78rem;
+        text-transform: uppercase;
+        letter-spacing: .03em;
+    }
+
+    .font-weight-600 {
+        font-weight: 600;
+    }
 </style>
 @stop
 
@@ -759,6 +962,8 @@
         const corTerciaria = document.getElementById('cor_terciaria');
         const themePreview = document.getElementById('empresa-theme-preview');
         const blocks = document.querySelectorAll('.gateway-fields');
+        const calcaoAtivo = document.getElementById('calcao_ativo');
+        const calcaoWrap = document.getElementById('calcao-config-wrap');
 
         function onlyDigits(value) {
             return (value || '').replace(/\D/g, '');
@@ -820,6 +1025,14 @@
             const c3 = corTerciaria?.value || '#64748B';
 
             themePreview.style.background = 'linear-gradient(135deg, ' + c1 + ' 0%, ' + c2 + ' 55%, ' + c3 + ' 100%)';
+        }
+
+        function syncCalcaoFields() {
+            if (!calcaoAtivo || !calcaoWrap) {
+                return;
+            }
+
+            calcaoWrap.classList.toggle('d-none', calcaoAtivo.value !== 'S');
         }
 
         // Wizard/Steps do cadastro de empresa (igual ao admin reserva)
@@ -918,7 +1131,8 @@
                     dominio: 3, reserva_selecionar_modelo: 3, reserva_atraso_max_minutos: 3, reserva_bloqueio_pos_reserva_horas: 3,
                     adicionar_novas_marcas_automaticamente: 3, adicionar_novos_modelos_automaticamente: 3,
                     logo: 4, cor_primaria: 4, cor_secundaria: 4, cor_terciaria: 4,
-                    gateway_pagamento: 5, moeda_pagamento: 5,
+                    gateway_pagamento: 5, moeda_pagamento: 5, calcao_ativo: 5, calcao_tipo_regra_valor: 5, calcao_valor: 5,
+                    calcao_valor_minimo: 5, calcao_valor_maximo: 5, calcao_grupos: 5,
                     stripe_public_key: 6, stripe_secret: 6,
                     mercado_livre_public_key: 6, mercado_livre_access_token: 6,
                     paypal_client_id: 6, paypal_client_secret: 6, paypal_mode: 6,
@@ -931,6 +1145,10 @@
                 };
 
                 for (const campo of errosCampos) {
+                    if (String(campo).startsWith('calcao_grupos.')) {
+                        setStep(5, true);
+                        return;
+                    }
                     const step = mapa[campo];
                     if (step) {
                         setStep(step, true);
@@ -946,6 +1164,10 @@
             gateway.addEventListener('change', syncGatewayFields);
         }
 
+        if (calcaoAtivo) {
+            calcaoAtivo.addEventListener('change', syncCalcaoFields);
+        }
+
         [corPrimaria, corSecundaria, corTerciaria].forEach((input) => {
             if (input) {
                 input.addEventListener('input', syncThemePreview);
@@ -956,6 +1178,7 @@
         bindMask(telefoneInput, formatTelefone);
 
         syncGatewayFields();
+        syncCalcaoFields();
         syncThemePreview();
     })();
 </script>

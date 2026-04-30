@@ -921,7 +921,26 @@
 
                             <div class="rs-mini-list">
                                 @foreach($danosReserva as $d)
-                                    <div class="rs-mini-item">
+                                    <div class="rs-mini-item rs-mini-item--clickable js-dano-detalhe-trigger"
+                                         data-dano='@json([
+                                             "id" => $d->id,
+                                             "localizacao" => strtoupper((string) ($d->local_dano ?? $d->localizacao_problema ?? "-")),
+                                             "descricao" => $d->observacoes,
+                                             "tipo_dano" => $d->tipo_dano,
+                                             "categoria" => $d->dano?->categoria?->nome,
+                                             "local_dano" => $d->local_dano,
+                                             "localizacao_problema" => $d->localizacao_problema,
+                                             "custo_estimado" => $d->custo_estimado,
+                                             "quilometragem_veiculo" => $d->quilometragem_veiculo,
+                                             "created_at" => $d->created_at ? \Carbon\Carbon::parse($d->created_at)->format("d/m/Y H:i") : null,
+                                             "correcao_descricao" => $d->correcao_descricao,
+                                             "correcao_data" => $d->correcao_data ? \Carbon\Carbon::parse($d->correcao_data)->format("d/m/Y H:i") : null,
+                                             "correcao_usuario" => $d->usuarioCorrecao?->nome,
+                                             "correcao_realizada" => (bool) $d->correcao_data,
+                                             "imagens" => $d->imagem->map(fn ($img) => [
+                                                 "url" => $img->caminho_imagem ? \Illuminate\Support\Facades\Storage::disk("public")->url($img->caminho_imagem) : null,
+                                             ])->filter(fn ($img) => !empty($img["url"]))->values()->all(),
+                                         ])'>
                                         <div>
                                             <strong>{{ strtoupper($d->local_dano ?? $d->localizacao_problema ?? '-') }}</strong>
                                             <div class="text-muted small">{{ \Illuminate\Support\Str::limit($d->observacoes ?? $d->tipo_dano ?? '', 120) }}</div>
@@ -1553,6 +1572,33 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 });
 </script>
 @endpush
+
+<div class="modal fade" id="modalDetalheDanoReserva" tabindex="-1" role="dialog" aria-labelledby="modalDetalheDanoReservaLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content rs-dano-modal">
+            <div class="modal-header rs-dano-modal__header">
+                <div>
+                    <div class="rs-dano-modal__eyebrow">Detalhes do dano</div>
+                    <h5 class="modal-title" id="modalDetalheDanoReservaLabel">Dano registrado no check-in</h5>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="rs-dano-modal__grid" id="rsDanoModalInfos"></div>
+                <div class="rs-dano-modal__correcao d-none" id="rsDanoModalCorrecaoWrap">
+                    <h6>Correção</h6>
+                    <div id="rsDanoModalCorrecao"></div>
+                </div>
+                <div class="rs-dano-modal__imagens d-none" id="rsDanoModalImagensWrap">
+                    <h6>Fotos do dano</h6>
+                    <div class="rs-dano-modal__thumbs" id="rsDanoModalImagens"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section('css')
 <style>
@@ -2871,6 +2917,19 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         background: #fbfdff;
     }
 
+    .rs-dano-item,
+    .rs-mini-item--clickable {
+        cursor: pointer;
+        transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .rs-dano-item:hover,
+    .rs-mini-item--clickable:hover {
+        transform: translateY(-1px);
+        border-color: #cbd5e1;
+        box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    }
+
     .rs-dano-item:last-child { margin-bottom: 0; }
 
     .rs-dano-thumbs {
@@ -2885,6 +2944,104 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         height: 54px;
         object-fit: cover;
         border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        background: #fff;
+    }
+
+    .rs-dano-modal {
+        border: 0;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 24px 64px rgba(15, 23, 42, 0.24);
+    }
+
+    .rs-dano-modal__header {
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: #fff;
+        border-bottom: 0;
+        padding: 18px 22px;
+    }
+
+    .rs-dano-modal__header .close {
+        color: #fff;
+        opacity: .85;
+        text-shadow: none;
+    }
+
+    .rs-dano-modal__eyebrow {
+        text-transform: uppercase;
+        letter-spacing: .14em;
+        font-size: .72rem;
+        font-weight: 700;
+        opacity: .7;
+        margin-bottom: 4px;
+    }
+
+    .rs-dano-modal__grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+        gap: 12px;
+    }
+
+    .rs-dano-modal__info {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        padding: 12px 14px;
+    }
+
+    .rs-dano-modal__info span {
+        display: block;
+        font-size: .74rem;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #64748b;
+        margin-bottom: 5px;
+        font-weight: 700;
+    }
+
+    .rs-dano-modal__info strong,
+    .rs-dano-modal__info div {
+        color: #0f172a;
+        font-size: .95rem;
+        word-break: break-word;
+    }
+
+    .rs-dano-modal__correcao,
+    .rs-dano-modal__imagens {
+        margin-top: 18px;
+    }
+
+    .rs-dano-modal__correcao h6,
+    .rs-dano-modal__imagens h6 {
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 10px;
+    }
+
+    .rs-dano-modal__correcao-box {
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-left: 4px solid #10b981;
+        border-radius: 14px;
+        padding: 14px 16px;
+    }
+
+    .rs-dano-modal__thumbs {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .rs-dano-modal__thumbs a {
+        display: block;
+    }
+
+    .rs-dano-modal__thumbs img {
+        width: 96px;
+        height: 96px;
+        object-fit: cover;
+        border-radius: 14px;
         border: 1px solid #e2e8f0;
         background: #fff;
     }
@@ -3394,7 +3551,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                         .map(function (img) {
                             const url = img.url || (img.path ? ('/storage/' + img.path) : null);
                             if (!url) return '';
-                            return `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="dano"></a>`;
+                            return `<a href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><img src="${url}" alt="dano"></a>`;
                         })
                         .filter(Boolean)
                         .join('');
@@ -3405,8 +3562,9 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                     const custo = d.custo_estimado !== undefined && d.custo_estimado !== null
                         ? `<strong>R$ ${parseFloat(d.custo_estimado || 0).toFixed(2).replace('.', ',')}</strong>`
                         : '';
+                    const payload = encodeURIComponent(JSON.stringify(d));
 
-                    return `<div class="rs-dano-item">
+                    return `<div class="rs-dano-item js-dano-detalhe-trigger" data-dano="${payload}">
                         <div>
                             <strong>${titulo}</strong>
                             <div class="text-muted small">${desc}</div>
@@ -3419,7 +3577,101 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 }).join('');
             }
             container.classList.remove('d-none');
+            bindDanoDetalheTriggers(container);
         }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function formatCurrency(value) {
+            const number = Number(value || 0);
+            return number.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+
+        function openDanoDetalheModal(dano) {
+            const infos = document.getElementById('rsDanoModalInfos');
+            const correcaoWrap = document.getElementById('rsDanoModalCorrecaoWrap');
+            const correcaoBox = document.getElementById('rsDanoModalCorrecao');
+            const imagensWrap = document.getElementById('rsDanoModalImagensWrap');
+            const imagensBox = document.getElementById('rsDanoModalImagens');
+
+            if (!infos || !correcaoWrap || !correcaoBox || !imagensWrap || !imagensBox) return;
+
+            const infoItems = [
+                ['ID', dano.id ?? '—'],
+                ['Vista', dano.localizacao || dano.local_dano || '—'],
+                ['Área', dano.localizacao_problema || '—'],
+                ['Categoria', dano.categoria || '—'],
+                ['Tipo de dano', dano.tipo_dano || '—'],
+                ['Custo estimado', dano.custo_estimado !== undefined && dano.custo_estimado !== null ? formatCurrency(dano.custo_estimado) : '—'],
+                ['Quilometragem', dano.quilometragem_veiculo ? `${dano.quilometragem_veiculo} km` : '—'],
+                ['Registrado em', dano.created_at || '—'],
+                ['Observações', dano.descricao || '—'],
+            ];
+
+            infos.innerHTML = infoItems.map(([label, value]) => `
+                <div class="rs-dano-modal__info">
+                    <span>${escapeHtml(label)}</span>
+                    <div>${escapeHtml(value)}</div>
+                </div>
+            `).join('');
+
+            if (dano.correcao_realizada || dano.correcao_descricao || dano.correcao_data) {
+                correcaoWrap.classList.remove('d-none');
+                correcaoBox.innerHTML = `
+                    <div class="rs-dano-modal__correcao-box">
+                        <div><strong>Status:</strong> ${dano.correcao_realizada ? 'Corrigido' : 'Pendente'}</div>
+                        <div><strong>Descrição:</strong> ${escapeHtml(dano.correcao_descricao || '—')}</div>
+                        <div><strong>Data:</strong> ${escapeHtml(dano.correcao_data || '—')}</div>
+                        <div><strong>Responsável:</strong> ${escapeHtml(dano.correcao_usuario || '—')}</div>
+                    </div>
+                `;
+            } else {
+                correcaoWrap.classList.add('d-none');
+                correcaoBox.innerHTML = '';
+            }
+
+            const imagens = Array.isArray(dano.imagens) ? dano.imagens.filter(img => img && img.url) : [];
+            if (imagens.length) {
+                imagensWrap.classList.remove('d-none');
+                imagensBox.innerHTML = imagens.map((img, idx) => `
+                    <a href="${escapeHtml(img.url)}" target="_blank" rel="noopener">
+                        <img src="${escapeHtml(img.url)}" alt="Foto do dano ${idx + 1}">
+                    </a>
+                `).join('');
+            } else {
+                imagensWrap.classList.add('d-none');
+                imagensBox.innerHTML = '';
+            }
+
+            $('#modalDetalheDanoReserva').modal('show');
+        }
+
+        function bindDanoDetalheTriggers(scope) {
+            (scope || document).querySelectorAll('.js-dano-detalhe-trigger').forEach(function (el) {
+                if (el.dataset.boundDanoModal === '1') return;
+                el.dataset.boundDanoModal = '1';
+                el.addEventListener('click', function () {
+                    try {
+                        const raw = this.dataset.dano || '{}';
+                        const payload = raw.startsWith('%7B') || raw.startsWith('%5B')
+                            ? JSON.parse(decodeURIComponent(raw))
+                            : JSON.parse(raw);
+                        openDanoDetalheModal(payload);
+                    } catch (e) {
+                        console.error('Erro ao abrir detalhe do dano', e);
+                    }
+                });
+            });
+        }
+
+        bindDanoDetalheTriggers(document);
 
         function carregarDanos() {
             if (danosCarregados) return;

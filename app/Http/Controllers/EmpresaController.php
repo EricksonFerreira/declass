@@ -7,7 +7,9 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Empresa\StoreEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
+use App\Models\ConfiguracaoCalcao;
 use App\Models\Empresa;
+use App\Models\GrupoFrota;
 use App\Support\ArquivoAnexoHelper;
 use App\Services\BreadcrumbService;
 use App\Services\EmpresaService;
@@ -177,8 +179,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Empresas', 'empresa.index', 'Criar');
         [$metodo, $rota] = $this->getFormMethodAndRoute();
+        [$calcaoConfigEmpresa, $calcaoConfigsGrupo, $gruposFrota] = $this->dadosCalcaoForm(null);
 
-        return view('empresa.add-edit', compact('breadcrumb', 'status', 'metodo', 'rota'))
+        return view('empresa.add-edit', compact('breadcrumb', 'status', 'metodo', 'rota', 'calcaoConfigEmpresa', 'calcaoConfigsGrupo', 'gruposFrota'))
             ->with('titulo', $this->titulo);
     }
 
@@ -192,7 +195,8 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $data = $request->validated();
         $data = $this->handleLogoUpload($request, $data);
 
-        $this->empresaService->createWithDefaultTemplate($data);
+        $empresa = $this->empresaService->createWithDefaultTemplate($data);
+        $this->syncCalcaoConfiguracoes($empresa, $request);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro)
             ->with('success', 'Empresa criada com base no modelo padrao.');
@@ -221,8 +225,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', "Editar: $empresa->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($empresa);
+        [$calcaoConfigEmpresa, $calcaoConfigsGrupo, $gruposFrota] = $this->dadosCalcaoForm($empresa);
 
-        return view('empresa.add-edit', compact('empresa', 'breadcrumb', 'status', 'metodo', 'rota'))
+        return view('empresa.add-edit', compact('empresa', 'breadcrumb', 'status', 'metodo', 'rota', 'calcaoConfigEmpresa', 'calcaoConfigsGrupo', 'gruposFrota'))
             ->with('titulo', $this->titulo);
     }
 
@@ -251,6 +256,8 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         if (! $updated) {
             abort(403, 'Sem acesso para editar esta empresa.');
         }
+
+        $this->syncCalcaoConfiguracoes($empresaAtual->fresh(), $request);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -602,5 +609,122 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
                 'locais' => [],
             ],
         ];
+    }
+
+    /**
+     * @return array{0:?ConfiguracaoCalcao,1:array<int, ConfiguracaoCalcao>,2:\Illuminate\Support\Collection<int, GrupoFrota>}
+     */
+    private function dadosCalcaoForm(?Empresa $empresa): array
+    {
+        $vazio = [null, [], collect()];
+
+        if (!Schema::hasTable('configuracoes_calcao') || !Schema::hasTable('grupos_frota') || !$empresa) {
+            return $vazio;
+        }
+
+        $configs = ConfiguracaoCalcao::query()
+            ->where('empresa_id', $empresa->id)
+            ->whereNull('modelo_id')
+            ->get();
+
+        $configEmpresa = $configs
+            ->first(fn (ConfiguracaoCalcao $config) => $config->grupo_frota_id === null);
+
+        $configsGrupo = $configs
+            ->filter(fn (ConfiguracaoCalcao $config) => $config->grupo_frota_id !== null)
+            ->keyBy('grupo_frota_id')
+            ->all();
+
+        $grupos = GrupoFrota::query()
+            ->where('empresa_id', $empresa->id)
+            ->orderBy('ordem')
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+
+        return [$configEmpresa, $configsGrupo, $grupos];
+    }
+
+    private function syncCalcaoConfiguracoes(Empresa $empresa, Request $request): void
+    {
+        if (!Schema::hasTable('configuracoes_calcao')) {
+            return;
+        }
+
+        $ativoEmpresa = $request->input('calcao_ativo', 'N') === 'S';
+
+        if (!$ativoEmpresa) {
+            ConfiguracaoCalcao::query()
+                ->where('empresa_id', $empresa->id)
+                ->update(['ativo' => false, 'updated_at' => now()]);
+            return;
+        }
+
+        $this->upsertCalcaoConfig($empresa->id, null, [
+            'tipo_regra_valor' => $request->input('calcao_tipo_regra_valor', ConfiguracaoCalcao::TIPO_FIXO),
+            'valor' => $request->input('calcao_valor'),
+            'valor_minimo' => $request->input('calcao_valor_minimo'),
+            'valor_maximo' => $request->input('calcao_valor_maximo'),
+            'ativo' => true,
+        ]);
+
+        foreach ((array) $request->input('calcao_grupos', []) as $grupoId => $dadosGrupo) {
+            $grupoId = (int) $grupoId;
+            if ($grupoId <= 0 || !is_array($dadosGrupo)) {
+                continue;
+            }
+
+            $ativo = ($dadosGrupo['ativo'] ?? 'N') === 'S';
+
+            if (!$ativo) {
+                ConfiguracaoCalcao::query()
+                    ->where('empresa_id', $empresa->id)
+                    ->where('grupo_frota_id', $grupoId)
+                    ->whereNull('modelo_id')
+                    ->update(['ativo' => false, 'updated_at' => now()]);
+                continue;
+            }
+
+            $this->upsertCalcaoConfig($empresa->id, $grupoId, [
+                'tipo_regra_valor' => $dadosGrupo['tipo_regra_valor'] ?? ConfiguracaoCalcao::TIPO_FIXO,
+                'valor' => $dadosGrupo['valor'] ?? null,
+                'valor_minimo' => $dadosGrupo['valor_minimo'] ?? null,
+                'valor_maximo' => $dadosGrupo['valor_maximo'] ?? null,
+                'ativo' => true,
+            ]);
+        }
+    }
+
+    private function upsertCalcaoConfig(int $empresaId, ?int $grupoFrotaId, array $dados): void
+    {
+        $config = ConfiguracaoCalcao::query()->firstOrNew([
+            'empresa_id' => $empresaId,
+            'grupo_frota_id' => $grupoFrotaId,
+            'modelo_id' => null,
+        ]);
+
+        $config->tipo_regra_valor = $dados['tipo_regra_valor'] ?? ConfiguracaoCalcao::TIPO_FIXO;
+        $config->valor = $this->decimalOrZero($dados['valor'] ?? null);
+        $config->valor_minimo = $this->decimalOrNull($dados['valor_minimo'] ?? null);
+        $config->valor_maximo = $this->decimalOrNull($dados['valor_maximo'] ?? null);
+        $config->ativo = (bool) ($dados['ativo'] ?? true);
+        $config->save();
+    }
+
+    private function decimalOrZero(mixed $value): float
+    {
+        $number = $this->decimalOrNull($value);
+
+        return $number ?? 0.0;
+    }
+
+    private function decimalOrNull(mixed $value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        $normalized = str_replace(',', '.', (string) $value);
+
+        return is_numeric($normalized) ? round((float) $normalized, 2) : null;
     }
 }

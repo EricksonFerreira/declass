@@ -65,6 +65,17 @@ class StoreEmpresaRequest extends FormRequest
             'reserva_bloqueio_pos_reserva_horas' => ['nullable', 'integer', 'min:0', 'max:720'],
             'adicionar_novas_marcas_automaticamente' => ['nullable', Rule::in(['S', 'N'])],
             'adicionar_novos_modelos_automaticamente' => ['nullable', Rule::in(['S', 'N'])],
+            'calcao_ativo' => ['nullable', 'in:S,N'],
+            'calcao_tipo_regra_valor' => ['nullable', Rule::in(['fixo', 'percentual'])],
+            'calcao_valor' => ['nullable', 'numeric', 'min:0'],
+            'calcao_valor_minimo' => ['nullable', 'numeric', 'min:0'],
+            'calcao_valor_maximo' => ['nullable', 'numeric', 'min:0'],
+            'calcao_grupos' => ['nullable', 'array'],
+            'calcao_grupos.*.ativo' => ['nullable', 'in:S,N'],
+            'calcao_grupos.*.tipo_regra_valor' => ['nullable', Rule::in(['fixo', 'percentual'])],
+            'calcao_grupos.*.valor' => ['nullable', 'numeric', 'min:0'],
+            'calcao_grupos.*.valor_minimo' => ['nullable', 'numeric', 'min:0'],
+            'calcao_grupos.*.valor_maximo' => ['nullable', 'numeric', 'min:0'],
             'nfse_ativo' => ['nullable', Rule::in(['S', 'N'])],
             'nfse_ambiente' => ['nullable', Rule::in(['homologacao', 'producao'])],
             'nfse_provedor' => ['nullable', 'string', 'max:50'],
@@ -88,6 +99,10 @@ class StoreEmpresaRequest extends FormRequest
             'reserva_bloqueio_pos_reserva_horas.integer' => 'O bloqueio pos-reserva deve ser um numero inteiro de horas.',
             'reserva_bloqueio_pos_reserva_horas.min' => 'O bloqueio pos-reserva nao pode ser negativo.',
             'reserva_bloqueio_pos_reserva_horas.max' => 'O bloqueio pos-reserva nao pode ultrapassar 720 horas.',
+            'calcao_tipo_regra_valor.in' => 'O tipo de regra do calcao deve ser fixo ou percentual.',
+            'calcao_valor.numeric' => 'O valor padrao do calcao deve ser numerico.',
+            'calcao_valor_minimo.numeric' => 'O valor minimo do calcao deve ser numerico.',
+            'calcao_valor_maximo.numeric' => 'O valor maximo do calcao deve ser numerico.',
         ];
     }
 
