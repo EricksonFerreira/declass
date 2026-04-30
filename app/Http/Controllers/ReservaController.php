@@ -869,10 +869,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 ->with('warning', 'O pagamento deve ser efetuado antes de realizar o check-out.');
         }
 
+        if (!$reserva->contratoCheckin || $reserva->contratoCheckin->assinado !== 'S') {
+            return redirect()
+                ->route('reserva.show', $reserva_id)
+                ->with('warning', 'O check-in deve ser realizado e o contrato assinado antes do check-out.');
+        }
+
         if (!$reserva->podeFazerCheckout()) {
             return redirect()
                 ->route('reserva.show', $reserva_id)
-                ->with('warning', 'Check-out com vistoria não está disponível para esta reserva.');
+                ->with('warning', 'A reserva precisa estar no status "Check-in" (em andamento) para realizar o check-out.');
         }
 
         if ($mensagemCalcao = $this->validarCalcaoParaCheckout($reserva)) {

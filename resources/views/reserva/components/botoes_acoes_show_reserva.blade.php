@@ -77,13 +77,39 @@
             @endif
 
             {{-- Check-out --}}
-            @if($pagamentoEfetuado ?? false)
-                <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="action-pill action-pill--checkout">
+            @php
+                $calcaoAtualCo    = $reserva->calcao ?? null;
+                $calcooPendenteCo = false; // assume ok ou não exige
+                // Só bloqueia se houver calção configurado e não estiver em status válido
+                // (a validação real fica no server; aqui apenas indicador visual)
+                $checkinAssinadoCo = $reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S';
+                $statusOkCo        = $reserva->status_reserva_id === 3; // Checkin
+                $checkoutUrl       = route('reserva.checkout.vistoria', $reserva->id);
+                $dataFim           = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
+                $isAntesDaDataFim  = $dataFim && now()->lt($dataFim);
+
+                $podeCheckout = ($pagamentoEfetuado ?? false)
+                    && $checkinAssinadoCo
+                    && $statusOkCo;
+            @endphp
+
+            @if($podeCheckout)
+                <button type="button" id="btn-iniciar-checkout"
+                        class="action-pill action-pill--checkout"
+                        data-url="{{ $checkoutUrl }}"
+                        data-antes-fim="{{ $isAntesDaDataFim ? '1' : '0' }}"
+                        data-data-fim="{{ $dataFim ? $dataFim->format('d/m/Y') : '' }}">
                     <i class="fas fa-flag-checkered"></i>
                     <span>Fazer check-out</span>
-                </a>
+                </button>
             @else
-                <span class="action-pill action-pill--disabled" title="Pagamento necessário para check-out">
+                @php
+                    $motivoBloqueio = '';
+                    if (!($pagamentoEfetuado ?? false))       $motivoBloqueio = 'Pagamento não efetuado';
+                    elseif (!$checkinAssinadoCo)              $motivoBloqueio = 'Check-in não realizado';
+                    elseif (!$statusOkCo)                     $motivoBloqueio = 'Reserva não está em andamento (check-in)';
+                @endphp
+                <span class="action-pill action-pill--disabled" title="{{ $motivoBloqueio }}">
                     <i class="fas fa-lock"></i>
                     <span>Check-out</span>
                 </span>
@@ -476,6 +502,45 @@
 
             if (window.confirm('Tem certeza que deseja cancelar a reserva?')) {
                 cancelarReserva();
+            }
+        });
+    })();
+
+    /* ── Iniciar Check-out ── */
+    (function () {
+        const btn = document.getElementById('btn-iniciar-checkout');
+        if (!btn) return;
+
+        btn.addEventListener('click', function () {
+            const url        = btn.dataset.url;
+            const antesFim   = btn.dataset.antesFim === '1';
+            const dataFim    = btn.dataset.dataFim;
+
+            if (antesFim) {
+                // Fora da data prevista — avisa sobre sem estorno
+                Swal.fire({
+                    title: 'Check-out antecipado',
+                    html: `<p style="color:#374151;line-height:1.6">A data prevista de devolução é <strong>${dataFim}</strong>.<br><br>
+                           Ao realizar o check-out agora, <strong>não haverá estorno</strong> dos dias restantes que já foram cobrados.<br><br>
+                           Deseja continuar mesmo assim?</p>`,
+                    icon: 'warning',
+                    iconColor: '#f59e0b',
+                    showCancelButton: true,
+                    confirmButtonText: '<i class="fas fa-flag-checkered mr-1"></i> Sim, fazer check-out',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#0891b2',
+                    cancelButtonColor: '#6b7280',
+                    reverseButtons: true,
+                    customClass: {
+                        popup: 'swal-rounded',
+                    },
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            } else {
+                window.location.href = url;
             }
         });
     })();
