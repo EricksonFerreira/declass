@@ -72,9 +72,12 @@
                 </div>
 
                 <section class="wizard-step active" data-step="1">
-                    <div class="step-head">
-                        <h5><i class="fas fa-car-side mr-2"></i>Dados da devolução</h5>
-                        <p>Confirme o veículo da reserva e registre quilometragem, combustível e data/hora de devolução.</p>
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon"><i class="fas fa-car-side"></i></div>
+                        <div>
+                            <h5>Dados da devolução</h5>
+                            <p>Confirme o veículo da reserva e registre quilometragem, combustível e data/hora de devolução.</p>
+                        </div>
                     </div>
 
                     <form id="form_dados_devolucao">
@@ -146,9 +149,12 @@
                 </section>
 
                 <section class="wizard-step" data-step="2">
-                    <div class="step-head">
-                        <h5><i class="fas fa-search mr-2"></i>Vistoria do veículo</h5>
-                        <p>Registre novas avarias da devolução e consulte histórico do veículo, incluindo correções já realizadas.</p>
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--amber"><i class="fas fa-search"></i></div>
+                        <div>
+                            <h5>Vistoria do veículo</h5>
+                            <p>Registre novas avarias da devolução e consulte histórico do veículo, incluindo correções já realizadas.</p>
+                        </div>
                     </div>
 
                     <div class="ci-block">
@@ -250,9 +256,12 @@
                 </section>
 
                 <section class="wizard-step" data-step="3">
-                    <div class="step-head">
-                        <h5><i class="fas fa-comment-alt mr-2"></i>Observações finais</h5>
-                        <p>Notas para o registro de devolução. Ao concluir, a reserva será finalizada.</p>
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--green"><i class="fas fa-comment-alt"></i></div>
+                        <div>
+                            <h5>Observações finais</h5>
+                            <p>Notas para o registro de devolução. Ao concluir, a reserva será finalizada.</p>
+                        </div>
                     </div>
 
                     <div class="ci-block">
@@ -313,28 +322,30 @@
 <link rel="stylesheet" href="{{ asset('css/select2.min.css') }}">
 <style>
     @include('reserva.partials.vistoria_reserva_estilos_inner')
+
+    /* ── Step content header — checkout usa verde como cor base ── */
+    .rw-step-content-header { border-left-color: #059669; background: #f0fdf9; }
+    .rw-step-content-icon   { background: #d1fae5; color: #059669; }
+
+    /* Header bar verde */
     .co-checkout-header::after {
         background: linear-gradient(90deg, #059669, #10b981, #0ea5e9);
     }
-    .co-checkout-icon {
-        color: #d1fae5;
-    }
-    .damage-table-wrap {
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
-    }
+    .co-checkout-icon { color: #d1fae5; }
+
+    /* Card de conclusão */
     .co-summary-checkout .ci-summary-card__icon {
         background: linear-gradient(135deg, #059669, #10b981);
-        box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35);
+        box-shadow: 0 6px 18px rgba(5,150,105,.35);
     }
     .co-btn-finalizar {
         background: linear-gradient(135deg, #059669, #10b981) !important;
-        box-shadow: 0 6px 18px rgba(5, 150, 105, 0.35) !important;
+        box-shadow: 0 6px 18px rgba(5,150,105,.35) !important;
     }
 </style>
 @stop
 
-@section('js')
+@push('js')
 <script src="{{ asset('js/select2.min.js') }}"></script>
 <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
 <script>
@@ -573,4 +584,4 @@
 
 })();
 </script>
-@stop
+@endpush
