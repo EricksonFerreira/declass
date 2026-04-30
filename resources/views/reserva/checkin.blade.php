@@ -82,9 +82,12 @@
                      PASSO 1 — Dados do Veiculo
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step active" data-step="1">
-                    <div class="step-head">
-                        <h5><i class="fas fa-car mr-2"></i>Dados do Veiculo</h5>
-                        <p>Selecione o veiculo, registre a quilometragem atual e defina data e hora de saida.</p>
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon"><i class="fas fa-car"></i></div>
+                        <div>
+                            <h5>Dados do Veiculo</h5>
+                            <p>Selecione o veiculo, registre a quilometragem atual e defina data e hora de saida.</p>
+                        </div>
                     </div>
 
                     <form id="form_dados_veiculos">
@@ -292,9 +295,12 @@
                      PASSO 2 — Estado do Veiculo
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="2">
-                    <div class="step-head">
-                        <h5><i class="fas fa-camera mr-2"></i>Fotos do Veiculo</h5>
-                        <p>Envie as fotos obrigatorias para registrar o estado do veiculo no check-in. Nao e possivel continuar sem concluir este passo.</p>
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--blue"><i class="fas fa-camera"></i></div>
+                        <div>
+                            <h5>Fotos do Veiculo</h5>
+                            <p>Envie as fotos obrigatorias para registrar o estado do veiculo no check-in. Nao e possivel continuar sem concluir este passo.</p>
+                        </div>
                     </div>
 
                     <div class="ci-block">
@@ -355,9 +361,12 @@
                 </section>
 
                 <section class="wizard-step" data-step="3">
-                    <div class="step-head">
-                        <h5><i class="fas fa-search mr-2"></i>Estado do Veiculo</h5>
-                        <p>Clique em uma das vistas do veiculo para registrar um novo dano. O veiculo deve estar selecionado no Passo 1.</p>
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--amber"><i class="fas fa-search"></i></div>
+                        <div>
+                            <h5>Estado do Veiculo</h5>
+                            <p>Clique em uma das vistas do veiculo para registrar um novo dano. O veiculo deve estar selecionado no Passo 1.</p>
+                        </div>
                     </div>
 
                     {{-- Vistas do carro --}}
@@ -465,9 +474,12 @@
                      PASSO 3 — Observacoes
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="4">
-                    <div class="step-head">
-                        <h5><i class="fas fa-comment-alt mr-2"></i>Observacoes e Notas</h5>
-                        <p>Registre quaisquer observacoes adicionais sobre a saida do veiculo.</p>
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--green"><i class="fas fa-comment-alt"></i></div>
+                        <div>
+                            <h5>Observacoes e Notas</h5>
+                            <p>Registre quaisquer observacoes adicionais sobre a saida do veiculo.</p>
+                        </div>
                     </div>
 
                     <div class="ci-block">
@@ -536,7 +548,7 @@
                         <i class="fas fa-arrow-left mr-1"></i>Voltar
                     </button>
                     <div class="wizard-actions-right">
-                        <button type="button" class="btn-action btn-primary" id="wizardNext">
+                        <button type="button" class="btn-action btn-action-primary" id="wizardNext">
                             Continuar<i class="fas fa-arrow-right ml-1"></i>
                         </button>
                         {{-- @if(!($contratoExistente && $contratoExistente->assinado == 'S'))
@@ -558,6 +570,52 @@
 <link rel="stylesheet" href="{{ asset('css/select2.min.css') }}">
 <style>
     @include('reserva.partials.vistoria_reserva_estilos_inner')
+
+    /* ── Step content header (padrão add-edit) ── */
+    .rw-step-content-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        background: #f8faff;
+        border: 1px solid var(--c-border);
+        border-left: 4px solid var(--c-indigo);
+        border-radius: 12px;
+        margin-bottom: 1rem;
+    }
+    .rw-step-content-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--c-indigo) 12%, #fff 88%);
+        color: var(--c-indigo);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .rw-step-content-icon--blue  { background: #eff6ff; color: #2563eb; }
+    .rw-step-content-icon--amber { background: #fffbeb; color: #f59e0b; }
+    .rw-step-content-icon--green { background: #ecfdf5; color: #10b981; }
+    .rw-step-content-header:has(.rw-step-content-icon--amber) { border-left-color: var(--c-amber); background: #fffdf5; }
+    .rw-step-content-header:has(.rw-step-content-icon--green) { border-left-color: var(--c-green); background: #f0fdf9; }
+    .rw-step-content-header h5 {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--c-ink);
+        margin: 0 0 2px;
+        letter-spacing: -0.01em;
+    }
+    .rw-step-content-header p {
+        font-size: 0.78rem;
+        color: var(--c-slate);
+        margin: 0;
+    }
+    /* ── Step indicator usando padrão rw-* (ativo/feito) ── */
+    .step-btn.completed { background: color-mix(in srgb, var(--c-green) 10%, #fff 90%); }
+    .step-btn.completed .step-num { background: var(--c-green); color: #fff; border-color: transparent; }
+    .step-btn.completed .step-label-text { color: var(--c-green); }
 
     .ci-photo-card {
         border: 1px solid rgba(0,0,0,.08);
