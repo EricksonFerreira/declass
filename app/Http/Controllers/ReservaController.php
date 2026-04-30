@@ -1832,9 +1832,29 @@ private function montarDiasSemanaFlags($diasUteis): array
     public function efetuarPagamento($id)
     {
 
-        $reserva = $this->reservaService->getById($id);
+        $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto', 'estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos']);
         if ($reserva->status_reserva_id != StatusReservaEnum::Pendente->value) {
             return redirect()->route('reserva.show', $id)->with('error', 'Reserva não pode ser paga');
+        }
+
+        // Taxas fora de expediente (igual ao show)
+        $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
+        $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+        if ($taxaColeta == 0 && $reserva->estacaoRetirada && $reserva->data_inicio) {
+            $av = $this->reservaService->avaliarFuncionamentoEstacaoPublico((int) $reserva->estacao_retirada_id, $reserva->data_inicio, 'retirada');
+            if (($av['taxa_extra'] ?? false) && ($av['ok'] ?? false)) {
+                $taxaColeta = (float) ($reserva->estacaoRetirada->valor_taxa_coleta ?? 0);
+            }
+        }
+        if ($taxaEntrega == 0 && $reserva->estacaoDevolucao && $reserva->data_fim) {
+            $av = $this->reservaService->avaliarFuncionamentoEstacaoPublico((int) $reserva->estacao_devolucao_id, $reserva->data_fim, 'devolucao');
+            if (($av['taxa_extra'] ?? false) && ($av['ok'] ?? false)) {
+                $taxaEntrega = (float) ($reserva->estacaoDevolucao->valor_taxa_entrega ?? 0);
+            }
+        }
+        // Desconto: recuperar do cupom se não salvo
+        if ((float) ($reserva->percentual_desconto ?? 0) == 0 && $reserva->cupom_desconto_id && $reserva->cupomDesconto) {
+            $reserva->percentual_desconto = (float) ($reserva->cupomDesconto->valor ?? 0);
         }
 
         $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $reserva->empresa_id);
@@ -1899,7 +1919,7 @@ private function montarDiasSemanaFlags($diasUteis): array
 
         return view(
             'reserva.efetuar-pagamento',
-            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento', 'gatewayPadrao', 'gatewayNome', 'moedaPadrao', 'stripePublicKey')
+            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento', 'gatewayPadrao', 'gatewayNome', 'moedaPadrao', 'stripePublicKey', 'taxaColeta', 'taxaEntrega')
         );
     }
 
