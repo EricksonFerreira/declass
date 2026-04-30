@@ -822,6 +822,12 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     {
         $reserva = $this->reservaService->getById($reserva_id, ['modelos', 'usuario', 'veiculo', 'contratoCheckin', 'calcao']);
 
+        if (($reserva->pagamento_efetuado ?? 'N') !== 'S') {
+            return redirect()
+                ->route('reserva.show', $reserva_id)
+                ->with('warning', 'O pagamento deve ser efetuado antes de realizar o check-out.');
+        }
+
         if (!$reserva->podeFazerCheckout()) {
             return redirect()
                 ->route('reserva.show', $reserva_id)
@@ -1959,6 +1965,12 @@ private function montarDiasSemanaFlags($diasUteis): array
     public function checkin(Request $request, $reserva_id)
     {
         $reserva = $this->reservaService->getById($reserva_id, ['modelos']);
+
+        if (($reserva->pagamento_efetuado ?? 'N') !== 'S') {
+            return redirect()
+                ->route('reserva.show', $reserva_id)
+                ->with('warning', 'O pagamento deve ser efetuado antes de realizar o check-in.');
+        }
 
         $categoriaDanos = $this->categoriaDanoService->getAllForSelect();
 

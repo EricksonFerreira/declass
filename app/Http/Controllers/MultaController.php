@@ -120,6 +120,12 @@ class MultaController extends BaseController
         $reservaId  = $request->query('reserva_id');
         $reserva    = $reservaId ? $this->reservaService->getById($reservaId, ['usuario', 'grupoFrota']) : null;
 
+        if ($reserva && ($reserva->pagamento_efetuado ?? 'N') !== 'S') {
+            return redirect()
+                ->route('reserva.show', $reserva->id)
+                ->with('warning', 'O pagamento deve ser efetuado antes de registrar multas.');
+        }
+
         $veiculoId = $request->query('veiculo_id');
         $veiculo   = $veiculoId ? $this->veiculoService->getById($veiculoId, ['marca', 'modelo']) : null;
 

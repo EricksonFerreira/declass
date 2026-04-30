@@ -200,7 +200,7 @@
                                         <option value="">Selecione a data</option>
                                     </select>
                                     <small id="data_inicio_hora_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Escolha uma data.</small>
-                                    <small id="data_inicio_taxa_aviso" class="d-none text-warning d-block mt-1" style="font-size:0.75rem"><i class="fas fa-exclamation-triangle mr-1"></i>Horário fora do expediente. Taxa adicional aplicável.</small>
+                                    <small id="data_inicio_taxa_aviso" class="d-none d-block mt-1" style="font-size:.75rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 7px;color:#92400e;font-weight:600"><i class="fas fa-exclamation-triangle mr-1"></i>Fora do expediente — taxa adicional aplicável.</small>
                                 </div>
                             </div>
                             <input type="hidden" id="data_inicio_data" value="{{ $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('Y-m-d') : '' }}">
@@ -240,7 +240,7 @@
                                         <option value="">Selecione a data</option>
                                     </select>
                                     <small id="data_fim_hora_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Escolha uma data.</small>
-                                    <small id="data_fim_taxa_aviso" class="d-none text-warning d-block mt-1" style="font-size:0.75rem"><i class="fas fa-exclamation-triangle mr-1"></i>Horário fora do expediente. Taxa adicional aplicável.</small>
+                                    <small id="data_fim_taxa_aviso" class="d-none d-block mt-1" style="font-size:.75rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 7px;color:#92400e;font-weight:600"><i class="fas fa-exclamation-triangle mr-1"></i>Fora do expediente — taxa adicional aplicável.</small>
                                 </div>
                             </div>
                             <input type="hidden" id="data_fim_data" value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('Y-m-d') : '' }}">
@@ -2581,7 +2581,9 @@
             if (horaNorm && $sel.find(`option[value="${horaNorm}"]`).length) {
                 $sel.val(horaNorm);
             }
-            $('#data_inicio_taxa_aviso').toggleClass('d-none', $sel.find('option:selected').data('taxa-extra') != '1');
+            const _initTaxaRetirada = $sel.find('option:selected').data('taxa-extra') == '1';
+            $('#data_inicio_taxa_aviso').toggleClass('d-none', !_initTaxaRetirada);
+            $sel.css({ 'border-color': _initTaxaRetirada ? '#f59e0b' : '', 'color': _initTaxaRetirada ? '#92400e' : '', 'font-weight': _initTaxaRetirada ? '600' : '' });
             $fb.text('Escolha a hora de retirada.');
             atualizarDataInicioRetirada();
             return lista;
@@ -3192,8 +3194,12 @@
             $sel.append('<option value="">Selecione a hora</option>');
             lista.forEach(function(slot) {
                 const optVal = slot.value.includes('T') ? slot.value.split('T')[1].slice(0, 5) : String(slot.value).slice(0, 5);
-                const texto = slot.taxa_extra ? `${slot.label} • Taxa extra` : slot.label;
-                $sel.append(`<option value="${optVal}" data-taxa-extra="${slot.taxa_extra ? '1' : '0'}">${texto}</option>`);
+                const texto = slot.taxa_extra
+                    ? `⚡ ${slot.label}  —  fora do expediente (+taxa)`
+                    : slot.label;
+                const $opt = $(`<option value="${optVal}" data-taxa-extra="${slot.taxa_extra ? '1' : '0'}">${texto}</option>`);
+                if (slot.taxa_extra) $opt.css({ 'color': '#b45309', 'font-weight': '600' });
+                $sel.append($opt);
             });
             $sel.prop('disabled', false);
 
@@ -3202,7 +3208,9 @@
             if (horaNorm && $sel.find(`option[value="${horaNorm}"]`).length) {
                 $sel.val(horaNorm);
             }
-            $('#data_fim_taxa_aviso').toggleClass('d-none', $sel.find('option:selected').data('taxa-extra') != '1');
+            const _initTaxaDevolucao = $sel.find('option:selected').data('taxa-extra') == '1';
+            $('#data_fim_taxa_aviso').toggleClass('d-none', !_initTaxaDevolucao);
+            $sel.css({ 'border-color': _initTaxaDevolucao ? '#f59e0b' : '', 'color': _initTaxaDevolucao ? '#92400e' : '', 'font-weight': _initTaxaDevolucao ? '600' : '' });
             $fb.text('Escolha a hora de devolução.');
             atualizarDataFimDevolucao();
             return lista;
@@ -3211,6 +3219,7 @@
         $('#data_fim_hora_fp').on('change', function() {
             const temTaxa = $(this).find('option:selected').data('taxa-extra') == '1';
             $('#data_fim_taxa_aviso').toggleClass('d-none', !temTaxa);
+            $(this).css({ 'border-color': temTaxa ? '#f59e0b' : '', 'color': temTaxa ? '#92400e' : '', 'font-weight': temTaxa ? '600' : '' });
             if (typeof setTaxaEntrega === 'function') {
                 const estacaoId = $('#estacao_devolucao_id').val();
                 const info = ESTACOES_TAXAS[estacaoId];
@@ -3223,6 +3232,7 @@
         $('#data_inicio_hora').on('change', function() {
             const temTaxa = $(this).find('option:selected').data('taxa-extra') == '1';
             $('#data_inicio_taxa_aviso').toggleClass('d-none', !temTaxa);
+            $(this).css({ 'border-color': temTaxa ? '#f59e0b' : '', 'color': temTaxa ? '#92400e' : '', 'font-weight': temTaxa ? '600' : '' });
             if (typeof setTaxaColeta === 'function') {
                 const estacaoId = $('#estacao_retirada_id').val();
                 const info = ESTACOES_TAXAS[estacaoId];

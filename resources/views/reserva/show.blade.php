@@ -89,6 +89,7 @@
         }
     }
 
+    $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
     $totalMultas = $reserva->multas?->count() ?? 0;
     $danosReserva = $reserva->veiculoDano ?? collect();
     $danosPendentes = $danosReserva->whereNull('correcao_data');
@@ -813,9 +814,15 @@
                     <div class="rs-empty py-5">
                         <i class="fas fa-file-signature" style="font-size:2.5rem;color:#cbd5e1"></i>
                         <span>Nenhum contrato de check-in cadastrado para esta reserva.</span>
-                        <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-btn rs-btn--outline mt-2">
-                            <i class="fas fa-plus"></i> Criar check-in
-                        </a>
+                        @if($pagamentoEfetuado)
+                            <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-btn rs-btn--outline mt-2">
+                                <i class="fas fa-plus"></i> Criar check-in
+                            </a>
+                        @else
+                            <div class="mt-3 d-flex align-items-center justify-content-center" style="gap:.5rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:.6rem 1rem;font-size:.83rem;color:#92400e;font-weight:600">
+                                <i class="fas fa-lock"></i> Pagamento necessário para criar o check-in
+                            </div>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -831,9 +838,18 @@
                             <h2>Vistoria de Check-out</h2>
                         </div>
                         <div class="d-flex align-items-center gap-3 flex-wrap" style="gap:12px">
-                            <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="rs-btn rs-btn--outline">
-                                <i class="fas fa-search"></i> Abrir vistoria / danos
-                            </a>
+                            @if($pagamentoEfetuado)
+                                <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="rs-btn rs-btn--outline">
+                                    <i class="fas fa-search"></i> Abrir vistoria / danos
+                                </a>
+                            @else
+                                <span class="rs-btn rs-btn--outline" style="opacity:.5;cursor:not-allowed;pointer-events:none" title="Pagamento necessário para acessar o checkout">
+                                    <i class="fas fa-lock mr-1"></i> Abrir vistoria / danos
+                                </span>
+                                <small style="color:#92400e;font-weight:600;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:3px 10px;font-size:.78rem">
+                                    <i class="fas fa-lock mr-1"></i>Pagamento necessário
+                                </small>
+                            @endif
                             @can('avaria.cobrar')
                                 <a href="{{ route('reserva.avarias.cobranca', $reserva->id) }}" class="rs-btn rs-btn--outline">
                                     <i class="fas fa-hand-holding-usd"></i> Debitar avarias
@@ -1131,9 +1147,15 @@
                         </div>
                         <div style="display:flex;gap:8px;align-items:center">
                             @can('multa.create')
-                            <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline">
-                                <i class="fas fa-plus"></i> Nova multa
-                            </a>
+                            @if($pagamentoEfetuado)
+                                <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline">
+                                    <i class="fas fa-plus"></i> Nova multa
+                                </a>
+                            @else
+                                <span class="rs-btn rs-btn--outline" style="opacity:.5;cursor:not-allowed;pointer-events:none" title="Pagamento necessário">
+                                    <i class="fas fa-lock mr-1"></i> Nova multa
+                                </span>
+                            @endif
                             @endcan
                             @if($totalMultas > 0)
                             <a href="{{ route('multa.index', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline">
@@ -1181,9 +1203,15 @@
                             <i class="fas fa-check-circle" style="font-size:2.5rem;color:#10b981"></i>
                             <span>Nenhuma multa registrada nesta reserva.</span>
                             @can('multa.create')
-                            <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline mt-2">
-                                <i class="fas fa-plus"></i> Registrar primeira multa
-                            </a>
+                            @if($pagamentoEfetuado)
+                                <a href="{{ route('multa.create', ['reserva_id' => $reserva->id]) }}" class="rs-btn rs-btn--outline mt-2">
+                                    <i class="fas fa-plus"></i> Registrar primeira multa
+                                </a>
+                            @else
+                                <div class="mt-3 d-flex align-items-center justify-content-center" style="gap:.5rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:.6rem 1rem;font-size:.83rem;color:#92400e;font-weight:600">
+                                    <i class="fas fa-lock"></i> Pagamento necessário para registrar multas
+                                </div>
+                            @endif
                             @endcan
                         </div>
                     @endif
