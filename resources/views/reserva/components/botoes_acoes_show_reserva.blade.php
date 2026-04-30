@@ -104,12 +104,13 @@
                 </button>
             @else
                 @php
-                    $motivoBloqueio = '';
-                    if (!($pagamentoEfetuado ?? false))       $motivoBloqueio = 'Pagamento não efetuado';
-                    elseif (!$checkinAssinadoCo)              $motivoBloqueio = 'Check-in não realizado';
-                    elseif (!$statusOkCo)                     $motivoBloqueio = 'Reserva não está em andamento (check-in)';
+                    $motivosBloqueio = [];
+                    if (!($pagamentoEfetuado ?? false)) $motivosBloqueio[] = 'Pagamento não efetuado';
+                    if (!$checkinAssinadoCo)            $motivosBloqueio[] = 'Check-in não realizado ou contrato não assinado';
+                    if (!$statusOkCo)                   $motivosBloqueio[] = 'Status da reserva não está em "Check-in" (em andamento)';
                 @endphp
-                <span class="action-pill action-pill--disabled" title="{{ $motivoBloqueio }}">
+                <span class="action-pill action-pill--disabled checkout-bloqueado"
+                      data-motivos="{{ implode('|', $motivosBloqueio) }}">
                     <i class="fas fa-lock"></i>
                     <span>Check-out</span>
                 </span>
@@ -273,10 +274,15 @@
     .action-pill--disabled {
         background: #cbd5e1;
         color: #64748b;
-        cursor: not-allowed;
-        pointer-events: none;
+        cursor: pointer;
         box-shadow: none;
         transform: none !important;
+        position: relative;
+    }
+    .action-pill--disabled:hover {
+        background: #b0bec5;
+        transform: none !important;
+        box-shadow: none !important;
     }
     .reservation-actions-card__menu {
         border: 0;
@@ -503,6 +509,30 @@
             if (window.confirm('Tem certeza que deseja cancelar a reserva?')) {
                 cancelarReserva();
             }
+        });
+    })();
+
+    /* ── Check-out bloqueado: mostra motivos via SweetAlert ── */
+    (function () {
+        document.querySelectorAll('.checkout-bloqueado').forEach(function (el) {
+            el.addEventListener('click', function () {
+                const motivos = (el.dataset.motivos || '').split('|').filter(Boolean);
+                const listaHtml = motivos.map(m =>
+                    `<li style="text-align:left;padding:4px 0;color:#374151;">
+                        <i class="fas fa-times-circle" style="color:#ef4444;margin-right:6px;"></i>${m}
+                    </li>`
+                ).join('');
+
+                Swal.fire({
+                    title: 'Check-out indisponível',
+                    html: `<p style="color:#475569;margin-bottom:10px;">Para realizar o check-out, os seguintes requisitos precisam ser atendidos:</p>
+                           <ul style="list-style:none;padding:0;margin:0">${listaHtml}</ul>`,
+                    icon: 'info',
+                    iconColor: '#0891b2',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#0891b2',
+                });
+            });
         });
     })();
 

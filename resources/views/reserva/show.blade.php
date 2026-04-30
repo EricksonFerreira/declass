@@ -3285,8 +3285,21 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             const flashError = @json(session('error'));
 
             if (flashSuccess) showToast('Reserva', flashSuccess, 'success');
-            if (flashWarning) showToast('Reserva', flashWarning, 'warning');
-            if (flashError) showToast('Reserva', flashError, 'error');
+            if (flashError)   showToast('Reserva', flashError, 'error');
+            if (flashWarning) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        title: 'Atenção',
+                        text: flashWarning,
+                        icon: 'warning',
+                        iconColor: '#f59e0b',
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#0891b2',
+                    });
+                } else {
+                    alert(flashWarning);
+                }
+            }
 
             const forms = document.querySelectorAll('.js-nfse-form');
             if (!forms.length) return;
