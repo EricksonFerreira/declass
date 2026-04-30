@@ -2956,8 +2956,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             $calcao = $this->calcaoService->autorizarCalcao(
                 $reserva,
                 $reserva->contratoCheckin,
-                $request->input('payment_method_id'),
-                $request->input('stripe_customer_id')
+                $request->input('payment_method_id')
             );
 
             $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([

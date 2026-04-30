@@ -136,12 +136,17 @@ class CalcaoService
         $valorEmCentavos = (int) round($calculo['valor_calculado'] * 100);
         $moeda = strtolower($this->gatewayConfig->moeda($empresa) ?? 'brl');
 
+        // Resolve o stripe_customer_id: usa o passado, ou cai para o do usuário da reserva
+        if (empty($stripeCustomerId)) {
+            $stripeCustomerId = $reserva->usuario?->stripe_id ?? null;
+        }
+
         $stripe  = new StripeClient($stripeSecret);
         $payload = [
             'amount'               => $valorEmCentavos,
             'currency'             => $moeda,
             'payment_method'       => $paymentMethodId,
-            'capture_method'       => 'manual',   // << HOLD, não captura
+            'capture_method'       => 'manual',
             'confirm'              => true,
             'automatic_payment_methods' => [
                 'enabled'          => true,
