@@ -921,26 +921,39 @@
 
                             <div class="rs-mini-list">
                                 @foreach($danosReserva as $d)
+                                    @php
+                                        $danoPayload = [
+                                            'id' => $d->id,
+                                            'localizacao' => strtoupper((string) ($d->local_dano ?? $d->localizacao_problema ?? '-')),
+                                            'descricao' => $d->observacoes,
+                                            'tipo_dano' => $d->tipo_dano,
+                                            'categoria' => $d->dano?->categoria?->nome,
+                                            'local_dano' => $d->local_dano,
+                                            'localizacao_problema' => $d->localizacao_problema,
+                                            'custo_estimado' => $d->custo_estimado,
+                                            'quilometragem_veiculo' => $d->quilometragem_veiculo,
+                                            'created_at' => $d->created_at ? \Carbon\Carbon::parse($d->created_at)->format('d/m/Y H:i') : null,
+                                            'correcao_descricao' => $d->correcao_descricao,
+                                            'correcao_data' => $d->correcao_data ? \Carbon\Carbon::parse($d->correcao_data)->format('d/m/Y H:i') : null,
+                                            'correcao_usuario' => $d->usuarioCorrecao?->nome,
+                                            'correcao_realizada' => (bool) $d->correcao_data,
+                                            'imagens' => $d->imagem
+                                                ->map(function ($img) {
+                                                    return [
+                                                        'url' => $img->caminho_imagem
+                                                            ? \Illuminate\Support\Facades\Storage::disk('public')->url($img->caminho_imagem)
+                                                            : null,
+                                                    ];
+                                                })
+                                                ->filter(function ($img) {
+                                                    return !empty($img['url']);
+                                                })
+                                                ->values()
+                                                ->all(),
+                                        ];
+                                    @endphp
                                     <div class="rs-mini-item rs-mini-item--clickable js-dano-detalhe-trigger"
-                                         data-dano='@json([
-                                             "id" => $d->id,
-                                             "localizacao" => strtoupper((string) ($d->local_dano ?? $d->localizacao_problema ?? "-")),
-                                             "descricao" => $d->observacoes,
-                                             "tipo_dano" => $d->tipo_dano,
-                                             "categoria" => $d->dano?->categoria?->nome,
-                                             "local_dano" => $d->local_dano,
-                                             "localizacao_problema" => $d->localizacao_problema,
-                                             "custo_estimado" => $d->custo_estimado,
-                                             "quilometragem_veiculo" => $d->quilometragem_veiculo,
-                                             "created_at" => $d->created_at ? \Carbon\Carbon::parse($d->created_at)->format("d/m/Y H:i") : null,
-                                             "correcao_descricao" => $d->correcao_descricao,
-                                             "correcao_data" => $d->correcao_data ? \Carbon\Carbon::parse($d->correcao_data)->format("d/m/Y H:i") : null,
-                                             "correcao_usuario" => $d->usuarioCorrecao?->nome,
-                                             "correcao_realizada" => (bool) $d->correcao_data,
-                                             "imagens" => $d->imagem->map(fn ($img) => [
-                                                 "url" => $img->caminho_imagem ? \Illuminate\Support\Facades\Storage::disk("public")->url($img->caminho_imagem) : null,
-                                             ])->filter(fn ($img) => !empty($img["url"]))->values()->all(),
-                                         ])'>
+                                         data-dano='@json($danoPayload)'>
                                         <div>
                                             <strong>{{ strtoupper($d->local_dano ?? $d->localizacao_problema ?? '-') }}</strong>
                                             <div class="text-muted small">{{ \Illuminate\Support\Str::limit($d->observacoes ?? $d->tipo_dano ?? '', 120) }}</div>
