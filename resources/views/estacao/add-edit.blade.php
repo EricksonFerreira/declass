@@ -377,6 +377,8 @@
                                         </div>
                                     </div>
 
+                                    <input type="hidden" name="tipo_dia_nome[]" value="{{ $horarioNome }}">
+
                                     {{-- Campos ocultos quando 24h (para não quebrar o array no controller) --}}
                                     <div class="ec-hidden-24h-fields {{ $is24h ? '' : 'd-none' }}">
                                         <input type="hidden" name="hora_abertura[]" value="00:00">

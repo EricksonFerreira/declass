@@ -113,6 +113,7 @@ class UpdateEstacaoRequest extends FormRequest
             $funciona24h = $this->input('funciona_24h', []);
             $funciona = $this->input('funciona', []);
             $temIntervaloAlmoco = $this->input('tem_intervalo_almoco', []);
+            $tipoDiaNomes = $this->input('tipo_dia_nome', []);
 
             $toMinutes = function ($value): ?int {
                 if (!is_string($value) || trim($value) === '' || $value === '00:00') {
@@ -159,22 +160,24 @@ class UpdateEstacaoRequest extends FormRequest
                     continue;
                 }
 
+                $nomeDia = $tipoDiaNomes[$i] ?? "Tipo #$i";
+
                 if ($abertura === null || $fechamento === null) {
-                    $validator->errors()->add("hora_abertura.$i", 'Preencha todos os campos de Horario Diario na aba Horarios.');
-                    $validator->errors()->add("hora_fechamento.$i", 'Preencha todos os campos de Horario Diario na aba Horarios.');
+                    $validator->errors()->add("hora_abertura.$i", "[$nomeDia] Preencha os horários de abertura e fechamento na aba Horários.");
+                    $validator->errors()->add("hora_fechamento.$i", "[$nomeDia] Preencha os horários de abertura e fechamento na aba Horários.");
                     continue;
                 }
 
                 if ($temAlmoco === 'S' && $inicioAlmoco !== null && ($inicioAlmoco < $abertura || $inicioAlmoco > $fechamento)) {
-                    $validator->errors()->add("hora_inicio_almoco.$i", 'Horario de almoco deve estar dentro do horario de abertura e fechamento.');
+                    $validator->errors()->add("hora_inicio_almoco.$i", "[$nomeDia] Horário de almoço deve estar dentro do horário de funcionamento ({$aberturas[$i]} – {$fechamentos[$i]}).");
                 }
 
                 if ($temAlmoco === 'S' && $fimAlmoco !== null && ($fimAlmoco < $abertura || $fimAlmoco > $fechamento)) {
-                    $validator->errors()->add("hora_fim_almoco.$i", 'Horario de almoco deve estar dentro do horario de abertura e fechamento.');
+                    $validator->errors()->add("hora_fim_almoco.$i", "[$nomeDia] Horário de almoço deve estar dentro do horário de funcionamento ({$aberturas[$i]} – {$fechamentos[$i]}).");
                 }
 
                 if ($temAlmoco === 'S' && $inicioAlmoco !== null && $fimAlmoco !== null && $inicioAlmoco >= $fimAlmoco) {
-                    $validator->errors()->add("hora_fim_almoco.$i", 'Fim do almoco deve ser maior que o inicio do almoco.');
+                    $validator->errors()->add("hora_fim_almoco.$i", "[$nomeDia] O fim do almoço deve ser maior que o início do almoço.");
                 }
             }
         });

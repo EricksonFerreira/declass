@@ -687,20 +687,29 @@ class ReservaService extends AbstractBaseService
 
     private function estacaoPermiteTaxaForaExpediente(int $estacaoId, string $tipo): bool
     {
-        if (!Schema::hasTable('estacoes')) {
-            return false;
-        }
-
         $coluna = $tipo === 'devolucao' ? 'cobrar_na_entrega' : 'cobrar_na_coleta';
-        if (!Schema::hasColumn('estacoes', $coluna)) {
-            return false;
+
+        // Tenta primeiro na tabela fora_de_hora (configuração por estação)
+        if (Schema::hasTable('fora_de_hora') && Schema::hasColumn('fora_de_hora', $coluna)) {
+            $valor = DB::table('fora_de_hora')
+                ->where('estacao_id', $estacaoId)
+                ->value($coluna);
+
+            if ($valor !== null) {
+                return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
+            }
         }
 
-        $valor = DB::table('estacoes')
-            ->where('id', $estacaoId)
-            ->value($coluna);
+        // Fallback: coluna direta em estacoes (legado)
+        if (Schema::hasTable('estacoes') && Schema::hasColumn('estacoes', $coluna)) {
+            $valor = DB::table('estacoes')
+                ->where('id', $estacaoId)
+                ->value($coluna);
 
-        return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
+            return in_array((string) $valor, ['S', '1', 'true', 'TRUE'], true);
+        }
+
+        return false;
     }
 
     public function obterDatasRetiradaDisponiveisParaEstacao(int $estacaoId, ?string $dataBase = null, int $limite = 14): array
@@ -794,7 +803,7 @@ class ReservaService extends AbstractBaseService
             $inicio = null;
             $fim = null;
 
-            if ($tipo === 'devolucao' && $permiteTaxaExtra) {
+            if ($permiteTaxaExtra) {
                 $inicio = $dia->copy()->startOfDay();
                 $fim = $dia->copy()->endOfDay();
             } else {
@@ -819,7 +828,7 @@ class ReservaService extends AbstractBaseService
 
             while ($slotAtual->lessThanOrEqualTo($fim)) {
                 $slotHora = $slotAtual->format('H:i');
-                if (!($tipo === 'devolucao' && $permiteTaxaExtra) && $temIntervaloAlmoco && $inicioAlmoco && $fimAlmoco) {
+                if (!$permiteTaxaExtra && $temIntervaloAlmoco && $inicioAlmoco && $fimAlmoco) {
                     $ia = substr((string) $inicioAlmoco, 0, 5);
                     $fa = substr((string) $fimAlmoco, 0, 5);
                     if (!(($ia === '00:00' && $fa === '00:00') || $slotHora < $ia || $slotHora > $fa)) {
