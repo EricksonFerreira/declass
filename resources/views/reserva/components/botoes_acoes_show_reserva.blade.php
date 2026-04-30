@@ -78,19 +78,27 @@
 
             {{-- Check-out --}}
             @php
-                $calcaoAtualCo    = $reserva->calcao ?? null;
-                $calcooPendenteCo = false; // assume ok ou não exige
-                // Só bloqueia se houver calção configurado e não estiver em status válido
-                // (a validação real fica no server; aqui apenas indicador visual)
                 $checkinAssinadoCo = $reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S';
-                $statusOkCo        = (int) $reserva->status_reserva_id === 3; // Checkin = em andamento
                 $checkoutUrl       = route('reserva.checkout.vistoria', $reserva->id);
                 $dataFim           = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
                 $isAntesDaDataFim  = $dataFim && now()->lt($dataFim);
 
-                $podeCheckout = ($pagamentoEfetuado ?? false)
-                    && $checkinAssinadoCo
-                    && $statusOkCo;
+                // Calção: ok se não há regra configurada, ou se já foi autorizado/capturado
+                $calcaoOkCo = true;
+                try {
+                    $calculo = app(\App\Services\CalcaoService::class)->calcularValor($reserva);
+                    if ((float)($calculo['valor_calculado'] ?? 0) > 0) {
+                        $calcaoStatus = $reserva->calcao?->status ?? '';
+                        $calcaoOkCo = in_array($calcaoStatus, ['autorizado','capturado','parcialmente_capturado'], true);
+                    }
+                } catch (\Throwable $e) { $calcaoOkCo = true; }
+
+                $podeCheckout = ($pagamentoEfetuado ?? false) && $checkinAssinadoCo && $calcaoOkCo;
+
+                $motivosBloqueio = [];
+                if (!($pagamentoEfetuado ?? false))   $motivosBloqueio[] = 'Pagamento não efetuado';
+                if (!$checkinAssinadoCo)              $motivosBloqueio[] = 'Check-in não realizado ou contrato não assinado';
+                if (!$calcaoOkCo)                     $motivosBloqueio[] = 'Calção pendente — realize a pré-autorização antes do check-out';
             @endphp
 
             @if($podeCheckout)
@@ -98,20 +106,11 @@
                         class="action-pill action-pill--checkout"
                         data-url="{{ $checkoutUrl }}"
                         data-antes-fim="{{ $isAntesDaDataFim ? '1' : '0' }}"
-                        data-data-fim="{{ $dataFim ? $dataFim->format('d/m/Y') : '' }}">
+                        data-data-fim="{{ $dataFim ? $dataFim->format('d/m/Y H:i') : '' }}">
                     <i class="fas fa-flag-checkered"></i>
                     <span>Fazer check-out</span>
                 </button>
             @else
-                @php
-                    $motivosBloqueio = [];
-                    if (!($pagamentoEfetuado ?? false)) $motivosBloqueio[] = 'Pagamento não efetuado';
-                    if (!$checkinAssinadoCo)            $motivosBloqueio[] = 'Check-in não realizado ou contrato não assinado';
-                    if (!$statusOkCo) {
-                        $statusAtualNome = \App\Enums\StatusReservaEnum::tryFrom((int)$reserva->status_reserva_id)?->label() ?? 'desconhecido';
-                        $motivosBloqueio[] = 'Status da reserva precisa ser "Check-in" (em andamento) — atual: "' . $statusAtualNome . '"';
-                    }
-                @endphp
                 <span class="action-pill action-pill--disabled checkout-bloqueado"
                       data-motivos="{{ implode('|', $motivosBloqueio) }}">
                     <i class="fas fa-lock"></i>
