@@ -38,6 +38,7 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     // Feature 4: Calção
     Route::get('{id}/calcao', [ReservaController::class, 'calcaoCheckin'])->name('calcao');
     Route::post('{id}/calcao/autorizar', [ReservaController::class, 'autorizarCalcao'])->name('calcao.autorizar');
+    Route::post('{id}/calcao/salvar-cartao', [ReservaController::class, 'salvarCartaoCalcao'])->name('calcao.salvar-cartao');
     Route::post('{id}/calcao/capturar', [ReservaController::class, 'capturarCalcao'])->name('calcao.capturar');
     Route::post('{id}/calcao/liberar', [ReservaController::class, 'liberarCalcao'])->name('calcao.liberar');
     Route::post('{id}/calcao/presencial', [ReservaController::class, 'registrarCalcaoPresencial'])->name('calcao.presencial');

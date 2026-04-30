@@ -52,42 +52,49 @@
             {{-- Resumo em 3 cards (row Bootstrap) --}}
             <div class="row mb-4">
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <div class="calcao-info-card">
-                        <div class="calcao-info-card__icon" style="background:#eff6ff;color:#2563eb;">
+                    <div class="calcao-info-card calcao-info-card--blue">
+                        <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--blue">
                             <i class="fas fa-user"></i>
                         </div>
-                        <div>
+                        <div class="calcao-info-card__body">
                             <div class="calcao-info-card__label">Cliente</div>
                             <div class="calcao-info-card__value">{{ $reserva->usuario?->nome ?? '—' }}</div>
+                            @if($reserva->usuario?->email)
+                                <div class="calcao-info-card__sub">{{ $reserva->usuario->email }}</div>
+                            @endif
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-4 mb-3 mb-md-0">
-                    <div class="calcao-info-card">
-                        <div class="calcao-info-card__icon" style="background:#ecfdf5;color:#059669;">
+                    <div class="calcao-info-card calcao-info-card--green">
+                        <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--green">
                             <i class="fas fa-car"></i>
                         </div>
-                        <div>
+                        <div class="calcao-info-card__body">
                             <div class="calcao-info-card__label">Veículo / Grupo</div>
                             <div class="calcao-info-card__value">{{ $reserva->grupoFrota?->nome ?? '—' }}</div>
+                            @if($reserva->modelos?->first())
+                                <div class="calcao-info-card__sub">{{ $reserva->modelos->first()->nome ?? '' }}</div>
+                            @endif
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-4">
                     <div class="calcao-info-card calcao-info-card--navy">
-                        <div class="calcao-info-card__icon" style="background:rgba(255,255,255,.15);color:#fff;">
+                        <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--navy">
                             <i class="fas fa-shield-alt"></i>
                         </div>
-                        <div>
-                            <div class="calcao-info-card__label" style="color:rgba(255,255,255,.65);">Valor do Calção</div>
+                        <div class="calcao-info-card__body">
+                            <div class="calcao-info-card__label calcao-info-card__label--light">Valor do Calção</div>
                             @if((float)($calculo['valor_calculado'] ?? 0) > 0)
-                                <div class="calcao-info-card__value" style="color:#fff;font-size:1.3rem;">
+                                <div class="calcao-info-card__value calcao-info-card__value--light calcao-info-card__value--lg">
                                     R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
                                 </div>
-                                <div style="font-size:.72rem;color:rgba(255,255,255,.55);margin-top:2px;">
-                                    {{ $calculo['tipo_regra_aplicada'] ?? '' }} · {{ $calculo['origem_regra_aplicada'] ?? '' }}
+                                <div class="calcao-info-card__sub calcao-info-card__sub--light">
+                                    {{ $calculo['tipo_regra_aplicada'] ?? '' }}
+                                    @if($calculo['origem_regra_aplicada'] ?? '') · {{ $calculo['origem_regra_aplicada'] }} @endif
                                 </div>
                             @else
                                 <div class="calcao-info-card__value" style="color:#fbbf24;">Não configurado</div>
@@ -172,10 +179,16 @@
                     </div>
 
                     {{-- Lista de cartões --}}
+                    {{-- $pm['card'] é \Stripe\StripeObject — acesso via -> --}}
                     <div id="calcao-pm-list" class="row">
                         @forelse($metodosPagamento as $pm)
                             @php
-                                $brandIcon = match(strtolower($pm['brand'] ?? '')) {
+                                $card      = $pm['card'];
+                                $pmBrand   = strtolower($card->brand ?? '');
+                                $pmLast4   = $card->last4 ?? '';
+                                $pmMonth   = str_pad($card->exp_month ?? '', 2, '0', STR_PAD_LEFT);
+                                $pmYear    = $card->exp_year ?? '';
+                                $brandIcon = match($pmBrand) {
                                     'visa'       => 'fab fa-cc-visa',
                                     'mastercard' => 'fab fa-cc-mastercard',
                                     'amex'       => 'fab fa-cc-amex',
@@ -183,10 +196,11 @@
                                     'jcb'        => 'fab fa-cc-jcb',
                                     default      => 'fas fa-credit-card',
                                 };
-                                $brandColor = match(strtolower($pm['brand'] ?? '')) {
+                                $brandColor = match($pmBrand) {
                                     'visa'       => '#1a1f71',
                                     'mastercard' => '#eb001b',
                                     'amex'       => '#007bc1',
+                                    'discover'   => '#e65c00',
                                     default      => '#475569',
                                 };
                             @endphp
@@ -200,8 +214,8 @@
                                         <i class="{{ $brandIcon }}"></i>
                                     </div>
                                     <div class="calcao-pm-item__info">
-                                        <span class="calcao-pm-item__number">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ $pm['last4'] ?? '' }}</span>
-                                        <span class="calcao-pm-item__exp">Vence {{ str_pad($pm['exp_month'] ?? '', 2, '0', STR_PAD_LEFT) }}/{{ $pm['exp_year'] ?? '' }}</span>
+                                        <span class="calcao-pm-item__number">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ $pmLast4 }}</span>
+                                        <span class="calcao-pm-item__exp">Vence {{ $pmMonth }}/{{ $pmYear }}</span>
                                     </div>
                                     <span class="calcao-pm-item__badge">Salvo</span>
                                 </label>
@@ -295,33 +309,61 @@
     .calcao-info-card {
         display: flex;
         align-items: center;
-        gap: 14px;
-        padding: 18px 20px;
-        border-radius: 14px;
+        gap: 16px;
+        padding: 20px 22px;
+        border-radius: 16px;
         background: #fff;
-        border: 1px solid var(--c-border);
-        box-shadow: var(--shadow-sm);
+        border: 1.5px solid var(--c-border);
+        box-shadow: 0 2px 12px rgba(0,0,0,.06);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
     }
+    .calcao-info-card::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+    }
+    .calcao-info-card--blue::after  { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+    .calcao-info-card--green::after { background: linear-gradient(90deg, #059669, #34d399); }
     .calcao-info-card--navy {
         background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
         border-color: transparent;
         box-shadow: 0 8px 28px rgba(12,20,40,.28);
     }
-    .calcao-info-card__icon {
-        width: 46px; height: 46px;
-        border-radius: 12px;
+    .calcao-info-card--navy::after { background: linear-gradient(90deg, #4338ca, #0ea5e9, #10b981); }
+
+    .calcao-info-card__icon-wrap {
+        width: 52px; height: 52px;
+        border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         flex-shrink: 0;
     }
+    .calcao-info-card__icon-wrap--blue  { background: #eff6ff; color: #2563eb; }
+    .calcao-info-card__icon-wrap--green { background: #ecfdf5; color: #059669; }
+    .calcao-info-card__icon-wrap--navy  { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.18); }
+
+    .calcao-info-card__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+
     .calcao-info-card__label {
-        font-size: .7rem; font-weight: 700;
+        font-size: .68rem; font-weight: 700;
         letter-spacing: .1em; text-transform: uppercase;
-        color: #64748b; margin-bottom: 4px;
+        color: #64748b; margin-bottom: 3px;
     }
+    .calcao-info-card__label--light { color: rgba(255,255,255,.55); }
     .calcao-info-card__value {
         font-size: .97rem; font-weight: 700; color: var(--c-ink);
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .calcao-info-card__value--light { color: #fff; }
+    .calcao-info-card__value--lg    { font-size: 1.35rem; letter-spacing: -.01em; }
+    .calcao-info-card__sub {
+        font-size: .72rem; color: #94a3b8; font-weight: 500;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .calcao-info-card__sub--light { color: rgba(255,255,255,.45); }
 
     /* ── Cabeçalho da seção de cartões ── */
     .calcao-pm-header {
@@ -584,11 +626,12 @@
 <script src="https://js.stripe.com/v3/"></script>
 <script>
 (function () {
-    const STRIPE_KEY   = @json($stripePublicKey);
-    const AUTORIZAR_URL = @json(route('reserva.calcao.autorizar', $reserva->id));
-    const SHOW_URL     = @json(route('reserva.show', $reserva->id));
-    const CSRF         = @json(csrf_token());
-    const VALOR        = @json((float)($calculo['valor_calculado'] ?? 0));
+    const STRIPE_KEY      = @json($stripePublicKey);
+    const AUTORIZAR_URL   = @json(route('reserva.calcao.autorizar', $reserva->id));
+    const SALVAR_CARTAO_URL = @json(route('reserva.calcao.salvar-cartao', $reserva->id));
+    const SHOW_URL        = @json(route('reserva.show', $reserva->id));
+    const CSRF            = @json(csrf_token());
+    const VALOR           = @json((float)($calculo['valor_calculado'] ?? 0));
 
     if (!STRIPE_KEY || VALOR <= 0) return;
 
@@ -632,18 +675,21 @@
     });
 
     /* ─────────────────────────────────────────
-       Salvar novo cartão (criar payment method
-       e adicionar à lista sem recarregar)
+       Salvar novo cartão:
+       1. Tokeniza no Stripe via JS (createPaymentMethod)
+       2. Envia pm.id ao servidor para fazer attach ao cliente
+       3. Injeta o cartão retornado na lista
     ───────────────────────────────────────── */
     document.getElementById('btn-salvar-cartao')?.addEventListener('click', async () => {
-        const btn    = document.getElementById('btn-salvar-cartao');
-        const errEl  = document.getElementById('modal-card-errors');
+        const btn   = document.getElementById('btn-salvar-cartao');
+        const errEl = document.getElementById('modal-card-errors');
 
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
         errEl.textContent = '';
         errEl.classList.add('d-none');
 
+        // Passo 1 — tokenizar no Stripe
         const { paymentMethod, error } = await stripe.createPaymentMethod({
             type: 'card',
             card: modalElement,
@@ -657,16 +703,38 @@
             return;
         }
 
-        // Adiciona o novo cartão à lista e seleciona-o
-        adicionarCartaoNaLista(paymentMethod);
+        // Passo 2 — enviar ao servidor para vincular ao cliente Stripe
+        try {
+            const resp = await fetch(SALVAR_CARTAO_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
+                body: JSON.stringify({ payment_method_id: paymentMethod.id }),
+            });
+            const data = await resp.json();
+
+            if (!data.success) {
+                errEl.textContent = data.error ?? 'Erro ao salvar o cartão.';
+                errEl.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar cartão';
+                return;
+            }
+
+            // Passo 3 — injetar na lista com dados vindos do servidor
+            adicionarCartaoNaLista(data.pm);
+        } catch (e) {
+            errEl.textContent = 'Erro de comunicação. Tente novamente.';
+            errEl.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar cartão';
+            return;
+        }
 
         // Fecha o modal e reseta
         $('#modalNovoCartao').modal('hide');
         modalElement.clear();
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar cartão';
-
-        // Habilita o botão de autorizar caso estava desabilitado
         document.getElementById('btn-autorizar-calcao').disabled = false;
     });
 
@@ -683,11 +751,12 @@
         if (emptyWrap) emptyWrap.closest('.col-12')?.remove();
 
         const list  = document.getElementById('calcao-pm-list');
+        // pm pode ser objeto flat {id, brand, last4, exp_month, exp_year} vindo do servidor
         const id    = pm.id;
-        const brand = pm.card?.brand ?? '';
-        const last4 = pm.card?.last4 ?? '';
-        const month = String(pm.card?.exp_month ?? '').padStart(2, '0');
-        const year  = pm.card?.exp_year ?? '';
+        const brand = pm.brand ?? '';
+        const last4 = pm.last4 ?? '';
+        const month = String(pm.exp_month ?? '').padStart(2, '0');
+        const year  = pm.exp_year ?? '';
         const color = brandColorMap[brand.toLowerCase()] ?? '#475569';
 
         const col = document.createElement('div');

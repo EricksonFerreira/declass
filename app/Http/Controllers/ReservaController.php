@@ -2980,6 +2980,64 @@ private function montarDiasSemanaFlags($diasUteis): array
     }
 
     /**
+     * Vincula um PaymentMethod (já criado no Stripe via JS) ao cliente da reserva.
+     * Chamado após stripe.createPaymentMethod() no front — persiste o cartão no Stripe.
+     */
+    public function salvarCartaoCalcao(Request $request, $reserva_id)
+    {
+        $this->authorize('calcao.autorizar');
+
+        $request->validate(['payment_method_id' => 'required|string']);
+
+        $reserva = $this->reservaService->getById($reserva_id, ['usuario']);
+        if (!$reserva || !$reserva->usuario) {
+            return response()->json(['error' => 'Reserva ou cliente não encontrado.'], 404);
+        }
+
+        $empresa = $this->gatewayEmpresaConfigService->empresaAtual();
+        if (!$empresa || !$empresa->stripe_secret) {
+            return response()->json(['error' => 'Stripe não configurado.'], 422);
+        }
+
+        $user = $reserva->usuario;
+
+        try {
+            // Garante que o cliente existe no Stripe
+            $stripeId = $this->clienteStripeService->garantirClienteValido(
+                $user->stripe_id ?? null,
+                $user->email ?? '',
+                $user->nome ?? 'Cliente',
+                $empresa->stripe_secret
+            );
+
+            if (empty($user->stripe_id) || $user->stripe_id !== $stripeId) {
+                $this->userService->updateUser($user->id, ['stripe_id' => $stripeId]);
+            }
+
+            // Vincula o PaymentMethod (já criado via Stripe.js) ao cliente
+            $pm = $this->clienteStripeService->attachPaymentMethod(
+                $request->input('payment_method_id'),
+                $stripeId,
+                $empresa->stripe_secret
+            );
+
+            return response()->json([
+                'success' => true,
+                'pm' => [
+                    'id'        => $pm->id,
+                    'brand'     => $pm->card->brand ?? '',
+                    'last4'     => $pm->card->last4 ?? '',
+                    'exp_month' => $pm->card->exp_month ?? '',
+                    'exp_year'  => $pm->card->exp_year ?? '',
+                ],
+            ]);
+        } catch (\Throwable $e) {
+            \Log::error('Erro ao salvar cartão no calção', ['exception' => $e->getMessage()]);
+            return response()->json(['error' => 'Não foi possível salvar o cartão: ' . $e->getMessage()], 422);
+        }
+    }
+
+    /**
      * Captura (total ou parcial) o valor do calção no checkout.
      */
     public function capturarCalcao(CapturarCalcaoRequest $request, $reserva_id)

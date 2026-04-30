@@ -143,6 +143,21 @@ class ClienteStripeService
     }
 
     /**
+     * Vincula um PaymentMethod já existente (criado via Stripe Elements) ao cliente.
+     *
+     * @throws \Stripe\Exception\ApiErrorException
+     */
+    public function attachPaymentMethod(string $paymentMethodId, string $customerId, ?string $stripeSecret = null): PaymentMethod
+    {
+        $pm = $this->client($stripeSecret)->paymentMethods->retrieve($paymentMethodId);
+        if (empty($pm->customer)) {
+            $this->vincularMetodoPagamentoAoCliente($paymentMethodId, $customerId, $stripeSecret);
+            $pm = $this->client($stripeSecret)->paymentMethods->retrieve($paymentMethodId);
+        }
+        return $pm;
+    }
+
+    /**
      * Desvincula (remove) um método de pagamento.
      *
      * @throws \Stripe\Exception\ApiErrorException
