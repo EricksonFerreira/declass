@@ -108,7 +108,7 @@ class MultaController extends BaseController
             'filtroMarcas'      => $scope(Marca::query())->orderBy('nome')->pluck('nome', 'id'),
             'filtroGrupos'      => $scope(GrupoFrota::query())->orderBy('nome')->pluck('nome', 'id'),
             'filtroTipos'       => $scope(TipoFrota::query())->orderBy('nome')->pluck('nome', 'id'),
-            'filtroStatus'      => $scope(StatusVeiculo::query())->orderBy('nome')->pluck('nome', 'id'),
+            'filtroStatus'      => StatusVeiculo::query()->orderBy('nome')->pluck('nome', 'id'),
         ];
     }
 
@@ -120,10 +120,13 @@ class MultaController extends BaseController
         $reservaId  = $request->query('reserva_id');
         $reserva    = $reservaId ? $this->reservaService->getById($reservaId, ['usuario', 'grupoFrota']) : null;
 
-        if ($reserva && ($reserva->pagamento_efetuado ?? 'N') !== 'S') {
-            return redirect()
-                ->route('reserva.show', $reserva->id)
-                ->with('warning', 'O pagamento deve ser efetuado antes de registrar multas.');
+        if ($reserva) {
+            $reserva->load('contratoCheckin');
+            if (!$reserva->contratoCheckin) {
+                return redirect()
+                    ->route('reserva.show', $reserva->id)
+                    ->with('warning', 'O check-in deve ser realizado antes de registrar multas.');
+            }
         }
 
         $veiculoId = $request->query('veiculo_id');
