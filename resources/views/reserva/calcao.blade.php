@@ -49,44 +49,50 @@
                 </div>
             @endif
 
-            {{-- Resumo em 3 cards --}}
-            <div class="calcao-summary-grid mb-4">
-                <div class="calcao-info-card">
-                    <div class="calcao-info-card__icon" style="background:#eff6ff;color:#2563eb;">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div>
-                        <div class="calcao-info-card__label">Cliente</div>
-                        <div class="calcao-info-card__value">{{ $reserva->usuario?->nome ?? '—' }}</div>
-                    </div>
-                </div>
-
-                <div class="calcao-info-card">
-                    <div class="calcao-info-card__icon" style="background:#ecfdf5;color:#059669;">
-                        <i class="fas fa-car"></i>
-                    </div>
-                    <div>
-                        <div class="calcao-info-card__label">Veículo / Grupo</div>
-                        <div class="calcao-info-card__value">{{ $reserva->grupoFrota?->nome ?? '—' }}</div>
+            {{-- Resumo em 3 cards (row Bootstrap) --}}
+            <div class="row mb-4">
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="calcao-info-card">
+                        <div class="calcao-info-card__icon" style="background:#eff6ff;color:#2563eb;">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <div class="calcao-info-card__label">Cliente</div>
+                            <div class="calcao-info-card__value">{{ $reserva->usuario?->nome ?? '—' }}</div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="calcao-info-card calcao-info-card--navy">
-                    <div class="calcao-info-card__icon" style="background:rgba(255,255,255,.15);color:#fff;">
-                        <i class="fas fa-shield-alt"></i>
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="calcao-info-card">
+                        <div class="calcao-info-card__icon" style="background:#ecfdf5;color:#059669;">
+                            <i class="fas fa-car"></i>
+                        </div>
+                        <div>
+                            <div class="calcao-info-card__label">Veículo / Grupo</div>
+                            <div class="calcao-info-card__value">{{ $reserva->grupoFrota?->nome ?? '—' }}</div>
+                        </div>
                     </div>
-                    <div>
-                        <div class="calcao-info-card__label" style="color:rgba(255,255,255,.65);">Valor do Calção</div>
-                        @if((float)($calculo['valor_calculado'] ?? 0) > 0)
-                            <div class="calcao-info-card__value" style="color:#fff;font-size:1.3rem;">
-                                R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
-                            </div>
-                            <div style="font-size:.72rem;color:rgba(255,255,255,.55);margin-top:2px;">
-                                {{ $calculo['tipo_regra_aplicada'] ?? '' }} · {{ $calculo['origem_regra_aplicada'] ?? '' }}
-                            </div>
-                        @else
-                            <div class="calcao-info-card__value" style="color:#fbbf24;">Não configurado</div>
-                        @endif
+                </div>
+
+                <div class="col-md-4">
+                    <div class="calcao-info-card calcao-info-card--navy">
+                        <div class="calcao-info-card__icon" style="background:rgba(255,255,255,.15);color:#fff;">
+                            <i class="fas fa-shield-alt"></i>
+                        </div>
+                        <div>
+                            <div class="calcao-info-card__label" style="color:rgba(255,255,255,.65);">Valor do Calção</div>
+                            @if((float)($calculo['valor_calculado'] ?? 0) > 0)
+                                <div class="calcao-info-card__value" style="color:#fff;font-size:1.3rem;">
+                                    R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
+                                </div>
+                                <div style="font-size:.72rem;color:rgba(255,255,255,.55);margin-top:2px;">
+                                    {{ $calculo['tipo_regra_aplicada'] ?? '' }} · {{ $calculo['origem_regra_aplicada'] ?? '' }}
+                                </div>
+                            @else
+                                <div class="calcao-info-card__value" style="color:#fbbf24;">Não configurado</div>
+                            @endif
+                        </div>
                     </div>
                 </div>
             </div>
@@ -159,41 +165,53 @@
                                 Nenhum cartão salvo — adicione um cartão
                             @endif
                         </div>
-                        <button type="button" class="calcao-btn-add" id="btnAbrirModalCartao">
+                        <button type="button" class="btn-action btn-action-primary calcao-btn-add" id="btnAbrirModalCartao">
                             <i class="fas fa-plus"></i>
                             Adicionar cartão
                         </button>
                     </div>
 
                     {{-- Lista de cartões --}}
-                    <div id="calcao-pm-list">
+                    <div id="calcao-pm-list" class="row">
                         @forelse($metodosPagamento as $pm)
-                            <label class="calcao-pm-item" for="pm_{{ $pm['id'] }}">
-                                <input type="radio" id="pm_{{ $pm['id'] }}" name="payment_method_id_radio"
-                                       class="calcao-pm-radio" value="{{ $pm['id'] }}"
-                                       {{ $loop->first ? 'checked' : '' }}>
-                                <div class="calcao-pm-item__check"><i class="fas fa-check"></i></div>
-                                <div class="calcao-pm-item__brand">
-                                    @php
-                                        $brandIcon = match(strtolower($pm['brand'] ?? '')) {
-                                            'visa'       => 'fab fa-cc-visa',
-                                            'mastercard' => 'fab fa-cc-mastercard',
-                                            'amex'       => 'fab fa-cc-amex',
-                                            default      => 'fas fa-credit-card',
-                                        };
-                                    @endphp
-                                    <i class="{{ $brandIcon }}"></i>
-                                </div>
-                                <div class="calcao-pm-item__info">
-                                    <span class="calcao-pm-item__number">{{ strtoupper($pm['brand'] ?? '') }} &bull;&bull;&bull;&bull; {{ $pm['last4'] ?? '' }}</span>
-                                    <span class="calcao-pm-item__exp">Vence {{ str_pad($pm['exp_month'] ?? '', 2, '0', STR_PAD_LEFT) }}/{{ $pm['exp_year'] ?? '' }}</span>
-                                </div>
-                                <div class="calcao-pm-item__badge">Salvo</div>
-                            </label>
+                            @php
+                                $brandIcon = match(strtolower($pm['brand'] ?? '')) {
+                                    'visa'       => 'fab fa-cc-visa',
+                                    'mastercard' => 'fab fa-cc-mastercard',
+                                    'amex'       => 'fab fa-cc-amex',
+                                    'discover'   => 'fab fa-cc-discover',
+                                    'jcb'        => 'fab fa-cc-jcb',
+                                    default      => 'fas fa-credit-card',
+                                };
+                                $brandColor = match(strtolower($pm['brand'] ?? '')) {
+                                    'visa'       => '#1a1f71',
+                                    'mastercard' => '#eb001b',
+                                    'amex'       => '#007bc1',
+                                    default      => '#475569',
+                                };
+                            @endphp
+                            <div class="col-md-6 mb-3">
+                                <label class="calcao-pm-item" for="pm_{{ $pm['id'] }}">
+                                    <input type="radio" id="pm_{{ $pm['id'] }}" name="payment_method_id_radio"
+                                           class="calcao-pm-radio" value="{{ $pm['id'] }}"
+                                           {{ $loop->first ? 'checked' : '' }}>
+                                    <div class="calcao-pm-item__radio-dot"></div>
+                                    <div class="calcao-pm-item__brand-icon" style="color:{{ $brandColor }}">
+                                        <i class="{{ $brandIcon }}"></i>
+                                    </div>
+                                    <div class="calcao-pm-item__info">
+                                        <span class="calcao-pm-item__number">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ $pm['last4'] ?? '' }}</span>
+                                        <span class="calcao-pm-item__exp">Vence {{ str_pad($pm['exp_month'] ?? '', 2, '0', STR_PAD_LEFT) }}/{{ $pm['exp_year'] ?? '' }}</span>
+                                    </div>
+                                    <span class="calcao-pm-item__badge">Salvo</span>
+                                </label>
+                            </div>
                         @empty
-                            <div id="calcao-empty-state" class="calcao-pm-empty">
-                                <i class="fas fa-credit-card"></i>
-                                <p>Nenhum cartão salvo. Clique em <strong>Adicionar cartão</strong> para continuar.</p>
+                            <div class="col-12">
+                                <div id="calcao-empty-state" class="calcao-pm-empty">
+                                    <i class="fas fa-credit-card"></i>
+                                    <p>Nenhum cartão salvo. Clique em <strong>Adicionar cartão</strong> para continuar.</p>
+                                </div>
                             </div>
                         @endforelse
                     </div>
@@ -204,7 +222,7 @@
                     {{-- Botão de autorizar --}}
                     <div class="calcao-action-bar">
                         <button id="btn-autorizar-calcao" type="button"
-                                class="btn-action btn-action-primary calcao-btn-autorizar"
+                                class="btn-action btn-action-success calcao-btn-autorizar"
                                 {{ empty($metodosPagamento) ? 'disabled' : '' }}>
                             <i class="fas fa-lock"></i>
                             Pré-autorizar R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
@@ -273,12 +291,7 @@
 @section('css')
 @include('reserva.partials.vistoria_reserva_estilos_inner')
 <style>
-    /* ── Summary grid (3 cards topo) ── */
-    .calcao-summary-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 14px;
-    }
+    /* ── Summary cards topo ── */
     .calcao-info-card {
         display: flex;
         align-items: center;
@@ -315,7 +328,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 14px;
+        margin-bottom: 16px;
         gap: 12px;
     }
     .calcao-pm-header__title {
@@ -327,92 +340,101 @@
         gap: 7px;
     }
     .calcao-pm-header__title i { color: var(--c-indigo); }
-    .calcao-btn-add {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        padding: 7px 14px;
-        border-radius: 8px;
-        border: 1.5px solid var(--c-indigo);
-        background: #eff3ff;
-        color: var(--c-indigo);
-        font-size: .8rem;
-        font-weight: 700;
-        cursor: pointer;
-        transition: background .18s, box-shadow .18s;
-        white-space: nowrap;
-        flex-shrink: 0;
-    }
-    .calcao-btn-add:hover {
-        background: color-mix(in srgb, var(--c-indigo) 12%, #fff 88%);
-        box-shadow: 0 3px 10px color-mix(in srgb, var(--c-indigo) 20%, transparent 80%);
-    }
+    .calcao-btn-add { white-space: nowrap; flex-shrink: 0; font-size: .8rem; padding: 7px 14px; }
 
-    /* ── Lista de cartões ── */
-    #calcao-pm-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+    /* ── Lista de cartões (grid via Bootstrap row/col) ── */
+    #calcao-pm-list { margin-bottom: 18px; }
 
     .calcao-pm-item {
         display: flex;
         align-items: center;
-        gap: 14px;
-        padding: 14px 16px;
-        border-radius: 12px;
-        border: 1.5px solid var(--c-border);
-        background: #fafbff;
+        gap: 12px;
+        padding: 16px 18px;
+        border-radius: 14px;
+        border: 2px solid var(--c-border);
+        background: #fff;
         cursor: pointer;
         transition: border-color .18s, background .18s, box-shadow .18s;
         margin: 0;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
     }
-    .calcao-pm-item:hover { background: #f4f6ff; border-color: #c7d4ff; }
+    .calcao-pm-item::before {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--c-indigo), #0ea5e9);
+        opacity: 0;
+        transition: opacity .18s;
+    }
+    .calcao-pm-item:hover { background: #f8f9ff; border-color: #c7d2fe; }
     .calcao-pm-item:has(.calcao-pm-radio:checked) {
         border-color: var(--c-indigo);
         background: #eef2ff;
-        box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-indigo) 12%, transparent 88%);
+        box-shadow: 0 4px 16px rgba(67,56,202,.12);
     }
+    .calcao-pm-item:has(.calcao-pm-radio:checked)::before { opacity: 1; }
     .calcao-pm-radio { display: none; }
-    .calcao-pm-item__check {
-        width: 22px; height: 22px;
+
+    /* Dot radio visual */
+    .calcao-pm-item__radio-dot {
+        width: 18px; height: 18px;
         border-radius: 50%;
         border: 2px solid #cbd5e1;
-        display: flex; align-items: center; justify-content: center;
         flex-shrink: 0;
-        color: #fff;
-        font-size: .62rem;
-        transition: all .18s;
+        position: relative;
+        transition: border-color .18s;
     }
-    .calcao-pm-item:has(.calcao-pm-radio:checked) .calcao-pm-item__check {
+    .calcao-pm-item__radio-dot::after {
+        content: '';
+        position: absolute;
+        inset: 3px;
+        border-radius: 50%;
         background: var(--c-indigo);
+        opacity: 0;
+        transition: opacity .18s;
+    }
+    .calcao-pm-item:has(.calcao-pm-radio:checked) .calcao-pm-item__radio-dot {
         border-color: var(--c-indigo);
     }
-    .calcao-pm-item__brand {
-        font-size: 1.6rem;
-        color: #334155;
+    .calcao-pm-item:has(.calcao-pm-radio:checked) .calcao-pm-item__radio-dot::after {
+        opacity: 1;
+    }
+
+    /* Brand icon */
+    .calcao-pm-item__brand-icon {
+        font-size: 2.2rem;
         flex-shrink: 0;
-        width: 32px;
+        line-height: 1;
+        width: 40px;
         display: flex;
         align-items: center;
         justify-content: center;
     }
+
     .calcao-pm-item__info {
         display: flex;
         flex-direction: column;
-        gap: 2px;
+        gap: 3px;
         flex: 1;
         min-width: 0;
     }
     .calcao-pm-item__number {
-        font-size: .88rem;
+        font-size: .85rem;
         font-weight: 700;
         color: #1e293b;
-        letter-spacing: .04em;
+        letter-spacing: .08em;
+        font-family: 'Courier New', monospace;
     }
     .calcao-pm-item__exp {
-        font-size: .73rem;
+        font-size: .72rem;
         color: #94a3b8;
         font-weight: 500;
     }
     .calcao-pm-item__badge {
-        font-size: .68rem;
+        font-size: .65rem;
         font-weight: 700;
         padding: 3px 8px;
         border-radius: 999px;
@@ -420,6 +442,7 @@
         color: #4338ca;
         white-space: nowrap;
         flex-shrink: 0;
+        align-self: flex-start;
     }
     .calcao-pm-item--new .calcao-pm-item__badge {
         background: #dcfce7;
@@ -550,9 +573,9 @@
     .calcao-card-input.StripeElement--invalid { border-color: var(--c-red); }
 
     @media (max-width: 767px) {
-        .calcao-summary-grid { grid-template-columns: 1fr; }
         .calcao-pm-header { flex-direction: column; align-items: flex-start; }
         .calcao-btn-add { width: 100%; justify-content: center; }
+        .calcao-info-card { margin-bottom: 12px; }
     }
 </style>
 @stop
@@ -652,39 +675,39 @@
         return map[String(brand).toLowerCase()] ?? 'fas fa-credit-card';
     }
 
+    const brandColorMap = { visa: '#1a1f71', mastercard: '#eb001b', amex: '#007bc1' };
+
     function adicionarCartaoNaLista(pm) {
         // Remove empty state se existir
-        const empty = document.getElementById('calcao-empty-state');
-        if (empty) empty.remove();
+        const emptyWrap = document.getElementById('calcao-empty-state');
+        if (emptyWrap) emptyWrap.closest('.col-12')?.remove();
 
-        const list = document.getElementById('calcao-pm-list');
-        const id   = pm.id;
+        const list  = document.getElementById('calcao-pm-list');
+        const id    = pm.id;
         const brand = pm.card?.brand ?? '';
         const last4 = pm.card?.last4 ?? '';
         const month = String(pm.card?.exp_month ?? '').padStart(2, '0');
         const year  = pm.card?.exp_year ?? '';
+        const color = brandColorMap[brand.toLowerCase()] ?? '#475569';
 
-        const label = document.createElement('label');
-        label.className = 'calcao-pm-item calcao-pm-item--new';
-        label.setAttribute('for', `pm_${id}`);
-        label.innerHTML = `
-            <input type="radio" id="pm_${id}" name="payment_method_id_radio"
-                   class="calcao-pm-radio" value="${id}" checked>
-            <div class="calcao-pm-item__check"><i class="fas fa-check"></i></div>
-            <div class="calcao-pm-item__brand"><i class="${brandIcon(brand)}"></i></div>
-            <div class="calcao-pm-item__info">
-                <span class="calcao-pm-item__number">${brand.toUpperCase()} &bull;&bull;&bull;&bull; ${last4}</span>
-                <span class="calcao-pm-item__exp">Vence ${month}/${year}</span>
-            </div>
-            <div class="calcao-pm-item__badge">Novo</div>
-        `;
+        const col = document.createElement('div');
+        col.className = 'col-md-6 mb-3';
+        col.innerHTML = `
+            <label class="calcao-pm-item calcao-pm-item--new" for="pm_${id}">
+                <input type="radio" id="pm_${id}" name="payment_method_id_radio"
+                       class="calcao-pm-radio" value="${id}" checked>
+                <div class="calcao-pm-item__radio-dot"></div>
+                <div class="calcao-pm-item__brand-icon" style="color:${color}">
+                    <i class="${brandIcon(brand)}"></i>
+                </div>
+                <div class="calcao-pm-item__info">
+                    <span class="calcao-pm-item__number">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; ${last4}</span>
+                    <span class="calcao-pm-item__exp">Vence ${month}/${year}</span>
+                </div>
+                <span class="calcao-pm-item__badge">Novo</span>
+            </label>`;
 
-        // Desmarca os outros ao clicar neste
-        label.addEventListener('click', () => {
-            document.querySelectorAll('.calcao-pm-radio').forEach(r => r.checked = false);
-        });
-
-        list.appendChild(label);
+        list.appendChild(col);
 
         // Desmarca os outros e marca este
         document.querySelectorAll('.calcao-pm-radio').forEach(r => { r.checked = r.value === id; });
