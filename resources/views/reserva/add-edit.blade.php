@@ -136,31 +136,50 @@
             <div class="card-body">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" id="formularioReserva" rowClass="row" novalidate>
 
-                    <div class="col-12 reserva-wizard-top">
-                        <div class="reserva-wizard-steps" role="tablist" aria-label="Passos da reserva">
-                            <button type="button" class="reserva-wizard-step is-active" data-reserva-step-btn="1">
-                                <span class="num">1</span><span class="txt">Datas</span>
+                    <div class="col-12 rw-step-indicator-wrap">
+                        <div class="rw-step-indicator" role="tablist" aria-label="Passos da reserva">
+                            <button type="button" class="rw-step-btn is-active" data-reserva-step-btn="1">
+                                <span class="rw-step-num">1</span>
+                                <span class="rw-step-label">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    Datas
+                                </span>
                             </button>
-                            <div class="div"></div>
-                            <button type="button" class="reserva-wizard-step" data-reserva-step-btn="2">
-                                <span class="num">2</span><span class="txt">Veículo</span>
+                            <div class="rw-step-divider"></div>
+                            <button type="button" class="rw-step-btn" data-reserva-step-btn="2">
+                                <span class="rw-step-num">2</span>
+                                <span class="rw-step-label">
+                                    <i class="fas fa-car"></i>
+                                    Veículo
+                                </span>
                             </button>
-                            <div class="div"></div>
-                            <button type="button" class="reserva-wizard-step" data-reserva-step-btn="3">
-                                <span class="num">3</span><span class="txt">Opcionais</span>
+                            <div class="rw-step-divider"></div>
+                            <button type="button" class="rw-step-btn" data-reserva-step-btn="3">
+                                <span class="rw-step-num">3</span>
+                                <span class="rw-step-label">
+                                    <i class="fas fa-puzzle-piece"></i>
+                                    Opcionais
+                                </span>
                             </button>
-                            <div class="div"></div>
-                            <button type="button" class="reserva-wizard-step" data-reserva-step-btn="4">
-                                <span class="num">4</span><span class="txt">Cliente</span>
+                            <div class="rw-step-divider"></div>
+                            <button type="button" class="rw-step-btn" data-reserva-step-btn="4">
+                                <span class="rw-step-num">4</span>
+                                <span class="rw-step-label">
+                                    <i class="fas fa-user"></i>
+                                    Cliente
+                                </span>
                             </button>
                         </div>
-                        <small class="text-muted d-block mt-2">
-                            Dica: avance pelos passos e finalize em "Cliente" para salvar.
-                        </small>
                     </div>
 
-                    <div class="col-12" data-reserva-step="1">
-                        <x-section-division-header-form class="reserva-section-title">Estações e Datas</x-section-division-header-form>
+                    <div class="col-12 rw-step-head" data-reserva-step="1">
+                        <div class="rw-step-content-header">
+                            <div class="rw-step-content-icon"><i class="fas fa-calendar-alt"></i></div>
+                            <div>
+                                <h5>Estações e Datas</h5>
+                                <p>Selecione os locais de retirada e devolução, e defina o período da locação.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Estações e Datas -->
@@ -252,8 +271,14 @@
                     </div>
 
 
-                    <div class="col-12" data-reserva-step="2">
-                        <x-section-division-header-form class="reserva-section-title">Veículo</x-section-division-header-form>
+                    <div class="col-12 rw-step-head" data-reserva-step="2">
+                        <div class="rw-step-content-header">
+                            <div class="rw-step-content-icon rw-step-content-icon--blue"><i class="fas fa-car"></i></div>
+                            <div>
+                                <h5>Escolha do Veículo</h5>
+                                <p>Selecione o grupo de frota, modelo e configure os detalhes do veículo.</p>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="col-md-8" data-reserva-step="2">
@@ -346,8 +371,14 @@
                     @endif
 
 
-                    <div class="col-12" data-reserva-step="3">
-                        <x-section-division-header-form class="reserva-section-title">Opcionais</x-section-division-header-form>
+                    <div class="col-12 rw-step-head" data-reserva-step="3">
+                        <div class="rw-step-content-header">
+                            <div class="rw-step-content-icon rw-step-content-icon--amber"><i class="fas fa-puzzle-piece"></i></div>
+                            <div>
+                                <h5>Opcionais</h5>
+                                <p>Adicione serviços e itens opcionais à reserva.</p>
+                            </div>
+                        </div>
                     </div>
                     <div id="opcionaisWrapper" data-reserva-step="3" class="w-100">
                         <div id="opcionais" class="" 
@@ -405,8 +436,14 @@
                     <br>
 
 
-                    <div class="col-12" data-reserva-step="4">
-                        <x-section-division-header-form class="reserva-section-title">Informações Pessoais</x-section-division-header-form>
+                    <div class="col-12 rw-step-head" data-reserva-step="4">
+                        <div class="rw-step-content-header">
+                            <div class="rw-step-content-icon rw-step-content-icon--green"><i class="fas fa-user"></i></div>
+                            <div>
+                                <h5>Dados do Cliente</h5>
+                                <p>Informe o cliente da reserva, cupom de desconto e observações finais.</p>
+                            </div>
+                        </div>
                     </div>
 
 
@@ -488,18 +525,20 @@
                     </div>
                 </div> --}}
 
-            <div class="col-12 reserva-wizard-footer">
-                <button type="button" class="btn btn-outline-secondary btn-sm" id="reservaWizardPrev">
-                    <i class="fas fa-arrow-left mr-1"></i>Voltar
+            <div class="col-12 rw-wizard-footer">
+                <button type="button" id="reservaWizardPrev" class="rw-btn rw-btn-secondary" style="display:none">
+                    <i class="fas fa-arrow-left"></i> Voltar
                 </button>
-                <button type="button" class="btn btn-primary btn-sm" id="reservaWizardNext">
-                    Continuar <i class="fas fa-arrow-right ml-1"></i>
-                </button>
-                <button type="submit" id="btnSalvarReserva"
-                    class="btn btn-success btn-sm reserva-submit-btn d-none"
-                    {{ !$preRequisitosReserva['pode_reservar'] ? 'disabled' : '' }}>
-                    <i class="fas fa-check mr-1"></i>Salvar reserva
-                </button>
+                <div class="rw-footer-right">
+                    <button type="submit" id="btnSalvarReserva"
+                        class="rw-btn rw-btn-success d-none"
+                        {{ !$preRequisitosReserva['pode_reservar'] ? 'disabled' : '' }}>
+                        <i class="fas fa-save"></i> Salvar reserva
+                    </button>
+                    <button type="button" id="reservaWizardNext" class="rw-btn rw-btn-primary">
+                        Continuar <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
             </div>
 
             <input type="hidden" id="reservaHidden" name="reservaHidden">
@@ -836,84 +875,211 @@
             --reserva-title: var(--empresa-cor-primaria, #0f172a);
         }
 
-        .reserva-wizard-top {
-            border: 1px solid var(--reserva-border);
-            border-radius: 14px;
-            padding: 12px 12px 10px;
-            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
-            margin-bottom: 10px;
+        /* ===== Wizard Reserva — Step Indicator ===== */
+        .rw-step-indicator-wrap {
+            margin-bottom: 0;
+            padding-bottom: 0;
         }
 
-        .reserva-wizard-steps {
+        .rw-step-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            margin-bottom: 1.5rem;
+            background: #fff;
+            border: 1px solid #e2e9f4;
+            border-radius: 14px;
+            padding: 6px;
+            overflow-x: auto;
+        }
+
+        .rw-step-btn {
             display: flex;
             align-items: center;
             gap: 10px;
-            flex-wrap: wrap;
-        }
-        .reserva-wizard-steps .div {
-            flex: 1 1 20px;
-            height: 2px;
-            background: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 22%, #e5edf7 78%);
-            border-radius: 999px;
-            min-width: 12px;
-        }
-        .reserva-wizard-step {
-            appearance: none;
-            border: 1px solid color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 30%, #dbe3ef 70%);
-            background: #fff;
-            border-radius: 999px;
-            padding: 8px 10px;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            color: #0f172a;
+            background: transparent;
+            border: none;
             cursor: pointer;
-            transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease, color .12s ease;
-        }
-        .reserva-wizard-step .num {
-            width: 22px;
-            height: 22px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 12%, #ffffff 88%);
-            color: color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 88%, #111827 12%);
-            border: 1px solid color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 25%, #dbe3ef 75%);
-        }
-        .reserva-wizard-step.is-active {
-            background: var(--empresa-cor-primaria, #2563eb);
-            border-color: var(--empresa-cor-primaria, #2563eb);
-            color: var(--empresa-cor-primaria-contraste, #fff);
-            text-shadow: 0 1px 2px rgba(0,0,0,.25);
-            box-shadow: 0 10px 22px color-mix(in srgb, var(--empresa-cor-primaria, #2563eb) 22%, transparent 78%);
-        }
-        .reserva-wizard-step.is-active .txt {
-            color: var(--empresa-cor-primaria-contraste, #fff);
-            text-shadow: 0 1px 2px rgba(0,0,0,.35);
-            font-weight: 800;
-        }
-        .reserva-wizard-step.is-active .num {
-            background: rgba(0,0,0,.18);
-            color: #fff;
-            border-color: rgba(0,0,0,.12);
-            text-shadow: 0 1px 2px rgba(0,0,0,.4);
+            padding: 10px 16px;
+            border-radius: 10px;
+            flex-shrink: 0;
+            transition: background 0.2s, color 0.2s;
+            color: #64748b;
         }
 
-        .reserva-wizard-footer {
+        .rw-step-btn:hover { background: #f4f6ff; }
+
+        .rw-step-num {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #d0dff0;
+            background: #f4f8ff;
+            color: #94a3b8;
+            font-weight: 800;
+            font-size: 0.78rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.25s;
+        }
+
+        .rw-step-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: #64748b;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .rw-step-btn.is-active {
+            background: color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 10%, #fff 90%);
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 20%, transparent 80%);
+        }
+
+        .rw-step-btn.is-active .rw-step-num {
+            border-color: transparent;
+            background: var(--empresa-cor-primaria, #4338ca);
+            color: #fff;
+            box-shadow: 0 3px 10px color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 42%, transparent 58%);
+        }
+
+        .rw-step-btn.is-active .rw-step-label {
+            color: var(--empresa-cor-primaria, #4338ca);
+            font-weight: 800;
+        }
+
+        .rw-step-btn.is-done .rw-step-num {
+            border-color: transparent;
+            background: #10b981;
+            color: #fff;
+        }
+
+        .rw-step-btn.is-done .rw-step-label { color: #10b981; }
+
+        .rw-step-divider {
+            flex: 1;
+            height: 1px;
+            background: #e2e9f4;
+            min-width: 12px;
+        }
+
+        /* ===== Step Content Header ===== */
+        .rw-step-head {
+            margin-bottom: 4px;
+        }
+
+        .rw-step-content-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 16px;
+            background: #f8faff;
+            border: 1px solid #e2e9f4;
+            border-left: 4px solid var(--empresa-cor-primaria, #4338ca);
+            border-radius: 12px;
+            margin-bottom: 1rem;
+        }
+
+        .rw-step-content-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 11px;
+            background: color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 12%, #fff 88%);
+            color: var(--empresa-cor-primaria, #4338ca);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .rw-step-content-icon--blue  { background: #eff6ff; color: #2563eb; }
+        .rw-step-content-icon--amber { background: #fffbeb; color: #f59e0b; }
+        .rw-step-content-icon--green { background: #ecfdf5; color: #10b981; }
+
+        .rw-step-content-header h5 {
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #0c1428;
+            margin: 0 0 2px;
+            letter-spacing: -0.01em;
+        }
+
+        .rw-step-content-header p {
+            font-size: 0.78rem;
+            color: #64748b;
+            margin: 0;
+        }
+
+        /* ===== Wizard Footer ===== */
+        .rw-wizard-footer {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 8px;
-            padding: 10px 0 0;
-            margin-top: 10px;
-            border-top: 1px dashed color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 28%, #e5edf7 72%);
+            padding: 14px 0 0;
+            margin-top: 14px;
+            border-top: 1px solid #e2e9f4;
         }
-        .reserva-wizard-footer .btn {
-            border-radius: 999px;
+
+        .rw-footer-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-left: auto;
+        }
+
+        .rw-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border: none;
+            border-radius: 10px;
+            padding: 10px 22px;
+            font-size: 0.84rem;
             font-weight: 700;
+            cursor: pointer;
+            transition: all 0.18s;
+            letter-spacing: -0.01em;
+        }
+
+        .rw-btn-secondary {
+            background: #fff;
+            color: #475569;
+            border: 1px solid #e2e9f4;
+            box-shadow: 0 2px 8px rgba(12,20,40,.07);
+        }
+        .rw-btn-secondary:hover { background: #f1f5f9; color: #0c1428; }
+
+        .rw-btn-primary {
+            background: var(--empresa-cor-primaria, #4338ca);
+            color: var(--empresa-cor-secundaria, #fff);
+            box-shadow: 0 4px 12px color-mix(in srgb, var(--empresa-cor-primaria, #4338ca) 30%, transparent 70%);
+        }
+        .rw-btn-primary:hover {
+            filter: brightness(1.06);
+            transform: translateY(-1px);
+            color: var(--empresa-cor-secundaria, #fff);
+        }
+        .rw-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+        .rw-btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.28);
+        }
+        .rw-btn-success:hover { opacity: 0.92; transform: translateY(-1px); color: #fff; }
+
+        @media (max-width: 768px) {
+            .rw-step-label { display: none; }
+            .rw-wizard-footer { flex-wrap: wrap; }
+            .rw-footer-right { width: 100%; }
+            .rw-btn { width: 100%; justify-content: center; }
         }
 
         /* ===== Skeleton overlay ===== */
@@ -1974,7 +2140,7 @@
                         btn.classList.toggle('is-active', Number(btn.dataset.reservaStepBtn) === s);
                     });
 
-                    if (prevBtn) prevBtn.disabled = s <= 1;
+                    if (prevBtn) prevBtn.style.display = s <= 1 ? 'none' : '';
                     if (nextBtn) nextBtn.classList.toggle('d-none', s >= maxStep);
                     if (submitBtn) submitBtn.classList.toggle('d-none', !isEdit && s < maxStep);
 
