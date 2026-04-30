@@ -3226,7 +3226,7 @@
         $('#data_fim_hora_fp').on('change', function() {
             const temTaxa = $(this).find('option:selected').data('taxa-extra') == '1';
             $('#data_fim_taxa_aviso').toggleClass('d-none', !temTaxa);
-            $(this).css({ 'border-color': temTaxa ? '#f59e0b' : '', 'color': temTaxa ? '#92400e' : '', 'font-weight': temTaxa ? '600' : '' });
+            $(this).toggleClass('taxa-extra-sel', temTaxa).css({ 'border-color': '', 'color': '', 'font-weight': '' });
             if (typeof setTaxaEntrega === 'function') {
                 const estacaoId = $('#estacao_devolucao_id').val();
                 const info = ESTACOES_TAXAS[estacaoId];
@@ -3239,7 +3239,7 @@
         $('#data_inicio_hora').on('change', function() {
             const temTaxa = $(this).find('option:selected').data('taxa-extra') == '1';
             $('#data_inicio_taxa_aviso').toggleClass('d-none', !temTaxa);
-            $(this).css({ 'border-color': temTaxa ? '#f59e0b' : '', 'color': temTaxa ? '#92400e' : '', 'font-weight': temTaxa ? '600' : '' });
+            $(this).toggleClass('taxa-extra-sel', temTaxa).css({ 'border-color': '', 'color': '', 'font-weight': '' });
             if (typeof setTaxaColeta === 'function') {
                 const estacaoId = $('#estacao_retirada_id').val();
                 const info = ESTACOES_TAXAS[estacaoId];
