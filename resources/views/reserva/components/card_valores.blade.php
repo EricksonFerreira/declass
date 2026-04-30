@@ -9,19 +9,50 @@
         </div>
     </div>
 
+    <div class="minha-reserva-card__section" id="minhaReserva_periodo_section" style="display:none">
+        <div class="minha-reserva-card__section-title">
+            <i class="fas fa-route"></i>
+            <span>Período</span>
+        </div>
+        <ul class="minha-reserva-list">
+            <li class="minha-reserva-list__item" style="flex-direction:column;align-items:flex-start;gap:1px">
+                <span class="minha-reserva-list__label" style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">
+                    <i class="fas fa-map-marker-alt mr-1" style="color:#3b82f6"></i>Retirada
+                </span>
+                <span id="minhaReserva_estacao_retirada" style="font-size:.8rem;color:#1e40af;font-weight:600">—</span>
+                <span id="minhaReserva_data_retirada" style="font-size:.78rem;color:#374151">—</span>
+            </li>
+            <li class="minha-reserva-list__item" style="flex-direction:column;align-items:flex-start;gap:1px;margin-top:4px">
+                <span class="minha-reserva-list__label" style="color:#6b7280;font-size:.72rem;text-transform:uppercase;letter-spacing:.05em">
+                    <i class="fas fa-map-marker-alt mr-1" style="color:#10b981"></i>Devolução
+                </span>
+                <span id="minhaReserva_estacao_devolucao" style="font-size:.8rem;color:#065f46;font-weight:600">—</span>
+                <span id="minhaReserva_data_devolucao" style="font-size:.78rem;color:#374151">—</span>
+            </li>
+        </ul>
+    </div>
+
     <div class="minha-reserva-card__section">
         <div class="minha-reserva-card__section-title">
             <i class="fas fa-wallet"></i>
             <span>Valores</span>
         </div>
         <ul class="minha-reserva-list">
+            <li class="minha-reserva-list__item d-none" id="minhaReserva_grupo_li">
+                <span class="minha-reserva-list__label" style="color:#6b7280"><i class="fas fa-layer-group mr-1"></i>Grupo</span>
+                <span class="minha-reserva-list__value" id="minhaReserva_grupo_nome" style="font-size:.82rem;color:#374151;text-align:right;max-width:60%">—</span>
+            </li>
             <li class="minha-reserva-list__item">
                 <span class="minha-reserva-list__label">Tarifa base</span>
                 <span class="minha-reserva-list__value" id="tarifa_base">0</span>
             </li>
-            <li class="minha-reserva-list__item">
-                <span class="minha-reserva-list__label">Desconto</span>
-                <span class="minha-reserva-list__value" id="desconto">0 %</span>
+            <li class="minha-reserva-list__item d-none" id="minhaReserva_desconto_li"
+                style="background:#f0fdf4;border:1px solid #86efac;border-radius:6px;padding:5px 8px;margin-top:2px">
+                <span class="minha-reserva-list__label" style="color:#16a34a;font-weight:600">
+                    <i class="fas fa-tag mr-1"></i>Desconto
+                    <span id="minhaReserva_cupom_badge" class="badge badge-xs ml-1" style="background:#16a34a;color:#fff;font-size:.68rem;letter-spacing:.04em"></span>
+                </span>
+                <span class="minha-reserva-list__value" style="color:#16a34a;font-weight:700" id="desconto">0%</span>
             </li>
             <li class="minha-reserva-list__item d-none" id="minhaReserva_taxa_coleta_li"
                 style="flex-direction:column;align-items:flex-start;gap:2px;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:6px 8px;margin-top:4px">

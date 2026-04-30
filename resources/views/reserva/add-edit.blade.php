@@ -289,8 +289,19 @@
                         </div>
                     </div>
                      <div class="col-md-3" data-reserva-step="2">
-                        <x-form-input maxlength="7" id="cupom_desconto" name="cupom_desconto" label="Cupom de Desconto"
-                            value="{{ old('cupom_desconto', $reserva->cupomDesconto->codigo ?? '') }}" class="form-control form-control-sm" />
+                        <label for="cupom_desconto" class="mb-1">Cupom de Desconto</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" id="cupom_desconto" name="cupom_desconto" maxlength="7"
+                                value="{{ old('cupom_desconto', $reserva->cupomDesconto->codigo ?? '') }}"
+                                class="form-control form-control-sm text-uppercase"
+                                placeholder="Ex: DESC10" autocomplete="off" />
+                            <div class="input-group-append">
+                                <button type="button" id="btn_verificar_cupom" class="btn btn-outline-secondary btn-sm" title="Verificar cupom">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <small id="cupom_feedback" class="d-block mt-1" style="font-size:.75rem;min-height:1rem"></small>
                     </div>
                     {{-- <div class="col-md-2 d-flex align-items-center">
 
@@ -2304,26 +2315,56 @@
 
         });
 
-        $('#cupom_desconto').on('input', function() {
+        function verificarCupomDesconto() {
+            const codigo = $('#cupom_desconto').val().trim().toUpperCase();
+            const $fb = $('#cupom_feedback');
+            const $btn = $('#btn_verificar_cupom');
+
+            if (!codigo) {
+                setCupomDesconto(null);
+                $fb.text('').removeClass('text-success text-danger');
+                atualizarMinhaReserva();
+                return;
+            }
+
+            $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+            $fb.text('Verificando...').removeClass('text-success text-danger').addClass('text-muted');
+
             $.ajax({
                 url: "{{ route('cupom_desconto.verificarCupom') }}",
                 method: 'POST',
-                data: {
-                    cupom: $(this).val(),
-                    _token: $('meta[name="csrf-token"]').attr('content')
-                },
+                data: { cupom: codigo, _token: $('meta[name="csrf-token"]').attr('content') },
                 success: function(response) {
                     if (response.id) {
                         setCupomDesconto(response);
-                    }else{
+                        $fb.text('✓ Cupom válido — ' + response.valor + '% de desconto')
+                            .removeClass('text-danger text-muted').addClass('text-success');
+                    } else {
                         setCupomDesconto(null);
+                        $fb.text('✗ Cupom inválido ou expirado.')
+                            .removeClass('text-success text-muted').addClass('text-danger');
                     }
                     atualizarMinhaReserva();
                 },
                 error: function() {
-                    mostrarErroReserva('Atencao!', 'Erro ao verificar o cupom. Por favor, tente novamente.');
+                    setCupomDesconto(null);
+                    $fb.text('Erro ao verificar o cupom.').removeClass('text-success text-muted').addClass('text-danger');
+                },
+                complete: function() {
+                    $btn.prop('disabled', false).html('<i class="fas fa-search"></i>');
                 }
             });
+        }
+
+        $('#btn_verificar_cupom').on('click', verificarCupomDesconto);
+        $('#cupom_desconto').on('keydown', function(e) {
+            if (e.key === 'Enter') { e.preventDefault(); verificarCupomDesconto(); }
+        });
+        $('#cupom_desconto').on('input', function() {
+            // Limpa feedback e desconto ao digitar (força revalidação)
+            setCupomDesconto(null);
+            $('#cupom_feedback').text('').removeClass('text-success text-danger text-muted');
+            atualizarMinhaReserva();
         });
 
         function validarPeriodoReserva() {

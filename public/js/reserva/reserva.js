@@ -381,8 +381,47 @@ function getValorDiario() {
 // Atualizar a função atualizarMinhaReserva para usar a formatação de moeda
 function atualizarMinhaReserva() {
     $('#tarifa_base').text(formatarMoeda(getTarifaBase()));
-    $('#desconto').text(getCupomDescontoValor() + "%");
+
+    const grupoNome = window.reserva.grupo_frota_nome || null;
+    if (grupoNome) {
+        $('#minhaReserva_grupo_nome').text(grupoNome);
+        $('#minhaReserva_grupo_li').removeClass('d-none');
+    } else {
+        $('#minhaReserva_grupo_li').addClass('d-none');
+    }
+
+    const desconto = Number(getCupomDescontoValor() || 0);
+    const cupom = window.reserva.cupom_desconto;
+    if (desconto > 0 && cupom) {
+        $('#desconto').text(desconto + '%');
+        $('#minhaReserva_cupom_badge').text(cupom.codigo || '');
+        $('#minhaReserva_desconto_li').removeClass('d-none');
+    } else {
+        $('#minhaReserva_cupom_badge').text('');
+        $('#minhaReserva_desconto_li').addClass('d-none');
+    }
+
     $('#quantidade_dias').text(getQuantidadeDias());
+
+    // Período: estação + data/hora retirada e devolução
+    const _fmtDT = function(iso) {
+        if (!iso) return null;
+        const d = new Date(iso.includes('T') ? iso : iso + 'T00:00');
+        if (isNaN(d)) return null;
+        const data = d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const hora = d.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        return data + ' às ' + hora;
+    };
+    const estRet  = window.reserva.estacao_retirada_nome  || null;
+    const estDev  = window.reserva.estacao_devolucao_nome || null;
+    const dtRet   = _fmtDT(window.reserva.data_inicio);
+    const dtDev   = _fmtDT(window.reserva.data_fim);
+    const temPeriodo = estRet || estDev || dtRet || dtDev;
+    $('#minhaReserva_periodo_section').toggle(!!temPeriodo);
+    $('#minhaReserva_estacao_retirada').text(estRet || '—');
+    $('#minhaReserva_data_retirada').text(dtRet  || '—');
+    $('#minhaReserva_estacao_devolucao').text(estDev || '—');
+    $('#minhaReserva_data_devolucao').text(dtDev  || '—');
 
     $('#minhaReserva_opcionals_ul').empty();
 
