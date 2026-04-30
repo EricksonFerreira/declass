@@ -27,6 +27,12 @@
                 </div>
             </div>
             <div class="ci-header-right">
+                @if((float)($calculo['valor_calculado'] ?? 0) > 0)
+                    <div class="ci-date-badge">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}</span>
+                    </div>
+                @endif
                 <a href="{{ route('reserva.show', $reserva->id) }}" class="ci-btn-back">
                     <i class="fas fa-arrow-left"></i>
                     <span>Voltar</span>
@@ -43,138 +49,173 @@
                 </div>
             @endif
 
-            {{-- Resumo em 3 blocos --}}
-            <div class="ci-info-row">
-                <div class="ci-info-card">
-                    <div class="ci-info-card__icon" style="background:#eff6ff;color:#2563eb;">
+            {{-- Resumo em 3 cards --}}
+            <div class="calcao-summary-grid mb-4">
+                <div class="calcao-info-card">
+                    <div class="calcao-info-card__icon" style="background:#eff6ff;color:#2563eb;">
                         <i class="fas fa-user"></i>
                     </div>
-                    <div class="ci-info-card__body">
-                        <span class="ci-info-card__label">Cliente</span>
-                        <span class="ci-info-card__value">{{ $reserva->usuario?->nome ?? '—' }}</span>
+                    <div>
+                        <div class="calcao-info-card__label">Cliente</div>
+                        <div class="calcao-info-card__value">{{ $reserva->usuario?->nome ?? '—' }}</div>
                     </div>
                 </div>
 
-                <div class="ci-info-card">
-                    <div class="ci-info-card__icon" style="background:#f0fdf4;color:#059669;">
+                <div class="calcao-info-card">
+                    <div class="calcao-info-card__icon" style="background:#ecfdf5;color:#059669;">
                         <i class="fas fa-car"></i>
                     </div>
-                    <div class="ci-info-card__body">
-                        <span class="ci-info-card__label">Veículo / Grupo</span>
-                        <span class="ci-info-card__value">{{ $reserva->grupoFrota?->nome ?? '—' }}</span>
+                    <div>
+                        <div class="calcao-info-card__label">Veículo / Grupo</div>
+                        <div class="calcao-info-card__value">{{ $reserva->grupoFrota?->nome ?? '—' }}</div>
                     </div>
                 </div>
 
-                <div class="ci-info-card ci-info-card--highlight">
-                    <div class="ci-info-card__icon" style="background:rgba(255,255,255,.18);color:#fff;">
+                <div class="calcao-info-card calcao-info-card--navy">
+                    <div class="calcao-info-card__icon" style="background:rgba(255,255,255,.15);color:#fff;">
                         <i class="fas fa-shield-alt"></i>
                     </div>
-                    <div class="ci-info-card__body">
-                        <span class="ci-info-card__label" style="color:rgba(255,255,255,.75);">Valor do Calção</span>
+                    <div>
+                        <div class="calcao-info-card__label" style="color:rgba(255,255,255,.65);">Valor do Calção</div>
                         @if((float)($calculo['valor_calculado'] ?? 0) > 0)
-                            <span class="ci-info-card__value" style="color:#fff;font-size:1.25rem;">
+                            <div class="calcao-info-card__value" style="color:#fff;font-size:1.3rem;">
                                 R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
-                            </span>
-                            <span style="font-size:.74rem;color:rgba(255,255,255,.65);margin-top:2px;display:block;">
-                                Regra: {{ $calculo['tipo_regra_aplicada'] ?? '—' }} ({{ $calculo['origem_regra_aplicada'] ?? '—' }})
-                            </span>
+                            </div>
+                            <div style="font-size:.72rem;color:rgba(255,255,255,.55);margin-top:2px;">
+                                {{ $calculo['tipo_regra_aplicada'] ?? '' }} · {{ $calculo['origem_regra_aplicada'] ?? '' }}
+                            </div>
                         @else
-                            <span class="ci-info-card__value" style="color:#fbbf24;">Não configurado</span>
+                            <div class="calcao-info-card__value" style="color:#fbbf24;">Não configurado</div>
                         @endif
                     </div>
                 </div>
             </div>
 
-            {{-- Status do calção existente --}}
+            {{-- Status do calção existente (quando já há registro) --}}
             @if($calcaoExistente)
                 @php
-                    $statusBadge = match($calcaoExistente->status) {
-                        'autorizado'             => ['bg'=>'#ecfdf5','color'=>'#047857','icon'=>'fa-check-circle'],
-                        'capturado'              => ['bg'=>'#fef2f2','color'=>'#b91c1c','icon'=>'fa-lock'],
-                        'parcialmente_capturado' => ['bg'=>'#fffbeb','color'=>'#b45309','icon'=>'fa-adjust'],
-                        'cancelado'              => ['bg'=>'#f8fafc','color'=>'#64748b','icon'=>'fa-ban'],
-                        'falhou'                 => ['bg'=>'#fef2f2','color'=>'#b91c1c','icon'=>'fa-times-circle'],
-                        default                  => ['bg'=>'#eff6ff','color'=>'#1d4ed8','icon'=>'fa-info-circle'],
+                    $sb = match($calcaoExistente->status) {
+                        'autorizado'             => ['bg'=>'#ecfdf5','c'=>'#047857','icon'=>'fa-check-circle'],
+                        'capturado'              => ['bg'=>'#fef2f2','c'=>'#b91c1c','icon'=>'fa-lock'],
+                        'parcialmente_capturado' => ['bg'=>'#fffbeb','c'=>'#b45309','icon'=>'fa-adjust'],
+                        'cancelado'              => ['bg'=>'#f8fafc','c'=>'#64748b','icon'=>'fa-ban'],
+                        'falhou'                 => ['bg'=>'#fef2f2','c'=>'#b91c1c','icon'=>'fa-times-circle'],
+                        default                  => ['bg'=>'#eff6ff','c'=>'#1d4ed8','icon'=>'fa-info-circle'],
                     };
                 @endphp
-                <div class="ci-block mb-3" style="background:{{ $statusBadge['bg'] }};border-left-color:{{ $statusBadge['color'] }};">
-                    <div class="d-flex align-items-center gap-3" style="gap:12px;">
-                        <i class="fas {{ $statusBadge['icon'] }}" style="font-size:1.3rem;color:{{ $statusBadge['color'] }};flex-shrink:0;"></i>
+                <div class="ci-block mb-0" style="background:{{ $sb['bg'] }};border-left-color:{{ $sb['c'] }};">
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <i class="fas {{ $sb['icon'] }}" style="font-size:1.3rem;color:{{ $sb['c'] }};flex-shrink:0;"></i>
                         <div>
-                            <strong style="color:{{ $statusBadge['color'] }};">{{ $calcaoExistente->label_status }}</strong>
-                            <div style="font-size:.82rem;color:#475569;margin-top:2px;">
+                            <strong style="color:{{ $sb['c'] }};font-size:.9rem;">{{ $calcaoExistente->label_status }}</strong>
+                            <div style="font-size:.8rem;color:#475569;margin-top:3px;">
                                 Autorizado: <strong>R$ {{ number_format((float)$calcaoExistente->valor_autorizado, 2, ',', '.') }}</strong>
                                 @if($calcaoExistente->valor_capturado)
                                     &middot; Capturado: <strong>R$ {{ number_format((float)$calcaoExistente->valor_capturado, 2, ',', '.') }}</strong>
                                 @endif
-                                &middot; Intent: <code style="font-size:.75rem;">{{ $calcaoExistente->payment_intent_id }}</code>
+                                &middot; <code style="font-size:.72rem;background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;">{{ $calcaoExistente->payment_intent_id }}</code>
                             </div>
                         </div>
                     </div>
                 </div>
             @endif
 
-            {{-- Formulário de autorização --}}
+            {{-- ══ Formulário de autorização ══ --}}
             @if(!$calcaoExistente || $calcaoExistente->status === 'falhou')
+
                 @if((float)($calculo['valor_calculado'] ?? 0) <= 0)
+                    {{-- Sem configuração --}}
                     <div class="ci-block" style="background:#fffbeb;border-left-color:#f59e0b;">
                         <div class="ci-block-label">
                             <i class="fas fa-exclamation-triangle" style="background:#fffbeb;color:#f59e0b;"></i>
                             <div>
                                 <strong>Calção não configurado</strong>
-                                <span>Nenhuma regra de calção foi encontrada para esta reserva. Configure em <strong>Configurações › Calção</strong>.</span>
+                                <span>Nenhuma regra de calção encontrada para esta reserva. Configure em <strong>Configurações › Calção</strong>.</span>
                             </div>
                         </div>
                     </div>
+
                 @else
-                    <div class="ci-block">
-                        <div class="ci-block-label">
-                            <i class="fas fa-credit-card"></i>
-                            <div>
-                                <strong>Pré-autorizar Calção no Cartão</strong>
-                                <span>
-                                    O valor de <strong>R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}</strong>
-                                    será bloqueado (hold) no cartão — não é uma cobrança. Será liberado ou capturado no check-out.
-                                </span>
-                            </div>
-                        </div>
 
-                        <div id="stripe-container">
-                            {{-- Cartões salvos --}}
-                            @if(!empty($metodosPagamento))
-                                <div class="mb-3">
-                                    <label style="font-size:.76rem;font-weight:600;color:#3d4f63;display:block;margin-bottom:8px;">Cartão salvo</label>
-                                    @foreach($metodosPagamento as $pm)
-                                        <label class="ci-pm-option" for="pm_{{ $pm['id'] }}">
-                                            <input type="radio" id="pm_{{ $pm['id'] }}" name="payment_method_id_radio"
-                                                   class="ci-pm-radio" value="{{ $pm['id'] }}">
-                                            <i class="fas fa-credit-card"></i>
-                                            <span>{{ strtoupper($pm['brand'] ?? '') }} ···· {{ $pm['last4'] ?? '' }}</span>
-                                            <span class="ci-pm-exp">{{ $pm['exp_month'] ?? '' }}/{{ $pm['exp_year'] ?? '' }}</span>
-                                        </label>
-                                    @endforeach
-                                </div>
-                                <div class="ci-divider">— ou —</div>
-                            @endif
-
-                            {{-- Novo cartão via Stripe Elements --}}
-                            <div class="mb-3">
-                                <label style="font-size:.76rem;font-weight:600;color:#3d4f63;display:block;margin-bottom:8px;">Novo cartão</label>
-                                <div id="card-element" class="ci-card-input"></div>
-                                <div id="card-errors" class="ci-card-error"></div>
-                            </div>
-
-                            <button id="btn-autorizar-calcao" class="btn-action btn-action-primary ci-btn-full" type="button">
-                                <i class="fas fa-lock"></i>
-                                Pré-autorizar R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
-                            </button>
-
-                            <div id="calcao-status" class="mt-3 d-none"></div>
+                <div class="ci-block">
+                    <div class="ci-block-label">
+                        <i class="fas fa-credit-card"></i>
+                        <div>
+                            <strong>Pré-autorizar Calção no Cartão</strong>
+                            <span>
+                                O valor de <strong>R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}</strong>
+                                será bloqueado (hold) no cartão — não é uma cobrança. Será liberado ou capturado no check-out.
+                            </span>
                         </div>
                     </div>
+
+                    {{-- Cabeçalho da seção de cartões --}}
+                    <div class="calcao-pm-header">
+                        <div class="calcao-pm-header__title">
+                            <i class="fas fa-credit-card"></i>
+                            @if(!empty($metodosPagamento))
+                                Selecione o cartão para pré-autorização
+                            @else
+                                Nenhum cartão salvo — adicione um cartão
+                            @endif
+                        </div>
+                        <button type="button" class="calcao-btn-add" id="btnAbrirModalCartao">
+                            <i class="fas fa-plus"></i>
+                            Adicionar cartão
+                        </button>
+                    </div>
+
+                    {{-- Lista de cartões --}}
+                    <div id="calcao-pm-list">
+                        @forelse($metodosPagamento as $pm)
+                            <label class="calcao-pm-item" for="pm_{{ $pm['id'] }}">
+                                <input type="radio" id="pm_{{ $pm['id'] }}" name="payment_method_id_radio"
+                                       class="calcao-pm-radio" value="{{ $pm['id'] }}"
+                                       {{ $loop->first ? 'checked' : '' }}>
+                                <div class="calcao-pm-item__check"><i class="fas fa-check"></i></div>
+                                <div class="calcao-pm-item__brand">
+                                    @php
+                                        $brandIcon = match(strtolower($pm['brand'] ?? '')) {
+                                            'visa'       => 'fab fa-cc-visa',
+                                            'mastercard' => 'fab fa-cc-mastercard',
+                                            'amex'       => 'fab fa-cc-amex',
+                                            default      => 'fas fa-credit-card',
+                                        };
+                                    @endphp
+                                    <i class="{{ $brandIcon }}"></i>
+                                </div>
+                                <div class="calcao-pm-item__info">
+                                    <span class="calcao-pm-item__number">{{ strtoupper($pm['brand'] ?? '') }} &bull;&bull;&bull;&bull; {{ $pm['last4'] ?? '' }}</span>
+                                    <span class="calcao-pm-item__exp">Vence {{ str_pad($pm['exp_month'] ?? '', 2, '0', STR_PAD_LEFT) }}/{{ $pm['exp_year'] ?? '' }}</span>
+                                </div>
+                                <div class="calcao-pm-item__badge">Salvo</div>
+                            </label>
+                        @empty
+                            <div id="calcao-empty-state" class="calcao-pm-empty">
+                                <i class="fas fa-credit-card"></i>
+                                <p>Nenhum cartão salvo. Clique em <strong>Adicionar cartão</strong> para continuar.</p>
+                            </div>
+                        @endforelse
+                    </div>
+
+                    <div id="card-errors-global" class="calcao-error-msg d-none"></div>
+                    <div id="calcao-status" class="mt-3 d-none"></div>
+
+                    {{-- Botão de autorizar --}}
+                    <div class="calcao-action-bar">
+                        <button id="btn-autorizar-calcao" type="button"
+                                class="btn-action btn-action-primary calcao-btn-autorizar"
+                                {{ empty($metodosPagamento) ? 'disabled' : '' }}>
+                            <i class="fas fa-lock"></i>
+                            Pré-autorizar R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
+                        </button>
+                    </div>
+                </div>
+
                 @endif
+
             @else
-                {{-- Calção já autorizado com sucesso --}}
+                {{-- Já autorizado com sucesso --}}
                 <div class="ci-summary-card">
                     <div class="ci-summary-card__icon">
                         <i class="fas fa-shield-alt"></i>
@@ -193,143 +234,325 @@
         </div>{{-- /ci-body --}}
     </div>{{-- /ci-card --}}
 </div>
+
+{{-- ══ Modal: Adicionar novo cartão ══ --}}
+<div class="modal fade" id="modalNovoCartao" tabindex="-1" aria-labelledby="modalNovoCartaoLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:480px;">
+        <div class="modal-content calcao-modal">
+            <div class="calcao-modal__header">
+                <div class="calcao-modal__header-icon">
+                    <i class="fas fa-credit-card"></i>
+                </div>
+                <div>
+                    <h5 class="calcao-modal__title" id="modalNovoCartaoLabel">Adicionar novo cartão</h5>
+                    <p class="calcao-modal__sub">O cartão será salvo e ficará disponível para pré-autorização.</p>
+                </div>
+                <button type="button" class="calcao-modal__close" data-dismiss="modal" aria-label="Fechar">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="calcao-modal__body">
+                <label class="calcao-modal__label">Dados do cartão</label>
+                <div id="modal-card-element" class="calcao-card-input"></div>
+                <div id="modal-card-errors" class="calcao-error-msg mt-2"></div>
+            </div>
+            <div class="calcao-modal__footer">
+                <button type="button" class="btn-action btn-action-secondary" data-dismiss="modal">
+                    Cancelar
+                </button>
+                <button type="button" id="btn-salvar-cartao" class="btn-action btn-action-primary">
+                    <i class="fas fa-plus"></i>
+                    Adicionar cartão
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @stop
 
 @section('css')
 @include('reserva.partials.vistoria_reserva_estilos_inner')
 <style>
-    /* ── Info row (3 cards do topo) ── */
-    .ci-info-row {
+    /* ── Summary grid (3 cards topo) ── */
+    .calcao-summary-grid {
         display: grid;
         grid-template-columns: 1fr 1fr 1fr;
         gap: 14px;
-        margin-bottom: 1.5rem;
     }
-    .ci-info-card {
+    .calcao-info-card {
         display: flex;
         align-items: center;
         gap: 14px;
-        padding: 16px 18px;
+        padding: 18px 20px;
         border-radius: 14px;
         background: #fff;
         border: 1px solid var(--c-border);
         box-shadow: var(--shadow-sm);
     }
-    .ci-info-card--highlight {
+    .calcao-info-card--navy {
         background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
         border-color: transparent;
-        box-shadow: 0 8px 24px rgba(12,20,40,.25);
+        box-shadow: 0 8px 28px rgba(12,20,40,.28);
     }
-    .ci-info-card__icon {
-        width: 44px;
-        height: 44px;
+    .calcao-info-card__icon {
+        width: 46px; height: 46px;
         border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 1.1rem;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.15rem;
         flex-shrink: 0;
     }
-    .ci-info-card__body {
-        display: flex;
-        flex-direction: column;
-        min-width: 0;
+    .calcao-info-card__label {
+        font-size: .7rem; font-weight: 700;
+        letter-spacing: .1em; text-transform: uppercase;
+        color: #64748b; margin-bottom: 4px;
     }
-    .ci-info-card__label {
-        font-size: .72rem;
-        font-weight: 700;
-        letter-spacing: .1em;
-        text-transform: uppercase;
-        color: #64748b;
-        margin-bottom: 3px;
-    }
-    .ci-info-card__value {
-        font-size: .97rem;
-        font-weight: 700;
-        color: var(--c-ink);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+    .calcao-info-card__value {
+        font-size: .97rem; font-weight: 700; color: var(--c-ink);
     }
 
-    /* ── Cartões salvos ── */
-    .ci-pm-option {
+    /* ── Cabeçalho da seção de cartões ── */
+    .calcao-pm-header {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
-        border-radius: 10px;
+        justify-content: space-between;
+        margin-bottom: 14px;
+        gap: 12px;
+    }
+    .calcao-pm-header__title {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #334155;
+        display: flex;
+        align-items: center;
+        gap: 7px;
+    }
+    .calcao-pm-header__title i { color: var(--c-indigo); }
+    .calcao-btn-add {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px;
+        border-radius: 8px;
+        border: 1.5px solid var(--c-indigo);
+        background: #eff3ff;
+        color: var(--c-indigo);
+        font-size: .8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: background .18s, box-shadow .18s;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .calcao-btn-add:hover {
+        background: color-mix(in srgb, var(--c-indigo) 12%, #fff 88%);
+        box-shadow: 0 3px 10px color-mix(in srgb, var(--c-indigo) 20%, transparent 80%);
+    }
+
+    /* ── Lista de cartões ── */
+    #calcao-pm-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 18px; }
+
+    .calcao-pm-item {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        border-radius: 12px;
         border: 1.5px solid var(--c-border);
         background: #fafbff;
         cursor: pointer;
-        margin-bottom: 8px;
-        font-size: .85rem;
-        font-weight: 600;
-        color: #334155;
-        transition: border-color .18s, background .18s;
+        transition: border-color .18s, background .18s, box-shadow .18s;
+        margin: 0;
     }
-    .ci-pm-option:has(.ci-pm-radio:checked) {
+    .calcao-pm-item:hover { background: #f4f6ff; border-color: #c7d4ff; }
+    .calcao-pm-item:has(.calcao-pm-radio:checked) {
         border-color: var(--c-indigo);
-        background: #eff3ff;
-        color: var(--c-indigo);
+        background: #eef2ff;
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--c-indigo) 12%, transparent 88%);
     }
-    .ci-pm-radio { display: none; }
-    .ci-pm-exp {
-        margin-left: auto;
-        font-size: .76rem;
+    .calcao-pm-radio { display: none; }
+    .calcao-pm-item__check {
+        width: 22px; height: 22px;
+        border-radius: 50%;
+        border: 2px solid #cbd5e1;
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0;
+        color: #fff;
+        font-size: .62rem;
+        transition: all .18s;
+    }
+    .calcao-pm-item:has(.calcao-pm-radio:checked) .calcao-pm-item__check {
+        background: var(--c-indigo);
+        border-color: var(--c-indigo);
+    }
+    .calcao-pm-item__brand {
+        font-size: 1.6rem;
+        color: #334155;
+        flex-shrink: 0;
+        width: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .calcao-pm-item__info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        flex: 1;
+        min-width: 0;
+    }
+    .calcao-pm-item__number {
+        font-size: .88rem;
+        font-weight: 700;
+        color: #1e293b;
+        letter-spacing: .04em;
+    }
+    .calcao-pm-item__exp {
+        font-size: .73rem;
         color: #94a3b8;
         font-weight: 500;
     }
+    .calcao-pm-item__badge {
+        font-size: .68rem;
+        font-weight: 700;
+        padding: 3px 8px;
+        border-radius: 999px;
+        background: #e0e7ff;
+        color: #4338ca;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .calcao-pm-item--new .calcao-pm-item__badge {
+        background: #dcfce7;
+        color: #15803d;
+    }
 
-    /* ── Divisor ── */
-    .ci-divider {
+    /* ── Empty state ── */
+    .calcao-pm-empty {
         text-align: center;
+        padding: 2.5rem 1.5rem;
+        border: 2px dashed #cbd5e1;
+        border-radius: 12px;
+        background: #f8fafc;
         color: #94a3b8;
+    }
+    .calcao-pm-empty i { font-size: 2rem; display: block; margin-bottom: .75rem; opacity: .5; }
+    .calcao-pm-empty p { font-size: .85rem; margin: 0; line-height: 1.5; }
+
+    /* ── Barra de ação ── */
+    .calcao-action-bar {
+        padding-top: 16px;
+        border-top: 1px solid var(--c-border);
+    }
+    .calcao-btn-autorizar {
+        width: 100%;
+        justify-content: center;
+        padding: 14px 24px;
+        font-size: .95rem;
+    }
+    .calcao-btn-autorizar:disabled { opacity: .5; cursor: not-allowed; transform: none !important; }
+
+    /* ── Mensagem de erro inline ── */
+    .calcao-error-msg {
         font-size: .8rem;
-        margin: 14px 0;
+        color: var(--c-red);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* ── Modal ── */
+    .calcao-modal {
+        border: none;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 24px 60px rgba(12,20,40,.22);
+    }
+    .calcao-modal__header {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 20px 22px 16px;
+        background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
         position: relative;
     }
-    .ci-divider::before,
-    .ci-divider::after {
+    .calcao-modal__header::after {
         content: '';
         position: absolute;
-        top: 50%;
-        width: 42%;
-        height: 1px;
-        background: var(--c-border);
+        top: 0; left: 0; right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4338ca, #0ea5e9, #10b981);
     }
-    .ci-divider::before { left: 0; }
-    .ci-divider::after  { right: 0; }
-
-    /* ── Stripe card element ── */
-    .ci-card-input {
+    .calcao-modal__header-icon {
+        width: 42px; height: 42px;
+        border-radius: 11px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.18);
+        display: flex; align-items: center; justify-content: center;
+        color: #fff;
+        font-size: .95rem;
+        flex-shrink: 0;
+    }
+    .calcao-modal__title {
+        font-size: .97rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0 0 2px;
+    }
+    .calcao-modal__sub {
+        font-size: .75rem;
+        color: rgba(148,163,184,.8);
+        margin: 0;
+    }
+    .calcao-modal__close {
+        margin-left: auto;
+        background: rgba(255,255,255,.10);
+        border: 1px solid rgba(255,255,255,.18);
+        color: rgba(255,255,255,.7);
+        border-radius: 8px;
+        width: 32px; height: 32px;
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        transition: background .18s;
+        align-self: center;
+    }
+    .calcao-modal__close:hover { background: rgba(255,255,255,.18); color: #fff; }
+    .calcao-modal__body {
+        padding: 20px 22px;
+        background: #f8faff;
+    }
+    .calcao-modal__label {
+        display: block;
+        font-size: .76rem;
+        font-weight: 700;
+        color: #3d4f63;
+        margin-bottom: 8px;
+    }
+    .calcao-modal__footer {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        padding: 14px 22px;
+        background: #f0f2ff;
+        border-top: 1px solid #dce2ff;
+    }
+    .calcao-card-input {
         border: 1.5px solid #dce6f4;
-        border-radius: 9px;
-        background: #fcfeff;
-        padding: 11px 12px;
+        border-radius: 10px;
+        background: #fff;
+        padding: 12px 14px;
         transition: border-color .18s, box-shadow .18s;
     }
-    .ci-card-input.StripeElement--focus {
+    .calcao-card-input.StripeElement--focus {
         border-color: var(--c-indigo);
         box-shadow: 0 0 0 3px rgba(67,56,202,.10);
     }
-    .ci-card-error {
-        font-size: .78rem;
-        color: var(--c-red);
-        margin-top: 6px;
-        min-height: 1rem;
-    }
-
-    /* ── Botão full-width ── */
-    .ci-btn-full {
-        width: 100%;
-        justify-content: center;
-        padding: 13px 24px;
-        font-size: .95rem;
-    }
+    .calcao-card-input.StripeElement--invalid { border-color: var(--c-red); }
 
     @media (max-width: 767px) {
-        .ci-info-row { grid-template-columns: 1fr; }
+        .calcao-summary-grid { grid-template-columns: 1fr; }
+        .calcao-pm-header { flex-direction: column; align-items: flex-start; }
+        .calcao-btn-add { width: 100%; justify-content: center; }
     }
 </style>
 @stop
@@ -338,56 +561,163 @@
 <script src="https://js.stripe.com/v3/"></script>
 <script>
 (function () {
-    const stripeKey  = @json($stripePublicKey);
-    const reservaId  = @json($reserva->id);
-    const autorizarUrl = @json(route('reserva.calcao.autorizar', $reserva->id));
-    const csrfToken  = @json(csrf_token());
-    const valorCalcao = @json((float)($calculo['valor_calculado'] ?? 0));
+    const STRIPE_KEY   = @json($stripePublicKey);
+    const AUTORIZAR_URL = @json(route('reserva.calcao.autorizar', $reserva->id));
+    const SHOW_URL     = @json(route('reserva.show', $reserva->id));
+    const CSRF         = @json(csrf_token());
+    const VALOR        = @json((float)($calculo['valor_calculado'] ?? 0));
 
-    if (!stripeKey || valorCalcao <= 0) return;
+    if (!STRIPE_KEY || VALOR <= 0) return;
 
-    const stripe   = Stripe(stripeKey);
-    const elements = stripe.elements();
-    const cardElement = elements.create('card', {
+    const stripe = Stripe(STRIPE_KEY);
+
+    /* ─────────────────────────────────────────
+       Stripe Element para o MODAL
+    ───────────────────────────────────────── */
+    const elements     = stripe.elements();
+    const modalElement = elements.create('card', {
         style: {
-            base: { fontSize: '14px', color: '#0c1428', fontFamily: 'inherit', '::placeholder': { color: '#94a3b8' } },
+            base: {
+                fontSize: '14px',
+                color: '#0c1428',
+                fontFamily: 'inherit',
+                '::placeholder': { color: '#94a3b8' },
+            },
             invalid: { color: '#ef4444' },
+        },
+        hidePostalCode: true,
+    });
+
+    let modalMounted = false;
+
+    // Monta o element quando o modal abre
+    $('#modalNovoCartao').on('shown.bs.modal', function () {
+        if (!modalMounted) {
+            modalElement.mount('#modal-card-element');
+            modalMounted = true;
         }
-    });
-    cardElement.mount('#card-element');
-    cardElement.on('change', e => {
-        document.getElementById('card-errors').textContent = e.error ? e.error.message : '';
+        modalElement.on('change', e => {
+            const err = document.getElementById('modal-card-errors');
+            err.textContent = e.error ? e.error.message : '';
+            err.classList.toggle('d-none', !e.error);
+        });
     });
 
-    const btn      = document.getElementById('btn-autorizar-calcao');
-    const statusEl = document.getElementById('calcao-status');
+    // Abre modal
+    document.getElementById('btnAbrirModalCartao')?.addEventListener('click', () => {
+        $('#modalNovoCartao').modal('show');
+    });
 
-    btn?.addEventListener('click', async () => {
+    /* ─────────────────────────────────────────
+       Salvar novo cartão (criar payment method
+       e adicionar à lista sem recarregar)
+    ───────────────────────────────────────── */
+    document.getElementById('btn-salvar-cartao')?.addEventListener('click', async () => {
+        const btn    = document.getElementById('btn-salvar-cartao');
+        const errEl  = document.getElementById('modal-card-errors');
+
         btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando...';
-        statusEl.className = 'mt-3 d-none';
-        statusEl.textContent = '';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+        errEl.textContent = '';
+        errEl.classList.add('d-none');
 
-        const radioSelecionado = document.querySelector('input[name=payment_method_id_radio]:checked');
-        let paymentMethodId = radioSelecionado?.value ?? null;
+        const { paymentMethod, error } = await stripe.createPaymentMethod({
+            type: 'card',
+            card: modalElement,
+        });
 
-        if (!paymentMethodId) {
-            const { paymentMethod, error } = await stripe.createPaymentMethod({ type: 'card', card: cardElement });
-            if (error) {
-                document.getElementById('card-errors').textContent = error.message;
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-lock"></i> Pré-autorizar R$ {{ number_format((float)($calculo["valor_calculado"] ?? 0), 2, ",", ".") }}';
-                return;
-            }
-            paymentMethodId = paymentMethod.id;
+        if (error) {
+            errEl.textContent = error.message;
+            errEl.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar cartão';
+            return;
         }
+
+        // Adiciona o novo cartão à lista e seleciona-o
+        adicionarCartaoNaLista(paymentMethod);
+
+        // Fecha o modal e reseta
+        $('#modalNovoCartao').modal('hide');
+        modalElement.clear();
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus"></i> Adicionar cartão';
+
+        // Habilita o botão de autorizar caso estava desabilitado
+        document.getElementById('btn-autorizar-calcao').disabled = false;
+    });
+
+    function brandIcon(brand) {
+        const map = { visa: 'fab fa-cc-visa', mastercard: 'fab fa-cc-mastercard', amex: 'fab fa-cc-amex' };
+        return map[String(brand).toLowerCase()] ?? 'fas fa-credit-card';
+    }
+
+    function adicionarCartaoNaLista(pm) {
+        // Remove empty state se existir
+        const empty = document.getElementById('calcao-empty-state');
+        if (empty) empty.remove();
+
+        const list = document.getElementById('calcao-pm-list');
+        const id   = pm.id;
+        const brand = pm.card?.brand ?? '';
+        const last4 = pm.card?.last4 ?? '';
+        const month = String(pm.card?.exp_month ?? '').padStart(2, '0');
+        const year  = pm.card?.exp_year ?? '';
+
+        const label = document.createElement('label');
+        label.className = 'calcao-pm-item calcao-pm-item--new';
+        label.setAttribute('for', `pm_${id}`);
+        label.innerHTML = `
+            <input type="radio" id="pm_${id}" name="payment_method_id_radio"
+                   class="calcao-pm-radio" value="${id}" checked>
+            <div class="calcao-pm-item__check"><i class="fas fa-check"></i></div>
+            <div class="calcao-pm-item__brand"><i class="${brandIcon(brand)}"></i></div>
+            <div class="calcao-pm-item__info">
+                <span class="calcao-pm-item__number">${brand.toUpperCase()} &bull;&bull;&bull;&bull; ${last4}</span>
+                <span class="calcao-pm-item__exp">Vence ${month}/${year}</span>
+            </div>
+            <div class="calcao-pm-item__badge">Novo</div>
+        `;
+
+        // Desmarca os outros ao clicar neste
+        label.addEventListener('click', () => {
+            document.querySelectorAll('.calcao-pm-radio').forEach(r => r.checked = false);
+        });
+
+        list.appendChild(label);
+
+        // Desmarca os outros e marca este
+        document.querySelectorAll('.calcao-pm-radio').forEach(r => { r.checked = r.value === id; });
+    }
+
+    /* ─────────────────────────────────────────
+       Pré-autorizar com o cartão selecionado
+    ───────────────────────────────────────── */
+    document.getElementById('btn-autorizar-calcao')?.addEventListener('click', async () => {
+        const btn      = document.getElementById('btn-autorizar-calcao');
+        const statusEl = document.getElementById('calcao-status');
+        const globalErr = document.getElementById('card-errors-global');
+
+        const radio = document.querySelector('input[name=payment_method_id_radio]:checked');
+        if (!radio) {
+            globalErr.textContent = 'Selecione ou adicione um cartão para continuar.';
+            globalErr.classList.remove('d-none');
+            return;
+        }
+        globalErr.classList.add('d-none');
+
+        const paymentMethodId = radio.value;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processando pré-autorização...';
+        statusEl.className = 'mt-3 d-none';
 
         try {
-            const resp = await fetch(autorizarUrl, {
+            const resp = await fetch(AUTORIZAR_URL, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken,
+                    'X-CSRF-TOKEN': CSRF,
                     'Accept': 'application/json',
                 },
                 body: JSON.stringify({ payment_method_id: paymentMethodId }),
@@ -395,19 +725,29 @@
             const data = await resp.json();
 
             if (data.success) {
-                statusEl.className = 'mt-3 alert alert-success';
-                statusEl.innerHTML = '<i class="fas fa-check-circle mr-1"></i>' + (data.message ?? 'Calção autorizado com sucesso!');
-                setTimeout(() => window.location.href = @json(route('reserva.show', $reserva->id)), 1800);
+                btn.innerHTML = '<i class="fas fa-check"></i> Autorizado!';
+                statusEl.className = 'mt-3';
+                statusEl.innerHTML = `
+                    <div class="ci-block" style="background:#ecfdf5;border-left-color:#059669;">
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fas fa-check-circle" style="color:#059669;font-size:1.2rem;flex-shrink:0;"></i>
+                            <div>
+                                <strong style="color:#047857;font-size:.88rem;">Calção autorizado com sucesso!</strong>
+                                <p style="color:#475569;font-size:.8rem;margin:2px 0 0;">${data.message ?? ''}</p>
+                            </div>
+                        </div>
+                    </div>`;
+                setTimeout(() => window.location.href = SHOW_URL, 1800);
             } else {
                 const msg = data.error ?? 'Erro ao autorizar o calção.';
                 statusEl.className = 'mt-3';
                 statusEl.innerHTML = `
                     <div class="ci-block" style="background:#fef2f2;border-left-color:#ef4444;">
-                        <div class="d-flex align-items-center" style="gap:10px;">
-                            <i class="fas fa-times-circle" style="color:#ef4444;font-size:1.1rem;flex-shrink:0;"></i>
+                        <div style="display:flex;align-items:center;gap:10px;">
+                            <i class="fas fa-times-circle" style="color:#ef4444;font-size:1.2rem;flex-shrink:0;"></i>
                             <div>
                                 <strong style="color:#b91c1c;font-size:.88rem;">Falha na pré-autorização</strong>
-                                <p style="color:#64748b;font-size:.82rem;margin:2px 0 0;">${msg}</p>
+                                <p style="color:#475569;font-size:.8rem;margin:2px 0 0;">${msg}</p>
                             </div>
                         </div>
                     </div>`;
@@ -418,11 +758,11 @@
             statusEl.className = 'mt-3';
             statusEl.innerHTML = `
                 <div class="ci-block" style="background:#fef2f2;border-left-color:#ef4444;">
-                    <div class="d-flex align-items-center" style="gap:10px;">
-                        <i class="fas fa-wifi" style="color:#ef4444;font-size:1.1rem;flex-shrink:0;"></i>
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <i class="fas fa-wifi" style="color:#ef4444;font-size:1.2rem;flex-shrink:0;"></i>
                         <div>
                             <strong style="color:#b91c1c;font-size:.88rem;">Falha de comunicação</strong>
-                            <p style="color:#64748b;font-size:.82rem;margin:2px 0 0;">Verifique sua conexão e tente novamente.</p>
+                            <p style="color:#475569;font-size:.8rem;margin:2px 0 0;">Verifique sua conexão e tente novamente.</p>
                         </div>
                     </div>
                 </div>`;
