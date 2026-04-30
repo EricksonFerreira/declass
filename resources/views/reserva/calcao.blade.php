@@ -172,7 +172,7 @@
                                 Nenhum cartão salvo — adicione um cartão
                             @endif
                         </div>
-                        <button type="button" class="btn-action btn-action-primary calcao-btn-add" id="btnAbrirModalCartao">
+                        <button type="button" class="btn-action btn-primary calcao-btn-add" id="btnAbrirModalCartao">
                             <i class="fas fa-plus"></i>
                             Adicionar cartão
                         </button>
@@ -292,7 +292,7 @@
                 <button type="button" class="btn-action btn-action-secondary" data-dismiss="modal">
                     Cancelar
                 </button>
-                <button type="button" id="btn-salvar-cartao" class="btn-action btn-action-primary">
+                <button type="button" id="btn-salvar-cartao" class="btn-action btn-primary">
                     <i class="fas fa-plus"></i>
                     Adicionar cartão
                 </button>
