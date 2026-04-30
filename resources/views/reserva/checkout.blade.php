@@ -323,10 +323,6 @@
 <style>
     @include('reserva.partials.vistoria_reserva_estilos_inner')
 
-    /* ── Step content header — checkout usa verde como cor base ── */
-    .rw-step-content-header { border-left-color: #059669; background: #f0fdf9; }
-    .rw-step-content-icon   { background: #d1fae5; color: #059669; }
-
     /* Header bar verde */
     .co-checkout-header::after {
         background: linear-gradient(90deg, #059669, #10b981, #0ea5e9);
