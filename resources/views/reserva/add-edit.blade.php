@@ -1682,6 +1682,7 @@
         window.reservaCurrency = @json($moedaEmpresa);
         window.reservaCurrencySymbol = @json($simboloMoedaEmpresa);
         const podeReservar = @json((bool) ($preRequisitosReserva['pode_reservar'] ?? true));
+        const isEdit = @json(isset($reserva) && $reserva !== null);
         const mensagemPreRequisitos = @json(
             !empty($preRequisitosReserva['faltas'] ?? [])
                 ? 'Nao e possivel reservar ainda. ' . implode(' ', $preRequisitosReserva['faltas'])
@@ -1934,7 +1935,7 @@
 
                     if (prevBtn) prevBtn.disabled = s <= 1;
                     if (nextBtn) nextBtn.classList.toggle('d-none', s >= maxStep);
-                    if (submitBtn) submitBtn.classList.toggle('d-none', s < maxStep);
+                    if (submitBtn) submitBtn.classList.toggle('d-none', !isEdit && s < maxStep);
 
                     if (persist) localStorage.setItem(storageKey, String(s));
 
@@ -2047,6 +2048,14 @@
                     setOpcionaisReserva(opcionaisSelecionados);
                 }
                 setCupomDesconto(reserva.cupom_desconto);
+
+                // Inicializa taxas fora de expediente salvas na reserva
+                if (typeof setTaxaColeta === 'function') {
+                    setTaxaColeta(parseFloat(reserva.taxa_coleta || 0));
+                }
+                if (typeof setTaxaEntrega === 'function') {
+                    setTaxaEntrega(parseFloat(reserva.taxa_entrega || 0));
+                }
 
             $.ajax({
                 url: "{{ route('reserva.obterOpcionais') }}",
@@ -2446,9 +2455,19 @@
         }, 0);
 
         @php
-            $estacoesTaxasMap = \App\Models\Estacao::whereIn('id', array_keys($estacoesRetirada + $estacoesDevolucao))
-                ->get(['id', 'cobrar_na_coleta', 'valor_taxa_coleta', 'cobrar_na_entrega', 'valor_taxa_entrega'])
-                ->keyBy('id');
+            $estacoesIds = array_keys($estacoesRetirada + $estacoesDevolucao);
+            $foraDeHoraRows = \App\Models\ForaDeHora::whereIn('estacao_id', $estacoesIds)
+                ->get(['estacao_id', 'cobrar_na_coleta', 'valor_taxa_coleta', 'cobrar_na_entrega', 'valor_taxa_entrega'])
+                ->keyBy('estacao_id');
+            $estacoesTaxasMap = collect($estacoesIds)->mapWithKeys(function($id) use ($foraDeHoraRows) {
+                $row = $foraDeHoraRows[$id] ?? null;
+                return [$id => [
+                    'cobrar_na_coleta'    => $row?->cobrar_na_coleta    ?? 'N',
+                    'valor_taxa_coleta'   => $row?->valor_taxa_coleta   ?? 0,
+                    'cobrar_na_entrega'   => $row?->cobrar_na_entrega   ?? 'N',
+                    'valor_taxa_entrega'  => $row?->valor_taxa_entrega  ?? 0,
+                ]];
+            });
         @endphp
         const ESTACOES_TAXAS = @json($estacoesTaxasMap);
 
