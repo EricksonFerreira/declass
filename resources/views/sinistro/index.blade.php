@@ -11,18 +11,23 @@
     <div class="veiculo-filter-sticky mb-2">
         <form method="GET" action="{{ route('sinistro.index') }}" class="veiculo-like-filter" id="formFiltrosSinistro">
             <div class="veiculo-like-filter__group">
+                <label for="">Data início</label>
                 <input type="date" name="data_inicio" class="form-control form-control-sm veiculo-like-filter__field"
                     value="{{ $filtros['data_inicio'] ?? '' }}" title="Data ocorrido de">
+                <label for="">Data fim</label>
                 <input type="date" name="data_fim" class="form-control form-control-sm veiculo-like-filter__field"
                     value="{{ $filtros['data_fim'] ?? '' }}" title="Data ocorrido até">
+                <label for="">Placa</label>
                 <input type="text" name="placa" class="form-control form-control-sm veiculo-like-filter__field veiculo-like-filter__field--plate"
                     value="{{ $filtros['placa'] ?? '' }}" placeholder="Placa">
+                <label for="">Tipo de sinistro</label>
                 <select name="tipo_sinistro" class="form-control form-control-sm veiculo-like-filter__field">
                     <option value="">Tipo</option>
                     @foreach(\App\Models\Sinistro::TIPOS as $key => $label)
                         <option value="{{ $key }}" {{ ($filtros['tipo_sinistro'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
+                <label for="">Status</label>
                 <select name="status" class="form-control form-control-sm veiculo-like-filter__field">
                     <option value="">Status</option>
                     @foreach(\App\Models\Sinistro::STATUS as $key => $label)

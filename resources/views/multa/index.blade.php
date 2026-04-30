@@ -11,18 +11,23 @@
     <div class="veiculo-filter-sticky mb-2">
         <form method="GET" action="{{ route('multa.index') }}" class="veiculo-like-filter" id="formFiltrosMulta">
             <div class="veiculo-like-filter__group">
+                <label for="">Data início</label>
                 <input type="date" name="data_inicio" class="form-control form-control-sm veiculo-like-filter__field"
-                    value="{{ $filtros['data_inicio'] ?? '' }}" title="Data infração de">
+                value="{{ $filtros['data_inicio'] ?? '' }}" title="Data infração de">
+                <label for="">Data fim</label>
                 <input type="date" name="data_fim" class="form-control form-control-sm veiculo-like-filter__field"
-                    value="{{ $filtros['data_fim'] ?? '' }}" title="Data infração até">
+                value="{{ $filtros['data_fim'] ?? '' }}" title="Data infração até">
+                <label for="">Placa</label>
                 <input type="text" name="placa" class="form-control form-control-sm veiculo-like-filter__field veiculo-like-filter__field--plate"
-                    value="{{ $filtros['placa'] ?? '' }}" placeholder="Placa">
+                value="{{ $filtros['placa'] ?? '' }}" placeholder="Placa">
+                <label for="">Status da multa</label>
                 <select name="status_multa" class="form-control form-control-sm veiculo-like-filter__field">
                     <option value="">Status multa</option>
                     @foreach(\App\Models\Multa::STATUS_MULTA as $key => $label)
-                        <option value="{{ $key }}" {{ ($filtros['status_multa'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                    <option value="{{ $key }}" {{ ($filtros['status_multa'] ?? '') === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
+                <label for="">Status do desconto</label>
                 <select name="status_desconto" class="form-control form-control-sm veiculo-like-filter__field">
                     <option value="">Status desconto</option>
                     @foreach(\App\Models\Multa::STATUS_DESCONTO as $key => $label)
@@ -463,4 +468,3 @@
 })();
 </script>
 @stop
-

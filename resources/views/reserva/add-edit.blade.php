@@ -266,12 +266,12 @@
                                         <i class="fas fa-search"></i> Buscar
                                     </button>
                                 </label>
-                                <select name="grupo_frota_id" id="grupo_frota_id"
+                                <select id="grupo_frota_id"
                                     class="form-control form-control-sm js-selectpicker"
                                     data-live-search="true"
                                     data-size="8"
                                     data-show-subtext="true"
-                                    disabled required>
+                                    disabled>
                                     <option value="" disabled selected>Selecione pelo botão Buscar...</option>
                                     @foreach ($gruposVeiculo as $grupo)
                                         <option value="{{ $grupo->id }}" data-subtext="{{ $simboloMoedaEmpresa }} {{ number_format((float) $grupo->valor_diario, 2, ',', '.') }}"
@@ -1923,6 +1923,8 @@
                     } catch (e) {}
                 }
 
+                window.reservaWizardSetStep = setStep;
+
                 function validateStep(step) {
                     const containers = Array.from(document.querySelectorAll(`[data-reserva-step="${step}"]`));
                     const fields = [];
@@ -2006,6 +2008,7 @@
                 setEstacaoRetirada(reserva.estacao_retirada_id, reserva.estacao_retirada?.nome);
                 setEstacaoDevolucao(reserva.estacao_devolucao_id, reserva.estacao_devolucao?.nome);
                 setGrupoFrota(reserva.grupo_frota_id, reserva.grupo_frota?.nome);
+                $('#grupo_frota_id_hidden').val(reserva.grupo_frota_id || '');
                 setModelo(reserva.modelo_id, reserva.modelos?.nome);
 
                 const usuarioNome = (reserva.usuario?.nome || '').trim();
@@ -3557,6 +3560,7 @@
             }
 
             setGrupoFrota(id, nome);
+            $('#grupo_frota_id_hidden').val(id);
 
             $.ajax({
                 url: "{{ route('reserva.veiculosDisponiveis') }}",
@@ -3975,10 +3979,139 @@
                 setGrupoFrota(grupoId, grupoNome);
                 atualizarMinhaReserva();
 
+                // Sincroniza select visual (disabled) e hidden
+                const $selGrupo = $('#grupo_frota_id');
+                if ($selGrupo.find('option[value="' + grupoId + '"]').length) {
+                    $selGrupo.val(grupoId);
+                } else {
+                    $selGrupo.append(new Option(grupoNome, grupoId, true, true));
+                    $selGrupo.val(grupoId);
+                }
+                if ($selGrupo.hasClass('js-selectpicker')) $selGrupo.selectpicker('refresh');
+                $('#grupo_frota_id_hidden').val(grupoId);
+
                 // Carregar modelos e opcionais como se tivesse mudado o select
                 obterModelosComVeiculosDisponiveis(document.getElementById('grupo_frota_id'));
             });
         }());
+
+        // ── Card de cliente ──────────────────────────────────────────────────
+        (function initClienteCard() {
+            const hiddenId   = document.getElementById('user_id');
+            const hiddenNome = document.getElementById('user_display');
+            const emptyState = document.getElementById('clienteEmptyState');
+            const card       = document.getElementById('clienteSelectedCard');
+            const nomeEl     = document.getElementById('clienteNomeDisplay');
+            const idEl       = document.getElementById('clienteIdDisplay');
+            const avatarEl   = document.getElementById('clienteAvatar');
+            const submitBtn  = document.getElementById('btnSalvarReserva');
+
+            function primeiraLetra(str) {
+                return (str || 'U').trim().charAt(0).toUpperCase();
+            }
+
+            function atualizarCardCliente(id, nome) {
+                const temCliente = !!(id && String(id).trim() !== '');
+                emptyState?.classList.toggle('d-none', temCliente);
+                card?.classList.toggle('d-none', !temCliente);
+
+                if (temCliente) {
+                    if (nomeEl)   nomeEl.textContent   = nome || 'Cliente #' + id;
+                    if (idEl)     idEl.textContent      = '#' + id;
+                    if (avatarEl) avatarEl.textContent  = primeiraLetra(nome);
+                    if (hiddenNome) hiddenNome.value    = nome || '';
+                }
+
+                // Botão salvar: só habilitado se houver cliente
+                if (submitBtn) {
+                    submitBtn.disabled = !temCliente;
+                    submitBtn.title    = temCliente ? '' : 'Selecione um cliente para salvar a reserva';
+                }
+            }
+
+            // Observa mudanças no campo hidden user_id via MutationObserver + evento customizado
+            hiddenId?.addEventListener('change', function() {
+                atualizarCardCliente(this.value, hiddenNome?.value || '');
+            });
+            // Polling leve para capturar atribuições diretas ao .value
+            let _lastUserId = hiddenId?.value || '';
+            setInterval(function() {
+                const cur = hiddenId?.value || '';
+                if (cur !== _lastUserId) {
+                    _lastUserId = cur;
+                    atualizarCardCliente(cur, hiddenNome?.value || '');
+                }
+            }, 300);
+
+            // Botão "Trocar" no card aponta para o mesmo modal de busca
+            document.getElementById('btnBuscarUsuarioReserva2')?.addEventListener('click', function() {
+                $('#modalBuscarUsuarioReserva').modal('show');
+            });
+
+            // Limpar cliente
+            document.getElementById('btnLimparUsuarioReserva')?.addEventListener('click', function() {
+                hiddenId.value = '';
+                if (hiddenNome) hiddenNome.value = '';
+                setUser('', '');
+                atualizarCardCliente('', '');
+                atualizarMinhaReserva();
+            });
+
+            // Estado inicial
+            atualizarCardCliente(hiddenId?.value, hiddenNome?.value);
+        })();
+
+        // ── Validação completa no submit ──────────────────────────────────────
+        (function initValidacaoSubmit() {
+            const form = document.getElementById('formularioReserva');
+            if (!form) return;
+
+            const camposObrigatorios = [
+                { id: 'estacao_retirada_id', label: 'Estação de Retirada',  step: 1 },
+                { id: 'estacao_devolucao_id', label: 'Estação de Devolução', step: 1 },
+                { id: 'data_inicio',          label: 'Data de Retirada',     step: 1 },
+                { id: 'data_fim',             label: 'Data de Devolução',    step: 1 },
+                { id: 'grupo_frota_id_hidden',label: 'Grupo de Veículos',    step: 2 },
+                { id: 'user_id',              label: 'Cliente',              step: 4 },
+            ];
+
+            const submitBtn = document.getElementById('btnSalvarReserva');
+            if (!submitBtn) return;
+
+            submitBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+
+                const faltando = camposObrigatorios.filter(c => {
+                    const el = document.getElementById(c.id);
+                    return !el || !el.value || el.value.trim() === '';
+                });
+
+                if (faltando.length > 0) {
+                    const lista = faltando.map(c =>
+                        `<li><i class="fas fa-exclamation-circle text-danger mr-1"></i><strong>${c.label}</strong></li>`
+                    ).join('');
+
+                    const alertHtml = `
+                        <div style="text-align:left">
+                            <p class="mb-2" style="font-size:.92rem;">Preencha os campos obrigatórios antes de salvar:</p>
+                            <ul class="mb-0 pl-3" style="font-size:.88rem;list-style:none;">${lista}</ul>
+                        </div>`;
+
+                    mostrarErroReserva('Campos obrigatórios', alertHtml);
+
+                    // Ir para o step do primeiro campo faltando
+                    const primeiroStep = faltando[0].step;
+                    if (typeof window.reservaWizardSetStep === 'function') {
+                        window.reservaWizardSetStep(primeiroStep);
+                    }
+                    return;
+                }
+
+                // Tudo ok — submete
+                form.requestSubmit ? form.requestSubmit() : form.submit();
+            }, true);
+        })();
 
     </script>
 @stop
