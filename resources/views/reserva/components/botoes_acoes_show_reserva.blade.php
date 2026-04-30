@@ -36,10 +36,10 @@
 
             @can('reserva.editar_no_show')
                 @if(!$reserva->podeEditar() && !in_array((int)$reserva->status_reserva_id, [3,4,5]))
-                    <a href="{{ route('reserva.edit', $reserva->id) }}" class="action-pill action-pill--primary">
+                    <button type="button" class="action-pill action-pill--primary" data-toggle="modal" data-target="#modalEditarReservaShow">
                         <i class="fas fa-pen"></i>
                         <span>Editar reserva</span>
-                    </a>
+                    </button>
                 @endif
             @endcan
 

@@ -159,8 +159,10 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             $data['password'] = self::SENHA_PADRAO_ACESSO;
             $data['forcar_troca_senha'] = true;
 
+            $stripeSecret = $this->resolveStripeSecret(null, isset($data['empresa_id']) ? (int) $data['empresa_id'] : null);
+
             // Cria o cliente no Stripe
-            $cliente = $this->clienteStripeService->criarCliente($data['email'], $data['nome']);
+            $cliente = $this->clienteStripeService->criarCliente($data['email'], $data['nome'], $stripeSecret);
 
             // Cria o usuario no sistema
             $data['stripe_id'] = $cliente->id;
@@ -285,19 +287,21 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             abort(403, 'Sem acesso a este usuario.');
         }
 
+        $stripeSecret = $this->resolveStripeSecret($usuario);
+
         try {
             if ($usuario->stripe_id) {
                 try {
-                    $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
+                    $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
                 } catch (\Stripe\Exception\InvalidRequestException $e) {
                         Log::warning('Stripe customer invalid when loading user payment methods - attempting reconcile', ['user_id' => $usuario->id, 'stripe_id' => $usuario->stripe_id, 'exception' => $e->getMessage()]);
                     try {
-                        $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente');
+                        $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
                         if (!empty($novoStripeId) && $novoStripeId !== ($usuario->stripe_id ?? '')) {
                             $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $novoStripeId]);
                             $usuario = $this->usuarioService->getById($usuario->id);
                         }
-                        $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
+                        $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
                     } catch (\Exception $e2) {
                             Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (usuario.edit)', ['exception' => $e2->getMessage()]);
                         $metodosPagamento = [];
@@ -361,21 +365,23 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             abort(403, 'Sem acesso a este usuario.');
         }
 
+        $stripeSecret = $this->resolveStripeSecret($usuario);
+
         if($usuario->stripe_id == null){
             return $this->redirecionaRotaRedirect('usuario.index', 'Usuário não possui código Stripe','error');
         }
 
         try {
-            $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
+            $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
         } catch (\Stripe\Exception\InvalidRequestException $e) {
             Log::warning('Stripe customer invalid when loading user payment methods (metodoPagamento) - attempting reconcile', ['user_id' => $usuario->id, 'stripe_id' => $usuario->stripe_id, 'exception' => $e->getMessage()]);
             try {
-                $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente');
+                $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
                 if (!empty($novoStripeId) && $novoStripeId !== ($usuario->stripe_id ?? '')) {
                     $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $novoStripeId]);
                     $usuario = $this->usuarioService->getById($usuario->id);
                 }
-                $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
+                $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
             } catch (\Exception $e2) {
                 Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (usuario.metodoPagamento)', ['exception' => $e2->getMessage()]);
                 $metodosPagamento = [];
@@ -420,16 +426,17 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             if (!$usuario) {
                 abort(403, 'Sem acesso a este usuario.');
             }
+            $stripeSecret = $this->resolveStripeSecret($usuario);
             try {
                 // Garante que exista um cliente válido no Stripe (procura por email ou cria)
-                $stripeIdValido = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente');
+                $stripeIdValido = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
                 if (!empty($stripeIdValido) && $stripeIdValido !== ($usuario->stripe_id ?? '')) {
                     $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $stripeIdValido]);
                     $usuario = $this->usuarioService->getById($usuario->id);
                 }
 
                 // Agora cria o método de pagamento vinculado ao cliente garantido
-                $this->clienteStripeService->criarMetodoPagamento($usuario->stripe_id, $stripeToken);
+                $this->clienteStripeService->criarMetodoPagamento($usuario->stripe_id, $stripeToken, $stripeSecret);
             } catch (\Stripe\Exception\ApiErrorException $e) {
                 Log::error('Erro Stripe ao adicionar metodo de pagamento', ['user_id' => $usuario->id, 'exception' => $e->getMessage()]);
                 if ($request->expectsJson()) {
@@ -446,16 +453,16 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
             if ($request->expectsJson()) {
                 try {
-                    $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
+                    $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
                 } catch (\Stripe\Exception\InvalidRequestException $e) {
                     Log::warning('Stripe customer invalid when listing methods after add - attempting reconcile', ['user_id' => $usuario->id, 'stripe_id' => $usuario->stripe_id, 'exception' => $e->getMessage()]);
                     try {
-                        $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente');
+                        $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
                         if (!empty($novoStripeId) && $novoStripeId !== ($usuario->stripe_id ?? '')) {
                             $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $novoStripeId]);
                             $usuario = $this->usuarioService->getById($usuario->id);
                         }
-                        $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id);
+                        $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
                     } catch (\Exception $e2) {
                         Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (usuario.adicionarMetodoPagamento)', ['exception' => $e2->getMessage()]);
                         $metodosPagamento = [];
@@ -493,7 +500,12 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function excluirMetodoPagamento($usuarioId, $metodoId)
     {
-        $this->clienteStripeService->deletarMetodoPagamento($metodoId);
+        $usuario = $this->usuarioService->getById($usuarioId);
+        if (!$usuario) {
+            abort(403, 'Sem acesso a este usuario.');
+        }
+
+        $this->clienteStripeService->deletarMetodoPagamento($metodoId, $this->resolveStripeSecret($usuario));
         return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Metodo de pagamento excluido com sucesso!');
     }
 
@@ -619,5 +631,18 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             'POST',
             route('usuario.store'),
         ];
+    }
+
+    private function resolveStripeSecret(?User $usuario = null, ?int $empresaId = null): ?string
+    {
+        $empresaId = $empresaId
+            ?? ($usuario?->empresa_id ? (int) $usuario->empresa_id : null)
+            ?? $this->gatewayEmpresaConfigService->empresaIdAtual();
+
+        $empresa = $empresaId
+            ? $this->gatewayEmpresaConfigService->empresaPorId($empresaId)
+            : $this->gatewayEmpresaConfigService->empresaAtual();
+
+        return $empresa?->stripe_secret ?: config('services.stripe.secret');
     }
 }

@@ -1400,6 +1400,11 @@
     @endcan
     @endif
 
+    {{-- ── Modal Edicao no Show ── --}}
+    @can('reserva.editar_no_show')
+        @include('reserva.partials.modal_edicao_no_show')
+    @endcan
+
     {{-- Lightbox overlay --}}
     <div id="rs-lightbox" class="rs-lightbox d-none" role="dialog" aria-modal="true">
         <div class="rs-lightbox__backdrop" id="rs-lightbox-backdrop"></div>
