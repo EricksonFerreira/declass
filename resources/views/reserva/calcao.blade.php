@@ -51,7 +51,7 @@
 
             {{-- Resumo em 3 cards (row Bootstrap) --}}
             <div class="row mb-4">
-                <div class="col-md-4 mb-3 mb-md-0">
+                <div class="card col-md-4 mb-3 mb-md-0">
                     <div class="calcao-info-card calcao-info-card--blue">
                         <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--blue">
                             <i class="fas fa-user"></i>
@@ -66,7 +66,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-4 mb-3 mb-md-0">
+                <div class="card col-md-4 mb-3 mb-md-0">
                     <div class="calcao-info-card calcao-info-card--green">
                         <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--green">
                             <i class="fas fa-car"></i>
@@ -81,7 +81,7 @@
                     </div>
                 </div>
 
-                <div class="col-md-4">
+                <div class="card col-md-4">
                     <div class="calcao-info-card calcao-info-card--navy">
                         <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--navy">
                             <i class="fas fa-shield-alt"></i>
