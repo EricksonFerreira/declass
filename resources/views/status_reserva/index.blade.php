@@ -40,7 +40,6 @@
                         <th>#</th>
                         <th>Nome</th>
                         <th>Descrição</th>
-                        <th>Cor</th>
                         <th>Status</th>
                         @can('acessar-superadmin')
                             <th style="width: 160px;">Ações</th>
@@ -52,18 +51,12 @@
                         <tr>
                             <td>{{ $sr->id }}</td>
                             <td>
-                                <span class="badge sr-badge bg-{{$sr->cor}}"
-                                      style="font-size: .85rem; padding: 4px 10px;">
+                                <span class="badge-hex"
+                                      style="background-color:{{ $sr->cor ?? '#6c757d' }}">
                                     {{ $sr->nome }}
                                 </span>
                             </td>
                             <td>{{ $sr->descricao }}</td>
-                            <td>
-                                <div class="d-flex align-items-center" style="gap: 8px;">
-                                    <div style="width:24px;height:24px;border-radius:50%;background-color:{{ $sr->cor ?? '#6c757d' }};border:1px solid rgba(0,0,0,.15);flex-shrink:0;"></div>
-                                    <code style="font-size:.8rem;">{{ $sr->cor ?? '—' }}</code>
-                                </div>
-                            </td>
                             <td>
                                 <span class="badge badge-xs bg-{{ $sr->ativo == 'S' ? 'success' : 'danger' }}">
                                     {{ $sr->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}

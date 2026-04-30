@@ -1,0 +1,42 @@
+/* =====================================================================
+   Utilitários globais — carregado em todas as páginas via adminlte.php
+   ===================================================================== */
+
+/* Badge tamanhos extras */
+.badge-xs {
+    font-size: .72rem;
+    font-weight: 700;
+    padding: .25em .55em;
+    border-radius: .3rem;
+    display: inline-block;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+}
+
+.badge-sm {
+    font-size: .78rem;
+    font-weight: 600;
+    padding: .3em .65em;
+    border-radius: .3rem;
+    display: inline-block;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+}
+
+/* Cor de badge por valor hex inline (usado em status_reserva) */
+.badge-hex {
+    color: #fff;
+    font-size: .82rem;
+    font-weight: 700;
+    padding: .3em .75em;
+    border-radius: .35rem;
+    display: inline-block;
+    line-height: 1;
+    white-space: nowrap;
+    vertical-align: baseline;
+    letter-spacing: .01em;
+}

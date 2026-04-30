@@ -1202,6 +1202,16 @@ return [
                 ],
             ],
         ],
+        'AppCustom' => [
+            'active' => true,
+            'files' => [
+                [
+                    'type'     => 'css',
+                    'asset'    => true,
+                    'location' => 'css/app-custom.css',
+                ],
+            ],
+        ],
         'Pace' => [
             'active' => false,
             'files' => [
