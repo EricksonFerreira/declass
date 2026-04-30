@@ -72,13 +72,6 @@
                 </div>
 
                 <section class="wizard-step active" data-step="1">
-                    <div class="rw-step-content-header">
-                        <div class="rw-step-content-icon"><i class="fas fa-car-side"></i></div>
-                        <div>
-                            <h5>Dados da devolução</h5>
-                            <p>Confirme o veículo da reserva e registre quilometragem, combustível e data/hora de devolução.</p>
-                        </div>
-                    </div>
 
                     <form id="form_dados_devolucao">
                         <div class="ci-block">
@@ -149,14 +142,7 @@
                 </section>
 
                 <section class="wizard-step" data-step="2">
-                    <div class="rw-step-content-header">
-                        <div class="rw-step-content-icon rw-step-content-icon--amber"><i class="fas fa-search"></i></div>
-                        <div>
-                            <h5>Vistoria do veículo</h5>
-                            <p>Registre novas avarias da devolução e consulte histórico do veículo, incluindo correções já realizadas.</p>
-                        </div>
-                    </div>
-
+        
                     <div class="ci-block">
                         <div class="ci-block-label">
                             <i class="fas fa-car-crash"></i>
@@ -256,14 +242,7 @@
                 </section>
 
                 <section class="wizard-step" data-step="3">
-                    <div class="rw-step-content-header">
-                        <div class="rw-step-content-icon rw-step-content-icon--green"><i class="fas fa-comment-alt"></i></div>
-                        <div>
-                            <h5>Observações finais</h5>
-                            <p>Notas para o registro de devolução. Ao concluir, a reserva será finalizada.</p>
-                        </div>
-                    </div>
-
+       
                     <div class="ci-block">
                         <div class="ci-block-label">
                             <i class="fas fa-pen-alt"></i>
