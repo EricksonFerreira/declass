@@ -24,24 +24,24 @@
                 <span class="minha-reserva-list__value" id="desconto">0 %</span>
             </li>
             <li class="minha-reserva-list__item d-none" id="minhaReserva_taxa_coleta_li"
-                style="flex-direction:column;align-items:flex-start;gap:2px;background:#fef3c7;border-radius:6px;padding:6px 8px;margin-top:4px">
+                style="flex-direction:column;align-items:flex-start;gap:2px;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:6px 8px;margin-top:4px">
                 <div class="d-flex justify-content-between w-100">
                     <span class="minha-reserva-list__label" style="color:#92400e;font-weight:700">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>Taxa retirada
+                        <i class="fas fa-exclamation-triangle mr-1"></i>* Retirada fora do expediente
                     </span>
                     <span class="minha-reserva-list__value" style="color:#92400e;font-weight:700" id="minhaReserva_taxa_coleta_val">R$ 0,00</span>
                 </div>
-                <small style="color:#b45309;font-size:.74rem">⚡ Horário fora do expediente da estação</small>
+                <small style="color:#b45309;font-size:.74rem">Horário selecionado está fora do horário de funcionamento da estação de retirada.</small>
             </li>
             <li class="minha-reserva-list__item d-none" id="minhaReserva_taxa_entrega_li"
-                style="flex-direction:column;align-items:flex-start;gap:2px;background:#fef3c7;border-radius:6px;padding:6px 8px;margin-top:4px">
+                style="flex-direction:column;align-items:flex-start;gap:2px;background:#fef3c7;border:1px solid #f59e0b;border-radius:6px;padding:6px 8px;margin-top:4px">
                 <div class="d-flex justify-content-between w-100">
                     <span class="minha-reserva-list__label" style="color:#92400e;font-weight:700">
-                        <i class="fas fa-exclamation-triangle mr-1"></i>Taxa devolução
+                        <i class="fas fa-exclamation-triangle mr-1"></i>* Devolução fora do expediente
                     </span>
                     <span class="minha-reserva-list__value" style="color:#92400e;font-weight:700" id="minhaReserva_taxa_entrega_val">R$ 0,00</span>
                 </div>
-                <small style="color:#b45309;font-size:.74rem">⚡ Horário fora do expediente da estação</small>
+                <small style="color:#b45309;font-size:.74rem">Horário selecionado está fora do horário de funcionamento da estação de devolução.</small>
             </li>
         </ul>
     </div>
