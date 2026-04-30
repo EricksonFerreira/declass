@@ -2900,9 +2900,13 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         padding: 6px 10px;
         margin-top: 4px;
     }
-    .rs-tl-detalhes table { width:100%; border-collapse:collapse; }
-    .rs-tl-detalhes td { padding: 2px 6px 2px 0; vertical-align:top; }
-    .rs-tl-detalhes td:first-child { color:#94a3b8; white-space:nowrap; font-weight:600; width:40%; }
+    .rs-tl-table { width:100%; border-collapse:collapse; }
+    .rs-tl-table tr + tr td { border-top: 1px solid #f1f5f9; }
+    .rs-tl-table td { padding: 3px 8px 3px 0; vertical-align:top; font-size:.78rem; }
+    .rs-tl-table__key { color:#94a3b8; white-space:nowrap; font-weight:600; width:35%; padding-right:10px; }
+    .rs-tl-bloco { margin-top:6px; }
+    .rs-tl-bloco__title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:3px; padding-bottom:2px; border-bottom:1px solid #e2e8f0; }
+    .rs-tl-pre { margin:0; font-size:.72rem; background:#f1f5f9; border-radius:4px; padding:3px 6px; white-space:pre-wrap; word-break:break-all; }
 
     /* ── Contrato legado ── */
     .rs-contrato-badge {
@@ -3148,17 +3152,66 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 return;
             }
 
+            function formatVal(v) {
+                if (v === null || v === undefined) return '—';
+                if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
+                if (typeof v === 'object') {
+                    const entries = Object.entries(v);
+                    if (!entries.length) return '—';
+                    return '<table class="rs-tl-subtable">' + entries.map(([sk, sv]) => {
+                        const slabel = sk.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                        const sval = (sv === null || sv === undefined) ? '—' : (typeof sv === 'object' ? JSON.stringify(sv) : sv);
+                        return `<tr><td>${slabel}</td><td>${sval}</td></tr>`;
+                    }).join('') + '</table>';
+                }
+                return v;
+            }
+
+            function renderDetalhes(det) {
+                const BLOCK_KEYS = ['antes', 'depois', 'data', 'payload'];
+                const simples = [];
+                const blocos  = [];
+
+                Object.entries(det).filter(([k]) => k !== 'acao').forEach(([k, v]) => {
+                    const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                    if (BLOCK_KEYS.includes(k) && typeof v === 'object' && v !== null) {
+                        blocos.push({ label, v });
+                    } else {
+                        simples.push({ label, v });
+                    }
+                });
+
+                let html = '';
+
+                if (simples.length) {
+                    html += '<table class="rs-tl-table">' + simples.map(({ label, v }) =>
+                        `<tr><td class="rs-tl-table__key">${label}:</td><td>${formatVal(v)}</td></tr>`
+                    ).join('') + '</table>';
+                }
+
+                blocos.forEach(({ label, v }) => {
+                    const entries = Object.entries(v);
+                    if (!entries.length) return;
+                    html += `<div class="rs-tl-bloco">
+                        <div class="rs-tl-bloco__title">${label}</div>
+                        <table class="rs-tl-table">` +
+                        entries.map(([sk, sv]) => {
+                            const slabel = sk.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+                            const sval = (sv === null || sv === undefined) ? '—'
+                                       : (typeof sv === 'object' ? `<pre class="rs-tl-pre">${JSON.stringify(sv, null, 2)}</pre>` : sv);
+                            return `<tr><td class="rs-tl-table__key">${slabel}:</td><td>${sval}</td></tr>`;
+                        }).join('') +
+                        `</table></div>`;
+                });
+
+                return html;
+            }
+
             container.innerHTML = logs.map(function (log) {
                 const nivel  = log.nivel || 'info';
                 const icon   = nivelIcone[nivel] || nivelIcone.info;
                 const det    = log.detalhes || {};
-                const linhas = Object.entries(det)
-                    .filter(([k]) => k !== 'acao')
-                    .map(([k, v]) => {
-                        const label = k.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                        const val   = typeof v === 'boolean' ? (v ? 'Sim' : 'Não') : (v ?? '—');
-                        return `<tr><td>${label}:</td><td>${val}</td></tr>`;
-                    }).join('');
+                const detHtml = renderDetalhes(det);
 
                 return `
                 <div class="rs-tl-item">
@@ -3170,7 +3223,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                             &nbsp;&middot;&nbsp;
                             <i class="fas fa-clock mr-1"></i>${log.data}
                         </div>
-                        ${linhas ? `<div class="rs-tl-detalhes"><table>${linhas}</table></div>` : ''}
+                        ${detHtml ? `<div class="rs-tl-detalhes">${detHtml}</div>` : ''}
                     </div>
                 </div>`;
             }).join('');
