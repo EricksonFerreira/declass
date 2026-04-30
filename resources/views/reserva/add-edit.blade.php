@@ -2575,10 +2575,9 @@
             lista.forEach(function(slot) {
                 const optVal = slot.value.includes('T') ? slot.value.split('T')[1].slice(0, 5) : String(slot.value).slice(0, 5);
                 const texto = slot.taxa_extra
-                    ? `⚡ ${slot.label}  —  fora do expediente (+taxa)`
+                    ? `* ${slot.label}  —  fora do expediente`
                     : slot.label;
                 const $opt = $(`<option value="${optVal}" data-taxa-extra="${slot.taxa_extra ? '1' : '0'}">${texto}</option>`);
-                if (slot.taxa_extra) $opt.css({ 'color': '#b45309', 'font-weight': '600' });
                 $sel.append($opt);
             });
             $sel.prop('disabled', false);
@@ -3202,10 +3201,9 @@
             lista.forEach(function(slot) {
                 const optVal = slot.value.includes('T') ? slot.value.split('T')[1].slice(0, 5) : String(slot.value).slice(0, 5);
                 const texto = slot.taxa_extra
-                    ? `⚡ ${slot.label}  —  fora do expediente (+taxa)`
+                    ? `* ${slot.label}  —  fora do expediente`
                     : slot.label;
                 const $opt = $(`<option value="${optVal}" data-taxa-extra="${slot.taxa_extra ? '1' : '0'}">${texto}</option>`);
-                if (slot.taxa_extra) $opt.css({ 'color': '#b45309', 'font-weight': '600' });
                 $sel.append($opt);
             });
             $sel.prop('disabled', false);
