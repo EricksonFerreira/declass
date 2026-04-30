@@ -132,8 +132,37 @@
 
     <div class="reserva-page">
     <div class="d-flex justify-content-between flex-wrap reserva-layout">
-        <div class="col-xl-9 col-lg-9 col-md-9 col-sm-12 col-xs-12 card p-2 reserva-main-card">
-            <div class="card-body">
+        <div class="col-xl-9 col-lg-9 col-md-9 col-sm-12 col-xs-12 reserva-main-card">
+            <div class="ci-card">
+
+                {{-- ── Header escuro ── --}}
+                <div class="ci-card-header">
+                    <div class="ci-header-left">
+                        <div class="ci-header-icon">
+                            <i class="fas fa-{{ isset($reserva->id) ? 'pen' : 'plus' }}"></i>
+                        </div>
+                        <div>
+                            <div class="ci-header-eyebrow">{{ isset($reserva->id) ? 'Editar Reserva' : 'Nova Reserva' }}</div>
+                            <h4 class="ci-header-title">{{ $titulo }}</h4>
+                            <p class="ci-header-sub">
+                                <i class="fas fa-map-marker-alt mr-1"></i>Estações: {{ $preRequisitosReserva['qtd_estacoes'] }}
+                                &nbsp;&middot;&nbsp;
+                                <i class="fas fa-car mr-1"></i>Grupos: {{ $preRequisitosReserva['qtd_grupos'] }}
+                                &nbsp;&middot;&nbsp;
+                                <i class="fas fa-car-side mr-1"></i>Veículos: {{ $preRequisitosReserva['qtd_veiculos_total'] }}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="ci-header-right">
+                        <a href="{{ route('reserva.index') }}" class="ci-btn-back">
+                            <i class="fas fa-arrow-left"></i>
+                            <span>Voltar</span>
+                        </a>
+                    </div>
+                </div>
+
+                {{-- ── Body ── --}}
+                <div class="ci-body">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" id="formularioReserva" rowClass="row" novalidate>
 
                     <div class="col-12 rw-step-indicator-wrap">
@@ -183,90 +212,117 @@
                     </div>
 
                     <!-- Estações e Datas -->
-                    <div class="col-md-6" data-reserva-step="1">
-                        <div class="form-group">
-                                <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estação de Retirada"
-                                :options="$estacoesRetirada" placeholder="Selecione uma estação" :selected="old(
-                                    'estacao_retirada_id',
-                                    isset($reserva->estacao_retirada_id) ? $reserva->estacao_retirada_id : null,
-                                )"
-                                class="handleGetGrupoVeiculos form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
-                            @if ($qtdEstacoes === 0)
-                                <small class="text-danger d-block mt-1">Nenhuma estação disponível para seu acesso.</small>
-                            @endif
-                            <small id="estacao_veiculos_feedback" class="d-block mt-1 text-muted">
-                                Veículos disponíveis na estação selecionada: --
-                            </small>
-                        </div>
-                    </div>
-                    <div class="col-md-6" data-reserva-step="1">
-                        <div class="form-group mb-0">
-                            <label class="mb-1">Data e Hora de Retirada <span class="text-danger">*</span></label>
-                            <div class="d-flex">
-                                <div class="flex-grow-1 mr-2">
-                                    <div class="input-group input-group-sm">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                        </div>
-                                        <input type="text" id="data_inicio_flatpickr" class="form-control form-control-sm"
-                                            placeholder="Selecione a estação" readonly
-                                            value="{{ $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('d/m/Y') : '' }}">
-                                    </div>
-                                    <small id="data_inicio_dias_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Selecione a estação para ver os dias.</small>
-                                </div>
-                                <div style="min-width:130px">
-                                    <select id="data_inicio_hora" class="form-control form-control-sm" disabled>
-                                        <option value="">Selecione a data</option>
-                                    </select>
-                                    <small id="data_inicio_hora_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Escolha uma data.</small>
-                                    <small id="data_inicio_taxa_aviso" class="d-none d-block mt-1" style="font-size:.75rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 7px;color:#92400e;font-weight:600"><i class="fas fa-exclamation-triangle mr-1"></i>Fora do expediente — taxa adicional aplicável.</small>
+                    <div class="col-12" data-reserva-step="1">
+                        <div class="ci-block">
+                            <div class="ci-block-label">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <div>
+                                    <strong>Estações</strong>
+                                    <span>Selecione os locais de retirada e devolução do veículo.</span>
                                 </div>
                             </div>
-                            <input type="hidden" id="data_inicio_data" value="{{ $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('Y-m-d') : '' }}">
-                            <input type="hidden" id="data_inicio" name="data_inicio" value="{{ $dataInicioSelecionada }}">
-                        </div>
-                    </div>
-                    <div class="col-md-6" data-reserva-step="1">
-                        <div class="form-group">
-                            <x-form-select id="estacao_devolucao_id" name="estacao_devolucao_id"
-                                label="Estação de Devolução" :options="$estacoesDevolucao" placeholder="Selecione uma estação"
-                                :selected="old(
-                                    'estacao_devolucao_id',
-                                    isset($reserva->estacao_devolucao_id) ? $reserva->estacao_devolucao_id : null,
-                                )" class="handleGetGrupoVeiculos form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
-                            @if ($qtdEstacoes === 0)
-                                <small class="text-danger d-block mt-1">Cadastre/libere estação para continuar.</small>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="col-md-6" data-reserva-step="1">
-                        <div class="form-group mb-0">
-                            <label class="mb-1">Data e Hora de Devolução <span class="text-danger">*</span></label>
-                            <div class="d-flex">
-                                <div class="flex-grow-1 mr-2">
-                                    <div class="input-group input-group-sm">
-                                        <div class="input-group-prepend">
-                                            <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
-                                        </div>
-                                        <input type="text" id="data_fim_flatpickr" class="form-control form-control-sm"
-                                            placeholder="Selecione a estação" readonly
-                                            value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('d/m/Y') : '' }}">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-2">
+                                        <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estação de Retirada"
+                                        :options="$estacoesRetirada" placeholder="Selecione uma estação" :selected="old(
+                                            'estacao_retirada_id',
+                                            isset($reserva->estacao_retirada_id) ? $reserva->estacao_retirada_id : null,
+                                        )"
+                                        class="handleGetGrupoVeiculos form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
+                                        @if ($qtdEstacoes === 0)
+                                            <small class="text-danger d-block mt-1">Nenhuma estação disponível para seu acesso.</small>
+                                        @endif
+                                        <small id="estacao_veiculos_feedback" class="d-block mt-1 text-muted">
+                                            Veículos disponíveis na estação selecionada: --
+                                        </small>
                                     </div>
-                                    <small id="data_fim_dias_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Selecione a estação para ver os dias.</small>
                                 </div>
-                                <div style="min-width:130px">
-                                    <select id="data_fim_hora_fp" class="form-control form-control-sm" disabled>
-                                        <option value="">Selecione a data</option>
-                                    </select>
-                                    <small id="data_fim_hora_feedback" class="d-block text-muted mt-1" style="font-size:0.75rem">Escolha uma data.</small>
-                                    <small id="data_fim_taxa_aviso" class="d-none d-block mt-1" style="font-size:.75rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 7px;color:#92400e;font-weight:600"><i class="fas fa-exclamation-triangle mr-1"></i>Fora do expediente — taxa adicional aplicável.</small>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-0">
+                                        <x-form-select id="estacao_devolucao_id" name="estacao_devolucao_id"
+                                            label="Estação de Devolução" :options="$estacoesDevolucao" placeholder="Selecione uma estação"
+                                            :selected="old(
+                                                'estacao_devolucao_id',
+                                                isset($reserva->estacao_devolucao_id) ? $reserva->estacao_devolucao_id : null,
+                                            )" class="handleGetGrupoVeiculos form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
+                                        @if ($qtdEstacoes === 0)
+                                            <small class="text-danger d-block mt-1">Cadastre/libere estação para continuar.</small>
+                                        @endif
+                                    </div>
                                 </div>
                             </div>
-                            <input type="hidden" id="data_fim_data" value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('Y-m-d') : '' }}">
-                            <input type="hidden" id="data_fim_hora" value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('H:i') : '' }}">
-                            {{-- mantido para compatibilidade com reserva.js --}}
-                            <input type="hidden" id="data_fim_display" value="{{ $dataFimExibicao ?? '' }}">
-                            <input type="hidden" id="data_fim" name="data_fim" value="{{ $dataFimSelecionada }}">
+                        </div>
+                    </div>
+
+                    <div class="col-12" data-reserva-step="1">
+                        <div class="ci-block ci-block--amber">
+                            <div class="ci-block-label">
+                                <i class="fas fa-calendar-alt"></i>
+                                <div>
+                                    <strong>Período da Locação</strong>
+                                    <span>Defina as datas e horários de retirada e devolução.</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-0">
+                                        <label class="mb-1" style="font-size:.76rem;font-weight:600;color:#3d4f63;">Data e Hora de Retirada <span class="req">*</span></label>
+                                        <div class="d-flex">
+                                            <div class="flex-grow-1 mr-2">
+                                                <div class="input-group input-group-sm">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                    </div>
+                                                    <input type="text" id="data_inicio_flatpickr" class="form-control form-control-sm"
+                                                        placeholder="Selecione a estação" readonly
+                                                        value="{{ $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('d/m/Y') : '' }}">
+                                                </div>
+                                                <small id="data_inicio_dias_feedback" class="ci-hint">Selecione a estação para ver os dias.</small>
+                                            </div>
+                                            <div style="min-width:130px">
+                                                <select id="data_inicio_hora" class="form-control form-control-sm" disabled>
+                                                    <option value="">Selecione a data</option>
+                                                </select>
+                                                <small id="data_inicio_hora_feedback" class="ci-hint">Escolha uma data.</small>
+                                                <small id="data_inicio_taxa_aviso" class="d-none d-block mt-1" style="font-size:.75rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 7px;color:#92400e;font-weight:600"><i class="fas fa-exclamation-triangle mr-1"></i>Fora do expediente — taxa adicional aplicável.</small>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="data_inicio_data" value="{{ $dataInicioSelecionada ? \Carbon\Carbon::parse($dataInicioSelecionada)->format('Y-m-d') : '' }}">
+                                        <input type="hidden" id="data_inicio" name="data_inicio" value="{{ $dataInicioSelecionada }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-0">
+                                        <label class="mb-1" style="font-size:.76rem;font-weight:600;color:#3d4f63;">Data e Hora de Devolução <span class="req">*</span></label>
+                                        <div class="d-flex">
+                                            <div class="flex-grow-1 mr-2">
+                                                <div class="input-group input-group-sm">
+                                                    <div class="input-group-prepend">
+                                                        <span class="input-group-text"><i class="fas fa-calendar-alt"></i></span>
+                                                    </div>
+                                                    <input type="text" id="data_fim_flatpickr" class="form-control form-control-sm"
+                                                        placeholder="Selecione a estação" readonly
+                                                        value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('d/m/Y') : '' }}">
+                                                </div>
+                                                <small id="data_fim_dias_feedback" class="ci-hint">Selecione a estação para ver os dias.</small>
+                                            </div>
+                                            <div style="min-width:130px">
+                                                <select id="data_fim_hora_fp" class="form-control form-control-sm" disabled>
+                                                    <option value="">Selecione a data</option>
+                                                </select>
+                                                <small id="data_fim_hora_feedback" class="ci-hint">Escolha uma data.</small>
+                                                <small id="data_fim_taxa_aviso" class="d-none d-block mt-1" style="font-size:.75rem;background:#fef3c7;border:1px solid #f59e0b;border-radius:5px;padding:2px 7px;color:#92400e;font-weight:600"><i class="fas fa-exclamation-triangle mr-1"></i>Fora do expediente — taxa adicional aplicável.</small>
+                                            </div>
+                                        </div>
+                                        <input type="hidden" id="data_fim_data" value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('Y-m-d') : '' }}">
+                                        <input type="hidden" id="data_fim_hora" value="{{ $dataFimSelecionada ? \Carbon\Carbon::parse($dataFimSelecionada)->format('H:i') : '' }}">
+                                        {{-- mantido para compatibilidade com reserva.js --}}
+                                        <input type="hidden" id="data_fim_display" value="{{ $dataFimExibicao ?? '' }}">
+                                        <input type="hidden" id="data_fim" name="data_fim" value="{{ $dataFimSelecionada }}">
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -281,86 +337,101 @@
                         </div>
                     </div>
 
-                    <div class="col-md-8" data-reserva-step="2">
-                        <div class="form-group">
-                            <div class="form-group">
-                                <label for="grupo_frota_id" class="d-flex align-items-center justify-content-between mb-1">
-                                    <span>Grupo de Veículos</span>
-                                    <button type="button" class="btn btn-xs btn-outline-secondary" id="btn_buscar_grupo"
-                                        data-toggle="modal" data-target="#modalPesquisaGrupo" title="Buscar grupo de veículos">
-                                        <i class="fas fa-search"></i> Buscar
-                                    </button>
-                                </label>
-                                <select id="grupo_frota_id"
-                                    class="form-control form-control-sm js-selectpicker"
-                                    data-live-search="true"
-                                    data-size="8"
-                                    data-show-subtext="true"
-                                    disabled>
-                                    <option value="" disabled selected>Selecione pelo botão Buscar...</option>
-                                    @foreach ($gruposVeiculo as $grupo)
-                                        <option value="{{ $grupo->id }}" data-subtext="{{ $simboloMoedaEmpresa }} {{ number_format((float) $grupo->valor_diario, 2, ',', '.') }}"
-                                            {{ old('grupo_frota_id', isset($reserva->grupo_frota_id) ? $reserva->grupo_frota_id : null) == $grupo->id ? 'selected' : '' }}>
-                                            {{ $grupo->nome }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                                <input type="hidden" name="grupo_frota_id" id="grupo_frota_id_hidden" value="{{ old('grupo_frota_id', $reserva->grupo_frota_id ?? '') }}">
-                                @if ($qtdGrupos === 0)
-                                    <small class="text-danger d-block mt-1">Nenhum grupo de veículos ativo disponível.</small>
-                                @endif
+                    <div class="col-12" data-reserva-step="2">
+                        <div class="ci-block">
+                            <div class="ci-block-label">
+                                <i class="fas fa-layer-group"></i>
+                                <div>
+                                    <strong>Grupo de Frota e Cupom</strong>
+                                    <span>Selecione a categoria do veículo e aplique um cupom de desconto, se houver.</span>
+                                </div>
                             </div>
-
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <label for="grupo_frota_id" class="d-flex align-items-center justify-content-between mb-1" style="font-size:.76rem;font-weight:600;color:#3d4f63;">
+                                        <span>Grupo de Veículos</span>
+                                        <button type="button" class="btn btn-xs btn-outline-secondary" id="btn_buscar_grupo"
+                                            data-toggle="modal" data-target="#modalPesquisaGrupo" title="Buscar grupo de veículos">
+                                            <i class="fas fa-search"></i> Buscar
+                                        </button>
+                                    </label>
+                                    <select id="grupo_frota_id"
+                                        class="form-control form-control-sm js-selectpicker"
+                                        data-live-search="true"
+                                        data-size="8"
+                                        data-show-subtext="true"
+                                        disabled>
+                                        <option value="" disabled selected>Selecione pelo botão Buscar...</option>
+                                        @foreach ($gruposVeiculo as $grupo)
+                                            <option value="{{ $grupo->id }}" data-subtext="{{ $simboloMoedaEmpresa }} {{ number_format((float) $grupo->valor_diario, 2, ',', '.') }}"
+                                                {{ old('grupo_frota_id', isset($reserva->grupo_frota_id) ? $reserva->grupo_frota_id : null) == $grupo->id ? 'selected' : '' }}>
+                                                {{ $grupo->nome }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                    <input type="hidden" name="grupo_frota_id" id="grupo_frota_id_hidden" value="{{ old('grupo_frota_id', $reserva->grupo_frota_id ?? '') }}">
+                                    @if ($qtdGrupos === 0)
+                                        <small class="text-danger d-block mt-1">Nenhum grupo de veículos ativo disponível.</small>
+                                    @endif
+                                </div>
+                                <div class="col-md-4">
+                                    <label for="cupom_desconto" class="mb-1" style="font-size:.76rem;font-weight:600;color:#3d4f63;">Cupom de Desconto</label>
+                                    <div class="input-group input-group-sm">
+                                        <input type="text" id="cupom_desconto" name="cupom_desconto" maxlength="7"
+                                            value="{{ old('cupom_desconto', $reserva->cupomDesconto->codigo ?? '') }}"
+                                            class="form-control form-control-sm text-uppercase"
+                                            placeholder="Ex: DESC10" autocomplete="off" />
+                                        <div class="input-group-append">
+                                            <button type="button" id="btn_verificar_cupom" class="btn btn-outline-secondary btn-sm" title="Verificar cupom">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small id="cupom_feedback" class="d-block mt-1" style="font-size:.75rem;min-height:1rem"></small>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                     <div class="col-md-3" data-reserva-step="2">
-                        <label for="cupom_desconto" class="mb-1">Cupom de Desconto</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="cupom_desconto" name="cupom_desconto" maxlength="7"
-                                value="{{ old('cupom_desconto', $reserva->cupomDesconto->codigo ?? '') }}"
-                                class="form-control form-control-sm text-uppercase"
-                                placeholder="Ex: DESC10" autocomplete="off" />
-                            <div class="input-group-append">
-                                <button type="button" id="btn_verificar_cupom" class="btn btn-outline-secondary btn-sm" title="Verificar cupom">
-                                    <i class="fas fa-search"></i>
-                                </button>
-                            </div>
-                        </div>
-                        <small id="cupom_feedback" class="d-block mt-1" style="font-size:.75rem;min-height:1rem"></small>
-                    </div>
-                    {{-- <div class="col-md-2 d-flex align-items-center">
 
-                        <a class="btn btn-xs btn-info " data-toggle="modal" data-target="#modalPesquisa">
-                            <i class="fa fa-search mr-1"></i>
-                            Pesquisar
-                        </a>
-                    </div> --}}
                     @if(!empty($reservaSelecionarModelo))
-                    <div class="col-md-4 pb-2" data-reserva-step="2">
-                        @if (isset($reserva))
-                            <x-form-select name="modelo_id" label="Modelo" :options="$modelos" :selected="old('modelo_id', isset($reserva->modelos) ? $reserva->modelos->id : null)"
-                                id="modelo" onchange="getMarcaESegmento(this.value, $(this).find('option:selected').text())" placeholder="Selecione um modelo"
-                                class="form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
-                        @else
-                            <x-form-select name="modelo_id" label="Modelo" id="modelo" :options="[]"
-                                :selected="old('modelo_id')"
-                                onchange="getMarcaESegmento(this.value)" placeholder="Selecione primeiro o grupo de frotas"
-                                class="form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" disabled required />
-                        @endif
-                        @if ($qtdModelos === 0)
-                            <small class="text-danger d-block mt-1">Nenhum modelo ativo disponivel para reserva.</small>
-                        @endif
-                        <small id="modelo_disponibilidade_feedback" class="text-warning d-block mt-1 d-none"></small>
-                    </div>
-                    <div class="col-md-4" data-reserva-step="2">
-                        <x-form-input type="text" class="form-control form-control-sm" disabled id="marca"
-                            name="marca" label="Marca"
-                            value="{{ old('marca', isset($marcas) && isset($marcas->nome) ? $marcas->nome : '') }}" />
-                    </div>
-                    <div class="col-md-4" data-reserva-step="2">
-                        <x-form-input type="text" class="form-control form-control-sm" disabled id="segmento"
-                            name="segmento" label="Segmento"
-                            value="{{ old('segmento', isset($segmentos) && isset($segmentos->nome) ? $segmentos->nome : '') }} " />
+                    <div class="col-12" data-reserva-step="2">
+                        <div class="ci-block ci-block--amber">
+                            <div class="ci-block-label">
+                                <i class="fas fa-car-side"></i>
+                                <div>
+                                    <strong>Modelo do Veículo</strong>
+                                    <span>Informe o modelo, marca e segmento do veículo.</span>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-4 pb-2">
+                                    @if (isset($reserva))
+                                        <x-form-select name="modelo_id" label="Modelo" :options="$modelos" :selected="old('modelo_id', isset($reserva->modelos) ? $reserva->modelos->id : null)"
+                                            id="modelo" onchange="getMarcaESegmento(this.value, $(this).find('option:selected').text())" placeholder="Selecione um modelo"
+                                            class="form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
+                                    @else
+                                        <x-form-select name="modelo_id" label="Modelo" id="modelo" :options="[]"
+                                            :selected="old('modelo_id')"
+                                            onchange="getMarcaESegmento(this.value)" placeholder="Selecione primeiro o grupo de frotas"
+                                            class="form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" disabled required />
+                                    @endif
+                                    @if ($qtdModelos === 0)
+                                        <small class="text-danger d-block mt-1">Nenhum modelo ativo disponivel para reserva.</small>
+                                    @endif
+                                    <small id="modelo_disponibilidade_feedback" class="text-warning d-block mt-1 d-none"></small>
+                                </div>
+                                <div class="col-md-4">
+                                    <x-form-input type="text" class="form-control form-control-sm" disabled id="marca"
+                                        name="marca" label="Marca"
+                                        value="{{ old('marca', isset($marcas) && isset($marcas->nome) ? $marcas->nome : '') }}" />
+                                </div>
+                                <div class="col-md-4">
+                                    <x-form-input type="text" class="form-control form-control-sm" disabled id="segmento"
+                                        name="segmento" label="Segmento"
+                                        value="{{ old('segmento', isset($segmentos) && isset($segmentos->nome) ? $segmentos->nome : '') }} " />
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     @else
                     {{-- Sem seleção de modelo: campos ocultos para manter compatibilidade de submissão --}}
@@ -380,18 +451,20 @@
                             </div>
                         </div>
                     </div>
-                    <div id="opcionaisWrapper" data-reserva-step="3" class="w-100">
-                        <div id="opcionais" class="" 
-                        style="padding:1em; 
-                                background: linear-gradient(
-                                    90deg,
-                                    color-mix(in srgb, var(--empresa-cor-primaria, #1e293b) 90%, #000 10%) 0%,
-                                    color-mix(in srgb, var(--empresa-cor-terciaria, #334155) 90%, #000 10%) 100%
-                                );
-                                width:100%">
-                            <div class="alert alert-light col-md-8 d-flex align-items-center text-xs py-1 mt-1">
-                                <i class="fa-solid fa-circle-info me-2"></i>
-                                <span>Selecione um grupo de veículos para visualizar os opcionais disponíveis.</span>
+                    <div id="opcionaisWrapper" data-reserva-step="3" class="col-12 px-3">
+                        <div class="ci-block">
+                            <div class="ci-block-label">
+                                <i class="fas fa-puzzle-piece"></i>
+                                <div>
+                                    <strong>Itens Opcionais</strong>
+                                    <span>Selecione serviços e acessórios adicionais para a reserva.</span>
+                                </div>
+                            </div>
+                            <div id="opcionais">
+                                <div class="alert alert-light d-flex align-items-center text-xs py-1 mt-1 mb-0">
+                                    <i class="fas fa-circle-info mr-2"></i>
+                                    <span>Selecione um grupo de veículos para visualizar os opcionais disponíveis.</span>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -433,8 +506,6 @@
                             @endforeach
                         @endif
                     </div> --}}
-                    <br>
-
 
                     <div class="col-12 rw-step-head" data-reserva-step="4">
                         <div class="rw-step-content-header">
@@ -454,58 +525,66 @@
                             ? $users[$userIdSelecionado]
                             : ($reserva->usuario->nome ?? '');
                     @endphp
-                    <div class="col-md-12" data-reserva-step="4">
-                        <input type="hidden" name="user_id" id="user_id" value="{{ $userIdSelecionado }}" required>
-
-                        {{-- Card de cliente não selecionado --}}
-                        <div id="clienteEmptyState" class="{{ $userIdSelecionado ? 'd-none' : '' }}">
-                            <div style="border:2px dashed #cbd5e1;border-radius:14px;padding:2rem 1.5rem;text-align:center;background:#f8fafc;">
-                                <div style="width:56px;height:56px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
-                                    <i class="fas fa-user" style="font-size:1.5rem;color:#94a3b8;"></i>
-                                </div>
-                                <p class="mb-1 font-weight-bold" style="color:#374151;font-size:.95rem;">Nenhum cliente selecionado</p>
-                                <p class="mb-3" style="color:#94a3b8;font-size:.82rem;">Busque um cliente existente ou cadastre um novo</p>
-                                <div class="d-flex justify-content-center" style="gap:.6rem;flex-wrap:wrap;">
-                                    <button type="button" class="btn btn-primary btn-sm" id="btnBuscarUsuarioReserva">
-                                        <i class="fas fa-search mr-1"></i>Buscar cliente
-                                    </button>
-                                    <button type="button" class="btn btn-outline-success btn-sm" id="btnNovoUsuarioModal">
-                                        <i class="fas fa-user-plus mr-1"></i>Novo cliente
-                                    </button>
+                    <div class="col-12" data-reserva-step="4">
+                        <div class="ci-block">
+                            <div class="ci-block-label">
+                                <i class="fas fa-user"></i>
+                                <div>
+                                    <strong>Identificação do Cliente</strong>
+                                    <span>Busque um cliente existente ou cadastre um novo para esta reserva.</span>
                                 </div>
                             </div>
-                        </div>
 
-                        {{-- Card de cliente selecionado --}}
-                        <div id="clienteSelectedCard" class="{{ $userIdSelecionado ? '' : 'd-none' }}" style="border:1.5px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);padding:1.25rem 1.5rem;">
-                            <div class="d-flex align-items-center justify-content-between" style="gap:1rem;">
-                                <div class="d-flex align-items-center" style="gap:.9rem;min-width:0;">
-                                    <div id="clienteAvatar" style="width:46px;height:46px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:.02em;">
-                                        {{ strtoupper(substr($userNomeSelecionado ?: 'U', 0, 1)) }}
+                            <input type="hidden" name="user_id" id="user_id" value="{{ $userIdSelecionado }}" required>
+
+                            {{-- Card de cliente não selecionado --}}
+                            <div id="clienteEmptyState" class="{{ $userIdSelecionado ? 'd-none' : '' }}">
+                                <div style="border:2px dashed #cbd5e1;border-radius:14px;padding:2rem 1.5rem;text-align:center;background:#f8fafc;">
+                                    <div style="width:56px;height:56px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                                        <i class="fas fa-user" style="font-size:1.5rem;color:#94a3b8;"></i>
                                     </div>
-                                    <div style="min-width:0;">
-                                        <div id="clienteNomeDisplay" class="font-weight-bold" style="color:#1e3a5f;font-size:.97rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                                            {{ $userNomeSelecionado ?: '—' }}
-                                        </div>
-                                        <div style="color:#64748b;font-size:.78rem;margin-top:.15rem;">
-                                            <i class="fas fa-id-badge mr-1"></i><span id="clienteIdDisplay">{{ $userIdSelecionado ? '#'.$userIdSelecionado : '' }}</span>
-                                        </div>
+                                    <p class="mb-1 font-weight-bold" style="color:#374151;font-size:.95rem;">Nenhum cliente selecionado</p>
+                                    <p class="mb-3" style="color:#94a3b8;font-size:.82rem;">Busque um cliente existente ou cadastre um novo</p>
+                                    <div class="d-flex justify-content-center" style="gap:.6rem;flex-wrap:wrap;">
+                                        <button type="button" class="btn btn-primary btn-sm" id="btnBuscarUsuarioReserva">
+                                            <i class="fas fa-search mr-1"></i>Buscar cliente
+                                        </button>
+                                        <button type="button" class="btn btn-outline-success btn-sm" id="btnNovoUsuarioModal">
+                                            <i class="fas fa-user-plus mr-1"></i>Novo cliente
+                                        </button>
                                     </div>
-                                </div>
-                                <div class="d-flex align-items-center" style="gap:.5rem;flex-shrink:0;">
-                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnBuscarUsuarioReserva2" title="Trocar cliente">
-                                        <i class="fas fa-exchange-alt mr-1"></i>Trocar
-                                    </button>
-                                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnLimparUsuarioReserva" title="Remover cliente">
-                                        <i class="fas fa-times"></i>
-                                    </button>
                                 </div>
                             </div>
+
+                            {{-- Card de cliente selecionado --}}
+                            <div id="clienteSelectedCard" class="{{ $userIdSelecionado ? '' : 'd-none' }}" style="border:1.5px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);padding:1.25rem 1.5rem;">
+                                <div class="d-flex align-items-center justify-content-between" style="gap:1rem;">
+                                    <div class="d-flex align-items-center" style="gap:.9rem;min-width:0;">
+                                        <div id="clienteAvatar" style="width:46px;height:46px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:.02em;">
+                                            {{ strtoupper(substr($userNomeSelecionado ?: 'U', 0, 1)) }}
+                                        </div>
+                                        <div style="min-width:0;">
+                                            <div id="clienteNomeDisplay" class="font-weight-bold" style="color:#1e3a5f;font-size:.97rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                                {{ $userNomeSelecionado ?: '—' }}
+                                            </div>
+                                            <div style="color:#64748b;font-size:.78rem;margin-top:.15rem;">
+                                                <i class="fas fa-id-badge mr-1"></i><span id="clienteIdDisplay">{{ $userIdSelecionado ? '#'.$userIdSelecionado : '' }}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="d-flex align-items-center" style="gap:.5rem;flex-shrink:0;">
+                                        <button type="button" class="btn btn-sm btn-outline-primary" id="btnBuscarUsuarioReserva2" title="Trocar cliente">
+                                            <i class="fas fa-exchange-alt mr-1"></i>Trocar
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-danger" id="btnLimparUsuarioReserva" title="Remover cliente">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <input type="text" id="user_display" class="d-none" value="{{ $userNomeSelecionado }}">
                         </div>
-                        <input type="text" id="user_display" class="d-none" value="{{ $userNomeSelecionado }}">
                     </div>
-
-            </div>
 
 
             <!-- Status e Cancelamento -->
@@ -525,24 +604,28 @@
                     </div>
                 </div> --}}
 
-            <div class="col-12 rw-wizard-footer">
-                <button type="button" id="reservaWizardPrev" class="rw-btn rw-btn-secondary" style="display:none">
-                    <i class="fas fa-arrow-left"></i> Voltar
-                </button>
-                <div class="rw-footer-right">
-                    <button type="submit" id="btnSalvarReserva"
-                        class="rw-btn rw-btn-success d-none"
-                        {{ !$preRequisitosReserva['pode_reservar'] ? 'disabled' : '' }}>
-                        <i class="fas fa-save"></i> Salvar reserva
+            <div class="col-12">
+                <div class="wizard-actions">
+                    <button type="button" id="reservaWizardPrev" class="btn-action btn-action-secondary" style="display:none">
+                        <i class="fas fa-arrow-left"></i> Voltar
                     </button>
-                    <button type="button" id="reservaWizardNext" class="rw-btn rw-btn-primary">
-                        Continuar <i class="fas fa-arrow-right"></i>
-                    </button>
+                    <div class="wizard-actions-right">
+                        <button type="submit" id="btnSalvarReserva"
+                            class="btn-action btn-action-success d-none"
+                            {{ !$preRequisitosReserva['pode_reservar'] ? 'disabled' : '' }}>
+                            <i class="fas fa-save"></i> Salvar reserva
+                        </button>
+                        <button type="button" id="reservaWizardNext" class="btn-action btn-action-primary">
+                            Continuar <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
             <input type="hidden" id="reservaHidden" name="reservaHidden">
             </x-form>
+                </div>{{-- /ci-body --}}
+            </div>{{-- /ci-card --}}
         </div>
         <div class="col-xl-3 col-lg-3 col-md-3 col-sm-12 col-xs-12 reserva-sidebar ">
             @component('reserva.components.card_valores')
@@ -853,6 +936,7 @@
 @section('css')
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    @include('reserva.partials.vistoria_reserva_estilos_inner')
     <style>
         /* Flatpickr overrides */
         .flatpickr-calendar { font-family: inherit; box-shadow: 0 4px 20px rgba(0,0,0,.15); border-radius: 8px; }
@@ -874,6 +958,17 @@
             --reserva-border: color-mix(in srgb, var(--empresa-cor-terciaria, #64748B) 35%, #dbe3ef 65%);
             --reserva-title: var(--empresa-cor-primaria, #0f172a);
         }
+
+        /* Remove card nativo do main area — ci-card cuida do visual */
+        .reserva-main-card {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+
+        /* Corrige overflow do Bootstrap row dentro do ci-body */
+        .ci-body { overflow: hidden; }
 
         /* ===== Wizard Reserva — Step Indicator ===== */
         .rw-step-indicator-wrap {
@@ -2137,7 +2232,9 @@
                         opcionaisWrapperEl.classList.toggle('d-none', s !== 3);
                     }
                     document.querySelectorAll('[data-reserva-step-btn]').forEach(btn => {
-                        btn.classList.toggle('is-active', Number(btn.dataset.reservaStepBtn) === s);
+                        const n = Number(btn.dataset.reservaStepBtn);
+                        btn.classList.toggle('is-active', n === s);
+                        btn.classList.toggle('is-done', n < s);
                     });
 
                     if (prevBtn) prevBtn.style.display = s <= 1 ? 'none' : '';
