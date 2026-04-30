@@ -49,59 +49,80 @@
                 </div>
             @endif
 
-            {{-- Resumo em 3 cards (row Bootstrap) --}}
-            <div class="row mb-4">
-                <div class="card col-md-4 mb-3 mb-md-0">
-                    <div class="calcao-info-card calcao-info-card--blue">
-                        <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--blue">
-                            <i class="fas fa-user"></i>
-                        </div>
-                        <div class="calcao-info-card__body">
-                            <div class="calcao-info-card__label">Cliente</div>
-                            <div class="calcao-info-card__value">{{ $reserva->usuario?->nome ?? '—' }}</div>
-                            @if($reserva->usuario?->email)
-                                <div class="calcao-info-card__sub">{{ $reserva->usuario->email }}</div>
-                            @endif
+            {{-- Resumo em 3 cards --}}
+            <div class="row mb-4 calcao-summary-row">
+
+                {{-- Cliente --}}
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="cic cic--blue">
+                        <div class="cic__accent"></div>
+                        <div class="cic__inner">
+                            <div class="cic__icon-wrap">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="cic__content">
+                                <span class="cic__eyebrow">Cliente</span>
+                                <strong class="cic__primary">{{ $reserva->usuario?->nome ?? '—' }}</strong>
+                                @if($reserva->usuario?->email)
+                                    <span class="cic__secondary">
+                                        <i class="fas fa-envelope"></i>
+                                        {{ $reserva->usuario->email }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card col-md-4 mb-3 mb-md-0">
-                    <div class="calcao-info-card calcao-info-card--green">
-                        <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--green">
-                            <i class="fas fa-car"></i>
-                        </div>
-                        <div class="calcao-info-card__body">
-                            <div class="calcao-info-card__label">Veículo / Grupo</div>
-                            <div class="calcao-info-card__value">{{ $reserva->grupoFrota?->nome ?? '—' }}</div>
-                            @if($reserva->modelos?->first())
-                                <div class="calcao-info-card__sub">{{ $reserva->modelos->first()->nome ?? '' }}</div>
-                            @endif
+                {{-- Veículo / Grupo --}}
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="cic cic--green">
+                        <div class="cic__accent"></div>
+                        <div class="cic__inner">
+                            <div class="cic__icon-wrap">
+                                <i class="fas fa-car"></i>
+                            </div>
+                            <div class="cic__content">
+                                <span class="cic__eyebrow">Veículo / Grupo</span>
+                                <strong class="cic__primary">{{ $reserva->grupoFrota?->nome ?? '—' }}</strong>
+                                @if($reserva->modelos?->first())
+                                    <span class="cic__secondary">
+                                        <i class="fas fa-tag"></i>
+                                        {{ $reserva->modelos->first()->nome ?? '' }}
+                                    </span>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="card col-md-4">
-                    <div class="calcao-info-card calcao-info-card--navy">
-                        <div class="calcao-info-card__icon-wrap calcao-info-card__icon-wrap--navy">
-                            <i class="fas fa-shield-alt"></i>
-                        </div>
-                        <div class="calcao-info-card__body">
-                            <div class="calcao-info-card__label calcao-info-card__label--light">Valor do Calção</div>
-                            @if((float)($calculo['valor_calculado'] ?? 0) > 0)
-                                <div class="calcao-info-card__value calcao-info-card__value--light calcao-info-card__value--lg">
-                                    R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
-                                </div>
-                                <div class="calcao-info-card__sub calcao-info-card__sub--light">
-                                    {{ $calculo['tipo_regra_aplicada'] ?? '' }}
-                                    @if($calculo['origem_regra_aplicada'] ?? '') · {{ $calculo['origem_regra_aplicada'] }} @endif
-                                </div>
-                            @else
-                                <div class="calcao-info-card__value" style="color:#fbbf24;">Não configurado</div>
-                            @endif
+                {{-- Valor do Calção --}}
+                <div class="col-md-4">
+                    <div class="cic cic--navy">
+                        <div class="cic__accent cic__accent--rainbow"></div>
+                        <div class="cic__inner">
+                            <div class="cic__icon-wrap cic__icon-wrap--navy">
+                                <i class="fas fa-shield-alt"></i>
+                            </div>
+                            <div class="cic__content">
+                                <span class="cic__eyebrow cic__eyebrow--light">Valor do Calção</span>
+                                @if((float)($calculo['valor_calculado'] ?? 0) > 0)
+                                    <strong class="cic__primary cic__primary--light cic__primary--xl">
+                                        R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
+                                    </strong>
+                                    <span class="cic__secondary cic__secondary--light">
+                                        <i class="fas fa-info-circle"></i>
+                                        {{ $calculo['tipo_regra_aplicada'] ?? '' }}
+                                        @if($calculo['origem_regra_aplicada'] ?? '') · {{ $calculo['origem_regra_aplicada'] }} @endif
+                                    </span>
+                                @else
+                                    <strong class="cic__primary" style="color:#fbbf24;">Não configurado</strong>
+                                @endif
+                            </div>
                         </div>
                     </div>
                 </div>
+
             </div>
 
             {{-- Status do calção existente (quando já há registro) --}}
@@ -292,7 +313,7 @@
                 <button type="button" class="btn-action btn-action-secondary" data-dismiss="modal">
                     Cancelar
                 </button>
-                <button type="button" id="btn-salvar-cartao" class="btn-action btn-actionprimary">
+                <button type="button" id="btn-salvar-cartao" class="btn-action btn-action-primary">
                     <i class="fas fa-plus"></i>
                     Adicionar cartão
                 </button>
@@ -305,65 +326,102 @@
 @section('css')
 @include('reserva.partials.vistoria_reserva_estilos_inner')
 <style>
-    /* ── Summary cards topo ── */
-    .calcao-info-card {
+    /* ── Summary info-cards (cic) ── */
+    .cic {
+        border-radius: 18px;
+        border: 1.5px solid var(--c-border);
+        background: #fff;
+        box-shadow: 0 2px 14px rgba(0,0,0,.055);
+        overflow: hidden;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        transition: box-shadow .2s, transform .2s;
+    }
+    .cic:hover { box-shadow: 0 6px 22px rgba(0,0,0,.10); transform: translateY(-2px); }
+
+    /* Barra accent no topo */
+    .cic__accent {
+        height: 4px;
+        flex-shrink: 0;
+    }
+    .cic--blue  .cic__accent { background: linear-gradient(90deg, #2563eb 0%, #60a5fa 100%); }
+    .cic--green .cic__accent { background: linear-gradient(90deg, #059669 0%, #34d399 100%); }
+    .cic__accent--rainbow     { background: linear-gradient(90deg, #4338ca, #0ea5e9, #10b981); }
+
+    /* Card navy escuro */
+    .cic--navy {
+        background: linear-gradient(140deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
+        border-color: transparent;
+        box-shadow: 0 8px 28px rgba(12,20,40,.30);
+    }
+    .cic--navy:hover { box-shadow: 0 14px 36px rgba(12,20,40,.38); }
+
+    /* Conteúdo interno */
+    .cic__inner {
         display: flex;
         align-items: center;
         gap: 16px;
-        padding: 20px 22px;
-        border-radius: 16px;
-        background: #fff;
-        border: 1.5px solid var(--c-border);
-        box-shadow: 0 2px 12px rgba(0,0,0,.06);
-        height: 100%;
-        position: relative;
-        overflow: hidden;
+        padding: 18px 20px 20px;
+        flex: 1;
     }
-    .calcao-info-card::after {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 3px;
-    }
-    .calcao-info-card--blue::after  { background: linear-gradient(90deg, #2563eb, #60a5fa); }
-    .calcao-info-card--green::after { background: linear-gradient(90deg, #059669, #34d399); }
-    .calcao-info-card--navy {
-        background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
-        border-color: transparent;
-        box-shadow: 0 8px 28px rgba(12,20,40,.28);
-    }
-    .calcao-info-card--navy::after { background: linear-gradient(90deg, #4338ca, #0ea5e9, #10b981); }
 
-    .calcao-info-card__icon-wrap {
+    /* Ícone */
+    .cic__icon-wrap {
         width: 52px; height: 52px;
         border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.2rem;
+        font-size: 1.25rem;
         flex-shrink: 0;
     }
-    .calcao-info-card__icon-wrap--blue  { background: #eff6ff; color: #2563eb; }
-    .calcao-info-card__icon-wrap--green { background: #ecfdf5; color: #059669; }
-    .calcao-info-card__icon-wrap--navy  { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.18); }
+    .cic--blue  .cic__icon-wrap { background: #dbeafe; color: #2563eb; }
+    .cic--green .cic__icon-wrap { background: #d1fae5; color: #059669; }
+    .cic__icon-wrap--navy        { background: rgba(255,255,255,.12); color: #fff; border: 1px solid rgba(255,255,255,.20); }
 
-    .calcao-info-card__body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    /* Textos */
+    .cic__content {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        min-width: 0;
+        flex: 1;
+    }
+    .cic__eyebrow {
+        font-size: .67rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        display: block;
+    }
+    .cic__eyebrow--light { color: rgba(255,255,255,.45); }
 
-    .calcao-info-card__label {
-        font-size: .68rem; font-weight: 700;
-        letter-spacing: .1em; text-transform: uppercase;
-        color: #64748b; margin-bottom: 3px;
+    .cic__primary {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-height: 1.25;
     }
-    .calcao-info-card__label--light { color: rgba(255,255,255,.55); }
-    .calcao-info-card__value {
-        font-size: .97rem; font-weight: 700; color: var(--c-ink);
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    .cic__primary--light { color: #fff; }
+    .cic__primary--xl    { font-size: 1.4rem; letter-spacing: -.02em; }
+
+    .cic__secondary {
+        font-size: .73rem;
+        color: #94a3b8;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
-    .calcao-info-card__value--light { color: #fff; }
-    .calcao-info-card__value--lg    { font-size: 1.35rem; letter-spacing: -.01em; }
-    .calcao-info-card__sub {
-        font-size: .72rem; color: #94a3b8; font-weight: 500;
-        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .calcao-info-card__sub--light { color: rgba(255,255,255,.45); }
+    .cic__secondary i { font-size: .65rem; opacity: .7; flex-shrink: 0; }
+    .cic__secondary--light { color: rgba(255,255,255,.40); }
 
     /* ── Cabeçalho da seção de cartões ── */
     .calcao-pm-header {
