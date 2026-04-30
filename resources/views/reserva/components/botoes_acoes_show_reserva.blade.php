@@ -72,6 +72,7 @@
 
         </div>
 
+        @if($moduloNfse ?? false)
         <div class="reservation-actions-card__side">
             <div class="reservation-doc-card">
                 <div class="reservation-doc-card__header">
@@ -100,6 +101,7 @@
                 @endif
             </div>
         </div>
+        @endif
     </div>
 </section>
 

@@ -159,12 +159,12 @@
     {{-- ══════════════════════════════════════════
          PAINEL DE AÇÕES
     ══════════════════════════════════════════ --}}
-    @include('reserva.components.botoes_acoes_show_reserva')
+    @include('reserva.components.botoes_acoes_show_reserva', ['moduloNfse' => $moduloNfse])
 
     {{-- ══════════════════════════════════════════
          ALERTA NFS-e PENDENTE
     ══════════════════════════════════════════ --}}
-    @if($reservaConfirmada && $nfseNaoEmitida)
+    @if($moduloNfse && $reservaConfirmada && $nfseNaoEmitida)
         <div class="rs-alert rs-alert--warning">
             <div class="rs-alert__icon"><i class="fas fa-file-invoice"></i></div>
             <div class="rs-alert__content">
@@ -1132,6 +1132,7 @@
                         </div>
 
                         {{-- NFS-e card completo --}}
+                        @if($moduloNfse)
                         <div class="rs-card">
                             <div class="rs-card__header rs-card__header--between">
                                 <div class="rs-card__header-left">
@@ -1192,6 +1193,7 @@
                                 </form>
                             @endif
                         </div>
+                        @endif {{-- moduloNfse --}}
 
                     </aside>
                 </div>

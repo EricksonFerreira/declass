@@ -82,7 +82,8 @@
       "Bash(php -r \"echo Schema::hasColumn\\('roles','empresa_id'\\);\")",
       "Bash(grep -v \"//\")",
       "Bash(grep -i 'compact\\\\|$taxa\\\\|$grupo\\\\|$cupom\\\\|$tarifa\\\\|$valor\\\\|$dias\\\\|$percent')",
-      "Bash(grep -n 'const reserva\\\\b\\\\|var reserva\\\\b\\\\|let reserva\\\\b\\\\|$reserva\\\\b.*json\\\\|@json.*reserva' c:/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/reserva/add-edit.blade.php)"
+      "Bash(grep -n 'const reserva\\\\b\\\\|var reserva\\\\b\\\\|let reserva\\\\b\\\\|$reserva\\\\b.*json\\\\|@json.*reserva' c:/Users/Erickson/Dev/laragon/www/xpandCars/resources/views/reserva/add-edit.blade.php)",
+      "Bash(grep -v \"^\\\\s*//\")"
     ]
   }
 }
