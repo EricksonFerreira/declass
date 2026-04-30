@@ -74,7 +74,7 @@ class Reserva extends Model
 
     public function podeFazerCheckout(): bool
     {
-        return $this->status_reserva_id === StatusReservaEnum::Checkin->value;
+        return (int) $this->status_reserva_id === StatusReservaEnum::Checkin->value;
     }
     
 

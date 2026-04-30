@@ -83,7 +83,7 @@
                 // Só bloqueia se houver calção configurado e não estiver em status válido
                 // (a validação real fica no server; aqui apenas indicador visual)
                 $checkinAssinadoCo = $reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S';
-                $statusOkCo        = $reserva->status_reserva_id === 3; // Checkin
+                $statusOkCo        = (int) $reserva->status_reserva_id === 3; // Checkin = em andamento
                 $checkoutUrl       = route('reserva.checkout.vistoria', $reserva->id);
                 $dataFim           = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
                 $isAntesDaDataFim  = $dataFim && now()->lt($dataFim);
@@ -107,7 +107,10 @@
                     $motivosBloqueio = [];
                     if (!($pagamentoEfetuado ?? false)) $motivosBloqueio[] = 'Pagamento não efetuado';
                     if (!$checkinAssinadoCo)            $motivosBloqueio[] = 'Check-in não realizado ou contrato não assinado';
-                    if (!$statusOkCo)                   $motivosBloqueio[] = 'Status da reserva não está em "Check-in" (em andamento)';
+                    if (!$statusOkCo) {
+                        $statusAtualNome = \App\Enums\StatusReservaEnum::tryFrom((int)$reserva->status_reserva_id)?->label() ?? 'desconhecido';
+                        $motivosBloqueio[] = 'Status da reserva precisa ser "Check-in" (em andamento) — atual: "' . $statusAtualNome . '"';
+                    }
                 @endphp
                 <span class="action-pill action-pill--disabled checkout-bloqueado"
                       data-motivos="{{ implode('|', $motivosBloqueio) }}">
