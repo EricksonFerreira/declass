@@ -298,10 +298,10 @@
                         <div class="empresa-subsection__head">
                             <div>
                                 <h5>Calção</h5>
-                                <p>Defina uma regra padrão simples para o calção da empresa e, se precisar, exceções por grupo de frota.</p>
+                                <p>Defina como o sistema calcula o calção da empresa e, se precisar, crie exceções por grupo de frota.</p>
                             </div>
                             <div class="empresa-subsection__badge">
-                                <i class="fas fa-shield-alt"></i> Regra aplicada na reserva
+                                <i class="fas fa-shield-alt"></i> Prioridade: modelo > grupo > empresa
                             </div>
                         </div>
 
@@ -354,7 +354,7 @@
                             </div>
 
                             <div class="empresa-calcao-help">
-                                <strong>Como funciona:</strong> primeiro o sistema procura uma regra por modelo, depois por grupo e, por último, usa esta regra padrão da empresa.
+                                <strong>Regras do calção:</strong> você escolhe se o valor será <strong>fixo</strong> ou um <strong>percentual da reserva</strong>. Se existir uma exceção por grupo, ela sobrescreve a regra padrão da empresa. No futuro, uma regra por modelo pode sobrescrever as duas.
                             </div>
 
                             @if(isset($empresa) && isset($gruposFrota) && $gruposFrota->isNotEmpty())
@@ -954,6 +954,7 @@
 @section('js')
 <script>
     (function () {
+        const isEdit = @json($isEdit);
         const gateway = document.getElementById('gateway_pagamento');
         const cnpjInput = document.getElementById('cnpj');
         const telefoneInput = document.getElementById('telefone');
