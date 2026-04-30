@@ -9,40 +9,116 @@ use Illuminate\Support\Facades\Schema;
 class TiposDanosPorCategoriaELocalizacaoSeeder extends Seeder
 {
     /**
-     * @var array<string, array{interior: string, exterior: string}>
+     * @var array<string, array{interior: string[], exterior: string[]}>
      */
     private array $templates = [
         'Lataria e pintura' => [
-            'interior' => 'Acabamento interno riscado ou amassado',
-            'exterior' => 'Lataria externa amassada ou riscada',
+            'interior' => [
+                'Acabamento interno riscado ou amassado',
+                'Soleira interna riscada',
+                'Lataria interna do porta-malas amassada',
+            ],
+            'exterior' => [
+                'Lataria externa amassada ou riscada',
+                'Parachoque riscado ou desalinhado',
+                'Pintura externa descascada ou manchada',
+                'Grade frontal quebrada',
+            ],
         ],
         'Vidros e espelhos' => [
-            'interior' => 'Espelho interno quebrado ou ausente',
-            'exterior' => 'Vidro ou retrovisor externo quebrado',
+            'interior' => [
+                'Espelho interno quebrado ou ausente',
+                'Película interna com bolhas ou rasgada',
+                'Espelho do quebra-sol quebrado ou ausente',
+            ],
+            'exterior' => [
+                'Vidro ou retrovisor externo quebrado',
+                'Para-brisa trincado',
+                'Vidro traseiro trincado',
+                'Capa do retrovisor riscada ou ausente',
+            ],
         ],
         'Iluminacao' => [
-            'interior' => 'Luz interna queimada ou quebrada',
-            'exterior' => 'Farol ou lanterna externa quebrada',
+            'interior' => [
+                'Luz interna queimada ou quebrada',
+                'Iluminação do painel apagada',
+                'Luz do porta-malas sem funcionamento',
+            ],
+            'exterior' => [
+                'Farol ou lanterna externa quebrada',
+                'Seta dianteira quebrada',
+                'Farol de neblina avariado',
+                'Luz de placa sem funcionamento',
+            ],
         ],
         'Rodas e pneus' => [
-            'interior' => 'Estepe ou suporte interno avariado',
-            'exterior' => 'Pneu ou roda externa avariada',
+            'interior' => [
+                'Estepe ou suporte interno avariado',
+                'Compartimento do estepe quebrado',
+                'Trava interna do estepe danificada',
+            ],
+            'exterior' => [
+                'Pneu ou roda externa avariada',
+                'Roda ralada ou amassada',
+                'Calota quebrada ou ausente',
+                'Pneu com bolha, corte ou rasgo',
+            ],
         ],
         'Interior' => [
-            'interior' => 'Banco, painel ou forro danificado',
-            'exterior' => 'Acabamento externo relacionado ao interior danificado',
+            'interior' => [
+                'Banco, painel ou forro danificado',
+                'Carpete manchado, rasgado ou molhado',
+                'Console central quebrado',
+                'Volante descascando ou rasgado',
+                'Cinto de segurança com defeito',
+            ],
+            'exterior' => [
+                'Acabamento externo relacionado ao interior danificado',
+                'Borracha de vedação externa ressecada ou solta',
+                'Acabamento externo da soleira danificado',
+            ],
         ],
         'Acessorios e itens' => [
-            'interior' => 'Acessorio interno ausente ou quebrado',
-            'exterior' => 'Acessorio externo ausente ou quebrado',
+            'interior' => [
+                'Acessório interno ausente ou quebrado',
+                'Tapetes ausentes',
+                'Triângulo, macaco ou chave de roda ausentes',
+                'Central multimídia ou rádio com defeito',
+                'Porta-luvas quebrado',
+            ],
+            'exterior' => [
+                'Acessório externo ausente ou quebrado',
+                'Antena externa quebrada ou ausente',
+                'Sensor de estacionamento avariado',
+                'Câmera de ré externa opaca ou quebrada',
+            ],
         ],
         'Limpadores e palhetas' => [
-            'interior' => 'Comando interno do limpador avariado',
-            'exterior' => 'Palheta ou braco do limpador avariado',
+            'interior' => [
+                'Comando interno do limpador avariado',
+                'Motor do limpador sem funcionamento',
+                'Reservatório do esguicho com vazamento',
+            ],
+            'exterior' => [
+                'Palheta ou braço do limpador avariado',
+                'Palheta ressecada ou rasgada',
+                'Braço do limpador torto',
+                'Esguicho externo entupido ou quebrado',
+            ],
         ],
         'Mecanica e estrutural' => [
-            'interior' => 'Componente mecanico interno avariado',
-            'exterior' => 'Componente estrutural externo avariado',
+            'interior' => [
+                'Componente mecânico interno avariado',
+                'Bateria descarregada ou ausente',
+                'Fiação interna exposta ou cortada',
+                'Máquina de vidro sem funcionamento',
+            ],
+            'exterior' => [
+                'Componente estrutural externo avariado',
+                'Protetor de cárter amassado ou ausente',
+                'Escapamento solto ou furado',
+                'Suspensão com vazamento ou avaria',
+            ],
         ],
     ];
 
@@ -107,45 +183,36 @@ class TiposDanosPorCategoriaELocalizacaoSeeder extends Seeder
             $template = $this->templates[$categoria->nome] ?? $this->templateGenerico((string) $categoria->nome);
 
             foreach (['interior', 'exterior'] as $localizacao) {
-                $existeAtivo = DB::table('danos')
-                    ->where('categoria_id', (int) $categoria->id)
-                    ->where('localizacao', $localizacao)
-                    ->when($this->hasColumn('danos', 'empresa_id'), fn ($query) => $query->where('empresa_id', $empresaId))
-                    ->when($this->hasColumn('danos', 'ativo'), fn ($query) => $query->where('ativo', 'S'))
-                    ->exists();
+                foreach ($template[$localizacao] as $nomeDano) {
+                    $where = [
+                        'categoria_id' => (int) $categoria->id,
+                        'localizacao' => $localizacao,
+                        'nome' => $nomeDano,
+                    ];
 
-                if ($existeAtivo) {
-                    continue;
+                    if ($this->hasColumn('danos', 'empresa_id')) {
+                        $where['empresa_id'] = $empresaId;
+                    }
+
+                    $data = $where;
+                    if ($this->hasColumn('danos', 'ativo')) {
+                        $data['ativo'] = 'S';
+                    }
+
+                    $this->upsert('danos', $where, $data);
                 }
-
-                $where = [
-                    'categoria_id' => (int) $categoria->id,
-                    'localizacao' => $localizacao,
-                    'nome' => $template[$localizacao],
-                ];
-
-                if ($this->hasColumn('danos', 'empresa_id')) {
-                    $where['empresa_id'] = $empresaId;
-                }
-
-                $data = $where;
-                if ($this->hasColumn('danos', 'ativo')) {
-                    $data['ativo'] = 'S';
-                }
-
-                $this->upsert('danos', $where, $data);
             }
         }
     }
 
     /**
-     * @return array{interior: string, exterior: string}
+     * @return array{interior: string[], exterior: string[]}
      */
     private function templateGenerico(string $categoriaNome): array
     {
         return [
-            'interior' => 'Dano interno - ' . $categoriaNome,
-            'exterior' => 'Dano externo - ' . $categoriaNome,
+            'interior' => ['Dano interno - ' . $categoriaNome],
+            'exterior' => ['Dano externo - ' . $categoriaNome],
         ];
     }
 
