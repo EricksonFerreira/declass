@@ -2645,12 +2645,14 @@
             const horaNorm = horaPreferida ? _toTime(horaPreferida) : (lista.length === 1 ? _toTime(lista[0].value) : '');
             if (horaNorm && $sel.find(`option[value="${horaNorm}"]`).length) {
                 $sel.val(horaNorm);
+                $sel.trigger('change');
+            } else {
+                const _initTaxaRetirada = $sel.find('option:selected').data('taxa-extra') == '1';
+                $('#data_inicio_taxa_aviso').toggleClass('d-none', !_initTaxaRetirada);
+                $sel.toggleClass('taxa-extra-sel', _initTaxaRetirada).css({ 'border-color': '', 'color': '', 'font-weight': '' });
+                $fb.text('Escolha a hora de retirada.');
+                atualizarDataInicioRetirada();
             }
-            const _initTaxaRetirada = $sel.find('option:selected').data('taxa-extra') == '1';
-            $('#data_inicio_taxa_aviso').toggleClass('d-none', !_initTaxaRetirada);
-            $sel.css({ 'border-color': _initTaxaRetirada ? '#f59e0b' : '', 'color': _initTaxaRetirada ? '#92400e' : '', 'font-weight': _initTaxaRetirada ? '600' : '' });
-            $fb.text('Escolha a hora de retirada.');
-            atualizarDataInicioRetirada();
             return lista;
         }
 
@@ -3271,12 +3273,14 @@
             const horaNorm = horaPreferida ? _toTimeDev(horaPreferida) : (lista.length === 1 ? _toTimeDev(lista[0].value) : '');
             if (horaNorm && $sel.find(`option[value="${horaNorm}"]`).length) {
                 $sel.val(horaNorm);
+                $sel.trigger('change');
+            } else {
+                const _initTaxaDevolucao = $sel.find('option:selected').data('taxa-extra') == '1';
+                $('#data_fim_taxa_aviso').toggleClass('d-none', !_initTaxaDevolucao);
+                $sel.toggleClass('taxa-extra-sel', _initTaxaDevolucao).css({ 'border-color': '', 'color': '', 'font-weight': '' });
+                $fb.text('Escolha a hora de devolução.');
+                atualizarDataFimDevolucao();
             }
-            const _initTaxaDevolucao = $sel.find('option:selected').data('taxa-extra') == '1';
-            $('#data_fim_taxa_aviso').toggleClass('d-none', !_initTaxaDevolucao);
-            $sel.css({ 'border-color': _initTaxaDevolucao ? '#f59e0b' : '', 'color': _initTaxaDevolucao ? '#92400e' : '', 'font-weight': _initTaxaDevolucao ? '600' : '' });
-            $fb.text('Escolha a hora de devolução.');
-            atualizarDataFimDevolucao();
             return lista;
         }
 
