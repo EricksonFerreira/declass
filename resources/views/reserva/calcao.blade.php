@@ -151,7 +151,7 @@
                 @else
 
                 <div class="ci-block">
-                    <div class="ci-block-label">
+                    <div class="ci-block-label" style="background:linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%)">
                         <i class="fas fa-credit-card"></i>
                         <div>
                             <strong>Pré-autorizar Calção no Cartão</strong>
@@ -172,7 +172,7 @@
                                 Nenhum cartão salvo — adicione um cartão
                             @endif
                         </div>
-                        <button type="button" class="btn-action btn-primary calcao-btn-add" id="btnAbrirModalCartao">
+                        <button type="button" class="btn-action btn-actionprimary calcao-btn-add" id="btnAbrirModalCartao">
                             <i class="fas fa-plus"></i>
                             Adicionar cartão
                         </button>
@@ -292,7 +292,7 @@
                 <button type="button" class="btn-action btn-action-secondary" data-dismiss="modal">
                     Cancelar
                 </button>
-                <button type="button" id="btn-salvar-cartao" class="btn-action btn-primary">
+                <button type="button" id="btn-salvar-cartao" class="btn-action btn-actionprimary">
                     <i class="fas fa-plus"></i>
                     Adicionar cartão
                 </button>
