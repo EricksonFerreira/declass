@@ -1400,11 +1400,6 @@
     @endcan
     @endif
 
-    {{-- ── Modal Edicao no Show ── --}}
-    @can('reserva.editar_no_show')
-        @include('reserva.partials.modal_edicao_no_show')
-    @endcan
-
     {{-- ── Modal Detalhes do Historico ── --}}
     <div class="modal fade" id="modalDetalhesLog" tabindex="-1" data-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
