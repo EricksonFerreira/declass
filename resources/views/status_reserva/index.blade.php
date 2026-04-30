@@ -51,8 +51,7 @@
                         <tr>
                             <td>{{ $sr->id }}</td>
                             <td>
-                                <span class="badge-hex"
-                                      style="background-color:{{ $sr->cor ?? '#6c757d' }}">
+                                <span class="badge badge-xs bg-{{$sr->cor}}">
                                     {{ $sr->nome }}
                                 </span>
                             </td>

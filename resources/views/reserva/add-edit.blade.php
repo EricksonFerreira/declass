@@ -271,8 +271,8 @@
                                     data-live-search="true"
                                     data-size="8"
                                     data-show-subtext="true"
-                                    onchange="obterModelosComVeiculosDisponiveis(this)" required>
-                                    <option value="" disabled selected>Selecione...</option>
+                                    disabled required>
+                                    <option value="" disabled selected>Selecione pelo botão Buscar...</option>
                                     @foreach ($gruposVeiculo as $grupo)
                                         <option value="{{ $grupo->id }}" data-subtext="{{ $simboloMoedaEmpresa }} {{ number_format((float) $grupo->valor_diario, 2, ',', '.') }}"
                                             {{ old('grupo_frota_id', isset($reserva->grupo_frota_id) ? $reserva->grupo_frota_id : null) == $grupo->id ? 'selected' : '' }}>
@@ -280,6 +280,7 @@
                                         </option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="grupo_frota_id" id="grupo_frota_id_hidden" value="{{ old('grupo_frota_id', $reserva->grupo_frota_id ?? '') }}">
                                 @if ($qtdGrupos === 0)
                                     <small class="text-danger d-block mt-1">Nenhum grupo de veiculos ativo disponivel.</small>
                                 @endif
@@ -406,30 +407,54 @@
                             : ($reserva->usuario->nome ?? '');
                     @endphp
                     <div class="col-md-12" data-reserva-step="4">
-                        <div class="form-group">
-                            <label>Usuario <span class="text-danger">*</span></label>
-                            <input type="hidden" name="user_id" id="user_id" value="{{ $userIdSelecionado }}" required>
-                            <div class="input-group input-group-sm">
-                                <input type="text" id="user_display" class="form-control form-control-sm"
-                                       readonly placeholder="Clique na lupa para buscar um usuario..."
-                                       value="{{ $userNomeSelecionado }}">
-                                <div class="input-group-append">
-                                    <button type="button" class="btn btn-outline-primary" id="btnBuscarUsuarioReserva"
-                                            title="Buscar usuario">
-                                        <i class="fas fa-search"></i>
+                        <input type="hidden" name="user_id" id="user_id" value="{{ $userIdSelecionado }}" required>
+
+                        {{-- Card de cliente não selecionado --}}
+                        <div id="clienteEmptyState" class="{{ $userIdSelecionado ? 'd-none' : '' }}">
+                            <div style="border:2px dashed #cbd5e1;border-radius:14px;padding:2rem 1.5rem;text-align:center;background:#f8fafc;">
+                                <div style="width:56px;height:56px;border-radius:50%;background:#e2e8f0;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;">
+                                    <i class="fas fa-user" style="font-size:1.5rem;color:#94a3b8;"></i>
+                                </div>
+                                <p class="mb-1 font-weight-bold" style="color:#374151;font-size:.95rem;">Nenhum cliente selecionado</p>
+                                <p class="mb-3" style="color:#94a3b8;font-size:.82rem;">Busque um cliente existente ou cadastre um novo</p>
+                                <div class="d-flex justify-content-center" style="gap:.6rem;flex-wrap:wrap;">
+                                    <button type="button" class="btn btn-primary btn-sm" id="btnBuscarUsuarioReserva">
+                                        <i class="fas fa-search mr-1"></i>Buscar cliente
                                     </button>
-                                    <button type="button" class="btn btn-outline-danger {{ $userIdSelecionado ? '' : 'd-none' }}" id="btnLimparUsuarioReserva"
-                                            title="Limpar selecao">
+                                    <button type="button" class="btn btn-outline-success btn-sm" id="btnNovoUsuarioModal">
+                                        <i class="fas fa-user-plus mr-1"></i>Novo cliente
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Card de cliente selecionado --}}
+                        <div id="clienteSelectedCard" class="{{ $userIdSelecionado ? '' : 'd-none' }}" style="border:1.5px solid #bfdbfe;border-radius:14px;background:linear-gradient(135deg,#eff6ff 0%,#f0fdf4 100%);padding:1.25rem 1.5rem;">
+                            <div class="d-flex align-items-center justify-content-between" style="gap:1rem;">
+                                <div class="d-flex align-items-center" style="gap:.9rem;min-width:0;">
+                                    <div id="clienteAvatar" style="width:46px;height:46px;border-radius:50%;background:#3b82f6;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:1.1rem;font-weight:700;color:#fff;letter-spacing:.02em;">
+                                        {{ strtoupper(substr($userNomeSelecionado ?: 'U', 0, 1)) }}
+                                    </div>
+                                    <div style="min-width:0;">
+                                        <div id="clienteNomeDisplay" class="font-weight-bold" style="color:#1e3a5f;font-size:.97rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                                            {{ $userNomeSelecionado ?: '—' }}
+                                        </div>
+                                        <div style="color:#64748b;font-size:.78rem;margin-top:.15rem;">
+                                            <i class="fas fa-id-badge mr-1"></i><span id="clienteIdDisplay">{{ $userIdSelecionado ? '#'.$userIdSelecionado : '' }}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center" style="gap:.5rem;flex-shrink:0;">
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnBuscarUsuarioReserva2" title="Trocar cliente">
+                                        <i class="fas fa-exchange-alt mr-1"></i>Trocar
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" id="btnLimparUsuarioReserva" title="Remover cliente">
                                         <i class="fas fa-times"></i>
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-2 d-flex" style="gap:.5rem">
-                                <button type="button" class="btn btn-outline-success btn-sm" id="btnNovoUsuarioModal">
-                                    <i class="fas fa-user-plus mr-1"></i>Novo usuario
-                                </button>
-                            </div>
                         </div>
+                        <input type="text" id="user_display" class="d-none" value="{{ $userNomeSelecionado }}">
                     </div>
 
             </div>
