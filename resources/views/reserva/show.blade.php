@@ -53,7 +53,7 @@
         default              => 'fas fa-info-circle',
     };
 
-    $clienteNome    = $reserva->usuario->nome ?? 'Nao informado';
+    $clienteNome    = $reserva->usuario->nome ?? 'Não informado';
     $clientePartes  = preg_split('/\s+/', trim((string) $clienteNome)) ?: [];
     $clienteIniciais = collect($clientePartes)
         ->filter()
@@ -64,7 +64,7 @@
 
     $nfseAtual       = $reserva->nfseAtual ?? null;
     $nfseStatusRaw   = strtolower((string) ($nfseAtual->status ?? ''));
-    $nfseStatusLabel = $nfseAtual ? ucfirst($nfseAtual->status ?? 'pendente') : 'Nao emitida';
+    $nfseStatusLabel = $nfseAtual ? ucfirst($nfseAtual->status ?? 'pendente') : 'Não emitida';
     $nfseBadgeClass  = match ($nfseStatusRaw) {
         'emitida'   => 'is-success',
         'erro'      => 'is-danger',
@@ -141,7 +141,7 @@
                     </div>
                     <div class="rs-kpi-divider"></div>
                     <div class="rs-kpi">
-                        <span>Duracao</span>
+                        <span>Duração</span>
                         <strong>{{ $diasReserva }}&nbsp;{{ $diasReserva === 1 ? 'dia' : 'dias' }}</strong>
                     </div>
                     @if($percentualDesconto > 0)
@@ -157,7 +157,7 @@
     </div>
 
     {{-- ══════════════════════════════════════════
-         PAINEL DE ACOES
+         PAINEL DE AÇÕES
     ══════════════════════════════════════════ --}}
     @include('reserva.components.botoes_acoes_show_reserva')
 
@@ -168,8 +168,8 @@
         <div class="rs-alert rs-alert--warning">
             <div class="rs-alert__icon"><i class="fas fa-file-invoice"></i></div>
             <div class="rs-alert__content">
-                <strong>NFS-e pendente de emissao</strong>
-                <p>{{ $nfseMotivo ?? $nfseErroDetalhado ?? 'A nota fiscal ainda nao foi emitida para esta reserva.' }}</p>
+                <strong>NFS-e pendente de emissão</strong>
+                <p>{{ $nfseMotivo ?? $nfseErroDetalhado ?? 'A nota fiscal ainda não foi emitida para esta reserva.' }}</p>
             </div>
             <form method="POST" action="{{ route('reserva.emitirNfse', $reserva->id) }}" class="js-nfse-form">
                 @csrf
@@ -258,7 +258,7 @@
                                     </div>
                                     <div class="rs-route__info">
                                         <span class="rs-route__label">Retirada</span>
-                                        <strong class="rs-route__place">{{ $reserva->estacaoRetirada->nome ?? 'Nao informado' }}</strong>
+                                        <strong class="rs-route__place">{{ $reserva->estacaoRetirada->nome ?? 'Não informado' }}</strong>
                                         <div class="rs-route__datetime">
                                             <span class="rs-route__date">{{ $inicioData }}</span>
                                             @if($inicioHora)
@@ -282,8 +282,8 @@
                                         <i class="fas fa-flag-checkered"></i>
                                     </div>
                                     <div class="rs-route__info">
-                                        <span class="rs-route__label">Devolucao</span>
-                                        <strong class="rs-route__place">{{ $reserva->estacaoDevolucao->nome ?? 'Nao informado' }}</strong>
+                                        <span class="rs-route__label">Devolução</span>
+                                        <strong class="rs-route__place">{{ $reserva->estacaoDevolucao->nome ?? 'Não informado' }}</strong>
                                         <div class="rs-route__datetime">
                                             <span class="rs-route__date">{{ $fimData }}</span>
                                             @if($fimHora)
@@ -295,20 +295,20 @@
                             </div>
                         </div>
 
-                        {{-- Card: Veiculo --}}
+                        {{-- Card: Veículo --}}
                         <div class="rs-card rs-card--vehicle">
                             <div class="rs-card__header">
                                 <i class="fas fa-car rs-card__icon"></i>
-                                <h2>Veiculo reservado</h2>
+                                <h2>Veículo reservado</h2>
                             </div>
                             <div class="rs-vehicle">
                                 <div class="rs-vehicle__media">
                                     <img src="{{ $reserva->modelos->imagem_url ?? asset('img/no-image.jpg') }}"
-                                         alt="{{ $reserva->modelos->nome ?? 'Veiculo reservado' }}">
+                                         alt="{{ $reserva->modelos->nome ?? 'Veículo reservado' }}">
                                 </div>
                                 <div class="rs-vehicle__info">
-                                    <div class="rs-vehicle__brand">{{ $reserva->modelos->marca->nome ?? 'Marca nao informada' }}</div>
-                                    <h3 class="rs-vehicle__name">{{ $reserva->modelos->nome ?? 'Nao informado' }}</h3>
+                                    <div class="rs-vehicle__brand">{{ $reserva->modelos->marca->nome ?? 'Marca não informada' }}</div>
+                                    <h3 class="rs-vehicle__name">{{ $reserva->modelos->nome ?? 'Não informado' }}</h3>
 
                                     <div class="rs-vehicle__chips">
                                         @if(!empty($reserva->grupoFrota->nome))
@@ -404,7 +404,7 @@
                                 <div class="rs-client__avatar">{{ $clienteIniciais }}</div>
                                 <div class="rs-client__main">
                                     <strong>{{ $clienteNome }}</strong>
-                                    <span>{{ $reserva->usuario->email ?? 'E-mail nao informado' }}</span>
+                                    <span>{{ $reserva->usuario->email ?? 'E-mail não informado' }}</span>
                                 </div>
                             </div>
                             <div class="rs-info-rows">
@@ -536,7 +536,7 @@
                                                 <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
                                             </div>
                                             <div class="rs-tx__info">
-                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
+                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'NÃO DEFINIDO') }}</strong>
                                                 <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
                                                 @if($jaConfirmado)
                                                     <span class="rs-tx__confirmed">
@@ -1032,7 +1032,7 @@
                                                 <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
                                             </div>
                                             <div class="rs-tx__info">
-                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'Nao definido') }}</strong>
+                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'NÃO DEFINIDO') }}</strong>
                                                 <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
                                                 @if($jaConfirmado)
                                                     <span class="rs-tx__confirmed">
@@ -1144,7 +1144,7 @@
                             @if($nfseAtual)
                                 <div class="rs-info-rows">
                                     <div class="rs-info-row">
-                                        <span><i class="fas fa-hashtag"></i>Numero</span>
+                                        <span><i class="fas fa-hashtag"></i>Número</span>
                                         <strong>{{ $nfseAtual->numero ?? '-' }}</strong>
                                     </div>
                                     <div class="rs-info-row">
@@ -1335,16 +1335,16 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-cash-register mr-1"></i> Calcao Presencial</h5>
+                    <h5 class="modal-title"><i class="fas fa-cash-register mr-1"></i> Calção Presencial</h5>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>Metodo <span class="text-danger">*</span></label>
+                        <label>Método <span class="text-danger">*</span></label>
                         <select id="calcao_presencial_metodo" class="form-control">
                             <option value="dinheiro">Dinheiro</option>
                             <option value="pix">Pix</option>
-                            <option value="transferencia">Transferencia</option>
+                            <option value="transferencia">Transferência</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -1352,8 +1352,8 @@
                         <input type="number" step="0.01" min="0.01" id="calcao_presencial_valor" class="form-control" placeholder="Deixe vazio para usar o valor calculado">
                     </div>
                     <div class="form-group mb-0">
-                        <label>Observacao (opcional)</label>
-                        <textarea id="calcao_presencial_obs" class="form-control" rows="3" placeholder="Ex.: Recebido no balcao"></textarea>
+                        <label>Observação (opcional)</label>
+                        <textarea id="calcao_presencial_obs" class="form-control" rows="3" placeholder="Ex.: Recebido no balcão"></textarea>
                     </div>
                     <div id="calcao-presencial-status" class="small mt-2"></div>
                 </div>
@@ -1368,22 +1368,22 @@
     </div>
     @endcan
 
-    {{-- Modal Devolver Calcao Presencial --}}
+    {{-- Modal Devolver Calção Presencial --}}
     @if(isset($calcao) && empty($calcao->payment_intent_id) && ($calcao->status ?? '') !== 'cancelado')
     @can('calcao.cancelar')
     <div class="modal fade" id="modalDevolverCalcaoPresencial" tabindex="-1">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title"><i class="fas fa-hand-holding-heart mr-1"></i> Devolver Calcao Presencial</h5>
+                    <h5 class="modal-title"><i class="fas fa-hand-holding-heart mr-1"></i> Devolver Calção Presencial</h5>
                     <button type="button" class="close" data-dismiss="modal">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="alert alert-warning mb-2">
-                        Confirma a devolucao do calcao presencial? Esta acao registra uma transacao negativa.
+                        Confirma a devolução do calção presencial? Esta ação registra uma transação negativa.
                     </div>
                     <div class="form-group mb-0">
-                        <label>Observacao (opcional)</label>
+                        <label>Observação (opcional)</label>
                         <textarea id="calcao_devolver_obs" class="form-control" rows="3" placeholder="Ex.: Devolvido no checkout"></textarea>
                     </div>
                     <div id="calcao-devolver-status" class="small mt-2"></div>
@@ -1459,7 +1459,7 @@ const reservaId = @json($reserva->id);
 
 // ── Liberar calção ──
 function liberarCalcao(calcaoId) {
-    if (!confirm('Confirma a liberacao do calcao? O valor sera devolvido ao cartao do cliente.')) return;
+    if (!confirm('Confirma a liberação do calção? O valor será devolvido ao cartão do cliente.')) return;
     fetch(@json(route('reserva.calcao.liberar', $reserva->id)), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
@@ -1468,7 +1468,7 @@ function liberarCalcao(calcaoId) {
     .then(r => r.json())
     .then(d => {
         if (d.success) { location.reload(); }
-        else alert(d.error ?? 'Erro ao liberar calcao.');
+        else alert(d.error ?? 'Erro ao liberar calção.');
     });
 }
 
@@ -1481,7 +1481,7 @@ document.getElementById('btn-salvar-calcao-presencial')?.addEventListener('click
     const statusEl = document.getElementById('calcao-presencial-status');
 
     if (!metodo) {
-        if (statusEl) statusEl.textContent = 'Selecione um metodo.';
+        if (statusEl) statusEl.textContent = 'Selecione um método.';
         return;
     }
 

@@ -1,7 +1,7 @@
 @php
     $nfse = $reserva->nfseAtual ?? null;
     $nfseStatusRaw = strtolower((string) ($nfse->status ?? ''));
-    $nfseStatus = $nfse ? ucfirst($nfse->status ?? 'pendente') : 'Nao emitida';
+    $nfseStatus = $nfse ? ucfirst($nfse->status ?? 'pendente') : 'Não emitida';
     $nfseNumero = $nfse->numero ?? '-';
     $nfseBadgeClass = match ($nfseStatusRaw) {
         'emitida' => 'is-success',
@@ -14,10 +14,10 @@
 <section class="reservation-actions-card">
     <div class="reservation-actions-card__content">
         <div class="reservation-actions-card__copy">
-            <span class="reservation-actions-card__eyebrow">Painel de acoes</span>
+            <span class="reservation-actions-card__eyebrow">Painel de ações</span>
             <h4 class="reservation-actions-card__title">Gerencie esta reserva com rapidez</h4>
             <p class="reservation-actions-card__text">
-                Edite os dados, siga para pagamento, trabalhe com o contrato e acompanhe a situacao fiscal sem sair desta tela.
+                Edite os dados, siga para pagamento, trabalhe com o contrato e acompanhe a situação fiscal sem sair desta tela.
             </p>
         </div>
 
@@ -57,7 +57,7 @@
                 @if(!$calcaoAtual || $calcaoAtual->status === 'falhou')
                 <a href="{{ route('reserva.calcao', $reserva->id) }}" class="action-pill" style="background:linear-gradient(135deg,#6f42c1,#9061f9)">
                     <i class="fas fa-shield-alt"></i>
-                    <span>Calcao no cartao</span>
+                    <span>Calção no cartão</span>
                 </a>
                 @endif
                 @endcan
@@ -77,13 +77,13 @@
                 <div class="reservation-doc-card__header">
                     <div>
                         <span class="reservation-doc-card__eyebrow">Nota fiscal (NFS-e)</span>
-                        <div class="reservation-doc-card__number">Numero {{ $nfseNumero }}</div>
+                        <div class="reservation-doc-card__number">Número {{ $nfseNumero }}</div>
                     </div>
                     <span class="reservation-doc-card__badge {{ $nfseBadgeClass }}">{{ $nfseStatus }}</span>
                 </div>
 
                 <div class="reservation-doc-card__text">
-                    XML e DPS ficam disponiveis aqui quando a emissao estiver concluida.
+                    XML e DPS ficam disponíveis aqui quando a emissão estiver concluída.
                 </div>
 
                 @if($nfse && !empty($nfse->nfse_id) && (auth()->user()?->hasPermissao('nfse.download') || auth()->user()?->isAdministrador()))
@@ -429,7 +429,7 @@
                     'Tem certeza que deseja cancelar a reserva?',
                     'warning',
                     'Sim, cancelar reserva!',
-                    'Nao, manter reserva',
+                    'Não, manter reserva',
                     cancelarReserva
                 );
                 return;

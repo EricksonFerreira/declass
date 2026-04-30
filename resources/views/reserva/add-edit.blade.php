@@ -23,7 +23,7 @@
             'pode_reservar' => true,
         ];
         $moedaEmpresa = strtoupper($moedaEmpresa ?? 'BRL');
-        $simboloMoedaEmpresa = $simboloMoedaEmpresa ?? ($moedaEmpresa === 'USD' ? '$' : ($moedaEmpresa === 'EUR' ? 'â‚¬' : 'R$'));
+        $simboloMoedaEmpresa = $simboloMoedaEmpresa ?? ($moedaEmpresa === 'USD' ? '$' : ($moedaEmpresa === 'EUR' ? '€' : 'R$'));
         $qtdEstacoes = (int) ($preRequisitosReserva['qtd_estacoes'] ?? 0);
         $qtdGrupos = (int) ($preRequisitosReserva['qtd_grupos'] ?? 0);
         $qtdModelos = (int) ($preRequisitosReserva['qtd_modelos'] ?? 0);
@@ -69,17 +69,17 @@
     @endif
     <div class="reserva-top-header mb-3">
         <div class="reserva-top-header__badges">
-            <span class="reserva-chip">Estacoes: {{ $preRequisitosReserva['qtd_estacoes'] }}</span>
+            <span class="reserva-chip">Estações: {{ $preRequisitosReserva['qtd_estacoes'] }}</span>
             <span class="reserva-chip">Grupos: {{ $preRequisitosReserva['qtd_grupos'] }}</span>
             <span class="reserva-chip">Modelos: {{ $preRequisitosReserva['qtd_modelos'] }}</span>
-            <span class="reserva-chip">Veiculos: {{ $qtdVeiculosTotal }}</span>
+            <span class="reserva-chip">Veículos: {{ $qtdVeiculosTotal }}</span>
             <span class="reserva-chip reserva-chip--info">Moeda: {{ $moedaEmpresa }}</span>
         </div>
         @if (!$preRequisitosReserva['pode_reservar'])
             <div class="reserva-top-header__warning">
                 <div class="reserva-top-header__warning-title">
                     <i class="fas fa-exclamation-triangle mr-1"></i>
-                    Pre-requisitos pendentes para reservar
+                    Pré-requisitos pendentes para reservar
                 </div>
                 @foreach ($preRequisitosReserva['faltas'] as $falta)
                     <div class="reserva-top-header__warning-item">{{ $falta }}</div>
@@ -120,10 +120,10 @@
     </div>
 
     {{-- <x-pre-requisitos-alerta
-        title="Disponibilidade de veiculos por estacao"
+        title="Disponibilidade de veículos por estação"
         :chips="[
-            ['label' => 'Veiculos nas estacoes', 'value' => $qtdVeiculosTotal],
-            ['label' => 'Estacoes com veiculos', 'value' => $qtdEstacoesComVeiculo],
+            ['label' => 'Veículos nas estações', 'value' => $qtdVeiculosTotal],
+            ['label' => 'Estações com veículos', 'value' => $qtdEstacoesComVeiculo],
         ]"
         :details="$detalhesVeiculosEstacao"
         :missing-items="[]"
@@ -143,7 +143,7 @@
                             </button>
                             <div class="div"></div>
                             <button type="button" class="reserva-wizard-step" data-reserva-step-btn="2">
-                                <span class="num">2</span><span class="txt">Veiculo</span>
+                                <span class="num">2</span><span class="txt">Veículo</span>
                             </button>
                             <div class="div"></div>
                             <button type="button" class="reserva-wizard-step" data-reserva-step-btn="3">
@@ -160,23 +160,23 @@
                     </div>
 
                     <div class="col-12" data-reserva-step="1">
-                        <x-section-division-header-form class="reserva-section-title">Estacoes e Datas</x-section-division-header-form>
+                        <x-section-division-header-form class="reserva-section-title">Estações e Datas</x-section-division-header-form>
                     </div>
 
                     <!-- Estações e Datas -->
                     <div class="col-md-6" data-reserva-step="1">
                         <div class="form-group">
-                                <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estacao de Retirada"
-                                :options="$estacoesRetirada" placeholder="Selecione uma estacao" :selected="old(
+                                <x-form-select id="estacao_retirada_id" name="estacao_retirada_id" label="Estação de Retirada"
+                                :options="$estacoesRetirada" placeholder="Selecione uma estação" :selected="old(
                                     'estacao_retirada_id',
                                     isset($reserva->estacao_retirada_id) ? $reserva->estacao_retirada_id : null,
                                 )"
                                 class="handleGetGrupoVeiculos form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
                             @if ($qtdEstacoes === 0)
-                                <small class="text-danger d-block mt-1">Nenhuma estacao disponivel para seu acesso.</small>
+                                <small class="text-danger d-block mt-1">Nenhuma estação disponível para seu acesso.</small>
                             @endif
                             <small id="estacao_veiculos_feedback" class="d-block mt-1 text-muted">
-                                Veiculos disponiveis na estacao selecionada: --
+                                Veículos disponíveis na estação selecionada: --
                             </small>
                         </div>
                     </div>
@@ -210,13 +210,13 @@
                     <div class="col-md-6" data-reserva-step="1">
                         <div class="form-group">
                             <x-form-select id="estacao_devolucao_id" name="estacao_devolucao_id"
-                                label="Estacao de Devolucao" :options="$estacoesDevolucao" placeholder="Selecione uma estacao"
+                                label="Estação de Devolução" :options="$estacoesDevolucao" placeholder="Selecione uma estação"
                                 :selected="old(
                                     'estacao_devolucao_id',
                                     isset($reserva->estacao_devolucao_id) ? $reserva->estacao_devolucao_id : null,
                                 )" class="handleGetGrupoVeiculos form-control form-control-sm js-selectpicker" data-live-search="true" data-size="8" required />
                             @if ($qtdEstacoes === 0)
-                                <small class="text-danger d-block mt-1">Cadastre/libere estacao para continuar.</small>
+                                <small class="text-danger d-block mt-1">Cadastre/libere estação para continuar.</small>
                             @endif
                         </div>
                     </div>
@@ -253,14 +253,14 @@
 
 
                     <div class="col-12" data-reserva-step="2">
-                        <x-section-division-header-form class="reserva-section-title">Veiculo</x-section-division-header-form>
+                        <x-section-division-header-form class="reserva-section-title">Veículo</x-section-division-header-form>
                     </div>
 
                     <div class="col-md-8" data-reserva-step="2">
                         <div class="form-group">
                             <div class="form-group">
                                 <label for="grupo_frota_id" class="d-flex align-items-center justify-content-between mb-1">
-                                    <span>Grupo de Veiculos</span>
+                                    <span>Grupo de Veículos</span>
                                     <button type="button" class="btn btn-xs btn-outline-secondary" id="btn_buscar_grupo"
                                         data-toggle="modal" data-target="#modalPesquisaGrupo" title="Buscar grupo de veículos">
                                         <i class="fas fa-search"></i> Buscar
@@ -282,7 +282,7 @@
                                 </select>
                                 <input type="hidden" name="grupo_frota_id" id="grupo_frota_id_hidden" value="{{ old('grupo_frota_id', $reserva->grupo_frota_id ?? '') }}">
                                 @if ($qtdGrupos === 0)
-                                    <small class="text-danger d-block mt-1">Nenhum grupo de veiculos ativo disponivel.</small>
+                                    <small class="text-danger d-block mt-1">Nenhum grupo de veículos ativo disponível.</small>
                                 @endif
                             </div>
 
@@ -360,7 +360,7 @@
                                 width:100%">
                             <div class="alert alert-light col-md-8 d-flex align-items-center text-xs py-1 mt-1">
                                 <i class="fa-solid fa-circle-info me-2"></i>
-                                <span>Selecione um grupo de veiculos para visualizar os opcionais disponiveis.</span>
+                                <span>Selecione um grupo de veículos para visualizar os opcionais disponíveis.</span>
                             </div>
                         </div>
                     </div>
@@ -406,11 +406,11 @@
 
 
                     <div class="col-12" data-reserva-step="4">
-                        <x-section-division-header-form class="reserva-section-title">Informacoes Pessoais</x-section-division-header-form>
+                        <x-section-division-header-form class="reserva-section-title">Informações Pessoais</x-section-division-header-form>
                     </div>
 
 
-                    <!-- Identificacoes -->
+                    <!-- Identificações -->
                     @php
                         $userIdSelecionado = old('user_id', $reserva->user_id ?? null);
                         $userNomeSelecionado = $userIdSelecionado && isset($users[$userIdSelecionado])
@@ -686,19 +686,19 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="tab-contato-endereco-tab" data-toggle="pill" href="#tab-contato-endereco" role="tab" aria-controls="tab-contato-endereco" aria-selected="false">
-                                    <i class="fas fa-phone-alt mr-1"></i> Contato e Endereco
+                                    <i class="fas fa-phone-alt mr-1"></i> Contato e Endereço
                                 </a>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <a class="nav-link" id="tab-carta-conducao-tab" data-toggle="pill" href="#tab-carta-conducao" role="tab" aria-controls="tab-carta-conducao" aria-selected="false">
-                                    <i class="fas fa-id-card mr-1"></i> Carta de Conducao
+                                    <i class="fas fa-id-card mr-1"></i> Carta de Condução
                                 </a>
                             </li>
                         </ul>
 
                         <div class="tab-content reserva-user-modal__tab-content" id="novoUsuarioReservaTabsContent">
                             <div class="tab-pane fade show active" id="tab-dados-pessoais" role="tabpanel" aria-labelledby="tab-dados-pessoais-tab">
-                                <div class="reserva-user-modal__section-title">Informacoes Pessoais</div>
+                                <div class="reserva-user-modal__section-title">Informações Pessoais</div>
                                 <div class="form-row">
                                     <div class="col-md-6">
                                         <label for="novo_usuario_nome">Nome <span class="text-danger">*</span></label>
@@ -726,14 +726,14 @@
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_local_nascimento" name="local_nascimento" value="{{ old('local_nascimento') }}" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_numero_identificacao">Numero de Identificacao <span class="text-danger">*</span></label>
+                                        <label for="novo_usuario_numero_identificacao">Número de Identificação <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_identificacao" name="numero_identificacao" value="{{ old('numero_identificacao') }}" required>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="tab-pane fade" id="tab-contato-endereco" role="tabpanel" aria-labelledby="tab-contato-endereco-tab">
-                                <div class="reserva-user-modal__section-title">Contato e Endereco</div>
+                                <div class="reserva-user-modal__section-title">Contato e Endereço</div>
                                 <div class="form-row">
                                     <div class="col-md-3">
                                         <label for="novo_usuario_telefone">Telefone <span class="text-danger">*</span></label>
@@ -744,7 +744,7 @@
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_celular" name="celular" value="{{ old('celular') }}" placeholder="(99) 99999-9999" required>
                                     </div>
                                     <div class="col-md-3">
-                                        <label for="novo_usuario_pais_sigla">Pais <span class="text-danger">*</span></label>
+                                        <label for="novo_usuario_pais_sigla">País <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_sigla" name="pais_sigla" data-live-search="true" data-size="8" required>
                                             <option value="">Selecione...</option>
                                             @foreach (($paises ?? []) as $siglaPais => $nomePais)
@@ -761,25 +761,25 @@
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_cidade" name="cidade" value="{{ old('cidade') }}" required>
                                     </div>
                                     <div class="col-md-8">
-                                        <label for="novo_usuario_endereco">Endereco <span class="text-danger">*</span></label>
+                                        <label for="novo_usuario_endereco">Endereço <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_endereco" name="endereco" value="{{ old('endereco') }}" required>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="tab-pane fade" id="tab-carta-conducao" role="tabpanel" aria-labelledby="tab-carta-conducao-tab">
-                                <div class="reserva-user-modal__section-title">Carta de Conducao</div>
+                                <div class="reserva-user-modal__section-title">Carta de Condução</div>
                                 <div class="form-row">
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_numero_carta_conducao">Numero Carta de Conducao <span class="text-danger">*</span></label>
+                                        <label for="novo_usuario_numero_carta_conducao">Número da Carta de Condução <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_carta_conducao" name="numero_carta_conducao" value="{{ old('numero_carta_conducao') }}" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_local_emissao_carta_conducao">Local de Emissao <span class="text-danger">*</span></label>
+                                        <label for="novo_usuario_local_emissao_carta_conducao">Local de Emissão <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control form-control-sm" id="novo_usuario_local_emissao_carta_conducao" name="local_emissao_carta_conducao" value="{{ old('local_emissao_carta_conducao') }}" required>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_pais_emissao_carta_conducao">Pais de Emissao <span class="text-danger">*</span></label>
+                                        <label for="novo_usuario_pais_emissao_carta_conducao">País de Emissão <span class="text-danger">*</span></label>
                                         <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_emissao_carta_conducao" name="pais_emissao_carta_conducao" data-live-search="true" data-size="8" required>
                                             <option value="">Selecione...</option>
                                             @foreach (($paises ?? []) as $siglaPais => $nomePais)
@@ -788,7 +788,7 @@
                                         </select>
                                     </div>
                                     <div class="col-md-4">
-                                        <label for="novo_usuario_data_emissao_carta_conducao">Data de Emissao <span class="text-danger">*</span></label>
+                                        <label for="novo_usuario_data_emissao_carta_conducao">Data de Emissão <span class="text-danger">*</span></label>
                                         <input type="date" class="form-control form-control-sm" id="novo_usuario_data_emissao_carta_conducao" name="data_emissao_carta_conducao" value="{{ old('data_emissao_carta_conducao') }}" required>
                                     </div>
                                     <div class="col-md-4">
@@ -803,7 +803,7 @@
                 <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Fechar</button>
                     <button type="button" class="btn btn-primary" id="btnSalvarNovoUsuarioReserva">
-                        <i class="fas fa-save mr-1"></i>Salvar usuario
+                        <i class="fas fa-save mr-1"></i>Salvar usuário
                     </button>
                 </div>
             </div>
@@ -1685,8 +1685,8 @@
         const isEdit = @json(isset($reserva) && $reserva !== null);
         const mensagemPreRequisitos = @json(
             !empty($preRequisitosReserva['faltas'] ?? [])
-                ? 'Nao e possivel reservar ainda. ' . implode(' ', $preRequisitosReserva['faltas'])
-                : 'Nao e possivel reservar ainda.',
+                ? 'Não é possível reservar ainda. ' . implode(' ', $preRequisitosReserva['faltas'])
+                : 'Não é possível reservar ainda.',
         );
         const rotaCriarUsuario = @json(route('usuario.store'));
         const rotaUsuariosSelect = @json(route('usuario.selectOptions'));
@@ -1712,8 +1712,8 @@
         };
 
         function mostrarErroReserva(titulo, mensagem) {
-            const tituloFinal = titulo || 'Atencao!';
-            const mensagemFinal = mensagem || 'Nao foi possivel concluir a acao.';
+            const tituloFinal = titulo || 'Atenção!';
+            const mensagemFinal = mensagem || 'Não foi possível concluir a ação.';
 
             if (window.Swal && typeof Swal.fire === 'function') {
                 Swal.fire({
@@ -1734,7 +1734,7 @@
         @endif
 
         @if (session('error'))
-            mostrarErroReserva('Atencao!', @json(session('error')));
+            mostrarErroReserva('Atenção!', @json(session('error')));
         @endif
 
         function abrirPrimeiraAbaNovoUsuario() {
@@ -1754,7 +1754,7 @@
             }
         }
 
-        function exibirErrosNovoUsuario(erros = {}, mensagemPadrao = 'Nao foi possivel salvar o usuario.') {
+        function exibirErrosNovoUsuario(erros = {}, mensagemPadrao = 'Não foi possível salvar o usuário.') {
             const alert = $('#modalNovoUsuarioAlert');
             let html = '';
 
@@ -1831,13 +1831,13 @@
         $('#formularioReserva').on('submit', function(e) {
             if (!podeReservar) {
                 e.preventDefault();
-                mostrarErroReserva('Atencao!', mensagemPreRequisitos);
+                mostrarErroReserva('Atenção!', mensagemPreRequisitos);
                 return false;
             }
 
             if (!handleGetGrupoVeiculos('submit')) {
                 e.preventDefault();
-                mostrarErroReserva('Atencao!', 'Preencha estacoes e datas validas para continuar.');
+                mostrarErroReserva('Atenção!', 'Preencha estações e datas válidas para continuar.');
                 return false;
             }
 
@@ -2684,7 +2684,7 @@
             const seletorHora = tipoAgenda === 'devolucao' ? '#data_fim_hora_fp' : '#data_inicio_hora';
             const seletorFeedback = tipoAgenda === 'devolucao' ? '#data_fim_hora_feedback' : '#data_inicio_hora_feedback';
 
-            $(seletorFeedback).text('Carregando horarios disponiveis...');
+            $(seletorFeedback).text('Carregando horários disponíveis...');
             $(seletorHora).prop('disabled', true);
 
             return fetch(AGENDA_DISP_URL + '?' + params.toString(), {
@@ -2703,8 +2703,8 @@
                         preencherHorariosRetirada([], null);
                     }
                     mostrarErroReserva('Sem horario', tipoAgenda === 'devolucao'
-                        ? 'Nao ha horarios de devolucao disponiveis para a data selecionada.'
-                        : 'Nao ha horarios de retirada disponiveis para a data selecionada.');
+                        ? 'Não há horários de devolução disponíveis para a data selecionada.'
+                        : 'Não há horários de retirada disponíveis para a data selecionada.');
                     return [];
                 }
 
@@ -2719,8 +2719,8 @@
                     preencherHorariosRetirada([], null);
                 }
                 mostrarErroReserva('Sem horario', tipoAgenda === 'devolucao'
-                    ? 'Nao foi possivel carregar os horarios da devolucao.'
-                    : 'Nao foi possivel carregar os horarios da retirada.');
+                    ? 'Não foi possível carregar os horários da devolução.'
+                    : 'Não foi possível carregar os horários da retirada.');
                 return [];
             });
         }
@@ -2921,7 +2921,7 @@
         function carregarAgendaEstacao(tipo) {
             const estacaoId = obterEstacaoAgenda(tipo);
             if (!estacaoId) {
-                mostrarErroReserva('Atencao!', 'Selecione a estacao antes de abrir a agenda.');
+                mostrarErroReserva('Atenção!', 'Selecione a estação antes de abrir a agenda.');
                 return;
             }
 
@@ -2963,8 +2963,8 @@
             })
             .catch(() => {
                 agendaReservaDados = [];
-                $('#agenda_status').html('<span class="text-danger">Nao foi possivel carregar a agenda desta estacao.</span>');
-                $('#agenda_horarios_vazio').removeClass('d-none').text('Nao foi possivel carregar os horarios.');
+                $('#agenda_status').html('<span class="text-danger">Não foi possível carregar a agenda desta estação.</span>');
+                $('#agenda_horarios_vazio').removeClass('d-none').text('Não foi possível carregar os horários.');
             });
         }
 
@@ -2976,7 +2976,7 @@
             const valor = $('#agenda_valor_selecionado').val();
 
             if (!valor) {
-                mostrarErroReserva('Atencao!', 'Selecione um horario para continuar.');
+                mostrarErroReserva('Atenção!', 'Selecione um horário para continuar.');
                 return;
             }
 
@@ -3069,7 +3069,7 @@
                     if ($('#estacao_retirada_id').hasClass('js-selectpicker')) {
                         $('#estacao_retirada_id').selectpicker('refresh');
                     }
-                    mostrarErroReserva('Sem disponibilidade', 'Nao ha nenhuma estacao com veiculos disponiveis para essa data de retirada.');
+                    mostrarErroReserva('Sem disponibilidade', 'Não há nenhuma estação com veículos disponíveis para essa data de retirada.');
                 }
 
                 return ids;
@@ -3624,12 +3624,12 @@
             const nome = $(selectElement).find('option:selected').text();
             $('#modelo_disponibilidade_feedback').text('').addClass('d-none');
             $('#estacao_veiculos_feedback')
-                .text('Veiculos disponiveis na estacao selecionada: --')
+                .text('Veículos disponíveis na estação selecionada: --')
                 .removeClass('text-danger text-success')
                 .addClass('text-muted');
 
             if (faltaPreencherEstacoesEDatas()) {
-                mostrarErroReserva('Atencao!', 'Por favor, preencha as estacoes e as datas antes de selecionar o grupo.');
+                mostrarErroReserva('Atenção!', 'Por favor, preencha as estações e as datas antes de selecionar o grupo.');
                 $('#grupo_frota_id').val('');
                 if ($('#grupo_frota_id').hasClass('js-selectpicker')) {
                     $('#grupo_frota_id').selectpicker('refresh');
@@ -3728,8 +3728,8 @@
 
             if (Number.isFinite(qtdVeiculosEstacao)) {
                 const texto = qtdVeiculosEstacao === 1
-                    ? 'Veiculos disponiveis na estacao selecionada: 1'
-                    : `Veiculos disponiveis na estacao selecionada: ${qtdVeiculosEstacao}`;
+                    ? 'Veículos disponíveis na estação selecionada: 1'
+                    : `Veículos disponíveis na estação selecionada: ${qtdVeiculosEstacao}`;
 
                 feedbackEstacao
                     .text(texto)
@@ -3737,7 +3737,7 @@
                     .addClass(qtdVeiculosEstacao > 0 ? 'text-success' : 'text-danger');
             } else {
                 feedbackEstacao
-                    .text('Veiculos disponiveis na estacao selecionada: --')
+                    .text('Veículos disponíveis na estação selecionada: --')
                     .removeClass('text-danger text-success')
                     .addClass('text-muted');
             }

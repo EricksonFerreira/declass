@@ -109,18 +109,18 @@
                             <div class="rc__stop rc__stop--right">
                                 <div class="rc__stop-dot rc__stop-dot--b"></div>
                                 <div>
-                                    <div class="rc__stop-label">Devolucao</div>
+                                    <div class="rc__stop-label">Devolução</div>
                                     <div class="rc__stop-place">{{ $reserva->estacaoDevolucao?->nome ?? '-' }}</div>
                                     <div class="rc__stop-date">{{ $dataFim }}@if($horaFim) <span>{{ $horaFim }}</span>@endif</div>
                                 </div>
                             </div>
                         </div>
 
-                        {{-- Footer: veiculo + valor --}}
+                        {{-- Footer: veículo + valor --}}
                         <div class="rc__foot">
                             <div class="rc__vehicle">
                                 <i class="fas fa-car"></i>
-                                <span>{{ $reserva->modelos?->nome ?? 'Modelo nao definido' }}</span>
+                                <span>{{ $reserva->modelos?->nome ?? 'Modelo não definido' }}</span>
                                 @if(!empty($reserva->grupoFrota?->nome))
                                     <span class="rc__group">{{ $reserva->grupoFrota->nome }}</span>
                                 @endif
@@ -142,9 +142,9 @@
             <th class="text-center">#</th>
             <th>Cliente</th>
             <th>Origem</th>
-            <th>Veiculo</th>
+            <th>Veículo</th>
             <th>Retirada</th>
-            <th>Devolucao</th>
+            <th>Devolução</th>
             <th class="text-right">Total</th>
             <th>Pagamento</th>
             <th>Status</th>
@@ -181,7 +181,7 @@
                 </td>
                 <td>
                     <strong>{{ $reserva->grupoFrota?->nome ?? '-' }}</strong><br>
-                    <small>{{ $reserva->modelos?->nome ?? 'Modelo nao definido' }}</small>
+                    <small>{{ $reserva->modelos?->nome ?? 'Modelo não definido' }}</small>
                 </td>
                 <td>
                     <strong>{{ $reserva->estacaoRetirada?->nome }}</strong><br>
