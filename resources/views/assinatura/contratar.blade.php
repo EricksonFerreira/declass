@@ -237,16 +237,34 @@
                     </div>
                 </div>
 
-                {{-- ── STEP 2: Pagamento ── --}}
+                {{-- ── STEP 2: Revisao e Pagamento ── --}}
                 <div id="stepPagamento" style="display:none;">
                     <div class="card mb-3" style="border-radius:12px;overflow:hidden;">
                         <div class="card-header py-2" style="background:#f8fafc;">
                             <h5 class="mb-0" style="font-size:.9rem;font-weight:700;">
-                                <span class="badge badge-primary mr-2">2</span> Pagamento
+                                <span class="badge badge-primary mr-2">2</span> Revisao e Pagamento
                             </h5>
                         </div>
                         <div class="card-body">
-                            {{-- PIX --}}
+                            {{-- Resumo antes de confirmar --}}
+                            <div id="divResumoConfirmar">
+                                <div class="resumo-box mb-3">
+                                    <div>
+                                        <div class="resumo-plano">{{ $plano->nome }}</div>
+                                        <div class="resumo-sub" id="resumoPeriodicidade">{{ $periodicidade === 'anual' ? 'Anual' : 'Mensal' }}</div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="resumo-valor">R$ <span id="resumoValor">{{ $periodicidade === 'anual' ? number_format($plano->valor_anual, 2, ',', '.') : number_format($plano->valor_mensal, 2, ',', '.') }}</span></div>
+                                        <div class="resumo-sub" id="resumoMetodo"></div>
+                                    </div>
+                                </div>
+                                <p class="text-muted mb-0" style="font-size:.82rem;">
+                                    <i class="fas fa-shield-alt text-primary mr-1"></i>
+                                    Sua conta ficara em modo de avaliacao ate a confirmacao do pagamento.
+                                </p>
+                            </div>
+
+                            {{-- PIX apos confirmar --}}
                             <div id="divPagamentoPix" style="display:none;">
                                 <div id="pixLoading" class="text-center py-4">
                                     <div class="spinner-border text-primary mb-2" style="width:2rem;height:2rem;"></div>
@@ -256,8 +274,7 @@
                                     <div class="d-flex align-items-start" style="gap:1.5rem;flex-wrap:wrap;">
                                         <div class="text-center flex-shrink-0">
                                             <div style="padding:8px;border:2px solid #e2e8f0;border-radius:10px;background:#fff;display:inline-block;">
-                                                <img id="pixQrImage" src="" alt="QR Code PIX"
-                                                     style="width:160px;height:160px;display:block;">
+                                                <img id="pixQrImage" src="" alt="QR Code PIX" style="width:160px;height:160px;display:block;">
                                             </div>
                                             <div class="text-muted mt-1" style="font-size:.72rem;">Escaneie com seu banco</div>
                                             <div id="pixExpira" class="mt-1" style="font-size:.72rem;color:#dc2626;font-weight:600;"></div>
@@ -269,9 +286,7 @@
                                             <p class="text-muted mb-2" style="font-size:.82rem;">
                                                 Escaneie o QR Code ou copie o codigo abaixo. O pagamento e processado pelo Stripe — confirmacao automatica em segundos.
                                             </p>
-                                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6b7280;">
-                                                Codigo PIX copia e cola
-                                            </label>
+                                            <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6b7280;">Codigo PIX copia e cola</label>
                                             <div class="input-group input-group-sm mb-2">
                                                 <input type="text" class="form-control" id="pixCopiaCola" readonly style="font-size:.72rem;font-family:monospace;background:#f8fafc;">
                                                 <div class="input-group-append">
@@ -292,16 +307,14 @@
                                 </div>
                             </div>
 
-                            {{-- Cartao --}}
+                            {{-- Cartao apos confirmar --}}
                             <div id="divPagamentoCartao" style="display:none;">
                                 <p class="font-weight-bold mb-2" style="font-size:.88rem;"><i class="fas fa-credit-card mr-1"></i> Dados do Cartao</p>
                                 <div id="card-element" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:.75rem;background:#f8fafc;min-height:40px;"></div>
                                 <div id="card-errors" class="mt-1" style="color:#ef4444;font-size:.8rem;display:none;"></div>
                                 <div class="custom-control custom-checkbox mt-2">
                                     <input type="checkbox" class="custom-control-input" id="salvarCartao">
-                                    <label class="custom-control-label" for="salvarCartao" style="font-size:.82rem;">
-                                        Salvar cartao para pagamentos futuros
-                                    </label>
+                                    <label class="custom-control-label" for="salvarCartao" style="font-size:.82rem;">Salvar cartao para pagamentos futuros</label>
                                 </div>
                                 <div id="cartaoProcessando" class="text-center py-3" style="display:none;">
                                     <div class="spinner-border text-primary mb-2" style="width:2rem;height:2rem;"></div>
@@ -428,10 +441,11 @@ function voltarStep1() {
     document.getElementById('stepPagamento').style.display = 'none';
     document.getElementById('divBtnStep1').style.display = 'flex';
     document.getElementById('divBtnStep2').style.display = 'none';
+    document.getElementById('divNotaSeguranca').style.display = 'block';
     atualizarStepper(1);
 }
 
-// ── Avancar para step de pagamento ──
+// ── Avancar para step de revisao (sem submit) ──
 document.getElementById('btnAvancarPagamento').addEventListener('click', function () {
     var metodo = document.getElementById('inputMetodo').value;
     if (!metodo) {
@@ -440,9 +454,28 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
         return;
     }
 
+    var nomeMetodo = { pix: 'PIX', cartao: 'Cartao de Credito', atendente: 'Atendente' }[metodo] || metodo;
+    document.getElementById('resumoMetodo').textContent = nomeMetodo;
+
+    document.getElementById('stepMetodo').style.display = 'none';
+    document.getElementById('stepPagamento').style.display = 'block';
+    document.getElementById('divBtnStep1').style.display = 'none';
+    document.getElementById('divBtnStep2').style.display = 'flex';
+    document.getElementById('divNotaSeguranca').style.display = 'none';
+    atualizarStepper(2);
+});
+
+// ── Confirmar e processar pagamento ──
+document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
+    var metodo = document.getElementById('inputMetodo').value;
+    if (!metodo) return;
+
     var btn = this;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Preparando...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Criando assinatura...';
+
+    document.getElementById('divResumoConfirmar').style.display = 'none';
+    document.getElementById('pixLoading').style.display = 'block';
 
     var formData = new FormData(document.getElementById('formContratar'));
 
@@ -459,26 +492,23 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
         return r.text().then(function () { return { status: r.status, isJson: false, url: r.url }; });
     })
     .then(function (res) {
-        btn.disabled = false;
-        btn.innerHTML = 'Continuar <i class="fas fa-arrow-right ml-1"></i>';
-
         if (!res.isJson) {
             window.location.href = res.url || '{{ route('assinatura.meu-plano') }}';
             return;
         }
 
         if (!res.data.success) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
+            document.getElementById('pixLoading').style.display = 'none';
+            document.getElementById('divResumoConfirmar').style.display = 'block';
             alert(res.data.message || res.data.error || 'Erro ao criar assinatura.');
             return;
         }
 
         PAGAMENTO_ID = res.data.pagamento_id;
 
-        document.getElementById('stepMetodo').style.display = 'none';
-        document.getElementById('stepPagamento').style.display = 'block';
-        document.getElementById('divBtnStep1').style.display = 'none';
-        document.getElementById('divBtnStep2').style.display = 'flex';
-        document.getElementById('divNotaSeguranca').style.display = 'none';
+        document.getElementById('divBtnStep2').style.display = 'none';
         atualizarStepper(2);
 
         if (metodo === 'pix') {
@@ -491,7 +521,9 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
     })
     .catch(function () {
         btn.disabled = false;
-        btn.innerHTML = 'Continuar <i class="fas fa-arrow-right ml-1"></i>';
+        btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
+        document.getElementById('pixLoading').style.display = 'none';
+        document.getElementById('divResumoConfirmar').style.display = 'block';
         alert('Erro de conexao. Tente novamente.');
     });
 });
