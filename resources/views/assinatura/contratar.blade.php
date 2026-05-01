@@ -451,10 +451,21 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
         headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' },
         body: formData,
     })
-    .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
+    .then(function (r) {
+        var ct = r.headers.get('Content-Type') || '';
+        if (ct.includes('application/json')) {
+            return r.json().then(function (d) { return { status: r.status, data: d, isJson: true }; });
+        }
+        return r.text().then(function () { return { status: r.status, isJson: false, url: r.url }; });
+    })
     .then(function (res) {
         btn.disabled = false;
         btn.innerHTML = 'Continuar <i class="fas fa-arrow-right ml-1"></i>';
+
+        if (!res.isJson) {
+            window.location.href = res.url || '{{ route('assinatura.meu-plano') }}';
+            return;
+        }
 
         if (!res.data.success) {
             alert(res.data.message || res.data.error || 'Erro ao criar assinatura.');

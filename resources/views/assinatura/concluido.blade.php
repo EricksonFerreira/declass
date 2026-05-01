@@ -42,7 +42,7 @@
                             @if ($assinatura)
                             <tr>
                                 <td class="text-muted pl-0">Periodicidade</td>
-                                <td class="font-weight-bold">{{ $assinatura->periodicidade_texto }}</td>
+                                <td class="font-weight-bold">{{ $assinatura->periodicidade === 'anual' ? 'Anual' : 'Mensal' }}</td>
                             </tr>
                             <tr>
                                 <td class="text-muted pl-0">Inicio</td>
@@ -54,7 +54,7 @@
                             </tr>
                             <tr>
                                 <td class="text-muted pl-0">Metodo</td>
-                                <td class="font-weight-bold">{{ $assinatura->metodo_cobranca_texto ?? $pagamento?->metodo_texto }}</td>
+                                <td class="font-weight-bold">{{ ucfirst($pagamento->metodo ?? $assinatura->metodo_cobranca ?? '—') }}</td>
                             </tr>
                             @endif
                             @if ($pagamento?->pago_em)
