@@ -9,11 +9,11 @@
 @section('content')
 
     <div class="col-12 px-0">
-        <div class="ci-card co-checkout-card">
+        <div class="ci-card">
 
-            <div class="ci-card-header co-checkout-header">
+            <div class="ci-card-header">
                 <div class="ci-header-left">
-                    <div class="ci-header-icon co-checkout-icon">
+                    <div class="ci-header-icon">
                         <i class="fas fa-undo-alt"></i>
                     </div>
                     <div>
@@ -77,14 +77,6 @@
                      PASSO 1 — Dados da Devolução
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step active" data-step="1">
-                    <div class="rw-step-content-header">
-                        <div class="rw-step-content-icon"><i class="fas fa-car-side"></i></div>
-                        <div>
-                            <h5>Dados da Devolução</h5>
-                            <p>Confirme o veículo da reserva e registre quilometragem, combustível e data/hora de devolução.</p>
-                        </div>
-                    </div>
-
                     <form id="form_dados_devolucao">
                         {{-- Bloco: Veículo vinculado --}}
                         <div class="ci-block">
@@ -173,14 +165,6 @@
                      PASSO 2 — Fotos da Devolução
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="2">
-                    <div class="rw-step-content-header">
-                        <div class="rw-step-content-icon rw-step-content-icon--blue"><i class="fas fa-camera"></i></div>
-                        <div>
-                            <h5>Fotos da Devolução</h5>
-                            <p>Envie as fotos do estado do veículo na devolução para registro no contrato de check-out.</p>
-                        </div>
-                    </div>
-
                     <div class="ci-block">
                         <div class="ci-block-label">
                             <i class="fas fa-images"></i>
@@ -239,14 +223,6 @@
                      PASSO 3 — Vistoria do Veículo
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="3">
-                    <div class="rw-step-content-header">
-                        <div class="rw-step-content-icon rw-step-content-icon--amber"><i class="fas fa-search"></i></div>
-                        <div>
-                            <h5>Vistoria do Veículo</h5>
-                            <p>Registre novas avarias detectadas na devolução e consulte o histórico de danos da reserva.</p>
-                        </div>
-                    </div>
-
                     <div class="ci-block">
                         <div class="ci-block-label">
                             <i class="fas fa-car-crash"></i>
@@ -351,14 +327,6 @@
                      PASSO 4 — Observações
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="4">
-                    <div class="rw-step-content-header">
-                        <div class="rw-step-content-icon rw-step-content-icon--green"><i class="fas fa-comment-alt"></i></div>
-                        <div>
-                            <h5>Observações e Notas</h5>
-                            <p>Registre quaisquer observações adicionais sobre a devolução do veículo.</p>
-                        </div>
-                    </div>
-
                     <div class="ci-block">
                         <div class="ci-block-label">
                             <i class="fas fa-pen-alt"></i>
@@ -423,12 +391,6 @@
 <link rel="stylesheet" href="{{ asset('css/select2.min.css') }}">
 <style>
     @include('reserva.partials.vistoria_reserva_estilos_inner')
-
-    /* Header bar verde */
-    .co-checkout-header::after {
-        background: linear-gradient(90deg, #059669, #10b981, #0ea5e9);
-    }
-    .co-checkout-icon { color: #d1fae5; }
 
     /* Card de conclusão */
     .co-summary-checkout .ci-summary-card__icon {
