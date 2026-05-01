@@ -832,7 +832,8 @@
                     position: 'top-right',
                 });
                 setTimeout(() => {
-                    window.location.href = data.redirect || "{{ route('reserva.show', ':id') }}".replace(':id', reserva_id);
+                    const base = data.redirect || "{{ route('reserva.show', ':id') }}".replace(':id', reserva_id);
+                    window.location.href = base + (base.includes('?') ? '&' : '?') + 'satisfacao=1';
                 }, 800);
             },
             error: function (xhr) {

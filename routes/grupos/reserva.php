@@ -49,6 +49,7 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/confirmar-pagamento-dinheiro', [ReservaController::class, 'confirmarPagamentoDinheiro'])->name('confirmarPagamentoDinheiro');
     Route::post('{id}/criarContratoCheckin', [ReservaController::class, 'criarContratoCheckin'])->name('criarContratoCheckin');
     Route::post('{id}/adicionarDanoVeiculo', [ReservaController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');
+    Route::post('{id}/satisfacao', [ReservaController::class, 'salvarSatisfacao'])->name('satisfacao.store');
     Route::get('{id}/assinarContratoCheckin', [ReservaController::class, 'assinarContratoCheckin'])->name('assinarContratoCheckin');
     // Route::post('{id}/assinarContratoCheckin', [ReservaController::class, 'salvarAssinaturaContratoCheckin'])->name('salvarAssinaturaContratoCheckin');
     Route::post('{id}/salvar-assinatura-checkin', [ReservaController::class, 'salvarAssinarContratoCheckIn'])->name('salvarAssinarContratoCheckIn');

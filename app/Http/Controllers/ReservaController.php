@@ -980,6 +980,35 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
     }
 
+    public function salvarSatisfacao(Request $request, $reserva_id)
+    {
+        $reserva = $this->reservaService->getById($reserva_id);
+        if (!$reserva) {
+            return response()->json(['message' => 'Reserva não encontrada.'], 404);
+        }
+
+        $validated = $request->validate([
+            'satisfacao_geral'   => ['required', 'integer', 'min:1', 'max:5'],
+            'facilidade_reserva' => ['required', 'integer', 'min:1', 'max:5'],
+            'nps_nota'           => ['required', 'integer', 'min:0', 'max:10'],
+            'comentario'         => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        \App\Models\ReservaSatisfacao::updateOrCreate(
+            ['reserva_id' => (int) $reserva_id],
+            [
+                'empresa_id'          => session('empresa_id') ?? $reserva->empresa_id ?? null,
+                'respondente_user_id' => Auth::id(),
+                'satisfacao_geral'    => (int) $validated['satisfacao_geral'],
+                'facilidade_reserva'  => (int) $validated['facilidade_reserva'],
+                'nps_nota'            => (int) $validated['nps_nota'],
+                'comentario'          => trim((string) ($validated['comentario'] ?? '')) ?: null,
+            ]
+        );
+
+        return response()->json(['success' => true, 'message' => 'Avaliação registrada com sucesso!']);
+    }
+
     private function validarCalcaoParaCheckout(Reserva $reserva): ?string
     {
         $calculo = $this->calcaoService->calcularValor($reserva);
