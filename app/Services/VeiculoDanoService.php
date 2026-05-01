@@ -70,8 +70,10 @@ class VeiculoDanoService extends AbstractBaseService
             $url = null;
             if (!empty($path)) {
                 try {
-                    $normalizedPath = ltrim(str_replace('\\', '/', $path), '/');
-                    $url = Storage::disk('public')->url($normalizedPath);
+                    $normalizedPath = ltrim(str_replace('\\', '/', (string) $path), '/');
+                    $url = Storage::disk('public')->exists($normalizedPath)
+                        ? '/storage/' . $normalizedPath
+                        : null;
                 } catch (\Throwable $e) {
                     $url = null;
                 }

@@ -2477,14 +2477,12 @@ private function montarDiasSemanaFlags($diasUteis): array
                 $dir = 'danos/reserva_' . (int) $reserva_id . '/dano_' . (int) $dano->id;
 
                 foreach ($fotos as $foto) {
-                    if (!$foto || !$foto->isValid()) {
-                        continue;
-                    }
+                    $path = \App\Support\ArquivoAnexoHelper::armazenar($foto, $dir);
+                    if (!$path) continue;
 
-                    $path = $foto->store($dir, 'public');
                     $dano->imagem()->create([
                         'caminho_imagem' => $path,
-                        'nome_imagem'    => basename((string) $path),
+                        'nome_imagem'    => basename($path),
                     ]);
                 }
             }
