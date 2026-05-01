@@ -1067,13 +1067,13 @@
                                     <td><span class="xp-id">{{ $os->numero ?? '#' . $os->id }}</span></td>
                                     <td>
                                         @if($osStatusVal === \App\Models\OrdemServico::STATUS_ABERTA)
-                                            <span class="status-badge status-badge--amber">Aberta</span>
+                                            <span class="status-badge bg-amber">Aberta</span>
                                         @elseif($osStatusVal === \App\Models\OrdemServico::STATUS_EM_ANDAMENTO)
-                                            <span class="status-badge status-badge--blue">Em Andamento</span>
+                                            <span class="status-badge bg-blue">Em Andamento</span>
                                         @elseif($osStatusVal === \App\Models\OrdemServico::STATUS_CONCLUIDA)
-                                            <span class="status-badge status-badge--green">Concluída</span>
+                                            <span class="status-badge bg-green">Concluída</span>
                                         @else
-                                            <span class="status-badge status-badge--gray">Cancelada</span>
+                                            <span class="status-badge bg-gray">Cancelada</span>
                                         @endif
                                     </td>
                                     <td>{{ $os->created_at ? $os->created_at->format('d/m/Y') : '—' }}</td>
