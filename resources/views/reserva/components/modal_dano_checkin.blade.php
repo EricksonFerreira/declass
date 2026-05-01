@@ -139,7 +139,7 @@
                                     <i class="fas fa-upload"></i>
                                     <span>Selecionar fotos</span>
                                 </label>
-                                <input type="file" class="dano-upload-input" id="fotos-dano" name="fotos_dano" multiple accept="image/*">
+                                <input type="file" class="dano-upload-input" id="fotos-dano" name="fotos[]" multiple accept="image/*">
                                 <small class="dano-hint">JPG, PNG ou WEBP. Multiplas fotos permitidas.</small>
                             </div>
                         </div>
@@ -646,7 +646,7 @@
         formData.append('quilometragem_veiculo', dano.quilometragem);
         if (dano.observacoes) formData.append('observacoes', dano.observacoes);
         formData.append('veiculo_id', dano.veiculo);
-        Array.from(dano.fotos).forEach(file => formData.append('fotos_dano[]', file));
+        Array.from(dano.fotos).forEach(file => formData.append('fotos[]', file));
 
         $.ajax({
             url, type: 'POST', data: formData,

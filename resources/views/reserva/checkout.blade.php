@@ -111,7 +111,7 @@
                                             <small class="text-muted">(KM inicial: {{ $reserva->contratoCheckin->quilometragem_atual }})</small>
                                         @endif
                                     </label>
-                                    <input type="number" required class="form-control form-control-sm" id="quilometragem_devolucao" name="quilometragem_devolucao" placeholder="Ex: 45800" min="{{ (float) ($reserva->contratoCheckin->quilometragem_atual ?? 0) }}">
+                                    <input type="number" required class="form-control form-control-sm" id="quilometragem_devolucao" name="quilometragem_devolucao" placeholder="Ex: 45800" min="{{ (float) ($reserva->contratoCheckin->quilometragem_atual ?? 0) }}" value="{{ (float) ($reserva->contratoCheckin->quilometragem_atual ?? '') ?: '' }}">
                                 </div>
                                 <div class="col-md-6 col-lg-3">
                                     <label for="combustivel_devolucao">Nível de combustível <span class="req">*</span></label>
