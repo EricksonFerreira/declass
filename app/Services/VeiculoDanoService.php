@@ -70,7 +70,8 @@ class VeiculoDanoService extends AbstractBaseService
             $url = null;
             if (!empty($path)) {
                 try {
-                    $url = Storage::disk('public')->url($path);
+                    $normalizedPath = ltrim(str_replace('\\', '/', $path), '/');
+                    $url = Storage::disk('public')->url($normalizedPath);
                 } catch (\Throwable $e) {
                     $url = null;
                 }
@@ -88,6 +89,7 @@ class VeiculoDanoService extends AbstractBaseService
             'localizacao' => $loc,
             'descricao' => $d->observacoes,
             'tipo_dano' => $d->tipo_dano,
+            'nome_dano' => $d->dano?->nome,
             'categoria' => $d->dano?->categoria?->nome,
             'local_dano' => $d->local_dano,
             'localizacao_problema' => $d->localizacao_problema,

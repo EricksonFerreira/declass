@@ -666,11 +666,18 @@
 
     function rowImagens(dano) {
         const imgs = dano.imagens || [];
+        if (!imgs.length) return '<span class="text-muted small">—</span>';
         return imgs.map(function (i) {
-            const url = i.url || (i.path ? `{{ asset('storage') }}/${i.path}` : (i.imagem ? `{{ asset('storage') }}/${i.imagem}` : null));
+            const url = i.url
+                || (i.path  ? `{{ asset('storage') }}/${i.path}`  : null)
+                || (i.imagem ? `{{ asset('storage') }}/${i.imagem}` : null);
             if (!url) return '';
-            return `<a href="${url}" target="_blank" rel="noopener"><img src="${url}" alt="Dano" style="width:44px;height:44px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;margin-right:6px;"></a>`;
-        }).filter(Boolean).join(' ');
+            return `<a href="${url}" target="_blank" rel="noopener" title="Ver imagem">
+                        <img src="${url}" alt="foto do dano"
+                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px;"
+                             onerror="this.outerHTML='<span class=text-danger small>Erro</span>'">
+                    </a>`;
+        }).filter(Boolean).join('');
     }
 
     const TIPO_LABEL = {
@@ -706,16 +713,21 @@
                     return;
                 }
                 data.forEach(dano => {
-                    const categoria  = dano.categoria ?? '—';
-                    const local      = dano.localizacao_problema ?? '—';
-                    const locLabel   = `<strong>${dano.localizacao}</strong><br><small class="text-muted">${categoria} · ${local}</small>`;
-                    const descricao  = dano.descricao || '<span class="text-muted">—</span>';
-                    const km         = dano.quilometragem_veiculo ? `<small class="text-muted d-block">KM: ${dano.quilometragem_veiculo}</small>` : '';
+                    const categoria = dano.categoria ?? '—';
+                    const local     = dano.localizacao_problema ?? '—';
+                    const locLabel  = `<strong>${dano.localizacao}</strong><br><small class="text-muted">${categoria} · ${local}</small>`;
+                    const descricao = dano.descricao || '<span class="text-muted">—</span>';
+                    const km        = dano.quilometragem_veiculo
+                        ? `<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ${Number(dano.quilometragem_veiculo).toLocaleString('pt-BR')}</small>`
+                        : '';
+                    const nomeDano  = dano.nome_dano
+                        ? `<small class="d-block text-muted mt-1">${dano.nome_dano}</small>`
+                        : '';
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr>
                             <td>${locLabel}</td>
                             <td>${descricao}${km}</td>
-                            <td>${tipoBadge(dano.tipo_dano)}</td>
+                            <td>${tipoBadge(dano.tipo_dano)}${nomeDano}</td>
                             <td>${formatCusto(dano.custo_estimado)}</td>
                             <td>${rowImagens(dano)}</td>
                         </tr>
