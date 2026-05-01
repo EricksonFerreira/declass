@@ -4111,7 +4111,8 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         .then(r => r.json())
         .then(data => {
             $('#modalSatisfacao').modal('hide');
-            Swal.fire({ icon: 'success', title: 'Obrigado!', text: data.message || 'Avaliação registrada.', timer: 2500, showConfirmButton: false, toast: true, position: 'top-right' });
+            Swal.fire({ icon: 'success', title: 'Obrigado!', text: data.message || 'Avaliação registrada.', timer: 2000, showConfirmButton: false, toast: true, position: 'top-right' });
+            setTimeout(() => window.location.reload(), 2000);
         })
         .catch(() => {
             btn.disabled = false;
