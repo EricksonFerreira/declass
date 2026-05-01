@@ -77,6 +77,14 @@
                      PASSO 1 — Dados da Devolução
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step active" data-step="1">
+                      <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon"><i class="fas fa-car"></i></div>
+                        <div>
+                            <h5>Dados do Veiculo</h5>
+                            <p>Selecione o veiculo, registre a quilometragem atual e defina data e hora de saida.</p>
+                        </div>
+                    </div>
+
                     <form id="form_dados_devolucao">
                         {{-- Bloco: Veículo vinculado --}}
                         <div class="ci-block">
