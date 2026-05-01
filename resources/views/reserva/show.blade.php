@@ -752,27 +752,64 @@
                     </div>
 
                     {{-- Danos existentes no check-in --}}
-                    <div class="rs-card">
-                        <div class="rs-card__header">
-                            <i class="fas fa-car-crash rs-card__icon" style="color:#64748b"></i>
-                            <h2>Danos Existentes (pré-reserva)</h2>
+                    <div class="rs-damage-block">
+                        <div class="rs-damage-block__label">
+                            <i class="fas fa-history" style="color:#64748b"></i>
+                            <div>
+                                <strong>Danos Existentes (pré-reserva)</strong>
+                                <span>Avarias de outras reservas / correções registradas</span>
+                            </div>
                         </div>
-                        <div id="danos-existentes-loading" class="text-center py-3">
-                            <i class="fas fa-spinner fa-spin mr-1"></i> Carregando danos...
+                        <div class="rs-damage-table-wrap">
+                            <table class="rs-damage-table">
+                                <thead>
+                                    <tr>
+                                        <th>Localização</th>
+                                        <th>Descrição</th>
+                                        <th>Correção</th>
+                                        <th>Imagem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="danos-existentes-container">
+                                    <tr id="danos-existentes-loading-table">
+                                        <td colspan="4" class="damage-empty">
+                                            <i class="fas fa-spinner fa-spin mr-1"></i> Carregando danos...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div id="danos-existentes-container" class="d-none"></div>
                     </div>
 
                     {{-- Danos detectados nesta reserva --}}
-                    <div class="rs-card">
-                        <div class="rs-card__header">
-                            <i class="fas fa-search rs-card__icon" style="color:#ef4444"></i>
-                            <h2>Danos Detectados nesta Reserva</h2>
+                    <div class="rs-damage-block rs-damage-block--amber">
+                        <div class="rs-damage-block__label">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <div>
+                                <strong>Danos Detectados nesta Reserva</strong>
+                                <span>Avarias registradas no check-in</span>
+                            </div>
                         </div>
-                        <div id="danos-detectados-loading" class="text-center py-3">
-                            <i class="fas fa-spinner fa-spin mr-1"></i> Carregando danos...
+                        <div class="rs-damage-table-wrap">
+                            <table class="rs-damage-table" id="danos-detectados-table">
+                                <thead>
+                                    <tr>
+                                        <th>Localização</th>
+                                        <th>Descrição</th>
+                                        <th>Tipo</th>
+                                        <th>Custo Est.</th>
+                                        <th>Imagem</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="danos-detectados-container">
+                                    <tr id="danos-detectados-loading">
+                                        <td colspan="5" class="damage-empty">
+                                            <i class="fas fa-spinner fa-spin mr-1"></i> Carregando danos...
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <div id="danos-detectados-container" class="d-none"></div>
                     </div>
 
                     {{-- Calção --}}
@@ -2207,6 +2244,18 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     .rs-damage-table tbody tr:last-child td {
         border-bottom: 0;
     }
+    .rs-damage-table .damage-empty {
+        text-align: center;
+        padding: 22px !important;
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+    .rs-damage-table .damage-empty i {
+        display: block;
+        font-size: 1.5rem;
+        margin-bottom: 6px;
+        opacity: 0.5;
+    }
 
     .rs-damage-table__row {
         cursor: pointer;
@@ -2231,34 +2280,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         border: 1px solid #e2e8f0;
     }
 
-    .rs-dano-table {
-        width: 100%;
-        border-collapse: collapse;
-        font-size: .82rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-    .rs-dano-table thead tr { background: #f1f5f9; }
-    .rs-dano-table th {
-        padding: 9px 12px;
-        text-align: left;
-        font-weight: 700;
-        color: #475569;
-        font-size: .72rem;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        border-bottom: 2px solid #e2e8f0;
-    }
-    .rs-dano-table td {
-        padding: 9px 12px;
-        color: #334155;
-        border-bottom: 1px solid #f1f5f9;
-        vertical-align: middle;
-    }
-    .rs-dano-table tbody tr:last-child td { border-bottom: 0; }
-    .rs-dano-table tbody tr:hover td { background: #f8fafc; }
-    .rs-dano-table tbody tr { transition: background .16s ease; }
+
 
     .rs-damage-empty-inline {
         display: inline-flex;
@@ -3868,54 +3890,89 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
         }
 
-        function renderDanos(data, containerId, loadingId) {
-            const loading   = document.getElementById(loadingId);
-            const container = document.getElementById(containerId);
-            if (loading) loading.classList.add('d-none');
+        function renderDanosExistentes(data) {
+            const loading   = document.getElementById('danos-existentes-loading-table');
+            const container = document.getElementById('danos-existentes-container');
+            if (loading) loading.remove();
             if (!container) return;
 
             const items = data.danos || data || [];
+            container.innerHTML = '';
+
             if (!items.length) {
-                container.innerHTML = '<div class="rs-empty"><i class="fas fa-check-circle" style="color:#10b981"></i><span>Nenhum dano registrado.</span></div>';
+                container.innerHTML = '<tr><td colspan="4" class="damage-empty"><i class="fas fa-check-circle"></i> Sem histórico de avarias anteriores</td></tr>';
             } else {
-                container.innerHTML = '<table class="rs-dano-table"><thead><tr>'
-                    + '<th>Localizacao</th>'
-                    + '<th>Descricao</th>'
-                    + '<th>Tipo</th>'
-                    + '<th>Custo Est.</th>'
-                    + '<th>Imagem</th>'
-                    + '</tr></thead><tbody>'
-                    + items.map(function (d) {
-                        const payload = encodeURIComponent(JSON.stringify(d));
-                        const imagens = Array.isArray(d.imagens) ? d.imagens : [];
-                        const thumbsHtml = imagens.map(function (img) {
-                            const url = img.url || (img.path ? ('/storage/' + img.path) : null);
-                            if (!url) return '';
-                            return `<a href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver imagem"><img src="${url}" alt="foto" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px"></a>`;
-                        }).filter(Boolean).join('') || '<span class="text-muted small">—</span>';
+                items.forEach(function (d) {
+                    const imagens = Array.isArray(d.imagens) ? d.imagens : [];
+                    const thumbsHtml = imagens.map(function (img) {
+                        const url = img.url || (img.path ? ('/storage/' + img.path) : null);
+                        if (!url) return '';
+                        return '<a href="' + url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver imagem"><img src="' + url + '" alt="foto" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px"></a>';
+                    }).filter(Boolean).join('') || '<span class="text-muted small">—</span>';
 
-                        const categoria = d.categoria ?? '—';
-                        const local = d.localizacao_problema ?? '—';
-                        const locLabel = '<strong>' + escapeHtml(d.localizacao || d.local_dano || '—') + '</strong><br><small class="text-muted">' + escapeHtml(categoria) + ' \u00b7 ' + escapeHtml(local) + '</small>';
-                        const descricao = escapeHtml(d.descricao || '<span class="text-muted">—</span>');
-                        const km = d.quilometragem_veiculo != null
-                            ? '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(d.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>'
-                            : '';
-                        const nomeDano = d.nome_dano
-                            ? '<small class="d-block text-muted mt-1">' + escapeHtml(d.nome_dano) + '</small>'
-                            : '';
+                    var corr = '<span class="text-muted">—</span>';
+                    if (d.correcao_realizada) {
+                        corr = '<span class="text-success"><i class="fas fa-wrench"></i> ' + escapeHtml(d.correcao_descricao ?? '') + '<br><small>' + (d.correcao_data ?? '') + '</small></span>';
+                    } else if (d.correcao_descricao || d.correcao_data) {
+                        corr = '<span class="text-warning"><i class="fas fa-hourglass-half"></i> Pendente</span>';
+                    }
 
-                        return '<tr class="js-dano-detalhe-trigger" data-dano="' + payload + '" style="cursor:pointer">'
-                            + '<td>' + locLabel + '</td>'
-                            + '<td>' + descricao + km + '</td>'
-                            + '<td>' + tipoBadge(d.tipo_dano) + nomeDano + '</td>'
-                            + '<td>' + formatCusto(d.custo_estimado) + '</td>'
-                            + '<td>' + thumbsHtml + '</td>'
-                            + '</tr>';
-                    }).join('')
-                    + '</tbody></table>';
+                    var tr = document.createElement('tr');
+                    tr.className = 'js-dano-detalhe-trigger rs-damage-table__row';
+                    tr.dataset.dano = encodeURIComponent(JSON.stringify(d));
+                    tr.innerHTML = '<td><strong>' + escapeHtml(d.localizacao || d.local_dano || '—') + '</strong></td>'
+                        + '<td>' + escapeHtml(d.descricao || '') + '</td>'
+                        + '<td>' + corr + '</td>'
+                        + '<td>' + thumbsHtml + '</td>';
+                    container.appendChild(tr);
+                });
             }
-            container.classList.remove('d-none');
+            bindDanoDetalheTriggers(container);
+        }
+
+        function renderDanosDetectados(data) {
+            const loading   = document.getElementById('danos-detectados-loading');
+            const container = document.getElementById('danos-detectados-container');
+            if (loading) loading.remove();
+            if (!container) return;
+
+            const items = data.danos || data || [];
+            container.innerHTML = '';
+
+            if (!items.length) {
+                container.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>';
+            } else {
+                items.forEach(function (d) {
+                    const payload = encodeURIComponent(JSON.stringify(d));
+                    const imagens = Array.isArray(d.imagens) ? d.imagens : [];
+                    const thumbsHtml = imagens.map(function (img) {
+                        const url = img.url || (img.path ? ('/storage/' + img.path) : null);
+                        if (!url) return '';
+                        return '<a href="' + url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver imagem"><img src="' + url + '" alt="foto" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px"></a>';
+                    }).filter(Boolean).join('') || '<span class="text-muted small">—</span>';
+
+                    const categoria = d.categoria ?? '—';
+                    const local = d.localizacao_problema ?? '—';
+                    const locLabel = '<strong>' + escapeHtml(d.localizacao || d.local_dano || '—') + '</strong><br><small class="text-muted">' + escapeHtml(categoria) + ' \u00b7 ' + escapeHtml(local) + '</small>';
+                    const descricao = d.descricao ? escapeHtml(d.descricao) : '<span class="text-muted">—</span>';
+                    const km = d.quilometragem_veiculo != null
+                        ? '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(d.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>'
+                        : '';
+                    const nomeDano = d.nome_dano
+                        ? '<small class="d-block text-muted mt-1">' + escapeHtml(d.nome_dano) + '</small>'
+                        : '';
+
+                    var tr = document.createElement('tr');
+                    tr.className = 'js-dano-detalhe-trigger rs-damage-table__row';
+                    tr.dataset.dano = payload;
+                    tr.innerHTML = '<td>' + locLabel + '</td>'
+                        + '<td>' + descricao + km + '</td>'
+                        + '<td>' + tipoBadge(d.tipo_dano) + nomeDano + '</td>'
+                        + '<td>' + formatCusto(d.custo_estimado) + '</td>'
+                        + '<td>' + thumbsHtml + '</td>';
+                    container.appendChild(tr);
+                });
+            }
             bindDanoDetalheTriggers(container);
         }
 
@@ -4021,10 +4078,10 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF_TOKEN }
             })
             .then(r => r.json())
-            .then(data => renderDanos(data, 'danos-existentes-container', 'danos-existentes-loading'))
+            .then(data => renderDanosExistentes(data))
             .catch(() => {
-                const el = document.getElementById('danos-existentes-loading');
-                if (el) el.textContent = 'Erro ao carregar danos existentes.';
+                const el = document.getElementById('danos-existentes-loading-table');
+                if (el) el.outerHTML = '<tr><td colspan="4" class="damage-empty text-danger"><i class="fas fa-exclamation-circle"></i> Erro ao carregar danos existentes.</td></tr>';
             });
 
             // Danos detectados
@@ -4032,10 +4089,10 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'X-CSRF-TOKEN': CSRF_TOKEN }
             })
             .then(r => r.json())
-            .then(data => renderDanos(data, 'danos-detectados-container', 'danos-detectados-loading'))
+            .then(data => renderDanosDetectados(data))
             .catch(() => {
                 const el = document.getElementById('danos-detectados-loading');
-                if (el) el.textContent = 'Erro ao carregar danos detectados.';
+                if (el) el.outerHTML = '<tr><td colspan="5" class="damage-empty text-danger"><i class="fas fa-exclamation-circle"></i> Erro ao carregar danos detectados.</td></tr>';
             });
         }
 
