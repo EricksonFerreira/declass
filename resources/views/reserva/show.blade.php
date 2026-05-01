@@ -727,13 +727,18 @@
                             <i class="fas fa-camera rs-card__icon"></i>
                             <h2>Fotos do Veículo no Check-in</h2>
                         </div>
-                        <div class="rs-photo-grid">
+                        <div class="row rs-photo-grid">
                             @foreach($fotosPaths as $label => $path)
                                 @php $fotoUrl = $path ? asset('storage/' . $path) : null; @endphp
-                                <div class="rs-photo-item">
+                                <div class="col-6 col-md-2 rs-photo-item">
                                     @if($fotoUrl)
-                                        <img src="{{ $fotoUrl }}" alt="Foto {{ $label }}" class="rs-photo-thumb js-lightbox-trigger"
+                                        <div class="rs-photo-frame js-lightbox-trigger"
                                              data-src="{{ $fotoUrl }}" data-label="{{ $label }}">
+                                            <img src="{{ $fotoUrl }}" alt="Foto {{ $label }}" class="rs-photo-thumb">
+                                            <div class="rs-photo-zoom">
+                                                <i class="fas fa-search-plus"></i>
+                                            </div>
+                                        </div>
                                     @else
                                         <div class="rs-photo-placeholder">
                                             <i class="fas fa-image"></i>
@@ -897,6 +902,48 @@
                             @endcan
                         </div>
                     </div>
+
+                    @if($reserva->contratoCheckout)
+                    @php
+                        $co = $reserva->contratoCheckout;
+                        $fotosCheckoutPaths = [
+                            'Direita' => $co->foto_direita_path ?? null,
+                            'Esquerda' => $co->foto_esquerda_path ?? null,
+                            'Frente' => $co->foto_frente_path ?? null,
+                            'Trás' => $co->foto_tras_path ?? null,
+                            'Velocímetro' => $co->foto_velocimetro_path ?? null,
+                            'Combustível' => $co->foto_combustivel_path ?? null,
+                        ];
+                    @endphp
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-camera rs-card__icon"></i>
+                            <h2>Fotos do Veículo no Check-out</h2>
+                        </div>
+                        <div class="row rs-photo-grid">
+                            @foreach($fotosCheckoutPaths as $label => $path)
+                                @php $fotoUrl = $path ? asset('storage/' . $path) : null; @endphp
+                                <div class="col-6 col-md-2 rs-photo-item">
+                                    @if($fotoUrl)
+                                        <div class="rs-photo-frame js-lightbox-trigger"
+                                             data-src="{{ $fotoUrl }}" data-label="{{ $label }} (Check-out)">
+                                            <img src="{{ $fotoUrl }}" alt="Foto {{ $label }} do check-out" class="rs-photo-thumb">
+                                            <div class="rs-photo-zoom">
+                                                <i class="fas fa-search-plus"></i>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="rs-photo-placeholder">
+                                            <i class="fas fa-image"></i>
+                                            <span>Sem foto</span>
+                                        </div>
+                                    @endif
+                                    <div class="rs-photo-label">{{ $label }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                    @endif
 
                     {{-- Avarias registradas --}}
                     <div class="rs-card">
@@ -2973,35 +3020,62 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 
     /* ── Fotos check-in ── */
     .rs-photo-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
+        margin-left: -6px;
+        margin-right: -6px;
     }
 
     .rs-photo-item {
         display: flex;
         flex-direction: column;
         gap: 6px;
+        padding-left: 6px;
+        padding-right: 6px;
+        margin-bottom: 12px;
+    }
+
+    .rs-photo-frame {
+        position: relative;
+        width: 100%;
+        cursor: pointer;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
     }
 
     .rs-photo-thumb {
         width: 100%;
-        aspect-ratio: 4/3;
+        aspect-ratio: 1/1;
         object-fit: cover;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        cursor: pointer;
+        display: block;
         transition: transform 0.18s, box-shadow 0.18s;
     }
 
-    .rs-photo-thumb:hover {
-        transform: scale(1.03);
-        box-shadow: 0 6px 20px rgba(15,23,42,0.15);
+    .rs-photo-zoom {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, 0.38);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity .18s ease;
+        color: #fff;
+        font-size: 1.1rem;
+        pointer-events: none;
+    }
+
+    .rs-photo-frame:hover .rs-photo-thumb {
+        transform: scale(1.04);
+    }
+
+    .rs-photo-frame:hover .rs-photo-zoom {
+        opacity: 1;
     }
 
     .rs-photo-placeholder {
         width: 100%;
-        aspect-ratio: 4/3;
+        aspect-ratio: 1/1;
         border-radius: 12px;
         border: 2px dashed #e2e8f0;
         background: #f8fafc;
@@ -3019,7 +3093,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     }
 
     .rs-photo-label {
-        font-size: 0.74rem;
+        font-size: 0.7rem;
         font-weight: 600;
         color: #64748b;
         text-align: center;

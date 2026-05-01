@@ -85,7 +85,7 @@
                         </div>
                     </div>
 
-                    <form id="form_dados_devolucao">
+                    <form id="form_dados_devolucao" enctype="multipart/form-data">
                         {{-- Bloco: Veículo vinculado --}}
                         <div class="ci-block">
                             <div class="ci-block-label">
@@ -262,7 +262,7 @@
                                 <div class="col-md-4">
                                     <div class="ci-photo-card">
                                         <label for="{{ $f['id'] }}">{{ $f['label'] }}</label>
-                                        <input type="file" class="form-control form-control-sm"
+                                        <input type="file" class="form-control form-control-sm" required
                                                id="{{ $f['id'] }}" name="{{ $f['id'] }}" accept="image/*">
                                         <div class="ci-photo-preview" data-preview-for="{{ $f['id'] }}">
                                             @if($fotoUrl)
@@ -798,14 +798,8 @@
         const url = "{{ route('reserva.checkout.finalizar', ':id') }}".replace(':id', reserva_id);
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
-        const payload = {
-            quilometragem_devolucao: document.getElementById('quilometragem_devolucao')?.value,
-            nivel_combustivel_devolucao: document.getElementById('combustivel_devolucao')?.value,
-            data_devolucao: document.getElementById('data_devolucao')?.value,
-            hora_devolucao: document.getElementById('hora_devolucao')?.value,
-            notas_devolucao: document.getElementById('notas_devolucao')?.value || '',
-            observacoes_devolucao: document.getElementById('observacoes_devolucao')?.value || '',
-        };
+        const formEl = document.getElementById('form_dados_devolucao');
+        const payload = new FormData(formEl);
 
         const btnFinal = document.getElementById('btn_finalizar_checkout');
         const wizBtn   = document.getElementById('wizardCreateBtn');
@@ -822,6 +816,8 @@
             type: 'POST',
             data: payload,
             headers: { 'X-CSRF-TOKEN': csrf },
+            processData: false,
+            contentType: false,
             success: function (data) {
                 Swal.fire({
                     icon: 'success',

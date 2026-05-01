@@ -414,7 +414,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             new BreadCrumbItem('Reservas', route('reserva.index')),
             new BreadCrumbItem('Detalhes da Reserva Nº' . $id)
         ]);
-        $reserva = $this->reservaService->getById($id, ['contratoCheckin']);
+        $reserva = $this->reservaService->getById($id, ['contratoCheckin', 'contratoCheckout']);
         if (!$reserva) {
             return redirect()->route('reserva.index')->with('error', 'Reserva nao encontrada.');
         }
@@ -433,6 +433,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'contratoCheckin.grupoFrotaOriginal',
             'contratoCheckin.veiculo.marca',
             'contratoCheckin.usuarioUpgrade',
+            'contratoCheckout',
             'calcao',
             'veiculoDano' => fn ($q) => $q->with('imagem')->orderByDesc('id')->take(10),
             'avariaCobrancas' => fn ($q) => $q->orderByDesc('id')->take(10),
@@ -937,6 +938,32 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         try {
             DB::beginTransaction();
 
+            $dir = 'checkout/reserva_' . (int) $reserva_id;
+            $mapFotosCheckout = [
+                'foto_direita_co' => 'foto_direita_path',
+                'foto_esquerda_co' => 'foto_esquerda_path',
+                'foto_frente_co' => 'foto_frente_path',
+                'foto_tras_co' => 'foto_tras_path',
+                'foto_velocimetro_co' => 'foto_velocimetro_path',
+                'foto_combustivel_co' => 'foto_combustivel_path',
+            ];
+
+            $destDir = storage_path('app/public/' . $dir);
+            if (!is_dir($destDir)) {
+                mkdir($destDir, 0775, true);
+            }
+
+            $dadosFotosCheckout = [];
+            foreach ($mapFotosCheckout as $input => $col) {
+                if ($request->hasFile($input) && $request->file($input)->isValid()) {
+                    $file = $request->file($input);
+                    $extension = $file->getClientOriginalExtension() ?: 'jpg';
+                    $filename = \Illuminate\Support\Str::random(40) . '.' . $extension;
+                    $file->move($destDir, $filename);
+                    $dadosFotosCheckout[$col] = $dir . '/' . $filename;
+                }
+            }
+
             ContratoCheckout::create([
                 'reserva_id' => (int) $reserva_id,
                 'veiculo_id' => (int) $reserva->veiculo_id,
@@ -947,6 +974,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'hora_devolucao' => $dados['hora_devolucao'],
                 'notas_devolucao' => $dados['notas_devolucao'] ?? null,
                 'observacoes_devolucao' => $dados['observacoes_devolucao'] ?? null,
+                ...$dadosFotosCheckout,
             ]);
 
             $this->movimentacaoService->realizarCheckOut(

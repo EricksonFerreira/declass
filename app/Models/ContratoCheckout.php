@@ -19,6 +19,12 @@ class ContratoCheckout extends Model
         'hora_devolucao',
         'notas_devolucao',
         'observacoes_devolucao',
+        'foto_direita_path',
+        'foto_esquerda_path',
+        'foto_frente_path',
+        'foto_tras_path',
+        'foto_velocimetro_path',
+        'foto_combustivel_path',
     ];
 
     public function reserva(): BelongsTo
