@@ -1254,6 +1254,19 @@
                                     $mvUsuario = strtolower(optional($mov->usuario)->nome ?? '');
                                     $mvDataSaida = $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('Y-m-d') : '';
                                     $cor = optional($mov->statusMovimentacao)->cor ?? 'secondary';
+                                    $statusBadgeClass = [
+                                        'success' => 'status-badge--green',
+                                        'info' => 'status-badge--blue',
+                                        'primary' => 'status-badge--blue',
+                                        'warning' => 'status-badge--amber',
+                                        'orange' => 'status-badge--orange',
+                                        'danger' => 'status-badge--red',
+                                        'secondary' => 'status-badge--gray',
+                                        'gray' => 'status-badge--gray',
+                                        'grey' => 'status-badge--gray',
+                                        'purple' => 'status-badge--purple',
+                                        'teal' => 'status-badge--teal',
+                                    ][strtolower((string) $cor)] ?? 'status-badge--gray';
                                 @endphp
                                 <tr
                                     data-mv-tipo="{{ $mvTipo }}"
@@ -1267,7 +1280,11 @@
                                 >
                                     <td><span class="xp-id">#{{ $mov->id }}</span></td>
                                     <td>{{ optional($mov->tipoMovimentacao)->nome ?? '—' }}</td>
-                                    <td><span class="badge badge-{{ $cor }}">{{ optional($mov->statusMovimentacao)->nome ?? '—' }}</span></td>
+                                    <td>
+                                        <span class="status-badge {{ $statusBadgeClass }}">
+                                            {{ optional($mov->statusMovimentacao)->nome ?? '—' }}
+                                        </span>
+                                    </td>
                                     <td>{{ optional($mov->localOrigem)->nome ?? '—' }}</td>
                                     <td>{{ optional($mov->localDestino)->nome ?? '—' }}</td>
                                     <td>{{ $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('d/m/Y H:i') : '—' }}</td>
@@ -1934,6 +1951,9 @@
     .status-badge--blue   { background: #dbeafe; color: #1e40af; }
     .status-badge--gray   { background: #f1f5f9; color: #475569; }
     .status-badge--red    { background: #fee2e2; color: #991b1b; }
+    .status-badge--orange { background: #ffedd5; color: #9a3412; }
+    .status-badge--purple { background: #ede9fe; color: #6d28d9; }
+    .status-badge--teal   { background: #ccfbf1; color: #115e59; }
 
     /* ── Table ── */
     .xp-table { font-size: .82rem; }
