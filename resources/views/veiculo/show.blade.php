@@ -119,9 +119,12 @@
                         <div class="veiculo-field">
                             <span class="veiculo-field__label">Status</span>
                             <span class="veiculo-field__value">
-                                @php $st = optional($veiculo->statusVeiculo)->nome ?? null; @endphp
+                                @php
+                                    $st = optional($veiculo->statusVeiculo)->nome ?? null;
+                                    $cor = optional($veiculo->statusVeiculo)->cor ?? 'secondary';
+                                @endphp
                                 @if($st)
-                                    <span class="status-badge status-badge--blue">{{ $st }}</span>
+                                    <span class="badge badge-xs bg-{{ $cor }}">{{ $st }}</span>
                                 @else
                                     <span class="text-muted">—</span>
                                 @endif

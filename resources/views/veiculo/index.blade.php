@@ -105,6 +105,7 @@
                             $accentClass = 'vc-status--slate';
                         }
 
+                        $statusCor  = (string) ($veiculo->statusVeiculo?->cor ?? 'secondary');
                         $statusNome = (string) ($veiculo->statusVeiculo?->nome ?? '');
                         $localNome = (string) ($veiculo->localDisponibilidade?->nome ?? '-');
                         $dataDisp = $temDisponibilidade
@@ -114,18 +115,9 @@
 
                     @php
                         $availKey = $temDisponibilidade ? ($disponivel ? 'disponivel' : 'indisponivel') : 'sem_data';
-                        $statusNorm = mb_strtolower(trim($statusNome));
-                        $statusBadgeClass = match (true) {
-                            $statusNorm === '' => 'vc__badge--slate',
-                            in_array($statusNorm, ['ativo', 'disponivel'], true) => 'vc__badge--green',
-                            $statusNorm === 'reservado' || str_contains($statusNorm, 'reserva') || str_contains($statusNorm, 'loca') || str_contains($statusNorm, 'alug') || str_contains($statusNorm, 'em uso') => 'vc__badge--amber',
-                            $statusNorm === 'indisponivel' || $statusNorm === 'inativo' || str_contains($statusNorm, 'manut') || str_contains($statusNorm, 'avaria') => 'vc__badge--red',
-                            default => 'vc__badge--slate',
-                        };
-
-                        $showStatusBadge = $statusNorm !== ''
-                            && !($disponivel && in_array($statusNorm, ['ativo', 'disponivel'], true))
-                            && !(!$disponivel && $statusNorm === 'indisponivel');
+                        $showStatusBadge = $statusNome !== ''
+                            && !($disponivel && in_array(mb_strtolower(trim($statusNome)), ['ativo', 'disponivel'], true))
+                            && !(!$disponivel && mb_strtolower(trim($statusNome)) === 'indisponivel');
                     @endphp
 
                     <article class="vc {{ $accentClass }}"
@@ -145,7 +137,7 @@
                                     {{ $disponivel ? 'Disponivel' : 'Indisponivel' }}
                                 </span>
                                 @if($showStatusBadge)
-                                    <span class="vc__badge {{ $statusBadgeClass }}" title="Status do veiculo">
+                                    <span class="badge badge-xs bg-{{ $statusCor }}" title="Status do veiculo">
                                         {{ $statusNome }}
                                     </span>
                                 @endif
@@ -222,7 +214,10 @@
                                 <td>{{ $veiculo->grupoFrota?->nome }}</td>
                                 <td>{{ $veiculo->marca?->nome }}</td>
                                 <td>{{ $veiculo->modelo?->nome }}</td>
-                                <td>{{ $veiculo->statusVeiculo?->nome }}</td>
+                                <td>
+                                    @php $stCor = optional($veiculo->statusVeiculo)->cor ?? 'secondary'; @endphp
+                                    <span class="badge badge-xs bg-{{ $stCor }}">{{ $veiculo->statusVeiculo?->nome ?? '—' }}</span>
+                                </td>
                                 <td>
                                     @if ($veiculo->data_hora_disponibilidade)
                                         @if ($veiculo->data_hora_disponibilidade <= $agora)

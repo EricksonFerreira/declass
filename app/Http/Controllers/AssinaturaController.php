@@ -302,7 +302,7 @@ class AssinaturaController extends Controller
         // Bloqueia downgrade no mesmo mês pago
         $assinaturaAtual = $empresa->planoAtivo()->with('plano')->first();
 
-        // Se jÃ¡ existe assinatura ativa, trata como troca de plano (padrÃ£o SaaS).
+        // Se já existe assinatura ativa, trata como troca de plano (padrÃ£o SaaS).
         if ($assinaturaAtual && $assinaturaAtual->estaAtivo()) {
             if ((int) $assinaturaAtual->plano_id === (int) $plano->id && (string) $assinaturaAtual->periodicidade === (string) $data['periodicidade']) {
                 return back()->withErrors(['plano_id' => 'Voce ja esta neste plano e periodicidade.'])->withInput();
@@ -328,7 +328,7 @@ class AssinaturaController extends Controller
             }
 
 
-            // Downgrade: agenda para a prÃ³xima renovaÃ§Ã£o (fim do perÃ­odo vigente).
+            // Downgrade: agenda para a próxima renovação (fim do perí­odo vigente).
             if ($valorNovoTotal < $valorAtualTotal) {
                 $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
 
@@ -355,7 +355,7 @@ class AssinaturaController extends Controller
                     ->with('success', 'Downgrade agendado para a proxima renovacao. Voce mantera o plano atual ate o fim do periodo.');
             }
 
-            // Upgrade: cria cobranÃ§a proporcional e aplica apÃ³s pagamento confirmado.
+            // Upgrade: cria cobrança proporcional e aplica após pagamento confirmado.
             $jaTemUpgradePendente = EmpresaPlanoPagamento::where('empresa_plano_id', $assinaturaAtual->id)
                 ->where('status', 'pendente')
                 ->where('metadados->acao', 'upgrade')
@@ -406,6 +406,17 @@ class AssinaturaController extends Controller
         );
 
         $pagamento = $assinatura?->pagamentos()->where('status', 'pendente')->first();
+
+        if ($request->expectsJson() || $request->ajax()) {
+            if (!$pagamento) {
+                return response()->json(['success' => false, 'message' => 'Erro ao criar pagamento.'], 422);
+            }
+            return response()->json([
+                'success'      => true,
+                'pagamento_id' => $pagamento->id,
+                'message'      => 'Assinatura criada. Realize o pagamento.',
+            ]);
+        }
 
         return redirect()->route('assinatura.meu-plano', $pagamento ? ['pagamento' => $pagamento->id] : [])
             ->with('success', 'Plano contratado! Escolha como pagar abaixo.');
