@@ -1082,12 +1082,7 @@ class ReservaService extends AbstractBaseService
     {
         $reserva = $this->model->find($reserva_id);
 
-        // Busca o status "Concluída" da empresa da reserva para suportar multi-empresa
-        $statusConcluida = \App\Models\StatusReserva::where('empresa_id', $reserva->empresa_id)
-            ->where('nome', 'like', 'Conclu%')
-            ->first();
-
-        $reserva->status_reserva_id = $statusConcluida ? $statusConcluida->id : 5;
+        $reserva->status_reserva_id = \App\Enums\StatusReservaEnum::Checkout->value; // 5 = Concluída
         $reserva->save();
     }
 }

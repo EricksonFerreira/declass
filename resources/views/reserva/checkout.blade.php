@@ -96,15 +96,19 @@
                                 </div>
                             </div>
                             @php
-                                $v = $reserva->veiculo;
+                                $v   = $reserva->veiculo;
                                 $vUrl = $v ? route('veiculo.show', $v->id) : null;
-                                $ci = $reserva->contratoCheckin;
+                                $ci  = $reserva->contratoCheckin;
+                                $nomeModelo = $v?->modelo?->nome;
+                                $nomeMarca  = $v?->marca?->nome;
                             @endphp
                             <div class="co-veiculo-card">
                                 <div class="co-veiculo-card__icon">
                                     <i class="fas fa-car-side"></i>
                                 </div>
                                 <div class="co-veiculo-card__info">
+
+                                    {{-- Nome + link --}}
                                     <div class="co-veiculo-card__name">
                                         @if($vUrl)
                                             <a href="{{ $vUrl }}" target="_blank" rel="noopener" class="co-veiculo-link">
@@ -114,34 +118,57 @@
                                         @else
                                             <span>Veículo #{{ $reserva->veiculo_id }}</span>
                                         @endif
+                                        @if($nomeMarca)
+                                            <span class="co-veiculo-brand">{{ $nomeMarca }}</span>
+                                        @endif
                                     </div>
+
+                                    {{-- Badges: placa, modelo, cor --}}
                                     <div class="co-veiculo-card__meta">
                                         @if($v?->placa_licenca)
                                             <span class="co-veiculo-badge co-veiculo-badge--placa">
                                                 <i class="fas fa-id-card"></i>{{ $v->placa_licenca }}
                                             </span>
                                         @endif
-                                        @if($v?->modelo)
+                                        @if($nomeModelo)
                                             <span class="co-veiculo-badge">
-                                                <i class="fas fa-tag"></i>{{ $v->modelo }}
+                                                <i class="fas fa-layer-group"></i>{{ $nomeModelo }}
                                             </span>
                                         @endif
                                         @if($v?->cor)
                                             <span class="co-veiculo-badge">
-                                                <i class="fas fa-palette"></i>{{ $v->cor }}
+                                                <i class="fas fa-circle" style="color:{{ $v->cor }};font-size:.55rem"></i>{{ $v->cor }}
+                                            </span>
+                                        @endif
+                                        @if($v?->ano_fabricacao)
+                                            <span class="co-veiculo-badge">
+                                                <i class="fas fa-calendar"></i>{{ $v->ano_fabricacao }}
                                             </span>
                                         @endif
                                     </div>
+
+                                    {{-- Referência check-in --}}
                                     @if($ci)
                                         <div class="co-veiculo-card__checkin">
-                                            <i class="fas fa-sign-in-alt"></i>
-                                            Check-in — KM <strong>{{ number_format($ci->quilometragem_atual, 0, ',', '.') }}</strong>
-                                            &middot; Combustível <strong>{{ $ci->nivel_combustivel ?? '—' }}</strong>
+                                            <div class="co-ci-item">
+                                                <span class="co-ci-label"><i class="fas fa-tachometer-alt"></i> KM Saída</span>
+                                                <strong>{{ number_format((float)$ci->quilometragem_atual, 0, ',', '.') }}</strong>
+                                            </div>
+                                            <div class="co-ci-sep"></div>
+                                            <div class="co-ci-item">
+                                                <span class="co-ci-label"><i class="fas fa-gas-pump"></i> Combustível</span>
+                                                <strong>{{ $ci->nivel_combustivel ?? '—' }}</strong>
+                                            </div>
                                             @if($ci->data_saida)
-                                                &middot; Saída em <strong>{{ \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') }}</strong>
+                                                <div class="co-ci-sep"></div>
+                                                <div class="co-ci-item">
+                                                    <span class="co-ci-label"><i class="fas fa-calendar-check"></i> Saída</span>
+                                                    <strong>{{ \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') }}</strong>
+                                                </div>
                                             @endif
                                         </div>
                                     @endif
+
                                 </div>
                             </div>
                         </div>
@@ -545,20 +572,55 @@
         letter-spacing: 0.04em;
     }
     .co-veiculo-badge i { font-size: 0.65rem; }
-    .co-veiculo-card__checkin {
-        font-size: 0.76rem;
+    .co-veiculo-brand {
+        font-size: 0.72rem;
+        font-weight: 600;
         color: var(--c-slate);
-        background: #fff;
-        border: 1px dashed #d1d9ef;
-        border-radius: 8px;
-        padding: 6px 10px;
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
+        margin-left: 8px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
     }
-    .co-veiculo-card__checkin i { color: var(--c-indigo); font-size: 0.72rem; }
-    .co-veiculo-card__checkin strong { color: var(--c-ink); }
+    .co-veiculo-card__checkin {
+        display: flex;
+        align-items: stretch;
+        gap: 0;
+        background: #f8faff;
+        border: 1px solid #e0e7ff;
+        border-radius: 10px;
+        overflow: hidden;
+        width: fit-content;
+        max-width: 100%;
+    }
+    .co-ci-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 8px 16px;
+        gap: 2px;
+    }
+    .co-ci-label {
+        font-size: 0.65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--c-slate);
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        white-space: nowrap;
+    }
+    .co-ci-label i { color: var(--c-indigo); font-size: 0.6rem; }
+    .co-ci-item strong {
+        font-size: 0.82rem;
+        font-weight: 800;
+        color: var(--c-ink);
+    }
+    .co-ci-sep {
+        width: 1px;
+        background: #dde4f5;
+        align-self: stretch;
+    }
 
     .ci-photo-card {
         border: 1px solid rgba(0,0,0,.08);
