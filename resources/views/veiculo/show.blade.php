@@ -1067,13 +1067,13 @@
                                     <td><span class="xp-id">{{ $os->numero ?? '#' . $os->id }}</span></td>
                                     <td>
                                         @if($osStatusVal === \App\Models\OrdemServico::STATUS_ABERTA)
-                                            <span class="status-badge bg-amber">Aberta</span>
+                                            <span class="badge badge-xs bg-amber">Aberta</span>
                                         @elseif($osStatusVal === \App\Models\OrdemServico::STATUS_EM_ANDAMENTO)
-                                            <span class="status-badge bg-blue">Em Andamento</span>
+                                            <span class="badge badge-xs bg-blue">Em Andamento</span>
                                         @elseif($osStatusVal === \App\Models\OrdemServico::STATUS_CONCLUIDA)
-                                            <span class="status-badge bg-green">Concluída</span>
+                                            <span class="badge badge-xs bg-green">Concluída</span>
                                         @else
-                                            <span class="status-badge bg-gray">Cancelada</span>
+                                            <span class="badge badge-xs bg-gray">Cancelada</span>
                                         @endif
                                     </td>
                                     <td>{{ $os->created_at ? $os->created_at->format('d/m/Y') : '—' }}</td>
@@ -1255,18 +1255,18 @@
                                     $mvDataSaida = $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('Y-m-d') : '';
                                     $cor = optional($mov->statusMovimentacao)->cor ?? 'secondary';
                                     $statusBadgeClass = [
-                                        'success' => 'status-badge--green',
-                                        'info' => 'status-badge--blue',
-                                        'primary' => 'status-badge--blue',
-                                        'warning' => 'status-badge--amber',
-                                        'orange' => 'status-badge--orange',
-                                        'danger' => 'status-badge--red',
-                                        'secondary' => 'status-badge--gray',
-                                        'gray' => 'status-badge--gray',
-                                        'grey' => 'status-badge--gray',
-                                        'purple' => 'status-badge--purple',
-                                        'teal' => 'status-badge--teal',
-                                    ][strtolower((string) $cor)] ?? 'status-badge--gray';
+                                        'success' => 'bg-green',
+                                        'info' => 'bg-blue',
+                                        'primary' => 'bg-blue',
+                                        'warning' => 'bg-amber',
+                                        'orange' => 'bg-orange',
+                                        'danger' => 'bg-red',
+                                        'secondary' => 'bg-gray',
+                                        'gray' => 'bg-gray',
+                                        'grey' => 'bg-gray',
+                                        'purple' => 'bg-purple',
+                                        'teal' => 'bg-teal',
+                                    ][strtolower((string) $cor)] ?? 'bg-gray';
                                 @endphp
                                 <tr
                                     data-mv-tipo="{{ $mvTipo }}"
@@ -1281,7 +1281,7 @@
                                     <td><span class="xp-id">#{{ $mov->id }}</span></td>
                                     <td>{{ optional($mov->tipoMovimentacao)->nome ?? '—' }}</td>
                                     <td>
-                                        <span class="status-badge {{ $statusBadgeClass }}">
+                                        <span class="status-badge badge badge-xs {{ $statusBadgeClass }}">
                                             {{ optional($mov->statusMovimentacao)->nome ?? '—' }}
                                         </span>
                                     </td>
