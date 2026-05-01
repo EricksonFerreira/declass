@@ -41,6 +41,9 @@
       <div class="label">URL de acesso</div>
       <div class="value">{{ config('app.url') }}/login</div>
 
+      <div class="label">Slug da empresa</div>
+      <div class="value">{{ $empresa->slug }}</div>
+
       <div class="label">E-mail</div>
       <div class="value">{{ $admin->email }}</div>
 

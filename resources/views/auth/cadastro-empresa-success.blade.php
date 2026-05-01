@@ -87,7 +87,10 @@
             @else
                 <div class="pill">
                     <div style="margin-bottom:6px;"><strong>E-mail:</strong> <code>{{ $email }}</code></div>
-                    <div><strong>Senha padrao:</strong> <code>{{ $senha }}</code></div>
+                    <div style="margin-bottom:6px;"><strong>Senha padrao:</strong> <code>{{ $senha }}</code></div>
+                    @if ($slug)
+                        <div><strong>Slug da empresa:</strong> <code>{{ $slug }}</code></div>
+                    @endif
                 </div>
             @endif
 

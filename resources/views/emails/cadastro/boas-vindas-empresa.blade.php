@@ -40,6 +40,9 @@
       <div class="label">Empresa</div>
       <div class="value">{{ $empresa->nome }}</div>
 
+      <div class="label">Slug da empresa</div>
+      <div class="value">{{ $empresa->slug }}</div>
+
       @if ($empresa->cnpj)
       <div class="label">CNPJ</div>
       <div class="value">{{ $empresa->cnpj }}</div>

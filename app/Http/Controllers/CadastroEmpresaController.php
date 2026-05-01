@@ -55,8 +55,18 @@ class CadastroEmpresaController extends Controller
 
         $payload = DB::transaction(function () use ($data, $replicacaoBaseService, $senhaPadrao) {
             $slugBase = Str::slug((string) $data['empresa_nome']);
-            $slug = $slugBase !== '' ? $slugBase : 'empresa';
-            $slug .= '-' . Str::random(6);
+            if ($slugBase === '') {
+                $slugBase = 'empresa';
+            }
+            // Pega o primeiro nome (primeira palavra antes de hifen ou espaco)
+            $slugPrimeira = explode('-', $slugBase)[0];
+            // Verifica se o slug ja existe e adiciona numeros incrementais
+            $slug = $slugPrimeira;
+            $contador = 0;
+            while (Empresa::where('slug', $slug)->exists()) {
+                $contador++;
+                $slug = $slugPrimeira . $contador;
+            }
 
             $empresa = Empresa::create([
                 'nome'     => $data['empresa_nome'],
@@ -144,14 +154,16 @@ class CadastroEmpresaController extends Controller
 
         return redirect()->route('cadastro.empresa.success')
             ->with('cadastro_empresa_email', $payload['email'])
-            ->with('cadastro_empresa_senha', $payload['senha']);
+            ->with('cadastro_empresa_senha', $payload['senha'])
+            ->with('cadastro_empresa_slug', $payload['empresa']->slug);
     }
 
     public function success(Request $request): View
     {
         $email = (string) session('cadastro_empresa_email', '');
         $senha = (string) session('cadastro_empresa_senha', '');
+        $slug  = (string) session('cadastro_empresa_slug', '');
 
-        return view('auth.cadastro-empresa-success', compact('email', 'senha'));
+        return view('auth.cadastro-empresa-success', compact('email', 'senha', 'slug'));
     }
 }
