@@ -281,7 +281,7 @@ class AssinaturaController extends Controller
     }
 
     /** Processa contratação interna: cria assinatura + pagamento pendente. */
-    public function contratar(Request $request): RedirectResponse
+    public function contratar(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $data = $request->validate([
             'plano_id'             => 'required|exists:planos,id',
@@ -392,93 +392,6 @@ class AssinaturaController extends Controller
                 'downgrade_origem'         => 'assinatura',
             ]);
             return $jsonRedirect(route('assinatura.downgrade'));
-        }
-
-            // Define upgrade vs downgrade pelo valor TOTAL do periodo (mensal vs anual).
-            // Isso evita tratar "mensal -> anual" como downgrade quando o valor_anual e menor (desconto),
-            // pois no anual o total cobrado e (valor_anual * 12).
-            $valorAtualTotal = (float) ($assinaturaAtual->valor_cobrado ?? 0);
-            $valorNovoTotal  = (float) $this->planoService->valorTotalPlano($plano, (string) $data['periodicidade']);
-
-            // Regra padrao SaaS: anual -> mensal reduz compromisso, entao agenda para o fim do periodo anual.
-            if ((string) $assinaturaAtual->periodicidade === 'anual' && (string) $data['periodicidade'] === 'mensal') {
-                $this->agendarMudancaPlano(
-                    assinatura:    $assinaturaAtual,
-                    proximoPlano:  $plano,
-                    periodicidade: $data['periodicidade'],
-                    tipo:          'downgrade',
-                );
-
-                return redirect()->route('assinatura.meu-plano')
-                    ->with('success', 'Mudanca para mensal agendada para a proxima renovacao anual. Voce mantera o plano atual ate o fim do periodo.');
-            }
-
-
-            // Downgrade: agenda para a próxima renovação (fim do perí­odo vigente).
-            if ($valorNovoTotal < $valorAtualTotal) {
-                $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
-
-                if ($excedentes->isNotEmpty()) {
-                    session([
-                        'downgrade_plano_id'       => $data['plano_id'],
-                        'downgrade_periodicidade'  => $data['periodicidade'],
-                        'downgrade_metodo'         => $data['metodo_pagamento'],
-                        'downgrade_dia_vencimento' => $data['dia_vencimento'],
-                        'downgrade_origem'         => 'agendar',
-                    ]);
-
-                    return redirect()->route('assinatura.downgrade');
-                }
-
-                $this->agendarMudancaPlano(
-                    assinatura:    $assinaturaAtual,
-                    proximoPlano:  $plano,
-                    periodicidade: $data['periodicidade'],
-                    tipo:          'downgrade',
-                );
-
-                return redirect()->route('assinatura.meu-plano')
-                    ->with('success', 'Downgrade agendado para a proxima renovacao. Voce mantera o plano atual ate o fim do periodo.');
-            }
-
-            // Upgrade: cria cobrança proporcional e aplica após pagamento confirmado.
-            $jaTemUpgradePendente = EmpresaPlanoPagamento::where('empresa_plano_id', $assinaturaAtual->id)
-                ->where('status', 'pendente')
-                ->where('metadados->acao', 'upgrade')
-                ->exists();
-
-            if ($jaTemUpgradePendente) {
-                return back()->withErrors(['metodo_pagamento' => 'Ja existe um upgrade pendente de pagamento. Finalize ou cancele antes de solicitar outro.'])->withInput();
-            }
-
-            try {
-                $this->planoService->criarCobrancaUpgrade(
-                    assinatura:        $assinaturaAtual,
-                    novoPlano:         $plano,
-                    novaPeriodicidade: $data['periodicidade'],
-                    metodoPagamento:   $data['metodo_pagamento'],
-                    criadoPorUserId:   Auth::id(),
-                );
-            } catch (\Throwable $e) {
-                return back()->withErrors(['metodo_pagamento' => $e->getMessage()])->withInput();
-            }
-
-            return redirect()->route('assinatura.meu-plano')
-                ->with('success', 'Upgrade solicitado! Assim que o pagamento for confirmado, os recursos do novo plano serao liberados.');
-        }
-
-        $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
-
-        if ($excedentes->isNotEmpty()) {
-            session([
-                'downgrade_plano_id'       => $data['plano_id'],
-                'downgrade_periodicidade'  => $data['periodicidade'],
-                'downgrade_metodo'         => $data['metodo_pagamento'],
-                'downgrade_dia_vencimento' => $data['dia_vencimento'],
-                'downgrade_origem'         => 'assinatura',
-            ]);
-
-            return redirect()->route('assinatura.downgrade');
         }
 
         $assinatura = $this->planoService->contratar(
