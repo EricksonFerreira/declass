@@ -3,7 +3,7 @@
         <div class="modal-content rs-dano-modal">
             <div class="modal-header rs-dano-modal__header">
                 <div>
-                    <div class="rs-dano-modal__eyebrow">Edicao rapida</div>
+                    <div class="rs-dano-modal__eyebrow">Edição rápida</div>
                     <h5 class="modal-title" id="editModalTitle">Editar Reserva #{{ $reserva->id }}</h5>
                 </div>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
@@ -24,20 +24,20 @@
                                 <input type="datetime-local" class="form-control form-control-sm" id="edit_data_inicio">
                             </div>
                             <div class="rs-dano-modal__info">
-                                <span><i class="fas fa-calendar-check mr-1"></i> Data/Hora devolucao</span>
+                                <span><i class="fas fa-calendar-check mr-1"></i> Data/Hora devolução</span>
                                 <input type="datetime-local" class="form-control form-control-sm" id="edit_data_fim">
                             </div>
                             <div class="rs-dano-modal__info">
-                                <span><i class="fas fa-store mr-1"></i> Estacao retirada</span>
+                                <span><i class="fas fa-store mr-1"></i> Estação retirada</span>
                                 <select class="form-control form-control-sm" id="edit_estacao_retirada_id"></select>
                             </div>
                             <div class="rs-dano-modal__info">
-                                <span><i class="fas fa-store-alt mr-1"></i> Estacao devolucao</span>
+                                <span><i class="fas fa-store-alt mr-1"></i> Estação devolução</span>
                                 <select class="form-control form-control-sm" id="edit_estacao_devolucao_id"></select>
                             </div>
                         </div>
                         <div class="rs-dano-modal__info mb-3">
-                            <span><i class="fas fa-sticky-note mr-1"></i> Observacoes</span>
+                            <span><i class="fas fa-sticky-note mr-1"></i> Observações</span>
                             <textarea class="form-control form-control-sm" id="edit_observacoes" rows="3" maxlength="1000"></textarea>
                         </div>
                         <div id="editOpcionaisSection" class="d-none">
@@ -50,11 +50,11 @@
                         <div class="alert alert-success text-center" id="editSuccessAlert">
                             <i class="fas fa-check-circle fa-2x mb-2"></i>
                             <h5 class="mb-1">Reserva atualizada com sucesso!</h5>
-                            <p class="mb-0 text-muted small" id="editSuccessMessage">As alteracoes foram aplicadas.</p>
+                            <p class="mb-0 text-muted small" id="editSuccessMessage">As alterações foram aplicadas.</p>
                         </div>
 
                         <div id="editChangesContainer" class="mt-3">
-                            <h6 class="font-weight-bold mb-3"><i class="fas fa-exchange-alt mr-1"></i> Alteracoes realizadas</h6>
+                            <h6 class="font-weight-bold mb-3"><i class="fas fa-exchange-alt mr-1"></i> Alterações realizadas</h6>
                             <div id="editChangesList"></div>
                         </div>
                     </div>
@@ -73,10 +73,10 @@
                     <i class="fas fa-times mr-1"></i> <span id="editBtnCloseText">Cancelar</span>
                 </button>
                 <button type="button" class="btn btn-primary" id="editBtnSave">
-                    <i class="fas fa-save mr-1"></i> Salvar alteracoes
+<i class="fas fa-save mr-1"></i> Salvar alterações
                 </button>
                 <button type="button" class="btn btn-success d-none" id="editBtnReload" onclick="location.reload()">
-                    <i class="fas fa-redo mr-1"></i> Recarregar pagina
+                    <i class="fas fa-redo mr-1"></i> Recarregar página
                 </button>
             </div>
         </div>
@@ -226,10 +226,10 @@
 
         const fieldsMap = {
             data_inicio: 'Data retirada',
-            data_fim: 'Data devolucao',
-            estacao_retirada_id: 'Estacao retirada',
-            estacao_devolucao_id: 'Estacao devolucao',
-            observacoes: 'Observacoes',
+            data_fim: 'Data devolução',
+            estacao_retirada_id: 'Estação retirada',
+            estacao_devolucao_id: 'Estação devolução',
+            observacoes: 'Observações',
         };
 
         let hasChanges = false;
@@ -257,7 +257,7 @@
         });
 
         if (!hasChanges) {
-            container.innerHTML = '<div class="rs-empty"><i class="fas fa-minus-circle"></i><span>Nenhuma alteracao detectada.</span></div>';
+            container.innerHTML = '<div class="rs-empty"><i class="fas fa-minus-circle"></i><span>Nenhuma alteração detectada.</span></div>';
         }
     }
 
@@ -265,7 +265,7 @@
         if (value === null || value === undefined || value === '') return '—';
         if (field === 'estacao_retirada_id' || field === 'estacao_devolucao_id') {
             const est = estacoesMap[value];
-            return est ? (est.nome + (est.cidade ? ' - ' + est.cidade : '')) : 'Estacao #' + value;
+            return est ? (est.nome + (est.cidade ? ' - ' + est.cidade : '')) : 'Estação #' + value;
         }
         if (field === 'data_inicio' || field === 'data_fim') {
             if (value.includes('T')) value = value.replace('T', ' ');
@@ -300,7 +300,7 @@
         .then(function (r) { return r.json().then(function (d) { return { status: r.status, data: d }; }); })
         .then(function (res) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar alteracoes';
+            btn.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar alterações';
 
             if (res.status === 200 && res.data.success) {
                 changesData = {
@@ -309,7 +309,7 @@
                 };
                 document.getElementById('editSuccessAlert').classList.remove('alert-danger');
                 document.getElementById('editSuccessAlert').classList.add('alert-success');
-                document.getElementById('editSuccessMessage').textContent = res.data.message || 'As alteracoes foram aplicadas.';
+                document.getElementById('editSuccessMessage').textContent = res.data.message || 'As alterações foram aplicadas.';
 
                 renderChanges(initialFormData, payload);
                 showView('editResultView');
@@ -325,8 +325,8 @@
         })
         .catch(function () {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar alteracoes';
-            document.getElementById('editErrorMessage').textContent = 'Erro de conexao. Tente novamente.';
+            btn.innerHTML = '<i class="fas fa-save mr-1"></i> Salvar alterações';
+            document.getElementById('editErrorMessage').textContent = 'Erro de conexão. Tente novamente.';
             showView('editErrorView');
         });
     }

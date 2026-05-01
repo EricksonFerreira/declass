@@ -34,9 +34,21 @@ class CadastroEmpresaController extends Controller
     {
         $data = $request->validate([
             'empresa_nome'     => 'required|string|max:200',
-            'empresa_cnpj'     => 'nullable|string|max:20',
-            'empresa_email'    => 'nullable|email|max:200',
-            'empresa_telefone' => 'nullable|string|max:30',
+            'empresa_cnpj'     => ['nullable', 'string', 'max:20', function ($attr, $value, $fail) {
+                if ($value && !self::validarCnpj($value)) {
+                    $fail('CNPJ invalido.');
+                }
+            }],
+            'empresa_email'    => ['nullable', 'email', 'max:200', function ($attr, $value, $fail) {
+                if ($value && !filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                    $fail('E-mail da empresa invalido.');
+                }
+            }],
+            'empresa_telefone' => ['nullable', 'string', 'max:30', function ($attr, $value, $fail) {
+                if ($value && !self::validarTelefone($value)) {
+                    $fail('Telefone invalido. Use o formato (XX) XXXXX-XXXX.');
+                }
+            }],
             'admin_nome'       => 'required|string|max:200',
             'admin_email'      => ['required', 'email', 'max:200', Rule::unique('users', 'email')],
             'plano'            => 'nullable|string|max:50',
@@ -85,6 +97,9 @@ class CadastroEmpresaController extends Controller
                     'status_movimentacao',
                     'status_reserva',
                     'status_veiculos',
+                    'tipo_frota',
+                    'grupo_frota',
+                    'catalogo_fipe',
                 ]);
             } catch (\Throwable $e) {
                 Log::warning('Replicacao parcial ao criar empresa.', [
@@ -156,6 +171,37 @@ class CadastroEmpresaController extends Controller
             ->with('cadastro_empresa_email', $payload['email'])
             ->with('cadastro_empresa_senha', $payload['senha'])
             ->with('cadastro_empresa_slug', $payload['empresa']->slug);
+    }
+
+    public static function validarCnpj(string $cnpj): bool
+    {
+        $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
+        if (strlen($cnpj) !== 14) return false;
+        if (preg_match('/^(\d)\1{13}$/', $cnpj)) return false;
+
+        $soma1 = 0;
+        $peso1 = [5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        for ($i = 0; $i < 12; $i++) {
+            $soma1 += (int) $cnpj[$i] * $peso1[$i];
+        }
+        $dig1 = $soma1 % 11 < 2 ? 0 : 11 - ($soma1 % 11);
+        if ((int) $cnpj[12] !== $dig1) return false;
+
+        $soma2 = 0;
+        $peso2 = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        for ($i = 0; $i < 13; $i++) {
+            $soma2 += (int) $cnpj[$i] * $peso2[$i];
+        }
+        $dig2 = $soma2 % 11 < 2 ? 0 : 11 - ($soma2 % 11);
+        if ((int) $cnpj[13] !== $dig2) return false;
+
+        return true;
+    }
+
+    public static function validarTelefone(string $telefone): bool
+    {
+        $telefone = preg_replace('/[^0-9]/', '', $telefone);
+        return in_array(strlen($telefone), [10, 11], true);
     }
 
     public function success(Request $request): View

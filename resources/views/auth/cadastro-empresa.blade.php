@@ -122,23 +122,23 @@
 
                 <div class="row">
                     <label>Empresa <span class="req">*</span></label>
-                    <input name="empresa_nome" value="{{ old('empresa_nome') }}" placeholder="Nome da locadora" required>
+                    <input id="empresa_nome" name="empresa_nome" value="{{ old('empresa_nome') }}" placeholder="Nome da locadora" required>
                 </div>
 
                 <div class="grid">
                     <div class="row">
                         <label>CNPJ</label>
-                        <input name="empresa_cnpj" value="{{ old('empresa_cnpj') }}" placeholder="00.000.000/0000-00">
+                        <input id="empresa_cnpj" name="empresa_cnpj" value="{{ old('empresa_cnpj') }}" placeholder="00.000.000/0000-00">
                     </div>
                     <div class="row">
                         <label>Telefone</label>
-                        <input name="empresa_telefone" value="{{ old('empresa_telefone') }}" placeholder="(00) 00000-0000">
+                        <input id="empresa_telefone" name="empresa_telefone" value="{{ old('empresa_telefone') }}" placeholder="(00) 00000-0000">
                     </div>
                 </div>
 
                 <div class="row">
                     <label>E-mail da empresa</label>
-                    <input name="empresa_email" type="email" value="{{ old('empresa_email') }}" placeholder="financeiro@empresa.com">
+                    <input id="empresa_email" name="empresa_email" type="email" value="{{ old('empresa_email') }}" placeholder="financeiro@empresa.com">
                 </div>
 
                 <hr style="border:0;border-top:1px solid #eef2f7;margin:14px 0;">
@@ -146,11 +146,11 @@
                 <div class="grid">
                     <div class="row">
                         <label>Responsavel <span class="req">*</span></label>
-                        <input name="admin_nome" value="{{ old('admin_nome') }}" placeholder="Nome do responsavel" required>
+                        <input id="admin_nome" name="admin_nome" value="{{ old('admin_nome') }}" placeholder="Nome do responsavel" required>
                     </div>
                     <div class="row">
                         <label>E-mail do responsavel <span class="req">*</span></label>
-                        <input name="admin_email" type="email" value="{{ old('admin_email') }}" placeholder="voce@empresa.com" required>
+                        <input id="admin_email" name="admin_email" type="email" value="{{ old('admin_email') }}" placeholder="voce@empresa.com" required>
                     </div>
                 </div>
 
@@ -170,6 +170,136 @@
         </div>
     </div>
 </div>
+<script>
+// ── Validação de CNPJ ──
+function validarCnpj(value) {
+    var cnpj = value.replace(/[^0-9]/g, '');
+    if (cnpj.length !== 14) return false;
+    if (/^(\d)\1{13}$/.test(cnpj)) return false;
+
+    var soma = 0, peso = [5,4,3,2,9,8,7,6,5,4,3,2];
+    for (var i = 0; i < 12; i++) soma += parseInt(cnpj[i]) * peso[i];
+    var dig1 = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (parseInt(cnpj[12]) !== dig1) return false;
+
+    soma = 0; peso = [6,5,4,3,2,9,8,7,6,5,4,3,2];
+    for (var i = 0; i < 13; i++) soma += parseInt(cnpj[i]) * peso[i];
+    var dig2 = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+    if (parseInt(cnpj[13]) !== dig2) return false;
+
+    return true;
+}
+
+function validarTelefone(value) {
+    var nums = value.replace(/[^0-9]/g, '');
+    return nums.length === 10 || nums.length === 11;
+}
+
+function mostrarErro(input, msg) {
+    var err = input.parentNode.querySelector('.field-error');
+    if (!err) {
+        err = document.createElement('div');
+        err.className = 'field-error';
+        err.style.cssText = 'color:#ef4444;font-size:.72rem;font-weight:600;margin-top:4px;';
+        input.parentNode.appendChild(err);
+    }
+    err.textContent = msg;
+    input.style.borderColor = '#ef4444';
+}
+
+function limparErro(input) {
+    var err = input.parentNode.querySelector('.field-error');
+    if (err) err.textContent = '';
+    input.style.borderColor = '';
+}
+
+// ── Mascaras ──
+document.getElementById('empresa_cnpj')?.addEventListener('input', function () {
+    var v = this.value.replace(/[^0-9]/g, '');
+    if (v.length > 14) v = v.slice(0, 14);
+    var m = '';
+    if (v.length > 0) m = v.slice(0, 2);
+    if (v.length > 2) m += '.' + v.slice(2, 5);
+    if (v.length > 5) m += '.' + v.slice(5, 8);
+    if (v.length > 8) m += '/' + v.slice(8, 12);
+    if (v.length > 12) m += '-' + v.slice(12, 14);
+    this.value = m;
+    if (v.length === 14) {
+        if (!validarCnpj(v)) mostrarErro(this, 'CNPJ invalido.');
+        else limparErro(this);
+    } else if (v.length > 0) {
+        mostrarErro(this, 'CNPJ deve ter 14 digitos.');
+    } else {
+        limparErro(this);
+    }
+});
+
+document.getElementById('empresa_telefone')?.addEventListener('input', function () {
+    var v = this.value.replace(/[^0-9]/g, '');
+    if (v.length > 11) v = v.slice(0, 11);
+    var m = '';
+    if (v.length > 0) m = '(' + v.slice(0, 2);
+    if (v.length > 2) m += ') ' + v.slice(2, 7);
+    if (v.length > 7) m += '-' + v.slice(7, 11);
+    this.value = m;
+    if (v.length > 0) {
+        if (!validarTelefone(v)) mostrarErro(this, 'Telefone invalido. Use (XX) XXXXX-XXXX.');
+        else limparErro(this);
+    } else {
+        limparErro(this);
+    }
+});
+
+// ── Validacao de email no blur ──
+['empresa_email', 'admin_email'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('blur', function () {
+        var v = this.value.trim();
+        if (v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) {
+            mostrarErro(this, 'E-mail invalido.');
+        } else {
+            limparErro(this);
+        }
+    });
+});
+
+// ── Validacao no submit ──
+document.querySelector('form').addEventListener('submit', function (e) {
+    var cnpj = document.getElementById('empresa_cnpj');
+    if (cnpj && cnpj.value) {
+        var nums = cnpj.value.replace(/[^0-9]/g, '');
+        if (nums.length > 0 && !validarCnpj(nums)) {
+            e.preventDefault();
+            mostrarErro(cnpj, 'CNPJ invalido.');
+            cnpj.focus();
+            return;
+        }
+    }
+
+    var tel = document.getElementById('empresa_telefone');
+    if (tel && tel.value) {
+        var nums = tel.value.replace(/[^0-9]/g, '');
+        if (nums.length > 0 && !validarTelefone(nums)) {
+            e.preventDefault();
+            mostrarErro(tel, 'Telefone invalido. Use (XX) XXXXX-XXXX.');
+            tel.focus();
+            return;
+        }
+    }
+
+    ['empresa_email', 'admin_email'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el || !el.value) return;
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(el.value.trim())) {
+            e.preventDefault();
+            mostrarErro(el, 'E-mail invalido.');
+            el.focus();
+            return;
+        }
+    });
+});
+</script>
 </body>
 </html>
 
