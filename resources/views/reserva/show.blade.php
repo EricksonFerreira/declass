@@ -1544,25 +1544,25 @@
     {{-- ── Modal Detalhes do Historico ── --}}
     <div class="modal fade" id="modalDetalhesLog" tabindex="-1" data-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        <span id="logModalAcao"></span>
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <div class="modal-content rs-dano-modal">
+                <div class="modal-header rs-dano-modal__header">
+                    <div>
+                        <div class="rs-dano-modal__eyebrow">Detalhes do registro</div>
+                        <h5 class="modal-title" id="logModalAcao"></h5>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="d-flex align-items-center mb-3 pb-2 border-bottom">
-                        <span class="mr-3 small"><i class="fas fa-user mr-1"></i> <strong id="logModalUsuario"></strong></span>
-                        <span class="mr-3 small"><i class="fas fa-clock mr-1"></i> <span id="logModalData"></span></span>
+                    <div class="d-flex align-items-center mb-4 pb-3" style="border-bottom:2px solid #e2e8f0;gap:16px;flex-wrap:wrap">
+                        <span class="small" style="display:flex;align-items:center;gap:6px"><i class="fas fa-user text-muted"></i> <strong id="logModalUsuario"></strong></span>
+                        <span class="small" style="display:flex;align-items:center;gap:6px"><i class="fas fa-clock text-muted"></i> <span id="logModalData"></span></span>
                         <span class="ml-auto"><span class="badge" id="logModalNivel"></span></span>
                     </div>
                     <div id="logModalDetalhes"></div>
                 </div>
-                <div class="modal-footer">
+                <div class="modal-footer border-0 pt-0">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">
                         <i class="fas fa-times mr-1"></i> Fechar
                     </button>
@@ -1570,13 +1570,6 @@
             </div>
         </div>
     </div>
-    <style>
-        #logModalDetalhes .card { border-radius:8px; overflow:hidden; }
-        #logModalDetalhes .card-header { font-size:.8rem; }
-        #logModalDetalhes .table td { vertical-align:middle; }
-        #logModalDetalhes del { color:#dc2626; text-decoration:line-through; }
-        #logModalDetalhes ins { color:#16a34a; text-decoration:none; font-weight:700; }
-    </style>
 
     {{-- Lightbox overlay --}}
     <div id="rs-lightbox" class="rs-lightbox d-none" role="dialog" aria-modal="true">
@@ -3191,6 +3184,11 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     }
 
     .rs-dano-item:last-child { margin-bottom: 0; }
+    .rs-dano-item--changed { border-color: #fbbf24; background: #fffbeb; }
+    .rs-diff-before { color: #991b1b; }
+    .rs-diff-after { color: #065f46; }
+    .rs-diff-before del { color: #dc2626; }
+    .rs-diff-after ins { color: #16a34a; text-decoration:none; font-weight:700; }
 
     .rs-dano-thumbs {
         margin-top: 8px;
@@ -3635,84 +3633,90 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             container.innerHTML = '';
 
             const BLOCK_KEYS = ['antes', 'depois', 'data', 'payload'];
-            const hasBlocks = BLOCK_KEYS.some(function (k) { return typeof det[k] === 'object' && det[k] !== null; });
-
             const entries = Object.entries(det).filter(function (_ref) { var k = _ref[0]; return k !== 'acao'; });
 
             if (!entries.length) {
-                container.innerHTML = '<p class="text-muted text-center mb-0"><i class="fas fa-info-circle mr-1"></i>Nenhum detalhe adicional.</p>';
-            } else {
-                entries.forEach(function (_ref2) {
-                    var k = _ref2[0], v = _ref2[1];
-                    var label = k.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
-
-                    if (BLOCK_KEYS.includes(k) && typeof v === 'object' && v !== null) {
-                        var card = document.createElement('div');
-                        card.className = 'card mb-3 border';
-                        card.innerHTML = '<div class="card-header py-2 px-3 font-weight-bold small bg-light">' + label + '</div>';
-                        var body = document.createElement('div');
-                        body.className = 'card-body p-0';
-
-                        if (Array.isArray(v)) {
-                            body.innerHTML = '<div class="p-2"><pre class="mb-0 small" style="max-height:200px;overflow:auto;white-space:pre-wrap">' + JSON.stringify(v, null, 2) + '</pre></div>';
-                        } else {
-                            var table = document.createElement('table');
-                            table.className = 'table table-sm table-bordered mb-0 small';
-                            var tbody = document.createElement('tbody');
-                            Object.entries(v).forEach(function (_ref3) {
-                                var sk = _ref3[0], sv = _ref3[1];
-                                var slabel = sk.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
-                                var sval = (sv === null || sv === undefined) ? '—' : (typeof sv === 'object' ? JSON.stringify(sv) : sv);
-                                var tr = document.createElement('tr');
-                                tr.innerHTML = '<td class="font-weight-bold text-nowrap" style="width:35%">' + slabel + '</td><td>' + sval + '</td>';
-                                tbody.appendChild(tr);
-                            });
-                            table.appendChild(tbody);
-                            body.appendChild(table);
-                        }
-                        card.appendChild(body);
-                        container.appendChild(card);
-
-                        if (k === 'antes' && typeof det.depois === 'object' && det.depois !== null) {
-                            var diffCard = document.createElement('div');
-                            diffCard.className = 'card mb-3 border border-success';
-                            diffCard.innerHTML = '<div class="card-header py-2 px-3 font-weight-bold small bg-success text-white"><i class="fas fa-exchange-alt mr-1"></i>Comparacao (antes vs depois)</div>';
-                            var diffBody = document.createElement('div');
-                            diffBody.className = 'card-body p-0';
-                            var diffTable = document.createElement('table');
-                            diffTable.className = 'table table-sm table-bordered mb-0 small';
-                            var diffThead = document.createElement('thead');
-                            diffThead.className = 'thead-light';
-                            diffThead.innerHTML = '<tr><th style="width:30%">Campo</th><th style="width:35%">Antes</th><th style="width:35%">Depois</th></tr>';
-                            diffTable.appendChild(diffThead);
-                            var diffTbody = document.createElement('tbody');
-                            var allKeys = new Set([].concat(Object.keys(v), Object.keys(det.depois)));
-                            allKeys.forEach(function (sk) {
-                                var svBefore = v[sk];
-                                var svAfter  = det.depois[sk];
-                                var sBefore = (svBefore === null || svBefore === undefined) ? '—' : (typeof svBefore === 'object' ? JSON.stringify(svBefore) : String(svBefore));
-                                var sAfter  = (svAfter === null || svAfter === undefined) ? '—' : (typeof svAfter === 'object' ? JSON.stringify(svAfter) : String(svAfter));
-                                var slabel  = sk.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
-                                var changed = String(svBefore) !== String(svAfter);
-                                var tr = document.createElement('tr');
-                                tr.innerHTML = '<td class="font-weight-bold">' + slabel + '</td>'
-                                    + '<td class="' + (changed ? 'text-danger' : '') + '">' + (changed ? '<del>' + sBefore + '</del>' : sBefore) + '</td>'
-                                    + '<td class="' + (changed ? 'text-success font-weight-bold' : '') + '">' + (changed ? '<ins>' + sAfter + '</ins>' : sAfter) + '</td>';
-                                diffTbody.appendChild(tr);
-                            });
-                            diffTable.appendChild(diffTbody);
-                            diffBody.appendChild(diffTable);
-                            diffCard.appendChild(diffBody);
-                            container.appendChild(diffCard);
-                        }
-                    } else {
-                        var row = document.createElement('div');
-                        row.className = 'd-flex justify-content-between align-items-start py-1 px-3 border-bottom small';
-                        row.innerHTML = '<span class="font-weight-bold text-nowrap mr-2">' + label + ':</span><span class="text-right text-break">' + formatLogValue(v) + '</span>';
-                        container.appendChild(row);
-                    }
-                });
+                container.innerHTML = '<div class="rs-empty"><i class="fas fa-info-circle"></i><span>Nenhum detalhe adicional.</span></div>';
+                $(modal).modal('show');
+                return;
             }
+
+            var blocos = [];
+            var simples = [];
+
+            entries.forEach(function (_ref2) {
+                var k = _ref2[0], v = _ref2[1];
+                if (BLOCK_KEYS.includes(k) && typeof v === 'object' && v !== null) {
+                    blocos.push({ key: k, value: v, label: k.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) });
+                } else {
+                    simples.push({ key: k, value: v, label: k.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); }) });
+                }
+            });
+
+            if (simples.length) {
+                var simpleGrid = document.createElement('div');
+                simpleGrid.className = 'rs-dano-modal__grid mb-4';
+                simples.forEach(function (s) {
+                    var info = document.createElement('div');
+                    info.className = 'rs-dano-modal__info';
+                    info.innerHTML = '<span>' + escapeHtml(s.label) + '</span><div>' + formatLogValue(s.value) + '</div>';
+                    simpleGrid.appendChild(info);
+                });
+                container.appendChild(simpleGrid);
+            }
+
+            blocos.forEach(function (b) {
+                var isAntesDepois = b.key === 'antes' && typeof det.depois === 'object' && det.depois !== null;
+                var v = b.value;
+
+                if (isAntesDepois && typeof v === 'object' && !Array.isArray(v)) {
+                    var diffCard = document.createElement('div');
+                    diffCard.className = 'mb-4';
+                    diffCard.innerHTML = '<h6 class="font-weight-bold mb-3" style="font-size:.85rem;color:#0f172a"><i class="fas fa-exchange-alt mr-2"></i>Comparacao: Antes vs Depois</h6>';
+
+                    var allKeys = new Set([].concat(Object.keys(v), Object.keys(det.depois)));
+                    allKeys.forEach(function (sk) {
+                        var svBefore = v[sk];
+                        var svAfter  = det.depois[sk];
+                        var slabel  = sk.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+                        var changed = String(svBefore) !== String(svAfter);
+
+                        var item = document.createElement('div');
+                        item.className = 'rs-dano-item' + (changed ? ' rs-dano-item--changed' : '');
+                        item.innerHTML = '<div style="flex:1"><strong>' + escapeHtml(slabel) + '</strong>'
+                            + '<div class="rs-diff-values" style="display:flex;gap:12px;margin-top:4px">'
+                            + '<span class="rs-diff-before' + (changed ? '' : ' text-muted') + '"><span class="small text-muted">Antes:</span> ' + formatDiffValue(svBefore) + '</span>'
+                            + '<span class="rs-diff-after' + (changed ? ' font-weight-bold' : ' text-muted') + '"><span class="small text-muted">Depois:</span> ' + formatDiffValue(svAfter) + '</span>'
+                            + '</div></div>';
+                        diffCard.appendChild(item);
+                    });
+                    container.appendChild(diffCard);
+                } else {
+                    var blockCard = document.createElement('div');
+                    blockCard.className = 'mb-4';
+                    blockCard.innerHTML = '<h6 class="font-weight-bold mb-3" style="font-size:.85rem;color:#0f172a">' + escapeHtml(b.label) + '</h6>';
+
+                    if (Array.isArray(v)) {
+                        var pre = document.createElement('pre');
+                        pre.className = 'mb-0 small p-3';
+                        pre.style.cssText = 'background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;max-height:200px;overflow:auto;white-space:pre-wrap';
+                        pre.textContent = JSON.stringify(v, null, 2);
+                        blockCard.appendChild(pre);
+                    } else {
+                        var entries2 = Object.entries(v);
+                        entries2.forEach(function (_ref3) {
+                            var sk = _ref3[0], sv = _ref3[1];
+                            var slabel = sk.replace(/_/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+                            var item2 = document.createElement('div');
+                            item2.className = 'rs-dano-item';
+                            item2.style.cursor = 'default';
+                            item2.innerHTML = '<div style="flex:1"><strong>' + escapeHtml(slabel) + '</strong><div class="text-muted small" style="margin-top:2px">' + formatLogValue(sv) + '</div></div>';
+                            blockCard.appendChild(item2);
+                        });
+                    }
+                    container.appendChild(blockCard);
+                }
+            });
 
             $(modal).modal('show');
         }
@@ -3720,7 +3724,14 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         function formatLogValue(v) {
             if (v === null || v === undefined) return '<span class="text-muted">—</span>';
             if (typeof v === 'boolean') return v ? '<span class="text-success">Sim</span>' : '<span class="text-danger">Nao</span>';
-            if (typeof v === 'object') return '<pre class="mb-0 small" style="max-height:120px;overflow:auto;white-space:pre-wrap">' + JSON.stringify(v, null, 2) + '</pre>';
+            if (typeof v === 'object') return '<pre class="mb-0 small" style="background:#f1f5f9;border-radius:6px;padding:4px 8px;max-height:80px;overflow:auto;white-space:pre-wrap;margin:0">' + JSON.stringify(v, null, 2) + '</pre>';
+            return String(v);
+        }
+
+        function formatDiffValue(v) {
+            if (v === null || v === undefined) return '<span class="text-muted small">—</span>';
+            if (typeof v === 'boolean') return v ? 'Sim' : 'Nao';
+            if (typeof v === 'object') return '<span class="small">' + JSON.stringify(v) + '</span>';
             return String(v);
         }
 

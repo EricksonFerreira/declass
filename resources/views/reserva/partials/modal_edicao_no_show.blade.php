@@ -1,11 +1,11 @@
 <div class="modal fade" id="modalEditarReservaShow" tabindex="-1" data-backdrop="static" data-keyboard="false">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="fas fa-pen mr-2"></i>
-                    <span id="editModalTitle">Editar Reserva #{{ $reserva->id }}</span>
-                </h5>
+        <div class="modal-content rs-dano-modal">
+            <div class="modal-header rs-dano-modal__header">
+                <div>
+                    <div class="rs-dano-modal__eyebrow">Edicao rapida</div>
+                    <h5 class="modal-title" id="editModalTitle">Editar Reserva #{{ $reserva->id }}</h5>
+                </div>
                 <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                     <span aria-hidden="true">&times;</span>
                 </button>
@@ -18,45 +18,30 @@
 
                 <div id="editFormContent" class="d-none">
                     <div id="editFormView">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-calendar-day mr-1"></i> Data/Hora retirada <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control form-control-sm" id="edit_data_inicio">
-                                </div>
+                        <div class="rs-dano-modal__grid mb-3">
+                            <div class="rs-dano-modal__info">
+                                <span><i class="fas fa-calendar-day mr-1"></i> Data/Hora retirada</span>
+                                <input type="datetime-local" class="form-control form-control-sm" id="edit_data_inicio">
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-calendar-check mr-1"></i> Data/Hora devolucao <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" class="form-control form-control-sm" id="edit_data_fim">
-                                </div>
+                            <div class="rs-dano-modal__info">
+                                <span><i class="fas fa-calendar-check mr-1"></i> Data/Hora devolucao</span>
+                                <input type="datetime-local" class="form-control form-control-sm" id="edit_data_fim">
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-store mr-1"></i> Estacao retirada <span class="text-danger">*</span></label>
-                                    <select class="form-control form-control-sm" id="edit_estacao_retirada_id"></select>
-                                </div>
+                            <div class="rs-dano-modal__info">
+                                <span><i class="fas fa-store mr-1"></i> Estacao retirada</span>
+                                <select class="form-control form-control-sm" id="edit_estacao_retirada_id"></select>
                             </div>
-                            <div class="col-md-6">
-                                <div class="form-group">
-                                    <label><i class="fas fa-store-alt mr-1"></i> Estacao devolucao <span class="text-danger">*</span></label>
-                                    <select class="form-control form-control-sm" id="edit_estacao_devolucao_id"></select>
-                                </div>
+                            <div class="rs-dano-modal__info">
+                                <span><i class="fas fa-store-alt mr-1"></i> Estacao devolucao</span>
+                                <select class="form-control form-control-sm" id="edit_estacao_devolucao_id"></select>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="form-group">
-                                    <label><i class="fas fa-sticky-note mr-1"></i> Observacoes</label>
-                                    <textarea class="form-control form-control-sm" id="edit_observacoes" rows="3" maxlength="1000"></textarea>
-                                </div>
-                            </div>
+                        <div class="rs-dano-modal__info mb-3">
+                            <span><i class="fas fa-sticky-note mr-1"></i> Observacoes</span>
+                            <textarea class="form-control form-control-sm" id="edit_observacoes" rows="3" maxlength="1000"></textarea>
                         </div>
                         <div id="editOpcionaisSection" class="d-none">
-                            <hr>
-                            <h6 class="font-weight-bold mb-3"><i class="fas fa-boxes mr-1"></i> Opcionais</h6>
+                            <h6 class="font-weight-bold mb-3" style="font-size:.85rem;color:#0f172a"><i class="fas fa-boxes mr-1"></i> Opcionais</h6>
                             <div id="editOpcionaisContainer"></div>
                         </div>
                     </div>
@@ -248,7 +233,6 @@
         };
 
         let hasChanges = false;
-        let html = '<table class="table table-sm table-bordered mb-0"><thead class="thead-light"><tr><th style="width:30%">Campo</th><th style="width:35%">Antes</th><th style="width:35%">Depois</th></tr></thead><tbody>';
 
         Object.keys(fieldsMap).forEach(function (field) {
             const label = fieldsMap[field];
@@ -256,20 +240,24 @@
             const vAfter  = after && after[field] !== undefined ? after[field] : null;
             const sBefore = formatFieldValue(field, vBefore);
             const sAfter  = formatFieldValue(field, vAfter);
+            const changed = String(vBefore ?? '') !== String(vAfter ?? '');
 
-            if (String(vBefore ?? '') !== String(vAfter ?? '')) {
-                hasChanges = true;
-                html += '<tr><td>' + label + '</td><td class="text-danger"><del>' + sBefore + '</del></td><td class="text-success"><strong>' + sAfter + '</strong></td></tr>';
-            } else if (vBefore !== null || vAfter !== null) {
-                html += '<tr><td>' + label + '</td><td colspan="2" class="text-muted text-center small">Sem alteracao</td></tr>';
-            }
+            if (changed) hasChanges = true;
+
+            const item = document.createElement('div');
+            item.className = 'rs-dano-item' + (changed ? ' rs-dano-item--changed' : '');
+            item.style.cursor = 'default';
+            item.innerHTML = '<div style="flex:1">'
+                + '<strong>' + label + '</strong>'
+                + '<div class="rs-diff-values" style="display:flex;gap:16px;margin-top:4px">'
+                + '<span class="rs-diff-before' + (changed ? '' : ' text-muted') + '"><span class="small text-muted">Antes:</span> ' + sBefore + '</span>'
+                + '<span class="rs-diff-after' + (changed ? ' font-weight-bold' : ' text-muted') + '"><span class="small text-muted">Depois:</span> ' + sAfter + '</span>'
+                + '</div></div>';
+            container.appendChild(item);
         });
 
-        html += '</tbody></table>';
-        container.innerHTML = html;
-
         if (!hasChanges) {
-            container.innerHTML = '<p class="text-muted text-center mb-0"><i class="fas fa-minus-circle mr-1"></i>Nenhuma alteracao detectada.</p>';
+            container.innerHTML = '<div class="rs-empty"><i class="fas fa-minus-circle"></i><span>Nenhuma alteracao detectada.</span></div>';
         }
     }
 
