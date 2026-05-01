@@ -49,11 +49,13 @@
                 <input type="hidden" id="reserva_id" name="reserva_id" value="{{ $reserva->id }}">
                 <input type="hidden" id="veiculo" name="veiculo" value="{{ $reserva->veiculo_id }}">
 
+                {{-- Indicador de passos --}}
                 <div class="step-indicator" role="tablist">
                     @php
                         $steps = [
-                            ['label' => 'Dados da devolução', 'icon' => 'fas fa-car-side'],
-                            ['label' => 'Vistoria do veículo', 'icon' => 'fas fa-search'],
+                            ['label' => 'Dados da Devolução', 'icon' => 'fas fa-car-side'],
+                            ['label' => 'Fotos da Devolução', 'icon' => 'fas fa-camera'],
+                            ['label' => 'Vistoria do Veículo', 'icon' => 'fas fa-search'],
                             ['label' => 'Observações', 'icon' => 'fas fa-comment-alt'],
                         ];
                     @endphp
@@ -71,22 +73,38 @@
                     @endforeach
                 </div>
 
+                {{-- ═══════════════════════════════════
+                     PASSO 1 — Dados da Devolução
+                ═══════════════════════════════════ --}}
                 <section class="wizard-step active" data-step="1">
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon"><i class="fas fa-car-side"></i></div>
+                        <div>
+                            <h5>Dados da Devolução</h5>
+                            <p>Confirme o veículo da reserva e registre quilometragem, combustível e data/hora de devolução.</p>
+                        </div>
+                    </div>
 
                     <form id="form_dados_devolucao">
+                        {{-- Bloco: Veículo vinculado --}}
                         <div class="ci-block">
                             <div class="ci-block-label">
                                 <i class="fas fa-car"></i>
                                 <div>
-                                    <strong>Veículo vinculado</strong>
+                                    <strong>Veículo Vinculado</strong>
                                     <span>Este é o veículo em uso nesta reserva</span>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-12">
-                                    <p class="mb-2"><strong>{{ $reserva->veiculo->nome ?? ('#' . $reserva->veiculo_id) }}</strong></p>
+                                    <p class="mb-2"><strong>{{ $reserva->veiculo->nome ?? ('#' . $reserva->veiculo_id) }}</strong>
+                                        @if($reserva->veiculo?->placa_licenca)
+                                            <span class="text-muted">({{ $reserva->veiculo->placa_licenca }})</span>
+                                        @endif
+                                    </p>
                                     @if($reserva->contratoCheckin)
                                         <p class="text-muted small mb-0">
+                                            <i class="fas fa-info-circle mr-1"></i>
                                             Referência check-in: KM {{ $reserva->contratoCheckin->quilometragem_atual ?? '—' }},
                                             combustível {{ $reserva->contratoCheckin->nivel_combustivel ?? '—' }}
                                         </p>
@@ -95,60 +113,146 @@
                             </div>
                         </div>
 
+                        {{-- Bloco: Condição e devolução --}}
                         <div class="ci-block">
                             <div class="ci-block-label">
                                 <i class="fas fa-tachometer-alt"></i>
                                 <div>
-                                    <strong>Condição na devolução</strong>
-                                    <span>Quilometragem, nível de combustível e momento da devolução</span>
+                                    <strong>Condição na Devolução</strong>
+                                    <span>Quilometragem, nível de combustível e data/hora de devolução</span>
                                 </div>
                             </div>
+                            @php
+                                $kmCheckin = (float) ($reserva->contratoCheckin->quilometragem_atual ?? 0);
+                                $niveis    = ['Reserva','1/8','1/4','3/8','1/2','5/8','3/4','7/8','Cheio'];
+                                $coContrato = $reserva->contratoCheckout ?? null;
+                                $coKm        = old('quilometragem_devolucao',  $coContrato?->quilometragem_devolucao ?? ($kmCheckin ?: ''));
+                                $coCombust   = old('combustivel_devolucao',    $coContrato?->nivel_combustivel_devolucao ?? '');
+                                $coData      = old('data_devolucao',           $coContrato?->data_devolucao ?? date('Y-m-d'));
+                                $coHora      = old('hora_devolucao',           $coContrato?->hora_devolucao  ? substr($coContrato->hora_devolucao, 0, 5) : date('H:i'));
+                            @endphp
                             <div class="row">
-                                <div class="col-md-6 col-lg-3">
+                                <div class="col-md-3">
                                     <label for="quilometragem_devolucao">
-                                        Quilometragem na devolução <span class="req">*</span>
-                                        @if($reserva->contratoCheckin && $reserva->contratoCheckin->quilometragem_atual !== null)
-                                            <small class="text-muted">(KM inicial: {{ $reserva->contratoCheckin->quilometragem_atual }})</small>
+                                        Quilometragem na Devolução <span class="req">*</span>
+                                        @if($kmCheckin)
+                                            <small class="text-muted">(mín: {{ $kmCheckin }})</small>
                                         @endif
                                     </label>
-                                    <input type="number" required class="form-control form-control-sm" id="quilometragem_devolucao" name="quilometragem_devolucao" placeholder="Ex: 45800" min="{{ (float) ($reserva->contratoCheckin->quilometragem_atual ?? 0) }}" value="{{ (float) ($reserva->contratoCheckin->quilometragem_atual ?? '') ?: '' }}">
+                                    <input type="number" required class="form-control form-control-sm"
+                                           id="quilometragem_devolucao" name="quilometragem_devolucao"
+                                           placeholder="Ex: 45800"
+                                           min="{{ $kmCheckin }}"
+                                           value="{{ $coKm }}">
                                 </div>
-                                <div class="col-md-6 col-lg-3">
-                                    <label for="combustivel_devolucao">Nível de combustível <span class="req">*</span></label>
+                                <div class="col-md-3">
+                                    <label for="combustivel_devolucao">Nível de Combustível <span class="req">*</span></label>
                                     <select class="form-control form-control-sm" id="combustivel_devolucao" required name="combustivel_devolucao">
-                                        <option value="" disabled selected>Selecione</option>
-                                        <option>Reserva</option>
-                                        <option>1/8</option>
-                                        <option>1/4</option>
-                                        <option>3/8</option>
-                                        <option>1/2</option>
-                                        <option>5/8</option>
-                                        <option>3/4</option>
-                                        <option>7/8</option>
-                                        <option>Cheio</option>
+                                        <option value="" disabled {{ !$coCombust ? 'selected' : '' }}>Selecione</option>
+                                        @foreach($niveis as $nivel)
+                                            <option {{ $coCombust === $nivel ? 'selected' : '' }}>{{ $nivel }}</option>
+                                        @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-6 col-lg-3">
-                                    <label for="data_devolucao">Data de devolução <span class="req">*</span></label>
-                                    <input type="date" class="form-control form-control-sm" required id="data_devolucao" name="data_devolucao" value="{{ date('Y-m-d') }}">
+                                <div class="col-md-3">
+                                    <label for="data_devolucao">Data de Devolução <span class="req">*</span></label>
+                                    <input type="date" class="form-control form-control-sm" required
+                                           id="data_devolucao" name="data_devolucao" value="{{ $coData }}">
                                 </div>
-                                <div class="col-md-6 col-lg-3">
-                                    <label for="hora_devolucao">Hora de devolução <span class="req">*</span></label>
-                                    <input type="time" class="form-control form-control-sm" required id="hora_devolucao" name="hora_devolucao" value="{{ date('H:i') }}">
+                                <div class="col-md-3">
+                                    <label for="hora_devolucao">Hora de Devolução <span class="req">*</span></label>
+                                    <input type="time" class="form-control form-control-sm" required
+                                           id="hora_devolucao" name="hora_devolucao" value="{{ $coHora }}">
                                 </div>
                             </div>
                         </div>
                     </form>
                 </section>
 
+                {{-- ═══════════════════════════════════
+                     PASSO 2 — Fotos da Devolução
+                ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="2">
-        
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--blue"><i class="fas fa-camera"></i></div>
+                        <div>
+                            <h5>Fotos da Devolução</h5>
+                            <p>Envie as fotos do estado do veículo na devolução para registro no contrato de check-out.</p>
+                        </div>
+                    </div>
+
+                    <div class="ci-block">
+                        <div class="ci-block-label">
+                            <i class="fas fa-images"></i>
+                            <div>
+                                <strong>Fotos na Devolução</strong>
+                                <span>Direita, esquerda, frente, trás, velocímetro e combustível</span>
+                            </div>
+                        </div>
+
+                        @php
+                            $fotosCheckout = [
+                                ['id' => 'foto_direita_co',     'label' => 'Direita',               'col' => 'foto_direita_path'],
+                                ['id' => 'foto_esquerda_co',    'label' => 'Esquerda',              'col' => 'foto_esquerda_path'],
+                                ['id' => 'foto_frente_co',      'label' => 'Frente',                'col' => 'foto_frente_path'],
+                                ['id' => 'foto_tras_co',        'label' => 'Trás',                  'col' => 'foto_tras_path'],
+                                ['id' => 'foto_velocimetro_co', 'label' => 'Velocímetro',           'col' => 'foto_velocimetro_path'],
+                                ['id' => 'foto_combustivel_co', 'label' => 'Medidor de Combustível','col' => 'foto_combustivel_path'],
+                            ];
+                        @endphp
+
+                        <div class="row">
+                            @foreach($fotosCheckout as $f)
+                                @php
+                                    $fotoExistente = $coContrato?->{$f['col']} ?? null;
+                                    $fotoUrl = $fotoExistente ? asset('storage/' . $fotoExistente) : null;
+                                @endphp
+                                <div class="col-md-4">
+                                    <div class="ci-photo-card">
+                                        <label for="{{ $f['id'] }}">{{ $f['label'] }}</label>
+                                        <input type="file" class="form-control form-control-sm"
+                                               id="{{ $f['id'] }}" name="{{ $f['id'] }}" accept="image/*">
+                                        <div class="ci-photo-preview" data-preview-for="{{ $f['id'] }}">
+                                            @if($fotoUrl)
+                                                <img src="{{ $fotoUrl }}" alt="{{ $f['label'] }}" style="max-width:100%;max-height:160px;border-radius:6px;">
+                                            @else
+                                                <span class="ci-photo-preview__placeholder">
+                                                    <i class="far fa-image mr-1"></i>Sem imagem
+                                                </span>
+                                            @endif
+                                        </div>
+                                        <small class="ci-hint">
+                                            @if($fotoUrl)
+                                                Foto atual. Selecione para substituir.
+                                            @else
+                                                Opcional. Max 8MB. JPG/PNG/WEBP.
+                                            @endif
+                                        </small>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </section>
+
+                {{-- ═══════════════════════════════════
+                     PASSO 3 — Vistoria do Veículo
+                ═══════════════════════════════════ --}}
+                <section class="wizard-step" data-step="3">
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--amber"><i class="fas fa-search"></i></div>
+                        <div>
+                            <h5>Vistoria do Veículo</h5>
+                            <p>Registre novas avarias detectadas na devolução e consulte o histórico de danos da reserva.</p>
+                        </div>
+                    </div>
+
                     <div class="ci-block">
                         <div class="ci-block-label">
                             <i class="fas fa-car-crash"></i>
                             <div>
-                                <strong>Vistas do veículo</strong>
-                                <span>Toque na vista para registrar um dano</span>
+                                <strong>Vistas do Veículo</strong>
+                                <span>Clique na vista onde o dano se encontra para registrá-lo</span>
                             </div>
                         </div>
                         <div class="car-views-grid">
@@ -184,7 +288,7 @@
                             <div class="ci-block-label">
                                 <i class="fas fa-history"></i>
                                 <div>
-                                    <strong>Histórico no veículo</strong>
+                                    <strong>Histórico no Veículo</strong>
                                     <span>Avarias de outras reservas / correções registradas</span>
                                 </div>
                             </div>
@@ -213,8 +317,8 @@
                             <div class="ci-block-label">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <div>
-                                    <strong>Nesta reserva</strong>
-                                    <span>Avarias já registradas no check-in ou nesta devolução</span>
+                                    <strong>Danos Nesta Reserva</strong>
+                                    <span>Avarias registradas no check-in ou nesta devolução</span>
                                 </div>
                             </div>
                             <div class="damage-table-wrap">
@@ -223,12 +327,14 @@
                                         <tr>
                                             <th>Localização</th>
                                             <th>Descrição</th>
+                                            <th>Tipo</th>
+                                            <th>Custo Est.</th>
                                             <th>Imagem</th>
                                         </tr>
                                     </thead>
                                     <tbody id="danos_detectados">
                                         <tr>
-                                            <td colspan="3" class="damage-empty">
+                                            <td colspan="5" class="damage-empty">
                                                 <i class="fas fa-spinner fa-spin"></i> Carregando…
                                             </td>
                                         </tr>
@@ -241,23 +347,38 @@
                     @include('reserva.components.modal_dano_checkin')
                 </section>
 
-                <section class="wizard-step" data-step="3">
-       
+                {{-- ═══════════════════════════════════
+                     PASSO 4 — Observações
+                ═══════════════════════════════════ --}}
+                <section class="wizard-step" data-step="4">
+                    <div class="rw-step-content-header">
+                        <div class="rw-step-content-icon rw-step-content-icon--green"><i class="fas fa-comment-alt"></i></div>
+                        <div>
+                            <h5>Observações e Notas</h5>
+                            <p>Registre quaisquer observações adicionais sobre a devolução do veículo.</p>
+                        </div>
+                    </div>
+
                     <div class="ci-block">
                         <div class="ci-block-label">
                             <i class="fas fa-pen-alt"></i>
                             <div>
-                                <strong>Notas da devolução</strong>
+                                <strong>Notas e Observações na Devolução</strong>
+                                <span>Informações que ficam registradas no contrato de check-out</span>
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-6">
-                                <label for="notas_devolucao">Notas (contrato / cliente)</label>
-                                <textarea class="form-control form-control-sm" id="notas_devolucao" name="notas_devolucao" rows="5" placeholder="Ex: Arranhão novo no para-lama…"></textarea>
+                                <label for="notas_devolucao">Notas na Devolução</label>
+                                <textarea class="form-control form-control-sm" id="notas_devolucao" name="notas_devolucao" rows="5"
+                                          placeholder="Ex: Arranhão novo no para-lama…">{{ old('notas_devolucao', $coContrato?->notas_devolucao ?? '') }}</textarea>
+                                <small class="ci-hint">Notas visíveis no contrato gerado.</small>
                             </div>
                             <div class="col-md-6">
-                                <label for="observacoes_devolucao">Observações internas</label>
-                                <textarea class="form-control form-control-sm" id="observacoes_devolucao" name="observacoes_devolucao" rows="5" placeholder="Ex: Funcionário que recebeu o veículo…"></textarea>
+                                <label for="observacoes_devolucao">Observações Internas</label>
+                                <textarea class="form-control form-control-sm" id="observacoes_devolucao" name="observacoes_devolucao" rows="5"
+                                          placeholder="Ex: Funcionário que recebeu o veículo…">{{ old('observacoes_devolucao', $coContrato?->observacoes_devolucao ?? '') }}</textarea>
+                                <small class="ci-hint">Observações internas do operador.</small>
                             </div>
                         </div>
                     </div>
@@ -268,25 +389,26 @@
                         </div>
                         <div class="ci-summary-card__content">
                             <strong>Concluir check-out</strong>
-                            <p>Revise o passo 1 (dados da devolução). Esta ação finaliza a reserva e registra a movimentação de devolução.</p>
+                            <p>Verifique os dados dos passos anteriores. Esta ação finaliza a reserva e registra a movimentação de devolução.</p>
                         </div>
                         <button type="button" class="ci-btn-create co-btn-finalizar" id="btn_finalizar_checkout">
-                            <i class="fas fa-check-circle"></i>
+                            <i class="fas fa-flag-checkered"></i>
                             Concluir check-out
                         </button>
                     </div>
                 </section>
 
+                {{-- Ações do wizard --}}
                 <div class="wizard-actions">
                     <button type="button" class="btn-action btn-action-secondary" id="wizardPrev">
                         <i class="fas fa-arrow-left mr-1"></i>Voltar
                     </button>
                     <div class="wizard-actions-right">
-                        <button type="button" class="btn-action btn-primary" id="wizardNext">
+                        <button type="button" class="btn-action btn-action-primary" id="wizardNext">
                             Continuar<i class="fas fa-arrow-right ml-1"></i>
                         </button>
                         <button type="button" class="btn-action btn-action-success d-none" id="wizardCreateBtn">
-                            <i class="fas fa-check-circle mr-1"></i>Concluir check-out
+                            <i class="fas fa-flag-checkered mr-1"></i>Concluir check-out
                         </button>
                     </div>
                 </div>
