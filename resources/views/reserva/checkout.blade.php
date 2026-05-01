@@ -262,7 +262,7 @@
                                 <div class="col-md-4">
                                     <div class="ci-photo-card">
                                         <label for="{{ $f['id'] }}">{{ $f['label'] }}</label>
-                                        <input type="file" class="form-control form-control-sm" required
+                                        <input type="file" class="form-control form-control-sm"
                                                id="{{ $f['id'] }}" name="{{ $f['id'] }}" accept="image/*">
                                         <div class="ci-photo-preview" data-preview-for="{{ $f['id'] }}">
                                             @if($fotoUrl)
@@ -774,7 +774,7 @@
         const campos = document.querySelectorAll('#form_dados_devolucao input:required, #form_dados_devolucao select:required');
         const camposInvalidos = [];
         campos.forEach(campo => {
-            const invalido = !campo.value;
+            const invalido = campo.type === 'file' ? !campo.files.length : !campo.value;
             campo.classList.toggle('is-invalid', invalido);
             if (invalido) camposInvalidos.push(campo.name);
         });

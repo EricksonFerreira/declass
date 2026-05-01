@@ -2231,6 +2231,35 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         border: 1px solid #e2e8f0;
     }
 
+    .rs-dano-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .82rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .rs-dano-table thead tr { background: #f1f5f9; }
+    .rs-dano-table th {
+        padding: 9px 12px;
+        text-align: left;
+        font-weight: 700;
+        color: #475569;
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    .rs-dano-table td {
+        padding: 9px 12px;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+    .rs-dano-table tbody tr:last-child td { border-bottom: 0; }
+    .rs-dano-table tbody tr:hover td { background: #f8fafc; }
+    .rs-dano-table tbody tr { transition: background .16s ease; }
+
     .rs-damage-empty-inline {
         display: inline-flex;
         align-items: center;
@@ -3822,6 +3851,23 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         /* ── Carregar danos (check-in tab) ── */
         let danosCarregados = false;
 
+        const TIPO_LABEL = {
+            ausente:          '<span class="badge badge-success">Ausente</span>',
+            amolgadela_leve:  '<span class="badge badge-warning text-dark">Amolgadela Leve</span>',
+            amolgadela_grave: '<span class="badge badge-danger">Amolgadela Grave</span>',
+            risco_leve:       '<span class="badge badge-warning text-dark">Risco Leve</span>',
+            risco_grave:      '<span class="badge badge-danger">Risco Grave</span>',
+        };
+
+        function tipoBadge(tipo) {
+            return TIPO_LABEL[tipo] || '<span class="badge badge-secondary">' + (tipo || '—') + '</span>';
+        }
+
+        function formatCusto(val) {
+            if (val === null || val === undefined || val === '') return '—';
+            return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+        }
+
         function renderDanos(data, containerId, loadingId) {
             const loading   = document.getElementById(loadingId);
             const container = document.getElementById(containerId);
@@ -3832,36 +3878,42 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             if (!items.length) {
                 container.innerHTML = '<div class="rs-empty"><i class="fas fa-check-circle" style="color:#10b981"></i><span>Nenhum dano registrado.</span></div>';
             } else {
-                container.innerHTML = items.map(function (d) {
-                    const imagens = Array.isArray(d.imagens) ? d.imagens : [];
-                    const thumbs = imagens
-                        .map(function (img) {
+                container.innerHTML = '<table class="rs-dano-table"><thead><tr>'
+                    + '<th>Localizacao</th>'
+                    + '<th>Descricao</th>'
+                    + '<th>Tipo</th>'
+                    + '<th>Custo Est.</th>'
+                    + '<th>Imagem</th>'
+                    + '</tr></thead><tbody>'
+                    + items.map(function (d) {
+                        const payload = encodeURIComponent(JSON.stringify(d));
+                        const imagens = Array.isArray(d.imagens) ? d.imagens : [];
+                        const thumbsHtml = imagens.map(function (img) {
                             const url = img.url || (img.path ? ('/storage/' + img.path) : null);
                             if (!url) return '';
-                            return `<a href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()"><img src="${url}" alt="dano"></a>`;
-                        })
-                        .filter(Boolean)
-                        .join('');
+                            return `<a href="${url}" target="_blank" rel="noopener" onclick="event.stopPropagation()" title="Ver imagem"><img src="${url}" alt="foto" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px"></a>`;
+                        }).filter(Boolean).join('') || '<span class="text-muted small">—</span>';
 
-                    const thumbsHtml = thumbs ? `<div class="rs-dano-thumbs">${thumbs}</div>` : '';
-                    const titulo = d.localizacao || d.local_dano || d.localizacao_problema || '—';
-                    const desc = d.descricao || d.observacoes || d.tipo_dano || '';
-                    const custo = d.custo_estimado !== undefined && d.custo_estimado !== null
-                        ? `<strong>R$ ${parseFloat(d.custo_estimado || 0).toFixed(2).replace('.', ',')}</strong>`
-                        : '';
-                    const payload = encodeURIComponent(JSON.stringify(d));
+                        const categoria = d.categoria ?? '—';
+                        const local = d.localizacao_problema ?? '—';
+                        const locLabel = '<strong>' + escapeHtml(d.localizacao || d.local_dano || '—') + '</strong><br><small class="text-muted">' + escapeHtml(categoria) + ' \u00b7 ' + escapeHtml(local) + '</small>';
+                        const descricao = escapeHtml(d.descricao || '<span class="text-muted">—</span>');
+                        const km = d.quilometragem_veiculo != null
+                            ? '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(d.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>'
+                            : '';
+                        const nomeDano = d.nome_dano
+                            ? '<small class="d-block text-muted mt-1">' + escapeHtml(d.nome_dano) + '</small>'
+                            : '';
 
-                    return `<div class="rs-dano-item js-dano-detalhe-trigger" data-dano="${payload}">
-                        <div>
-                            <strong>${titulo}</strong>
-                            <div class="text-muted small">${desc}</div>
-                            ${thumbsHtml}
-                        </div>
-                        <div class="text-right" style="flex-shrink:0">
-                            ${custo}
-                        </div>
-                    </div>`;
-                }).join('');
+                        return '<tr class="js-dano-detalhe-trigger" data-dano="' + payload + '" style="cursor:pointer">'
+                            + '<td>' + locLabel + '</td>'
+                            + '<td>' + descricao + km + '</td>'
+                            + '<td>' + tipoBadge(d.tipo_dano) + nomeDano + '</td>'
+                            + '<td>' + formatCusto(d.custo_estimado) + '</td>'
+                            + '<td>' + thumbsHtml + '</td>'
+                            + '</tr>';
+                    }).join('')
+                    + '</tbody></table>';
             }
             container.classList.remove('d-none');
             bindDanoDetalheTriggers(container);

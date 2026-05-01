@@ -20,12 +20,12 @@ class FinalizarCheckoutVistoriaRequest extends FormRequest
             'hora_devolucao' => 'required|date_format:H:i',
             'notas_devolucao' => 'nullable|string|max:2000',
             'observacoes_devolucao' => 'nullable|string|max:2000',
-            'foto_direita_co' => 'required|image|max:8192',
-            'foto_esquerda_co' => 'required|image|max:8192',
-            'foto_frente_co' => 'required|image|max:8192',
-            'foto_tras_co' => 'required|image|max:8192',
-            'foto_velocimetro_co' => 'required|image|max:8192',
-            'foto_combustivel_co' => 'required|image|max:8192',
+            'foto_direita_co' => 'nullable|image|max:8192',
+            'foto_esquerda_co' => 'nullable|image|max:8192',
+            'foto_frente_co' => 'nullable|image|max:8192',
+            'foto_tras_co' => 'nullable|image|max:8192',
+            'foto_velocimetro_co' => 'nullable|image|max:8192',
+            'foto_combustivel_co' => 'nullable|image|max:8192',
         ];
     }
 }
