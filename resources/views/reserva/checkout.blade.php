@@ -430,6 +430,45 @@
     const createBtn  = document.getElementById('wizardCreateBtn');
     let current      = 1;
     const lastStep   = stepPanels.length;
+    const PHOTO_INPUT_IDS = [
+        'foto_direita_co',
+        'foto_esquerda_co',
+        'foto_frente_co',
+        'foto_tras_co',
+        'foto_velocimetro_co',
+        'foto_combustivel_co',
+    ];
+
+    function setupPhotoPreviews() {
+        PHOTO_INPUT_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            const preview = document.querySelector(`.ci-photo-preview[data-preview-for="${id}"]`);
+            if (!input || !preview) return;
+
+            let objectUrl = null;
+            input.addEventListener('change', function () {
+                input.classList.remove('is-invalid');
+
+                if (objectUrl) {
+                    URL.revokeObjectURL(objectUrl);
+                    objectUrl = null;
+                }
+
+                if (this.files && this.files[0]) {
+                    objectUrl = URL.createObjectURL(this.files[0]);
+                    preview.innerHTML = `<img src="${objectUrl}" alt="Preview">`;
+                } else {
+                    preview.innerHTML = `
+                        <span class="ci-photo-preview__placeholder">
+                            <i class="far fa-image mr-1"></i>Sem imagem
+                        </span>
+                    `;
+                }
+            });
+        });
+    }
+
+    setupPhotoPreviews();
 
     function showStep(n) {
         current = Math.min(Math.max(n, 1), lastStep);
