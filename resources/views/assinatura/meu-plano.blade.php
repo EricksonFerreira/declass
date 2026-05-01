@@ -359,6 +359,8 @@
                                                value="{{ route('assinatura.pagamento.pix', $proximoPagamento) }}">
                                         <input type="hidden" id="pixUrlStatus"
                                                value="{{ route('assinatura.pagamento.status', $proximoPagamento) }}">
+                                        <input type="hidden" id="pixUrlConcluido"
+                                               value="{{ route('assinatura.concluido', ['pagamento' => $proximoPagamento->id]) }}">
                                         {{-- Se já tem QR Code salvo e não expirou, pré-popula --}}
                                         @if ($proximoPagamento->pix_qr_code_image && $proximoPagamento->pix_expira_em?->isFuture())
                                             <input type="hidden" id="pixQrPreload"
@@ -875,7 +877,8 @@ async function pagarCartao() {
         // Sucesso
         document.getElementById('cartaoSucesso').style.display = 'block';
         document.getElementById('cartaoFormArea').querySelector('button').style.display = 'none';
-        setTimeout(() => location.reload(), 2500);
+        var destino = data2.redirect || window.location.href;
+        setTimeout(function () { window.location.href = destino; }, 2500);
 
     } catch (err) {
         erroEl.textContent = err.message || 'Erro ao processar pagamento.';
@@ -977,6 +980,7 @@ function carregarPix() {
 
 function iniciarPolling() {
     const urlStatus = document.getElementById('pixUrlStatus')?.value;
+    const urlConcluido = document.getElementById('pixUrlConcluido')?.value;
     if (!urlStatus) return;
 
     pixPollingTimer = setInterval(() => {
@@ -987,8 +991,8 @@ function iniciarPolling() {
                     clearInterval(pixPollingTimer);
                     document.getElementById('pixAguardando').style.display = 'none';
                     document.getElementById('pixPago').style.display       = 'block';
-                    // Redireciona após 2s para atualizar a página com o novo status
-                    setTimeout(() => location.reload(), 2000);
+                    var destino = urlConcluido || window.location.href;
+                    setTimeout(function () { window.location.href = destino; }, 2000);
                 }
             })
             .catch(() => {}); // silencia erros de rede no polling
@@ -1079,6 +1083,21 @@ document.querySelectorAll('.renovar-periodo-opt').forEach(l =>
 (function() {
     const checked = document.querySelector('.renovar-metodo-opt input:checked');
     if (checked?.value === 'cartao') document.getElementById('divRenovarCartao').style.display = 'block';
+})();
+
+// ── Auto-scroll para pagamento pendente ──
+(function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.has('pagamento')) {
+        var el = document.querySelector('.card[style*=\"#f59e0b\"]');
+        if (el) {
+            setTimeout(function () {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                el.style.boxShadow = '0 0 0 4px rgba(245,158,11,.3)';
+                setTimeout(function () { el.style.boxShadow = ''; }, 3000);
+            }, 400);
+        }
+    }
 })();
 </script>
 @endpush

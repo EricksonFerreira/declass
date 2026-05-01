@@ -44,6 +44,8 @@ Route::prefix('meu-plano')->name('assinatura.')->group(function () {
     Route::post('/renovar',         [AssinaturaController::class, 'renovar'])->name('renovar');
     Route::post('/cancelar',        [AssinaturaController::class, 'cancelar'])->name('cancelar');
     Route::post('/mudanca/remover', [AssinaturaController::class, 'removerMudancaAgendada'])->name('mudanca.remover');
+    // Tela de conclusao apos pagamento confirmado
+    Route::get('/concluido',        [AssinaturaController::class, 'concluido'])->name('concluido');
     // Alterar método de pagamento pendente
     Route::patch('/pagamento/{pagamento}/metodo', [AssinaturaController::class, 'alterarMetodoPagamento'])->name('pagamento.alterar-metodo');
     // Gerar QR Code PIX via Stripe

@@ -395,7 +395,7 @@ class AssinaturaController extends Controller
             return redirect()->route('assinatura.downgrade');
         }
 
-        $this->planoService->contratar(
+        $assinatura = $this->planoService->contratar(
             empresa:             $empresa,
             plano:               $plano,
             periodicidade:       $data['periodicidade'],
@@ -405,8 +405,40 @@ class AssinaturaController extends Controller
             renovacaoAutomatica: !empty($data['renovacao_automatica']),
         );
 
-        return redirect()->route('assinatura.meu-plano')
-            ->with('success', 'Plano contratado! Aguarde a confirmação do pagamento para ativar todos os recursos.');
+        $pagamento = $assinatura?->pagamentos()->where('status', 'pendente')->first();
+
+        return redirect()->route('assinatura.meu-plano', $pagamento ? ['pagamento' => $pagamento->id] : [])
+            ->with('success', 'Plano contratado! Escolha como pagar abaixo.');
+    }
+
+    /** Exibe tela de conclusao apos confirmacao de pagamento. */
+    public function concluido(Request $request): View|RedirectResponse
+    {
+        $empresa = Auth::user()->empresa;
+        abort_unless($empresa, 403);
+
+        $pagamentoId = $request->query('pagamento');
+        $pagamento = $pagamentoId
+            ? EmpresaPlanoPagamento::where('empresa_id', $empresa->id)->with('empresaPlano.plano.itens')->find($pagamentoId)
+            : null;
+
+        if (!$pagamento) {
+            $pagamento = $empresa->pagamentosPlano()
+                ->with('empresaPlano.plano.itens')
+                ->where('status', 'pago')
+                ->orderByDesc('pago_em')
+                ->first();
+        }
+
+        if (!$pagamento) {
+            return redirect()->route('assinatura.meu-plano')
+                ->with('error', 'Nenhum pagamento encontrado.');
+        }
+
+        $assinatura = $pagamento->empresaPlano;
+        $plano      = $assinatura?->plano;
+
+        return view('assinatura.concluido', compact('pagamento', 'assinatura', 'plano', 'empresa'));
     }
 
     /** Exibe seleção de veículos para downgrade (via painel, não onboarding). */
@@ -690,7 +722,9 @@ class AssinaturaController extends Controller
                 'metodo'             => 'cartao',
             ]);
 
-            return response()->json(['ok' => true]);
+            $redirect = route('assinatura.concluido', ['pagamento' => $pagamento->id]);
+
+            return response()->json(['ok' => true, 'redirect' => $redirect]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
         }
