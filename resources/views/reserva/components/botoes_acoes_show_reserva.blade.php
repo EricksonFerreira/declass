@@ -78,6 +78,7 @@
 
             {{-- Check-out --}}
             @php
+                $checkoutJaFeito   = $reserva->contratoCheckout()->exists();
                 $checkinAssinadoCo = $reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S';
                 $checkoutUrl       = route('reserva.checkout.vistoria', $reserva->id);
                 $dataFim           = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
@@ -93,7 +94,7 @@
                     }
                 } catch (\Throwable $e) { $calcaoOkCo = true; }
 
-                $podeCheckout = ($pagamentoEfetuado ?? false) && $checkinAssinadoCo && $calcaoOkCo;
+                $podeCheckout = !$checkoutJaFeito && ($pagamentoEfetuado ?? false) && $checkinAssinadoCo && $calcaoOkCo;
 
                 $motivosBloqueio = [];
                 if (!($pagamentoEfetuado ?? false))   $motivosBloqueio[] = 'Pagamento não efetuado';
@@ -101,7 +102,9 @@
                 if (!$calcaoOkCo)                     $motivosBloqueio[] = 'Calção pendente — realize a pré-autorização antes do check-out';
             @endphp
 
-            @if($podeCheckout)
+            @if($checkoutJaFeito)
+                {{-- Checkout concluído: não exibe botão --}}
+            @elseif($podeCheckout)
                 <button type="button" id="btn-iniciar-checkout"
                         class="action-pill action-pill--checkout"
                         data-url="{{ $checkoutUrl }}"

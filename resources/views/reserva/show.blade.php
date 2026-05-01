@@ -3917,4 +3917,208 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         });
 })();
 </script>
+
+{{-- ═══════════════════════════════════════════════
+     MODAL — Pesquisa de Satisfação pós-checkout
+═══════════════════════════════════════════════ --}}
+@php $jaSatisfacao = $reserva->satisfacao()->exists(); @endphp
+
+<div class="modal fade" id="modalSatisfacao" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:520px" role="document">
+        <div class="modal-content" style="border:0;border-radius:20px;overflow:hidden;box-shadow:0 32px 80px rgba(12,20,40,.28)">
+
+            {{-- Header --}}
+            <div style="position:relative;background:linear-gradient(135deg,#0c1428 0%,#1a2848 55%,#1e3461 100%);padding:1.4rem 1.6rem;overflow:hidden">
+                <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.05) 1px,transparent 1px);background-size:20px 20px;pointer-events:none"></div>
+                <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#059669,#10b981,#0ea5e9)"></div>
+                <div style="position:relative;z-index:1;display:flex;align-items:center;gap:14px">
+                    <div style="width:46px;height:46px;border-radius:13px;background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#10b981;flex-shrink:0">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div>
+                        <div style="font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(148,163,184,.8);margin-bottom:2px">Check-out concluído</div>
+                        <h6 style="margin:0;font-size:.95rem;font-weight:800;color:#fff">Pesquisa de Satisfação</h6>
+                        <p style="margin:0;font-size:.73rem;color:rgba(148,163,184,.8)">Reserva #{{ $reserva->id }} · {{ $reserva->usuario->nome ?? '' }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Body --}}
+            <div style="padding:1.4rem 1.6rem;background:#f2f5fb">
+                @if($jaSatisfacao)
+                    <div class="text-center py-3">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <p class="mb-0 font-weight-bold">Avaliação já registrada para esta reserva.</p>
+                    </div>
+                @else
+                <form id="formSatisfacao">
+                    @csrf
+
+                    {{-- Satisfação geral --}}
+                    <div class="sat-block">
+                        <label class="sat-label">Como foi a experiência geral do cliente? <span style="color:#ef4444">*</span></label>
+                        <div class="sat-stars" data-field="satisfacao_geral">
+                            @for($s = 1; $s <= 5; $s++)
+                                <button type="button" class="sat-star" data-val="{{ $s }}">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                            @endfor
+                        </div>
+                        <input type="hidden" name="satisfacao_geral" id="satisfacao_geral">
+                    </div>
+
+                    {{-- Facilidade --}}
+                    <div class="sat-block">
+                        <label class="sat-label">O processo de reserva e devolução foi fácil? <span style="color:#ef4444">*</span></label>
+                        <div class="sat-stars" data-field="facilidade_reserva">
+                            @for($s = 1; $s <= 5; $s++)
+                                <button type="button" class="sat-star" data-val="{{ $s }}">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                            @endfor
+                        </div>
+                        <input type="hidden" name="facilidade_reserva" id="facilidade_reserva">
+                    </div>
+
+                    {{-- NPS --}}
+                    <div class="sat-block">
+                        <label class="sat-label">De 0 a 10, o cliente recomendaria a empresa? <span style="color:#ef4444">*</span></label>
+                        <div class="sat-nps">
+                            @for($n = 0; $n <= 10; $n++)
+                                <button type="button" class="sat-nps-btn
+                                    {{ $n <= 6 ? 'sat-nps-btn--red' : ($n <= 8 ? 'sat-nps-btn--amber' : 'sat-nps-btn--green') }}"
+                                    data-val="{{ $n }}">{{ $n }}</button>
+                            @endfor
+                        </div>
+                        <div class="sat-nps-legend">
+                            <span>Detrator</span><span>Neutro</span><span>Promotor</span>
+                        </div>
+                        <input type="hidden" name="nps_nota" id="nps_nota">
+                    </div>
+
+                    {{-- Comentário --}}
+                    <div class="sat-block">
+                        <label class="sat-label">Observações adicionais</label>
+                        <textarea name="comentario" class="form-control form-control-sm" rows="3"
+                                  placeholder="Ex: Cliente muito satisfeito com o veículo…" maxlength="1000"
+                                  style="border-radius:10px;border-color:#dce6f4;font-size:.83rem"></textarea>
+                    </div>
+                </form>
+                @endif
+            </div>
+
+            {{-- Footer --}}
+            <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 1.6rem;background:#eef2ff;border-top:1px solid #dde4ff">
+                <button type="button" class="btn btn-sm btn-light" style="border-radius:10px;font-weight:600;font-size:.82rem" data-dismiss="modal">
+                    @if($jaSatisfacao) Fechar @else Pular @endif
+                </button>
+                @if(!$jaSatisfacao)
+                <button type="button" id="btnSalvarSatisfacao"
+                        style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:0;border-radius:10px;padding:9px 22px;font-size:.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(5,150,105,.3)">
+                    <i class="fas fa-paper-plane"></i> Enviar avaliação
+                </button>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.sat-block { margin-bottom: 1.1rem; }
+.sat-label { font-size: .78rem; font-weight: 700; color: #3d4f63; margin-bottom: 8px; display: block; }
+.sat-stars { display: flex; gap: 6px; }
+.sat-star {
+    background: none; border: none; padding: 0; cursor: pointer;
+    font-size: 1.5rem; color: #d1d5db; transition: color .15s, transform .15s;
+}
+.sat-star:hover, .sat-star.active { color: #f59e0b; transform: scale(1.15); }
+.sat-nps { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
+.sat-nps-btn {
+    width: 36px; height: 36px; border-radius: 9px; border: 1.5px solid #e2e9f4;
+    background: #fff; font-size: .82rem; font-weight: 700; cursor: pointer;
+    transition: all .15s; color: #475569;
+}
+.sat-nps-btn--red.active    { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
+.sat-nps-btn--amber.active  { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+.sat-nps-btn--green.active  { background: #d1fae5; border-color: #10b981; color: #065f46; }
+.sat-nps-btn:hover { opacity: .8; transform: translateY(-2px); }
+.sat-nps-legend { display: flex; justify-content: space-between; font-size: .65rem; color: #94a3b8; font-weight: 600; margin-top: 2px; }
+</style>
+
+<script>
+(function () {
+    // Abre automaticamente se vier de checkout
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('satisfacao') === '1') {
+        setTimeout(() => $('#modalSatisfacao').modal('show'), 600);
+        // Limpa o param da URL sem recarregar
+        const url = new URL(window.location);
+        url.searchParams.delete('satisfacao');
+        history.replaceState({}, '', url);
+    }
+
+    // Estrelas
+    document.querySelectorAll('.sat-stars').forEach(group => {
+        const stars = group.querySelectorAll('.sat-star');
+        const field = group.dataset.field;
+        const hidden = document.getElementById(field);
+        stars.forEach((star, idx) => {
+            star.addEventListener('mouseenter', () => {
+                stars.forEach((s, i) => s.classList.toggle('active', i <= idx));
+            });
+            star.addEventListener('mouseleave', () => {
+                const val = hidden?.value;
+                stars.forEach((s, i) => s.classList.toggle('active', val && i < parseInt(val)));
+            });
+            star.addEventListener('click', () => {
+                if (hidden) hidden.value = star.dataset.val;
+                stars.forEach((s, i) => s.classList.toggle('active', i <= idx));
+            });
+        });
+    });
+
+    // NPS
+    document.querySelectorAll('.sat-nps-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.sat-nps-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('nps_nota').value = btn.dataset.val;
+        });
+    });
+
+    // Enviar
+    document.getElementById('btnSalvarSatisfacao')?.addEventListener('click', function () {
+        const form = document.getElementById('formSatisfacao');
+        const satGeral = document.getElementById('satisfacao_geral')?.value;
+        const facil    = document.getElementById('facilidade_reserva')?.value;
+        const nps      = document.getElementById('nps_nota')?.value;
+
+        if (!satGeral || !facil || !nps) {
+            Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Preencha todas as avaliações antes de enviar.', confirmButtonColor: '#059669' });
+            return;
+        }
+
+        const btn = this;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando…';
+
+        const fd = new FormData(form);
+        fetch("{{ route('reserva.satisfacao.store', $reserva->id) }}", {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
+            body: fd,
+        })
+        .then(r => r.json())
+        .then(data => {
+            $('#modalSatisfacao').modal('hide');
+            Swal.fire({ icon: 'success', title: 'Obrigado!', text: data.message || 'Avaliação registrada.', timer: 2500, showConfirmButton: false, toast: true, position: 'top-right' });
+        })
+        .catch(() => {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar avaliação';
+            Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível salvar a avaliação.', confirmButtonColor: '#059669' });
+        });
+    });
+}());
+</script>
 @stop
