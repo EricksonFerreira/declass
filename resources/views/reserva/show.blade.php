@@ -204,6 +204,7 @@
                     @endif
                 </a>
             </li>
+            @if($reserva->contratoCheckin)
             <li class="nav-item">
                 <a class="nav-link" id="tab-checkout" data-toggle="tab" href="#pane-checkout" role="tab">
                     <i class="fas fa-car-crash"></i>
@@ -213,6 +214,7 @@
                     @endif
                 </a>
             </li>
+            @endif
             <li class="nav-item">
                 <a class="nav-link" id="tab-financeiro" data-toggle="tab" href="#pane-financeiro" role="tab">
                     <i class="fas fa-file-invoice-dollar"></i>
@@ -234,7 +236,7 @@
                 <a class="nav-link" id="tab-historico" data-toggle="tab" href="#pane-historico" role="tab">
                     <i class="fas fa-history"></i>
                     <span>Histórico</span>
-                    <span class="rs-tab-badge rs-tab-badge--slate" id="historicoCount">—</span>
+                    <span class="rs-tab-badge rs-tab-badge--slate d-none" id="historicoCount"></span>
                 </a>
             </li>
         </ul>
@@ -3482,7 +3484,10 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             const container = document.getElementById('historicoTimeline');
             const countEl   = document.getElementById('historicoCount');
             const countPaneEl = document.getElementById('historicoCountPane');
-            if (countEl) countEl.textContent = logs.length;
+            if (countEl) {
+                countEl.textContent = logs.length;
+                countEl.classList.toggle('d-none', logs.length === 0);
+            }
             if (countPaneEl) countPaneEl.textContent = logs.length;
 
             if (!logs.length) {

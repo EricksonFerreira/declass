@@ -109,22 +109,26 @@
                     <i class="fas fa-{{ $jaSatisfacaoBtn ? 'check-circle' : 'star' }}"></i>
                     <span>{{ $jaSatisfacaoBtn ? 'Ver avaliação' : 'Avaliar atendimento' }}</span>
                 </button>
-            @elseif($podeCheckout)
-                <button type="button" id="btn-iniciar-checkout"
-                        class="action-pill action-pill--checkout"
-                        data-url="{{ $checkoutUrl }}"
-                        data-antes-fim="{{ $isAntesDaDataFim ? '1' : '0' }}"
-                        data-data-fim="{{ $dataFim ? $dataFim->format('d/m/Y H:i') : '' }}">
-                    <i class="fas fa-flag-checkered"></i>
-                    <span>Fazer check-out</span>
-                </button>
-            @else
-                <span class="action-pill action-pill--disabled checkout-bloqueado"
-                      data-motivos="{{ implode('|', $motivosBloqueio) }}">
-                    <i class="fas fa-lock"></i>
-                    <span>Check-out</span>
-                </span>
+            @elseif($checkinAssinadoCo)
+                {{-- Check-in feito: mostra botão ativo ou bloqueado --}}
+                @if($podeCheckout)
+                    <button type="button" id="btn-iniciar-checkout"
+                            class="action-pill action-pill--checkout"
+                            data-url="{{ $checkoutUrl }}"
+                            data-antes-fim="{{ $isAntesDaDataFim ? '1' : '0' }}"
+                            data-data-fim="{{ $dataFim ? $dataFim->format('d/m/Y H:i') : '' }}">
+                        <i class="fas fa-flag-checkered"></i>
+                        <span>Fazer check-out</span>
+                    </button>
+                @else
+                    <span class="action-pill action-pill--disabled checkout-bloqueado"
+                          data-motivos="{{ implode('|', $motivosBloqueio) }}">
+                        <i class="fas fa-lock"></i>
+                        <span>Check-out</span>
+                    </span>
+                @endif
             @endif
+            {{-- Sem checkin: nenhum botão de checkout exibido --}}
 
             @if($reserva->podeFazerCancelamento())
                 <button type="button" class="action-pill action-pill--danger" id="btnCancelarReserva">
