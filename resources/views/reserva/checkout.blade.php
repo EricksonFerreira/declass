@@ -400,14 +400,73 @@
 <style>
     @include('reserva.partials.vistoria_reserva_estilos_inner')
 
-    /* Card de conclusão */
-    .co-summary-checkout .ci-summary-card__icon {
-        background: linear-gradient(135deg, #059669, #10b981);
-        box-shadow: 0 6px 18px rgba(5,150,105,.35);
+    /* ── Step content header (padrão add-edit) ── */
+    .rw-step-content-header {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 14px 16px;
+        background: #f8faff;
+        border: 1px solid var(--c-border);
+        border-left: 4px solid var(--c-indigo);
+        border-radius: 12px;
+        margin-bottom: 1rem;
     }
-    .co-btn-finalizar {
-        background: linear-gradient(135deg, #059669, #10b981) !important;
-        box-shadow: 0 6px 18px rgba(5,150,105,.35) !important;
+    .rw-step-content-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 11px;
+        background: color-mix(in srgb, var(--c-indigo) 12%, #fff 88%);
+        color: var(--c-indigo);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .rw-step-content-icon--blue  { background: #eff6ff; color: #2563eb; }
+    .rw-step-content-icon--amber { background: #fffbeb; color: #f59e0b; }
+    .rw-step-content-icon--green { background: #ecfdf5; color: #10b981; }
+    .rw-step-content-header:has(.rw-step-content-icon--amber) { border-left-color: var(--c-amber); background: #fffdf5; }
+    .rw-step-content-header:has(.rw-step-content-icon--green) { border-left-color: var(--c-green); background: #f0fdf9; }
+    .rw-step-content-header h5 {
+        font-size: 0.92rem;
+        font-weight: 800;
+        color: var(--c-ink);
+        margin: 0 0 2px;
+        letter-spacing: -0.01em;
+    }
+    .rw-step-content-header p {
+        font-size: 0.78rem;
+        color: var(--c-slate);
+        margin: 0;
+    }
+    .ci-photo-card {
+        border: 1px solid rgba(0,0,0,.08);
+        border-radius: 10px;
+        padding: 12px;
+        margin-bottom: 14px;
+        background: #fff;
+    }
+    .ci-photo-preview {
+        margin-top: 10px;
+        height: 130px;
+        border-radius: 10px;
+        background: #f8fafc;
+        border: 1px dashed rgba(0,0,0,.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    .ci-photo-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .ci-photo-preview__placeholder {
+        color: rgba(0,0,0,.55);
+        font-size: .9rem;
     }
 </style>
 @stop
