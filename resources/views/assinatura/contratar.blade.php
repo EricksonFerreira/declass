@@ -506,22 +506,15 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
 
 // ── criar assinatura + pix ──
 function criarAssinaturaEProcessarPix() {
-var aguardandoConfirmacao = false;
-
+// ── Cartao: confirmar contratação ──
 document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
-    if (aguardandoConfirmacao) return;
     var metodo = document.getElementById('inputMetodo').value;
-    if (!metodo) return;
+    if (metodo !== 'cartao') return;
+    if (!cartaoPmId) { alert('Selecione um cartao.'); return; }
 
     var btn = this;
     btn.disabled = true;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Criando assinatura...';
-
-    document.getElementById('divResumoConfirmar').style.display = 'none';
-
-    if (metodo === 'pix') {
-        document.getElementById('pixLoading').style.display = 'block';
-    }
 
     var formData = new FormData(document.getElementById('formContratar'));
 
@@ -542,36 +535,22 @@ document.getElementById('btnConfirmarPagamento').addEventListener('click', funct
             window.location.href = res.url || '{{ route('assinatura.meu-plano') }}';
             return;
         }
-
         if (!res.data.success) {
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
-            document.getElementById('pixLoading').style.display = 'none';
-            document.getElementById('divResumoConfirmar').style.display = 'block';
-            alert(res.data.message || res.data.error || 'Erro ao criar assinatura.');
+            alert(res.data.message || 'Erro ao criar assinatura.');
             return;
         }
-
         PAGAMENTO_ID = res.data.pagamento_id;
-        atualizarStepper(2);
-
-        if (metodo === 'pix') {
-            document.getElementById('divBtnStep2').style.display = 'none';
-            document.getElementById('divPagamentoPix').style.display = 'block';
-            gerarPix(res.data.pagamento_id);
-        } else if (metodo === 'cartao') {
-            document.getElementById('divPagamentoCartao').style.display = 'block';
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
-            aguardandoConfirmacao = true;
-            btn.onclick = function () { processarCartao(PAGAMENTO_ID); };
-        }
+        document.getElementById('divPagamentoCartao').querySelector('.font-weight-bold').style.display = 'none';
+        document.getElementById('cartoesSalvosContainer').style.display = 'none';
+        document.getElementById('cartaoProcessando').style.display = 'block';
+        btn.style.display = 'none';
+        processarCartao(PAGAMENTO_ID, btn);
     })
     .catch(function () {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
-        document.getElementById('pixLoading').style.display = 'none';
-        document.getElementById('divResumoConfirmar').style.display = 'block';
         alert('Erro de conexao. Tente novamente.');
     });
 });
@@ -675,42 +654,82 @@ function inicializarCartao(pagamentoId) {
     });
 }
 
-async function processarCartao(pagamentoId) {
-    var btn = document.getElementById('btnConfirmarPagamento');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processando...';
+var stripeNovoCard = null;
 
-    document.getElementById('cartaoProcessando').style.display = 'block';
+function inicializarStripeNovoCartao() {
+    if (stripeNovoCard) return;
+    fetch('/meu-plano/pagamento/0/cartao-intent?peek=1', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ peek: true }),
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+        if (data.stripe_key) {
+            stripe = Stripe(data.stripe_key);
+            var elements = stripe.elements({ locale: 'pt-BR' });
+            stripeNovoCard = elements.create('card', {
+                style: { base: { fontSize: '15px', color: '#0f172a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#94a3b8' } } }
+            });
+            stripeNovoCard.mount('#card-element');
+            stripeNovoCard.on('change', function (event) {
+                var erroEl = document.getElementById('card-errors');
+                if (event.error) { erroEl.textContent = event.error.message; erroEl.style.display = 'block'; }
+                else { erroEl.textContent = ''; erroEl.style.display = 'none'; }
+            });
+        }
+    });
+}
+
+async function processarCartao(pagamentoId, btn) {
     document.getElementById('cartaoSucesso').style.display = 'none';
     document.getElementById('cartaoErro').style.display = 'none';
 
     try {
-        var r1 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-intent', {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                salvar_cartao: document.getElementById('salvarCartao')?.checked || false,
-            }),
-        });
-        var data1 = await r1.json();
-        if (data1.error) throw new Error(data1.error);
+        if (cartaoPmId === 'novo') {
+            if (!stripeNovoCard) throw new Error('Formulario de cartao nao carregado.');
+            var r1 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-intent', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ salvar_cartao: true }),
+            });
+            var data1 = await r1.json();
+            if (data1.error) throw new Error(data1.error);
 
-        cartaoClientSecret = data1.client_secret;
+            var result = await stripe.confirmCardPayment(data1.client_secret, { payment_method: { card: stripeNovoCard } });
+            if (result.error) throw new Error(result.error.message);
+            if (result.paymentIntent.status !== 'succeeded') throw new Error('Pagamento nao aprovado.');
 
-        var result = await stripe.confirmCardPayment(cartaoClientSecret);
-        if (result.error) throw new Error(result.error.message);
+            var r2 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-confirmar', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_intent_id: result.paymentIntent.id }),
+            });
+            var data2 = await r2.json();
+            if (data2.error) throw new Error(data2.error);
 
-        if (result.paymentIntent.status !== 'succeeded') {
-            throw new Error('Pagamento nao aprovado. Tente novamente.');
+        } else {
+            // Cartao salvo: cria intent com payment_method ja definido
+            var r1 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-intent', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ salvar_cartao: false, payment_method: cartaoPmId }),
+            });
+            var data1 = await r1.json();
+            if (data1.error) throw new Error(data1.error);
+
+            var result = await stripe.confirmCardPayment(data1.client_secret);
+            if (result.error) throw new Error(result.error.message);
+            if (result.paymentIntent.status !== 'succeeded') throw new Error('Pagamento nao aprovado.');
+
+            var r2 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-confirmar', {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                body: JSON.stringify({ payment_intent_id: result.paymentIntent.id }),
+            });
+            var data2 = await r2.json();
+            if (data2.error) throw new Error(data2.error);
         }
-
-        var r2 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-confirmar', {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ payment_intent_id: result.paymentIntent.id }),
-        });
-        var data2 = await r2.json();
-        if (data2.error) throw new Error(data2.error);
 
         document.getElementById('cartaoProcessando').style.display = 'none';
         document.getElementById('cartaoSucesso').style.display = 'block';
@@ -721,11 +740,12 @@ async function processarCartao(pagamentoId) {
         }, 2000);
 
     } catch (err) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao'; btn.style.display = ''; }
         document.getElementById('cartaoProcessando').style.display = 'none';
         document.getElementById('cartaoErro').textContent = err.message || 'Erro ao processar pagamento.';
         document.getElementById('cartaoErro').style.display = 'block';
+        document.getElementById('cartoesSalvosContainer').style.display = '';
+        document.getElementById('divPagamentoCartao').querySelector('.font-weight-bold').style.display = '';
     }
 }
 

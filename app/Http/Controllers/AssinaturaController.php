@@ -668,6 +668,7 @@ class AssinaturaController extends Controller
             }
 
             $salvar = $request->boolean('salvar_cartao', false);
+            $paymentMethod = $request->input('payment_method');
             $valorCentavos = (int) round((float) $pagamento->valor * 100);
 
             // Cria ou reutiliza Customer
@@ -697,6 +698,10 @@ class AssinaturaController extends Controller
                     'empresa_id'   => $pagamento->empresa_id,
                 ],
             ];
+
+            if ($paymentMethod) {
+                $intentParams['payment_method'] = $paymentMethod;
+            }
 
             if ($salvar) {
                 $intentParams['setup_future_usage'] = 'off_session';
