@@ -2,10 +2,15 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\Empresa;
+use App\Models\User;
+use App\Support\DomainNormalizer;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
@@ -27,9 +32,23 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'slug' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        $slug = trim((string) $this->input('slug', ''));
+        if ($slug === '') {
+            $slug = $this->slugFromDomain() ?? '';
+        }
+
+        $this->merge([
+            'slug' => Str::lower($slug),
+            'email' => Str::lower(trim((string) $this->input('email', ''))),
+        ]);
     }
 
     /**
@@ -41,15 +60,24 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        $empresa = $this->resolveEmpresaBySlug();
+        $user = $empresa ? $this->resolveUserForEmpresa($empresa->id) : null;
+
+        if (! $user || ! Hash::check((string) $this->input('password'), (string) $user->password)) {
             RateLimiter::hit($this->throttleKey());
 
-            // lang/vendor/adminlte/pt-br/adminlte.php
-            // Quero
-            throw ValidationException::withMessages([
+            $messages = [
                 'email' => trans('auth.failed'),
-            ]);
+            ];
+
+            if (! $empresa) {
+                $messages['slug'] = ['Empresa não encontrada para o slug informado.'];
+            }
+
+            throw ValidationException::withMessages($messages);
         }
+
+        Auth::login($user, $this->boolean('remember'));
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -82,6 +110,64 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+        return Str::transliterate(
+            Str::lower($this->string('slug')).'|'.Str::lower($this->string('email')).'|'.$this->ip()
+        );
+    }
+
+    private function resolveEmpresaBySlug(): ?Empresa
+    {
+        if (!Schema::hasTable('empresas')) {
+            return null;
+        }
+
+        $slug = trim((string) $this->input('slug', ''));
+        if ($slug === '') {
+            return null;
+        }
+
+        return Empresa::query()
+            ->withoutGlobalScopes()
+            ->where('slug', $slug)
+            ->where('ativo', 'S')
+            ->first();
+    }
+
+    private function resolveUserForEmpresa(int $empresaId): ?User
+    {
+        $email = Str::lower(trim((string) $this->input('email', '')));
+        if ($email === '') {
+            return null;
+        }
+
+        return User::query()
+            ->where('email', $email)
+            ->where(function ($query) use ($empresaId) {
+                $query->where('empresa_id', $empresaId);
+            })
+            ->first();
+    }
+
+    private function slugFromDomain(): ?string
+    {
+        if (!Schema::hasTable('empresas')) {
+            return null;
+        }
+
+        $host = DomainNormalizer::normalize($this->getHost());
+        if (!$host) {
+            return null;
+        }
+
+        $empresa = Empresa::query()
+            ->withoutGlobalScopes()
+            ->where('ativo', 'S')
+            ->whereNotNull('dominio')
+            ->get(['id', 'slug', 'dominio'])
+            ->first(function (Empresa $empresa) use ($host) {
+                return DomainNormalizer::normalize($empresa->dominio) === $host;
+            });
+
+        return $empresa?->slug;
     }
 }

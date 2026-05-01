@@ -423,11 +423,45 @@
                 {{-- Heading --}}
                 <div class="fhead">
                     <h1 class="fhead__title">Bem-vindo de volta</h1>
-                    <p class="fhead__sub">Entre com suas credenciais para acessar o sistema</p>
+                    <p class="fhead__sub">
+                        @if($loginEmpresa)
+                            Entre com seu e-mail e senha para acessar {{ $loginTitle }}
+                        @else
+                            Informe o slug da empresa, seu e-mail e sua senha para acessar o sistema
+                        @endif
+                    </p>
                 </div>
 
                 <form method="POST" action="{{ route('login') }}" novalidate id="loginForm">
                     @csrf
+
+                    @if($loginEmpresa)
+                        <input type="hidden" name="slug" value="{{ old('slug', $loginEmpresa->slug) }}">
+                    @else
+                    <div class="field {{ $errors->has('slug') ? 'field--error' : '' }}">
+                        <label class="field__label" for="slug">Slug da empresa</label>
+                        <div class="input-wrap">
+                            <span class="input-wrap__icon">
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                    <path d="M2 3.5A1.5 1.5 0 013.5 2h7A1.5 1.5 0 0112 3.5v7a1.5 1.5 0 01-1.5 1.5h-7A1.5 1.5 0 012 10.5v-7z" stroke="currentColor" stroke-width="1.2"/>
+                                    <path d="M4.2 7h5.6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                                </svg>
+                            </span>
+                            <input
+                                id="slug"
+                                class="input"
+                                type="text"
+                                name="slug"
+                                value="{{ old('slug') }}"
+                                placeholder="ex.: minha-locadora"
+                                required autofocus autocomplete="organization"
+                            >
+                        </div>
+                        @error('slug')
+                            <p class="field__error">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    @endif
 
                     {{-- E-mail --}}
                     <div class="field {{ $errors->has('email') ? 'field--error' : '' }}">
@@ -446,7 +480,7 @@
                                 name="email"
                                 value="{{ old('email') }}"
                                 placeholder="seu@email.com"
-                                required autofocus autocomplete="username"
+                                required {{ $loginEmpresa ? 'autofocus' : '' }} autocomplete="username"
                             >
                         </div>
                         @error('email')
