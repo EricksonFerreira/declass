@@ -277,7 +277,16 @@ class AssinaturaController extends Controller
         $assinaturaAtual  = $empresa?->planoAtivo()->with('plano')->first();
         $erroDowngrade    = null;
 
-        return view('assinatura.contratar', compact('plano', 'periodicidade', 'empresa', 'totalVeiculos', 'assinaturaAtual', 'erroDowngrade'));
+        $cartoesSalvos = [];
+        if ($empresa && $empresa->gateway_customer_id) {
+            try {
+                $cartoesSalvos = app(\App\Services\ClienteStripeService::class)->listarMetodosPagamento($empresa->gateway_customer_id);
+            } catch (\Throwable $e) {
+                $cartoesSalvos = [];
+            }
+        }
+
+        return view('assinatura.contratar', compact('plano', 'periodicidade', 'empresa', 'totalVeiculos', 'assinaturaAtual', 'erroDowngrade', 'cartoesSalvos'));
     }
 
     /** Processa contratação interna: cria assinatura + pagamento pendente. */

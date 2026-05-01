@@ -246,26 +246,20 @@
                             </h5>
                         </div>
                         <div class="card-body">
-                            {{-- Resumo antes de confirmar --}}
-                            <div id="divResumoConfirmar">
-                                <div class="resumo-box mb-3">
-                                    <div>
-                                        <div class="resumo-plano">{{ $plano->nome }}</div>
-                                        <div class="resumo-sub" id="resumoPeriodicidade">{{ $periodicidade === 'anual' ? 'Anual' : 'Mensal' }}</div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="resumo-valor">R$ <span id="resumoValor">{{ $periodicidade === 'anual' ? number_format($plano->valor_anual, 2, ',', '.') : number_format($plano->valor_mensal, 2, ',', '.') }}</span></div>
-                                        <div class="resumo-sub" id="resumoMetodo"></div>
-                                    </div>
+                            {{-- Resumo --}}
+                            <div class="resumo-box mb-3">
+                                <div>
+                                    <div class="resumo-plano">{{ $plano->nome }}</div>
+                                    <div class="resumo-sub" id="resumoPeriodicidade">{{ $periodicidade === 'anual' ? 'Anual' : 'Mensal' }}</div>
                                 </div>
-                                <p class="text-muted mb-0" style="font-size:.82rem;">
-                                    <i class="fas fa-shield-alt text-primary mr-1"></i>
-                                    Sua conta ficara em modo de avaliacao ate a confirmacao do pagamento.
-                                </p>
+                                <div class="text-right">
+                                    <div class="resumo-valor">R$ <span id="resumoValor">{{ $periodicidade === 'anual' ? number_format($plano->valor_anual, 2, ',', '.') : number_format($plano->valor_mensal, 2, ',', '.') }}</span></div>
+                                    <div class="resumo-sub" id="resumoMetodo"></div>
+                                </div>
                             </div>
 
-                            {{-- PIX apos confirmar --}}
-                            <div id="divPagamentoPix" style="display:none;">
+                            {{-- PIX --}}
+                            <div id="divPagamentoPix">
                                 <div id="pixLoading" class="text-center py-4">
                                     <div class="spinner-border text-primary mb-2" style="width:2rem;height:2rem;"></div>
                                     <p class="text-muted mb-0" style="font-size:.85rem;">Gerando QR Code PIX...</p>
@@ -280,12 +274,8 @@
                                             <div id="pixExpira" class="mt-1" style="font-size:.72rem;color:#dc2626;font-weight:600;"></div>
                                         </div>
                                         <div class="flex-grow-1">
-                                            <p class="font-weight-bold mb-1" style="font-size:.92rem;color:#064e3b;">
-                                                <i class="fas fa-qrcode mr-1"></i> Pague <span id="pixValorExibido"></span> via PIX
-                                            </p>
-                                            <p class="text-muted mb-2" style="font-size:.82rem;">
-                                                Escaneie o QR Code ou copie o codigo abaixo. O pagamento e processado pelo Stripe — confirmacao automatica em segundos.
-                                            </p>
+                                            <p class="font-weight-bold mb-1" style="font-size:.92rem;color:#064e3b;"><i class="fas fa-qrcode mr-1"></i> Pague <span id="pixValorExibido"></span> via PIX</p>
+                                            <p class="text-muted mb-2" style="font-size:.82rem;">Escaneie o QR Code ou copie o codigo abaixo.</p>
                                             <label style="font-size:.72rem;font-weight:700;text-transform:uppercase;color:#6b7280;">Codigo PIX copia e cola</label>
                                             <div class="input-group input-group-sm mb-2">
                                                 <input type="text" class="form-control" id="pixCopiaCola" readonly style="font-size:.72rem;font-family:monospace;background:#f8fafc;">
@@ -295,9 +285,7 @@
                                                     </button>
                                                 </div>
                                             </div>
-                                            <div id="pixAguardando" style="font-size:.8rem;color:#64748b;">
-                                                <i class="fas fa-spinner fa-spin mr-1"></i> Aguardando confirmacao...
-                                            </div>
+                                            <div id="pixAguardando" style="font-size:.8rem;color:#64748b;"><i class="fas fa-spinner fa-spin mr-1"></i> Aguardando confirmacao...</div>
                                             <div id="pixPago" class="alert alert-success py-2 mb-0" style="display:none;font-size:.82rem;">
                                                 <i class="fas fa-check-circle mr-1"></i> <strong>Pagamento confirmado!</strong> Redirecionando...
                                             </div>
@@ -307,15 +295,45 @@
                                 </div>
                             </div>
 
-                            {{-- Cartao apos confirmar --}}
+                            {{-- Cartao: lista cartoes salvos + novo cartao --}}
                             <div id="divPagamentoCartao" style="display:none;">
-                                <p class="font-weight-bold mb-2" style="font-size:.88rem;"><i class="fas fa-credit-card mr-1"></i> Dados do Cartao</p>
-                                <div id="card-element" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:.75rem;background:#f8fafc;min-height:40px;"></div>
-                                <div id="card-errors" class="mt-1" style="color:#ef4444;font-size:.8rem;display:none;"></div>
-                                <div class="custom-control custom-checkbox mt-2">
-                                    <input type="checkbox" class="custom-control-input" id="salvarCartao">
-                                    <label class="custom-control-label" for="salvarCartao" style="font-size:.82rem;">Salvar cartao para pagamentos futuros</label>
+                                <p class="font-weight-bold mb-3" style="font-size:.88rem;"><i class="fas fa-credit-card mr-1"></i> Selecione o cartao</p>
+
+                                <div id="cartoesSalvosContainer">
+                                    @forelse ($cartoesSalvos as $c)
+                                        @php $card = $c['card'] ?? null; @endphp
+                                        @if ($card)
+                                        <div class="cartao-opt" data-pm="{{ $c['id'] }}" onclick="selecionarCartao(this, '{{ $c['id'] }}')">
+                                            <div class="cartao-opt-radio"></div>
+                                            <div class="cartao-opt-info">
+                                                <strong>{{ strtoupper($card->brand ?? '') }}</strong>
+                                                &nbsp;&middot;&nbsp;
+                                                **** {{ $card->last4 ?? '----' }}
+                                                <span class="text-muted ml-2" style="font-size:.78rem;">
+                                                    {{ $card->exp_month ?? '--' }}/{{ $card->exp_year ?? '----' }}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        @endif
+                                    @empty
+                                        <p class="text-muted mb-2" style="font-size:.82rem;">Nenhum cartao salvo.</p>
+                                    @endforelse
+                                    <div class="cartao-opt" data-pm="novo" onclick="selecionarCartao(this, 'novo')">
+                                        <div class="cartao-opt-radio"></div>
+                                        <div class="cartao-opt-info">
+                                            <i class="fas fa-plus-circle mr-1"></i>
+                                            <strong>Novo cartao</strong>
+                                            <span class="text-muted ml-2" style="font-size:.78rem;">Adicionar um novo cartao de credito</span>
+                                        </div>
+                                    </div>
+                                    <input type="hidden" id="cartaoSelecionado" value="">
                                 </div>
+
+                                <div id="novoCartaoForm" style="display:none;" class="mt-3">
+                                    <div id="card-element" style="border:1.5px solid #e2e8f0;border-radius:10px;padding:.75rem;background:#f8fafc;min-height:40px;"></div>
+                                    <div id="card-errors" class="mt-1" style="color:#ef4444;font-size:.8rem;display:none;"></div>
+                                </div>
+
                                 <div id="cartaoProcessando" class="text-center py-3" style="display:none;">
                                     <div class="spinner-border text-primary mb-2" style="width:2rem;height:2rem;"></div>
                                     <p class="text-muted mb-0" style="font-size:.85rem;">Processando pagamento...</p>
@@ -327,31 +345,20 @@
                             </div>
                         </div>
                     </div>
+
+                    {{-- Botao confirmar --}}
+                    <div class="text-right">
+                        <button type="button" class="btn-action btn-action-success btn-lg" id="btnConfirmarPagamento">
+                            <i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao
+                        </button>
+                    </div>
                 </div>
 
-                {{-- Nota de seguranca --}}
-                <div id="divNotaSeguranca" class="alert alert-light border mb-3" style="font-size:.82rem;">
-                    <i class="fas fa-shield-alt text-primary mr-1"></i>
-                    <strong>Sem cobranca imediata.</strong>
-                    Apos confirmar, voce insere os dados de pagamento. Sua conta fica ativa em modo de avaliacao ate a confirmacao.
-                </div>
-
-                {{-- Botoes --}}
-                <div id="divBtnStep1" class="d-flex justify-content-between align-items-center">
-                    <a href="{{ route('assinatura.meu-plano') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left mr-1"></i> Cancelar
-                    </a>
-                    <button type="button" class="btn-action btn-primary" id="btnAvancarPagamento"
+                {{-- Botao step 1 --}}
+                <div id="divBtnStep1" class="text-right">
+                    <button type="button" class="btn-action btn-primary btn-lg" id="btnAvancarPagamento"
                             {{ $erroDowngrade ? 'disabled' : '' }}>
                         Continuar <i class="fas fa-arrow-right ml-1"></i>
-                    </button>
-                </div>
-                <div id="divBtnStep2" class="d-flex justify-content-between align-items-center" style="display:none;">
-                    <button type="button" class="btn btn-secondary" onclick="voltarStep1()">
-                        <i class="fas fa-arrow-left mr-1"></i> Voltar
-                    </button>
-                    <button type="button" class="btn-action btn-action-success" id="btnConfirmarPagamento">
-                        <i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao
                     </button>
                 </div>
             </div>
