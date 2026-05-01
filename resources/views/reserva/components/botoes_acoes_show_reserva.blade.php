@@ -103,7 +103,12 @@
             @endphp
 
             @if($checkoutJaFeito)
-                {{-- Checkout concluído: não exibe botão --}}
+                @php $jaSatisfacaoBtn = $reserva->satisfacao()->exists(); @endphp
+                <button type="button" class="action-pill action-pill--success"
+                        onclick="$('#modalSatisfacao').modal('show')">
+                    <i class="fas fa-{{ $jaSatisfacaoBtn ? 'check-circle' : 'star' }}"></i>
+                    <span>{{ $jaSatisfacaoBtn ? 'Ver avaliação' : 'Avaliar atendimento' }}</span>
+                </button>
             @elseif($podeCheckout)
                 <button type="button" id="btn-iniciar-checkout"
                         class="action-pill action-pill--checkout"
