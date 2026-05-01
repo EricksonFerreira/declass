@@ -383,6 +383,13 @@
 .resumo-plano{font-weight:700;font-size:.95rem;color:#0f172a}
 .resumo-valor{font-size:1.4rem;font-weight:900;color:#0a1628}
 .resumo-sub{font-size:.78rem;color:#64748b}
+.cartao-opt{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;transition:border-color .15s,background .15s;margin-bottom:8px;background:#fff}
+.cartao-opt:hover{border-color:#94a3b8;background:#f8fafc}
+.cartao-opt.selecionado{border-color:#0a1628;background:#f0f4ff}
+.cartao-opt-radio{width:20px;height:20px;border-radius:50%;border:2px solid #cbd5e1;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:border-color .15s}
+.cartao-opt.selecionado .cartao-opt-radio{border-color:#0a1628}
+.cartao-opt.selecionado .cartao-opt-radio::after{content:'';width:10px;height:10px;border-radius:50%;background:#0a1628}
+.cartao-opt-info{flex:1;font-size:.85rem;color:#0f172a}
 </style>
 @endpush
 
@@ -409,6 +416,21 @@ document.getElementById('togglePeriodo').addEventListener('change', function () 
     document.getElementById('lblAnual').style.color       = anual ? '#0a1628' : '#94a3b8';
 });
 
+var cartaoPmId = null;
+
+function selecionarCartao(el, pmId) {
+    document.querySelectorAll('.cartao-opt').forEach(function (c) { c.classList.remove('selecionado'); });
+    el.classList.add('selecionado');
+    cartaoPmId = pmId;
+    document.getElementById('cartaoSelecionado').value = pmId;
+    if (pmId === 'novo') {
+        document.getElementById('novoCartaoForm').style.display = 'block';
+        inicializarStripeNovoCartao();
+    } else {
+        document.getElementById('novoCartaoForm').style.display = 'none';
+    }
+}
+
 function selecionarMetodo(metodo, el) {
     document.querySelectorAll('.metodo-card').forEach(function (c) {
         c.style.borderColor = '#dee2e6';
@@ -422,8 +444,7 @@ function selecionarMetodo(metodo, el) {
     document.getElementById('errMetodo').style.display = 'none';
     document.getElementById('divCartao').style.display    = metodo === 'cartao'    ? 'block' : 'none';
     document.getElementById('divAtendente').style.display = metodo === 'atendente' ? 'block' : 'none';
-    document.getElementById('divNotaSeguranca').style.display = metodo === 'atendente' ? 'none' : 'block';
-    document.getElementById('divBtnStep1').style.display  = metodo === 'atendente' ? 'none' : 'flex';
+    document.getElementById('divBtnStep1').style.display  = metodo === 'atendente' ? 'none' : 'block';
     if (metodo !== 'cartao') {
         document.getElementById('toggleRenovacao').checked = false;
         document.getElementById('inputRenovacaoAutomatica').value = '0';
@@ -471,12 +492,20 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
     document.getElementById('stepMetodo').style.display = 'none';
     document.getElementById('stepPagamento').style.display = 'block';
     document.getElementById('divBtnStep1').style.display = 'none';
-    document.getElementById('divBtnStep2').style.display = 'flex';
-    document.getElementById('divNotaSeguranca').style.display = 'none';
+
+    if (metodo === 'pix') {
+        document.getElementById('divPagamentoPix').style.display = 'block';
+        document.getElementById('btnConfirmarPagamento').style.display = 'none';
+        criarAssinaturaEProcessarPix();
+    } else if (metodo === 'cartao') {
+        document.getElementById('divPagamentoPix').style.display = 'none';
+        document.getElementById('divPagamentoCartao').style.display = 'block';
+    }
     atualizarStepper(2);
 });
 
-// ── Confirmar e processar pagamento ──
+// ── criar assinatura + pix ──
+function criarAssinaturaEProcessarPix() {
 var aguardandoConfirmacao = false;
 
 document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
