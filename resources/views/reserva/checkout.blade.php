@@ -673,6 +673,23 @@
         }).filter(Boolean).join(' ');
     }
 
+    const TIPO_LABEL = {
+        ausente:          '<span class="badge badge-success">Ausente</span>',
+        amolgadela_leve:  '<span class="badge badge-warning text-dark">Amolgadela Leve</span>',
+        amolgadela_grave: '<span class="badge badge-danger">Amolgadela Grave</span>',
+        risco_leve:       '<span class="badge badge-warning text-dark">Risco Leve</span>',
+        risco_grave:      '<span class="badge badge-danger">Risco Grave</span>',
+    };
+
+    function tipoBadge(tipo) {
+        return TIPO_LABEL[tipo] || `<span class="badge badge-secondary">${tipo ?? '—'}</span>`;
+    }
+
+    function formatCusto(val) {
+        if (val === null || val === undefined || val === '') return '—';
+        return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+    }
+
     function obterDanosDetectados() {
         const veiculo_id = document.getElementById('veiculo')?.value;
         const reserva_id = document.getElementById('reserva_id')?.value;
@@ -685,14 +702,21 @@
                 const tbody = document.getElementById('danos_detectados');
                 tbody.innerHTML = '';
                 if (!data.length) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="damage-empty"><i class="fas fa-shield-alt"></i>Nenhuma avaria nesta reserva</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>';
                     return;
                 }
                 data.forEach(dano => {
+                    const categoria  = dano.categoria ?? '—';
+                    const local      = dano.localizacao_problema ?? '—';
+                    const locLabel   = `<strong>${dano.localizacao}</strong><br><small class="text-muted">${categoria} · ${local}</small>`;
+                    const descricao  = dano.descricao || '<span class="text-muted">—</span>';
+                    const km         = dano.quilometragem_veiculo ? `<small class="text-muted d-block">KM: ${dano.quilometragem_veiculo}</small>` : '';
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr>
-                            <td>${dano.localizacao}</td>
-                            <td>${dano.descricao ?? ''}</td>
+                            <td>${locLabel}</td>
+                            <td>${descricao}${km}</td>
+                            <td>${tipoBadge(dano.tipo_dano)}</td>
+                            <td>${formatCusto(dano.custo_estimado)}</td>
                             <td>${rowImagens(dano)}</td>
                         </tr>
                     `);
