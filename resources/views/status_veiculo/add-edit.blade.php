@@ -22,7 +22,7 @@
             <div class="card-header card-header-status-veiculo border-0">
                 <div>
                     <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Configure os dados principais do status de veiculo.</p>
+                    <p class="mb-0 text-muted">Configure nome, cor visual e status do veículo.</p>
                 </div>
             </div>
 
@@ -33,16 +33,38 @@
                     @endif
                     @csrf
 
-                    <div class="status-veiculo-section-title">Informacoes Basicas</div>
+                    <div class="status-veiculo-section-title">Informações básicas</div>
                     <div class="form-row">
-                        <div class="col-lg-8 col-md-7">
+                        <div class="col-lg-5 col-md-6">
                             <div class="form-group form-group-status-veiculo">
                                 <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
                                     label="Nome" value="{{ old('nome', $status_veiculo->nome ?? '') }}" required />
                             </div>
                         </div>
 
-                        <div class="col-lg-4 col-md-5">
+                        <div class="col-lg-4 col-md-6">
+                            <div class="form-group form-group-status-veiculo">
+                                <label for="cor" class="form-label-status-veiculo">Cor</label>
+                                @php
+                                    $corSelecionada = old('cor', $status_veiculo->cor ?? 'secondary');
+                                @endphp
+                                <select name="cor" id="cor" class="form-control form-control-sm" required>
+                                    @foreach ($opcoesCor as $valor => $texto)
+                                        <option value="{{ $valor }}" {{ $corSelecionada === $valor ? 'selected' : '' }}>
+                                            {{ $texto }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <x-form-errors name="cor" />
+                                <div class="status-veiculo-preview mt-2">
+                                    <span id="status-veiculo-preview-badge" class="badge badge-xs bg-{{ $corSelecionada }}">
+                                        {{ old('nome', $status_veiculo->nome ?? 'Pré-visualização') }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-3 col-md-4">
                             <div class="form-group form-group-status-veiculo">
                                 <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione um valor"
                                     :selected="old('ativo', isset($status_veiculo->ativo) && $status_veiculo->ativo ? $status_veiculo->ativo : null)"
@@ -91,6 +113,14 @@
         margin-bottom: 1rem;
     }
 
+    .form-label-status-veiculo {
+        display: block;
+        margin-bottom: .45rem;
+        font-size: .86rem;
+        font-weight: 600;
+        color: #334155;
+    }
+
     .card-status-veiculo .form-control,
     .card-status-veiculo .form-select {
         border-radius: 10px;
@@ -102,6 +132,12 @@
     .card-status-veiculo .form-select:focus {
         border-color: #4b80ff;
         box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
+    }
+
+    .status-veiculo-preview .badge {
+        font-size: .78rem;
+        padding: .45rem .7rem;
+        border-radius: 999px;
     }
 
     .btn-save-status-veiculo {
@@ -164,5 +200,21 @@
 @stop
 
 @section('js')
-    <script></script>
+<script>
+    (function () {
+        const nome = document.getElementById('nome');
+        const cor = document.getElementById('cor');
+        const badge = document.getElementById('status-veiculo-preview-badge');
+
+        function syncPreview() {
+            if (!badge || !cor) return;
+            badge.className = 'badge badge-xs bg-' + (cor.value || 'secondary');
+            badge.textContent = (nome?.value || '').trim() || 'Pré-visualização';
+        }
+
+        nome?.addEventListener('input', syncPreview);
+        cor?.addEventListener('change', syncPreview);
+        syncPreview();
+    })();
+</script>
 @stop

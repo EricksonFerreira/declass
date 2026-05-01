@@ -219,6 +219,10 @@ class CalcaoService
             throw new \RuntimeException('Este calcao nao pode ser capturado no status atual: ' . $calcao->status);
         }
 
+        if ($calcao->data_hora_captura || (float) $calcao->valor_capturado > 0) {
+            throw new \RuntimeException('Este calcao ja foi capturado anteriormente e nao pode ser capturado novamente.');
+        }
+
         $empresa = $this->gatewayConfig->empresaAtual();
         $stripeSecret = $empresa?->stripe_secret;
         if (!$stripeSecret) {

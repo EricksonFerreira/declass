@@ -105,6 +105,6 @@ class Calcao extends Model
 
     public function podeCapturar(): bool
     {
-        return in_array($this->status, [self::STATUS_AUTORIZADO, self::STATUS_PARCIALMENTE_CAPTURADO], true);
+        return $this->status === self::STATUS_AUTORIZADO;
     }
 }

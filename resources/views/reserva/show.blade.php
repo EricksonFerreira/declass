@@ -590,6 +590,7 @@
                 @php
                     $ci          = $reserva->contratoCheckin;
                     $ciAssinado  = $ci->assinado === 'S';
+                    $checkoutJaRegistrado = $reserva->contratoCheckout()->exists();
                     $ciVeiculo   = $ci->veiculo?->nome ?? ('ID ' . $ci->veiculo_id);
                     $ciBorder    = $ciAssinado ? '#10b981' : '#f59e0b';
                     $ciBgFrom    = $ciAssinado ? '#ecfdf5' : '#fffbeb';
@@ -669,7 +670,7 @@
                             <a href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" target="_blank" class="rs-ci-btn rs-ci-btn--view">
                                 <i class="fas fa-eye"></i> Ver contrato
                             </a>
-                            @if(!$ciAssinado)
+                            @if(!$ciAssinado && !$checkoutJaRegistrado)
                                 <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
                                     <i class="fas fa-signature"></i> Assinar
                                 </a>
@@ -677,12 +678,14 @@
                                     <i class="fas fa-edit"></i> Editar contrato
                                 </a>
                             @endif
-                            <button type="button" class="rs-ci-btn rs-ci-btn--delete js-excluir-contrato-checkin"
-                                    data-url="{{ route('reserva.checkin.excluirContrato', $reserva->id) }}"
-                                    data-assinado="{{ $ciAssinado ? '1' : '0' }}">
-                                <i class="fas fa-trash"></i>
-                                {{ $ciAssinado ? 'Excluir e recriar' : 'Excluir contrato' }}
-                            </button>
+                            @if(!$checkoutJaRegistrado)
+                                <button type="button" class="rs-ci-btn rs-ci-btn--delete js-excluir-contrato-checkin"
+                                        data-url="{{ route('reserva.checkin.excluirContrato', $reserva->id) }}"
+                                        data-assinado="{{ $ciAssinado ? '1' : '0' }}">
+                                    <i class="fas fa-trash"></i>
+                                    {{ $ciAssinado ? 'Excluir e recriar' : 'Excluir contrato' }}
+                                </button>
+                            @endif
                         </div>
                     </div>
 
@@ -921,9 +924,41 @@
                                 </div>
                             </div>
 
-                            <div class="rs-mini-list">
+                            <div class="rs-damage-block rs-damage-block--amber">
+                                <div class="rs-damage-block__label">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    <div>
+                                        <strong>Danos Nesta Reserva</strong>
+                                        <span>Avarias registradas no check-in ou nesta devolução</span>
+                                    </div>
+                                </div>
+
+                                <div class="rs-damage-table-wrap">
+                                    <table class="rs-damage-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Localização</th>
+                                                <th>Descrição</th>
+                                                <th>Tipo</th>
+                                                <th>Custo Est.</th>
+                                                <th>Imagem</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
                                 @foreach($danosReserva as $d)
                                     @php
+                                        $imagensDano = $d->imagem
+                                            ->map(function ($img) {
+                                                return [
+                                                    'url' => $img->caminho_imagem
+                                                        ? \Illuminate\Support\Facades\Storage::disk('public')->url($img->caminho_imagem)
+                                                        : null,
+                                                ];
+                                            })
+                                            ->filter(function ($img) {
+                                                return !empty($img['url']);
+                                            })
+                                            ->values();
                                         $danoPayload = [
                                             'id' => $d->id,
                                             'localizacao' => strtoupper((string) ($d->local_dano ?? $d->localizacao_problema ?? '-')),
@@ -939,37 +974,56 @@
                                             'correcao_data' => $d->correcao_data ? \Carbon\Carbon::parse($d->correcao_data)->format('d/m/Y H:i') : null,
                                             'correcao_usuario' => $d->usuarioCorrecao?->nome,
                                             'correcao_realizada' => (bool) $d->correcao_data,
-                                            'imagens' => $d->imagem
-                                                ->map(function ($img) {
-                                                    return [
-                                                        'url' => $img->caminho_imagem
-                                                            ? \Illuminate\Support\Facades\Storage::disk('public')->url($img->caminho_imagem)
-                                                            : null,
-                                                    ];
-                                                })
-                                                ->filter(function ($img) {
-                                                    return !empty($img['url']);
-                                                })
-                                                ->values()
-                                                ->all(),
+                                            'imagens' => $imagensDano->all(),
                                         ];
                                     @endphp
-                                    <div class="rs-mini-item rs-mini-item--clickable js-dano-detalhe-trigger"
-                                         data-dano='@json($danoPayload)'>
-                                        <div>
-                                            <strong>{{ strtoupper($d->local_dano ?? $d->localizacao_problema ?? '-') }}</strong>
-                                            <div class="text-muted small">{{ \Illuminate\Support\Str::limit($d->observacoes ?? $d->tipo_dano ?? '', 120) }}</div>
-                                        </div>
-                                        <div class="text-right">
-                                            <div><strong>R$ {{ number_format((float) ($d->custo_estimado ?? 0), 2, ',', '.') }}</strong></div>
-                                            @if($d->correcao_data)
-                                                <span class="badge badge-success">Corrigido</span>
-                                            @else
-                                                <span class="badge badge-warning">Pendente</span>
+                                    <tr class="js-dano-detalhe-trigger rs-damage-table__row" data-dano='@json($danoPayload)'>
+                                        <td>
+                                            <strong>{{ strtoupper($d->local_dano ?? $d->localizacao_problema ?? '-') }}</strong><br>
+                                            <small class="text-muted">{{ $d->dano?->categoria?->nome ?? '—' }} · {{ $d->localizacao_problema ?? '—' }}</small>
+                                        </td>
+                                        <td>
+                                            {{ $d->observacoes ?: '—' }}
+                                            @if($d->quilometragem_veiculo)
+                                                <small class="text-muted d-block mt-1">
+                                                    <i class="fas fa-tachometer-alt mr-1"></i>KM {{ number_format((float) $d->quilometragem_veiculo, 0, ',', '.') }}
+                                                </small>
                                             @endif
-                                        </div>
-                                    </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <span class="badge badge-light text-dark border">{{ $d->tipo_dano ?: '—' }}</span>
+                                                @if($d->tipo_dano)
+                                                    <small class="d-block text-muted mt-1">{{ $d->tipo_dano }}</small>
+                                                @endif
+                                            </div>
+                                            <div class="mt-1">
+                                                    @if($d->correcao_data)
+                                                        <span class="badge badge-success">Corrigido</span>
+                                                    @else
+                                                        <span class="badge badge-warning">Pendente</span>
+                                                    @endif
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <strong>R$ {{ number_format((float) ($d->custo_estimado ?? 0), 2, ',', '.') }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="rs-damage-thumbs">
+                                                @forelse($imagensDano as $img)
+                                                    <img src="{{ $img['url'] }}" alt="Foto do dano">
+                                                @empty
+                                                    <span class="rs-damage-empty-inline">
+                                                        <i class="far fa-image"></i> Sem imagem
+                                                    </span>
+                                                @endforelse
+                                            </div>
+                                        </td>
+                                    </tr>
                                 @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         @else
                             <div class="rs-empty">
@@ -2026,6 +2080,123 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         border: 1px solid #f1f5f9;
         border-radius: 14px;
         background: #fbfdff;
+    }
+
+    .rs-damage-block {
+        border: 1px solid #e2e8f0;
+        border-left: 3px solid #4f46e5;
+        border-radius: 14px;
+        padding: 1.1rem 1.3rem;
+        background: #fff;
+    }
+
+    .rs-damage-block--amber {
+        border-left-color: #f59e0b;
+    }
+
+    .rs-damage-block__label {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 1rem;
+        padding-bottom: .8rem;
+        border-bottom: 1px dashed #e5eaf3;
+    }
+
+    .rs-damage-block__label > i {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: #fffbeb;
+        color: #f59e0b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        flex-shrink: 0;
+    }
+
+    .rs-damage-block__label strong {
+        display: block;
+        color: #0f172a;
+        font-size: .88rem;
+        font-weight: 700;
+    }
+
+    .rs-damage-block__label span {
+        display: block;
+        color: #64748b;
+        font-size: .76rem;
+        margin-top: 2px;
+    }
+
+    .rs-damage-table-wrap {
+        overflow-x: auto;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .rs-damage-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: .82rem;
+    }
+
+    .rs-damage-table thead tr {
+        background: #fffbeb;
+    }
+
+    .rs-damage-table th {
+        padding: 9px 12px;
+        text-align: left;
+        font-weight: 700;
+        color: #92400e;
+        font-size: .72rem;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        border-bottom: 1px solid #fde68a;
+    }
+
+    .rs-damage-table td {
+        padding: 9px 12px;
+        color: #334155;
+        border-bottom: 1px solid #f1f5f9;
+        vertical-align: middle;
+    }
+
+    .rs-damage-table tbody tr:last-child td {
+        border-bottom: 0;
+    }
+
+    .rs-damage-table__row {
+        cursor: pointer;
+        transition: background .16s ease;
+    }
+
+    .rs-damage-table__row:hover td {
+        background: #fafbff;
+    }
+
+    .rs-damage-thumbs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .rs-damage-thumbs img {
+        width: 46px;
+        height: 46px;
+        object-fit: cover;
+        border-radius: 6px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .rs-damage-empty-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #94a3b8;
+        font-size: .78rem;
     }
 
     /* ═══════════════════════════

@@ -12,6 +12,7 @@ class StatusVeiculo extends Model
     protected $table = 'status_veiculos';
     protected $fillable = [
         'nome',
+        'cor',
         'ativo',
     ];
 }

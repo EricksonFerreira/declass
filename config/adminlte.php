@@ -656,19 +656,8 @@ return [
                 ],
                 [
                     'text' => 'Status de Veículo',
+                    'route' => 'status_veiculo.index',
                     'icon' => 'fas fa-traffic-light',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'status_veiculo.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'status_veiculo.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
                 ],
             ],
         ],
@@ -1276,3 +1265,4 @@ return [
 
     'livewire' => false,
 ];
+

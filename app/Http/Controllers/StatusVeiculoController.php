@@ -9,22 +9,24 @@ use App\Http\Requests\StatusVeiculo\UpdateStatusVeiculoRequest;
 use App\Services\BreadcrumbService;
 use App\Services\StatusVeiculoService;
 use App\Traits\AtualizaFiltrosTrait;
-use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
+use Illuminate\Http\Request;
 
 class StatusVeiculoController extends BaseController implements FiltroInterface, ResourceInterface
 {
     use FiltroTrait;
     use AtualizaFiltrosTrait;
+
     protected $status_veiculoService;
     protected $breadcrumbService;
 
     public function __construct(StatusVeiculoService $status_veiculoService, BreadcrumbService $breadcrumbService)
     {
-        $this->titulo = "Status dos Veículos";
+        $this->titulo = 'Status dos Veículos';
         $this->nomeFiltro = 'status_veiculo';
         $this->status_veiculoService = $status_veiculoService;
         $this->breadcrumbService = $breadcrumbService;
+        $this->middleware('can:acessar-superadmin')->only(['create', 'store', 'edit', 'update', 'destroy']);
     }
 
     public function index()
@@ -56,15 +58,19 @@ class StatusVeiculoController extends BaseController implements FiltroInterface,
         ))->with('titulo', $this->titulo);
     }
 
-    public function create(){
+    public function create()
+    {
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Status dos Veículos','status_veiculo.index','Criar');
+        $opcoesCor = $this->opcoesCor();
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Status dos Veículos', 'status_veiculo.index', 'Criar');
 
-        [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('status_veiculo.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        [$metodo, $rota] = $this->getFormMethodAndRoute();
+
+        return view('status_veiculo.add-edit', compact('breadcrumb', 'status', 'metodo', 'rota', 'opcoesCor'))
+            ->with('titulo', $this->titulo);
     }
 
     public function store(StoreStatusVeiculoRequest $request)
@@ -79,29 +85,38 @@ class StatusVeiculoController extends BaseController implements FiltroInterface,
         $status_veiculo = $this->status_veiculoService->getById($id);
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Status dos Veículos','status_veiculo.index',"Editar: $status_veiculo->nome");
-        [$metodo,$rota] = $this->getFormMethodAndRoute($status_veiculo);
+        $opcoesCor = $this->opcoesCor();
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
+            'Status dos Veículos',
+            'status_veiculo.index',
+            "Editar: $status_veiculo->nome"
+        );
+        [$metodo, $rota] = $this->getFormMethodAndRoute($status_veiculo);
 
-        return view('status_veiculo.add-edit', compact('status_veiculo','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('status_veiculo.add-edit', compact('status_veiculo', 'breadcrumb', 'status', 'metodo', 'rota', 'opcoesCor'))
+            ->with('titulo', $this->titulo);
     }
 
     public function update(UpdateStatusVeiculoRequest $request, $id)
     {
-        $success = $this->status_veiculoService->update($id,$request->all());
+        $this->status_veiculoService->update($id, $request->all());
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function destroy($id)
     {
-        $success = $this->status_veiculoService->delete($id);
+        $this->status_veiculoService->delete($id);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function filtro(Request $request)
     {
         $this->criarFiltros($request, $this->nomeFiltro);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -109,15 +124,14 @@ class StatusVeiculoController extends BaseController implements FiltroInterface,
     {
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function setPerPage(Request $request)
     {
-        // Salva o valor de paginação na sessão
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
-        // Redireciona de volta para a página de listagem
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -134,24 +148,16 @@ class StatusVeiculoController extends BaseController implements FiltroInterface,
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
-                ['value' => 'N', 'label' => 'Inativo', 'selected' => false]
-            ]]
+                ['value' => 'N', 'label' => 'Inativo', 'selected' => false],
+            ]],
         ];
     }
 
     public function obterFiltrosSecundarios()
     {
-        return [
-            // Adicione filtros secundários aqui, se necessário
-        ];
+        return [];
     }
 
-    /**
-     * Função para obter o método e a rota para o formulário.
-     *
-     * @param  StatusVeiculo|null  $status_veiculo
-     * @return array
-     */
     private function getFormMethodAndRoute($status_veiculo = null)
     {
         if ($status_veiculo) {
@@ -164,6 +170,23 @@ class StatusVeiculoController extends BaseController implements FiltroInterface,
         return [
             'POST',
             route('status_veiculo.store'),
+        ];
+    }
+
+    private function opcoesCor(): array
+    {
+        return [
+            'success' => 'Verde',
+            'info' => 'Azul claro',
+            'primary' => 'Azul',
+            'warning' => 'Âmbar',
+            'orange' => 'Laranja',
+            'danger' => 'Vermelho',
+            'secondary' => 'Cinza',
+            'gray' => 'Cinza',
+            'grey' => 'Cinza escuro',
+            'purple' => 'Roxo',
+            'teal' => 'Verde azulado',
         ];
     }
 }

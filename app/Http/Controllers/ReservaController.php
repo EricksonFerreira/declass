@@ -957,6 +957,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             );
 
             $this->reservaService->checkOutRealizado($reserva_id);
+            $this->liberarCalcaoAposCheckout($reserva);
             $this->reservaService->adicionaLog(
                 $reserva_id,
                 Auth::id(),
@@ -1034,6 +1035,79 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         return 'Para fazer o checkout é obrigatório registrar o calção. Status atual do calção: ' . (string) ($calcao->label_status ?? $calcao->status);
+    }
+
+    private function liberarCalcaoAposCheckout(Reserva $reserva): void
+    {
+        $calcao = $reserva->calcao;
+        if (!$calcao) {
+            return;
+        }
+
+        if (!empty($calcao->payment_intent_id) && $calcao->podeLiberar()) {
+            $calcaoLiberado = $this->calcaoService->cancelar(
+                $calcao,
+                'Calção liberado automaticamente após o checkout.'
+            );
+
+            $this->reservaService->adicionaLog($reserva->id, Auth::id(), json_encode([
+                'acao' => 'Calção liberado automaticamente no checkout',
+                'calcao_id' => $calcaoLiberado->id,
+            ]));
+
+            return;
+        }
+
+        if (!empty($calcao->payment_intent_id) || $calcao->status === Calcao::STATUS_CANCELADO) {
+            return;
+        }
+
+        $valor = (float) ($calcao->valor_capturado ?: $calcao->valor_autorizado ?: $calcao->valor_calculado ?: 0);
+        if ($valor <= 0) {
+            return;
+        }
+
+        $metodo = (string) (($calcao->stripe_response['metodo'] ?? null) ?: 'presencial');
+
+        $calcao->update([
+            'status' => Calcao::STATUS_CANCELADO,
+            'data_hora_cancelamento' => now(),
+            'usuario_responsavel_id' => Auth::id(),
+            'observacao' => 'Calção presencial devolvido automaticamente após o checkout.',
+        ]);
+
+        $payload = [
+            'user_id' => $reserva->user_id,
+            'pago_por_user_id' => Auth::id(),
+            'reserva_id' => $reserva->id,
+            'valor' => -1 * abs($valor),
+            'moeda' => 'BRL',
+            'metodo_pagamento' => $metodo,
+            'status' => 'refunded',
+            'info_pagamento' => [
+                'tipo' => 'calcao',
+                'acao' => 'devolvido_automaticamente_checkout',
+                'calcao_id' => $calcao->id,
+            ],
+        ];
+
+        if (Schema::hasColumn('transacoes', 'confirmado_em')) {
+            $payload['confirmado_em'] = now();
+        }
+        if (Schema::hasColumn('transacoes', 'confirmado_por_user_id')) {
+            $payload['confirmado_por_user_id'] = Auth::id();
+        }
+        if (Schema::hasColumn('transacoes', 'empresa_id')) {
+            $payload['empresa_id'] = $reserva->empresa_id ?? null;
+        }
+
+        Transacao::create($payload);
+
+        $this->reservaService->adicionaLog($reserva->id, Auth::id(), json_encode([
+            'acao' => 'Calção presencial devolvido automaticamente no checkout',
+            'calcao_id' => $calcao->id,
+            'valor' => $valor,
+        ]));
     }
 
     public function cancelar($id)
@@ -2686,12 +2760,17 @@ private function montarDiasSemanaFlags($diasUteis): array
      */
     public function excluirContratoCheckin(Request $request, $reserva_id)
     {
-        $reserva  = $this->reservaService->getById($reserva_id, ['contratoCheckin']);
+        $reserva  = $this->reservaService->getById($reserva_id, ['contratoCheckin', 'contratoCheckout']);
         $contrato = $reserva->contratoCheckin;
 
         if (!$contrato) {
             return redirect()->route('reserva.show', $reserva_id)
                 ->with('warning', 'Nenhum contrato de check-in encontrado.');
+        }
+
+        if ($reserva->contratoCheckout) {
+            return redirect()->route('reserva.show', $reserva_id)
+                ->with('warning', 'Após o checkout, o contrato de check-in não pode mais ser excluído. Apenas a visualização fica disponível.');
         }
 
         $foiAssinado = $contrato->assinado === 'S';
