@@ -372,6 +372,10 @@
 .plano-step-title{font-size:.82rem;font-weight:800;line-height:1}
 .plano-step-sub{font-size:.72rem;color:#64748b;line-height:1.1;margin-top:2px}
 #card-element.StripeElement--focus{border-color:#0a1628;box-shadow:0 0 0 3px rgba(10,22,40,.08)}
+.resumo-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.5rem}
+.resumo-plano{font-weight:700;font-size:.95rem;color:#0f172a}
+.resumo-valor{font-size:1.4rem;font-weight:900;color:#0a1628}
+.resumo-sub{font-size:.78rem;color:#64748b}
 </style>
 @endpush
 
@@ -466,7 +470,10 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
 });
 
 // ── Confirmar e processar pagamento ──
+var aguardandoConfirmacao = false;
+
 document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
+    if (aguardandoConfirmacao) return;
     var metodo = document.getElementById('inputMetodo').value;
     if (!metodo) return;
 
@@ -475,7 +482,10 @@ document.getElementById('btnConfirmarPagamento').addEventListener('click', funct
     btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Criando assinatura...';
 
     document.getElementById('divResumoConfirmar').style.display = 'none';
-    document.getElementById('pixLoading').style.display = 'block';
+
+    if (metodo === 'pix') {
+        document.getElementById('pixLoading').style.display = 'block';
+    }
 
     var formData = new FormData(document.getElementById('formContratar'));
 
@@ -507,16 +517,18 @@ document.getElementById('btnConfirmarPagamento').addEventListener('click', funct
         }
 
         PAGAMENTO_ID = res.data.pagamento_id;
-
-        document.getElementById('divBtnStep2').style.display = 'none';
         atualizarStepper(2);
 
         if (metodo === 'pix') {
+            document.getElementById('divBtnStep2').style.display = 'none';
             document.getElementById('divPagamentoPix').style.display = 'block';
             gerarPix(res.data.pagamento_id);
         } else if (metodo === 'cartao') {
             document.getElementById('divPagamentoCartao').style.display = 'block';
-            inicializarCartao(res.data.pagamento_id);
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
+            aguardandoConfirmacao = true;
+            btn.onclick = function () { processarCartao(PAGAMENTO_ID); };
         }
     })
     .catch(function () {
@@ -622,10 +634,6 @@ function inicializarCartao(pagamentoId) {
                     erroEl.textContent = '';
                     erroEl.style.display = 'none';
                 }
-            });
-
-            document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
-                processarCartao(pagamentoId);
             });
         }
     });
