@@ -98,7 +98,7 @@
         .fleet-card-title{font-family:Outfit,sans-serif;font-size:1.1rem;font-weight:700;color:var(--frota-ct);margin-bottom:6px;letter-spacing:-.02em}
         .fleet-card-desc{font-size:.86rem;line-height:1.65;color:var(--frota-cd)}
 
-        .vant-strip{display:flex;gap:16px;overflow-x:auto;padding:8px 0 16px;scroll-snap-type:x mandatory}
+        .vant-strip{display:flex;gap:16px;overflow-x:auto;padding:8px 0 16px;scroll-snap-type:x mandatory;flex-wrap: wrap}
         .vant-strip::-webkit-scrollbar{height:6px}
         .vant-strip::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px}
         .vant-chip{scroll-snap-align:start;flex-shrink:0;padding:20px 32px;background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh);display:flex;align-items:center;gap:14px;transition:all .25s;min-width:280px;border:1px solid var(--line)}
@@ -238,25 +238,7 @@
         </div>
     </section>
 
-    <section id="vantagens" class="sec sec--vant">
-        <div class="wrap">
-            <div class="sec-head">
-                @if(!empty($vantagensLabelSuperior))<div class="eyebrow">{{ $vantagensLabelSuperior }}</div>@endif
-                <h2>{{ $vantagensTitulo }}</h2>
-                @if(!empty($vantagensDescricao))<p>{{ $vantagensDescricao }}</p>@endif
-            </div>
-            <div class="vant-strip">
-                @foreach($beneficios as $beneficio)
-                    @if(!empty($beneficio))
-                        <div class="vant-chip">
-                            <span class="vant-chip-icon">✦</span>
-                            <span class="vant-chip-text">{{ $beneficio }}</span>
-                        </div>
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    </section>
+    
 
     <section id="frota" class="sec sec--frota">
         <div class="wrap">
@@ -281,6 +263,26 @@
                         </div>
                     </article>
                 @endfor
+            </div>
+        </div>
+    </section>
+
+    <section id="vantagens" class="sec sec--vant">
+        <div class="wrap">
+            <div class="sec-head">
+                @if(!empty($vantagensLabelSuperior))<div class="eyebrow">{{ $vantagensLabelSuperior }}</div>@endif
+                <h2>{{ $vantagensTitulo }}</h2>
+                @if(!empty($vantagensDescricao))<p>{{ $vantagensDescricao }}</p>@endif
+            </div>
+            <div class="vant-strip">
+                @foreach($beneficios as $beneficio)
+                    @if(!empty($beneficio))
+                        <div class="vant-chip">
+                            <span class="vant-chip-icon">✦</span>
+                            <span class="vant-chip-text">{{ $beneficio }}</span>
+                        </div>
+                    @endif
+                @endforeach
             </div>
         </div>
     </section>
