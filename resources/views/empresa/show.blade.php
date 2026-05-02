@@ -387,7 +387,6 @@
 
 .rs-hero { position:relative; border-radius:20px; background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%); overflow:hidden; box-shadow:0 8px 32px rgba(15,23,42,.20); }
 .rs-hero__accent { position:absolute; top:0;left:0;right:0; height:4px; background:linear-gradient(90deg,#3b82f6,#8b5cf6); }
-.rs-hero--confirmada .rs-hero__accent { background:linear-gradient(90deg,#10b981,#34d399); }
 .rs-hero--cancelada .rs-hero__accent { background:linear-gradient(90deg,#ef4444,#f87171); }
 .rs-hero__body { display:flex; align-items:flex-start; justify-content:space-between; gap:24px; padding:28px 30px; flex-wrap:wrap; }
 .rs-hero__left { display:grid; gap:8px; }
@@ -453,8 +452,6 @@
     background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);
     box-shadow:0 4px 24px rgba(0,0,0,.08);
 }
-.rs-hero--confirmada { background:linear-gradient(135deg,#065f46 0%,#0f172a 100%); }
-.rs-hero--cancelada { background:linear-gradient(135deg,#991b1b 0%,#0f172a 100%); }
 .rs-hero__accent {
     position:absolute; top:-60px; right:-60px; width:200px; height:200px;
     border-radius:50%; background:rgba(255,255,255,.03);

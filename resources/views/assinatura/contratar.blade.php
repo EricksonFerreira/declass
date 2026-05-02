@@ -348,15 +348,15 @@
 
                     {{-- Botao confirmar --}}
                     <div class="text-right">
-                        <button type="button" class="btn-action btn-action-success btn-lg" id="btnConfirmarPagamento">
-                            <i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao
-                        </button>
+<button type="button" class="rs-btn rs-btn--primary" id="btnConfirmarPagamento" style="background:#16a34a;">
+    <i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao
+</button>
                     </div>
                 </div>
 
                 {{-- Botao step 1 --}}
                 <div id="divBtnStep1" class="text-right">
-                    <button type="button" class="btn-action btn-primary btn-lg" id="btnAvancarPagamento"
+                    <button type="button" class="btn btn-primary btn-lg" id="btnAvancarPagamento"
                             {{ $erroDowngrade ? 'disabled' : '' }}>
                         Continuar <i class="fas fa-arrow-right ml-1"></i>
                     </button>
