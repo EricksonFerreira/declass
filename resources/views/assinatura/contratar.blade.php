@@ -348,7 +348,7 @@
 
                     {{-- Botao confirmar --}}
                     <div class="text-right">
-<button type="button" class="rs-btn rs-btn--primary" id="btnConfirmarPagamento" style="background:#16a34a;">
+<button type="button" class="btn btn-success btn-lg" id="btnConfirmarPagamento">
     <i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao
 </button>
                     </div>
