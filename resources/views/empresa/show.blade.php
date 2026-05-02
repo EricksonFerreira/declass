@@ -37,6 +37,11 @@
                     <span><i class="fas fa-calendar-plus"></i>Criada em {{ $empresa->created_at?->format('d/m/Y H:i') ?: '-' }}</span>
                 </div>
             </div>
+            <div class="rs-hero__center">
+                  <a href="#" class="rs-btn rs-btn--outline">
+                            <i class="fas fa-hand-holding-usd"></i> Debitar avarias
+                        </a>
+            </div>
             <div class="rs-hero__right">
                 <span class="rs-status-badge {{ $empresa->ativo === 'S' ? 'is-success' : 'is-danger' }}">
                     <i class="fas {{ $empresa->ativo === 'S' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
