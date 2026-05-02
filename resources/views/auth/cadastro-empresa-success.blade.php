@@ -40,7 +40,7 @@
             margin-bottom: 14px;
             font-size: .86rem;
         }
-        .pill code { font-weight: 800; }
+        /* .pill code { font-weight: 800; } */
         .btn {
             height: 44px;
             border-radius: 12px;
@@ -86,11 +86,11 @@
                 </div>
             @else
                 <div class="pill">
-                    <div style="margin-bottom:6px;"><strong>E-mail:</strong> <code>{{ $email }}</code></div>
-                    <div style="margin-bottom:6px;"><strong>Senha padrao:</strong> <code>{{ $senha }}</code></div>
                     @if ($slug)
                         <div><strong>Slug da empresa:</strong> <code>{{ $slug }}</code></div>
                     @endif
+                    <div style="margin-bottom:6px;"><strong>E-mail:</strong> <code>{{ $email }}</code></div>
+                    <div style="margin-bottom:6px;"><strong>Senha padrao:</strong> <code>{{ $senha }}</code></div>
                 </div>
             @endif
 
