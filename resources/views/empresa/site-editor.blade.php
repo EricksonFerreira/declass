@@ -11,6 +11,14 @@
             </a>
             <div class="se-divider"></div>
             <h4 class="se-title"><i class="fas fa-paint-brush mr-2"></i>Editor Visual — {{ $empresa->nome }}</h4>
+            <div class="se-divider"></div>
+            <div class="se-model-selector">
+                <label>Modelo:</label>
+                <select id="seModeloSelect" onchange="seTrocarModelo(this.value)" class="se-select">
+                    <option value="modelo_1" {{ ($empresa->site_apresentacao_modelo ?? 'modelo_1') === 'modelo_1' ? 'selected' : '' }}>Modelo 1 — Premium</option>
+                    <option value="modelo_2" {{ ($empresa->site_apresentacao_modelo ?? 'modelo_1') === 'modelo_2' ? 'selected' : '' }}>Modelo 2 — Moderno</option>
+                </select>
+            </div>
         </div>
         <div class="se-toolbar-right">
             <span id="seSaveStatus" class="se-save-status"></span>
@@ -473,6 +481,15 @@
 .se-divider { width: 1px; height: 28px; background: #e2e8f0; }
 .se-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; }
 .se-save-status { font-size: .8rem; color: #64748b; }
+.se-model-selector { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: #475569; }
+.se-model-selector label { margin: 0; font-weight: 500; }
+.se-select {
+    padding: 4px 10px; border: 1px solid #e2e8f0; border-radius: 6px;
+    font-size: .82rem; background: #fff; color: #0f172a; cursor: pointer;
+    outline: none; transition: border-color .15s;
+}
+.se-select:hover { border-color: #0ea5e9; }
+.se-select:focus { border-color: #0ea5e9; box-shadow: 0 0 0 2px rgba(14,165,233,.15); }
 
 .se-editor-layout {
     display: flex; gap: 0; margin: -15px; height: calc(100vh - 130px);
