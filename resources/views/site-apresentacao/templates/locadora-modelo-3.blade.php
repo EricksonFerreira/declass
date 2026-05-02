@@ -143,6 +143,12 @@
         .footer-nav a{opacity:.4;transition:opacity .2s}
         .footer-nav a:hover{opacity:.8}
 
+        .hide-pc { display:none !important; }
+        .hide-tablet { display:none !important; }
+        .hide-mobile { display:none !important; }
+        @media (min-width:769px) { .hide-tablet, .hide-mobile { display:revert !important; } }
+        @media (max-width:768px) and (min-width:481px) { .hide-pc, .hide-mobile { display:revert !important; } }
+        @media (max-width:480px) { .hide-pc, .hide-tablet { display:revert !important; } }
         @media(max-width:768px){
             .hero .wrap,.hero .wrap.has-image{grid-template-columns:1fr;gap:40px}
             .hero{padding:60px 20px 48px}

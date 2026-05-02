@@ -1488,7 +1488,8 @@
                         <span class="trust-chip">Pagamento seguro</span>
                     </div>
 
-                    <div class="hero-image-strip" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
+                    @php $imgCfg = $imagensConfig ?? []; $heroResp = (!$imgCfg['hero_pc']??true?' hide-pc':'').(!$imgCfg['hero_tablet']??true?' hide-tablet':'').(!$imgCfg['hero_celular']??true?' hide-mobile':''); @endphp
+                    <div class="hero-image-strip{{ $heroResp }}" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
                         <img src="{{ $imagemHero ?? '' }}" alt="Destaque {{ $empresa->nome }}" class="hero-main-img" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
                         <div class="hero-image-placeholder" style="{{ empty($imagemHero) ? '' : 'display:none' }}"></div>
                     </div>
