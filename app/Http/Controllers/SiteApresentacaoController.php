@@ -20,6 +20,7 @@ class SiteApresentacaoController extends Controller
 {
     private const MODELO_1 = 'modelo_1';
     private const MODELO_2 = 'modelo_2';
+    private const MODELO_3 = 'modelo_3';
     protected $estacaoService;
 
     public function __construct(EstacaoService $estacaoService)
