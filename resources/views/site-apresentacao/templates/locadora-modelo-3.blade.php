@@ -47,8 +47,9 @@
 
         .hero{background:var(--hb);color:var(--ht);padding:100px 24px;position:relative;overflow:hidden}
         .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 40%,rgba(255,255,255,.06) 0%,transparent 60%);pointer-events:none}
-        .hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
-        .hero .wrap.has-image{grid-template-columns:1fr 1fr 1fr}
+        .hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+        .hero .wrap.has-img.has-form{grid-template-columns:1fr 1fr 1fr}
+        .hero .wrap.has-img:not(.has-form) .hero-col-img{grid-column:2}
         .hero-col-img{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg);aspect-ratio:4/3;width:100%}
         .hero-col-img img{width:100%;height:100%;object-fit:cover;display:block}
         .hero-col-img-placeholder{width:100%;height:100%;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.2;aspect-ratio:4/3}
@@ -174,9 +175,8 @@
         </div></div>
     </header>
 
-    @php $heroImgVisivel = \Illuminate\Support\Arr::get($imagensConfig ?? [], 'hero', true); @endphp
     <section class="hero">
-        <div class="wrap {{ $heroImgVisivel && !empty($imagemHero) ? 'has-image' : '' }}">
+        <div class="wrap{{ !empty($imagemHero) ? ' has-img' : '' }}{{ !empty($heroFormTitulo) ? ' has-form' : '' }}">
             <div>
                 @if(!empty($heroTag))<div class="hero-tag">{{ $heroTag }}</div>@endif
                 <h1 class="hero-title">{{ $titulo }}</h1>
@@ -388,6 +388,9 @@
                     else c.style.display='none'
                 }
                 var im={imagem_hero:'.hero-col-img img'};for(var ik in im){if(!du[ik])continue;var ie=document.querySelector(im[ik]);if(ie)ie.src=du[ik]}
+                var vis={hero:['.hero-col-img,.hero-col-img-placeholder','.hero .wrap','has-img']};
+                for(var vk in vis){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;var els=document.querySelectorAll(vis[vk][0]);for(var vi=0;vi<els.length;vi++)els[vi].style.display=d[uk]==='S'?'':'none';var wrap=document.querySelector(vis[vk][1]);if(wrap){if(d[uk]==='S')wrap.classList.add(vis[vk][2]);else wrap.classList.remove(vis[vk][2])}}
+                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var img=cel.querySelector('.fleet-card-img,.fleet-card-img-placeholder');if(img)img.style.display=d[uk]==='S'?'':'none'}
             });
             window.parent.postMessage({type:'se-pronto'},'*');
         })();
