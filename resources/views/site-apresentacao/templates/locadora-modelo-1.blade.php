@@ -2369,6 +2369,10 @@
                     }
                 }
 
+                /* Image visibility */
+                var imgVisM1={hero:'.hero-image-strip',contato:'.contato-image-wrap'};
+                for(var vk in imgVisM1){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;document.querySelectorAll(imgVisM1[vk]).forEach(function(el){el.style.display=d[uk]==='S'?'':'none'})}
+                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img,.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none'}
                 /* Image preview */
                 var imgMap = {
                     imagem_frota_1: '#frota .fleet-card:nth-child(1) img',

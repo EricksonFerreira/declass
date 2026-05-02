@@ -433,6 +433,9 @@
                     if(t&&t.trim()){c.style.display='';if(te)te.textContent=t;if(de2)de2.textContent=de||''}
                     else c.style.display='none'
                 }
+                var imgVisM2={hero:'.hero-image,.hero-image-placeholder',contato:'.contato-image-wrap'};
+                for(var vkm in imgVisM2){var uk='usar_imagem_'+vkm;if(d[uk]===undefined)continue;document.querySelectorAll(imgVisM2[vkm]).forEach(function(el){el.style.display=d[uk]==='S'?'':'none'})}
+                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img,.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none'}
                 var imgMap={imagem_hero:'.hero-image img'};for(var ik in imgMap){if(!du[ik])continue;var ie=document.querySelector(imgMap[ik]);if(ie)ie.src=du[ik]}
             });
             window.parent.postMessage({type:'se-pronto'},'*');
