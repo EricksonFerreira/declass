@@ -542,6 +542,13 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $data = $this->prepareSiteImagensConfigPayload($request, $empresaAtual, $data);
         $data = $this->handleSiteImagesUpload($request, $data, $empresaAtual);
 
+        if ($request->has('site_apresentacao_modelo')) {
+            $modelo = $request->input('site_apresentacao_modelo');
+            if (in_array($modelo, ['modelo_1', 'modelo_2'])) {
+                $data['site_apresentacao_modelo'] = $modelo;
+            }
+        }
+
         foreach (array_keys(self::SITE_IMAGEM_FIELDS) as $imageField) {
             unset($data[$imageField]);
         }
