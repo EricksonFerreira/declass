@@ -11,6 +11,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -234,13 +236,20 @@ class OnboardingController extends Controller
             $updateData['cor_secundaria'] = $data['cor_secundaria'];
         }
 
-        if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('empresas/logo', 'public');
-            if ($path) {
-                if ($empresa->logo_path) {
-                    \Illuminate\Support\Facades\Storage::disk('public')->delete($empresa->logo_path);
+        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
+            try {
+                $path = $request->file('logo')->store('empresas/logo', 'public');
+                if ($path) {
+                    if ($empresa->logo_path) {
+                        Storage::disk('public')->delete($empresa->logo_path);
+                    }
+                    $updateData['logo_path'] = $path;
                 }
-                $updateData['logo_path'] = $path;
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Falha ao salvar logo no onboarding.', [
+                    'erro' => $e->getMessage(),
+                    'empresa_id' => $empresa->id,
+                ]);
             }
         }
 
