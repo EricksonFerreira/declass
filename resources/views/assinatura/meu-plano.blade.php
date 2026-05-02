@@ -938,7 +938,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (data.stripe_key) await inicializarStripeElements(data.stripe_key);
 });
 </script>
-@endif
 <script>
 // ── Navegação entre abas ─────────────────────────────────────────────────────
 function irParaAba(tabId) {
