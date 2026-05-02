@@ -188,11 +188,9 @@
                     <a href="{{ $botaoLoginUrl }}" class="hero-btn hero-btn-s">{{ $botaoAdminTexto }}</a>
                 </div>
             </div>
-            @if(!empty($imagemHero))
-            <div class="hero-col-img">
-                <img src="{{ $imagemHero }}" alt="Hero {{ $empresa->nome }}">
+            <div class="hero-col-img" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
+                <img src="{{ $imagemHero ?? '' }}" alt="Hero {{ $empresa->nome }}" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
             </div>
-            @endif
             @if(!empty($heroFormTitulo))
             <div class="hero-form">
                 <h2>{{ $heroFormTitulo }}</h2>
@@ -432,7 +430,7 @@
                     else c.style.display='none'
                 }
                 var imgM3={imagem_hero:'.hero-col-img img'};for(var ik in imgM3){if(!du[ik])continue;var ie=document.querySelector(imgM3[ik]);if(ie)ie.src=du[ik]}
-                var visM3={hero:['.hero-col-img,.hero-col-img-placeholder','.hero .wrap','has-img'],contato:['.contato-img-wrap']};
+                var visM3={hero:['.hero-col-img','.hero-col-img img',null,'.hero .wrap','has-img'],contato:['.contato-img-wrap']};
                 for(var vk in visM3){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;var els=document.querySelectorAll(visM3[vk][0]);for(var vi=0;vi<els.length;vi++)els[vi].style.display=d[uk]==='S'?'':'none';if(visM3[vk][1]){var w=document.querySelector(visM3[vk][1]);if(w){if(d[uk]==='S')w.classList.add(visM3[vk][2]);else w.classList.remove(visM3[vk][2])}}}
                 for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none';if(pl)pl.style.display=d[uk]==='S'?'none':''}
             });

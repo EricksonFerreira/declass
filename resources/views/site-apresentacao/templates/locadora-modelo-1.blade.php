@@ -584,6 +584,7 @@
             color: var(--brand-accent);
         }
 
+        .hero-image-placeholder { width:100%; height:180px; background:linear-gradient(135deg,var(--off),#e8edf5); }
         .hero-image-strip {
             margin-top: 28px;
         }
@@ -1482,9 +1483,8 @@
                     </div>
 
                     <div class="hero-image-strip" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
-                        @if(!empty($imagemHero))
-                            <img src="{{ $imagemHero }}" alt="Destaque {{ $empresa->nome }}">
-                        @endif
+                        <img src="{{ $imagemHero ?? '' }}" alt="Destaque {{ $empresa->nome }}" class="hero-main-img" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
+                        <div class="hero-image-placeholder" style="{{ empty($imagemHero) ? '' : 'display:none' }}"></div>
                     </div>
                 </div>
 
@@ -2380,8 +2380,8 @@
                 }
 
                 /* Image visibility */
-                var imgVisM1={hero:'.hero-image-strip',contato:'.contato-image-wrap'};
-                for(var vk in imgVisM1){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;document.querySelectorAll(imgVisM1[vk]).forEach(function(el){el.style.display=d[uk]==='S'?'':'none'})}
+                var imgVisM1={hero:['.hero-image-strip','.hero-main-img','.hero-image-placeholder'],contato:['.contato-image-wrap']};
+                for(var vk in imgVisM1){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;var c=document.querySelector(imgVisM1[vk][0]);if(!c)continue;c.style.display=d[uk]==='S'?'':'none';if(imgVisM1[vk][1]){var ig=document.querySelector(imgVisM1[vk][1]);if(ig)ig.style.display=d[uk]==='S'?'':'none'}if(imgVisM1[vk][2]){var ph=document.querySelector(imgVisM1[vk][2]);if(ph)ph.style.display=d[uk]==='S'?'none':''}}
                 for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none';if(pl)pl.style.display=d[uk]==='S'?'none':''}
                 /* Image preview */
                 var imgMap = {
