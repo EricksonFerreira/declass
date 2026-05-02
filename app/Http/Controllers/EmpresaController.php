@@ -18,6 +18,7 @@ use App\Traits\FiltroTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Storage;
 
 class EmpresaController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -238,7 +239,18 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'cnpj'       => 'nullable|string|max:20',
             'cor_primaria'   => 'nullable|string|max:20',
             'cor_secundaria' => 'nullable|string|max:20',
+            'logo'       => 'nullable|image|mimes:png,jpeg,jpg,webp|max:2048',
         ]);
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('empresas/logo', 'public');
+            if ($path) {
+                if ($empresa->logo_path) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($empresa->logo_path);
+                }
+                $data['logo_path'] = $path;
+            }
+        }
 
         $empresa->update($data);
 

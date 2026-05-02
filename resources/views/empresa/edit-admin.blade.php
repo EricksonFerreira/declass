@@ -24,7 +24,7 @@
         </div>
 
         <div class="card-body p-4">
-            <form method="POST" action="{{ route('empresa.atualizar') }}">
+            <form method="POST" action="{{ route('empresa.atualizar') }}" enctype="multipart/form-data">
                 @csrf
                 @method('PUT')
 
@@ -94,6 +94,38 @@
                 </div>
 
                 <hr class="my-4">
+                <div class="empresa-section-title" style="font-size:.9rem;">Logo da Empresa</div>
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="form-group form-group-empresa">
+                            <label class="font-weight-bold" style="font-size:.82rem;">Logo</label>
+                            <div class="custom-file">
+                                <input type="file" class="custom-file-input" id="logo" name="logo" accept="image/png,image/jpeg,image/webp">
+                                <label class="custom-file-label" for="logo">Escolher arquivo...</label>
+                            </div>
+                            <small class="text-muted">PNG, JPG ou WEBP. Max 2MB. Sera redimensionada automaticamente.</small>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 text-center">
+                        @php $logoUrl = $empresa->logo_url; @endphp
+                        @if($logoUrl)
+                            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:12px;background:#f8fafc;display:inline-block;">
+                                <img src="{{ $logoUrl }}" alt="Logo" style="max-width:160px;max-height:80px;border-radius:6px;">
+                            </div>
+                            <div class="mt-2">
+                                <label class="small text-muted d-block">Logo atual</label>
+                            </div>
+                        @else
+                            <div style="border:1px solid #e2e8f0;border-radius:10px;padding:20px;background:#f8fafc;display:inline-block;">
+                                <i class="fas fa-image fa-3x text-muted" style="opacity:.4;"></i>
+                                <p class="text-muted small mb-0 mt-1">Nenhuma logo</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                <hr class="my-4">
 
                 <div class="d-flex justify-content-between align-items-center" style="gap:10px;flex-wrap:wrap;">
                     {{-- <a href="{{ route('empresa.minha') }}" class="btn btn-secondary btn-sm">
@@ -108,6 +140,15 @@
     </div>
 </div>
 @stop
+
+@push('js')
+<script>
+document.getElementById('logo')?.addEventListener('change', function (e) {
+    var label = this.nextElementSibling;
+    if (label) label.textContent = e.target.files[0]?.name || 'Escolher arquivo...';
+});
+</script>
+@endpush
 
 @push('css')
 <style>
