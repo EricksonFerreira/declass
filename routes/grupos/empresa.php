@@ -14,3 +14,8 @@ Route::middleware('can:acessar-superadmin')->prefix('empresa')->name('empresa.')
 Route::middleware('can:acessar-superadmin')->group(function () {
     Route::resource('empresa', EmpresaController::class);
 });
+
+// Rota para administradores verem sua propria empresa
+Route::middleware('can:gerenciar-empresa')->prefix('empresa')->name('empresa.')->group(function () {
+    Route::get('minha', [EmpresaController::class, 'minhaEmpresa'])->name('minha');
+});

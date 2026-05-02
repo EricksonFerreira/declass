@@ -202,9 +202,28 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             ->with('success', 'Empresa criada com base no modelo padrao.');
     }
 
+    public function minhaEmpresa()
+    {
+        $empresa = auth()->user()->empresa;
+        if (!$empresa) {
+            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresa', null, $empresa->nome);
+
+        return view('empresa.show', compact('empresa', 'breadcrumb'));
+    }
+
     public function show($id)
     {
-        return redirect()->route('empresa.edit', $id);
+        $empresa = $this->empresaService->getById($id);
+        if (!$empresa) {
+            return redirect()->route('empresa.index')->with('error', 'Empresa nao encontrada.');
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome);
+
+        return view('empresa.show', compact('empresa', 'breadcrumb'));
     }
 
     public function edit($id)

@@ -386,6 +386,25 @@ return [
             'can'   => 'gerenciar-empresa',
         ],
 
+        // EMPRESA
+        [
+            'header'  => 'Minha Empresa',
+            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
+            'can'     => 'gerenciar-empresa',
+        ],
+        [
+            'text'  => 'Dados da Empresa',
+            'route' => 'empresa.minha',
+            'icon'  => 'fas fa-building',
+            'can'   => 'gerenciar-empresa',
+        ],
+        [
+            'text'    => 'Assinatura',
+            'route'   => 'assinatura.meu-plano',
+            'icon'    => 'fas fa-layer-group',
+            'can'     => 'gerenciar-empresa',
+        ],
+
         // OPERAÇÃO
         [
             'header'  => 'sidebar.operacao',
