@@ -504,6 +504,11 @@
                                                     onclick="abrirAlterarMetodo({{ $pag->id }}, '{{ $pag->metodo }}')">
                                                 <i class="fas fa-exchange-alt"></i>
                                             </button>
+                                            <button type="button" class="btn btn-xs btn-outline-danger"
+                                                    title="Cancelar pagamento"
+                                                    onclick="cancelarPagamento({{ $pag->id }})">
+                                                <i class="fas fa-times"></i>
+                                            </button>
                                         @endif
                                     </td>
                                 </tr>
@@ -512,7 +517,7 @@
                     </table>
                 </div>
                 @if ($historico->hasPages())
-                    <div class="mt-3">{{ $historico->links() }}</div>
+                    <div class="mt-3 paginate-historico">{{ $historico->links() }}</div>
                 @endif
             @endif
         </div>
@@ -1084,6 +1089,51 @@ document.querySelectorAll('.renovar-periodo-opt').forEach(l =>
     const checked = document.querySelector('.renovar-metodo-opt input:checked');
     if (checked?.value === 'cartao') document.getElementById('divRenovarCartao').style.display = 'block';
 })();
+
+// ── Persistência de aba (hash) ──
+(function() {
+    var hash = window.location.hash;
+    if (hash) {
+        var tab = document.querySelector('#planTabs a[href="' + hash + '"]');
+        if (tab) { tab.click(); }
+    }
+    document.querySelectorAll('#planTabs a[data-toggle="tab"]').forEach(function(a) {
+        a.addEventListener('shown.bs.tab', function(e) {
+            history.replaceState(null, '', e.target.hash || window.location.pathname);
+        });
+    });
+    // Corrigir links de paginação para preservar hash
+    document.querySelectorAll('.paginate-historico a').forEach(function(link) {
+        var hash2 = window.location.hash;
+        if (hash2 && !link.hash) {
+            link.href = link.href.split('#')[0] + hash2;
+        }
+    });
+})();
+
+// ── Cancelar pagamento pendente ──
+function cancelarPagamento(pagamentoId) {
+    Swal.fire({
+        title: 'Cancelar pagamento?',
+        text: 'O pagamento pendente será cancelado.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sim, cancelar',
+        cancelButtonText: 'Não',
+    }).then(function(result) {
+        if (!result.isConfirmed) return;
+        fetch('/meu-plano/pagamento/' + pagamentoId + '/cancelar', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '', 'Accept': 'application/json' },
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) { Swal.fire({ icon: 'success', title: 'Cancelado!', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); location.reload(); }
+            else { Swal.fire({ icon: 'error', title: 'Erro', text: data.error || 'Erro ao cancelar.' }); }
+        })
+        .catch(function() { Swal.fire({ icon: 'error', title: 'Erro de conexão' }); });
+    });
+}
 
 // ── Auto-scroll para pagamento pendente ──
 (function() {

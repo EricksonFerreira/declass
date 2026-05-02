@@ -56,4 +56,6 @@ Route::prefix('meu-plano')->name('assinatura.')->group(function () {
     Route::post('/pagamento/{pagamento}/cartao-intent', [AssinaturaController::class, 'criarIntentCartao'])->name('pagamento.cartao-intent');
     // Confirmar pagamento cartão após Stripe Elements
     Route::post('/pagamento/{pagamento}/cartao-confirmar', [AssinaturaController::class, 'confirmarCartao'])->name('pagamento.cartao-confirmar');
+    // Cancelar pagamento pendente
+    Route::post('/pagamento/{pagamento}/cancelar', [AssinaturaController::class, 'cancelarPagamento'])->name('pagamento.cancelar');
 });

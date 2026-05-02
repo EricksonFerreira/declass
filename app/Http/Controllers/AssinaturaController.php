@@ -755,6 +755,18 @@ class AssinaturaController extends Controller
     }
 
     /** Renova o plano atual (mesmo plano, nova vigência). */
+    public function cancelarPagamento(Request $request, EmpresaPlanoPagamento $pagamento): JsonResponse
+    {
+        if ($pagamento->empresa_id !== auth()->user()->empresa_id) {
+            return response()->json(['success' => false, 'error' => 'Pagamento não encontrado.'], 404);
+        }
+        if ($pagamento->status !== 'pendente') {
+            return response()->json(['success' => false, 'error' => 'Apenas pagamentos pendentes podem ser cancelados.'], 400);
+        }
+        $pagamento->update(['status' => 'cancelado', 'observacao' => 'Cancelado pelo usuário']);
+        return response()->json(['success' => true]);
+    }
+
     public function cancelar(): RedirectResponse
     {
         $empresa    = Auth::user()->empresa;

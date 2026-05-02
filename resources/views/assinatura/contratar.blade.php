@@ -3,6 +3,7 @@
 @section('title', 'Contratar — ' . $plano->nome)
 
 @section('content_header')
+    <script src="https://js.stripe.com/v3/"></script>
     <div class="d-flex justify-content-between align-items-center flex-wrap" style="gap:8px;">
         <div>
             <h1 class="m-0 text-dark" style="font-size:1.3rem;font-weight:700;">
@@ -395,13 +396,12 @@
 
 @push('js')
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://js.stripe.com/v3/"></script>
 <script>
+var STRIPE_KEY = @json(config('services.stripe.key') ?? env('STRIPE_KEY') ?? null);
 var CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
 var RESERVA_ID = null;
 var PAGAMENTO_ID = null;
-var stripe = null;
-var stripePromise = null;
+var stripe = STRIPE_KEY ? Stripe(STRIPE_KEY) : null;
 var cartaoClientSecret = null;
 
 var valorMensal = '{{ number_format($plano->valor_mensal, 2, ",", ".") }}';
@@ -426,7 +426,6 @@ function selecionarCartao(el, pmId) {
     cartaoPmId = pmId;
     document.getElementById('cartaoSelecionado').value = pmId;
     if (pmId === 'novo') {
-        document.getElementById('novoCartaoForm').style.display = 'block';
         inicializarStripeNovoCartao();
     } else {
         document.getElementById('novoCartaoForm').style.display = 'none';
@@ -658,32 +657,21 @@ var stripeNovoCard = null;
 
 function inicializarStripeNovoCartao() {
     if (stripeNovoCard) return;
+    if (!stripe) { document.getElementById('card-errors').textContent = 'Stripe não configurado.'; document.getElementById('card-errors').style.display = 'block'; return; }
     var form = document.getElementById('novoCartaoForm');
     form.style.display = 'block';
+    document.getElementById('card-errors').style.display = 'none';
     setTimeout(function () {
-        var fn = function (stripeKey) {
-            if (!stripeKey) { document.getElementById('card-errors').textContent = 'Stripe não configurado.'; document.getElementById('card-errors').style.display = 'block'; return; }
-            stripe = Stripe(stripeKey);
-            var elements = stripe.elements({ locale: 'pt-BR' });
-            stripeNovoCard = elements.create('card', {
-                style: { base: { fontSize: '15px', color: '#0f172a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#94a3b8' } } }
-            });
-            stripeNovoCard.mount('#card-element');
-            stripeNovoCard.on('change', function (event) {
-                var erroEl = document.getElementById('card-errors');
-                if (event.error) { erroEl.textContent = event.error.message; erroEl.style.display = 'block'; }
-                else { erroEl.textContent = ''; erroEl.style.display = 'none'; }
-            });
-        };
-        if (stripe && stripe._url) { fn(stripe._url); return; }
-        fetch('/meu-plano/pagamento/0/cartao-intent?peek=1', {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-            body: JSON.stringify({ peek: true }),
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) { fn(data.stripe_key); })
-        .catch(function () { document.getElementById('card-errors').textContent = 'Erro ao carregar Stripe.'; document.getElementById('card-errors').style.display = 'block'; });
+        var elements = stripe.elements({ locale: 'pt-BR' });
+        stripeNovoCard = elements.create('card', {
+            style: { base: { fontSize: '15px', color: '#0f172a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#94a3b8' } } }
+        });
+        stripeNovoCard.mount('#card-element');
+        stripeNovoCard.on('change', function (event) {
+            var erroEl = document.getElementById('card-errors');
+            if (event.error) { erroEl.textContent = event.error.message; erroEl.style.display = 'block'; }
+            else { erroEl.textContent = ''; erroEl.style.display = 'none'; }
+        });
     }, 100);
 }
 
@@ -759,16 +747,6 @@ if (metodoSalvo) {
     if (card) selecionarMetodo(metodoSalvo, card);
 }
 
-// Inicializa Stripe e botao confirmar
-(function initStripe() {
-    fetch('/meu-plano/pagamento/0/cartao-intent?peek=1', {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ peek: true }),
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) { if (data.stripe_key) stripe = Stripe(data.stripe_key); });
-})();
 criarAssinatura();
 </script>
 @endpush
