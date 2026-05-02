@@ -714,26 +714,15 @@ async function processarCartao(pagamentoId, btn) {
             if (data2.error) throw new Error(data2.error);
 
         } else {
-            // Cartao salvo: cria intent com payment_method ja definido
-            var r1 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-intent', {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ salvar_cartao: false, payment_method: cartaoPmId }),
-            });
-            var data1 = await r1.json();
-            if (data1.error) throw new Error(data1.error);
-
-            var result = await stripe.confirmCardPayment(data1.client_secret);
-            if (result.error) throw new Error(result.error.message);
-            if (result.paymentIntent.status !== 'succeeded') throw new Error('Pagamento nao aprovado.');
-
-            var r2 = await fetch('/meu-plano/pagamento/' + pagamentoId + '/cartao-confirmar', {
-                method: 'POST',
-                headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-                body: JSON.stringify({ payment_intent_id: result.paymentIntent.id }),
-            });
-            var data2 = await r2.json();
-            if (data2.error) throw new Error(data2.error);
+            // Cartao salvo: assinatura já foi criada, redireciona
+            document.getElementById('cartaoProcessando').style.display = 'none';
+            document.getElementById('cartaoSucesso').style.display = 'block';
+            atualizarStepper(3);
+            Swal.fire({ icon: 'success', title: 'Contratação confirmada!', text: 'Redirecionando...', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+            setTimeout(function () {
+                window.location.href = '{{ route('assinatura.concluido') }}?pagamento=' + pagamentoId;
+            }, 2000);
+            return;
         }
 
         document.getElementById('cartaoProcessando').style.display = 'none';
