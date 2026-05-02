@@ -95,6 +95,7 @@
         .fleet-scroll .fleet-card{min-width:280px;max-width:320px;scroll-snap-align:start;background:var(--frota-cb);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh);transition:transform .2s,box-shadow .2s;flex-shrink:0}
         .fleet-scroll .fleet-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md)}
         .fleet-card-img{width:100%;height:170px;object-fit:cover}
+        .fleet-card-img-wrap{position:relative}
         .fleet-card-img-placeholder{height:170px;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:2.5rem;opacity:.4}
         .fleet-card-body{padding:18px 20px 22px}
         .fleet-card-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:8px;background:var(--brand-p);color:var(--brand-pt);font-size:.7rem;font-weight:800;margin-bottom:10px}
@@ -234,9 +235,9 @@
                 </div>
                 @endif
             </div>
-            <div class="hero-image">
+            <div class="hero-image" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
                 @if(!empty($imagemHero))
-                    <img src="{{ $imagemHero }}" alt="Hero">
+                    <img src="{{ $imagemHero }}" alt="Hero {{ $empresa->nome }}">
                 @else
                     <div class="hero-image-placeholder"><i class="f-icon">🚗</i></div>
                 @endif
@@ -255,11 +256,10 @@
                 @for($fi = 1; $fi <= 10; $fi++)
                     @php $fCard = $frotaDestaques[$fi - 1] ?? null; $fv = $fCard && !empty($fCard['titulo']); @endphp
                     <article class="fleet-card" data-frota="{{ $fi }}" style="{{ $fv ? '' : 'display:none' }}">
-                        @if($fCard && !empty($fCard['imagem']))
-                            <img src="{{ $fCard['imagem'] }}" alt="{{ $fCard['titulo'] }}" class="fleet-card-img" data-frota-img="{{ $fi }}">
-                        @else
-                            <div class="fleet-card-img-placeholder">🚗</div>
-                        @endif
+                        <div class="fleet-card-img-wrap">
+                            <img src="{{ $fCard['imagem'] ?? '' }}" alt="{{ $fCard['titulo'] ?? '' }}" class="fleet-card-img" data-frota-img="{{ $fi }}" style="{{ ($fCard && !empty($fCard['imagem'])) ? '' : 'display:none' }}">
+                            <div class="fleet-card-img-placeholder" style="{{ ($fCard && !empty($fCard['imagem'])) ? 'display:none' : '' }}">🚗</div>
+                        </div>
                         <div class="fleet-card-body">
                             <div class="fleet-card-num">{{ str_pad($fi,2,'0',STR_PAD_LEFT) }}</div>
                             <h3 class="fleet-card-title" data-frota-titulo="{{ $fi }}">{{ $fCard['titulo'] ?? '' }}</h3>
@@ -329,9 +329,11 @@
                 </div>
             </div>
             @if(!empty($imagemContato))
-                <div class="contato-image-wrap">
+            <div class="contato-image-wrap" style="{{ empty($imagemContato) ? 'display:none' : '' }}">
+                @if(!empty($imagemContato))
                     <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}">
-                </div>
+                @endif
+            </div>
             @endif
         </div>
     </section>
@@ -435,7 +437,7 @@
                 }
                 var imgVisM2={hero:'.hero-image,.hero-image-placeholder',contato:'.contato-image-wrap'};
                 for(var vkm in imgVisM2){var uk='usar_imagem_'+vkm;if(d[uk]===undefined)continue;document.querySelectorAll(imgVisM2[vkm]).forEach(function(el){el.style.display=d[uk]==='S'?'':'none'})}
-                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img,.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none'}
+                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none';if(pl)pl.style.display=d[uk]==='S'?'none':''}
                 var imgMap={imagem_hero:'.hero-image img'};for(var ik in imgMap){if(!du[ik])continue;var ie=document.querySelector(imgMap[ik]);if(ie)ie.src=du[ik]}
             });
             window.parent.postMessage({type:'se-pronto'},'*');

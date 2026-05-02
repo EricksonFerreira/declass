@@ -841,12 +841,21 @@
             box-shadow: var(--sh-lg);
         }
 
+        .fleet-card-img-wrap { position: relative; }
         .fleet-card-img {
             width: 100%;
             height: 180px;
             object-fit: cover;
             display: block;
             background: linear-gradient(135deg, var(--off), #e8edf5);
+        }
+        .fleet-card-img-wrap .fleet-card-img-placeholder {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, #f0f4fa, #e3eaf5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .fleet-card-img-placeholder {
@@ -1472,11 +1481,11 @@
                         <span class="trust-chip">Pagamento seguro</span>
                     </div>
 
-                    @if(!empty($imagemHero))
-                        <div class="hero-image-strip">
+                    <div class="hero-image-strip" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
+                        @if(!empty($imagemHero))
                             <img src="{{ $imagemHero }}" alt="Destaque {{ $empresa->nome }}">
-                        </div>
-                    @endif
+                        @endif
+                    </div>
                 </div>
 
                 <div class="hero-form-col">
@@ -1576,10 +1585,9 @@
                         $fVisivel = $fCard && !empty($fCard['titulo']);
                     @endphp
                     <article class="fleet-card reveal d{{ $fi + 1 }}" data-frota="{{ $fi }}" style="{{ $fVisivel ? '' : 'display:none' }}">
-                        @if($fCard && !empty($fCard['imagem']))
-                            <img src="{{ $fCard['imagem'] }}" alt="{{ $fCard['titulo'] }}" class="fleet-card-img" data-frota-img="{{ $fi }}">
-                        @else
-                            <div class="fleet-card-img-placeholder">
+                        <div class="fleet-card-img-wrap">
+                            <img src="{{ $fCard['imagem'] ?? '' }}" alt="{{ $fCard['titulo'] ?? '' }}" class="fleet-card-img" data-frota-img="{{ $fi }}" style="{{ ($fCard && !empty($fCard['imagem'])) ? '' : 'display:none' }}">
+                            <div class="fleet-card-img-placeholder" style="{{ ($fCard && !empty($fCard['imagem'])) ? 'display:none' : '' }}">
                                 <svg viewBox="0 0 64 32" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <rect x="4" y="10" width="56" height="16" rx="4" fill="currentColor"/>
                                     <circle cx="14" cy="26" r="5" fill="currentColor"/>
@@ -1587,7 +1595,7 @@
                                     <path d="M10 10 L18 4 H46 L56 10" stroke="currentColor" stroke-width="2"/>
                                 </svg>
                             </div>
-                        @endif
+                        </div>
                         <div class="fleet-card-body">
                             <div class="fleet-card-num">{{ str_pad($fi, 2, '0', STR_PAD_LEFT) }}</div>
                             <h3 class="fleet-card-title" data-frota-titulo="{{ $fi }}">{{ $fCard['titulo'] ?? '' }}</h3>
@@ -1692,8 +1700,10 @@
             </div>
 
             @if(!empty($imagemContato))
-                <div class="contato-image-wrap reveal d2">
-                    <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}">
+                <div class="contato-image-wrap reveal d2" style="{{ empty($imagemContato) ? 'display:none' : '' }}">
+                    @if(!empty($imagemContato))
+                        <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}">
+                    @endif
                 </div>
             @endif
         </div>
@@ -2372,7 +2382,7 @@
                 /* Image visibility */
                 var imgVisM1={hero:'.hero-image-strip',contato:'.contato-image-wrap'};
                 for(var vk in imgVisM1){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;document.querySelectorAll(imgVisM1[vk]).forEach(function(el){el.style.display=d[uk]==='S'?'':'none'})}
-                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img,.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none'}
+                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none';if(pl)pl.style.display=d[uk]==='S'?'none':''}
                 /* Image preview */
                 var imgMap = {
                     imagem_frota_1: '#frota .fleet-card:nth-child(1) img',
