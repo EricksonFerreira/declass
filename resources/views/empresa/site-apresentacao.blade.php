@@ -123,11 +123,8 @@
                     ['name' => 'frota_card_2_descricao', 'label' => 'Card 2 — Descricao',         'hint' => 'Ex: Conforto e elegancia para viagens longas',                 'type' => 'textarea', 'max' => 400],
                     ['name' => 'frota_card_3_titulo',    'label' => 'Card 3 — Titulo',            'hint' => 'Ex: SUV Familiar',                                             'type' => 'text',     'max' => 120],
                     ['name' => 'frota_card_3_descricao', 'label' => 'Card 3 — Descricao',         'hint' => 'Ex: Espaco e seguranca para toda a familia',                   'type' => 'textarea', 'max' => 400],
-                    @for($fi = 4; $fi <= 10; $fi++)
-                    ['name' => 'frota_card_{{$fi}}_titulo', 'label' => 'Card {{$fi}} — Titulo', 'hint' => 'Deixe em branco para ocultar este card', 'type' => 'text', 'max' => 120],
-                    ['name' => 'frota_card_{{$fi}}_descricao', 'label' => 'Card {{$fi}} — Descricao', 'hint' => '', 'type' => 'textarea', 'max' => 400],
-                    @endfor
                 ],
+            ]; for ($fi = 4; $fi <= 10; $fi++) { $textGroups[4]['fields'][] = ['name' => 'frota_card_'.$fi.'_titulo', 'label' => "Card $fi — Titulo", 'hint' => 'Deixe em branco para ocultar este card', 'type' => 'text', 'max' => 120]; $textGroups[4]['fields'][] = ['name' => 'frota_card_'.$fi.'_descricao', 'label' => "Card $fi — Descricao", 'hint' => '', 'type' => 'textarea', 'max' => 400]; } $textGroups = array_values($textGroups);$_ = $textGroups; array_push($textGroups, [
             ],
             [
                 'title'    => 'Secao Vantagens',
