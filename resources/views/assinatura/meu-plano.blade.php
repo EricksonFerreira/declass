@@ -463,7 +463,8 @@
                         </thead>
                         <tbody>
                             @foreach ($historico as $pag)
-                                <tr>
+                                @php $cancelado = $pag->status === 'cancelado'; @endphp
+                                <tr style="{{ $cancelado ? 'text-decoration:line-through;opacity:.5;' : '' }}">
                                     <td class="pl-3 align-middle">{{ $pag->data_vencimento->format('d/m/Y') }}</td>
                                     <td class="align-middle">{{ $pag->empresaPlano?->plano?->nome ?? '—' }}</td>
                                     <td class="align-middle">
@@ -1160,18 +1161,12 @@ function cancelarPagamento(pagamentoId, btn) {
             if (data.success) {
                 var row = (btn || event.target).closest('tr');
                 if (row) {
-                    row.querySelectorAll('td').forEach(function(td) {
-                        td.style.textDecoration = 'line-through';
-                        td.style.opacity = '0.5';
-                    });
-                    var statusCell = row.querySelector('.badge');
-                    if (statusCell) {
-                        statusCell.className = 'badge badge-secondary';
-                        statusCell.textContent = 'Cancelado';
-                        statusCell.style.textDecoration = 'none';
-                    }
-                    var actionsCell = row.querySelector('td:last-child');
-                    if (actionsCell) actionsCell.innerHTML = '<span class="text-muted" style="font-size:.75rem;">Cancelado</span>';
+                    row.style.textDecoration = 'line-through';
+                    row.style.opacity = '0.5';
+                    var sBadge = row.querySelector('td:nth-child(6) .badge');
+                    if (sBadge) { sBadge.className = 'badge badge-secondary'; sBadge.textContent = 'Cancelado'; }
+                    var aCell = row.querySelector('td:last-child');
+                    if (aCell) aCell.innerHTML = '';
                 }
                 Swal.fire({ icon: 'success', title: 'Cancelado!', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
             }
