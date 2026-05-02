@@ -124,7 +124,7 @@
                         <i class="fas fa-pen mr-1"></i> Editar
                     </a>
                     @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
-                        <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="rs-btn rs-btn--sm">
+                        <a href="{{ route('empresa.site-editor.edit', $empresa->id) }}" class="rs-btn rs-btn--sm">
                             <i class="fas fa-globe mr-1"></i> Site
                         </a>
                     @endif
