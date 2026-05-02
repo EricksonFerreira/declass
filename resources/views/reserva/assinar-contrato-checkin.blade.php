@@ -21,7 +21,7 @@
             <div>
                 <div class="assinatura-hero__eyebrow">Contrato de Check-in</div>
                 <h1 class="assinatura-hero__title">Assinatura Digital</h1>
-                <p class="assinatura-hero__sub">Reserva #{{ str_pad($reserva->id, 5, '0', STR_PAD_LEFT) }}</p>
+                <p class="assinatura-hero__sub">Reserva #{{ $reserva->id }}</p>
             </div>
         </div>
     </div>

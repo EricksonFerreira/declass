@@ -88,9 +88,8 @@
 
                         {{-- Header: avatar + nome + badges --}}
                         <div class="rc__head">
-                            <div class="rc__avatar">{{ $iniciais }}</div>
                             <div class="rc__head-info">
-                                <div class="rc__id" style="font-size:1.1rem;font-weight:800;">#{{ str_pad($reserva->id, 8, '0', STR_PAD_LEFT) }}</div>
+                                <div class="rc__id" style="font-size:1.1rem;font-weight:800;">#{{ $reserva->id }}</div>
                                 <div class="rc__cliente">{{ $nomeCliente }}</div>
                                 @if(!empty(auth()->user()->email))
                                     <div class="rc__email">{{ auth()->user()->email }}</div>
@@ -409,13 +408,6 @@
 
     /* head */
     .rc__head { display: flex; align-items: flex-start; gap: 11px; padding: 14px 16px 12px; border-bottom: 1px solid #f1f5f9; }
-    .rc__avatar {
-        width: 42px; height: 42px; border-radius: 12px;
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        color: #fff; font-size: .82rem; font-weight: 800;
-        display: flex; align-items: center; justify-content: center;
-        flex-shrink: 0; letter-spacing: .04em;
-    }
     .rc__head-info { flex: 1; min-width: 0; }
     .rc__id { font-size: .68rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #94a3b8; margin-bottom: 2px; }
     .rc__cliente { font-size: .92rem; font-weight: 700; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

@@ -73,9 +73,8 @@
 
                         {{-- Header: avatar + nome + badges --}}
                         <div class="rc__head">
-                            <div class="rc__avatar">{{ $iniciais }}</div>
                             <div class="rc__head-info">
-                                <div class="rc__id" style="font-size:1.1rem;font-weight:800;">#{{ str_pad($reserva->id, 8, '0', STR_PAD_LEFT) }}</div>
+                                <div class="rc__id" style="font-size:1.1rem;font-weight:800;">#{{ $reserva->id }}</div>
                                 <div class="rc__cliente">{{ $nomeCliente }}</div>
                                 @if(!empty($reserva->usuario?->email))
                                     <div class="rc__email">{{ $reserva->usuario->email }}</div>
@@ -168,7 +167,7 @@
                 $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
             @endphp
             <tr onclick="window.location='{{ route('reserva.show', $reserva->id) }}';" style="cursor: pointer;">
-                <td class="text-center" style="font-size:1.1rem;font-weight:800;">#{{ str_pad($reserva->id, 8, '0', STR_PAD_LEFT) }}</td>
+                <td class="text-center" style="font-size:1.1rem;font-weight:800;">#{{ $reserva->id }}</td>
                 <td>
                     <strong>{{ $reserva->usuario?->nome ?? 'Sem cliente' }}</strong><br>
                     <small>{{ $reserva->usuario?->email ?? '-' }}</small>
@@ -393,21 +392,6 @@
         gap: 11px;
         padding: 14px 16px 12px;
         border-bottom: 1px solid #f1f5f9;
-    }
-
-    .rc__avatar {
-        width: 42px;
-        height: 42px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
-        color: #fff;
-        font-size: .82rem;
-        font-weight: 800;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        flex-shrink: 0;
-        letter-spacing: .04em;
     }
 
     .rc__head-info {
