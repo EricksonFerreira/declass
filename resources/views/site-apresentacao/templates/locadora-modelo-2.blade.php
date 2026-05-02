@@ -59,6 +59,8 @@
         .hero-image img{width:100%;height:480px;object-fit:cover}
         .hero-image-placeholder{width:100%;height:480px;background:linear-gradient(135deg,var(--brand-s),var(--brand-p));border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:4rem}
 
+        .field-small{display:block;margin-top:4px;font-size:.9px;color:var(--ink3)}
+
         .hero-form-card{background:var(--form-bg);color:var(--form-txt);border-radius:var(--r-lg);padding:28px;box-shadow:var(--sh-lg);margin-top:24px}
         .hero-form-card form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
         .hero-form-card .full{grid-column:1/-1}
@@ -198,14 +200,14 @@
                         <div>
                             <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
                             <input id="data_retirada" name="data_retirada" type="text" readonly placeholder="Selecione a data">
-                            <small id="data_retirada_feedback">Selecione uma estação de retirada para ver os dias disponíveis.</small>
+                            <small class="field-small" id="data_retirada_feedback">Selecione uma estação de retirada para ver os dias disponíveis.</small>
                         </div>
                         <div>
                             <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
                             <select id="hora_retirada" name="hora_retirada" disabled>
                                 <option value="">Selecione a data</option>
                             </select>
-                            <small id="hora_retirada_feedback">Escolha uma data para ver os horários disponíveis.</small>
+                            <small class="field-small" id="hora_retirada_feedback">Escolha uma data para ver os horários disponíveis.</small>
                         </div>
                         <div class="full" id="devolucaoField">
                             <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolução' }}</label>
@@ -215,19 +217,19 @@
                                     <option value="{{ $estacao_id }}">{{ $nome }}</option>
                                 @endforeach
                             </select>
-                            <small id="devolucao_feedback">Selecione uma estação de devolução.</small>
+                            <small class="field-small" id="devolucao_feedback">Selecione uma estação de devolução.</small>
                         </div>
                         <div>
                             <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
                             <input id="data_devolucao" name="data_devolucao" type="text" readonly placeholder="Selecione a data">
-                            <small id="data_devolucao_feedback">Selecione uma estação de devolução para ver os dias disponíveis.</small>
+                            <small class="field-small" id="data_devolucao_feedback">Selecione uma estação de devolução para ver os dias disponíveis.</small>
                         </div>
                         <div>
                             <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
                             <select id="hora_devolucao" name="hora_devolucao" disabled>
                                 <option value="">Selecione a data</option>
                             </select>
-                            <small id="hora_devolucao_feedback">Escolha uma data para ver os horários disponíveis.</small>
+                            <small class="field-small" id="hora_devolucao_feedback">Escolha uma data para ver os horários disponíveis.</small>
                         </div>
                         <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
                         @if(!empty($heroFormNota))<div class="booking-note">{{ $heroFormNota }}</div>@endif

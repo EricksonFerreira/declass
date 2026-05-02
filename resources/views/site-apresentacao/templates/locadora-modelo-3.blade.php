@@ -77,6 +77,9 @@
         .hero-form small{font-size:.7rem;opacity:.5;display:block;margin-top:3px}
         .hero-form .note{font-size:.75rem;opacity:.5;margin-top:12px;grid-column:1/-1;text-align:center}
 
+
+        .field-small{display:block;margin-top:4px;font-size:.9px;color:var(--ink3)}
+        
         .sec{padding:100px 24px}
         .sec--alt{background:var(--off)}
         .sec--frota{background:var(--frota-b)}
