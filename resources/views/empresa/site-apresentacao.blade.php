@@ -617,13 +617,12 @@
                                 ['key' => 'frota_1', 'upload' => 'imagem_frota_1', 'toggle' => 'usar_imagem_frota_1', 'label' => 'Frota — Card 1',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
                                 ['key' => 'frota_2', 'upload' => 'imagem_frota_2', 'toggle' => 'usar_imagem_frota_2', 'label' => 'Frota — Card 2',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
                                 ['key' => 'frota_3', 'upload' => 'imagem_frota_3', 'toggle' => 'usar_imagem_frota_3', 'label' => 'Frota — Card 3',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
-                                @for($fi = 4; $fi <= 10; $fi++)
-                                ['key' => 'frota_{{$fi}}', 'upload' => 'imagem_frota_{{$fi}}', 'toggle' => 'usar_imagem_frota_{{$fi}}', 'label' => 'Frota — Card {{$fi}}', 'icon' => 'fas fa-car', 'hint' => 'Recomendado: 900 x 600 pixels'],
-                                @endfor
-                                ['key' => 'vantagens','upload' => 'imagem_vantagens','toggle' => 'usar_imagem_vantagens','label' => 'Secao Vantagens',        'icon' => 'fas fa-thumbs-up',    'hint' => 'Recomendado: 1200 x 700 pixels'],
-                                ['key' => 'contato', 'upload' => 'imagem_contato', 'toggle' => 'usar_imagem_contato', 'label' => 'Secao Contato',           'icon' => 'fas fa-envelope',     'hint' => 'Recomendado: 900 x 500 pixels'],
                             ];
-                        @endphp
+                            for ($fi = 4; $fi <= 10; $fi++) {
+                                $imageFields[] = ['key' => 'frota_'.$fi, 'upload' => 'imagem_frota_'.$fi, 'toggle' => 'usar_imagem_frota_'.$fi, 'label' => "Frota — Card {$fi}", 'icon' => 'fas fa-car', 'hint' => 'Recomendado: 900 x 600 pixels'];
+                            }
+                            $imageFields[] = ['key' => 'vantagens','upload' => 'imagem_vantagens','toggle' => 'usar_imagem_vantagens','label' => 'Secao Vantagens',        'icon' => 'fas fa-thumbs-up',    'hint' => 'Recomendado: 1200 x 700 pixels'];
+                            $imageFields[] = ['key' => 'contato', 'upload' => 'imagem_contato', 'toggle' => 'usar_imagem_contato', 'label' => 'Secao Contato',           'icon' => 'fas fa-envelope',     'hint' => 'Recomendado: 900 x 500 pixels'];
 
                         <div class="step-head">
                             <h5><i class="fas fa-images mr-2"></i>Imagens do Site</h5>
