@@ -55,7 +55,7 @@
         .hero-btn-prim{background:var(--btn1-bg);color:var(--btn1-txt)}
         .hero-btn-sec{background:var(--btn2-bg);color:var(--btn2-txt);border:1px solid var(--line)}
         .hero-btn:hover{transform:translateY(-2px);box-shadow:var(--sh-md)}
-        .hero-image{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg);position:relative}
+        .hero-image{border-radius:var(--r-lg);height:100%;overflow:hidden;box-shadow:var(--sh-lg);position:relative}
         .hero-image img{width:100%;height:100%;object-fit:cover}
         .hero-image-placeholder{width:100%;height:480px;background:linear-gradient(135deg,var(--brand-s),var(--brand-p));border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:4rem}
 
