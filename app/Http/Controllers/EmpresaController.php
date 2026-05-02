@@ -214,7 +214,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             return redirect()->route('home')->with('error', 'Empresa nao encontrada.');
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresa', null, $empresa->nome);
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresa', 'assinatura.meu-plano', $empresa->nome);
 
         return view('empresa.show', compact('empresa', 'breadcrumb'));
     }
