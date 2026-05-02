@@ -327,9 +327,7 @@
             </div>
             @if(!empty($imagemContato))
             <div class="contato-image-wrap" style="{{ empty($imagemContato) ? 'display:none' : '' }}">
-                @if(!empty($imagemContato))
-                    <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}">
-                @endif
+                <img src="{{ $imagemContato ?? '' }}" alt="Contato {{ $empresa->nome }}" style="{{ empty($imagemContato) ? 'display:none' : '' }}">
             </div>
             @endif
         </div>
