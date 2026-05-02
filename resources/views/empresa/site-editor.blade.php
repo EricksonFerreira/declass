@@ -59,9 +59,12 @@
 
         <div class="se-preview">
             <div class="se-preview-toolbar">
+                <button class="se-sidebar-toggle" onclick="seToggleSidebar()" title="Abrir seções">
+                    <i class="fas fa-bars"></i>
+                </button>
                 <i class="fas fa-mobile-alt"></i>
                 <span>Pré-visualização</span>
-                <span class="se-preview-badge">Clique nas seções ao lado para editar</span>
+                <span class="se-preview-badge">Clique nos elementos do preview para editar</span>
             </div>
             <div class="se-preview-frame" id="sePreviewFrame">
                 <iframe id="seIframe" src="{{ route('empresa.site-editor.preview', $empresa->id) }}" frameborder="0"></iframe>
@@ -481,6 +484,18 @@
     border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px;
     color: #0f172a; background: #f8fafc;
 }
+.se-sidebar-close {
+    margin-left: auto; background: none; border: none; color: #94a3b8;
+    cursor: pointer; font-size: 1rem; padding: 4px 8px; border-radius: 6px;
+    display: none;
+}
+.se-sidebar-close:hover { background: #e2e8f0; color: #475569; }
+.se-sidebar-toggle {
+    background: none; border: 1px solid #e2e8f0; color: #475569;
+    cursor: pointer; font-size: .9rem; padding: 6px 10px; border-radius: 6px;
+    display: none; align-items: center; justify-content: center;
+}
+.se-sidebar-toggle:hover { background: #f1f5f9; }
 .se-section-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
 .se-section-btn {
     display: flex; align-items: center; gap: 12px; width: 100%;
