@@ -683,7 +683,7 @@ function seColetarSecao(section) {
     document.querySelectorAll(`[data-section="${section}"]`).forEach(el => {
         const key = el.dataset.key;
         if (el.type === 'file') return;
-        if (el.type === 'checkbox') { dados[key] = el.checked ? 'S' : 'N'; return; }
+        if (el.type === 'checkbox') { dados[key] = el.checked ? '1' : '0'; return; }
         dados[key] = el.value;
     });
     return dados;

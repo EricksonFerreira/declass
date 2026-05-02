@@ -433,8 +433,8 @@
                     else c.style.display='none'
                 }
                 var imgVisM2={hero:['.hero-image','.hero-image img','.hero-image-placeholder'],contato:['.contato-image-wrap']};
-                for(var vkm in imgVisM2){var uk='usar_imagem_'+vkm;if(d[uk]===undefined)continue;var c=document.querySelector(imgVisM2[vkm][0]);if(!c)continue;c.style.display=d[uk]==='S'?'':'none';if(imgVisM2[vkm][1]){var ig=document.querySelector(imgVisM2[vkm][1]);if(ig)ig.style.display=d[uk]==='S'?'':'none'}if(imgVisM2[vkm][2]){var ph=document.querySelector(imgVisM2[vkm][2]);if(ph)ph.style.display=d[uk]==='S'?'none':''}}
-                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none';if(pl)pl.style.display=d[uk]==='S'?'none':''}
+                for(var vkm in imgVisM2){var uk='usar_imagem_'+vkm;if(d[uk]===undefined)continue;var c=document.querySelector(imgVisM2[vkm][0]);if(!c)continue;c.style.display=d[uk]==='1'?'':'none';if(imgVisM2[vkm][1]){var ig=document.querySelector(imgVisM2[vkm][1]);if(ig)ig.style.display=d[uk]==='1'?'':'none'}if(imgVisM2[vkm][2]){var ph=document.querySelector(imgVisM2[vkm][2]);if(ph)ph.style.display=d[uk]==='1'?'none':''}}
+                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='1'?'':'none';if(pl)pl.style.display=d[uk]==='1'?'none':''}
                 var imgMap={imagem_hero:'.hero-image img'};for(var ik in imgMap){if(!du[ik])continue;var ie=document.querySelector(imgMap[ik]);if(ie)ie.src=du[ik]}
             });
             window.parent.postMessage({type:'se-pronto'},'*');
