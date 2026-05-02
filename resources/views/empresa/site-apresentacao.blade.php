@@ -153,29 +153,27 @@
         }
 
         $textGroups[] = [
-            [
-                'title'    => 'Secao Como Funciona (Etapas)',
-                'icon'     => 'fas fa-list-ol',
-                'descricao' => 'Passo a passo explicando como o cliente faz a reserva.',
-                'fields'   => [
-                    ['name' => 'etapas_label_superior', 'label' => 'Etiqueta acima do titulo',   'hint' => 'Ex: E muito simples',                                           'type' => 'text',     'max' => 60],
-                    ['name' => 'etapas_titulo',         'label' => 'Titulo da secao',             'hint' => 'Ex: Como funciona',                                            'type' => 'text',     'max' => 160],
-                    ['name' => 'etapa_1_titulo',        'label' => 'Passo 1 — Titulo',            'hint' => 'Ex: Escolha o veiculo',                                        'type' => 'text',     'max' => 120],
-                    ['name' => 'etapa_1_descricao',     'label' => 'Passo 1 — Descricao',         'hint' => 'Ex: Navegue pela nossa frota e encontre o carro ideal',        'type' => 'textarea', 'max' => 300],
-                    ['name' => 'etapa_2_titulo',        'label' => 'Passo 2 — Titulo',            'hint' => 'Ex: Faca a reserva',                                           'type' => 'text',     'max' => 120],
-                    ['name' => 'etapa_2_descricao',     'label' => 'Passo 2 — Descricao',         'hint' => 'Ex: Preencha o formulario com as datas desejadas',             'type' => 'textarea', 'max' => 300],
-                    ['name' => 'etapa_3_titulo',        'label' => 'Passo 3 — Titulo',            'hint' => 'Ex: Retire e aproveite',                                       'type' => 'text',     'max' => 120],
-                    ['name' => 'etapa_3_descricao',     'label' => 'Passo 3 — Descricao',         'hint' => 'Ex: Retire o veiculo no local combinado e aproveite',          'type' => 'textarea', 'max' => 300],
-                ],
+            'title'    => 'Secao Como Funciona (Etapas)',
+            'icon'     => 'fas fa-list-ol',
+            'descricao' => 'Passo a passo explicando como o cliente faz a reserva.',
+            'fields'   => [
+                ['name' => 'etapas_label_superior', 'label' => 'Etiqueta acima do titulo',   'hint' => 'Ex: E muito simples',                                           'type' => 'text',     'max' => 60],
+                ['name' => 'etapas_titulo',         'label' => 'Titulo da secao',             'hint' => 'Ex: Como funciona',                                            'type' => 'text',     'max' => 160],
+                ['name' => 'etapa_1_titulo',        'label' => 'Passo 1 — Titulo',            'hint' => 'Ex: Escolha o veiculo',                                        'type' => 'text',     'max' => 120],
+                ['name' => 'etapa_1_descricao',     'label' => 'Passo 1 — Descricao',         'hint' => 'Ex: Navegue pela nossa frota e encontre o carro ideal',        'type' => 'textarea', 'max' => 300],
+                ['name' => 'etapa_2_titulo',        'label' => 'Passo 2 — Titulo',            'hint' => 'Ex: Faca a reserva',                                           'type' => 'text',     'max' => 120],
+                ['name' => 'etapa_2_descricao',     'label' => 'Passo 2 — Descricao',         'hint' => 'Ex: Preencha o formulario com as datas desejadas',             'type' => 'textarea', 'max' => 300],
+                ['name' => 'etapa_3_titulo',        'label' => 'Passo 3 — Titulo',            'hint' => 'Ex: Retire e aproveite',                                       'type' => 'text',     'max' => 120],
+                ['name' => 'etapa_3_descricao',     'label' => 'Passo 3 — Descricao',         'hint' => 'Ex: Retire o veiculo no local combinado e aproveite',          'type' => 'textarea', 'max' => 300],
             ],
-            [
-                'title'    => 'Secao Contato',
-                'icon'     => 'fas fa-envelope',
-                'descricao' => 'Textos da secao de contato ao final da pagina.',
-                'fields'   => [
-                    ['name' => 'contato_label_superior', 'label' => 'Etiqueta acima do titulo', 'hint' => 'Ex: Estamos aqui para ajudar',    'type' => 'text', 'max' => 60],
-                    ['name' => 'contato_titulo',         'label' => 'Titulo da secao',           'hint' => 'Ex: Entre em contato',             'type' => 'text', 'max' => 160],
-                ],
+        ];
+        $textGroups[] = [
+            'title'    => 'Secao Contato',
+            'icon'     => 'fas fa-envelope',
+            'descricao' => 'Textos da secao de contato ao final da pagina.',
+            'fields'   => [
+                ['name' => 'contato_label_superior', 'label' => 'Etiqueta acima do titulo', 'hint' => 'Ex: Estamos aqui para ajudar',    'type' => 'text', 'max' => 60],
+                ['name' => 'contato_titulo',         'label' => 'Titulo da secao',           'hint' => 'Ex: Entre em contato',             'type' => 'text', 'max' => 160],
             ],
         ];
     @endphp
