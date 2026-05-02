@@ -471,6 +471,12 @@
                                     'descricao' => 'Area que exibe os veiculos disponiveis.',
                                     'items'    => [
                                         ['name' => 'cor_frota_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
+                                        ['name' => 'cor_frota_etiqueta_texto', 'label' => 'Cor texto etiqueta', 'default' => '#334155'],
+                                        ['name' => 'cor_frota_titulo_texto', 'label' => 'Cor texto titulo', 'default' => '#0B1220'],
+                                        ['name' => 'cor_frota_descricao_texto', 'label' => 'Cor texto descricao', 'default' => '#5E6E85'],
+                                        ['name' => 'cor_frota_card_titulo_texto', 'label' => 'Cor texto card titulo', 'default' => '#0B1220'],
+                                        ['name' => 'cor_frota_card_descricao_texto', 'label' => 'Cor texto card descricao', 'default' => '#5E6E85'],
+                                        ['name' => 'cor_frota_card_fundo', 'label' => 'Cor fundo card', 'default' => '#FFFFFF'],
                                     ],
                                 ],
                                 [
@@ -479,6 +485,10 @@
                                     'descricao' => 'Area de diferenciais da empresa.',
                                     'items'    => [
                                         ['name' => 'cor_vantagens_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
+                                        ['name' => 'cor_vantagens_etiqueta_texto', 'label' => 'Cor texto etiqueta', 'default' => '#334155'],
+                                        ['name' => 'cor_vantagens_titulo_texto', 'label' => 'Cor texto titulo', 'default' => '#0B1220'],
+                                        ['name' => 'cor_vantagens_descricao_texto', 'label' => 'Cor texto descricao', 'default' => '#5E6E85'],
+                                        ['name' => 'cor_vantagens_item_texto', 'label' => 'Cor texto vantagem', 'default' => '#2D3A4F'],
                                     ],
                                 ],
                                 [
@@ -487,6 +497,12 @@
                                     'descricao' => 'Area do passo a passo da reserva.',
                                     'items'    => [
                                         ['name' => 'cor_etapas_fundo', 'label' => 'Cor de fundo', 'default' => '#FFFFFF'],
+                                        ['name' => 'cor_etapas_etiqueta_texto', 'label' => 'Cor texto etiqueta', 'default' => '#334155'],
+                                        ['name' => 'cor_etapas_titulo_texto', 'label' => 'Cor texto titulo', 'default' => '#0B1220'],
+                                        ['name' => 'cor_etapas_descricao_texto', 'label' => 'Cor texto descricao', 'default' => '#5E6E85'],
+                                        ['name' => 'cor_etapas_passo_texto', 'label' => 'Cor texto passo', 'default' => '#0B1220'],
+                                        ['name' => 'cor_etapas_passo_descricao_texto', 'label' => 'Cor texto descricao passo', 'default' => '#5E6E85'],
+                                        ['name' => 'cor_etapas_passo_fundo', 'label' => 'Cor fundo passo', 'default' => '#FFFFFF'],
                                     ],
                                 ],
                                 [

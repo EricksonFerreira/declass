@@ -29,8 +29,24 @@
             --form-bg:                {{ $corFormFundo }};
             --form-text:              {{ $corFormTexto }};
             --frota-bg:               {{ $corFrotaFundo }};
+            --frota-etiqueta-texto:   {{ $corFrotaEtiquetaTexto }};
+            --frota-titulo-texto:     {{ $corFrotaTituloTexto }};
+            --frota-descricao-texto:  {{ $corFrotaDescricaoTexto }};
+            --frota-card-titulo-texto: {{ $corFrotaCardTituloTexto }};
+            --frota-card-desc-texto:  {{ $corFrotaCardDescricaoTexto }};
+            --frota-card-bg:          {{ $corFrotaCardFundo }};
             --vantagens-bg:           {{ $corVantagensFundo }};
+            --vantagens-etiqueta-texto: {{ $corVantagensEtiquetaTexto }};
+            --vantagens-titulo-texto: {{ $corVantagensTituloTexto }};
+            --vantagens-desc-texto:   {{ $corVantagensDescricaoTexto }};
+            --vantagens-item-texto:   {{ $corVantagensItemTexto }};
             --etapas-bg:              {{ $corEtapasFundo }};
+            --etapas-etiqueta-texto:  {{ $corEtapasEtiquetaTexto }};
+            --etapas-titulo-texto:    {{ $corEtapasTituloTexto }};
+            --etapas-desc-texto:      {{ $corEtapasDescricaoTexto }};
+            --etapas-passo-texto:     {{ $corEtapasPassoTexto }};
+            --etapas-passo-desc-texto: {{ $corEtapasPassoDescricaoTexto }};
+            --etapas-passo-bg:        {{ $corEtapasPassoFundo }};
             --contato-bg:             {{ $corContatoFundo }};
             --footer-bg:              {{ $corFooterFundo }};
             --footer-text:            {{ $corFooterTexto }};
@@ -787,6 +803,16 @@
             max-width: 64ch;
         }
 
+        .section--frota .eyebrow { color: var(--frota-etiqueta-texto); }
+        .section--vant .eyebrow  { color: var(--vantagens-etiqueta-texto); }
+        .section--etapas .eyebrow { color: var(--etapas-etiqueta-texto); }
+        .section--frota .section-title { color: var(--frota-titulo-texto); }
+        .section--vant .section-title  { color: var(--vantagens-titulo-texto); }
+        .section--etapas .section-title { color: var(--etapas-titulo-texto); }
+        .section--frota .section-desc { color: var(--frota-descricao-texto); }
+        .section--vant .section-desc  { color: var(--vantagens-desc-texto); }
+        .section--etapas .section-desc { color: var(--etapas-desc-texto); }
+
         /* ══════════════════════════════════════════
            FROTA
         ══════════════════════════════════════════ */
@@ -797,7 +823,7 @@
         }
 
         .fleet-card {
-            background: #fff;
+            background: var(--frota-card-bg);
             border: 1px solid var(--line);
             border-radius: var(--r-lg);
             overflow: hidden;
@@ -854,7 +880,7 @@
         .fleet-card-title {
             font-size: 1.05rem;
             font-weight: 700;
-            color: var(--ink);
+            color: var(--frota-card-titulo-texto);
             margin-bottom: 8px;
             letter-spacing: -.01em;
         }
@@ -862,7 +888,7 @@
         .fleet-card-desc {
             font-size: .86rem;
             line-height: 1.65;
-            color: var(--ink-3);
+            color: var(--frota-card-desc-texto);
         }
 
         /* Top accent line on card */
@@ -961,7 +987,7 @@
         .vant-item-text {
             font-size: .92rem;
             font-weight: 600;
-            color: var(--ink-2);
+            color: var(--vantagens-item-texto);
             line-height: 1.5;
             padding-top: 9px;
         }
@@ -998,7 +1024,7 @@
         }
 
         .step-card {
-            background: #fff;
+            background: var(--etapas-passo-bg);
             border: 1px solid var(--line);
             border-radius: var(--r-lg);
             padding: 28px 24px 26px;
@@ -1046,7 +1072,7 @@
         .step-card-title {
             font-size: 1rem;
             font-weight: 700;
-            color: var(--ink);
+            color: var(--etapas-passo-texto);
             margin-bottom: 8px;
             letter-spacing: -.01em;
         }
@@ -1054,7 +1080,7 @@
         .step-card-desc {
             font-size: .86rem;
             line-height: 1.68;
-            color: var(--ink-3);
+            color: var(--etapas-passo-desc-texto);
         }
 
         /* ══════════════════════════════════════════
