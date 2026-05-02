@@ -74,7 +74,7 @@
     @endphp
 
     {{-- Modal: Topbar --}}
-    <div class="modal fade" id="modal-topbar" tabindex="-1">
+    <div class="modal fade left-panel" id="modal-topbar" data-backdrop="false" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -104,7 +104,7 @@
     </div>
 
     {{-- Modal: Hero --}}
-    <div class="modal fade" id="modal-hero" tabindex="-1">
+    <div class="modal fade left-panel" id="modal-hero" tabindex="-1" data-backdrop="false" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -115,6 +115,7 @@
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-hero-texto">Texto</a></li>
                         <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-hero-cores">Cores</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-hero-imagem">Imagem</a></li>
                     </ul>
                     <div class="tab-content se-tab-content">
                         <div class="tab-pane active" id="tab-hero-texto">
@@ -131,6 +132,23 @@
                                 <div class="se-cor-item"><label>Texto do banner</label><input type="color" class="se-cor-picker" data-section="hero" data-key="cor_hero_texto" value="{{ $cor('hero_texto', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('hero_texto', '#FFFFFF') }}"></div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="tab-hero-imagem">
+                            <div class="se-img-upload">
+                                <label>Imagem do banner (recomendado: 1600x900)</label>
+                                <div class="se-img-preview" id="seImgPreview-hero">
+                                    @php $heroImg = $siteImagens['hero'] ?? null; @endphp
+                                    @if($heroImg)
+                                        <img src="{{ Storage::url($heroImg) }}" alt="Hero">
+                                    @else
+                                        <div class="se-img-placeholder"><i class="fas fa-image"></i><span>Nenhuma imagem selecionada</span></div>
+                                    @endif
+                                </div>
+                                <input type="file" class="se-file-input" data-section="hero" data-key="imagem_hero" accept="image/jpeg,image/png,image/webp">
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
+                                    <i class="fas fa-upload"></i> Escolher imagem
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -142,7 +160,7 @@
     </div>
 
     {{-- Modal: Frota --}}
-    <div class="modal fade" id="modal-frota" tabindex="-1">
+    <div class="modal fade left-panel" id="modal-frota" tabindex="-1" data-backdrop="false" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -153,6 +171,7 @@
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-frota-texto">Texto</a></li>
                         <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-frota-cores">Cores</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-frota-imagem">Imagens</a></li>
                     </ul>
                     <div class="tab-content se-tab-content">
                         <div class="tab-pane active" id="tab-frota-texto">
@@ -180,6 +199,25 @@
                                 <div class="se-cor-item"><label>Card — fundo</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_card_fundo" value="{{ $cor('frota_card_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_card_fundo', '#FFFFFF') }}"></div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="tab-frota-imagem">
+                            @for($fi = 1; $fi <= 3; $fi++)
+                            <div class="se-img-upload mb-3">
+                                <label>Imagem do Card {{ $fi }} (recomendado: 900x600)</label>
+                                <div class="se-img-preview" id="seImgPreview-frota_{{$fi}}">
+                                    @php $frotaImg = $siteImagens['frota_'.$fi] ?? null; @endphp
+                                    @if($frotaImg)
+                                        <img src="{{ Storage::url($frotaImg) }}" alt="Frota {{ $fi }}">
+                                    @else
+                                        <div class="se-img-placeholder"><i class="fas fa-car"></i><span>Nenhuma imagem</span></div>
+                                    @endif
+                                </div>
+                                <input type="file" class="se-file-input" data-section="frota" data-key="imagem_frota_{{$fi}}" accept="image/jpeg,image/png,image/webp">
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
+                                    <i class="fas fa-upload"></i> Escolher imagem
+                                </button>
+                            </div>
+                            @endfor
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -191,7 +229,7 @@
     </div>
 
     {{-- Modal: Vantagens --}}
-    <div class="modal fade" id="modal-vantagens" tabindex="-1">
+    <div class="modal fade left-panel" id="modal-vantagens" tabindex="-1" data-backdrop="false" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -202,6 +240,7 @@
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-vantagens-texto">Texto</a></li>
                         <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-vantagens-cores">Cores</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-vantagens-imagem">Imagem</a></li>
                     </ul>
                     <div class="tab-content se-tab-content">
                         <div class="tab-pane active" id="tab-vantagens-texto">
@@ -224,6 +263,23 @@
                                 <div class="se-cor-item"><label>Texto dos itens</label><input type="color" class="se-cor-picker" data-section="vantagens" data-key="cor_vantagens_item_texto" value="{{ $cor('vantagens_item_texto', '#2D3A4F') }}"><input type="text" class="se-cor-text" value="{{ $cor('vantagens_item_texto', '#2D3A4F') }}"></div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="tab-vantagens-imagem">
+                            <div class="se-img-upload">
+                                <label>Imagem da seção Vantagens (recomendado: 900x600)</label>
+                                <div class="se-img-preview" id="seImgPreview-vantagens">
+                                    @php $vantImg = $siteImagens['vantagens'] ?? null; @endphp
+                                    @if($vantImg)
+                                        <img src="{{ Storage::url($vantImg) }}" alt="Vantagens">
+                                    @else
+                                        <div class="se-img-placeholder"><i class="fas fa-thumbs-up"></i><span>Nenhuma imagem</span></div>
+                                    @endif
+                                </div>
+                                <input type="file" class="se-file-input" data-section="vantagens" data-key="imagem_vantagens" accept="image/jpeg,image/png,image/webp">
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
+                                    <i class="fas fa-upload"></i> Escolher imagem
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -235,7 +291,7 @@
     </div>
 
     {{-- Modal: Etapas --}}
-    <div class="modal fade" id="modal-etapas" tabindex="-1">
+    <div class="modal fade left-panel" id="modal-etapas" tabindex="-1" data-backdrop="false" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -281,7 +337,7 @@
     </div>
 
     {{-- Modal: Contato --}}
-    <div class="modal fade" id="modal-contato" tabindex="-1">
+    <div class="modal fade left-panel" id="modal-contato" tabindex="-1" data-backdrop="false" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -292,6 +348,7 @@
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-contato-texto">Texto</a></li>
                         <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-contato-cores">Cores</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-contato-imagem">Imagem</a></li>
                     </ul>
                     <div class="tab-content se-tab-content">
                         <div class="tab-pane active" id="tab-contato-texto">
@@ -305,6 +362,23 @@
                                 <div class="se-cor-item"><label>Fundo da seção</label><input type="color" class="se-cor-picker" data-section="contato" data-key="cor_contato_fundo" value="{{ $cor('contato_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('contato_fundo', '#FFFFFF') }}"></div>
                             </div>
                         </div>
+                        <div class="tab-pane" id="tab-contato-imagem">
+                            <div class="se-img-upload">
+                                <label>Imagem da seção Contato (recomendado: 600x400)</label>
+                                <div class="se-img-preview" id="seImgPreview-contato">
+                                    @php $contImg = $siteImagens['contato'] ?? null; @endphp
+                                    @if($contImg)
+                                        <img src="{{ Storage::url($contImg) }}" alt="Contato">
+                                    @else
+                                        <div class="se-img-placeholder"><i class="fas fa-envelope"></i><span>Nenhuma imagem</span></div>
+                                    @endif
+                                </div>
+                                <input type="file" class="se-file-input" data-section="contato" data-key="imagem_contato" accept="image/jpeg,image/png,image/webp">
+                                <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
+                                    <i class="fas fa-upload"></i> Escolher imagem
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -316,7 +390,7 @@
     </div>
 
     {{-- Modal: Global --}}
-    <div class="modal fade" id="modal-global" tabindex="-1">
+    <div class="modal fade left-panel" id="modal-global" tabindex="-1" data-backdrop="false" data-keyboard="false">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -464,17 +538,61 @@
 
 /* Sync color picker ↔ text */
 .se-cor-picker, .se-cor-text { transition: all .1s; }
+
+/* ═══ IMAGE UPLOAD ═══ */
+.se-img-upload { padding: 8px 0; }
+.se-img-upload label { font-size: .82rem; font-weight: 600; color: #334155; margin-bottom: 8px; display: block; }
+.se-img-preview {
+    width: 100%; height: 140px; border-radius: 8px; overflow: hidden;
+    border: 1px solid #e2e8f0; background: #f8fafc;
+    display: flex; align-items: center; justify-content: center;
+}
+.se-img-preview img { width: 100%; height: 100%; object-fit: cover; }
+.se-img-placeholder {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    color: #94a3b8; font-size: .8rem;
+}
+.se-img-placeholder i { font-size: 1.6rem; }
+.se-file-input { display: none; }
+
+/* ═══ LEFT PANEL (side modal) ═══ */
+.modal.left-panel { padding-right: 0 !important; }
+.modal.left-panel.fade .modal-dialog {
+    position: fixed; left: 0; top: 56px; margin: 0;
+    width: 380px; max-width: 100vw;
+    height: calc(100vh - 56px);
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+}
+.modal.left-panel.fade.show .modal-dialog { transform: translateX(0); }
+.modal.left-panel .modal-dialog { max-width: 380px; height: calc(100vh - 56px); }
+.modal.left-panel .modal-content {
+    height: 100%; border-radius: 0; border: none;
+    box-shadow: 4px 0 24px rgba(0,0,0,.10);
+}
+.modal.left-panel .modal-header {
+    border-radius: 0; min-height: 56px; padding: 14px 20px;
+    background: #f8fafc; border-bottom: 1px solid #e2e8f0;
+}
+.modal.left-panel .modal-header h5 { font-size: .95rem; font-weight: 700; margin: 0; }
+.modal.left-panel .modal-body { overflow-y: auto; padding: 20px; }
+.modal.left-panel .modal-footer {
+    border-radius: 0; padding: 12px 20px;
+    border-top: 1px solid #e2e8f0;
+}
 </style>
 @stop
 
 @section('js')
 <script>
 let seDados = {};
+let seArquivos = {};
 
 function seColetarSecao(section) {
     const dados = {};
     document.querySelectorAll(`[data-section="${section}"]`).forEach(el => {
         const key = el.dataset.key;
+        if (el.type === 'file') return;
         dados[key] = el.value;
     });
     return dados;
@@ -542,6 +660,23 @@ function seSalvar() {
 
 function seAbrirModal(section) {
     $('#modal-' + section).modal('show');
+    $('#modal-' + section).find('.nav-tabs a:first').tab('show');
+}
+
+function seAbrirModalComAlvo(secao, alvo, campo) {
+    var modalId = '#modal-' + secao;
+    var tabId = (alvo === 'fundo' || alvo === 'imagem') ? 'cores' : 'texto';
+
+    $(modalId).modal('show');
+    $(modalId + ' a[href*="' + tabId + '"]').tab('show');
+
+    if (campo) {
+        setTimeout(function() {
+            var el = document.querySelector('[data-section="' + secao + '"][data-key="' + campo + '"]');
+            if (el) el.focus();
+            if (el && el.type === 'color') el.click();
+        }, 400);
+    }
 }
 
 // Sync color picker ↔ text input
@@ -560,8 +695,19 @@ document.addEventListener('input', function(e) {
 
 // Listen for postMessage from iframe
 window.addEventListener('message', function(e) {
-    if (e.data && e.data.type === 'se-pronto') {
+    if (!e.data) return;
+
+    if (e.data.type === 'se-pronto') {
         seEnviarDadosParaPreview();
+        return;
+    }
+
+    if (e.data.type === 'se-clicar') {
+        var alvo = e.data.alvo;
+        var secao = e.data.secao;
+        var campo = e.data.campo;
+        seAbrirModalComAlvo(secao, alvo, campo);
+        return;
     }
 });
 

@@ -2333,6 +2333,98 @@
             });
             window.parent.postMessage({ type: 'se-pronto' }, '*');
         })();
+
+        /* ── Editor click-to-edit ── */
+        (function() {
+            if (!window.parent || window.parent === window) return;
+
+            var style = document.createElement('style');
+            style.textContent = '.se-hover-hint { outline: 2px dashed rgba(14,165,233,0.4) !important; outline-offset: 2px; cursor: pointer !important; } .se-bg-hint { position: relative; } .se-bg-hint::after { content: "✎ editar fundo"; position: absolute; top: 8px; right: 12px; font: 11px/1 sans-serif; background: rgba(14,165,233,0.9); color: #fff; padding: 3px 10px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 99; } .se-bg-hint:hover::after { opacity: 1; } .se-img-hint { position: relative; } .se-img-hint::after { content: "✎ trocar imagem"; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font: 11px/1 sans-serif; background: rgba(0,0,0,0.65); color: #fff; padding: 4px 12px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 99; } .se-img-hint:hover::after { opacity: 1; }';
+            document.head.appendChild(style);
+
+            var seAlvo = function(alvo, secao, campo) {
+                window.parent.postMessage({ type: 'se-clicar', alvo: alvo, secao: secao, campo: campo }, '*');
+            };
+
+            var clickMap = [
+                { sel: '.hero .eyebrow', a: 'texto', s: 'hero', c: 'hero_tag' },
+                { sel: '.hero .section-title', a: 'texto', s: 'hero', c: 'hero_titulo' },
+                { sel: '.hero-subtitle', a: 'texto', s: 'hero', c: 'hero_subtitulo' },
+                { sel: '.hero-desc', a: 'texto', s: 'hero', c: 'hero_descricao' },
+                { sel: '#frota .eyebrow', a: 'texto', s: 'frota', c: 'frota_label_superior' },
+                { sel: '#frota .section-title', a: 'texto', s: 'frota', c: 'frota_titulo' },
+                { sel: '#frota .section-desc', a: 'texto', s: 'frota', c: 'frota_descricao' },
+                { sel: '#frota .fleet-card:nth-child(1) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_1_titulo' },
+                { sel: '#frota .fleet-card:nth-child(1) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_1_descricao' },
+                { sel: '#frota .fleet-card:nth-child(2) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_2_titulo' },
+                { sel: '#frota .fleet-card:nth-child(2) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_2_descricao' },
+                { sel: '#frota .fleet-card:nth-child(3) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_3_titulo' },
+                { sel: '#frota .fleet-card:nth-child(3) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_3_descricao' },
+                { sel: '#vantagens .eyebrow', a: 'texto', s: 'vantagens', c: 'vantagens_label_superior' },
+                { sel: '#vantagens .section-title', a: 'texto', s: 'vantagens', c: 'vantagens_titulo' },
+                { sel: '#vantagens .section-desc', a: 'texto', s: 'vantagens', c: 'vantagens_descricao' },
+                { sel: '.vant-item-text', a: 'texto', s: 'vantagens', c: 'beneficio_1' },
+                { sel: '#como-funciona .eyebrow', a: 'texto', s: 'etapas', c: 'etapas_label_superior' },
+                { sel: '#como-funciona .section-title', a: 'texto', s: 'etapas', c: 'etapas_titulo' },
+                { sel: '.step-card:nth-child(1) .step-card-title', a: 'texto', s: 'etapas', c: 'etapa_1_titulo' },
+                { sel: '.step-card:nth-child(1) .step-card-desc', a: 'texto', s: 'etapas', c: 'etapa_1_descricao' },
+                { sel: '.step-card:nth-child(2) .step-card-title', a: 'texto', s: 'etapas', c: 'etapa_2_titulo' },
+                { sel: '.step-card:nth-child(2) .step-card-desc', a: 'texto', s: 'etapas', c: 'etapa_2_descricao' },
+                { sel: '.step-card:nth-child(3) .step-card-title', a: 'texto', s: 'etapas', c: 'etapa_3_titulo' },
+                { sel: '.step-card:nth-child(3) .step-card-desc', a: 'texto', s: 'etapas', c: 'etapa_3_descricao' },
+                { sel: '#contato .contato-eyebrow', a: 'texto', s: 'contato', c: 'contato_label_superior' },
+                { sel: '#contato .contato-title', a: 'texto', s: 'contato', c: 'contato_titulo' },
+            ];
+
+            clickMap.forEach(function(item) {
+                var el = document.querySelector(item.sel);
+                if (!el) return;
+                el.classList.add('se-hover-hint');
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation(); e.preventDefault();
+                    seAlvo(item.a, item.s, item.c);
+                });
+            });
+
+            /* Background clicks on section wrappers */
+            var bgSections = [
+                { sel: '.section.hero', s: 'hero' },
+                { sel: '#frota', s: 'frota' },
+                { sel: '#vantagens', s: 'vantagens' },
+                { sel: '#como-funciona', s: 'etapas' },
+                { sel: '#contato', s: 'contato' },
+            ];
+            bgSections.forEach(function(item) {
+                var el = document.querySelector(item.sel);
+                if (!el) return;
+                el.classList.add('se-bg-hint');
+                el.addEventListener('click', function(e) {
+                    if (e.target === this || !e.target.closest('.se-hover-hint')) {
+                        seAlvo('fundo', item.s, null);
+                    }
+                });
+            });
+
+            /* Image clicks */
+            var imgSections = [
+                { sel: '.hero img', s: 'hero', c: 'imagem_hero' },
+                { sel: '#frota .fleet-card:nth-child(1) img', s: 'frota', c: 'imagem_frota_1' },
+                { sel: '#frota .fleet-card:nth-child(2) img', s: 'frota', c: 'imagem_frota_2' },
+                { sel: '#frota .fleet-card:nth-child(3) img', s: 'frota', c: 'imagem_frota_3' },
+                { sel: '#vantagens img', s: 'vantagens', c: 'imagem_vantagens' },
+                { sel: '#contato img', s: 'contato', c: 'imagem_contato' },
+            ];
+            imgSections.forEach(function(item) {
+                var el = document.querySelector(item.sel);
+                if (!el) return;
+                el.classList.add('se-img-hint');
+                el.style.cursor = 'pointer';
+                el.addEventListener('click', function(e) {
+                    e.stopPropagation(); e.preventDefault();
+                    seAlvo('imagem', item.s, item.c);
+                });
+            });
+        })();
     </script>
 </body>
 </html>
