@@ -356,6 +356,54 @@
             },true);
             document.querySelectorAll('form').forEach(function(f){f.addEventListener('submit',function(e){e.preventDefault()})});
 
+            var st=document.createElement('style');
+            st.textContent='.se-hover-hint{outline:2px dashed rgba(14,165,233,0.4)!important;outline-offset:2px;cursor:pointer!important}.se-bg-hint{position:relative}.se-bg-hint::after{content:"✎ editar fundo";position:absolute;top:8px;right:12px;font:11px/1 sans-serif;background:rgba(14,165,233,0.9);color:#fff;padding:3px 10px;border-radius:6px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}.se-bg-hint:hover::after{opacity:1}.se-img-hint{position:relative}.se-img-hint::after{content:"✎ trocar imagem";position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font:11px/1 sans-serif;background:rgba(0,0,0,0.65);color:#fff;padding:4px 12px;border-radius:6px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:99}.se-img-hint:hover::after{opacity:1}';
+            document.head.appendChild(st);
+            var sa=function(a,s,c){window.parent.postMessage({type:'se-clicar',alvo:a,secao:s,campo:c},'*')};
+
+            var cm=[
+                {sel:'.hero .hero-tag',a:'texto',s:'hero',c:'hero_tag'},
+                {sel:'.hero .hero-title',a:'texto',s:'hero',c:'hero_titulo'},
+                {sel:'.hero .hero-sub',a:'texto',s:'hero',c:'hero_subtitulo'},
+                {sel:'.hero .hero-desc',a:'texto',s:'hero',c:'hero_descricao'},
+                {sel:'.hero-form h2',a:'texto',s:'hero',c:'hero_form_titulo'},
+                {sel:'#frota .eyebrow',a:'texto',s:'frota',c:'frota_label_superior'},
+                {sel:'#frota .section-title',a:'texto',s:'frota',c:'frota_titulo'},
+                {sel:'#frota .section-desc',a:'texto',s:'frota',c:'frota_descricao'},
+                {sel:'.fleet-card[data-frota="1"] .fleet-card-title',a:'texto',s:'frota',c:'frota_card_1_titulo'},
+                {sel:'.fleet-card[data-frota="1"] .fleet-card-desc',a:'texto',s:'frota',c:'frota_card_1_descricao'},
+                {sel:'.fleet-card[data-frota="2"] .fleet-card-title',a:'texto',s:'frota',c:'frota_card_2_titulo'},
+                {sel:'.fleet-card[data-frota="2"] .fleet-card-desc',a:'texto',s:'frota',c:'frota_card_2_descricao'},
+                @for($fi = 3; $fi <= 10; $fi++)
+                {sel:'.fleet-card[data-frota="{{$fi}}"] .fleet-card-title',a:'texto',s:'frota',c:'frota_card_{{$fi}}_titulo'},
+                {sel:'.fleet-card[data-frota="{{$fi}}"] .fleet-card-desc',a:'texto',s:'frota',c:'frota_card_{{$fi}}_descricao'},
+                @endfor
+                {sel:'#vantagens .eyebrow',a:'texto',s:'vantagens',c:'vantagens_label_superior'},
+                {sel:'#vantagens .section-title',a:'texto',s:'vantagens',c:'vantagens_titulo'},
+                {sel:'#vantagens .section-desc',a:'texto',s:'vantagens',c:'vantagens_descricao'},
+                {sel:'.vant-item-text',a:'texto',s:'vantagens',c:'beneficio_1'},
+                {sel:'#como-funciona .eyebrow',a:'texto',s:'etapas',c:'etapas_label_superior'},
+                {sel:'#como-funciona .section-title',a:'texto',s:'etapas',c:'etapas_titulo'},
+                {sel:'.step-card:nth-child(1) .step-card-title',a:'texto',s:'etapas',c:'etapa_1_titulo'},
+                {sel:'.step-card:nth-child(1) .step-card-desc',a:'texto',s:'etapas',c:'etapa_1_descricao'},
+                {sel:'.step-card:nth-child(2) .step-card-title',a:'texto',s:'etapas',c:'etapa_2_titulo'},
+                {sel:'.step-card:nth-child(2) .step-card-desc',a:'texto',s:'etapas',c:'etapa_2_descricao'},
+                {sel:'.step-card:nth-child(3) .step-card-title',a:'texto',s:'etapas',c:'etapa_3_titulo'},
+                {sel:'.step-card:nth-child(3) .step-card-desc',a:'texto',s:'etapas',c:'etapa_3_descricao'},
+                {sel:'#contato .contato-eyebrow',a:'texto',s:'contato',c:'contato_label_superior'},
+                {sel:'#contato .contato-title',a:'texto',s:'contato',c:'contato_titulo'},
+            ];
+            cm.forEach(function(i){var e=document.querySelector(i.sel);if(!e)return;e.classList.add('se-hover-hint');e.addEventListener('click',function(ev){ev.stopPropagation();ev.preventDefault();sa(i.a,i.s,i.c)})});
+
+            var bg=[{sel:'.hero',s:'hero'},{sel:'#frota',s:'frota'},{sel:'#vantagens',s:'vantagens'},{sel:'#como-funciona',s:'etapas'},{sel:'#contato',s:'contato'}];
+            bg.forEach(function(i){var e=document.querySelector(i.sel);if(!e)return;e.classList.add('se-bg-hint');e.addEventListener('click',function(ev){if(ev.target===this||!ev.target.closest('.se-hover-hint'))sa('fundo',i.s,null)})});
+
+            var im=[{sel:'.hero-image img',s:'hero',c:'imagem_hero'},{sel:'#frota .fleet-card[data-frota="1"] img',s:'frota',c:'imagem_frota_1'},{sel:'#frota .fleet-card[data-frota="2"] img',s:'frota',c:'imagem_frota_2'},{sel:'#frota .fleet-card[data-frota="3"] img',s:'frota',c:'imagem_frota_3'}];
+            @for($fi = 4; $fi <= 10; $fi++)
+            im.push({sel:'#frota .fleet-card[data-frota="{{$fi}}"] img',s:'frota',c:'imagem_frota_{{$fi}}'});
+            @endfor
+            im.forEach(function(i){var e=document.querySelector(i.sel);if(!e)return;e.classList.add('se-img-hint');e.style.cursor='pointer';e.addEventListener('click',function(ev){ev.stopPropagation();ev.preventDefault();sa('imagem',i.s,i.c)})});
+
             var cssMap={
                 cor_primaria:'--brand-p',cor_secundaria:'--brand-s',cor_terciaria:'--brand-a',
                 cor_topbar_fundo:'--top-bg',cor_topbar_texto:'--top-txt',cor_topbar_link_hover:'--top-hv',

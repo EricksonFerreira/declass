@@ -2415,6 +2415,8 @@
             var clickMap = [
                 { sel: '.hero .eyebrow', a: 'texto', s: 'hero', c: 'hero_tag' },
                 { sel: '.hero .section-title', a: 'texto', s: 'hero', c: 'hero_titulo' },
+                { sel: '.booking-form-title', a: 'texto', s: 'hero', c: 'hero_form_titulo' },
+                { sel: '.booking-form-desc', a: 'texto', s: 'hero', c: 'hero_form_descricao' },
                 { sel: '.hero-subtitle', a: 'texto', s: 'hero', c: 'hero_subtitulo' },
                 { sel: '.hero-desc', a: 'texto', s: 'hero', c: 'hero_descricao' },
                 { sel: '#frota .eyebrow', a: 'texto', s: 'frota', c: 'frota_label_superior' },
