@@ -17,6 +17,7 @@
                 <select id="seModeloSelect" onchange="seTrocarModelo(this.value)" class="se-select">
                     <option value="modelo_1" {{ ($empresa->site_apresentacao_modelo ?? 'modelo_1') === 'modelo_1' ? 'selected' : '' }}>Modelo 1 — Premium</option>
                     <option value="modelo_2" {{ ($empresa->site_apresentacao_modelo ?? 'modelo_1') === 'modelo_2' ? 'selected' : '' }}>Modelo 2 — Moderno</option>
+                    <option value="modelo_3" {{ ($empresa->site_apresentacao_modelo ?? 'modelo_1') === 'modelo_3' ? 'selected' : '' }}>Modelo 3 — Executive</option>
                 </select>
             </div>
         </div>

@@ -88,7 +88,7 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
         return [
             'dominio' => $dominioRules,
             'site_apresentacao_ativo' => ['nullable', Rule::in(['S', 'N'])],
-            'site_apresentacao_modelo' => ['nullable', Rule::in(['modelo_1', 'modelo_2'])],
+            'site_apresentacao_modelo' => ['nullable', Rule::in(['modelo_1', 'modelo_2', 'modelo_3'])],
             'site_apresentacao_titulo' => ['nullable', 'string', 'max:120'],
             'site_apresentacao_subtitulo' => ['nullable', 'string', 'max:180'],
             'site_apresentacao_descricao' => ['nullable', 'string', 'max:2000'],

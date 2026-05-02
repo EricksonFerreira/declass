@@ -389,5 +389,134 @@
             window.parent.postMessage({type:'se-pronto'},'*');
         })();
     </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
+    <script>
+        (function () {
+            const retiradaSelect  = document.getElementById('retirada');
+            const devolucaoSelect = document.getElementById('devolucao');
+            const devolucaoField  = document.getElementById('devolucaoField');
+            const dataRetirada    = document.getElementById('data_retirada');
+            const horaRetirada    = document.getElementById('hora_retirada');
+            const dataDevolucao   = document.getElementById('data_devolucao');
+            const horaDevolucao   = document.getElementById('hora_devolucao');
+            const form            = dataRetirada?.closest('form');
+            const diasDisponiveisUrl = @json(route('reserva.diasSemDisponibilidade'));
+            const agendaUrl = @json(route('reserva.agendaDisponivelPorEstacao'));
+            const dataRetiradaFeedback = document.getElementById('data_retirada_feedback');
+            const horaRetiradaFeedback = document.getElementById('hora_retirada_feedback');
+            const dataDevolucaoFeedback = document.getElementById('data_devolucao_feedback');
+            const horaDevolucaoFeedback = document.getElementById('hora_devolucao_feedback');
+            const devolucaoFeedback = document.getElementById('devolucao_feedback');
+            const eventoChange = new Event('change', { bubbles: true });
+            let pickerRetirada = null;
+            let pickerDevolucao = null;
+
+            function toLocalDateInput(date) {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+            function toLocalTimeInput(date) {
+                const h = String(date.getHours()).padStart(2, '0');
+                const mi = String(date.getMinutes()).padStart(2, '0');
+                return `${h}:${mi}`;
+            }
+            function addDays(date, days) { const c = new Date(date.getTime()); c.setDate(c.getDate() + days); return c; }
+            function normalizeMinDates() {
+                if (!dataRetirada || !dataDevolucao) return;
+                const now = new Date();
+                dataRetirada.min = toLocalDateInput(now);
+                const rd  = dataRetirada.value ? new Date(dataRetirada.value+'T00:00:00') : now;
+                const md  = addDays(rd, 1);
+                dataDevolucao.min = toLocalDateInput(md);
+                if (dataDevolucao.value && new Date(dataDevolucao.value+'T00:00:00') < md) dataDevolucao.value = toLocalDateInput(md);
+            }
+            function normalizeMinTime() {
+                if (!dataRetirada || !horaRetirada) return;
+                const n=new Date(), t=toLocalDateInput(n);
+                dataRetirada.value===t? horaRetirada.min=toLocalTimeInput(n) : horaRetirada.removeAttribute('min');
+            }
+            function validateDates() {
+                if (!dataRetirada||!horaRetirada||!dataDevolucao) return true;
+                const n=new Date(),td=new Date(n.getFullYear(),n.getMonth(),n.getDate());
+                const rd=dataRetirada.value?new Date(dataRetirada.value+'T00:00:00'):null,dd=dataDevolucao.value?new Date(dataDevolucao.value+'T00:00:00'):null;
+                if(rd&&rd<td){dataRetirada.setCustomValidity('A retirada não pode ser antes de hoje.');dataRetirada.reportValidity();return false}
+                dataRetirada.setCustomValidity('');
+                if(rd&&rd.getTime()===td.getTime()&&horaRetirada.value){const dt=new Date(dataRetirada.value+'T'+horaRetirada.value);if(dt<n){horaRetirada.setCustomValidity('A hora de retirada não pode ser no passado.');horaRetirada.reportValidity();return false}}
+                horaRetirada.setCustomValidity('');
+                if(dataRetirada.value&&dataDevolucao.value){const md=addDays(new Date(dataRetirada.value+'T00:00:00'),1);if(dd<md){dataDevolucao.setCustomValidity('A devolução deve ser ao menos 1 dia após a retirada.');dataDevolucao.reportValidity();return false}}
+                dataDevolucao.setCustomValidity('');
+                return true;
+            }
+            function estacaoPermiteCheckout(id) { return !!devolucaoSelect?.querySelector(`option[value="${id}"]`); }
+            function syncDevolucao(t=false) {
+                if(!devolucaoField||!devolucaoSelect)return;
+                const rid=retiradaSelect?.value||'',ok=estacaoPermiteCheckout(rid),rt=retiradaSelect?.selectedOptions?.[0]?.textContent?.trim()||'';
+                devolucaoField.style.display='block';devolucaoSelect.disabled=false;
+                if(ok&&rid){const va=devolucaoSelect.value;devolucaoSelect.value=rid;if(t&&va!==rid)devolucaoSelect.dispatchEvent(eventoChange);if(devolucaoFeedback)devolucaoFeedback.textContent=rt?'Estação de devolução definida automaticamente: '+rt+'.':'Estação de devolução definida automaticamente.'}
+                else if(!ok&&devolucaoSelect.value===rid){devolucaoSelect.value='';if(devolucaoFeedback)devolucaoFeedback.textContent='Selecione uma estação de devolução.'}
+                else if(devolucaoFeedback)devolucaoFeedback.textContent=devolucaoSelect.value?'Estação de devolução selecionada: '+(devolucaoSelect.selectedOptions?.[0]?.textContent?.trim()||'')+'.':'Selecione uma estação de devolução.';
+            }
+            retiradaSelect?.addEventListener('change',()=>{syncDevolucao(true)});
+            const ptLocale=window.flatpickr?.l10ns?.pt||{};
+            function toIsoDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+            function normalizarSlotHorario(s){
+                if(s&&typeof s==='object'){const v=String(s.value||s.hora||s.time||'').trim(),l=String(s.label||s.text||v).trim();if(!v)return null;return{value:v,label:l||v,taxa_extra:Boolean(s.taxa_extra||s.status==='taxa_extra')}}
+                const v=String(s||'').trim();return v?{value:v,label:v,taxa_extra:false}:null;
+            }
+            function preencherHorarios(se,fe,sl,hp){
+                const l=Array.isArray(sl)?sl.map(normalizarSlotHorario).filter(Boolean):[];se.innerHTML='';
+                if(!l.length){se.appendChild(new Option('Sem horários disponíveis',''));se.disabled=true;if(fe)fe.textContent='Sem horários disponíveis para a data selecionada.';return[]}
+                se.appendChild(new Option('Selecione a hora',''));
+                l.forEach(function(s){const v=s.value.includes('T')?s.value.split('T')[1].slice(0,5):s.value.slice(0,5);const o=new Option(s.taxa_extra?s.label+' • Taxa extra':s.label,v);o.dataset.taxaExtra=s.taxa_extra?'1':'0';se.appendChild(o)});
+                se.disabled=false;const p=hp?String(hp).slice(0,5):(l.length===1?l[0].value.slice(0,5):'');se.value=p&&[...se.options].some(o=>o.value===p)?p:'';if(fe)fe.textContent='Escolha a hora disponível.';return l;
+            }
+            function carregarHorariosAgenda(tipo,db,hp){
+                const eid=tipo==='devolucao'?devolucaoSelect?.value:retiradaSelect?.value;if(!eid||!db)return Promise.resolve([]);
+                if(tipo==='devolucao'){horaDevolucao.innerHTML='<option>Carregando...</option>';horaDevolucao.disabled=true}else{horaRetirada.innerHTML='<option>Carregando...</option>';horaRetirada.disabled=true}
+                return fetch(agendaUrl+'?estacao_id='+eid+'&tipo='+tipo+'&data_base='+db+'&limite=1',{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){const a=Array.isArray(r.agenda)?r.agenda:[],dia=a.find(i=>String(i.date)===String(db))||a[0]||null,sl=Array.isArray(dia?.slots)?dia.slots:[];return tipo==='devolucao'?preencherHorarios(horaDevolucao,horaDevolucaoFeedback,sl,hp):preencherHorarios(horaRetirada,horaRetiradaFeedback,sl,hp)}).catch(function(){tipo==='devolucao'?preencherHorarios(horaDevolucao,horaDevolucaoFeedback,[],null):preencherHorarios(horaRetirada,horaRetiradaFeedback,[],null);return[]});
+            }
+            function buscarDiasDisponiveis(eid,tipo){
+                if(!eid)return Promise.resolve([]);
+                return fetch(diasDisponiveisUrl+'?estacao_id='+eid+'&dias=90&tipo='+tipo,{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){return Array.isArray(r.dias_disponiveis)?r.dias_disponiveis:[]}).catch(function(){return[]});
+            }
+            function criarPickerDate(el,dias){
+                if(!el||!window.flatpickr)return null;
+                const ok=new Set((dias||[]).map(function(i){return String(i.data||i).slice(0,10)}));
+                return window.flatpickr(el,{locale:ptLocale,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:'today',disable:[function(d){return!ok.has(toIsoDate(d))}],onChange:function(){el.dispatchEvent(new Event('change',{bubbles:true}))}});
+            }
+            function atualizarMinDateDevolucao(){
+                const rd=dataRetirada.value?new Date(dataRetirada.value+'T00:00:00'):null;if(!rd)return;
+                const md=new Date(rd.getTime()+86400000);
+                if(pickerDevolucao){pickerDevolucao.set('minDate',md);const s=pickerDevolucao.selectedDates[0]||null;if(s&&s.getTime()<md.getTime()){pickerDevolucao.clear();dataDevolucao.value='';horaDevolucao.value='';horaDevolucao.disabled=true;if(dataDevolucaoFeedback)dataDevolucaoFeedback.textContent='Escolha uma data de devolução igual ou posterior ao dia seguinte.'}}
+                else if(window.flatpickr)pickerDevolucao=window.flatpickr(dataDevolucao,{locale:ptLocale,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:md,onChange:function(){dataDevolucao.dispatchEvent(new Event('change',{bubbles:true}))}});
+            }
+            function atualizarRetirada(){const d=dataRetirada.value||'',h=horaRetirada.value||'';if(!d){horaRetirada.value='';horaRetirada.disabled=true;dataRetiradaFeedback&&(dataRetiradaFeedback.textContent='Selecione uma estação de retirada para ver os dias disponíveis.');return}dataRetiradaFeedback&&(dataRetiradaFeedback.textContent='Selecione a hora de retirada.');atualizarMinDateDevolucao();carregarHorariosAgenda('retirada',d,h)}
+            function atualizarDevolucao(){const d=dataDevolucao.value||'',h=horaDevolucao.value||'';if(!d){horaDevolucao.value='';horaDevolucao.disabled=true;dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent='Selecione uma estação de devolução para ver os dias disponíveis.');return}dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent='Selecione a hora de devolução.');carregarHorariosAgenda('devolucao',d,h)}
+            function recarregarPickersPorEstacao(){
+                const er=retiradaSelect?.value||'',ed=devolucaoSelect?.value||'';
+                if(pickerRetirada){pickerRetirada.destroy();pickerRetirada=null}if(pickerDevolucao){pickerDevolucao.destroy();pickerDevolucao=null}
+                dataRetirada.value='';dataDevolucao.value='';horaRetirada.value='';horaDevolucao.value='';horaRetirada.disabled=true;horaDevolucao.disabled=true;
+                if(er){dataRetiradaFeedback&&(dataRetiradaFeedback.textContent='Carregando...');buscarDiasDisponiveis(er,'retirada').then(function(d){dataRetiradaFeedback&&(dataRetiradaFeedback.textContent=d.length?'Selecione a data de retirada.':'Não há dias disponíveis para retirada nesta estação.');pickerRetirada=criarPickerDate(dataRetirada,d);atualizarMinDateDevolucao()})}
+                if(ed){dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent='Carregando...');buscarDiasDisponiveis(ed,'devolucao').then(function(d){dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent=d.length?'Selecione a data de devolução.':'Não há dias disponíveis para devolução nesta estação.');pickerDevolucao=criarPickerDate(dataDevolucao,d);atualizarMinDateDevolucao()})}
+            }
+            dataRetirada.addEventListener('change',atualizarRetirada);
+            horaRetirada.addEventListener('change',atualizarRetirada);
+            dataDevolucao.addEventListener('change',atualizarDevolucao);
+            horaDevolucao.addEventListener('change',atualizarDevolucao);
+            retiradaSelect?.addEventListener('change',function(){syncDevolucao(true);recarregarPickersPorEstacao()});
+            devolucaoSelect?.addEventListener('change',function(){syncDevolucao(false);recarregarPickersPorEstacao()});
+            if(typeof window.Choices!=='undefined'){[retiradaSelect,devolucaoSelect].forEach(function(s){if(!s)return;new window.Choices(s,{searchEnabled:true,searchPlaceholderValue:'Buscar estação...',itemSelectText:'',shouldSort:false,noResultsText:'Nenhuma estação encontrada',noChoicesText:'Nenhuma estação disponível'})})}
+            dataRetirada?.addEventListener('change',function(){normalizeMinTime();normalizeMinDates();validateDates()});
+            horaRetirada?.addEventListener('change',normalizeMinTime);
+            dataDevolucao?.addEventListener('change',function(){normalizeMinDates();validateDates()});
+            form?.addEventListener('submit',function(e){normalizeMinTime();normalizeMinDates();syncDevolucao();if(!validateDates())e.preventDefault()});
+            syncDevolucao();recarregarPickersPorEstacao();normalizeMinDates();normalizeMinTime();
+        })();
+    </script>
 </body>
 </html>

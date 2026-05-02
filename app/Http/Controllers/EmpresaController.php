@@ -416,7 +416,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $modelosSite = [
             ['value' => 'modelo_1', 'label' => 'Modelo 1 - Premium Locadora', 'enabled' => true],
             ['value' => 'modelo_2', 'label' => 'Modelo 2 - Moderno Vibrante', 'enabled' => true],
-            ['value' => 'modelo_3', 'label' => 'Modelo 3 - Corporativo (em breve)', 'enabled' => false],
+            ['value' => 'modelo_3', 'label' => 'Modelo 3 - Executive Dark', 'enabled' => true],
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
             'Empresas',
@@ -619,7 +619,11 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $urlReserva = Route::has('site.reserva.index') ? route('site.reserva.index') : '#';
         $urlAdminEntrada = Route::has('site.admin.entry') ? route('site.admin.entry') : (Route::has('login') ? route('login') : '/login');
 
-        $modeloPref = $empresa->site_apresentacao_modelo === 'modelo_2' ? 'locadora-modelo-2' : 'locadora-modelo-1';
+        $modeloPref = match ($empresa->site_apresentacao_modelo) {
+            'modelo_2' => 'locadora-modelo-2',
+            'modelo_3' => 'locadora-modelo-3',
+            default => 'locadora-modelo-1',
+        };
 
         return view('site-apresentacao.templates.' . $modeloPref, [
             'empresa' => $empresa,

@@ -354,6 +354,7 @@ class SiteApresentacaoController extends Controller
 
         return match ($normalized) {
             self::MODELO_2 => self::MODELO_2,
+            self::MODELO_3 => self::MODELO_3,
             default => self::MODELO_1,
         };
     }
@@ -362,6 +363,7 @@ class SiteApresentacaoController extends Controller
     {
         return match ($modelo) {
             self::MODELO_2 => 'site-apresentacao.templates.locadora-modelo-2',
+            self::MODELO_3 => 'site-apresentacao.templates.locadora-modelo-3',
             default => 'site-apresentacao.templates.locadora-modelo-1',
         };
     }

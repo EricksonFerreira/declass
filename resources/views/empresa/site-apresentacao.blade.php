@@ -58,10 +58,10 @@
             ],
             [
                 'valor'    => 'modelo_3',
-                'titulo'   => 'Modelo 3 — Corporativo',
-                'status'   => 'Em breve',
-                'icon'     => 'fas fa-building',
-                'descricao' => 'Layout institucional para operacoes B2B com blocos corporativos.',
+                'titulo'   => 'Modelo 3 — Executive Dark',
+                'status'   => 'Disponivel',
+                'icon'     => 'fas fa-briefcase',
+                'descricao' => 'Design escuro premium com grid de frota e timeline horizontal.',
             ],
         ];
 
