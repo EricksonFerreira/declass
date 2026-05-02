@@ -335,11 +335,11 @@
                                     <td>
                                         @php
                                             $pagBadge = match($pag->status) {
-                                                'pago' => 'badge-success',
-                                                'pendente' => 'badge-warning',
-                                                'vencido' => 'badge-danger',
-                                                'cancelado' => 'badge-secondary',
-                                                default => 'badge-info',
+                                                'pago' => 'bg-success',
+                                                'pendente' => 'bg-warning',
+                                                'vencido' => 'bg-danger',
+                                                'cancelado' => 'bg-secondary',
+                                                default => 'bg-info',
                                             };
                                         @endphp
                                         <span class="badge {{ $pagBadge }}">{{ ucfirst($pag->status) }}</span>
