@@ -836,6 +836,43 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Trocar modelo
+function seTrocarModelo(modelo) {
+    if (!confirm('Trocar o modelo pode alterar a aparência do site. Continuar?')) {
+        document.getElementById('seModeloSelect').value = '{{ $empresa->site_apresentacao_modelo ?? "modelo_1" }}';
+        return;
+    }
+    var btn = document.getElementById('seSaveBtn');
+    var oldHtml = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Aplicando...';
+
+    var formData = new FormData();
+    formData.append('_token', '{{ csrf_token() }}');
+    formData.append('site_apresentacao_modelo', modelo);
+
+    fetch('{{ route("empresa.site-editor.update", $empresa->id) }}', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            seMostrarStatus('✓ Modelo alterado!', 'success');
+            document.getElementById('seIframe').src = '{{ route("empresa.site-editor.preview", $empresa->id) }}?m=' + modelo + '&_t=' + Date.now();
+        } else {
+            seMostrarStatus('Erro: ' + (data.error || 'unknown'), 'error');
+        }
+    })
+    .catch(function(err) {
+        seMostrarStatus('Erro de conexão', 'error');
+    })
+    .finally(function() {
+        btn.disabled = false;
+        btn.innerHTML = oldHtml;
+    });
+}
+
 // Toggle sidebar
 function seToggleSidebar() {
     var el = document.getElementById('seSidebar');
