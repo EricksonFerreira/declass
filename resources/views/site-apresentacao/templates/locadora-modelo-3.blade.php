@@ -430,8 +430,8 @@
                     else c.style.display='none'
                 }
                 var imgM3={imagem_hero:'.hero-col-img img'};for(var ik in imgM3){if(!du[ik])continue;var ie=document.querySelector(imgM3[ik]);if(ie)ie.src=du[ik]}
-                var visM3={hero:['.hero-col-img','.hero-col-img img',null,'.hero .wrap','has-img'],contato:['.contato-img-wrap']};
-                for(var vk in visM3){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;var els=document.querySelectorAll(visM3[vk][0]);for(var vi=0;vi<els.length;vi++)els[vi].style.display=d[uk]==='S'?'':'none';if(visM3[vk][1]){var w=document.querySelector(visM3[vk][1]);if(w){if(d[uk]==='S')w.classList.add(visM3[vk][2]);else w.classList.remove(visM3[vk][2])}}}
+                var visM3={hero:['.hero-col-img','.hero-col-img img',null,'.hero .wrap','has-img'],contato:['.contato-img-wrap',null]};
+                for(var vk in visM3){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;var c=document.querySelector(visM3[vk][0]);if(!c)continue;c.style.display=d[uk]==='S'?'':'none';if(visM3[vk][1]){var ig=document.querySelector(visM3[vk][1]);if(ig)ig.style.display=d[uk]==='S'?'':'none'}if(visM3[vk][2]){var ph=document.querySelector(visM3[vk][2]);if(ph)ph.style.display=d[uk]==='S'?'none':''}if(visM3[vk][3]){var w=document.querySelector(visM3[vk][3]);if(w){if(d[uk]==='S')w.classList.add(visM3[vk][4]);else w.classList.remove(visM3[vk][4])}}}
                 for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='S'?'':'none';if(pl)pl.style.display=d[uk]==='S'?'none':''}
             });
             window.parent.postMessage({type:'se-pronto'},'*');
