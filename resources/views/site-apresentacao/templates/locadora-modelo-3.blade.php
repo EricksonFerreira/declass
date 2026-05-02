@@ -8,7 +8,9 @@
     <link rel="icon" href="{{ $empresa->logo_url ?: asset('assets/imgs/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;9..40,700;9..40,800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
         *,:after,:before{box-sizing:border-box;margin:0;padding:0}
         html{scroll-behavior:smooth}
@@ -23,128 +25,126 @@
             --cont-b:{{$corContatoFundo}};--cont-e:{{$corContatoEtiquetaTexto}};--cont-t:{{$corContatoTituloTexto}};--cont-i:{{$corContatoInfoTexto}};
             --foot-b:{{$corFooterFundo}};--foot-t:{{$corFooterTexto}};
             --b1-b:{{$corBotaoPrimarioFundo}};--b1-t:{{$corBotaoPrimarioTexto}};--b2-b:{{$corBotaoSecundarioFundo}};--b2-t:{{$corBotaoSecundarioTexto}};
-            --ink:#0b1220;--ink2:#1e293b;--ink3:#475569;--line:#e2e8f0;--white:#fff;--off:#f1f5f9;
-            --r:8px;--r-lg:16px;
-            --sh:0 1px 2px rgba(0,0,0,.05);--sh-md:0 4px 16px rgba(0,0,0,.08);--sh-lg:0 12px 48px rgba(0,0,0,.12);
+            --ink:#0c0a09;--ink2:#1c1917;--ink3:#57534e;--line:#e7e5e4;--white:#fff;--off:#fafaf9;
+            --r:4px;--r-lg:12px;
+            --sh:0 1px 2px rgba(0,0,0,.04);--sh-md:0 4px 12px rgba(0,0,0,.06);--sh-lg:0 8px 30px rgba(0,0,0,.08);
         }
         body{font-family:Inter,sans-serif;color:var(--ink);background:var(--white);-webkit-font-smoothing:antialiased}
         a{text-decoration:none;color:inherit}
         img{display:block;max-width:100%}
-        .wrap{width:min(1160px,calc(100% - 40px));margin-inline:auto}
+        .wrap{width:min(1200px,calc(100% - 48px));margin-inline:auto}
 
-        .topbar{position:sticky;top:0;z-index:100;background:var(--tb);border-bottom:1px solid var(--line)}
+        .topbar{position:sticky;top:0;z-index:100;background:var(--tb)}
         .topbar-inner{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
-        .brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.05rem;color:var(--tt);flex-shrink:0}
-        .brand img{height:36px;width:auto}
-        .topbar-nav{display:flex;align-items:center;gap:4px}
-        .topbar-nav a{padding:6px 14px;border-radius:6px;font-size:.82rem;font-weight:500;color:var(--tt);transition:all .15s}
-        .topbar-nav a:hover{background:var(--th);color:var(--tt)}
-        .topbar-cta{padding:8px 22px;border-radius:6px;font-size:.84rem;font-weight:600;background:var(--b1-b);color:var(--b1-t);transition:all .2s;flex-shrink:0}
-        .topbar-cta:hover{transform:translateY(-1px);box-shadow:var(--sh-md)}
+        .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:var(--tt);flex-shrink:0;letter-spacing:-.02em}
+        .brand img{height:34px;width:auto}
+        .topbar-nav{display:flex;align-items:center;gap:2px}
+        .topbar-nav a{padding:6px 14px;border-radius:var(--r);font-size:.82rem;font-weight:500;color:var(--tt);transition:all .15s;letter-spacing:-.01em}
+        .topbar-nav a:hover{background:var(--th)}
+        .topbar-cta{padding:8px 20px;border-radius:var(--r);font-size:.82rem;font-weight:600;background:var(--b1-b);color:var(--b1-t);transition:all .15s;flex-shrink:0;letter-spacing:-.01em}
+        .topbar-cta:hover{opacity:.9}
 
-        .hero{background:var(--hb);color:var(--ht);padding:80px 0;position:relative;overflow:hidden}
-        .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(255,255,255,.04) 0%,transparent 70%);pointer-events:none}
-        .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center;position:relative;z-index:1}
-        .hero-tag{display:inline-flex;align-items:center;gap:6px;font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--a);margin-bottom:14px;padding:4px 12px;border:1px solid rgba(255,255,255,.12);border-radius:20px}
-        .hero-title{font-family:'DM Sans',sans-serif;font-size:clamp(2rem,3.2vw+1rem,3.8rem);font-weight:800;line-height:1.05;margin-bottom:12px;letter-spacing:-.02em}
-        .hero-sub{font-size:1.1rem;font-weight:500;opacity:.8;margin-bottom:6px}
-        .hero-desc{font-size:.9rem;line-height:1.7;opacity:.6;margin-bottom:32px;max-width:48ch}
-        .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
-        .hero-btn{padding:14px 32px;border-radius:8px;font-weight:600;font-size:.9rem;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+        .hero{background:var(--hb);color:var(--ht);padding:100px 0 80px;position:relative}
+        .hero-inner{max-width:800px;margin-inline:auto;text-align:center}
+        .hero-tag{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--a);margin-bottom:16px;display:inline-block;padding:4px 14px;border:1px solid currentColor;border-radius:20px;opacity:.6}
+        .hero-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.2rem,4vw+1rem,4.2rem);font-weight:700;line-height:1;margin-bottom:16px;letter-spacing:-.03em}
+        .hero-sub{font-size:1.1rem;opacity:.7;margin-bottom:8px;font-weight:400}
+        .hero-desc{font-size:.92rem;line-height:1.7;opacity:.5;margin-bottom:36px;max-width:56ch;margin-inline:auto}
+        .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+        .hero-btn{padding:14px 36px;border-radius:var(--r);font-weight:600;font-size:.9rem;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
         .hero-btn-p{background:var(--b1-b);color:var(--b1-t)}
-        .hero-btn-s{background:var(--b2-b);color:var(--b2-t);border:1px solid rgba(255,255,255,.15)}
+        .hero-btn-s{background:transparent;color:var(--ht);border:1px solid currentColor;opacity:.6}
+        .hero-btn-s:hover{opacity:1}
         .hero-btn:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
-        .hero-image{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg)}
-        .hero-image img{width:100%;height:460px;object-fit:cover}
-        .hero-image-placeholder{height:460px;background:linear-gradient(135deg,var(--s),var(--p));border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.2);font-size:5rem}
 
-        .hero-form-card{background:var(--fb);color:var(--ft);border-radius:12px;padding:24px;box-shadow:var(--sh-lg);margin-top:24px}
-        .hero-form-card form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .hero-form-card .full{grid-column:1/-1}
-        .hero-form-card label{font-size:.76rem;font-weight:600;display:block;margin-bottom:4px;opacity:.8}
-        .hero-form-card select,.hero-form-card input{padding:10px 12px;border:1px solid var(--line);border-radius:6px;font-size:.84rem;width:100%;background:var(--white);color:var(--ink)}
-        .hero-form-card .btn-book{padding:12px;border:none;border-radius:6px;background:var(--b1-b);color:var(--b1-t);font-weight:600;font-size:.88rem;cursor:pointer;transition:opacity .15s;grid-column:1/-1}
-        .hero-form-card .btn-book:hover{opacity:.9}
+        .hero-form{background:var(--white);border-radius:var(--r-lg);padding:32px;box-shadow:var(--sh-lg);margin-top:40px;text-align:left;color:var(--ink)}
+        .hero-form h2{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
+        .hero-form .desc{font-size:.84rem;color:var(--ink3);margin-bottom:20px}
+        .hero-form form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+        .hero-form .full{grid-column:1/-1}
+        .hero-form label{font-size:.76rem;font-weight:600;display:block;margin-bottom:4px;color:var(--ink2)}
+        .hero-form select,.hero-form input{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);font-size:.84rem;width:100%;background:var(--white);color:var(--ink);outline:none}
+        .hero-form select:focus,.hero-form input:focus{border-color:var(--p);box-shadow:0 0 0 2px color-mix(in srgb,var(--p) 15%,transparent)}
+        .hero-form .btn-book{padding:12px 24px;border:none;border-radius:var(--r);background:var(--b1-b);color:var(--b1-t);font-weight:600;font-size:.88rem;cursor:pointer;transition:opacity .15s;grid-column:1/-1;justify-self:start}
+        .hero-form .btn-book:hover{opacity:.9}
+        .hero-form small{font-size:.7rem;color:var(--ink3);display:block;margin-top:2px}
+        .hero-form .note{font-size:.75rem;color:var(--ink3);margin-top:12px;grid-column:1/-1;opacity:.6}
 
-        .section{padding:80px 0}
+        .section{padding:96px 0}
         .section--alt{background:var(--off)}
         .section--frota{background:var(--frota-b)}
         .section--vant{background:var(--vant-b)}
         .section--etapas{background:var(--etap-b)}
-        .section--contato{background:var(--cont-b)}
-        .section-head{text-align:center;margin-bottom:48px}
-        .section-head .eyebrow{font-size:.65rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--a);margin-bottom:10px}
+        .section-head{text-align:center;margin-bottom:56px;max-width:640px;margin-inline:auto}
+        .section-head .eyebrow{font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--a);margin-bottom:10px;}
         .section--frota .eyebrow{color:var(--frota-e)}
         .section--vant .eyebrow{color:var(--vant-e)}
         .section--etapas .eyebrow{color:var(--etap-e)}
-        .section-title{font-family:'DM Sans',sans-serif;font-size:clamp(1.8rem,2.4vw+.8rem,2.8rem);font-weight:800;line-height:1.1;margin-bottom:10px;letter-spacing:-.02em}
+        .section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.8rem,2.8vw+.6rem,3rem);font-weight:700;line-height:1;margin-bottom:12px;letter-spacing:-.03em}
         .section--frota .section-title{color:var(--frota-t)}
         .section--vant .section-title{color:var(--vant-t)}
         .section--etapas .section-title{color:var(--etap-t)}
-        .section-desc{font-size:.9rem;line-height:1.7;color:var(--ink3);max-width:56ch;margin-inline:auto}
+        .section-desc{font-size:.9rem;line-height:1.7;color:var(--ink3)}
         .section--frota .section-desc{color:var(--frota-d)}
         .section--vant .section-desc{color:var(--vant-d)}
         .section--etapas .section-desc{color:var(--etap-d)}
 
-        .fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px}
-        .fleet-card{position:relative;border-radius:12px;overflow:hidden;background:var(--frota-cb);box-shadow:var(--sh);transition:all .3s;cursor:pointer}
-        .fleet-card:hover{transform:translateY(-6px);box-shadow:var(--sh-lg)}
-        .fleet-card-img{width:100%;height:200px;object-fit:cover}
-        .fleet-card-img-placeholder{height:200px;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:3rem;opacity:.3}
-        .fleet-card-body{padding:20px 22px 24px;position:relative}
-        .fleet-card-num{position:absolute;top:-14px;right:16px;width:32px;height:32px;border-radius:50%;background:var(--p);color:var(--pt);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;box-shadow:0 2px 8px rgba(0,0,0,.15)}
-        .fleet-card-title{font-family:'DM Sans',sans-serif;font-size:1.1rem;font-weight:700;color:var(--frota-ct);margin-bottom:6px}
-        .fleet-card-desc{font-size:.85rem;line-height:1.6;color:var(--frota-cd)}
+        .fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px}
+        .fleet-card{position:relative;border-radius:var(--r-lg);overflow:hidden;background:var(--frota-cb);box-shadow:var(--sh);transition:all .3s}
+        .fleet-card:hover{transform:translateY(-4px);box-shadow:var(--sh-lg)}
+        .fleet-card-img{width:100%;height:220px;object-fit:cover;transition:transform .4s}
+        .fleet-card:hover .fleet-card-img{transform:scale(1.04)}
+        .fleet-card-img-placeholder{height:220px;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.25}
+        .fleet-card-body{padding:24px 24px 28px}
+        .fleet-card-num{font-family:'Space Grotesk',sans-serif;font-size:.75rem;font-weight:700;color:var(--a);margin-bottom:6px;letter-spacing:.05em}
+        .fleet-card-title{font-family:'Space Grotesk',sans-serif;font-size:1.15rem;font-weight:700;color:var(--frota-ct);margin-bottom:6px;letter-spacing:-.02em}
+        .fleet-card-desc{font-size:.86rem;line-height:1.6;color:var(--frota-cd)}
 
-        .vant-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-        .vant-item{text-align:center;padding:32px 20px;background:var(--white);border:1px solid var(--line);border-radius:12px;box-shadow:var(--sh);transition:all .25s}
-        .vant-item:hover{transform:translateY(-4px);box-shadow:var(--sh-md);border-color:var(--a)}
-        .vant-item-icon{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,var(--p),var(--s));display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--pt);font-size:1.3rem;font-weight:800}
-        .vant-item-text{font-size:.9rem;font-weight:500;color:var(--vant-i);line-height:1.5}
+        .vant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
+        .vant-item{padding:28px 24px;background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh);transition:all .25s;position:relative;overflow:hidden}
+        .vant-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--p),var(--a));opacity:0;transition:opacity .25s}
+        .vant-item:hover::before{opacity:1}
+        .vant-item:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
+        .vant-item-icon{font-size:1.6rem;margin-bottom:12px;display:block}
+        .vant-item-text{font-size:.9rem;font-weight:500;color:var(--vant-i);line-height:1.6;display:block}
 
-        .steps-flow{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;position:relative}
-        .steps-flow::before{content:'';position:absolute;top:32px;left:calc(16.66%);right:calc(16.66%);height:2px;background:linear-gradient(90deg,var(--p),var(--a));z-index:0}
-        .step-card{background:var(--etap-pb);border:1px solid var(--line);border-radius:12px;padding:28px 22px 24px;text-align:center;box-shadow:var(--sh);position:relative;z-index:1;transition:all .25s}
-        .step-card:hover{transform:translateY(-4px);box-shadow:var(--sh-md)}
-        .step-num{width:48px;height:48px;border-radius:50%;background:var(--p);color:var(--pt);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-family:'DM Sans',sans-serif;font-size:1.2rem;font-weight:800;box-shadow:0 4px 12px rgba(0,0,0,.15)}
-        .step-card-title{font-size:1rem;font-weight:700;color:var(--etap-pt);margin-bottom:8px}
-        .step-card-desc{font-size:.85rem;line-height:1.6;color:var(--etap-pd);max-width:28ch;margin-inline:auto}
+        .steps-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;position:relative}
+        .step-card{padding:24px;background:var(--etap-pb);border-radius:var(--r-lg);box-shadow:var(--sh);transition:all .25s;position:relative}
+        .step-card:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
+        .step-card:nth-child(odd){transform:translateY(20px)}
+        .step-card:nth-child(odd):hover{transform:translateY(16px)}
+        .step-num{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;color:var(--a);line-height:1;margin-bottom:8px;letter-spacing:-.03em}
+        .step-card-title{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:700;color:var(--etap-pt);margin-bottom:6px;letter-spacing:-.02em}
+        .step-card-desc{font-size:.86rem;line-height:1.6;color:var(--etap-pd)}
 
-        .contato-banner{background:linear-gradient(135deg,var(--p),var(--s));border-radius:12px;padding:48px 52px;display:flex;align-items:center;justify-content:space-between;gap:32px;position:relative;overflow:hidden}
-        .contato-banner::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 70% 50%,rgba(255,255,255,.06) 0%,transparent 60%);pointer-events:none}
-        .contato-text{position:relative;z-index:1}
-        .contato-eyebrow{font-size:.65rem;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--a);margin-bottom:10px;opacity:.9}
-        .contato-title{font-family:'DM Sans',sans-serif;font-size:clamp(1.4rem,2vw+.6rem,2.2rem);font-weight:800;color:var(--cont-t);line-height:1.1;margin-bottom:14px}
-        .contato-info{display:flex;flex-wrap:wrap;gap:6px 20px}
-        .contato-info-item{font-size:.88rem;color:var(--cont-i);display:flex;align-items:center;gap:6px}
-        .contato-info-item::before{content:'◆';font-size:.5rem;color:var(--a)}
-        .contato-cta{flex-shrink:0;position:relative;z-index:1}
-        .btn-contato{padding:14px 32px;border-radius:8px;background:var(--b2-b);color:var(--b2-t);font-weight:600;font-size:.9rem;border:1px solid rgba(255,255,255,.15);display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s}
-        .btn-contato:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+        .contato{background:var(--cont-b);padding:80px 0}
+        .contato-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+        .contato-eyebrow{font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--cont-e);margin-bottom:10px}
+        .contato-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,2.4vw+.6rem,2.6rem);font-weight:700;color:var(--cont-t);line-height:1;margin-bottom:16px;letter-spacing:-.03em}
+        .contato-info{display:flex;flex-direction:column;gap:6px}
+        .contato-info-item{font-size:.9rem;color:var(--cont-i);display:flex;align-items:center;gap:8px}
+        .contato-info-item::before{content:'→';font-weight:700;color:var(--a)}
+        .contato-cta{padding:14px 32px;border-radius:var(--r);background:var(--b1-b);color:var(--b1-t);font-weight:600;font-size:.9rem;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s;margin-top:20px}
+        .contato-cta:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+        .contato-image{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg)}
+        .contato-image img{width:100%;height:340px;object-fit:cover}
+        .contato-image-placeholder{height:340px;background:var(--line);border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.2}
 
-        .contato-image-wrap{border-radius:12px;overflow:hidden;box-shadow:var(--sh-lg);margin-top:28px}
-        .contato-image-wrap img{width:100%;height:300px;object-fit:cover}
-
-        .footer{background:var(--foot-b);color:var(--foot-t);padding:36px 0;border-top:1px solid var(--line)}
+        .footer{background:var(--foot-b);color:var(--foot-t);padding:40px 0;border-top:1px solid var(--line)}
         .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-        .footer-text{font-size:.84rem;opacity:.65}
-        .footer-nav{display:flex;gap:16px;font-size:.84rem}
-        .footer-nav a{opacity:.5;transition:opacity .2s}
-        .footer-nav a:hover{opacity:1}
-        .footer-social{display:flex;gap:10px}
-        .footer-social a{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .2s;opacity:.5}
-        .footer-social a:hover{opacity:1;background:var(--p);color:var(--pt);border-color:var(--p)}
+        .footer-text{font-size:.84rem;opacity:.5}
+        .footer-nav{display:flex;gap:24px;font-size:.84rem}
+        .footer-nav a{opacity:.4;transition:opacity .2s;letter-spacing:-.01em}
+        .footer-nav a:hover{opacity:.8}
 
         @media(max-width:768px){
-            .hero-grid{grid-template-columns:1fr;gap:32px}
-            .hero-image img,.hero-image-placeholder{height:260px}
+            .hero{padding:60px 0 48px}
+            .hero-form form{grid-template-columns:1fr}
             .topbar-nav{display:none}
             .vant-grid{grid-template-columns:1fr}
-            .steps-flow{grid-template-columns:1fr;gap:16px}
-            .steps-flow::before{display:none}
-            .contato-banner{flex-direction:column;padding:32px 24px;text-align:center}
-            .contato-info{justify-content:center}
-            .hero-form-card form{grid-template-columns:1fr}
+            .steps-grid{grid-template-columns:1fr}
+            .steps-grid .step-card:nth-child(odd){transform:none}
+            .contato-inner{grid-template-columns:1fr;gap:32px}
             .fleet-grid{grid-template-columns:1fr}
         }
     </style>
@@ -170,77 +170,68 @@
     </header>
 
     <section class="hero">
-        <div class="wrap"><div class="hero-grid">
-            <div>
-                @if(!empty($heroTag))<div class="hero-tag">{{ $heroTag }}</div>@endif
-                <h1 class="hero-title">{{ $titulo }}</h1>
-                @if(!empty($subtitulo))<div class="hero-sub">{{ $subtitulo }}</div>@endif
-                @if(!empty($descricao))<p class="hero-desc">{{ $descricao }}</p>@endif
-                <div class="hero-actions">
-                    <a href="{{ $botaoUrl }}" class="hero-btn hero-btn-p">{{ $botaoTexto }}</a>
-                    <a href="{{ $botaoLoginUrl }}" class="hero-btn hero-btn-s">{{ $botaoAdminTexto }}</a>
-                </div>
-                @if(!empty($heroFormTitulo))
-                <div class="hero-form-card">
-                    <h2 style="font-size:.95rem;font-weight:700;margin-bottom:6px;font-family:'DM Sans',sans-serif">{{ $heroFormTitulo }}</h2>
-                    @if(!empty($heroFormDescricao))<p style="font-size:.82rem;opacity:.7;margin-bottom:14px">{{ $heroFormDescricao }}</p>@endif
-                    <form method="GET" action="{{ $botaoUrl }}">
-                        <div class="full">
-                            <label for="retirada">{{ $heroFormLabelRetirada }}</label>
-                            <select id="retirada" name="retirada">
-                                <option value="">Selecione uma estação</option>
-                                @foreach($estacoesRetirada as $estacao_id => $nome)
-                                    <option value="{{ $estacao_id }}">{{ $nome }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div>
-                            <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
-                            <input id="data_retirada" name="data_retirada" type="text" readonly placeholder="Selecione a data">
-                            <small id="data_retirada_feedback" style="font-size:.7rem;opacity:.6;display:block;margin-top:2px">Selecione uma estação de retirada para ver os dias disponíveis.</small>
-                        </div>
-                        <div>
-                            <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
-                            <select id="hora_retirada" name="hora_retirada" disabled>
-                                <option value="">Selecione a data</option>
-                            </select>
-                            <small id="hora_retirada_feedback" style="font-size:.7rem;opacity:.6;display:block;margin-top:2px">Escolha uma data para ver os horários disponíveis.</small>
-                        </div>
-                        <div class="full" id="devolucaoField">
-                            <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolução' }}</label>
-                            <select id="devolucao" name="devolucao">
-                                <option value="">Selecione uma estação</option>
-                                @foreach($estacoesDevolucao as $estacao_id => $nome)
-                                    <option value="{{ $estacao_id }}">{{ $nome }}</option>
-                                @endforeach
-                            </select>
-                            <small id="devolucao_feedback" style="font-size:.7rem;opacity:.6;display:block;margin-top:2px">Selecione uma estação de devolução.</small>
-                        </div>
-                        <div>
-                            <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
-                            <input id="data_devolucao" name="data_devolucao" type="text" readonly placeholder="Selecione a data">
-                            <small id="data_devolucao_feedback" style="font-size:.7rem;opacity:.6;display:block;margin-top:2px">Selecione uma estação de devolução para ver os dias disponíveis.</small>
-                        </div>
-                        <div>
-                            <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
-                            <select id="hora_devolucao" name="hora_devolucao" disabled>
-                                <option value="">Selecione a data</option>
-                            </select>
-                            <small id="hora_devolucao_feedback" style="font-size:.7rem;opacity:.6;display:block;margin-top:2px">Escolha uma data para ver os horários disponíveis.</small>
-                        </div>
-                        <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
-                        @if(!empty($heroFormNota))<p style="font-size:.75rem;opacity:.5;margin-top:10px;grid-column:1/-1">{{ $heroFormNota }}</p>@endif
-                    </form>
-                </div>
-                @endif
+        <div class="wrap"><div class="hero-inner">
+            @if(!empty($heroTag))<div class="hero-tag">{{ $heroTag }}</div>@endif
+            <h1 class="hero-title">{{ $titulo }}</h1>
+            @if(!empty($subtitulo))<div class="hero-sub">{{ $subtitulo }}</div>@endif
+            @if(!empty($descricao))<p class="hero-desc">{{ $descricao }}</p>@endif
+            <div class="hero-actions">
+                <a href="{{ $botaoUrl }}" class="hero-btn hero-btn-p">{{ $botaoTexto }}</a>
+                <a href="{{ $botaoLoginUrl }}" class="hero-btn hero-btn-s">{{ $botaoAdminTexto }}</a>
             </div>
-            <div class="hero-image">
-                @if(!empty($imagemHero))
-                    <img src="{{ $imagemHero }}" alt="Hero">
-                @else
-                    <div class="hero-image-placeholder">✦</div>
-                @endif
+            @if(!empty($heroFormTitulo))
+            <div class="hero-form">
+                <h2>{{ $heroFormTitulo }}</h2>
+                @if(!empty($heroFormDescricao))<p class="desc">{{ $heroFormDescricao }}</p>@endif
+                <form method="GET" action="{{ $botaoUrl }}">
+                    <div class="full">
+                        <label for="retirada">{{ $heroFormLabelRetirada }}</label>
+                        <select id="retirada" name="retirada">
+                            <option value="">Selecione</option>
+                            @foreach($estacoesRetirada as $id => $nome)
+                                <option value="{{ $id }}">{{ $nome }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
+                        <input id="data_retirada" name="data_retirada" type="text" readonly placeholder="Data">
+                        <small id="data_retirada_feedback">Selecione a estação</small>
+                    </div>
+                    <div>
+                        <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
+                        <select id="hora_retirada" name="hora_retirada" disabled>
+                            <option value="">Data</option>
+                        </select>
+                        <small id="hora_retirada_feedback">Escolha a data</small>
+                    </div>
+                    <div class="full" id="devolucaoField">
+                        <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Devolução' }}</label>
+                        <select id="devolucao" name="devolucao">
+                            <option value="">Selecione</option>
+                            @foreach($estacoesDevolucao as $id => $nome)
+                                <option value="{{ $id }}">{{ $nome }}</option>
+                            @endforeach
+                        </select>
+                        <small id="devolucao_feedback">Selecione a estação de devolução</small>
+                    </div>
+                    <div>
+                        <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
+                        <input id="data_devolucao" name="data_devolucao" type="text" readonly placeholder="Data">
+                        <small id="data_devolucao_feedback">Selecione a estação</small>
+                    </div>
+                    <div>
+                        <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
+                        <select id="hora_devolucao" name="hora_devolucao" disabled>
+                            <option value="">Data</option>
+                        </select>
+                        <small id="hora_devolucao_feedback">Escolha a data</small>
+                    </div>
+                    <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
+                    @if(!empty($heroFormNota))<div class="note">{{ $heroFormNota }}</div>@endif
+                </form>
             </div>
+            @endif
         </div></div>
     </section>
 
@@ -258,10 +249,10 @@
                         @if($fCard && !empty($fCard['imagem']))
                             <img src="{{ $fCard['imagem'] }}" alt="{{ $fCard['titulo'] }}" class="fleet-card-img" data-frota-img="{{ $fi }}">
                         @else
-                            <div class="fleet-card-img-placeholder">✦</div>
+                            <div class="fleet-card-img-placeholder">▤</div>
                         @endif
                         <div class="fleet-card-body">
-                            <div class="fleet-card-num">{{ str_pad($fi,2,'0',STR_PAD_LEFT) }}</div>
+                            <div class="fleet-card-num">C{{ str_pad($fi,2,'0',STR_PAD_LEFT) }}</div>
                             <h3 class="fleet-card-title" data-frota-titulo="{{ $fi }}">{{ $fCard['titulo'] ?? '' }}</h3>
                             <p class="fleet-card-desc" data-frota-desc="{{ $fi }}">{{ $fCard['descricao'] ?? '' }}</p>
                         </div>
@@ -282,7 +273,7 @@
                 @foreach($beneficios as $beneficio)
                     @if(!empty($beneficio))
                         <div class="vant-item">
-                            <div class="vant-item-icon">✦</div>
+                            <span class="vant-item-icon">✦</span>
                             <span class="vant-item-text">{{ $beneficio }}</span>
                         </div>
                     @endif
@@ -297,11 +288,11 @@
                 @if(!empty($etapasLabelSuperior))<div class="eyebrow">{{ $etapasLabelSuperior }}</div>@endif
                 <h2 class="section-title">{{ $etapasTitulo }}</h2>
             </div>
-            <div class="steps-flow">
+            <div class="steps-grid">
                 @foreach($etapasReserva as $idx => $etapa)
                     @if(!empty($etapa['titulo']))
                     <div class="step-card">
-                        <div class="step-num">{{ $idx + 1 }}</div>
+                        <div class="step-num">{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}</div>
                         <h4 class="step-card-title">{{ $etapa['titulo'] }}</h4>
                         <p class="step-card-desc">{{ $etapa['descricao'] ?? '' }}</p>
                     </div>
@@ -311,27 +302,25 @@
         </div>
     </section>
 
-    <section id="contato" class="section section--contato">
-        <div class="wrap">
-            <div class="contato-banner">
-                <div class="contato-text">
-                    @if(!empty($contatoLabelSuperior))<div class="contato-eyebrow">{{ $contatoLabelSuperior }}</div>@endif
-                    <div class="contato-title">{{ $contatoTitulo }}</div>
-                    <div class="contato-info">
-                        @if(!empty($contatoTelefone))<span class="contato-info-item">{{ $contatoTelefone }}</span>@endif
-                        @if(!empty($contatoEmail))<span class="contato-info-item">{{ $contatoEmail }}</span>@endif
-                    </div>
+    <section id="contato" class="contato">
+        <div class="wrap"><div class="contato-inner">
+            <div>
+                @if(!empty($contatoLabelSuperior))<div class="contato-eyebrow">{{ $contatoLabelSuperior }}</div>@endif
+                <div class="contato-title">{{ $contatoTitulo }}</div>
+                <div class="contato-info">
+                    @if(!empty($contatoTelefone))<span class="contato-info-item">{{ $contatoTelefone }}</span>@endif
+                    @if(!empty($contatoEmail))<span class="contato-info-item">{{ $contatoEmail }}</span>@endif
                 </div>
-                <div class="contato-cta">
-                    <a href="{{ $botaoUrl }}" class="btn-contato">{{ $botaoTexto }}</a>
-                </div>
+                <a href="{{ $botaoUrl }}" class="contato-cta">{{ $botaoTexto }}</a>
             </div>
-            @if(!empty($imagemContato))
-                <div class="contato-image-wrap">
+            <div class="contato-image">
+                @if(!empty($imagemContato))
                     <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}">
-                </div>
-            @endif
-        </div>
+                @else
+                    <div class="contato-image-placeholder">◈</div>
+                @endif
+            </div>
+        </div></div>
     </section>
 
     <footer class="footer">
@@ -367,8 +356,7 @@
                 cor_etapas_descricao_texto:'--etap-d',cor_etapas_passo_texto:'--etap-pt',cor_etapas_passo_descricao_texto:'--etap-pd',cor_etapas_passo_fundo:'--etap-pb',
                 cor_contato_fundo:'--cont-b',cor_contato_etiqueta_texto:'--cont-e',cor_contato_titulo_texto:'--cont-t',cor_contato_info_texto:'--cont-i',
                 cor_footer_fundo:'--foot-b',cor_footer_texto:'--foot-t',
-                cor_botao_primario_fundo:'--b1-b',cor_botao_primario_texto:'--b1-t',
-                cor_botao_secundario_fundo:'--b2-b',cor_botao_secundario_texto:'--b2-t',
+                cor_botao_primario_fundo:'--b1-b',cor_botao_primario_texto:'--b1-t',cor_botao_secundario_fundo:'--b2-b',cor_botao_secundario_texto:'--b2-t',
             };
 
             window.addEventListener('message',function(e){
@@ -395,127 +383,40 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script>
         (function () {
-            const retiradaSelect  = document.getElementById('retirada');
-            const devolucaoSelect = document.getElementById('devolucao');
-            const devolucaoField  = document.getElementById('devolucaoField');
-            const dataRetirada    = document.getElementById('data_retirada');
-            const horaRetirada    = document.getElementById('hora_retirada');
-            const dataDevolucao   = document.getElementById('data_devolucao');
-            const horaDevolucao   = document.getElementById('hora_devolucao');
-            const form            = dataRetirada?.closest('form');
-            const diasDisponiveisUrl = @json(route('reserva.diasSemDisponibilidade'));
-            const agendaUrl = @json(route('reserva.agendaDisponivelPorEstacao'));
-            const dataRetiradaFeedback = document.getElementById('data_retirada_feedback');
-            const horaRetiradaFeedback = document.getElementById('hora_retirada_feedback');
-            const dataDevolucaoFeedback = document.getElementById('data_devolucao_feedback');
-            const horaDevolucaoFeedback = document.getElementById('hora_devolucao_feedback');
-            const devolucaoFeedback = document.getElementById('devolucao_feedback');
-            const eventoChange = new Event('change', { bubbles: true });
-            let pickerRetirada = null;
-            let pickerDevolucao = null;
+            const R=document.getElementById('retirada'),D=document.getElementById('devolucao'),DF=document.getElementById('devolucaoField');
+            const DR=document.getElementById('data_retirada'),HR=document.getElementById('hora_retirada');
+            const DD=document.getElementById('data_devolucao'),HD=document.getElementById('hora_devolucao');
+            const F=DR?.closest('form'),DU=@json(route('reserva.diasSemDisponibilidade')),AU=@json(route('reserva.agendaDisponivelPorEstacao'));
+            const FR=document.getElementById('data_retirada_feedback'),FH=document.getElementById('hora_retirada_feedback');
+            const FD=document.getElementById('data_devolucao_feedback'),FHD=document.getElementById('hora_devolucao_feedback'),FDB=document.getElementById('devolucao_feedback');
+            const EV=new Event('change',{bubbles:true});let PR=null,PD=null;
 
-            function toLocalDateInput(date) {
-                const y = date.getFullYear();
-                const m = String(date.getMonth() + 1).padStart(2, '0');
-                const d = String(date.getDate()).padStart(2, '0');
-                return `${y}-${m}-${d}`;
-            }
-            function toLocalTimeInput(date) {
-                const h = String(date.getHours()).padStart(2, '0');
-                const mi = String(date.getMinutes()).padStart(2, '0');
-                return `${h}:${mi}`;
-            }
-            function addDays(date, days) { const c = new Date(date.getTime()); c.setDate(c.getDate() + days); return c; }
-            function normalizeMinDates() {
-                if (!dataRetirada || !dataDevolucao) return;
-                const now = new Date();
-                dataRetirada.min = toLocalDateInput(now);
-                const rd  = dataRetirada.value ? new Date(dataRetirada.value+'T00:00:00') : now;
-                const md  = addDays(rd, 1);
-                dataDevolucao.min = toLocalDateInput(md);
-                if (dataDevolucao.value && new Date(dataDevolucao.value+'T00:00:00') < md) dataDevolucao.value = toLocalDateInput(md);
-            }
-            function normalizeMinTime() {
-                if (!dataRetirada || !horaRetirada) return;
-                const n=new Date(), t=toLocalDateInput(n);
-                dataRetirada.value===t? horaRetirada.min=toLocalTimeInput(n) : horaRetirada.removeAttribute('min');
-            }
-            function validateDates() {
-                if (!dataRetirada||!horaRetirada||!dataDevolucao) return true;
-                const n=new Date(),td=new Date(n.getFullYear(),n.getMonth(),n.getDate());
-                const rd=dataRetirada.value?new Date(dataRetirada.value+'T00:00:00'):null,dd=dataDevolucao.value?new Date(dataDevolucao.value+'T00:00:00'):null;
-                if(rd&&rd<td){dataRetirada.setCustomValidity('A retirada não pode ser antes de hoje.');dataRetirada.reportValidity();return false}
-                dataRetirada.setCustomValidity('');
-                if(rd&&rd.getTime()===td.getTime()&&horaRetirada.value){const dt=new Date(dataRetirada.value+'T'+horaRetirada.value);if(dt<n){horaRetirada.setCustomValidity('A hora de retirada não pode ser no passado.');horaRetirada.reportValidity();return false}}
-                horaRetirada.setCustomValidity('');
-                if(dataRetirada.value&&dataDevolucao.value){const md=addDays(new Date(dataRetirada.value+'T00:00:00'),1);if(dd<md){dataDevolucao.setCustomValidity('A devolução deve ser ao menos 1 dia após a retirada.');dataDevolucao.reportValidity();return false}}
-                dataDevolucao.setCustomValidity('');
-                return true;
-            }
-            function estacaoPermiteCheckout(id) { return !!devolucaoSelect?.querySelector(`option[value="${id}"]`); }
-            function syncDevolucao(t=false) {
-                if(!devolucaoField||!devolucaoSelect)return;
-                const rid=retiradaSelect?.value||'',ok=estacaoPermiteCheckout(rid),rt=retiradaSelect?.selectedOptions?.[0]?.textContent?.trim()||'';
-                devolucaoField.style.display='block';devolucaoSelect.disabled=false;
-                if(ok&&rid){const va=devolucaoSelect.value;devolucaoSelect.value=rid;if(t&&va!==rid)devolucaoSelect.dispatchEvent(eventoChange);if(devolucaoFeedback)devolucaoFeedback.textContent=rt?'Estação de devolução definida automaticamente: '+rt+'.':'Estação de devolução definida automaticamente.'}
-                else if(!ok&&devolucaoSelect.value===rid){devolucaoSelect.value='';if(devolucaoFeedback)devolucaoFeedback.textContent='Selecione uma estação de devolução.'}
-                else if(devolucaoFeedback)devolucaoFeedback.textContent=devolucaoSelect.value?'Estação de devolução selecionada: '+(devolucaoSelect.selectedOptions?.[0]?.textContent?.trim()||'')+'.':'Selecione uma estação de devolução.';
-            }
-            retiradaSelect?.addEventListener('change',()=>{syncDevolucao(true)});
-            const ptLocale=window.flatpickr?.l10ns?.pt||{};
-            function toIsoDate(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-            function normalizarSlotHorario(s){
-                if(s&&typeof s==='object'){const v=String(s.value||s.hora||s.time||'').trim(),l=String(s.label||s.text||v).trim();if(!v)return null;return{value:v,label:l||v,taxa_extra:Boolean(s.taxa_extra||s.status==='taxa_extra')}}
-                const v=String(s||'').trim();return v?{value:v,label:v,taxa_extra:false}:null;
-            }
-            function preencherHorarios(se,fe,sl,hp){
-                const l=Array.isArray(sl)?sl.map(normalizarSlotHorario).filter(Boolean):[];se.innerHTML='';
-                if(!l.length){se.appendChild(new Option('Sem horários disponíveis',''));se.disabled=true;if(fe)fe.textContent='Sem horários disponíveis para a data selecionada.';return[]}
-                se.appendChild(new Option('Selecione a hora',''));
-                l.forEach(function(s){const v=s.value.includes('T')?s.value.split('T')[1].slice(0,5):s.value.slice(0,5);const o=new Option(s.taxa_extra?s.label+' • Taxa extra':s.label,v);o.dataset.taxaExtra=s.taxa_extra?'1':'0';se.appendChild(o)});
-                se.disabled=false;const p=hp?String(hp).slice(0,5):(l.length===1?l[0].value.slice(0,5):'');se.value=p&&[...se.options].some(o=>o.value===p)?p:'';if(fe)fe.textContent='Escolha a hora disponível.';return l;
-            }
-            function carregarHorariosAgenda(tipo,db,hp){
-                const eid=tipo==='devolucao'?devolucaoSelect?.value:retiradaSelect?.value;if(!eid||!db)return Promise.resolve([]);
-                if(tipo==='devolucao'){horaDevolucao.innerHTML='<option>Carregando...</option>';horaDevolucao.disabled=true}else{horaRetirada.innerHTML='<option>Carregando...</option>';horaRetirada.disabled=true}
-                return fetch(agendaUrl+'?estacao_id='+eid+'&tipo='+tipo+'&data_base='+db+'&limite=1',{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){const a=Array.isArray(r.agenda)?r.agenda:[],dia=a.find(i=>String(i.date)===String(db))||a[0]||null,sl=Array.isArray(dia?.slots)?dia.slots:[];return tipo==='devolucao'?preencherHorarios(horaDevolucao,horaDevolucaoFeedback,sl,hp):preencherHorarios(horaRetirada,horaRetiradaFeedback,sl,hp)}).catch(function(){tipo==='devolucao'?preencherHorarios(horaDevolucao,horaDevolucaoFeedback,[],null):preencherHorarios(horaRetirada,horaRetiradaFeedback,[],null);return[]});
-            }
-            function buscarDiasDisponiveis(eid,tipo){
-                if(!eid)return Promise.resolve([]);
-                return fetch(diasDisponiveisUrl+'?estacao_id='+eid+'&dias=90&tipo='+tipo,{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){return Array.isArray(r.dias_disponiveis)?r.dias_disponiveis:[]}).catch(function(){return[]});
-            }
-            function criarPickerDate(el,dias){
-                if(!el||!window.flatpickr)return null;
-                const ok=new Set((dias||[]).map(function(i){return String(i.data||i).slice(0,10)}));
-                return window.flatpickr(el,{locale:ptLocale,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:'today',disable:[function(d){return!ok.has(toIsoDate(d))}],onChange:function(){el.dispatchEvent(new Event('change',{bubbles:true}))}});
-            }
-            function atualizarMinDateDevolucao(){
-                const rd=dataRetirada.value?new Date(dataRetirada.value+'T00:00:00'):null;if(!rd)return;
-                const md=new Date(rd.getTime()+86400000);
-                if(pickerDevolucao){pickerDevolucao.set('minDate',md);const s=pickerDevolucao.selectedDates[0]||null;if(s&&s.getTime()<md.getTime()){pickerDevolucao.clear();dataDevolucao.value='';horaDevolucao.value='';horaDevolucao.disabled=true;if(dataDevolucaoFeedback)dataDevolucaoFeedback.textContent='Escolha uma data de devolução igual ou posterior ao dia seguinte.'}}
-                else if(window.flatpickr)pickerDevolucao=window.flatpickr(dataDevolucao,{locale:ptLocale,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:md,onChange:function(){dataDevolucao.dispatchEvent(new Event('change',{bubbles:true}))}});
-            }
-            function atualizarRetirada(){const d=dataRetirada.value||'',h=horaRetirada.value||'';if(!d){horaRetirada.value='';horaRetirada.disabled=true;dataRetiradaFeedback&&(dataRetiradaFeedback.textContent='Selecione uma estação de retirada para ver os dias disponíveis.');return}dataRetiradaFeedback&&(dataRetiradaFeedback.textContent='Selecione a hora de retirada.');atualizarMinDateDevolucao();carregarHorariosAgenda('retirada',d,h)}
-            function atualizarDevolucao(){const d=dataDevolucao.value||'',h=horaDevolucao.value||'';if(!d){horaDevolucao.value='';horaDevolucao.disabled=true;dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent='Selecione uma estação de devolução para ver os dias disponíveis.');return}dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent='Selecione a hora de devolução.');carregarHorariosAgenda('devolucao',d,h)}
-            function recarregarPickersPorEstacao(){
-                const er=retiradaSelect?.value||'',ed=devolucaoSelect?.value||'';
-                if(pickerRetirada){pickerRetirada.destroy();pickerRetirada=null}if(pickerDevolucao){pickerDevolucao.destroy();pickerDevolucao=null}
-                dataRetirada.value='';dataDevolucao.value='';horaRetirada.value='';horaDevolucao.value='';horaRetirada.disabled=true;horaDevolucao.disabled=true;
-                if(er){dataRetiradaFeedback&&(dataRetiradaFeedback.textContent='Carregando...');buscarDiasDisponiveis(er,'retirada').then(function(d){dataRetiradaFeedback&&(dataRetiradaFeedback.textContent=d.length?'Selecione a data de retirada.':'Não há dias disponíveis para retirada nesta estação.');pickerRetirada=criarPickerDate(dataRetirada,d);atualizarMinDateDevolucao()})}
-                if(ed){dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent='Carregando...');buscarDiasDisponiveis(ed,'devolucao').then(function(d){dataDevolucaoFeedback&&(dataDevolucaoFeedback.textContent=d.length?'Selecione a data de devolução.':'Não há dias disponíveis para devolução nesta estação.');pickerDevolucao=criarPickerDate(dataDevolucao,d);atualizarMinDateDevolucao()})}
-            }
-            dataRetirada.addEventListener('change',atualizarRetirada);
-            horaRetirada.addEventListener('change',atualizarRetirada);
-            dataDevolucao.addEventListener('change',atualizarDevolucao);
-            horaDevolucao.addEventListener('change',atualizarDevolucao);
-            retiradaSelect?.addEventListener('change',function(){syncDevolucao(true);recarregarPickersPorEstacao()});
-            devolucaoSelect?.addEventListener('change',function(){syncDevolucao(false);recarregarPickersPorEstacao()});
-            if(typeof window.Choices!=='undefined'){[retiradaSelect,devolucaoSelect].forEach(function(s){if(!s)return;new window.Choices(s,{searchEnabled:true,searchPlaceholderValue:'Buscar estação...',itemSelectText:'',shouldSort:false,noResultsText:'Nenhuma estação encontrada',noChoicesText:'Nenhuma estação disponível'})})}
-            dataRetirada?.addEventListener('change',function(){normalizeMinTime();normalizeMinDates();validateDates()});
-            horaRetirada?.addEventListener('change',normalizeMinTime);
-            dataDevolucao?.addEventListener('change',function(){normalizeMinDates();validateDates()});
-            form?.addEventListener('submit',function(e){normalizeMinTime();normalizeMinDates();syncDevolucao();if(!validateDates())e.preventDefault()});
-            syncDevolucao();recarregarPickersPorEstacao();normalizeMinDates();normalizeMinTime();
+            function tld(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+            function tlt(d){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+            function addD(d,n){const c=new Date(d);c.setDate(c.getDate()+n);return c}
+            function normDates(){if(!DR||!DD)return;const n=new Date();DR.min=tld(n);const rd=DR.value?new Date(DR.value+'T00:00:00'):n,md=addD(rd,1);DD.min=tld(md);if(DD.value&&new Date(DD.value+'T00:00:00')<md)DD.value=tld(md)}
+            function normTime(){if(!DR||!HR)return;const n=new Date(),t=tld(n);DR.value===t?HR.min=tlt(n):HR.removeAttribute('min')}
+            function valDates(){if(!DR||!HR||!DD)return true;const n=new Date(),td=new Date(n.getFullYear(),n.getMonth(),n.getDate()),rd=DR.value?new Date(DR.value+'T00:00:00'):null,dd=DD.value?new Date(DD.value+'T00:00:00'):null;if(rd&&rd<td){DR.setCustomValidity('A retirada não pode ser antes de hoje.');DR.reportValidity();return false}DR.setCustomValidity('');if(rd&&rd.getTime()===td.getTime()&&HR.value&&new Date(DR.value+'T'+HR.value)<n){HR.setCustomValidity('Hora no passado.');HR.reportValidity();return false}HR.setCustomValidity('');if(DR.value&&DD.value){const md=addD(new Date(DR.value+'T00:00:00'),1);if(dd<md){DD.setCustomValidity('Devolução deve ser 1 dia após retirada.');DD.reportValidity();return false}}DD.setCustomValidity('');return true}
+            function estOK(id){return!!D?.querySelector('option[value="'+id+'"]')}
+            function syncD(t){if(!DF||!D)return;const rid=R?.value||'',ok=estOK(rid),rt=R?.selectedOptions?.[0]?.textContent?.trim()||'';DF.style.display='block';D.disabled=false;if(ok&&rid){const va=D.value;D.value=rid;if(t&&va!==rid)D.dispatchEvent(EV);if(FDB)FDB.textContent=rt?'Auto: '+rt:'.'}else if(!ok&&D.value===rid){D.value='';if(FDB)FDB.textContent='Selecione devolução.'}else if(FDB)FDB.textContent=D.value?'OK':'Selecione.'}
+            R?.addEventListener('change',function(){syncD(true)});
+            const pt=window.flatpickr?.l10ns?.pt||{};
+            function toI(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+            function nrm(s){if(s&&typeof s==='object'){const v=String(s.value||s.hora||s.time||'').trim(),l=String(s.label||s.text||v).trim();return v?{value:v,label:l||v,taxa_extra:Boolean(s.taxa_extra||s.status==='taxa_extra')}:null}const v=String(s||'').trim();return v?{value:v,label:v,taxa_extra:false}:null}
+            function preenche(se,fe,sl,hp){const l=Array.isArray(sl)?sl.map(nrm).filter(Boolean):[];se.innerHTML='';if(!l.length){se.appendChild(new Option('Indisponível',''));se.disabled=true;fe&&(fe.textContent='Sem horários');return[]}se.appendChild(new Option('Hora',''));l.forEach(function(s){const v=s.value.includes('T')?s.value.split('T')[1].slice(0,5):s.value.slice(0,5);const o=new Option(s.taxa_extra?s.label+' • Extra':s.label,v);se.appendChild(o)});se.disabled=false;const p=hp?String(hp).slice(0,5):(l.length===1?l[0].value.slice(0,5):'');se.value=p&&[...se.options].some(o=>o.value===p)?p:'';fe&&(fe.textContent='Escolha a hora');return l}
+            function carrega(tipo,db,hp){const eid=tipo==='devolucao'?D?.value:R?.value;if(!eid||!db)return Promise.resolve([]);const sel=tipo==='devolucao'?HD:HR,fee=tipo==='devolucao'?FHD:FH;sel.innerHTML='<option>Carregando...</option>';sel.disabled=true;return fetch(AU+'?estacao_id='+eid+'&tipo='+tipo+'&data_base='+db+'&limite=1',{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){const a=Array.isArray(r.agenda)?r.agenda:[],dia=a.find(i=>String(i.date)===String(db))||a[0]||null,sl=Array.isArray(dia?.slots)?dia.slots:[];return preenche(sel,fee,sl,hp)}).catch(function(){preenche(sel,fee,[],null);return[]})}
+            function buscaDias(eid,tipo){if(!eid)return Promise.resolve([]);return fetch(DU+'?estacao_id='+eid+'&dias=90&tipo='+tipo,{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){return Array.isArray(r.dias_disponiveis)?r.dias_disponiveis:[]}).catch(function(){return[]})}
+            function pickerDate(el,dias){if(!el||!window.flatpickr)return null;const ok=new Set((dias||[]).map(function(i){return String(i.data||i).slice(0,10)}));return window.flatpickr(el,{locale:pt,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:'today',disable:[function(d){return!ok.has(toI(d))}],onChange:function(){el.dispatchEvent(new Event('change',{bubbles:true}))}})}
+            function attMD(){const rd=DR.value?new Date(DR.value+'T00:00:00'):null;if(!rd)return;const md=new Date(rd.getTime()+86400000);if(PD){PD.set('minDate',md);const s=PD.selectedDates[0]||null;if(s&&s.getTime()<md.getTime()){PD.clear();DD.value='';HD.value='';HD.disabled=true;FD&&(FD.textContent='Data inválida')}}else if(window.flatpickr)PD=window.flatpickr(DD,{locale:pt,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:md,onChange:function(){DD.dispatchEvent(new Event('change',{bubbles:true}))}})}
+            function attR(){const d=DR.value||'';if(!d){HR.value='';HR.disabled=true;FR&&(FR.textContent='Selecione estação');return}FR&&(FR.textContent='Hora:');attMD();carrega('retirada',d,HR.value)}
+            function attD(){const d=DD.value||'';if(!d){HD.value='';HD.disabled=true;FD&&(FD.textContent='Selecione estação');return}FD&&(FD.textContent='Hora:');carrega('devolucao',d,HD.value)}
+            function recarregar(){const er=R?.value||'',ed=D?.value||'';if(PR){PR.destroy();PR=null}if(PD){PD.destroy();PD=null}DR.value='';DD.value='';HR.value='';HD.value='';HR.disabled=true;HD.disabled=true;if(er){FR&&(FR.textContent='Carregando...');buscaDias(er,'retirada').then(function(d){FR&&(FR.textContent=d.length?'Data:':'Indisponível');PR=pickerDate(DR,d);attMD()})}if(ed){FD&&(FD.textContent='Carregando...');buscaDias(ed,'devolucao').then(function(d){FD&&(FD.textContent=d.length?'Data:':'Indisponível');PD=pickerDate(DD,d);attMD()})}}
+            DR.addEventListener('change',attR);HR.addEventListener('change',attR);DD.addEventListener('change',attD);HD.addEventListener('change',attD);
+            R?.addEventListener('change',function(){syncD(true);recarregar()});D?.addEventListener('change',function(){syncD(false);recarregar()});
+            if(typeof window.Choices!=='undefined'){[R,D].forEach(function(s){if(!s)return;new window.Choices(s,{searchEnabled:true,searchPlaceholderValue:'Buscar...',itemSelectText:'',shouldSort:false,noResultsText:'Nada encontrado',noChoicesText:'Indisponível'})})}
+            DR?.addEventListener('change',function(){normTime();normDates();valDates()});HR?.addEventListener('change',normTime);DD?.addEventListener('change',function(){normDates();valDates()});
+            F?.addEventListener('submit',function(e){normTime();normDates();syncD();if(!valDates())e.preventDefault()});
+            syncD();recarregar();normDates();normTime();
         })();
     </script>
 </body>
