@@ -636,6 +636,10 @@ function seSalvar() {
         formData.append(key, value);
     });
 
+    Object.entries(seArquivos).forEach(([key, file]) => {
+        formData.append(key, file);
+    });
+
     fetch('{{ route("empresa.site-editor.update", $empresa->id) }}', {
         method: 'POST',
         body: formData,
@@ -665,16 +669,21 @@ function seAbrirModal(section) {
 
 function seAbrirModalComAlvo(secao, alvo, campo) {
     var modalId = '#modal-' + secao;
-    var tabId = (alvo === 'fundo' || alvo === 'imagem') ? 'cores' : 'texto';
+    var tabMap = { texto: 'texto', fundo: 'cores', imagem: 'imagem' };
+    var tabId = tabMap[alvo] || 'texto';
 
     $(modalId).modal('show');
-    $(modalId + ' a[href*="' + tabId + '"]').tab('show');
+    var tabLink = $(modalId + ' a[href*="' + tabId + '"]');
+    if (tabLink.length) tabLink.tab('show');
 
     if (campo) {
         setTimeout(function() {
             var el = document.querySelector('[data-section="' + secao + '"][data-key="' + campo + '"]');
-            if (el) el.focus();
-            if (el && el.type === 'color') el.click();
+            if (el) {
+                if (el.type === 'file') el.click();
+                else if (el.type === 'color') el.click();
+                else el.focus();
+            }
         }, 400);
     }
 }
@@ -691,6 +700,31 @@ document.addEventListener('input', function(e) {
             picker.value = e.target.value.toUpperCase();
         }
     }
+});
+
+// File input change → preview + store
+document.addEventListener('change', function(e) {
+    if (!e.target.classList.contains('se-file-input')) return;
+    var file = e.target.files[0];
+    if (!file) return;
+
+    var key = e.target.dataset.key;
+    var section = e.target.dataset.section;
+    seArquivos[key] = file;
+
+    var previewId = 'seImgPreview-' + key.replace('imagem_', '');
+    var preview = document.getElementById(previewId);
+    if (preview) {
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            preview.innerHTML = '<img src="' + ev.target.result + '" alt="Preview">';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    seDados[key] = file.name;
+    seAtualizarPreview(section);
+    seMostrarStatus('Imagem selecionada. Publique para salvar.', 'success');
 });
 
 // Listen for postMessage from iframe

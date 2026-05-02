@@ -503,6 +503,11 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $data = $this->prepareSiteTextosPayload($request, $empresaAtual, $data);
         $data = $this->prepareSiteCoresPayload($request, $empresaAtual, $data);
         $data = $this->prepareSiteImagensConfigPayload($request, $empresaAtual, $data);
+        $data = $this->handleSiteImagesUpload($request, $data, $empresaAtual);
+
+        foreach (array_keys(self::SITE_IMAGEM_FIELDS) as $imageField) {
+            unset($data[$imageField]);
+        }
 
         $updated = $this->empresaService->update($id, $data);
         if (! $updated) {
