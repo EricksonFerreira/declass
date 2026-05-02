@@ -171,6 +171,14 @@
                                 <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
                                     <i class="fas fa-upload"></i> Escolher imagem
                                 </button>
+                                <div class="mt-2 pt-2" style="border-top:1px solid #e2e8f0;">
+                                    <label style="font-size:.78rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Exibir em:</label>
+                                    <div class="d-flex gap-2">
+                                        <label class="se-resp-label"><input type="checkbox" data-section="hero" data-key="mostrar_hero_pc" {{ ($siteImagensConfig['hero_pc'] ?? true) ? 'checked' : '' }}> 🖥 PC</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="hero" data-key="mostrar_hero_tablet" {{ ($siteImagensConfig['hero_tablet'] ?? true) ? 'checked' : '' }}> 📱 Tablet</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="hero" data-key="mostrar_hero_celular" {{ ($siteImagensConfig['hero_celular'] ?? true) ? 'checked' : '' }}> 📲 Celular</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -247,6 +255,14 @@
                                 <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
                                     <i class="fas fa-upload"></i> Escolher imagem
                                 </button>
+                                <div class="mt-2 pt-2" style="border-top:1px solid #e2e8f0;">
+                                    <label style="font-size:.78rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Exibir imagem em:</label>
+                                    <div class="d-flex gap-2">
+                                        <label class="se-resp-label"><input type="checkbox" data-section="frota" data-key="mostrar_frota_{{$fi}}_pc" {{ ($siteImagensConfig['frota_'.$fi.'_pc'] ?? true) ? 'checked' : '' }}> 🖥 PC</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="frota" data-key="mostrar_frota_{{$fi}}_tablet" {{ ($siteImagensConfig['frota_'.$fi.'_tablet'] ?? true) ? 'checked' : '' }}> 📱 Tablet</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="frota" data-key="mostrar_frota_{{$fi}}_celular" {{ ($siteImagensConfig['frota_'.$fi.'_celular'] ?? true) ? 'checked' : '' }}> 📲 Celular</label>
+                                    </div>
+                                </div>
                             </div>
                             @endfor
                         </div>
@@ -314,6 +330,14 @@
                                 <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
                                     <i class="fas fa-upload"></i> Escolher imagem
                                 </button>
+                                <div class="mt-2 pt-2" style="border-top:1px solid #e2e8f0;">
+                                    <label style="font-size:.78rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Exibir imagem em:</label>
+                                    <div class="d-flex gap-2">
+                                        <label class="se-resp-label"><input type="checkbox" data-section="vantagens" data-key="mostrar_vantagens_pc" {{ ($siteImagensConfig['vantagens_pc'] ?? true) ? 'checked' : '' }}> 🖥 PC</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="vantagens" data-key="mostrar_vantagens_tablet" {{ ($siteImagensConfig['vantagens_tablet'] ?? true) ? 'checked' : '' }}> 📱 Tablet</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="vantagens" data-key="mostrar_vantagens_celular" {{ ($siteImagensConfig['vantagens_celular'] ?? true) ? 'checked' : '' }}> 📲 Celular</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -420,6 +444,14 @@
                                 <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="this.previousElementSibling.click()">
                                     <i class="fas fa-upload"></i> Escolher imagem
                                 </button>
+                                <div class="mt-2 pt-2" style="border-top:1px solid #e2e8f0;">
+                                    <label style="font-size:.78rem;font-weight:600;color:#475569;display:block;margin-bottom:6px;">Exibir imagem em:</label>
+                                    <div class="d-flex gap-2">
+                                        <label class="se-resp-label"><input type="checkbox" data-section="contato" data-key="mostrar_contato_pc" {{ ($siteImagensConfig['contato_pc'] ?? true) ? 'checked' : '' }}> 🖥 PC</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="contato" data-key="mostrar_contato_tablet" {{ ($siteImagensConfig['contato_tablet'] ?? true) ? 'checked' : '' }}> 📱 Tablet</label>
+                                        <label class="se-resp-label"><input type="checkbox" data-section="contato" data-key="mostrar_contato_celular" {{ ($siteImagensConfig['contato_celular'] ?? true) ? 'checked' : '' }}> 📲 Celular</label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
