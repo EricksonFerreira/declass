@@ -506,7 +506,10 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
 
 // ── criar assinatura + pix ──
 function criarAssinaturaEProcessarPix() {
-// ── Cartao: confirmar contratação ──
+    criarAssinatura();
+}
+
+function criarAssinatura() {
 document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
     var metodo = document.getElementById('inputMetodo').value;
     if (metodo !== 'cartao') return;
@@ -554,6 +557,7 @@ document.getElementById('btnConfirmarPagamento').addEventListener('click', funct
         alert('Erro de conexao. Tente novamente.');
     });
 });
+}
 
 // ── PIX ──
 var pixPollingTimer = null;

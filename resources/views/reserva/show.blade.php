@@ -114,7 +114,7 @@
             <div class="rs-hero__left">
                 <div class="rs-hero__eyebrow">
                     <i class="fas fa-ticket-alt"></i>
-                    Reserva #{{ $reserva->id }}
+                    <span style="font-size:1.8rem;font-weight:900;letter-spacing:.04em;color:#fff;">#{{ str_pad($reserva->id, 8, '0', STR_PAD_LEFT) }}</span>
                 </div>
                 <h1 class="rs-hero__title">{{ $titulo }}</h1>
                 <div class="rs-hero__meta">

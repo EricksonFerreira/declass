@@ -1188,52 +1188,30 @@
     ];
 @endphp
 
-@if ($hasVisibleItems)
-    @php
-        $allCards = [];
-        foreach ($items as $grupoItems) {
-            $colorClass = $colorMap[$grupoItems['backgroundIcone']] ?? 'c-teal';
-            foreach (($grupoItems['items'] ?? []) as $card) {
-                $card['_colorClass'] = $colorClass;
-                $allCards[] = $card;
-            }
-        }
-        $quickCards = array_slice($allCards, 0, 8);
-        $moreCards = array_slice($allCards, 8);
-    @endphp
-
-    <p class="section-label">Acesso rapido</p>
-    <div class="stat-grid">
-        @foreach ($quickCards as $i)
-            <a href="{{ route($i['route']) }}" class="stat-card {{ $i['_colorClass'] ?? 'c-teal' }}">
-                <div class="stat-icon"><i class="{{ $i['icone'] }}"></i></div>
-                <div>
-                    <p class="stat-name">{{ $i['nome'] }}</p>
-                    <p class="stat-value">{{ $i['prefix'] }}{{ $i['valor'] }}{{ $i['suffix'] }}</p>
-                </div>
-            </a>
-        @endforeach
-    </div>
-
-    @if (count($moreCards) > 0)
-        <div class="mt-3">
-            <button type="button" class="btn-more-cards" id="btnMoreCards">Mostrar mais atalhos</button>
+<p class="section-label">Atalhos rápidos</p>
+<div class="stat-grid">
+    <a href="{{ route('veiculo.index') }}" class="stat-card c-teal">
+        <div class="stat-icon"><i class="fas fa-car"></i></div>
+        <div>
+            <p class="stat-name">Veículos</p>
+            <p class="stat-value">{{ \App\Models\Veiculo::count() }}</p>
         </div>
-        <div class="mt-3 d-none" id="moreCards">
-            <div class="stat-grid">
-                @foreach ($moreCards as $i)
-                    <a href="{{ route($i['route']) }}" class="stat-card {{ $i['_colorClass'] ?? 'c-teal' }}">
-                        <div class="stat-icon"><i class="{{ $i['icone'] }}"></i></div>
-                        <div>
-                            <p class="stat-name">{{ $i['nome'] }}</p>
-                            <p class="stat-value">{{ $i['prefix'] }}{{ $i['valor'] }}{{ $i['suffix'] }}</p>
-                        </div>
-                    </a>
-                @endforeach
-            </div>
+    </a>
+    <a href="{{ route('veiculo.disponibilidade') }}" class="stat-card c-teal">
+        <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+        <div>
+            <p class="stat-name">Disponibilidade</p>
+            <p class="stat-value">Ver frota</p>
         </div>
-    @endif
-@endif
+    </a>
+    <a href="{{ route('reserva.index') }}" class="stat-card c-teal">
+        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+        <div>
+            <p class="stat-name">Reservas</p>
+            <p class="stat-value">{{ \App\Models\Reserva::count() }}</p>
+        </div>
+    </a>
+</div>
 @stop
 
 @section('js')

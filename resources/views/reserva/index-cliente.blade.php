@@ -90,7 +90,7 @@
                         <div class="rc__head">
                             <div class="rc__avatar">{{ $iniciais }}</div>
                             <div class="rc__head-info">
-                                <div class="rc__id">Reserva #{{ $reserva->id }}</div>
+                                <div class="rc__id" style="font-size:1.1rem;font-weight:800;">#{{ str_pad($reserva->id, 8, '0', STR_PAD_LEFT) }}</div>
                                 <div class="rc__cliente">{{ $nomeCliente }}</div>
                                 @if(!empty(auth()->user()->email))
                                     <div class="rc__email">{{ auth()->user()->email }}</div>
