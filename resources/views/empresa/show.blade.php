@@ -224,7 +224,7 @@
                                 <i class="fas fa-layer-group rs-card__icon"></i>
                                 <h2>Plano Atual</h2>
                             </div>
-                            <div class="rs-info-grid" style="grid-template-columns:1fr;">
+                            <div class="rs-info-grid">
                                 <div class="rs-info-card">
                                     <span class="rs-info-card__label"><i class="fas fa-tag"></i> Plano</span>
                                     <strong class="rs-info-card__value">{{ $plano->nome }}</strong>
@@ -295,13 +295,13 @@
                         <h2>Recursos Inclusos</h2>
                         <span class="ml-auto badge bg-info">{{ $plano->itens->count() }}</span>
                     </div>
-                    <div class="rs-info-grid">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
                         @foreach($plano->itens as $item)
-                            <div class="rs-info-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;">
-                                <div style="width:28px;height:28px;border-radius:7px;background:{{ $item->incluso ? '#dcfce7' : '#f1f5f9' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                    <i class="fas fa-{{ $item->incluso ? 'check' : 'times' }}" style="font-size:.72rem;color:{{ $item->incluso ? '#16a34a' : '#94a3b8' }};"></i>
+                            <div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;transition:border-color .15s;">
+                                <div style="width:24px;height:24px;border-radius:6px;background:{{ $item->incluso ? '#dcfce7' : '#f1f5f9' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i class="fas fa-{{ $item->incluso ? 'check' : 'times' }}" style="font-size:.65rem;color:{{ $item->incluso ? '#16a34a' : '#94a3b8' }};"></i>
                                 </div>
-                                <span style="font-size:.82rem;color:#0f172a;font-weight:500;">{{ $item->descricao }}</span>
+                                <span style="font-size:.8rem;color:#0f172a;">{{ $item->descricao }}</span>
                             </div>
                         @endforeach
                     </div>
