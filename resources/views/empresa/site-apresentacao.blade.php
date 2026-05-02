@@ -124,25 +124,35 @@
                     ['name' => 'frota_card_3_titulo',    'label' => 'Card 3 — Titulo',            'hint' => 'Ex: SUV Familiar',                                             'type' => 'text',     'max' => 120],
                     ['name' => 'frota_card_3_descricao', 'label' => 'Card 3 — Descricao',         'hint' => 'Ex: Espaco e seguranca para toda a familia',                   'type' => 'textarea', 'max' => 400],
                 ],
-            ]; for ($fi = 4; $fi <= 10; $fi++) { $textGroups[4]['fields'][] = ['name' => 'frota_card_'.$fi.'_titulo', 'label' => "Card $fi — Titulo", 'hint' => 'Deixe em branco para ocultar este card', 'type' => 'text', 'max' => 120]; $textGroups[4]['fields'][] = ['name' => 'frota_card_'.$fi.'_descricao', 'label' => "Card $fi — Descricao", 'hint' => '', 'type' => 'textarea', 'max' => 400]; } $textGroups = array_values($textGroups);$_ = $textGroups; array_push($textGroups, [
             ],
-            [
-                'title'    => 'Secao Vantagens',
-                'icon'     => 'fas fa-thumbs-up',
-                'descricao' => 'Textos que destacam os diferenciais da empresa.',
-                'fields'   => [
-                    ['name' => 'vantagens_label_superior', 'label' => 'Etiqueta acima do titulo', 'hint' => 'Ex: Por que nos escolher',                                      'type' => 'text',     'max' => 60],
-                    ['name' => 'vantagens_titulo',         'label' => 'Titulo da secao',           'hint' => 'Ex: Nossas vantagens',                                         'type' => 'text',     'max' => 160],
-                    ['name' => 'vantagens_descricao',      'label' => 'Descricao da secao',        'hint' => 'Texto introdutorio sobre os beneficios',                       'type' => 'textarea', 'max' => 1000],
-                    ['name' => 'beneficio_1',              'label' => 'Vantagem 1',                'hint' => 'Ex: Atendimento 24 horas',                                     'type' => 'text',     'max' => 220],
-                    ['name' => 'beneficio_2',              'label' => 'Vantagem 2',                'hint' => 'Ex: Frota revisada e garantida',                               'type' => 'text',     'max' => 220],
-                    ['name' => 'beneficio_3',              'label' => 'Vantagem 3',                'hint' => 'Ex: Sem taxa de cancelamento',                                 'type' => 'text',     'max' => 220],
-                    ['name' => 'beneficio_4',              'label' => 'Vantagem 4',                'hint' => 'Ex: Cobertura em todo o Brasil',                               'type' => 'text',     'max' => 220],
-                    @for($bi = 5; $bi <= 10; $bi++)
-                    ['name' => 'beneficio_{{$bi}}',        'label' => 'Vantagem {{$bi}}',          'hint' => 'Deixe em branco para ocultar',                                 'type' => 'text',     'max' => 220],
-                    @endfor
-                ],
+        ];
+
+        // Add frota cards 4-10
+        for ($fi = 4; $fi <= 10; $fi++) {
+            $textGroups[3]['fields'][] = ['name' => 'frota_card_'.$fi.'_titulo', 'label' => "Card {$fi} — Titulo", 'hint' => 'Deixe em branco para ocultar este card', 'type' => 'text', 'max' => 120];
+            $textGroups[3]['fields'][] = ['name' => 'frota_card_'.$fi.'_descricao', 'label' => "Card {$fi} — Descricao", 'hint' => '', 'type' => 'textarea', 'max' => 400];
+        }
+
+        $textGroups[] = [
+            'title'    => 'Secao Vantagens',
+            'icon'     => 'fas fa-thumbs-up',
+            'descricao' => 'Textos que destacam os diferenciais da empresa.',
+            'fields'   => [
+                ['name' => 'vantagens_label_superior', 'label' => 'Etiqueta acima do titulo', 'hint' => 'Ex: Por que nos escolher',                                      'type' => 'text',     'max' => 60],
+                ['name' => 'vantagens_titulo',         'label' => 'Titulo da secao',           'hint' => 'Ex: Nossas vantagens',                                         'type' => 'text',     'max' => 160],
+                ['name' => 'vantagens_descricao',      'label' => 'Descricao da secao',        'hint' => 'Texto introdutorio sobre os beneficios',                       'type' => 'textarea', 'max' => 1000],
+                ['name' => 'beneficio_1',              'label' => 'Vantagem 1',                'hint' => 'Ex: Atendimento 24 horas',                                     'type' => 'text',     'max' => 220],
+                ['name' => 'beneficio_2',              'label' => 'Vantagem 2',                'hint' => 'Ex: Frota revisada e garantida',                               'type' => 'text',     'max' => 220],
+                ['name' => 'beneficio_3',              'label' => 'Vantagem 3',                'hint' => 'Ex: Sem taxa de cancelamento',                                 'type' => 'text',     'max' => 220],
+                ['name' => 'beneficio_4',              'label' => 'Vantagem 4',                'hint' => 'Ex: Cobertura em todo o Brasil',                               'type' => 'text',     'max' => 220],
             ],
+        ];
+
+        for ($bi = 5; $bi <= 10; $bi++) {
+            $textGroups[4]['fields'][] = ['name' => 'beneficio_'.$bi, 'label' => "Vantagem {$bi}", 'hint' => 'Deixe em branco para ocultar', 'type' => 'text', 'max' => 220];
+        }
+
+        $textGroups[] = [
             [
                 'title'    => 'Secao Como Funciona (Etapas)',
                 'icon'     => 'fas fa-list-ol',
