@@ -394,6 +394,7 @@
 @endpush
 
 @push('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://js.stripe.com/v3/"></script>
 <script>
 var CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
