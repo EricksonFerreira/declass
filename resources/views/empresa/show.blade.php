@@ -70,11 +70,14 @@
         <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary">
             <i class="fas fa-pen mr-1"></i> Editar
         </a>
-        @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
-            <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="rs-btn">
-                <i class="fas fa-globe mr-1"></i> Site
-            </a>
-        @endif
+                    @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
+                        <a href="{{ route('empresa.site-editor.edit', $empresa->id) }}" class="rs-btn rs-btn--sm" style="background:#0ea5e9;color:#fff;border-color:#0ea5e9;">
+                            <i class="fas fa-paint-brush mr-1"></i> Editor Visual
+                        </a>
+                        <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="rs-btn rs-btn--sm">
+                            <i class="fas fa-globe mr-1"></i> Site
+                        </a>
+                    @endif
         <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn">
             <i class="fas fa-credit-card mr-1"></i> Assinatura
         </a>

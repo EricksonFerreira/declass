@@ -15,8 +15,10 @@ use App\Services\BreadcrumbService;
 use App\Services\EmpresaService;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
@@ -451,6 +453,196 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         return redirect()
             ->route('empresa.site-apresentacao.edit', $id)
             ->with('success', 'Configuracoes do site de apresentacao salvas com sucesso.');
+    }
+
+    public function editSiteEditor($id)
+    {
+        if (! $this->empresaTableExists()) {
+            return redirect()->route('home')
+                ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
+        }
+
+        $empresa = $this->empresaService->getById($id);
+        if (! $empresa) {
+            abort(403, 'Sem acesso a esta empresa.');
+        }
+
+        $siteTextos = is_array($empresa->site_apresentacao_textos) ? $empresa->site_apresentacao_textos : [];
+        $siteImagens = is_array($empresa->site_apresentacao_imagens) ? $empresa->site_apresentacao_imagens : [];
+        $siteCores = is_array($empresa->site_apresentacao_cores) ? $empresa->site_apresentacao_cores : [];
+        $siteImagensConfig = is_array($empresa->site_apresentacao_imagens_config) ? $empresa->site_apresentacao_imagens_config : [];
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit(
+            'Empresas',
+            'empresa.index',
+            "Editor visual: $empresa->nome"
+        );
+
+        return view('empresa.site-editor', compact(
+            'empresa',
+            'breadcrumb',
+            'siteTextos',
+            'siteImagens',
+            'siteCores',
+            'siteImagensConfig'
+        ))->with('titulo', 'Editor Visual do Site');
+    }
+
+    public function updateSiteEditor(Request $request, $id)
+    {
+        if (! $this->empresaTableExists()) {
+            return response()->json(['error' => 'Tabela de empresas nao encontrada.'], 500);
+        }
+
+        $empresaAtual = $this->empresaService->getById($id);
+        if (! $empresaAtual) {
+            return response()->json(['error' => 'Empresa nao encontrada.'], 404);
+        }
+
+        $data = [];
+        $data = $this->prepareSiteTextosPayload($request, $empresaAtual, $data);
+        $data = $this->prepareSiteCoresPayload($request, $empresaAtual, $data);
+        $data = $this->prepareSiteImagensConfigPayload($request, $empresaAtual, $data);
+
+        $updated = $this->empresaService->update($id, $data);
+        if (! $updated) {
+            return response()->json(['error' => 'Erro ao salvar.'], 500);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Alteracoes salvas com sucesso!']);
+    }
+
+    public function previewSiteEditor($id)
+    {
+        $empresa = $this->empresaService->getById($id);
+        if (!$empresa) {
+            abort(404);
+        }
+
+        $textos = is_array($empresa->site_apresentacao_textos) ? $empresa->site_apresentacao_textos : [];
+        $imagens = is_array($empresa->site_apresentacao_imagens) ? $empresa->site_apresentacao_imagens : [];
+        $cores = is_array($empresa->site_apresentacao_cores) ? $empresa->site_apresentacao_cores : [];
+        $imagensConfig = is_array($empresa->site_apresentacao_imagens_config) ? $empresa->site_apresentacao_imagens_config : [];
+
+        $tv = fn(array $t, string $k, string $d = ''): string => trim($t[$k] ?? '') === '' ? $d : trim($t[$k]);
+        $cv = fn(array $c, string $k, string $d): string => preg_match('/^#[A-Fa-f0-9]{6}$/', trim($c[$k] ?? '')) ? strtoupper(trim($c[$k])) : $d;
+        $iv = fn(array $i, string $k, array $ic, string $key): ?string => ($ic[$key] ?? true) && !empty($i[$k]) ? Storage::url($i[$k]) : null;
+        $contrast = function(string $hex): string {
+            $h = ltrim($hex, '#');
+            if (!preg_match('/^[A-Fa-f0-9]{6}$/', $h)) return '#FFFFFF';
+            $b = (hexdec(substr($h,0,2))*299 + hexdec(substr($h,2,2))*587 + hexdec(substr($h,4,2))*114)/1000;
+            return $b >= 155 ? '#0F172A' : '#FFFFFF';
+        };
+
+        $corPrimaria = $cv($cores, 'brand_primaria', $empresa->cor_primaria ?: '#2F6F3F');
+        $corSecundaria = $cv($cores, 'brand_secundaria', $empresa->cor_secundaria ?: '#193C68');
+        $corTerciaria = $cv($cores, 'brand_terciaria', $empresa->cor_terciaria ?: '#E7B93A');
+
+        $frotaDestaques = [
+            ['titulo' => $tv($textos, 'frota_card_1_titulo', 'Econômicos Urbanos'), 'descricao' => $tv($textos, 'frota_card_1_descricao', 'Carros compactos com baixo consumo.'), 'imagem' => $iv($imagens, 'frota_1', $imagensConfig, 'frota_1')],
+            ['titulo' => $tv($textos, 'frota_card_2_titulo', 'SUV e Família'), 'descricao' => $tv($textos, 'frota_card_2_descricao', 'Espaço e conforto para a família.'), 'imagem' => $iv($imagens, 'frota_2', $imagensConfig, 'frota_2')],
+            ['titulo' => $tv($textos, 'frota_card_3_titulo', 'Executivo e Premium'), 'descricao' => $tv($textos, 'frota_card_3_descricao', 'Modelos para compromissos corporativos.'), 'imagem' => $iv($imagens, 'frota_3', $imagensConfig, 'frota_3')],
+        ];
+
+        $beneficios = [
+            $tv($textos, 'beneficio_1', 'Retirada ágil com pré-cadastro online'),
+            $tv($textos, 'beneficio_2', 'Proteções e adicionais sob medida'),
+            $tv($textos, 'beneficio_3', 'Atendimento para pessoa física e empresas'),
+            $tv($textos, 'beneficio_4', 'Frota revisada e higienizada regularmente'),
+        ];
+
+        $etapasReserva = [
+            ['titulo' => $tv($textos, 'etapa_1_titulo', 'Escolha local e datas'), 'descricao' => $tv($textos, 'etapa_1_descricao', 'Informe onde deseja retirar e devolver o veículo.')],
+            ['titulo' => $tv($textos, 'etapa_2_titulo', 'Selecione o grupo ideal'), 'descricao' => $tv($textos, 'etapa_2_descricao', 'Compare categorias e escolha o carro ideal.')],
+            ['titulo' => $tv($textos, 'etapa_3_titulo', 'Finalize e retire'), 'descricao' => $tv($textos, 'etapa_3_descricao', 'Conclua a reserva e retire seu carro.')],
+        ];
+
+        $urlReserva = Route::has('site.reserva.index') ? route('site.reserva.index') : '#';
+        $urlAdminEntrada = Route::has('site.admin.entry') ? route('site.admin.entry') : (Route::has('login') ? route('login') : '/login');
+
+        return view('site-apresentacao.templates.locadora-modelo-1', [
+            'empresa' => $empresa,
+            'heroTag' => $tv($textos, 'hero_tag', 'Modelo 1 - Premium Locadora'),
+            'titulo' => $tv($textos, 'hero_titulo', 'Aluguel de veículos com praticidade e segurança'),
+            'subtitulo' => $tv($textos, 'hero_subtitulo', 'Reserve online, retire rápido e viaje com cobertura nacional.'),
+            'descricao' => $tv($textos, 'hero_descricao', 'Planos diários, semanais e mensais.'),
+            'botaoTexto' => $empresa->site_apresentacao_botao_texto ?: 'Reservar agora',
+            'botaoUrl' => $urlReserva,
+            'botaoLoginUrl' => $urlAdminEntrada,
+            'corPrimaria' => $corPrimaria,
+            'corSecundaria' => $corSecundaria,
+            'corTerciaria' => $corTerciaria,
+            'corTextoPrimario' => $contrast($corPrimaria),
+            'corTopbarFundo' => $cv($cores, 'topbar_fundo', '#FFFFFF'),
+            'corTopbarTexto' => $cv($cores, 'topbar_texto', '#0F172A'),
+            'corTopbarLinkHover' => $cv($cores, 'topbar_link_hover', $corPrimaria),
+            'corHeroFundo' => $cv($cores, 'hero_fundo', $corPrimaria),
+            'corHeroTexto' => $cv($cores, 'hero_texto', '#FFFFFF'),
+            'corFormFundo' => $cv($cores, 'form_fundo', '#FFFFFF'),
+            'corFormTexto' => $cv($cores, 'form_texto', '#0F172A'),
+            'corFrotaFundo' => $cv($cores, 'frota_fundo', '#FFFFFF'),
+            'corFrotaEtiquetaTexto' => $cv($cores, 'frota_etiqueta_texto', '#334155'),
+            'corFrotaTituloTexto' => $cv($cores, 'frota_titulo_texto', '#0B1220'),
+            'corFrotaDescricaoTexto' => $cv($cores, 'frota_descricao_texto', '#5E6E85'),
+            'corFrotaCardTituloTexto' => $cv($cores, 'frota_card_titulo_texto', '#0B1220'),
+            'corFrotaCardDescricaoTexto' => $cv($cores, 'frota_card_descricao_texto', '#5E6E85'),
+            'corFrotaCardFundo' => $cv($cores, 'frota_card_fundo', '#FFFFFF'),
+            'corVantagensFundo' => $cv($cores, 'vantagens_fundo', '#FFFFFF'),
+            'corVantagensEtiquetaTexto' => $cv($cores, 'vantagens_etiqueta_texto', '#334155'),
+            'corVantagensTituloTexto' => $cv($cores, 'vantagens_titulo_texto', '#0B1220'),
+            'corVantagensDescricaoTexto' => $cv($cores, 'vantagens_descricao_texto', '#5E6E85'),
+            'corVantagensItemTexto' => $cv($cores, 'vantagens_item_texto', '#2D3A4F'),
+            'corEtapasFundo' => $cv($cores, 'etapas_fundo', '#FFFFFF'),
+            'corEtapasEtiquetaTexto' => $cv($cores, 'etapas_etiqueta_texto', '#334155'),
+            'corEtapasTituloTexto' => $cv($cores, 'etapas_titulo_texto', '#0B1220'),
+            'corEtapasDescricaoTexto' => $cv($cores, 'etapas_descricao_texto', '#5E6E85'),
+            'corEtapasPassoTexto' => $cv($cores, 'etapas_passo_texto', '#0B1220'),
+            'corEtapasPassoDescricaoTexto' => $cv($cores, 'etapas_passo_descricao_texto', '#5E6E85'),
+            'corEtapasPassoFundo' => $cv($cores, 'etapas_passo_fundo', '#FFFFFF'),
+            'corContatoFundo' => $cv($cores, 'contato_fundo', '#FFFFFF'),
+            'corFooterFundo' => $cv($cores, 'footer_fundo', '#FFFFFF'),
+            'corFooterTexto' => $cv($cores, 'footer_texto', '#64748B'),
+            'corBotaoPrimarioFundo' => $cv($cores, 'botao_primario_fundo', $corTerciaria),
+            'corBotaoPrimarioTexto' => $cv($cores, 'botao_primario_texto', '#111827'),
+            'corBotaoSecundarioFundo' => $cv($cores, 'botao_secundario_fundo', 'transparent'),
+            'corBotaoSecundarioTexto' => $cv($cores, 'botao_secundario_texto', '#FFFFFF'),
+            'contatoTelefone' => $empresa->telefone,
+            'contatoEmail' => $empresa->email ?: 'contato@exemplo.com.br',
+            'contatoCnpj' => $empresa->cnpj,
+            'anoAtual' => (int) now()->format('Y'),
+            'menuItemFrota' => $tv($textos, 'menu_item_frota', 'Frota'),
+            'menuItemVantagens' => $tv($textos, 'menu_item_vantagens', 'Vantagens'),
+            'menuItemEtapas' => $tv($textos, 'menu_item_etapas', 'Como funciona'),
+            'menuItemContato' => $tv($textos, 'menu_item_contato', 'Contato'),
+            'frotaTitulo' => $tv($textos, 'frota_titulo', 'Categorias para cada tipo de viagem'),
+            'frotaLabelSuperior' => $tv($textos, 'frota_label_superior', 'Frota em destaque'),
+            'frotaDescricao' => $tv($textos, 'frota_descricao', 'Selecione o grupo ideal e reserve.'),
+            'frotaDestaques' => $frotaDestaques,
+            'vantagensTitulo' => $tv($textos, 'vantagens_titulo', 'Por que escolher ' . $empresa->nome),
+            'vantagensLabelSuperior' => $tv($textos, 'vantagens_label_superior', 'Diferenciais'),
+            'vantagensDescricao' => $tv($textos, 'vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado.'),
+            'beneficios' => $beneficios,
+            'etapasTitulo' => $tv($textos, 'etapas_titulo', 'Como funciona a locação'),
+            'etapasLabelSuperior' => $tv($textos, 'etapas_label_superior', 'Jornada do cliente'),
+            'etapasReserva' => $etapasReserva,
+            'contatoTitulo' => $tv($textos, 'contato_titulo', 'Informações da locadora'),
+            'contatoLabelSuperior' => $tv($textos, 'contato_label_superior', 'Contato direto'),
+            'heroFormTitulo' => $tv($textos, 'hero_form_titulo', 'Simule sua reserva'),
+            'heroFormDescricao' => $tv($textos, 'hero_form_descricao', 'Preencha os dados da viagem.'),
+            'heroFormLabelRetirada' => $tv($textos, 'hero_form_label_retirada', 'Local de retirada'),
+            'heroFormLabelDevolucao' => $tv($textos, 'hero_form_label_devolucao', 'Local de devolução'),
+            'heroFormLabelDataRetirada' => $tv($textos, 'hero_form_label_data_retirada', 'Data de retirada'),
+            'heroFormLabelHoraRetirada' => $tv($textos, 'hero_form_label_hora_retirada', 'Hora de retirada'),
+            'heroFormLabelDataDevolucao' => $tv($textos, 'hero_form_label_data_devolucao', 'Data de devolução'),
+            'heroFormLabelHoraDevolucao' => $tv($textos, 'hero_form_label_hora_devolucao', 'Hora de devolução'),
+            'heroFormTextoBotao' => $tv($textos, 'hero_form_texto_botao', 'Iniciar reserva'),
+            'heroFormNota' => $tv($textos, 'hero_form_nota', 'Ao avançar, você segue para o fluxo completo de reserva.'),
+            'botaoAdminTexto' => $tv($textos, 'botao_admin_texto', 'Área administrativa'),
+            'footerTexto' => $tv($textos, 'footer_texto', 'Todos os direitos reservados.'),
+            'imagemHero' => $iv($imagens, 'hero', $imagensConfig, 'hero'),
+            'imagemVantagens' => $iv($imagens, 'vantagens', $imagensConfig, 'vantagens'),
+            'imagemContato' => $iv($imagens, 'contato', $imagensConfig, 'contato'),
+        ]);
     }
 
     public function destroy($id)

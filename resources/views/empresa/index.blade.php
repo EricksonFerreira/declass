@@ -141,6 +141,9 @@
                                 </span>
                             </td>
                             <td class="text-center align-middle">
+                                <a href="{{ route('empresa.site-editor.edit', $empresa->id) }}" class="btn btn-xs btn-info mb-1" style="background:#0ea5e9;border-color:#0ea5e9;">
+                                    <i class="fa fa-paint-brush"></i> Editor
+                                </a>
                                 <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="btn btn-xs btn-info mb-1">
                                     <i class="fa fa-globe"></i> Site
                                 </a>

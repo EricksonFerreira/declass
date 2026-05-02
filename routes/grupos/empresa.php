@@ -9,6 +9,9 @@ Route::middleware('can:acessar-superadmin')->prefix('empresa')->name('empresa.')
     Route::get('filtro', [EmpresaController::class, 'filtro'])->name('filtro');
     Route::get('{empresa}/site-apresentacao', [EmpresaController::class, 'editSiteApresentacao'])->name('site-apresentacao.edit');
     Route::put('{empresa}/site-apresentacao', [EmpresaController::class, 'updateSiteApresentacao'])->name('site-apresentacao.update');
+    Route::get('{empresa}/site-editor', [EmpresaController::class, 'editSiteEditor'])->name('site-editor.edit');
+    Route::post('{empresa}/site-editor', [EmpresaController::class, 'updateSiteEditor'])->name('site-editor.update');
+    Route::get('{empresa}/site-editor-preview', [EmpresaController::class, 'previewSiteEditor'])->name('site-editor.preview');
 });
 
 // Rotas para administrador ver/editar a propria empresa — DEVE vir antes do resource

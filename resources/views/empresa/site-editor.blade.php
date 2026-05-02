@@ -1,0 +1,583 @@
+@extends('adminlte::page')
+
+@section('title', 'Editor Visual do Site')
+
+@section('content_header')
+    <div class="se-toolbar">
+        <div class="se-toolbar-left">
+            <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="se-btn se-btn-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Voltar</span>
+            </a>
+            <div class="se-divider"></div>
+            <h4 class="se-title"><i class="fas fa-paint-brush mr-2"></i>Editor Visual — {{ $empresa->nome }}</h4>
+        </div>
+        <div class="se-toolbar-right">
+            <span id="seSaveStatus" class="se-save-status"></span>
+            <button id="seSaveBtn" class="se-btn se-btn-primary" onclick="seSalvar()">
+                <i class="fas fa-check"></i>
+                <span>Publicar</span>
+            </button>
+        </div>
+    </div>
+@stop
+
+@section('content')
+    <div class="se-editor-layout">
+        <div class="se-sidebar">
+            <div class="se-sidebar-header">
+                <i class="fas fa-layer-group"></i>
+                <span>Seções</span>
+            </div>
+            <div class="se-section-list">
+                @php
+                    $secoes = [
+                        ['id' => 'topbar',   'icon' => 'fa-bars',        'label' => 'Topo / Navegação', 'desc' => 'Menu e identidade visual'],
+                        ['id' => 'hero',     'icon' => 'fa-image',       'label' => 'Banner Principal',  'desc' => 'Hero e formulário'],
+                        ['id' => 'frota',    'icon' => 'fa-car',         'label' => 'Frota',             'desc' => 'Cards de veículos'],
+                        ['id' => 'vantagens','icon' => 'fa-thumbs-up',   'label' => 'Vantagens',         'desc' => 'Diferenciais'],
+                        ['id' => 'etapas',   'icon' => 'fa-list-ol',     'label' => 'Como Funciona',     'desc' => 'Passo a passo'],
+                        ['id' => 'contato',  'icon' => 'fa-envelope',    'label' => 'Contato',           'desc' => 'Informações'],
+                        ['id' => 'global',   'icon' => 'fa-palette',     'label' => 'Global',            'desc' => 'Cores e botões'],
+                    ];
+                @endphp
+                @foreach($secoes as $s)
+                    <button class="se-section-btn" data-section="{{ $s['id'] }}" onclick="seAbrirModal('{{ $s['id'] }}')">
+                        <div class="se-section-icon"><i class="fas {{ $s['icon'] }}"></i></div>
+                        <div class="se-section-info">
+                            <strong>{{ $s['label'] }}</strong>
+                            <small>{{ $s['desc'] }}</small>
+                        </div>
+                        <i class="fas fa-chevron-right se-section-arrow"></i>
+                    </button>
+                @endforeach
+            </div>
+        </div>
+
+        <div class="se-preview">
+            <div class="se-preview-toolbar">
+                <i class="fas fa-mobile-alt"></i>
+                <span>Pré-visualização</span>
+                <span class="se-preview-badge">Clique nas seções ao lado para editar</span>
+            </div>
+            <div class="se-preview-frame" id="sePreviewFrame">
+                <iframe id="seIframe" src="{{ route('empresa.site-editor.preview', $empresa->id) }}" frameborder="0"></iframe>
+            </div>
+        </div>
+    </div>
+
+    {{-- ===== MODAIS ===== --}}
+
+    @php
+        $cor = fn($k, $d) => $siteCores[$k] ?? $d;
+        $txt = fn($k, $d) => $siteTextos[$k] ?? $d;
+    @endphp
+
+    {{-- Modal: Topbar --}}
+    <div class="modal fade" id="modal-topbar" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="fas fa-bars mr-2"></i>Topo / Navegação</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-topbar-cores">Cores</a></li>
+                    </ul>
+                    <div class="tab-content se-tab-content">
+                        <div class="tab-pane active" id="tab-topbar-cores">
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Fundo do menu</label><input type="color" class="se-cor-picker" data-section="topbar" data-key="cor_topbar_fundo" value="{{ $cor('topbar_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('topbar_fundo', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Texto do menu</label><input type="color" class="se-cor-picker" data-section="topbar" data-key="cor_topbar_texto" value="{{ $cor('topbar_texto', '#0F172A') }}"><input type="text" class="se-cor-text" value="{{ $cor('topbar_texto', '#0F172A') }}"></div>
+                                <div class="se-cor-item"><label>Cor ao passar o mouse</label><input type="color" class="se-cor-picker" data-section="topbar" data-key="cor_topbar_link_hover" value="{{ $cor('topbar_link_hover', '#1F2937') }}"><input type="text" class="se-cor-text" value="{{ $cor('topbar_link_hover', '#1F2937') }}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="seAplicarSecao('topbar')">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Hero --}}
+    <div class="modal fade" id="modal-hero" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="fas fa-image mr-2"></i>Banner Principal</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-hero-texto">Texto</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-hero-cores">Cores</a></li>
+                    </ul>
+                    <div class="tab-content se-tab-content">
+                        <div class="tab-pane active" id="tab-hero-texto">
+                            <div class="se-form-grid">
+                                <div class="form-group"><label>Etiqueta (tag)</label><input class="form-control" data-section="hero" data-key="hero_tag" value="{{ $txt('hero_tag', 'Modelo 1 - Premium Locadora') }}"></div>
+                                <div class="form-group"><label>Título</label><input class="form-control" data-section="hero" data-key="hero_titulo" value="{{ $txt('hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veículos com praticidade e segurança') }}"></div>
+                                <div class="form-group"><label>Subtítulo</label><input class="form-control" data-section="hero" data-key="hero_subtitulo" value="{{ $txt('hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rápido e viaje com cobertura nacional.') }}"></div>
+                                <div class="form-group"><label>Descrição</label><textarea class="form-control" data-section="hero" data-key="hero_descricao" rows="2">{{ $txt('hero_descricao', $empresa->site_apresentacao_descricao ?: 'Planos diários, semanais e mensais para pessoas físicas e empresas.') }}</textarea></div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-hero-cores">
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Fundo do banner</label><input type="color" class="se-cor-picker" data-section="hero" data-key="cor_hero_fundo" value="{{ $cor('hero_fundo', '#1F2937') }}"><input type="text" class="se-cor-text" value="{{ $cor('hero_fundo', '#1F2937') }}"></div>
+                                <div class="se-cor-item"><label>Texto do banner</label><input type="color" class="se-cor-picker" data-section="hero" data-key="cor_hero_texto" value="{{ $cor('hero_texto', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('hero_texto', '#FFFFFF') }}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="seAplicarSecao('hero')">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Frota --}}
+    <div class="modal fade" id="modal-frota" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="fas fa-car mr-2"></i>Frota</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-frota-texto">Texto</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-frota-cores">Cores</a></li>
+                    </ul>
+                    <div class="tab-content se-tab-content">
+                        <div class="tab-pane active" id="tab-frota-texto">
+                            <div class="se-form-grid">
+                                <div class="form-group"><label>Etiqueta (rótulo superior)</label><input class="form-control" data-section="frota" data-key="frota_label_superior" value="{{ $txt('frota_label_superior', 'Frota em destaque') }}"></div>
+                                <div class="form-group"><label>Título</label><input class="form-control" data-section="frota" data-key="frota_titulo" value="{{ $txt('frota_titulo', 'Categorias para cada tipo de viagem') }}"></div>
+                                <div class="form-group"><label>Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_descricao" rows="2">{{ $txt('frota_descricao', 'Selecione o grupo ideal e reserve com condições ajustadas ao seu perfil.') }}</textarea></div>
+                                <hr><h6>Cards da Frota</h6>
+                                <div class="form-group"><label>Card 1 — Título</label><input class="form-control" data-section="frota" data-key="frota_card_1_titulo" value="{{ $txt('frota_card_1_titulo', 'Econômicos') }}"></div>
+                                <div class="form-group"><label>Card 1 — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_1_descricao" rows="1">{{ $txt('frota_card_1_descricao', 'Ideal para o dia a dia na cidade e viagens curtas.') }}</textarea></div>
+                                <div class="form-group"><label>Card 2 — Título</label><input class="form-control" data-section="frota" data-key="frota_card_2_titulo" value="{{ $txt('frota_card_2_titulo', 'SUV') }}"></div>
+                                <div class="form-group"><label>Card 2 — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_2_descricao" rows="1">{{ $txt('frota_card_2_descricao', 'Conforto e espaço para toda família.') }}</textarea></div>
+                                <div class="form-group"><label>Card 3 — Título</label><input class="form-control" data-section="frota" data-key="frota_card_3_titulo" value="{{ $txt('frota_card_3_titulo', 'Executivo') }}"></div>
+                                <div class="form-group"><label>Card 3 — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_3_descricao" rows="1">{{ $txt('frota_card_3_descricao', 'Premium para negócios e ocasiões especiais.') }}</textarea></div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-frota-cores">
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Fundo da seção</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_fundo" value="{{ $cor('frota_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_fundo', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Texto etiqueta</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_etiqueta_texto" value="{{ $cor('frota_etiqueta_texto', '#334155') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_etiqueta_texto', '#334155') }}"></div>
+                                <div class="se-cor-item"><label>Texto título</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_titulo_texto" value="{{ $cor('frota_titulo_texto', '#0B1220') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_titulo_texto', '#0B1220') }}"></div>
+                                <div class="se-cor-item"><label>Texto descrição</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_descricao_texto" value="{{ $cor('frota_descricao_texto', '#5E6E85') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_descricao_texto', '#5E6E85') }}"></div>
+                                <div class="se-cor-item"><label>Card — título</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_card_titulo_texto" value="{{ $cor('frota_card_titulo_texto', '#0B1220') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_card_titulo_texto', '#0B1220') }}"></div>
+                                <div class="se-cor-item"><label>Card — descrição</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_card_descricao_texto" value="{{ $cor('frota_card_descricao_texto', '#5E6E85') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_card_descricao_texto', '#5E6E85') }}"></div>
+                                <div class="se-cor-item"><label>Card — fundo</label><input type="color" class="se-cor-picker" data-section="frota" data-key="cor_frota_card_fundo" value="{{ $cor('frota_card_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('frota_card_fundo', '#FFFFFF') }}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="seAplicarSecao('frota')">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Vantagens --}}
+    <div class="modal fade" id="modal-vantagens" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="fas fa-thumbs-up mr-2"></i>Vantagens</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-vantagens-texto">Texto</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-vantagens-cores">Cores</a></li>
+                    </ul>
+                    <div class="tab-content se-tab-content">
+                        <div class="tab-pane active" id="tab-vantagens-texto">
+                            <div class="se-form-grid">
+                                <div class="form-group"><label>Etiqueta</label><input class="form-control" data-section="vantagens" data-key="vantagens_label_superior" value="{{ $txt('vantagens_label_superior', 'Diferenciais') }}"></div>
+                                <div class="form-group"><label>Título</label><input class="form-control" data-section="vantagens" data-key="vantagens_titulo" value="{{ $txt('vantagens_titulo', 'Por que escolher ' . $empresa->nome) }}"></div>
+                                <div class="form-group"><label>Descrição</label><textarea class="form-control" data-section="vantagens" data-key="vantagens_descricao" rows="2">{{ $txt('vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado.') }}</textarea></div>
+                                <hr><h6>Itens de Vantagens</h6>
+                                @for($i = 1; $i <= 4; $i++)
+                                <div class="form-group"><label>Benefício {{ $i }}</label><input class="form-control" data-section="vantagens" data-key="beneficio_{{$i}}" value="{{ $txt('beneficio_'.$i, '') }}"></div>
+                                @endfor
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-vantagens-cores">
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Fundo da seção</label><input type="color" class="se-cor-picker" data-section="vantagens" data-key="cor_vantagens_fundo" value="{{ $cor('vantagens_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('vantagens_fundo', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Texto etiqueta</label><input type="color" class="se-cor-picker" data-section="vantagens" data-key="cor_vantagens_etiqueta_texto" value="{{ $cor('vantagens_etiqueta_texto', '#334155') }}"><input type="text" class="se-cor-text" value="{{ $cor('vantagens_etiqueta_texto', '#334155') }}"></div>
+                                <div class="se-cor-item"><label>Texto título</label><input type="color" class="se-cor-picker" data-section="vantagens" data-key="cor_vantagens_titulo_texto" value="{{ $cor('vantagens_titulo_texto', '#0B1220') }}"><input type="text" class="se-cor-text" value="{{ $cor('vantagens_titulo_texto', '#0B1220') }}"></div>
+                                <div class="se-cor-item"><label>Texto descrição</label><input type="color" class="se-cor-picker" data-section="vantagens" data-key="cor_vantagens_descricao_texto" value="{{ $cor('vantagens_descricao_texto', '#5E6E85') }}"><input type="text" class="se-cor-text" value="{{ $cor('vantagens_descricao_texto', '#5E6E85') }}"></div>
+                                <div class="se-cor-item"><label>Texto dos itens</label><input type="color" class="se-cor-picker" data-section="vantagens" data-key="cor_vantagens_item_texto" value="{{ $cor('vantagens_item_texto', '#2D3A4F') }}"><input type="text" class="se-cor-text" value="{{ $cor('vantagens_item_texto', '#2D3A4F') }}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="seAplicarSecao('vantagens')">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Etapas --}}
+    <div class="modal fade" id="modal-etapas" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="fas fa-list-ol mr-2"></i>Como Funciona</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-etapas-texto">Texto</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-etapas-cores">Cores</a></li>
+                    </ul>
+                    <div class="tab-content se-tab-content">
+                        <div class="tab-pane active" id="tab-etapas-texto">
+                            <div class="se-form-grid">
+                                <div class="form-group"><label>Etiqueta</label><input class="form-control" data-section="etapas" data-key="etapas_label_superior" value="{{ $txt('etapas_label_superior', 'Jornada do cliente') }}"></div>
+                                <div class="form-group"><label>Título</label><input class="form-control" data-section="etapas" data-key="etapas_titulo" value="{{ $txt('etapas_titulo', 'Como funciona a locação') }}"></div>
+                                <hr><h6>Passos</h6>
+                                @for($i = 1; $i <= 3; $i++)
+                                <div class="form-group"><label>Passo {{ $i }} — Título</label><input class="form-control" data-section="etapas" data-key="etapa_{{$i}}_titulo" value="{{ $txt('etapa_'.$i.'_titulo', '') }}"></div>
+                                <div class="form-group"><label>Passo {{ $i }} — Descrição</label><textarea class="form-control" data-section="etapas" data-key="etapa_{{$i}}_descricao" rows="1">{{ $txt('etapa_'.$i.'_descricao', '') }}</textarea></div>
+                                @endfor
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-etapas-cores">
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Fundo da seção</label><input type="color" class="se-cor-picker" data-section="etapas" data-key="cor_etapas_fundo" value="{{ $cor('etapas_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('etapas_fundo', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Texto etiqueta</label><input type="color" class="se-cor-picker" data-section="etapas" data-key="cor_etapas_etiqueta_texto" value="{{ $cor('etapas_etiqueta_texto', '#334155') }}"><input type="text" class="se-cor-text" value="{{ $cor('etapas_etiqueta_texto', '#334155') }}"></div>
+                                <div class="se-cor-item"><label>Texto título</label><input type="color" class="se-cor-picker" data-section="etapas" data-key="cor_etapas_titulo_texto" value="{{ $cor('etapas_titulo_texto', '#0B1220') }}"><input type="text" class="se-cor-text" value="{{ $cor('etapas_titulo_texto', '#0B1220') }}"></div>
+                                <div class="se-cor-item"><label>Texto descrição</label><input type="color" class="se-cor-picker" data-section="etapas" data-key="cor_etapas_descricao_texto" value="{{ $cor('etapas_descricao_texto', '#5E6E85') }}"><input type="text" class="se-cor-text" value="{{ $cor('etapas_descricao_texto', '#5E6E85') }}"></div>
+                                <div class="se-cor-item"><label>Texto passo</label><input type="color" class="se-cor-picker" data-section="etapas" data-key="cor_etapas_passo_texto" value="{{ $cor('etapas_passo_texto', '#0B1220') }}"><input type="text" class="se-cor-text" value="{{ $cor('etapas_passo_texto', '#0B1220') }}"></div>
+                                <div class="se-cor-item"><label>Descrição do passo</label><input type="color" class="se-cor-picker" data-section="etapas" data-key="cor_etapas_passo_descricao_texto" value="{{ $cor('etapas_passo_descricao_texto', '#5E6E85') }}"><input type="text" class="se-cor-text" value="{{ $cor('etapas_passo_descricao_texto', '#5E6E85') }}"></div>
+                                <div class="se-cor-item"><label>Fundo do passo</label><input type="color" class="se-cor-picker" data-section="etapas" data-key="cor_etapas_passo_fundo" value="{{ $cor('etapas_passo_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('etapas_passo_fundo', '#FFFFFF') }}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="seAplicarSecao('etapas')">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Contato --}}
+    <div class="modal fade" id="modal-contato" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="fas fa-envelope mr-2"></i>Contato</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-contato-texto">Texto</a></li>
+                        <li class="nav-item"><a class="nav-link" data-toggle="tab" href="#tab-contato-cores">Cores</a></li>
+                    </ul>
+                    <div class="tab-content se-tab-content">
+                        <div class="tab-pane active" id="tab-contato-texto">
+                            <div class="se-form-grid">
+                                <div class="form-group"><label>Etiqueta</label><input class="form-control" data-section="contato" data-key="contato_label_superior" value="{{ $txt('contato_label_superior', 'Contato direto') }}"></div>
+                                <div class="form-group"><label>Título</label><input class="form-control" data-section="contato" data-key="contato_titulo" value="{{ $txt('contato_titulo', 'Informações da locadora') }}"></div>
+                            </div>
+                        </div>
+                        <div class="tab-pane" id="tab-contato-cores">
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Fundo da seção</label><input type="color" class="se-cor-picker" data-section="contato" data-key="cor_contato_fundo" value="{{ $cor('contato_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('contato_fundo', '#FFFFFF') }}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="seAplicarSecao('contato')">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Global --}}
+    <div class="modal fade" id="modal-global" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5><i class="fas fa-palette mr-2"></i>Global</h5>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item"><a class="nav-link active" data-toggle="tab" href="#tab-global-cores">Cores</a></li>
+                    </ul>
+                    <div class="tab-content se-tab-content">
+                        <div class="tab-pane active" id="tab-global-cores">
+                            <h6>Identidade da Marca</h6>
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Cor primária</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_primaria" value="{{ $empresa->cor_primaria ?: '#1F2937' }}"><input type="text" class="se-cor-text" value="{{ $empresa->cor_primaria ?: '#1F2937' }}"></div>
+                                <div class="se-cor-item"><label>Cor secundária</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_secundaria" value="{{ $empresa->cor_secundaria ?: '#334155' }}"><input type="text" class="se-cor-text" value="{{ $empresa->cor_secundaria ?: '#334155' }}"></div>
+                                <div class="se-cor-item"><label>Cor terciária (destaque)</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_terciaria" value="{{ $empresa->cor_terciaria ?: '#64748B' }}"><input type="text" class="se-cor-text" value="{{ $empresa->cor_terciaria ?: '#64748B' }}"></div>
+                            </div>
+                            <hr><h6>Botões</h6>
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Botão principal — fundo</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_botao_primario_fundo" value="{{ $cor('botao_primario_fundo', '#E7B93A') }}"><input type="text" class="se-cor-text" value="{{ $cor('botao_primario_fundo', '#E7B93A') }}"></div>
+                                <div class="se-cor-item"><label>Botão principal — texto</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_botao_primario_texto" value="{{ $cor('botao_primario_texto', '#111827') }}"><input type="text" class="se-cor-text" value="{{ $cor('botao_primario_texto', '#111827') }}"></div>
+                                <div class="se-cor-item"><label>Botão secundário — fundo</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_botao_secundario_fundo" value="{{ $cor('botao_secundario_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('botao_secundario_fundo', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Botão secundário — texto</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_botao_secundario_texto" value="{{ $cor('botao_secundario_texto', '#1F2937') }}"><input type="text" class="se-cor-text" value="{{ $cor('botao_secundario_texto', '#1F2937') }}"></div>
+                            </div>
+                            <hr><h6>Rodapé</h6>
+                            <div class="se-cor-grid">
+                                <div class="se-cor-item"><label>Fundo do rodapé</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_footer_fundo" value="{{ $cor('footer_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('footer_fundo', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Texto do rodapé</label><input type="color" class="se-cor-picker" data-section="global" data-key="cor_footer_texto" value="{{ $cor('footer_texto', '#64748B') }}"><input type="text" class="se-cor-text" value="{{ $cor('footer_texto', '#64748B') }}"></div>
+                            </div>
+                            <hr><h6>Texto do Rodapé</h6>
+                            <div class="form-group"><input class="form-control" data-section="global" data-key="footer_texto" value="{{ $txt('footer_texto', 'Todos os direitos reservados.') }}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                    <button type="button" class="btn btn-primary" onclick="seAplicarSecao('global')">Aplicar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+@stop
+
+@section('css')
+<style>
+/* ═══ EDITOR LAYOUT ═══ */
+.se-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0; margin: -15px -15px 0; height: 56px;
+    background: #fff; border-bottom: 1px solid #e2e8f0;
+}
+.se-toolbar-left, .se-toolbar-right { display: flex; align-items: center; gap: 12px; }
+.se-toolbar-left { padding-left: 16px; }
+.se-toolbar-right { padding-right: 16px; }
+.se-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-radius: 8px; font-size: .85rem; font-weight: 600;
+    border: 1px solid #e2e8f0; background: #fff; color: #334155;
+    cursor: pointer; transition: all .15s; text-decoration: none;
+}
+.se-btn:hover { background: #f1f5f9; text-decoration: none; color: #1e293b; }
+.se-btn-primary { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
+.se-btn-primary:hover { background: #0284c7; color: #fff; }
+.se-btn-back { border: none; background: transparent; }
+.se-btn-back:hover { background: #f1f5f9; }
+.se-divider { width: 1px; height: 28px; background: #e2e8f0; }
+.se-title { font-size: 1rem; font-weight: 700; color: #0f172a; margin: 0; }
+.se-save-status { font-size: .8rem; color: #64748b; }
+
+.se-editor-layout {
+    display: flex; gap: 0; margin: -15px; height: calc(100vh - 130px);
+    background: #f8fafc;
+}
+.se-sidebar {
+    width: 300px; min-width: 300px; background: #fff;
+    border-right: 1px solid #e2e8f0; overflow-y: auto;
+    display: flex; flex-direction: column;
+}
+.se-sidebar-header {
+    padding: 16px 20px; font-weight: 700; font-size: .9rem;
+    border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 10px;
+    color: #0f172a; background: #f8fafc;
+}
+.se-section-list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+.se-section-btn {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    padding: 14px 16px; border: 1px solid transparent; border-radius: 10px;
+    background: transparent; cursor: pointer; text-align: left;
+    transition: all .15s; color: #334155;
+}
+.se-section-btn:hover { background: #f1f5f9; border-color: #e2e8f0; }
+.se-section-icon {
+    width: 38px; height: 38px; border-radius: 10px;
+    background: linear-gradient(135deg, #0ea5e9, #3b82f6);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 1rem; flex-shrink: 0;
+}
+.se-section-info { flex: 1; }
+.se-section-info strong { display: block; font-size: .85rem; color: #0f172a; }
+.se-section-info small { display: block; font-size: .72rem; color: #94a3b8; margin-top: 2px; }
+.se-section-arrow { color: #cbd5e1; font-size: .75rem; }
+
+.se-preview { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+.se-preview-toolbar {
+    padding: 10px 20px; font-size: .85rem; font-weight: 600; color: #475569;
+    border-bottom: 1px solid #e2e8f0; background: #fff;
+    display: flex; align-items: center; gap: 10px;
+}
+.se-preview-badge {
+    font-size: .72rem; font-weight: 400; color: #94a3b8;
+    background: #f1f5f9; padding: 2px 10px; border-radius: 20px;
+}
+.se-preview-frame {
+    flex: 1; padding: 20px; overflow: hidden;
+    background: #e2e8f0;
+}
+.se-preview-frame iframe {
+    width: 100%; height: 100%; border-radius: 12px;
+    box-shadow: 0 4px 24px rgba(0,0,0,.10); background: #fff;
+}
+
+/* ═══ MODAL STYLES ═══ */
+.se-tab-content { padding-top: 20px; }
+.se-form-grid { display: flex; flex-direction: column; gap: 4px; }
+.se-form-grid .form-group { margin-bottom: 8px; }
+.se-form-grid h6 { font-size: .85rem; font-weight: 700; color: #0f172a; margin: 12px 0 8px; }
+.se-form-grid hr { margin: 12px 0; border-color: #e2e8f0; }
+.se-cor-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.se-cor-item {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px;
+    background: #f8fafc;
+}
+.se-cor-item label { font-size: .78rem; font-weight: 600; color: #475569; margin: 0; }
+.se-cor-item input[type="color"] {
+    width: 100%; height: 36px; padding: 2px; border: 1px solid #e2e8f0;
+    border-radius: 6px; cursor: pointer; background: #fff;
+}
+.se-cor-item .se-cor-text {
+    font-size: .75rem; font-family: monospace; text-align: center;
+    border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px;
+    background: #fff; color: #334155;
+}
+
+/* Sync color picker ↔ text */
+.se-cor-picker, .se-cor-text { transition: all .1s; }
+</style>
+@stop
+
+@section('js')
+<script>
+let seDados = {};
+
+function seColetarSecao(section) {
+    const dados = {};
+    document.querySelectorAll(`[data-section="${section}"]`).forEach(el => {
+        const key = el.dataset.key;
+        dados[key] = el.value;
+    });
+    return dados;
+}
+
+function seAplicarSecao(section) {
+    const dados = seColetarSecao(section);
+    Object.assign(seDados, dados);
+    seMostrarStatus('Alterações aplicadas na prévia', 'success');
+    seAtualizarPreview(section);
+    $('#modal-' + section).modal('hide');
+}
+
+function seMostrarStatus(msg, type) {
+    const el = document.getElementById('seSaveStatus');
+    el.textContent = msg;
+    el.style.color = type === 'success' ? '#16a34a' : '#dc2626';
+    el.style.opacity = '1';
+    setTimeout(() => { el.style.opacity = '0'; }, 3000);
+}
+
+function seAtualizarPreview(section) {
+    const iframe = document.getElementById('seIframe');
+    if (!iframe || !iframe.contentWindow) return;
+    iframe.contentWindow.postMessage({ type: 'se-atualizar', dados: seDados, secao: section }, '*');
+}
+
+function seSalvar() {
+    const btn = document.getElementById('seSaveBtn');
+    const status = document.getElementById('seSaveStatus');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Salvando...';
+    status.textContent = 'Salvando...';
+    status.style.color = '#0ea5e9';
+    status.style.opacity = '1';
+
+    const formData = new FormData();
+    formData.append('_token', '{{ csrf_token() }}');
+
+    Object.entries(seDados).forEach(([key, value]) => {
+        formData.append(key, value);
+    });
+
+    fetch('{{ route("empresa.site-editor.update", $empresa->id) }}', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            seMostrarStatus('✓ Publicado com sucesso!', 'success');
+            document.getElementById('seIframe').src = document.getElementById('seIframe').src.split('?')[0] + '?_t=' + Date.now();
+        } else {
+            seMostrarStatus('Erro: ' + (data.error || 'unknown'), 'error');
+        }
+    })
+    .catch(err => {
+        seMostrarStatus('Erro de conexão: ' + err.message, 'error');
+    })
+    .finally(() => {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check"></i> Publicar';
+    });
+}
+
+function seAbrirModal(section) {
+    $('#modal-' + section).modal('show');
+}
+
+// Sync color picker ↔ text input
+document.addEventListener('input', function(e) {
+    if (e.target.classList.contains('se-cor-picker')) {
+        const text = e.target.parentElement.querySelector('.se-cor-text');
+        if (text) text.value = e.target.value.toUpperCase();
+    }
+    if (e.target.classList.contains('se-cor-text')) {
+        const picker = e.target.parentElement.querySelector('.se-cor-picker');
+        if (picker && /^#[0-9a-fA-F]{6}$/.test(e.target.value)) {
+            picker.value = e.target.value.toUpperCase();
+        }
+    }
+});
+
+// Listen for postMessage from iframe
+window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'se-pronto') {
+        seEnviarDadosParaPreview();
+    }
+});
+
+function seEnviarDadosParaPreview() {
+    const iframe = document.getElementById('seIframe');
+    if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: 'se-carregar', dados: seDados }, '*');
+    }
+}
+
+// Carregar dados atuais
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('[data-section]').forEach(el => {
+        const key = el.dataset.key;
+        seDados[key] = el.value;
+    });
+});
+</script>
+@stop

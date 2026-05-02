@@ -2264,6 +2264,75 @@
             normalizeMinDates();
             normalizeMinTime();
         })();
+
+        /* ── Editor preview listener ── */
+        (function() {
+            var cssMap = {
+                cor_primaria: '--brand-primary', cor_secundaria: '--brand-secondary', cor_terciaria: '--brand-accent',
+                cor_topbar_fundo: '--topbar-bg', cor_topbar_texto: '--topbar-text', cor_topbar_link_hover: '--topbar-hover',
+                cor_hero_fundo: '--hero-bg', cor_hero_texto: '--hero-text',
+                cor_form_fundo: '--form-bg', cor_form_texto: '--form-text',
+                cor_frota_fundo: '--frota-bg',
+                cor_frota_etiqueta_texto: '--frota-etiqueta-texto', cor_frota_titulo_texto: '--frota-titulo-texto',
+                cor_frota_descricao_texto: '--frota-descricao-texto', cor_frota_card_titulo_texto: '--frota-card-titulo-texto',
+                cor_frota_card_descricao_texto: '--frota-card-desc-texto', cor_frota_card_fundo: '--frota-card-bg',
+                cor_vantagens_fundo: '--vantagens-bg',
+                cor_vantagens_etiqueta_texto: '--vantagens-etiqueta-texto', cor_vantagens_titulo_texto: '--vantagens-titulo-texto',
+                cor_vantagens_descricao_texto: '--vantagens-desc-texto', cor_vantagens_item_texto: '--vantagens-item-texto',
+                cor_etapas_fundo: '--etapas-bg',
+                cor_etapas_etiqueta_texto: '--etapas-etiqueta-texto', cor_etapas_titulo_texto: '--etapas-titulo-texto',
+                cor_etapas_descricao_texto: '--etapas-desc-texto', cor_etapas_passo_texto: '--etapas-passo-texto',
+                cor_etapas_passo_descricao_texto: '--etapas-passo-desc-texto', cor_etapas_passo_fundo: '--etapas-passo-bg',
+                cor_contato_fundo: '--contato-bg',
+                cor_footer_fundo: '--footer-bg', cor_footer_texto: '--footer-text',
+                cor_botao_primario_fundo: '--btn-p-bg', cor_botao_primario_texto: '--btn-p-text',
+                cor_botao_secundario_fundo: '--btn-s-bg', cor_botao_secundario_texto: '--btn-s-text',
+            };
+            var textSelectors = {
+                hero_tag: '.section.hero .eyebrow, .section--hero .eyebrow',
+                hero_titulo: '.section.hero .section-title, .hero-title',
+                hero_subtitulo: '.hero-subtitle',
+                hero_descricao: '.hero-desc',
+                frota_label_superior: '#frota .eyebrow',
+                frota_titulo: '#frota .section-title',
+                frota_descricao: '#frota .section-desc',
+                frota_card_1_titulo: '#frota .fleet-card:nth-child(1) .fleet-card-title',
+                frota_card_1_descricao: '#frota .fleet-card:nth-child(1) .fleet-card-desc',
+                frota_card_2_titulo: '#frota .fleet-card:nth-child(2) .fleet-card-title',
+                frota_card_2_descricao: '#frota .fleet-card:nth-child(2) .fleet-card-desc',
+                frota_card_3_titulo: '#frota .fleet-card:nth-child(3) .fleet-card-title',
+                frota_card_3_descricao: '#frota .fleet-card:nth-child(3) .fleet-card-desc',
+                vantagens_label_superior: '#vantagens .eyebrow',
+                vantagens_titulo: '#vantagens .section-title',
+                vantagens_descricao: '#vantagens .section-desc',
+                etapas_label_superior: '#como-funciona .eyebrow',
+                etapas_titulo: '#como-funciona .section-title',
+                contato_label_superior: '#contato .contato-eyebrow',
+                contato_titulo: '#contato .contato-title',
+                footer_texto: 'footer .footer-copy, .footer-text',
+            };
+            window.addEventListener('message', function(e) {
+                if (!e.data || e.data.type !== 'se-carregar' && e.data.type !== 'se-atualizar') return;
+                var dados = e.data.dados || {};
+                var root = document.documentElement;
+                for (var key in cssMap) {
+                    if (dados[key]) root.style.setProperty(cssMap[key], dados[key]);
+                }
+                for (var textKey in textSelectors) {
+                    if (!dados[textKey]) continue;
+                    var els = document.querySelectorAll(textSelectors[textKey]);
+                    for (var i = 0; i < els.length; i++) els[i].textContent = dados[textKey];
+                }
+                if (dados.cor_primaria) {
+                    var b = (function(h) {
+                        h = h.replace('#','');
+                        return (parseInt(h.substr(0,2),16)*299 + parseInt(h.substr(2,2),16)*587 + parseInt(h.substr(4,2),16)*114)/1000;
+                    })(dados.cor_primaria);
+                    root.style.setProperty('--brand-primary-text', b >= 155 ? '#0F172A' : '#FFFFFF');
+                }
+            });
+            window.parent.postMessage({ type: 'se-pronto' }, '*');
+        })();
     </script>
 </body>
 </html>
