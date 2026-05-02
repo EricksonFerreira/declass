@@ -601,6 +601,21 @@
     border-radius: 0; padding: 12px 20px;
     border-top: 1px solid #e2e8f0;
 }
+
+/* ═══ SIDEBAR COLLAPSED ═══ */
+.se-sidebar { transition: width .25s ease, min-width .25s ease, opacity .25s ease; overflow: hidden; }
+.se-sidebar.collapsed { width: 0 !important; min-width: 0 !important; opacity: 0; padding: 0; }
+.se-sidebar.collapsed .se-sidebar-header,
+.se-sidebar.collapsed .se-section-list { display: none; }
+
+@media (max-width: 768px) {
+    .se-sidebar { position: fixed; left: 0; top: 56px; bottom: 0; z-index: 50; box-shadow: 4px 0 20px rgba(0,0,0,.1); }
+    .se-sidebar:not(.collapsed) { width: 320px !important; min-width: 320px !important; }
+    .se-sidebar.collapsed { transform: translateX(-100%); width: 320px !important; min-width: 320px !important; opacity: 1; }
+    .se-sidebar-close { display: inline-flex; }
+    .se-sidebar-toggle { display: inline-flex; }
+    .se-preview-frame { padding: 10px; }
+}
 </style>
 @stop
 
@@ -687,6 +702,7 @@ function seSalvar() {
 function seAbrirModal(section) {
     $('#modal-' + section).modal('show');
     $('#modal-' + section).find('.nav-tabs a:first').tab('show');
+    if (window.innerWidth < 768) seToggleSidebar();
 }
 
 function seAbrirModalComAlvo(secao, alvo, campo) {
@@ -783,6 +799,12 @@ document.addEventListener('DOMContentLoaded', function() {
         seDados[key] = el.value;
     });
 });
+
+// Toggle sidebar
+function seToggleSidebar() {
+    var el = document.getElementById('seSidebar');
+    el.classList.toggle('collapsed');
+}
 
 // Fechar painel ao clicar fora dele
 document.addEventListener('click', function(e) {
