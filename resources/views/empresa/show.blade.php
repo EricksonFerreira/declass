@@ -230,31 +230,31 @@
                         <h2>{{ $plano->nome }}</h2>
                         <span class="ml-auto badge {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span>
                     </div>
-                    <div class="rs-info-rows">
-                        <div class="rs-info-row">
-                            <span>Valor</span>
-                            <strong>R$ {{ number_format($planoAtivo->valor_cobrado, 2, ',', '.') }}</strong>
+                    <div class="rs-info-grid">
+                        <div class="rs-info-card">
+                            <span class="rs-info-card__label"><i class="fas fa-dollar-sign"></i> Valor</span>
+                            <strong class="rs-info-card__value">R$ {{ number_format($planoAtivo->valor_cobrado, 2, ',', '.') }}</strong>
                         </div>
-                        <div class="rs-info-row">
-                            <span>Periodicidade</span>
-                            <strong>{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</strong>
+                        <div class="rs-info-card">
+                            <span class="rs-info-card__label"><i class="fas fa-calendar-alt"></i> Periodicidade</span>
+                            <strong class="rs-info-card__value">{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</strong>
                         </div>
-                        <div class="rs-info-row">
-                            <span>Inicio</span>
-                            <strong>{{ $planoAtivo->data_inicio?->format('d/m/Y') ?? '—' }}</strong>
+                        <div class="rs-info-card">
+                            <span class="rs-info-card__label"><i class="fas fa-play-circle"></i> Inicio</span>
+                            <strong class="rs-info-card__value">{{ $planoAtivo->data_inicio?->format('d/m/Y') ?? '—' }}</strong>
                         </div>
-                        <div class="rs-info-row">
-                            <span>Vencimento</span>
-                            <strong>{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
+                        <div class="rs-info-card">
+                            <span class="rs-info-card__label"><i class="fas fa-hourglass-end"></i> Vencimento</span>
+                            <strong class="rs-info-card__value">{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
                         </div>
-                        <div class="rs-info-row">
-                            <span>Metodo de cobranca</span>
-                            <strong>{{ $planoAtivo->metodo_cobranca_texto ?? ucfirst($planoAtivo->metodo_cobranca ?? '—') }}</strong>
+                        <div class="rs-info-card">
+                            <span class="rs-info-card__label"><i class="fas fa-credit-card"></i> Metodo de cobranca</span>
+                            <strong class="rs-info-card__value">{{ $planoAtivo->metodo_cobranca_texto ?? ucfirst($planoAtivo->metodo_cobranca ?? '—') }}</strong>
                         </div>
                         @if($planoAtivo->renovacao_automatica)
-                        <div class="rs-info-row">
-                            <span>Renovacao automática</span>
-                            <strong><span class="badge bg-success">Ativa</span></strong>
+                        <div class="rs-info-card">
+                            <span class="rs-info-card__label"><i class="fas fa-sync-alt"></i> Renovacao automatica</span>
+                            <strong class="rs-info-card__value"><span class="badge bg-success">Ativa</span></strong>
                         </div>
                         @endif
                     </div>
@@ -265,15 +265,18 @@
                     <div class="rs-card__header">
                         <i class="fas fa-list rs-card__icon"></i>
                         <h2>Recursos Inclusos</h2>
+                        <span class="ml-auto badge bg-info">{{ $plano->itens->count() }}</span>
                     </div>
-                    <ul class="list-unstyled mb-0" style="padding:12px 16px;">
+                    <div class="rs-info-grid">
                         @foreach($plano->itens as $item)
-                            <li class="mb-1 d-flex align-items-start" style="font-size:.85rem;">
-                                <i class="fas fa-{{ $item->incluso ? 'check text-success' : 'times text-muted' }} mr-2 mt-1" style="font-size:.7rem;"></i>
-                                {{ $item->descricao }}
-                            </li>
+                            <div class="rs-info-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;">
+                                <div style="width:28px;height:28px;border-radius:7px;background:{{ $item->incluso ? '#dcfce7' : '#f1f5f9' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                                    <i class="fas fa-{{ $item->incluso ? 'check' : 'times' }}" style="font-size:.72rem;color:{{ $item->incluso ? '#16a34a' : '#94a3b8' }};"></i>
+                                </div>
+                                <span style="font-size:.82rem;color:#0f172a;font-weight:500;">{{ $item->descricao }}</span>
+                            </div>
                         @endforeach
-                    </ul>
+                    </div>
                 </div>
                 @endif
 
