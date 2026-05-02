@@ -82,7 +82,7 @@
         <div class="body">
             @if (empty($email) || empty($senha))
                 <div class="pill">
-                    Nao foi possivel recuperar as credenciais desta sessao. Tente cadastrar novamente ou fale com o suporte.
+                    Não foi possivel recuperar as credenciais desta sessão. Tente cadastrar novamente ou fale com o suporte.
                 </div>
             @else
                 <div class="pill">
