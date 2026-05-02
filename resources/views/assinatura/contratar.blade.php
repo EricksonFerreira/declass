@@ -400,6 +400,7 @@ var CSRF = document.querySelector('meta[name="csrf-token"]')?.content || '';
 var RESERVA_ID = null;
 var PAGAMENTO_ID = null;
 var stripe = null;
+var stripePromise = null;
 var cartaoClientSecret = null;
 
 var valorMensal = '{{ number_format($plano->valor_mensal, 2, ",", ".") }}';
@@ -762,7 +763,16 @@ if (metodoSalvo) {
     if (card) selecionarMetodo(metodoSalvo, card);
 }
 
-// Inicializa botao confirmar
+// Inicializa Stripe e botao confirmar
+(function initStripe() {
+    fetch('/meu-plano/pagamento/0/cartao-intent?peek=1', {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ peek: true }),
+    })
+    .then(function (r) { return r.json(); })
+    .then(function (data) { if (data.stripe_key) stripe = Stripe(data.stripe_key); });
+})();
 criarAssinatura();
 </script>
 @endpush

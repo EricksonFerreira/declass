@@ -627,7 +627,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         return view('site-apresentacao.templates.' . $modeloPref, [
             'empresa' => $empresa,
-            'heroTag' => $tv($textos, 'hero_tag', 'Modelo 1 - Premium Locadora'),
+            'heroTag' => $tv($textos, 'hero_tag', ''),
             'titulo' => $tv($textos, 'hero_titulo', 'Aluguel de veículos com praticidade e segurança'),
             'subtitulo' => $tv($textos, 'hero_subtitulo', 'Reserve online, retire rápido e viaje com cobertura nacional.'),
             'descricao' => $tv($textos, 'hero_descricao', 'Planos diários, semanais e mensais.'),

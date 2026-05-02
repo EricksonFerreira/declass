@@ -67,7 +67,7 @@ class SiteApresentacaoController extends Controller
         return view($this->resolveTemplate($modelo), [
             'empresa' => $empresa,
             'modelo' => $modelo,
-            'heroTag' => $this->textValue($textos, 'hero_tag', 'Modelo 1 - Premium Locadora'),
+            'heroTag' => $this->textValue($textos, 'hero_tag', ''),
             'titulo' => $this->textValue($textos, 'hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veículos com praticidade e segurança'),
             'subtitulo' => $this->textValue($textos, 'hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rápido e viaje com cobertura nacional.'),
             'descricao' => $this->textValue($textos, 'hero_descricao', $empresa->site_apresentacao_descricao ?: 'Planos diários, semanais e mensais para pessoas físicas e empresas.'),
