@@ -109,41 +109,33 @@
                 <div class="row">
                     {{-- Card do plano --}}
                     <div class="col-md-5 mb-3">
-                        @php $borderColor = $planoPago ? '#22c55e' : '#0a1628'; $headerBg = $planoPago ? '#16a34a' : '#0a1628'; @endphp
-                        <div class="card h-100" style="border:2px solid {{ $borderColor }};border-radius:12px;overflow:hidden;">
-                            <div class="card-header py-2 text-white d-flex justify-content-between align-items-center"
-                                 style="background:{{ $headerBg }};">
-                                <span style="font-weight:700;font-size:.95rem;">
-                                    <i class="fas fa-{{ $planoPago ? 'check-circle' : 'id-card' }} mr-1"></i> {{ $assinatura->plano->nome }}
-                                </span>
+                        @php $headerBg = $planoPago ? '#16a34a' : '#0a1628'; @endphp
+                        <div class="plan-card {{ $planoPago ? 'plan-card--active' : '' }}">
+                            <div class="plan-card-header" style="background:{{ $headerBg }};">
+                                <span><i class="fas fa-{{ $planoPago ? 'check-circle' : 'id-card' }} mr-1"></i> {{ $assinatura->plano->nome }}</span>
                                 <span class="badge {{ $badge['class'] }}">{{ $badge['label'] }}</span>
                             </div>
-                            <div class="card-body">
-                                <div style="font-size:2.2rem;font-weight:900;color:#0a1628;line-height:1;">
-                                    R$ {{ number_format($assinatura->valor_cobrado, 2, ',', '.') }}
-                                    <small class="text-muted font-weight-normal" style="font-size:.85rem;">/mês</small>
-                                </div>
-                                <div class="text-muted mb-3" style="font-size:.8rem;">{{ $assinatura->periodicidade_texto }}</div>
-
-                                <table class="table table-sm table-borderless mb-3" style="font-size:.82rem;">
+                            <div class="plan-card-price">
+                                <span class="plan-card-amount">R$ {{ number_format($assinatura->valor_cobrado, 2, ',', '.') }}</span>
+                                <span class="plan-card-period">/mês · {{ $assinatura->periodicidade_texto }}</span>
+                            </div>
+                            <div class="plan-card-body">
+                                <table class="plan-detail-table">
+                                    <tr><td>Início</td><td>{{ $assinatura->data_inicio->format('d/m/Y') }}</td></tr>
                                     <tr>
-                                        <td class="text-muted pl-0" style="width:40%;">Início</td>
-                                        <td class="font-weight-bold">{{ $assinatura->data_inicio->format('d/m/Y') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted pl-0">Vencimento</td>
-                                        <td class="font-weight-bold">
+                                        <td>Vencimento</td>
+                                        <td>
                                             {{ $assinatura->data_vencimento->format('d/m/Y') }}
                                             @if ($dias >= 0 && $dias <= 10)
-                                                <span class="badge badge-warning ml-1">{{ $dias }}d</span>
+                                                <span class="badge badge-warning ml-1" style="font-size:.7rem;">{{ $dias }}d</span>
                                             @elseif ($dias < 0)
-                                                <span class="badge badge-danger ml-1">Vencido</span>
+                                                <span class="badge badge-danger ml-1" style="font-size:.7rem;">Vencido</span>
                                             @endif
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td class="text-muted pl-0">Cobrança</td>
-                                        <td class="font-weight-bold">
+                                        <td>Cobrança</td>
+                                        <td>
                                             @php
                                                 $mlabel = match($assinatura->metodo_cobranca) {
                                                     'boleto' => '<i class="fas fa-barcode mr-1"></i>Boleto',
@@ -154,16 +146,16 @@
                                             @endphp
                                             {!! $mlabel !!}
                                             @if ($assinatura->metodo_cobranca === 'cartao' && $assinatura->renovacao_automatica)
-                                                <span class="badge badge-success ml-1" style="font-size:.65rem;">
-                                                    <i class="fas fa-sync-alt"></i> Auto
-                                                </span>
+                                                <span class="badge badge-success ml-1" style="font-size:.65rem;"><i class="fas fa-sync-alt"></i> Auto</span>
                                             @endif
                                         </td>
                                     </tr>
                                 </table>
+                            </div>
 
-                                @if ($assinatura->temMudancaAgendada())
-                                    <div class="alert alert-warning py-2 mb-2" style="font-size:.82rem;">
+                            @if ($assinatura->temMudancaAgendada())
+                                <div class="px-3 pb-2">
+                                    <div class="alert alert-warning py-2 mb-0" style="font-size:.82rem;border-radius:8px;">
                                         <i class="fas fa-calendar-alt mr-1"></i>
                                         @if ($assinatura->mudanca_tipo === 'cancelamento')
                                             Cancelamento agendado para <strong>{{ $assinatura->mudanca_efetiva_em?->format('d/m/Y') }}</strong>.
@@ -172,31 +164,27 @@
                                         @endif
                                         <form method="POST" action="{{ route('assinatura.mudanca.remover') }}" class="d-inline">
                                             @csrf
-                                            <button type="submit" class="btn btn-link btn-sm p-0 ml-2" onclick="return confirm('Remover mudanca agendada?')">
-                                                Remover
-                                            </button>
+                                            <button type="submit" class="btn btn-link btn-sm p-0 ml-2">Remover</button>
                                         </form>
                                     </div>
-                                @endif
-
-                                <div class="d-flex" style="gap:.5rem;flex-wrap:wrap;">
-                                    <button type="button" class="btn btn-primary btn-sm flex-fill"
-                                            data-toggle="modal" data-target="#modalRenovar">
-                                        <i class="fas fa-sync-alt mr-1"></i> Renovar
-                                    </button>
-                                    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" onclick="irParaAba('tab-planos')">
-                                        <i class="fas fa-exchange-alt mr-1"></i> Trocar plano
-                                    </button>
-                                    @if (!$assinatura->temMudancaAgendada())
-                                        <form method="POST" action="{{ route('assinatura.cancelar') }}" class="flex-fill m-0">
-                                            @csrf
-                                            <button type="submit" class="btn btn-outline-danger btn-sm w-100"
-                                                    onclick="return confirm('Agendar cancelamento para o fim do periodo vigente?')">
-                                                <i class="fas fa-ban mr-1"></i> Cancelar
-                                            </button>
-                                        </form>
-                                    @endif
                                 </div>
+                            @endif
+
+                            <div class="plan-actions">
+                                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalRenovar">
+                                    <i class="fas fa-sync-alt mr-1"></i> Renovar
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" onclick="irParaAba('tab-planos')">
+                                    <i class="fas fa-exchange-alt mr-1"></i> Trocar
+                                </button>
+                                @if (!$assinatura->temMudancaAgendada())
+                                    <form method="POST" action="{{ route('assinatura.cancelar') }}" class="m-0" style="flex:1;min-width:100px;">
+                                        @csrf
+                                        <button type="submit" class="btn btn-outline-danger w-100" onclick="return confirm('Agendar cancelamento para o fim do periodo vigente?')">
+                                            <i class="fas fa-ban mr-1"></i> Cancelar
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -506,7 +494,7 @@
                                             </button>
                                             <button type="button" class="btn btn-xs btn-outline-danger"
                                                     title="Cancelar pagamento"
-                                                    onclick="cancelarPagamento({{ $pag->id }})">
+                                                    onclick="cancelarPagamento({{ $pag->id }}, this)">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         @endif
@@ -794,9 +782,48 @@
 
 @push('css')
 <style>
-.nav-tabs .nav-link { border-radius:0; border-bottom:none; }
-.nav-tabs .nav-link.active { border-color:#0a1628 #0a1628 #fff; color:#0a1628 !important; }
-.nav-tabs .nav-link:hover { color:#0a1628 !important; }
+body { background:#f0f4f9; }
+.nav-tabs .nav-link { border-radius:8px 8px 0 0; border:1px solid transparent; border-bottom:none; padding:10px 20px; transition:all .15s; }
+.nav-tabs .nav-link.active { border-color:#0a1628 #0a1628 #fff; color:#0a1628 !important; background:#fff; font-weight:700; }
+.nav-tabs .nav-link:hover { color:#0a1628 !important; background:#f8fafc; }
+.nav-tabs { border-bottom:2px solid #e2e8f0; gap:4px; }
+.tab-content { background:#fff; border:1px solid #e2e8f0; border-top:none; border-radius:0 0 12px 12px; padding:1.5rem; box-shadow:0 4px 24px rgba(0,0,0,.04); }
+
+.plan-card { border:2px solid #e2e8f0; border-radius:16px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,.04); transition:box-shadow .25s; }
+.plan-card:hover { box-shadow:0 8px 32px rgba(0,0,0,.08); }
+.plan-card--active { border-color:#22c55e; }
+.plan-card-header { padding:16px 20px; color:#fff; display:flex; justify-content:space-between; align-items:center; font-weight:700; font-size:.95rem; }
+.plan-card-price { padding:20px; display:flex; align-items:baseline; gap:6px; }
+.plan-card-amount { font-size:2.2rem; font-weight:900; color:#0a1628; line-height:1; }
+.plan-card-period { font-size:.85rem; color:#64748b; }
+.plan-card-body { padding:0 20px 20px; }
+
+.plan-detail-table { width:100%; font-size:.84rem; }
+.plan-detail-table td { padding:6px 0; border-bottom:1px solid #f1f5f9; }
+.plan-detail-table td:first-child { color:#64748b; width:40%; }
+.plan-detail-table td:last-child { font-weight:600; color:#0f172a; }
+.plan-detail-table tr:last-child td { border-bottom:none; }
+
+.plan-actions { display:flex; gap:8px; flex-wrap:wrap; padding:16px 20px; background:#f8fafc; border-top:1px solid #f1f5f9; }
+.plan-actions .btn { border-radius:8px; font-weight:600; font-size:.82rem; padding:8px 16px; flex:1; min-width:100px; }
+
+.historico-table { font-size:.84rem; }
+.historico-table th { background:#f8fafc; font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:#64748b; font-weight:700; padding:10px 12px; border-top:none; border-bottom:2px solid #e2e8f0; }
+.historico-table td { padding:10px 12px; vertical-align:middle; border-bottom:1px solid #f1f5f9; }
+.historico-table tbody tr:hover { background:#f8fafc; }
+.historico-table .badge { font-size:.72rem; padding:4px 10px; border-radius:20px; }
+
+.paginate-historico .pagination { margin:0; gap:4px; }
+.paginate-historico .page-link { border-radius:8px !important; border:1px solid #e2e8f0; color:#334155; font-size:.82rem; padding:6px 12px; transition:all .15s; }
+.paginate-historico .page-link:hover { background:#f1f5f9; border-color:#cbd5e1; }
+.paginate-historico .page-item.active .page-link { background:#0a1628; border-color:#0a1628; color:#fff; }
+.paginate-historico .page-item.disabled .page-link { background:#f8fafc; color:#cbd5e1; }
+
+.plan-feature-item { display:flex; align-items:flex-start; gap:10px; padding:8px 0; border-bottom:1px solid #f8fafc; font-size:.82rem; }
+.plan-feature-item:last-child { border-bottom:none; }
+.plan-feature-icon { width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:.65rem; }
+
+.alert-enhanced { border-radius:12px; border-left:4px solid; padding:12px 16px; font-size:.875rem; }
 
 .metodo-alt-opt.selected,
 .renovar-metodo-opt.selected {
@@ -1112,7 +1139,7 @@ document.querySelectorAll('.renovar-periodo-opt').forEach(l =>
 })();
 
 // ── Cancelar pagamento pendente ──
-function cancelarPagamento(pagamentoId) {
+function cancelarPagamento(pagamentoId, btn) {
     Swal.fire({
         title: 'Cancelar pagamento?',
         text: 'O pagamento pendente será cancelado.',
@@ -1120,6 +1147,7 @@ function cancelarPagamento(pagamentoId) {
         showCancelButton: true,
         confirmButtonText: 'Sim, cancelar',
         cancelButtonText: 'Não',
+        confirmButtonColor: '#dc2626',
     }).then(function(result) {
         if (!result.isConfirmed) return;
         fetch('/meu-plano/pagamento/' + pagamentoId + '/cancelar', {
@@ -1128,7 +1156,19 @@ function cancelarPagamento(pagamentoId) {
         })
         .then(function(r) { return r.json(); })
         .then(function(data) {
-            if (data.success) { Swal.fire({ icon: 'success', title: 'Cancelado!', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); location.reload(); }
+            if (data.success) {
+                var row = (btn || event.target).closest('tr');
+                if (row) {
+                    var statusCell = row.querySelector('.badge');
+                    if (statusCell) {
+                        statusCell.className = 'badge badge-secondary';
+                        statusCell.textContent = 'Cancelado';
+                    }
+                    var actionsCell = row.querySelector('td:last-child');
+                    if (actionsCell) actionsCell.innerHTML = '<span class="text-muted" style="font-size:.75rem;">Cancelado</span>';
+                }
+                Swal.fire({ icon: 'success', title: 'Cancelado!', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+            }
             else { Swal.fire({ icon: 'error', title: 'Erro', text: data.error || 'Erro ao cancelar.' }); }
         })
         .catch(function() { Swal.fire({ icon: 'error', title: 'Erro de conexão' }); });
