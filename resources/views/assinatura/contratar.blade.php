@@ -496,18 +496,12 @@ document.getElementById('btnAvancarPagamento').addEventListener('click', functio
     if (metodo === 'pix') {
         document.getElementById('divPagamentoPix').style.display = 'block';
         document.getElementById('btnConfirmarPagamento').style.display = 'none';
-        criarAssinaturaEProcessarPix();
     } else if (metodo === 'cartao') {
         document.getElementById('divPagamentoPix').style.display = 'none';
         document.getElementById('divPagamentoCartao').style.display = 'block';
     }
     atualizarStepper(2);
 });
-
-// ── criar assinatura + pix ──
-function criarAssinaturaEProcessarPix() {
-    criarAssinatura();
-}
 
 function criarAssinatura() {
 document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
@@ -767,5 +761,8 @@ if (metodoSalvo) {
     var card = document.querySelector('.metodo-card[data-metodo="' + metodoSalvo + '"]');
     if (card) selecionarMetodo(metodoSalvo, card);
 }
+
+// Inicializa botao confirmar
+criarAssinatura();
 </script>
 @endpush
