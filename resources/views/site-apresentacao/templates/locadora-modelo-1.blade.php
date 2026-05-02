@@ -1455,9 +1455,9 @@
             <div class="hero-inner">
 
                 <div class="hero-content reveal d1">
-                    {{-- @if(!empty($heroTag))
+                    {{-- @if(!empty($heroTag)) --}}
                         <span class="hero-tag">{{ $heroTag }}</span>
-                    @endif --}}
+                    {{-- @endif --}}
 
                     <h1 class="hero-title">{{ $titulo }}</h1>
 

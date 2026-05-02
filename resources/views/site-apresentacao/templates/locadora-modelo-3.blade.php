@@ -182,7 +182,7 @@
     <section class="hero">
         <div class="wrap{{ !empty($imagemHero) ? ' has-img' : '' }}{{ !empty($heroFormTitulo) ? ' has-form' : '' }}">
             <div>
-                @if(!empty($heroTag))<div class="hero-tag">{{ $heroTag }}</div>@endif
+                <div class="hero-tag">{{ $heroTag }}</div>
                 <h1 class="hero-title">{{ $titulo }}</h1>
                 @if(!empty($subtitulo))<div class="hero-sub">{{ $subtitulo }}</div>@endif
                 @if(!empty($descricao))<p class="hero-desc">{{ $descricao }}</p>@endif
