@@ -835,8 +835,10 @@ body { background:#f0f4f9; }
 @endpush
 
 @push('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 @if(isset($proximoPagamento) && $proximoPagamento?->metodo === 'cartao')
 <script src="https://js.stripe.com/v3/"></script>
+@endif
 <script>
 // ── Stripe Elements (cartão) ─────────────────────────────────────────────────
 let stripeInstance = null;
