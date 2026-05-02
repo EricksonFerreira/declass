@@ -88,9 +88,11 @@
         <span id="labelAnual">Anual <span class="discount-badge">Economize até 20%</span></span>
     </div>
 
-    <form action="{{ route('onboarding.plano.pagamento') }}" method="GET" id="formPlano">
+    <form action="{{ route('onboarding.plano.confirmar') }}" method="POST" id="formPlano">
+        @csrf
         <input type="hidden" name="periodicidade" id="inputPeriodicidade" value="mensal">
         <input type="hidden" name="plano_id" id="inputPlanoId" value="">
+        <input type="hidden" name="metodo_pagamento" value="automatico">
 
         <div class="planos-grid">
             @foreach ($planos as $plano)
@@ -135,7 +137,7 @@
                 <i class="fas fa-arrow-left mr-1"></i> Voltar
             </a>
             <button type="button" onclick="avancar()" class="btn btn-primary btn-lg">
-                Próximo: Pagamento <i class="fas fa-arrow-right"></i>
+                Continuar <i class="fas fa-arrow-right"></i>
             </button>
         </div>
     </form>

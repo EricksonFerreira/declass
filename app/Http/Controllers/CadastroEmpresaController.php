@@ -110,11 +110,13 @@ class CadastroEmpresaController extends Controller
                 ]);
             }
 
-            // Busca o role global "Administrador" criado pelo syncIfNeeded.
+            // Busca ou cria o role global "Administrador".
             // Roles são globais (sem empresa_id), portanto não criamos um novo — apenas reutilizamos.
-            $roleId = Regra::where('guard_name', 'web')
-                ->whereRaw('LOWER(name) = ?', ['administrador'])
-                ->value('id');
+            $role = Regra::firstOrCreate(
+                ['name' => 'administrador', 'guard_name' => 'web'],
+                []
+            );
+            $roleId = $role->id;
 
             $user = User::create([
                 'nome'              => $data['admin_nome'],
