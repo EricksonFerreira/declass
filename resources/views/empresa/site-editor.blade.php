@@ -74,6 +74,11 @@
                 <i class="fas fa-mobile-alt"></i>
                 <span>Pré-visualização</span>
                 <span class="se-preview-badge">Clique nos elementos do preview para editar</span>
+                <span class="se-devices">
+                    <button class="se-device-btn active" data-device="desktop" onclick="seMudarDevice('desktop')" title="Desktop"><i class="fas fa-desktop"></i></button>
+                    <button class="se-device-btn" data-device="tablet" onclick="seMudarDevice('tablet')" title="Tablet"><i class="fas fa-tablet-alt"></i></button>
+                    <button class="se-device-btn" data-device="mobile" onclick="seMudarDevice('mobile')" title="Celular"><i class="fas fa-mobile-alt"></i></button>
+                </span>
             </div>
             <div class="se-preview-frame" id="sePreviewFrame">
                 <iframe id="seIframe" src="{{ route('empresa.site-editor.preview', $empresa->id) }}?m={{ $empresa->site_apresentacao_modelo ?? 'modelo_1' }}" frameborder="0"></iframe>
@@ -563,14 +568,28 @@
     font-size: .72rem; font-weight: 400; color: #94a3b8;
     background: #f1f5f9; padding: 2px 10px; border-radius: 20px;
 }
+.se-devices { display: flex; align-items: center; gap: 4px; margin-left: auto; }
+.se-device-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 8px; border: 1px solid #e2e8f0;
+    background: #fff; color: #94a3b8; cursor: pointer; transition: all .15s;
+    font-size: .85rem;
+}
+.se-device-btn:hover { background: #f1f5f9; color: #475569; }
+.se-device-btn.active { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
 .se-preview-frame {
-    flex: 1; padding: 20px; overflow: hidden;
-    background: #e2e8f0;
+    flex: 1; padding: 20px; overflow: auto;
+    background: #e2e8f0; display: flex; align-items: flex-start; justify-content: center;
+    transition: all .3s;
 }
 .se-preview-frame iframe {
-    width: 100%; height: 100%; border-radius: 12px;
-    box-shadow: 0 4px 24px rgba(0,0,0,.10); background: #fff;
+    border-radius: 12px; box-shadow: 0 4px 24px rgba(0,0,0,.10); background: #fff;
+    transition: all .3s; width: 100%; height: 100%;
 }
+.se-preview-frame.device-tablet { padding: 20px calc(50% - 384px); }
+.se-preview-frame.device-tablet iframe { width: 768px; }
+.se-preview-frame.device-mobile { padding: 40px calc(50% - 185px); }
+.se-preview-frame.device-mobile iframe { width: 375px; height: 812px; }
 
 /* ═══ MODAL STYLES ═══ */
 .se-tab-content { padding-top: 20px; }
@@ -888,6 +907,16 @@ function seTrocarModelo(modelo) {
     .finally(function() {
         btn.disabled = false;
         btn.innerHTML = oldHtml;
+    });
+}
+
+// Device preview
+function seMudarDevice(device) {
+    var frame = document.getElementById('sePreviewFrame');
+    var btns = document.querySelectorAll('.se-device-btn');
+    frame.className = 'se-preview-frame' + (device !== 'desktop' ? ' device-' + device : '');
+    btns.forEach(function(b) {
+        b.classList.toggle('active', b.dataset.device === device);
     });
 }
 
