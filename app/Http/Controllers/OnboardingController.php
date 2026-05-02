@@ -130,8 +130,8 @@ class OnboardingController extends Controller
             criadoPorUserId:  Auth::id(),
         );
 
-        return redirect()->route('onboarding.orientacoes')
-            ->with('success', 'Plano contratado com sucesso!');
+        return redirect()->route('onboarding.cores')
+            ->with('success', 'Plano contratado com sucesso! Agora defina as cores da sua empresa.');
     }
 
     /**

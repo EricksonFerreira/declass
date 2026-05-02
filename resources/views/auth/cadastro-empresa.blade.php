@@ -214,6 +214,18 @@ function limparErro(input) {
 }
 
 // ── Mascaras ──
+// Valida CNPJ ao sair do campo (blur) para dar feedback mesmo com campo opcional
+document.getElementById('empresa_cnpj')?.addEventListener('blur', function () {
+    var nums = this.value.replace(/[^0-9]/g, '');
+    if (nums.length > 0 && nums.length !== 14) {
+        mostrarErro(this, 'CNPJ deve ter 14 digitos.');
+    } else if (nums.length === 14 && !validarCnpj(nums)) {
+        mostrarErro(this, 'CNPJ invalido.');
+    } else {
+        limparErro(this);
+    }
+});
+
 document.getElementById('empresa_cnpj')?.addEventListener('input', function () {
     var v = this.value.replace(/[^0-9]/g, '');
     if (v.length > 14) v = v.slice(0, 14);
@@ -227,8 +239,6 @@ document.getElementById('empresa_cnpj')?.addEventListener('input', function () {
     if (v.length === 14) {
         if (!validarCnpj(v)) mostrarErro(this, 'CNPJ invalido.');
         else limparErro(this);
-    } else if (v.length > 0) {
-        mostrarErro(this, 'CNPJ deve ter 14 digitos.');
     } else {
         limparErro(this);
     }
