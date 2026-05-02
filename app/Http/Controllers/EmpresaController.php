@@ -122,7 +122,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function __construct(EmpresaService $empresaService, BreadcrumbService $breadcrumbService)
     {
-        $this->middleware('can:gerenciar-empresa');
+        $this->middleware('can:gerenciar-empresa', ['except' => ['minhaEmpresa']]);
 
         $this->titulo = 'Empresas';
         $this->nomeFiltro = 'empresa';
@@ -204,9 +204,14 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     public function minhaEmpresa()
     {
-        $empresa = auth()->user()->empresa;
-        if (!$empresa) {
+        $user = auth()->user();
+        if (!$user || !$user->empresa_id) {
             return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
+        }
+
+        $empresa = $this->empresaService->getById($user->empresa_id);
+        if (!$empresa) {
+            return redirect()->route('home')->with('error', 'Empresa nao encontrada.');
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresa', null, $empresa->nome);
