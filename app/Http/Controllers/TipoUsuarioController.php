@@ -49,7 +49,7 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 12);
 
-        $tiposUsuario = $this->regraService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $tiposUsuario = $this->regraService->getAllWithFiltersAndPagination($itensFiltered, $perPage, [], 'name', 'asc');
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Tipos de Usuario');
         $filters = $this->obterFiltrosPrincipais();

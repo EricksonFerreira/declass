@@ -11,11 +11,11 @@ Route::middleware('can:acessar-superadmin')->prefix('empresa')->name('empresa.')
     Route::put('{empresa}/site-apresentacao', [EmpresaController::class, 'updateSiteApresentacao'])->name('site-apresentacao.update');
 });
 
-Route::middleware('can:acessar-superadmin')->group(function () {
-    Route::resource('empresa', EmpresaController::class);
-});
-
-// Rota para ver a propria empresa (qualquer usuario vinculado)
+// Rota para ver a propria empresa (qualquer usuario vinculado) — DEVE vir antes do resource
 Route::middleware('auth')->prefix('empresa')->name('empresa.')->group(function () {
     Route::get('minha', [EmpresaController::class, 'minhaEmpresa'])->name('minha');
+});
+
+Route::middleware('can:acessar-superadmin')->group(function () {
+    Route::resource('empresa', EmpresaController::class);
 });
