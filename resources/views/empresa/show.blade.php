@@ -59,9 +59,22 @@
                             <strong>{{ $plano->nome }}</strong>
                         </div>
                     @endif
+                    </div>
                 </div>
             </div>
         </div>
+    </div>
+
+    {{-- BOTOES DE ACAO --}}
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <a href="{{ route('empresa.edit', $empresa->id) }}" class="rs-btn rs-btn--primary">
+            <i class="fas fa-pen mr-1"></i> Editar
+        </a>
+        @if($empresa->site_apresentacao_ativo)
+            <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="rs-btn">
+                <i class="fas fa-globe mr-1"></i> Site
+            </a>
+        @endif
     </div>
 
     {{-- TABS --}}
