@@ -11,9 +11,11 @@ Route::middleware('can:acessar-superadmin')->prefix('empresa')->name('empresa.')
     Route::put('{empresa}/site-apresentacao', [EmpresaController::class, 'updateSiteApresentacao'])->name('site-apresentacao.update');
 });
 
-// Rota para ver a propria empresa (qualquer usuario vinculado) — DEVE vir antes do resource
+// Rotas para administrador ver/editar a propria empresa — DEVE vir antes do resource
 Route::middleware('auth')->prefix('empresa')->name('empresa.')->group(function () {
     Route::get('minha', [EmpresaController::class, 'minhaEmpresa'])->name('minha');
+    Route::get('editar', [EmpresaController::class, 'editarEmpresa'])->name('editar');
+    Route::put('atualizar', [EmpresaController::class, 'atualizarEmpresa'])->name('atualizar');
 });
 
 Route::middleware('can:acessar-superadmin')->group(function () {

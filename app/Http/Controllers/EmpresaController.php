@@ -202,6 +202,50 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             ->with('success', 'Empresa criada com base no modelo padrao.');
     }
 
+    public function editarEmpresa()
+    {
+        $user = auth()->user();
+        if (!$user || !$user->empresa_id) {
+            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
+        }
+
+        $empresa = $this->empresaService->getById($user->empresa_id);
+        if (!$empresa) {
+            return redirect()->route('home')->with('error', 'Empresa nao encontrada.');
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresa', 'assinatura.meu-plano', "Editar: $empresa->nome");
+
+        return view('empresa.edit-admin', compact('empresa', 'breadcrumb'));
+    }
+
+    public function atualizarEmpresa(Request $request)
+    {
+        $user = auth()->user();
+        if (!$user || !$user->empresa_id) {
+            return redirect()->route('home')->with('error', 'Voce nao esta vinculado a uma empresa.');
+        }
+
+        $empresa = $this->empresaService->getById($user->empresa_id);
+        if (!$empresa) {
+            return redirect()->route('home')->with('error', 'Empresa nao encontrada.');
+        }
+
+        $data = $request->validate([
+            'nome'       => 'required|string|max:200',
+            'email'      => 'nullable|email|max:200',
+            'telefone'   => 'nullable|string|max:30',
+            'dominio'    => 'nullable|string|max:255',
+            'cor_primaria'   => 'nullable|string|max:20',
+            'cor_secundaria' => 'nullable|string|max:20',
+        ]);
+
+        $empresa->update($data);
+
+        return redirect()->route('empresa.minha')
+            ->with('success', 'Empresa atualizada com sucesso.');
+    }
+
     public function minhaEmpresa()
     {
         $user = auth()->user();

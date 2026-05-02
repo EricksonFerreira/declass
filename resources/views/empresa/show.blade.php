@@ -67,14 +67,17 @@
 
     {{-- BOTOES DE ACAO --}}
     <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <a href="{{ route('empresa.edit', $empresa->id) }}" class="rs-btn rs-btn--primary">
+        <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary">
             <i class="fas fa-pen mr-1"></i> Editar
         </a>
-        @if($empresa->site_apresentacao_ativo)
+        @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
             <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="rs-btn">
                 <i class="fas fa-globe mr-1"></i> Site
             </a>
         @endif
+        <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn">
+            <i class="fas fa-credit-card mr-1"></i> Assinatura
+        </a>
     </div>
 
     {{-- TABS --}}
