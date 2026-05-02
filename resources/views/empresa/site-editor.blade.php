@@ -5,7 +5,7 @@
 @section('content_header')
     <div class="se-toolbar">
         <div class="se-toolbar-left">
-            <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="se-btn se-btn-back">
+            <a href="{{ url()->previous()  }}" class="se-btn se-btn-back">
                 <i class="fas fa-arrow-left"></i>
                 <span>Voltar</span>
             </a>
