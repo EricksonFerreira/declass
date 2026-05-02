@@ -235,7 +235,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'nome'       => 'required|string|max:200',
             'email'      => 'nullable|email|max:200',
             'telefone'   => 'nullable|string|max:30',
-            'dominio'    => 'nullable|string|max:255',
+            'cnpj'       => 'nullable|string|max:20',
             'cor_primaria'   => 'nullable|string|max:20',
             'cor_secundaria' => 'nullable|string|max:20',
         ]);
