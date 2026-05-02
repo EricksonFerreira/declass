@@ -55,7 +55,7 @@
         .hero-col-img-placeholder{width:100%;height:100%;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.2;aspect-ratio:4/3}
         .hero-tag{font-family:Outfit,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--a);margin-bottom:20px;display:inline-flex;align-items:center;gap:8px}
         .hero-tag::before{content:'';display:block;width:24px;height:2px;background:var(--a)}
-        .hero-title{font-family:Outfit,sans-serif;font-size: clamp(2.4rem, 3.8vw + 1rem, 4.4rem);font-weight:800;line-height:1;margin-bottom:16px;letter-spacing:-.03em}
+        .hero-title{font-family:Outfit,sans-serif;font-size: clamp(2.4rem, 1.8vw + 1rem, 4.4rem);font-weight:800;line-height:1;margin-bottom:16px;letter-spacing:-.03em}
         .hero-sub{font-size:1.05rem;line-height:1.5;opacity:.75;font-weight:500;margin-bottom:6px}
         .hero-desc{font-size:.92rem;line-height:1.7;opacity:.5;margin-bottom:36px;max-width:44ch}
         .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
