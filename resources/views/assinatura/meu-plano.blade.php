@@ -576,11 +576,11 @@
                                 <div class="mb-2">
                                     <div style="font-size:2rem;font-weight:900;color:#0a1628;line-height:1;">
                                         <span class="plan-price-mensal">R$ {{ number_format($p->valor_mensal, 2, ',', '.') }}</span>
-                                        <span class="plan-price-anual d-none">R$ {{ number_format($p->valor_anual, 2, ',', '.') }}</span>
+                                        <span class="plan-price-anual d-none">R$ {{ number_format($p->valor_anual ?: $p->valor_mensal * 12, 2, ',', '.') }}</span>
                                     </div>
                                     <small class="text-muted">/mes</small>
                                     <div class="plan-anual-note d-none text-success" style="font-size:.75rem;">
-                                        <i class="fas fa-piggy-bank mr-1"></i>Economia R$ {{ number_format($p->economia_anual, 2, ',', '.') }}/ano
+                                        <i class="fas fa-piggy-bank mr-1"></i>Economia R$ {{ number_format($p->economia_anual ?: 0, 2, ',', '.') }}/ano
                                     </div>
                                 </div>
 
