@@ -359,7 +359,10 @@
                         </div>
                         <div class="tab-pane" id="tab-contato-cores">
                             <div class="se-cor-grid">
-                                <div class="se-cor-item"><label>Fundo da seção</label><input type="color" class="se-cor-picker" data-section="contato" data-key="cor_contato_fundo" value="{{ $cor('contato_fundo', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('contato_fundo', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Fundo da seção</label><input type="color" class="se-cor-picker" data-section="contato" data-key="cor_contato_fundo" value="{{ $cor('contato_fundo', '#1F2937') }}"><input type="text" class="se-cor-text" value="{{ $cor('contato_fundo', '#1F2937') }}"></div>
+                                <div class="se-cor-item"><label>Texto etiqueta</label><input type="color" class="se-cor-picker" data-section="contato" data-key="cor_contato_etiqueta_texto" value="{{ $cor('contato_etiqueta_texto', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('contato_etiqueta_texto', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Texto título</label><input type="color" class="se-cor-picker" data-section="contato" data-key="cor_contato_titulo_texto" value="{{ $cor('contato_titulo_texto', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('contato_titulo_texto', '#FFFFFF') }}"></div>
+                                <div class="se-cor-item"><label>Texto informações (email/telefone)</label><input type="color" class="se-cor-picker" data-section="contato" data-key="cor_contato_info_texto" value="{{ $cor('contato_info_texto', '#FFFFFF') }}"><input type="text" class="se-cor-text" value="{{ $cor('contato_info_texto', '#FFFFFF') }}"></div>
                             </div>
                         </div>
                         <div class="tab-pane" id="tab-contato-imagem">
@@ -587,6 +590,7 @@
 <script>
 let seDados = {};
 let seArquivos = {};
+let seDataUrls = {};
 
 function seColetarSecao(section) {
     const dados = {};
@@ -617,7 +621,7 @@ function seMostrarStatus(msg, type) {
 function seAtualizarPreview(section) {
     const iframe = document.getElementById('seIframe');
     if (!iframe || !iframe.contentWindow) return;
-    iframe.contentWindow.postMessage({ type: 'se-atualizar', dados: seDados, secao: section }, '*');
+    iframe.contentWindow.postMessage({ type: 'se-atualizar', dados: seDados, dataUrls: seDataUrls, secao: section }, '*');
 }
 
 function seSalvar() {
@@ -717,13 +721,15 @@ document.addEventListener('change', function(e) {
     if (preview) {
         var reader = new FileReader();
         reader.onload = function(ev) {
-            preview.innerHTML = '<img src="' + ev.target.result + '" alt="Preview">';
+            var dataUrl = ev.target.result;
+            preview.innerHTML = '<img src="' + dataUrl + '" alt="Preview">';
+            seDataUrls[key] = dataUrl;
+            seAtualizarPreview(section);
         };
         reader.readAsDataURL(file);
     }
 
     seDados[key] = file.name;
-    seAtualizarPreview(section);
     seMostrarStatus('Imagem selecionada. Publique para salvar.', 'success');
 });
 
@@ -748,7 +754,7 @@ window.addEventListener('message', function(e) {
 function seEnviarDadosParaPreview() {
     const iframe = document.getElementById('seIframe');
     if (iframe && iframe.contentWindow) {
-        iframe.contentWindow.postMessage({ type: 'se-carregar', dados: seDados }, '*');
+        iframe.contentWindow.postMessage({ type: 'se-carregar', dados: seDados, dataUrls: seDataUrls }, '*');
     }
 }
 
@@ -757,6 +763,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('[data-section]').forEach(el => {
         const key = el.dataset.key;
         seDados[key] = el.value;
+    });
+});
+
+// Fechar painel ao clicar fora dele
+document.addEventListener('click', function(e) {
+    document.querySelectorAll('.modal.left-panel.show').forEach(function(modal) {
+        var dialog = modal.querySelector('.modal-dialog');
+        var toolbar = document.querySelector('.se-toolbar');
+        if (dialog && !dialog.contains(e.target) && toolbar && !toolbar.contains(e.target)) {
+            $(modal).modal('hide');
+        }
     });
 });
 </script>

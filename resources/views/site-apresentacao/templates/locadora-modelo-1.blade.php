@@ -48,6 +48,9 @@
             --etapas-passo-desc-texto: {{ $corEtapasPassoDescricaoTexto }};
             --etapas-passo-bg:        {{ $corEtapasPassoFundo }};
             --contato-bg:             {{ $corContatoFundo }};
+            --contato-etiqueta-texto: {{ $corContatoEtiquetaTexto }};
+            --contato-titulo-texto:   {{ $corContatoTituloTexto }};
+            --contato-info-texto:     {{ $corContatoInfoTexto }};
             --footer-bg:              {{ $corFooterFundo }};
             --footer-text:            {{ $corFooterTexto }};
             --btn-p-bg:               {{ $corBotaoPrimarioFundo }};
@@ -1129,7 +1132,7 @@
             font-weight: 800;
             letter-spacing: .16em;
             text-transform: uppercase;
-            color: var(--brand-accent);
+            color: var(--contato-etiqueta-texto);
             margin-bottom: 10px;
         }
 
@@ -1138,7 +1141,7 @@
             font-size: clamp(1.8rem, 2.4vw + .6rem, 2.8rem);
             font-weight: 900;
             text-transform: uppercase;
-            color: var(--brand-primary-text);
+            color: var(--contato-titulo-texto);
             line-height: 1;
             margin-bottom: 12px;
         }
@@ -1151,7 +1154,7 @@
 
         .contato-info-item {
             font-size: .88rem;
-            color: rgba(255,255,255,0.78);
+            color: var(--contato-info-texto);
             display: flex;
             align-items: center;
             gap: 7px;
@@ -2284,6 +2287,8 @@
                 cor_etapas_descricao_texto: '--etapas-desc-texto', cor_etapas_passo_texto: '--etapas-passo-texto',
                 cor_etapas_passo_descricao_texto: '--etapas-passo-desc-texto', cor_etapas_passo_fundo: '--etapas-passo-bg',
                 cor_contato_fundo: '--contato-bg',
+                cor_contato_etiqueta_texto: '--contato-etiqueta-texto', cor_contato_titulo_texto: '--contato-titulo-texto',
+                cor_contato_info_texto: '--contato-info-texto',
                 cor_footer_fundo: '--footer-bg', cor_footer_texto: '--footer-text',
                 cor_botao_primario_fundo: '--btn-p-bg', cor_botao_primario_texto: '--btn-p-text',
                 cor_botao_secundario_fundo: '--btn-s-bg', cor_botao_secundario_texto: '--btn-s-text',
@@ -2314,6 +2319,7 @@
             window.addEventListener('message', function(e) {
                 if (!e.data || e.data.type !== 'se-carregar' && e.data.type !== 'se-atualizar') return;
                 var dados = e.data.dados || {};
+                var dataUrls = e.data.dataUrls || {};
                 var root = document.documentElement;
                 for (var key in cssMap) {
                     if (dados[key]) root.style.setProperty(cssMap[key], dados[key]);
@@ -2330,6 +2336,20 @@
                     })(dados.cor_primaria);
                     root.style.setProperty('--brand-primary-text', b >= 155 ? '#0F172A' : '#FFFFFF');
                 }
+                /* Image preview */
+                var imgMap = {
+                    imagem_hero: '.hero img',
+                    imagem_frota_1: '#frota .fleet-card:nth-child(1) img',
+                    imagem_frota_2: '#frota .fleet-card:nth-child(2) img',
+                    imagem_frota_3: '#frota .fleet-card:nth-child(3) img',
+                    imagem_vantagens: '#vantagens img',
+                    imagem_contato: '#contato img',
+                };
+                for (var imgKey in imgMap) {
+                    if (!dataUrls[imgKey]) continue;
+                    var imgEl = document.querySelector(imgMap[imgKey]);
+                    if (imgEl) imgEl.src = dataUrls[imgKey];
+                }
             });
             window.parent.postMessage({ type: 'se-pronto' }, '*');
         })();
@@ -2337,6 +2357,17 @@
         /* ── Editor click-to-edit ── */
         (function() {
             if (!window.parent || window.parent === window) return;
+
+            /* Desativa todos os links e submits do formulario */
+            document.addEventListener('click', function(e) {
+                var link = e.target.closest('a');
+                if (link && link.getAttribute('href') && link.getAttribute('href') !== '#') {
+                    e.preventDefault();
+                }
+            }, true);
+            document.querySelectorAll('form').forEach(function(f) {
+                f.addEventListener('submit', function(e) { e.preventDefault(); });
+            });
 
             var style = document.createElement('style');
             style.textContent = '.se-hover-hint { outline: 2px dashed rgba(14,165,233,0.4) !important; outline-offset: 2px; cursor: pointer !important; } .se-bg-hint { position: relative; } .se-bg-hint::after { content: "✎ editar fundo"; position: absolute; top: 8px; right: 12px; font: 11px/1 sans-serif; background: rgba(14,165,233,0.9); color: #fff; padding: 3px 10px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 99; } .se-bg-hint:hover::after { opacity: 1; } .se-img-hint { position: relative; } .se-img-hint::after { content: "✎ trocar imagem"; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font: 11px/1 sans-serif; background: rgba(0,0,0,0.65); color: #fff; padding: 4px 12px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 99; } .se-img-hint:hover::after { opacity: 1; }';
