@@ -823,6 +823,11 @@ document.addEventListener('change', function(e) {
     var section = e.target.dataset.section;
     seArquivos[key] = file;
 
+    var toggleKey = 'usar_' + key;
+    seDados[toggleKey] = '1';
+    var toggleEl = document.querySelector('[data-section="' + section + '"][data-key="' + toggleKey + '"]');
+    if (toggleEl) toggleEl.checked = true;
+
     var previewId = 'seImgPreview-' + key.replace('imagem_', '');
     var preview = document.getElementById(previewId);
     if (preview) {
