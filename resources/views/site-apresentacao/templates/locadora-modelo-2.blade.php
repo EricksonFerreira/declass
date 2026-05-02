@@ -59,7 +59,7 @@
         .hero-image img{width:100%;height:480px;object-fit:cover}
         .hero-image-placeholder{width:100%;height:480px;background:linear-gradient(135deg,var(--brand-s),var(--brand-p));border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:4rem}
 
-        .field-small{display:block;margin-top:4px;font-size:.9px;color:var(--ink3)}
+        .field-small{display:block;margin-top:4px;font-size:9px;color:var(--ink3)}
 
         .hero-form-card{background:var(--form-bg);color:var(--form-txt);border-radius:var(--r-lg);padding:28px;box-shadow:var(--sh-lg);margin-top:24px}
         .hero-form-card form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
