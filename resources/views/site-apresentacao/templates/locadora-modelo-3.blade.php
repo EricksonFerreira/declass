@@ -48,6 +48,10 @@
         .hero{background:var(--hb);color:var(--ht);padding:100px 24px;position:relative;overflow:hidden}
         .hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 80% 40%,rgba(255,255,255,.06) 0%,transparent 60%);pointer-events:none}
         .hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+        .hero .wrap.has-image{grid-template-columns:1fr 1fr 1fr}
+        .hero-col-img{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg);aspect-ratio:4/3;width:100%}
+        .hero-col-img img{width:100%;height:100%;object-fit:cover;display:block}
+        .hero-col-img-placeholder{width:100%;height:100%;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.2;aspect-ratio:4/3}
         .hero-tag{font-family:Outfit,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--a);margin-bottom:20px;display:inline-flex;align-items:center;gap:8px}
         .hero-tag::before{content:'';display:block;width:24px;height:2px;background:var(--a)}
         .hero-title{font-family:Outfit,sans-serif;font-size:clamp(2.2rem,3.6vw+1rem,4rem);font-weight:800;line-height:1;margin-bottom:16px;letter-spacing:-.03em}
@@ -135,7 +139,7 @@
         .footer-nav a:hover{opacity:.8}
 
         @media(max-width:768px){
-            .hero .wrap{grid-template-columns:1fr;gap:40px}
+            .hero .wrap,.hero .wrap.has-image{grid-template-columns:1fr;gap:40px}
             .hero{padding:60px 20px 48px}
             .nav{display:none}
             .fleet-grid{grid-template-columns:1fr}
@@ -170,8 +174,9 @@
         </div></div>
     </header>
 
+    @php $heroImgVisivel = \Illuminate\Support\Arr::get($imagensConfig ?? [], 'hero', true); @endphp
     <section class="hero">
-        <div class="wrap">
+        <div class="wrap {{ $heroImgVisivel && !empty($imagemHero) ? 'has-image' : '' }}">
             <div>
                 @if(!empty($heroTag))<div class="hero-tag">{{ $heroTag }}</div>@endif
                 <h1 class="hero-title">{{ $titulo }}</h1>
@@ -182,6 +187,13 @@
                     <a href="{{ $botaoLoginUrl }}" class="hero-btn hero-btn-s">{{ $botaoAdminTexto }}</a>
                 </div>
             </div>
+            @if($heroImgVisivel && !empty($imagemHero))
+            <div class="hero-col-img">
+                <img src="{{ $imagemHero }}" alt="Hero {{ $empresa->nome }}">
+            </div>
+            @elseif($heroImgVisivel)
+            <div class="hero-col-img-placeholder"></div>
+            @endif
             @if(!empty($heroFormTitulo))
             <div class="hero-form">
                 <h2>{{ $heroFormTitulo }}</h2>

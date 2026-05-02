@@ -150,6 +150,10 @@
                         <div class="tab-pane" id="tab-hero-imagem">
                             <div class="se-img-upload">
                                 <label>Imagem do banner (recomendado: 1600x900)</label>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <input type="checkbox" class="se-img-toggle" data-section="hero" data-key="usar_imagem_hero" id="toggle-hero-img" {{ ($siteImagensConfig['hero'] ?? true) ? 'checked' : '' }}>
+                                    <label for="toggle-hero-img" class="mb-0" style="font-size:.8rem;font-weight:500;color:#475569">Mostrar imagem no banner</label>
+                                </div>
                                 <div class="se-img-preview" id="seImgPreview-hero">
                                     @php $heroImg = $siteImagens['hero'] ?? null; @endphp
                                     @if($heroImg)
@@ -222,6 +226,10 @@
                             @for($fi = 1; $fi <= 10; $fi++)
                             <div class="se-img-upload mb-3">
                                 <label>Imagem do Card {{ $fi }} (recomendado: 900x600)</label>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <input type="checkbox" class="se-img-toggle" data-section="frota" data-key="usar_imagem_frota_{{$fi}}" id="toggle-frota-{{$fi}}-img" {{ ($siteImagensConfig['frota_'.$fi] ?? true) ? 'checked' : '' }}>
+                                    <label for="toggle-frota-{{$fi}}-img" class="mb-0" style="font-size:.8rem;font-weight:500;color:#475569">Mostrar imagem no card {{ $fi }}</label>
+                                </div>
                                 <div class="se-img-preview" id="seImgPreview-frota_{{$fi}}">
                                     @php $frotaImg = $siteImagens['frota_'.$fi] ?? null; @endphp
                                     @if($frotaImg)
