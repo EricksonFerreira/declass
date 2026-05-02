@@ -257,8 +257,8 @@
                         </div>
                         @if($planoAtivo->renovacao_automatica)
                         <div class="rs-info-row">
-                            <span>Renovacao automatica</span>
-                            <strong><span class="badge badge-success">Ativa</span></strong>
+                            <span>Renovacao automática</span>
+                            <strong><span class="badge bg-success">Ativa</span></strong>
                         </div>
                         @endif
                     </div>
