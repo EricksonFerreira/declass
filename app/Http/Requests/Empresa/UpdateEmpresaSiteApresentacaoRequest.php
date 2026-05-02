@@ -88,7 +88,7 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
         return [
             'dominio' => $dominioRules,
             'site_apresentacao_ativo' => ['nullable', Rule::in(['S', 'N'])],
-            'site_apresentacao_modelo' => ['nullable', Rule::in(['modelo_1'])],
+            'site_apresentacao_modelo' => ['nullable', Rule::in(['modelo_1', 'modelo_2'])],
             'site_apresentacao_titulo' => ['nullable', 'string', 'max:120'],
             'site_apresentacao_subtitulo' => ['nullable', 'string', 'max:180'],
             'site_apresentacao_descricao' => ['nullable', 'string', 'max:2000'],
@@ -265,7 +265,7 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
         return [
             'dominio.unique' => 'Este dominio ja esta vinculado a outra empresa.',
             'site_apresentacao_ativo.in' => 'O status do site de apresentacao deve ser S ou N.',
-            'site_apresentacao_modelo.in' => 'No momento apenas o Modelo 1 esta disponivel.',
+            'site_apresentacao_modelo.in' => 'Modelo invalido. Escolha Modelo 1 ou Modelo 2.',
             'logo.image' => 'A logo deve ser uma imagem valida.',
             'logo.mimes' => 'A logo deve estar em um formato valido: jpg, jpeg, png, webp ou svg.',
             'logo.max' => 'A logo deve ter no maximo 2MB.',

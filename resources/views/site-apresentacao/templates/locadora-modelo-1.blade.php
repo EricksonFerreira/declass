@@ -1565,10 +1565,19 @@
             </div>
 
             <div class="fleet-grid">
-                @foreach($frotaDestaques as $i => $frota)
-                    <article class="fleet-card reveal d{{ $i + 2 }}">
-                        @if(!empty($frota['imagem']))
-                            <img src="{{ $frota['imagem'] }}" alt="{{ $frota['titulo'] }}" class="fleet-card-img">
+                @for($fi = 1; $fi <= 10; $fi++)
+                    @php
+                        $fCard = null;
+                        foreach ($frotaDestaques as $fd) {
+                            if (($fd['titulo'] ?? '') === $fi) break;
+                        }
+                        $fIdx = $fi - 1;
+                        $fCard = $frotaDestaques[$fIdx] ?? null;
+                        $fVisivel = $fCard && !empty($fCard['titulo']);
+                    @endphp
+                    <article class="fleet-card reveal d{{ $fi + 1 }}" data-frota="{{ $fi }}" style="{{ $fVisivel ? '' : 'display:none' }}">
+                        @if($fCard && !empty($fCard['imagem']))
+                            <img src="{{ $fCard['imagem'] }}" alt="{{ $fCard['titulo'] }}" class="fleet-card-img" data-frota-img="{{ $fi }}">
                         @else
                             <div class="fleet-card-img-placeholder">
                                 <svg viewBox="0 0 64 32" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1580,12 +1589,12 @@
                             </div>
                         @endif
                         <div class="fleet-card-body">
-                            <div class="fleet-card-num">{{ str_pad($i + 1, 2, '0', STR_PAD_LEFT) }}</div>
-                            <h3 class="fleet-card-title">{{ $frota['titulo'] }}</h3>
-                            <p class="fleet-card-desc">{{ $frota['descricao'] }}</p>
+                            <div class="fleet-card-num">{{ str_pad($fi, 2, '0', STR_PAD_LEFT) }}</div>
+                            <h3 class="fleet-card-title" data-frota-titulo="{{ $fi }}">{{ $fCard['titulo'] ?? '' }}</h3>
+                            <p class="fleet-card-desc" data-frota-desc="{{ $fi }}">{{ $fCard['descricao'] ?? '' }}</p>
                         </div>
                     </article>
-                @endforeach
+                @endfor
             </div>
         </div>
     </section>
@@ -2341,9 +2350,27 @@
                     })(dados.cor_primaria);
                     root.style.setProperty('--brand-primary-text', b >= 155 ? '#0F172A' : '#FFFFFF');
                 }
+                /* Frota cards show/hide + content */
+                for (var fi = 1; fi <= 10; fi++) {
+                    var card = document.querySelector('.fleet-card[data-frota="' + fi + '"]');
+                    if (!card) continue;
+                    var tituloKey = 'frota_card_' + fi + '_titulo';
+                    var descKey = 'frota_card_' + fi + '_descricao';
+                    var titulo = dados[tituloKey];
+                    var desc = dados[descKey];
+                    var tituloEl = card.querySelector('[data-frota-titulo="' + fi + '"]');
+                    var descEl = card.querySelector('[data-frota-desc="' + fi + '"]');
+                    if (titulo && titulo.trim()) {
+                        card.style.display = '';
+                        if (tituloEl) tituloEl.textContent = titulo;
+                        if (descEl) descEl.textContent = desc || '';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+
                 /* Image preview */
                 var imgMap = {
-                    imagem_hero: '.hero img',
                     imagem_frota_1: '#frota .fleet-card:nth-child(1) img',
                     imagem_frota_2: '#frota .fleet-card:nth-child(2) img',
                     imagem_frota_3: '#frota .fleet-card:nth-child(3) img',

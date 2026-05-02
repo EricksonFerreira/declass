@@ -51,10 +51,10 @@
             ],
             [
                 'valor'    => 'modelo_2',
-                'titulo'   => 'Modelo 2 — Compacto',
-                'status'   => 'Em breve',
+                'titulo'   => 'Modelo 2 — Moderno',
+                'status'   => 'Disponivel',
                 'icon'     => 'fas fa-bolt',
-                'descricao' => 'Variacao focada em conversao rapida para campanhas de midia.',
+                'descricao' => 'Design moderno com scroll horizontal na frota e timeline vertical nas etapas.',
             ],
             [
                 'valor'    => 'modelo_3',

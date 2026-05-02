@@ -19,6 +19,7 @@ use Illuminate\View\View;
 class SiteApresentacaoController extends Controller
 {
     private const MODELO_1 = 'modelo_1';
+    private const MODELO_2 = 'modelo_2';
     protected $estacaoService;
 
     public function __construct(EstacaoService $estacaoService)
@@ -350,15 +351,16 @@ class SiteApresentacaoController extends Controller
     {
         $normalized = strtolower(trim($modelo));
 
-        return $normalized === self::MODELO_1
-            ? self::MODELO_1
-            : self::MODELO_1;
+        return match ($normalized) {
+            self::MODELO_2 => self::MODELO_2,
+            default => self::MODELO_1,
+        };
     }
 
     private function resolveTemplate(string $modelo): string
     {
         return match ($modelo) {
-            self::MODELO_1 => 'site-apresentacao.templates.locadora-modelo-1',
+            self::MODELO_2 => 'site-apresentacao.templates.locadora-modelo-2',
             default => 'site-apresentacao.templates.locadora-modelo-1',
         };
     }

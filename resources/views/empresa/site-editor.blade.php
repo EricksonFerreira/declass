@@ -67,7 +67,7 @@
                 <span class="se-preview-badge">Clique nos elementos do preview para editar</span>
             </div>
             <div class="se-preview-frame" id="sePreviewFrame">
-                <iframe id="seIframe" src="{{ route('empresa.site-editor.preview', $empresa->id) }}" frameborder="0"></iframe>
+                <iframe id="seIframe" src="{{ route('empresa.site-editor.preview', $empresa->id) }}?m={{ $empresa->site_apresentacao_modelo ?? 'modelo_1' }}" frameborder="0"></iframe>
             </div>
         </div>
     </div>
@@ -185,10 +185,16 @@
                                 <div class="form-group"><label>Etiqueta (rótulo superior)</label><input class="form-control" data-section="frota" data-key="frota_label_superior" value="{{ $txt('frota_label_superior', 'Frota em destaque') }}"></div>
                                 <div class="form-group"><label>Título</label><input class="form-control" data-section="frota" data-key="frota_titulo" value="{{ $txt('frota_titulo', 'Categorias para cada tipo de viagem') }}"></div>
                                 <div class="form-group"><label>Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_descricao" rows="2">{{ $txt('frota_descricao', 'Selecione o grupo ideal e reserve com condições ajustadas ao seu perfil.') }}</textarea></div>
-                                <hr><h6>Cards da Frota <small class="text-muted">(deixe o título vazio para ocultar o card)</small></h6>
+                                <hr><h6>Cards da Frota <small class="text-muted">(deixe o título vazio para ocultar)</small></h6>
                                 @for($fi = 1; $fi <= 10; $fi++)
-                                <div class="form-group"><label>Card {{ $fi }} — Título</label><input class="form-control" data-section="frota" data-key="frota_card_{{$fi}}_titulo" value="{{ $txt('frota_card_'.$fi.'_titulo', '') }}"></div>
-                                <div class="form-group"><label>Card {{ $fi }} — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_{{$fi}}_descricao" rows="1">{{ $txt('frota_card_'.$fi.'_descricao', '') }}</textarea></div>
+                                <div class="se-card-group">
+                                    <div class="se-card-header">
+                                        <span class="se-card-num">{{ str_pad($fi, 2, '0') }}</span>
+                                        <span>Card {{ $fi }}</span>
+                                    </div>
+                                    <input class="form-control form-control-sm" placeholder="Título" data-section="frota" data-key="frota_card_{{$fi}}_titulo" value="{{ $txt('frota_card_'.$fi.'_titulo', '') }}">
+                                    <textarea class="form-control form-control-sm mt-1" placeholder="Descrição" data-section="frota" data-key="frota_card_{{$fi}}_descricao" rows="1">{{ $txt('frota_card_'.$fi.'_descricao', '') }}</textarea>
+                                </div>
                                 @endfor
                             </div>
                         </div>
@@ -573,6 +579,21 @@
 }
 .se-img-placeholder i { font-size: 1.6rem; }
 .se-file-input { display: none; }
+
+/* ═══ CARD GROUP ═══ */
+.se-card-group {
+    border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;
+    margin-bottom: 10px; background: #f8fafc;
+}
+.se-card-header {
+    display: flex; align-items: center; gap: 8px;
+    font-size: .82rem; font-weight: 600; color: #334155; margin-bottom: 8px;
+}
+.se-card-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; border-radius: 6px;
+    background: #0ea5e9; color: #fff; font-size: .7rem; font-weight: 800;
+}
 
 /* ═══ LEFT PANEL (side modal) ═══ */
 .modal.left-panel { padding-right: 0 !important; }
