@@ -349,7 +349,7 @@
                     {{-- Botao confirmar --}}
                     <div class="text-right">
 <button type="button" class="btn btn-success btn-lg" id="btnConfirmarPagamento">
-    <i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao
+    <i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratação
 </button>
                     </div>
                 </div>
@@ -513,11 +513,11 @@ function criarAssinatura() {
 document.getElementById('btnConfirmarPagamento').addEventListener('click', function () {
     var metodo = document.getElementById('inputMetodo').value;
     if (metodo !== 'cartao') return;
-    if (!cartaoPmId) { alert('Selecione um cartao.'); return; }
+    if (!cartaoPmId) { Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Selecione um cartão.', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 }); return; }
 
     var btn = this;
     btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Criando assinatura...';
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processando...';
 
     var formData = new FormData(document.getElementById('formContratar'));
 
@@ -540,8 +540,8 @@ document.getElementById('btnConfirmarPagamento').addEventListener('click', funct
         }
         if (!res.data.success) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
-            alert(res.data.message || 'Erro ao criar assinatura.');
+            btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratação';
+            Swal.fire({ icon: 'error', title: 'Erro', text: res.data.message || 'Erro ao criar assinatura.', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
             return;
         }
         PAGAMENTO_ID = res.data.pagamento_id;
@@ -553,8 +553,8 @@ document.getElementById('btnConfirmarPagamento').addEventListener('click', funct
     })
     .catch(function () {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao';
-        alert('Erro de conexao. Tente novamente.');
+        btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratação';
+        Swal.fire({ icon: 'error', title: 'Erro de conexão', text: 'Tente novamente.', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
     });
 });
 }
@@ -689,6 +689,12 @@ async function processarCartao(pagamentoId, btn) {
     document.getElementById('cartaoSucesso').style.display = 'none';
     document.getElementById('cartaoErro').style.display = 'none';
 
+    if (!pagamentoId) {
+        Swal.fire({ icon: 'error', title: 'Erro', text: 'Pagamento não foi criado. Tente novamente.', toast: true, position: 'top-end', showConfirmButton: false, timer: 4000 });
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratação'; btn.style.display = ''; }
+        return;
+    }
+
     try {
         if (cartaoPmId === 'novo') {
             if (!stripeNovoCard) throw new Error('Formulario de cartao nao carregado.');
@@ -739,12 +745,14 @@ async function processarCartao(pagamentoId, btn) {
         document.getElementById('cartaoSucesso').style.display = 'block';
         atualizarStepper(3);
 
+        Swal.fire({ icon: 'success', title: 'Contratação confirmada!', text: 'Redirecionando...', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+
         setTimeout(function () {
             window.location.href = data2.redirect || '{{ route('assinatura.concluido') }}?pagamento=' + pagamentoId;
         }, 2000);
 
     } catch (err) {
-        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratacao'; btn.style.display = ''; }
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-flag-checkered mr-1"></i> Confirmar Contratação'; btn.style.display = ''; }
         document.getElementById('cartaoProcessando').style.display = 'none';
         document.getElementById('cartaoErro').textContent = err.message || 'Erro ao processar pagamento.';
         document.getElementById('cartaoErro').style.display = 'block';
