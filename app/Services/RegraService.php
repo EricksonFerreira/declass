@@ -6,6 +6,7 @@ use App\Models\Regra;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class RegraService extends AbstractBaseService
 {
@@ -47,13 +48,39 @@ class RegraService extends AbstractBaseService
         return $this->model;
     }
 
+    /**
+     * Aplica escopo de empresa incluindo registros globais (empresa_id IS NULL).
+     */
+    protected function applyEmpresaScope($query)
+    {
+        if (!$this->shouldApplyEmpresaScope()) {
+            return $query;
+        }
+
+        if ($this->model->getTable() === 'empresas') {
+            return $query;
+        }
+
+        $empresaId = $this->currentEmpresaId();
+        if ($empresaId === null) {
+            $user = Auth::user();
+            if ($user?->isSuperAdmin()) {
+                return $query;
+            }
+            throw new AccessDeniedHttpException('Empresa nao identificada para a operacao.');
+        }
+
+        return $query->where(function ($q) use ($empresaId) {
+            $q->where($this->model->getTable() . '.empresa_id', $empresaId)
+              ->orWhereNull($this->model->getTable() . '.empresa_id');
+        });
+    }
+
     public function getAllTiposUsuarios()
     {
         $query = $this->model->newQuery();
 
-        if ($this->shouldApplyEmpresaScope()) {
-            $query->where('empresa_id', $this->currentEmpresaId());
-        }
+        $query = $this->applyEmpresaScope($query);
 
         $data = $query
             ->select('id', 'name')

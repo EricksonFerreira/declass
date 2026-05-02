@@ -110,27 +110,17 @@ class CadastroEmpresaController extends Controller
                 ]);
             }
 
-            // Garante que o perfil "Administrador" global existe com todas as permissões.
+            // Garante que o perfil "Administrador" existe com todas as permissões do sistema.
             Regra::firstOrCreate(
                 ['name' => 'administrador', 'guard_name' => 'web'],
                 []
             );
-            // Sincroniza permissões globais.
             $permissaoSyncService->sync();
 
-            // Cria o perfil "Administrador" específico da empresa (com empresa_id).
-            // Este é o perfil que aparecerá na tela de Perfis de Usuário da empresa.
-            $role = Regra::firstOrCreate(
-                ['name' => 'administrador', 'guard_name' => 'web', 'empresa_id' => $empresa->id],
-                []
-            );
-            // Copia todas as permissões do perfil global para o perfil da empresa.
-            $globalRole = Regra::where('name', 'administrador')->whereNull('empresa_id')->first();
-            if ($globalRole) {
-                $permIds = $globalRole->permissoes()->pluck('permissions.id')->toArray();
-                $role->permissoes()->sync($permIds);
-            }
-            $roleId = $role->id;
+            $role = Regra::where('name', 'administrador')
+                ->where('guard_name', 'web')
+                ->first();
+            $roleId = $role?->id;
 
             $user = User::create([
                 'nome'              => $data['admin_nome'],
