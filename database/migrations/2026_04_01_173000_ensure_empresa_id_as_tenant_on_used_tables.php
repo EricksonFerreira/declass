@@ -155,28 +155,46 @@ return new class extends Migration
             return;
         }
 
-        try {
-            Schema::table('users', function (Blueprint $table) {
-                $table->dropUnique('users_email_unique');
-            });
-        } catch (\Throwable $e) {
-            // Ignore when index does not exist.
+        $indexes = $this->getIndexes('users');
+
+        if (in_array('users_email_unique', $indexes, true)) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->dropUnique('users_email_unique');
+                });
+            } catch (\Throwable $e) {
+                // Ignore when index does not exist.
+            }
         }
 
-        try {
-            Schema::table('users', function (Blueprint $table) {
-                $table->dropUnique('users_tenant_email_unique');
-            });
-        } catch (\Throwable $e) {
-            // Ignore when index does not exist.
+        if (in_array('users_tenant_email_unique', $indexes, true)) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->dropUnique('users_tenant_email_unique');
+                });
+            } catch (\Throwable $e) {
+                // Ignore when index does not exist.
+            }
         }
 
+        if (!in_array('users_empresa_email_unique', $indexes, true)) {
+            try {
+                Schema::table('users', function (Blueprint $table) {
+                    $table->unique(['empresa_id', 'email'], 'users_empresa_email_unique');
+                });
+            } catch (\Throwable $e) {
+                // Ignore when index already exists.
+            }
+        }
+    }
+
+    private function getIndexes(string $table): array
+    {
         try {
-            Schema::table('users', function (Blueprint $table) {
-                $table->unique(['empresa_id', 'email'], 'users_empresa_email_unique');
-            });
+            $indexes = DB::select("SHOW INDEX FROM `{$table}`");
+            return array_unique(array_map(fn ($i) => $i->Key_name, $indexes));
         } catch (\Throwable $e) {
-            // Ignore when index already exists.
+            return [];
         }
     }
 };

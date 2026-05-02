@@ -97,21 +97,26 @@ return new class extends Migration
         if (Schema::hasTable('users') && Schema::hasColumn('users', 'empresa_id')) {
             DB::table('users')->whereNull('empresa_id')->update(['empresa_id' => $defaultTenantId]);
 
-            try {
-                Schema::table('users', function (Blueprint $table) {
-                    $table->dropUnique('users_email_unique');
-                });
-            } catch (\Throwable $e) {
-                // Ignore if the index does not exist.
+            $indexes = $this->getUserIndexes();
+
+            if (in_array('users_email_unique', $indexes, true)) {
+                try {
+                    Schema::table('users', function (Blueprint $table) {
+                        $table->dropUnique('users_email_unique');
+                    });
+                } catch (\Throwable $e) {
+                    // Ignore if the index does not exist.
+                }
             }
 
-            try {
-                if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
-                Schema::table('users', function (Blueprint $table) {
-                    $table->unique(['empresa_id', 'email'], 'users_empresa_email_unique');
-                });
-            } catch (\Throwable $e) {
-                // Ignore if the index already exists.
+            if (!in_array('users_empresa_email_unique', $indexes, true)) {
+                try {
+                    Schema::table('users', function (Blueprint $table) {
+                        $table->unique(['empresa_id', 'email'], 'users_empresa_email_unique');
+                    });
+                } catch (\Throwable $e) {
+                    // Ignore if the index already exists.
+                }
             }
         }
 
@@ -158,6 +163,16 @@ return new class extends Migration
 
         Schema::dropIfExists('empresas');
         Schema::enableForeignKeyConstraints();
+    }
+
+    private function getUserIndexes(): array
+    {
+        try {
+            $indexes = DB::select('SHOW INDEX FROM `users`');
+            return array_unique(array_map(fn ($i) => $i->Key_name, $indexes));
+        } catch (\Throwable $e) {
+            return [];
+        }
     }
 
     private function addTenantColumnToTable(string $tableName, int $defaultTenantId): void
