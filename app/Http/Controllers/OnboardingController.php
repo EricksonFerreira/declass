@@ -196,8 +196,8 @@ class OnboardingController extends Controller
 
         session()->forget(['downgrade_plano_id', 'downgrade_periodicidade', 'downgrade_metodo', 'downgrade_dia_vencimento']);
 
-        return redirect()->route('onboarding.orientacoes')
-            ->with('success', 'Plano alterado e veículos ajustados com sucesso.');
+        return redirect()->route('onboarding.cores')
+            ->with('success', 'Plano alterado e veiculos ajustados com sucesso. Agora defina as cores da sua empresa.');
     }
 
     /**
