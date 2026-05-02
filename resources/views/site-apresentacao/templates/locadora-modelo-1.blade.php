@@ -654,6 +654,7 @@
             display: block;
             min-height: 18px;
             line-height: 1.3;
+            font-size: 9px;
             color: var(--ink-2);
         }
 
