@@ -66,7 +66,7 @@
     </div>
 
     {{-- BOTOES DE ACAO --}}
-    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+    {{-- <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary">
             <i class="fas fa-pen mr-1"></i> Editar
         </a>
@@ -78,7 +78,7 @@
         <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn">
             <i class="fas fa-credit-card mr-1"></i> Assinatura
         </a>
-    </div>
+    </div> --}}
 
     {{-- TABS --}}
     <div class="rs-tabs-wrapper">
@@ -88,7 +88,7 @@
                     <i class="fas fa-building"></i>
                     <span>Dados</span>
                 </a>
-                <div style="display:flex;gap:10px;">
+                {{-- <div style="display:flex;gap:10px;">
                     <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary rs-btn--sm">
                         <i class="fas fa-pen mr-1"></i> Editar
                     </a>
@@ -100,7 +100,7 @@
                     <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--sm">
                         <i class="fas fa-credit-card mr-1"></i> Assinatura
                     </a>
-                </div>
+                </div> --}}
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="tab-plano" data-toggle="tab" href="#pane-plano" role="tab">
