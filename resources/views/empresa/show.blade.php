@@ -38,9 +38,11 @@
                 </div>
             </div>
             <div class="rs-hero__center">
-                  <a href="#" class="rs-btn rs-btn--outline">
-                            <i class="fas fa-hand-holding-usd"></i> Debitar avarias
-                        </a>
+    <div class="mt-1">
+                                <button type="button" class="btn btn-sm btn-outline-danger w-100" data-toggle="modal" data-target="#modalCapturarCalcao">
+                                    <i class="fas fa-hand-holding-usd mr-1"></i> Capturar Valor
+                                </button>
+                            </div>
             </div>
             <div class="rs-hero__right">
                 <span class="rs-status-badge {{ $empresa->ativo === 'S' ? 'is-success' : 'is-danger' }}">
