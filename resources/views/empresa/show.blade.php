@@ -37,13 +37,6 @@
                     <span><i class="fas fa-calendar-plus"></i>Criada em {{ $empresa->created_at?->format('d/m/Y H:i') ?: '-' }}</span>
                 </div>
             </div>
-            <div class="rs-hero__center">
-    <div class="mt-1">
-                                <button type="button" class="btn btn-sm btn-outline-danger w-100" data-toggle="modal" data-target="#modalCapturarCalcao">
-                                    <i class="fas fa-hand-holding-usd mr-1"></i> Capturar Valor
-                                </button>
-                            </div>
-            </div>
             <div class="rs-hero__right">
                 <span class="rs-status-badge {{ $empresa->ativo === 'S' ? 'is-success' : 'is-danger' }}">
                     <i class="fas {{ $empresa->ativo === 'S' ? 'fa-check-circle' : 'fa-times-circle' }}"></i>
@@ -90,11 +83,24 @@
     {{-- TABS --}}
     <div class="rs-tabs-wrapper">
         <ul class="nav nav-tabs rs-nav-tabs" role="tablist">
-            <li class="nav-item">
+            <li class="nav-item" style="display:flex;justify-content:space-between;align-items:center;flex:1;">
                 <a class="nav-link active" id="tab-dados" data-toggle="tab" href="#pane-dados" role="tab">
                     <i class="fas fa-building"></i>
                     <span>Dados</span>
                 </a>
+                <div style="display:flex;gap:10px;">
+                    <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary rs-btn--sm">
+                        <i class="fas fa-pen mr-1"></i> Editar
+                    </a>
+                    @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
+                        <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="rs-btn rs-btn--sm">
+                            <i class="fas fa-globe mr-1"></i> Site
+                        </a>
+                    @endif
+                    <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--sm">
+                        <i class="fas fa-credit-card mr-1"></i> Assinatura
+                    </a>
+                </div>
             </li>
             <li class="nav-item">
                 <a class="nav-link" id="tab-plano" data-toggle="tab" href="#pane-plano" role="tab">
@@ -108,6 +114,7 @@
                     <span>Pagamentos</span>
                 </a>
             </li>
+
         </ul>
 
         <div class="tab-content rs-tab-content">
@@ -237,31 +244,31 @@
                         <h2>{{ $plano->nome }}</h2>
                         <span class="ml-auto badge {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span>
                     </div>
-                    <div class="rs-info-grid">
-                        <div class="rs-info-card">
-                            <span class="rs-info-card__label"><i class="fas fa-dollar-sign"></i> Valor</span>
-                            <strong class="rs-info-card__value">R$ {{ number_format($planoAtivo->valor_cobrado, 2, ',', '.') }}</strong>
+                    <div class="rs-info-rows">
+                        <div class="rs-info-row">
+                            <span>Valor</span>
+                            <strong>R$ {{ number_format($planoAtivo->valor_cobrado, 2, ',', '.') }}</strong>
                         </div>
-                        <div class="rs-info-card">
-                            <span class="rs-info-card__label"><i class="fas fa-calendar-alt"></i> Periodicidade</span>
-                            <strong class="rs-info-card__value">{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</strong>
+                        <div class="rs-info-row">
+                            <span>Periodicidade</span>
+                            <strong>{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</strong>
                         </div>
-                        <div class="rs-info-card">
-                            <span class="rs-info-card__label"><i class="fas fa-play-circle"></i> Inicio</span>
-                            <strong class="rs-info-card__value">{{ $planoAtivo->data_inicio?->format('d/m/Y') ?? '—' }}</strong>
+                        <div class="rs-info-row">
+                            <span>Inicio</span>
+                            <strong>{{ $planoAtivo->data_inicio?->format('d/m/Y') ?? '—' }}</strong>
                         </div>
-                        <div class="rs-info-card">
-                            <span class="rs-info-card__label"><i class="fas fa-hourglass-end"></i> Vencimento</span>
-                            <strong class="rs-info-card__value">{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
+                        <div class="rs-info-row">
+                            <span>Vencimento</span>
+                            <strong>{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
                         </div>
-                        <div class="rs-info-card">
-                            <span class="rs-info-card__label"><i class="fas fa-credit-card"></i> Metodo de cobranca</span>
-                            <strong class="rs-info-card__value">{{ $planoAtivo->metodo_cobranca_texto ?? ucfirst($planoAtivo->metodo_cobranca ?? '—') }}</strong>
+                        <div class="rs-info-row">
+                            <span>Metodo de cobranca</span>
+                            <strong>{{ $planoAtivo->metodo_cobranca_texto ?? ucfirst($planoAtivo->metodo_cobranca ?? '—') }}</strong>
                         </div>
                         @if($planoAtivo->renovacao_automatica)
-                        <div class="rs-info-card">
-                            <span class="rs-info-card__label"><i class="fas fa-sync-alt"></i> Renovacao automatica</span>
-                            <strong class="rs-info-card__value"><span class="badge bg-success">Ativa</span></strong>
+                        <div class="rs-info-row">
+                            <span>Renovacao automática</span>
+                            <strong><span class="badge bg-success">Ativa</span></strong>
                         </div>
                         @endif
                     </div>
@@ -272,18 +279,15 @@
                     <div class="rs-card__header">
                         <i class="fas fa-list rs-card__icon"></i>
                         <h2>Recursos Inclusos</h2>
-                        <span class="ml-auto badge bg-info">{{ $plano->itens->count() }}</span>
                     </div>
-                    <div class="rs-info-grid">
+                    <ul class="list-unstyled mb-0" style="padding:12px 16px;">
                         @foreach($plano->itens as $item)
-                            <div class="rs-info-card" style="display:flex;align-items:center;gap:10px;padding:12px 14px;">
-                                <div style="width:28px;height:28px;border-radius:7px;background:{{ $item->incluso ? '#dcfce7' : '#f1f5f9' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                    <i class="fas fa-{{ $item->incluso ? 'check' : 'times' }}" style="font-size:.72rem;color:{{ $item->incluso ? '#16a34a' : '#94a3b8' }};"></i>
-                                </div>
-                                <span style="font-size:.82rem;color:#0f172a;font-weight:500;">{{ $item->descricao }}</span>
-                            </div>
+                            <li class="mb-1 d-flex align-items-start" style="font-size:.85rem;">
+                                <i class="fas fa-{{ $item->incluso ? 'check text-success' : 'times text-muted' }} mr-2 mt-1" style="font-size:.7rem;"></i>
+                                {{ $item->descricao }}
+                            </li>
                         @endforeach
-                    </div>
+                    </ul>
                 </div>
                 @endif
 
@@ -422,12 +426,12 @@
 .rs-card__icon { width:32px; height:32px; border-radius:9px; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:.82rem; flex-shrink:0; }
 .rs-card__header h2 { margin:0; font-size:.92rem; font-weight:700; color:#0f172a; }
 
-.rs-info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
-.rs-info-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; transition:border-color .15s,box-shadow .15s; }
-.rs-info-card:hover { border-color:#cbd5e1; box-shadow:0 2px 8px rgba(15,23,42,.06); }
-.rs-info-card__label { display:flex; align-items:center; gap:6px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:6px; }
-.rs-info-card__label i { width:14px; text-align:center; color:#94a3b8; font-size:.7rem; }
-.rs-info-card__value { display:block; font-size:.88rem; font-weight:600; color:#0f172a; word-break:break-word; }
+.rs-info-rows { display:grid; gap:0; }
+.rs-info-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid #f1f5f9; }
+.rs-info-row:last-child { border-bottom:0; padding-bottom:0; }
+.rs-info-row span { display:flex; align-items:center; gap:6px; font-size:.78rem; color:#64748b; }
+.rs-info-row span i { width:14px; text-align:center; color:#94a3b8; }
+.rs-info-row strong { font-size:.82rem; font-weight:600; color:#0f172a; text-align:right; }
 
 .rs-btn { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:10px; font-size:.82rem; font-weight:700; border:none; cursor:pointer; text-decoration:none; transition:all .18s; color:#fff; background:#0f172a; }
 .rs-btn:hover { color:#fff; text-decoration:none; background:#1e293b; }
