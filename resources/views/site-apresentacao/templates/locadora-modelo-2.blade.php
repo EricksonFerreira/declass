@@ -44,10 +44,12 @@
         .topbar-cta{padding:8px 20px;border-radius:8px;font-size:.84rem;font-weight:600;background:var(--btn1-bg);color:var(--btn1-txt);transition:opacity .15s;flex-shrink:0}
         .topbar-cta:hover{opacity:.9}
 
+        .booking-form-desc{ font-size: 12px; margin-bottom: 13px;}
+
         .hero{background:var(--hero-bg);color:var(--hero-txt);padding:60px 0;min-height:70vh;display:flex;align-items:center}
         .hero-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
         .hero-tag{font-size:.7rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--brand-a);margin-bottom:16px}
-        .hero-title{font-family:'Plus Jakarta Sans',sans-serif;font-size: clamp(2.4rem, 1.8vw + 1rem, 4.4rem);font-weight:800;line-height:1.05;margin-bottom:14px}
+        .hero-title{font-family:'Plus Jakarta Sans',sans-serif;font-size: clamp(2.4rem, 1.0vw + 1rem, 4.4rem);font-weight:800;line-height:1.05;margin-bottom:14px}
         .hero-sub{font-size:1.05rem;font-weight:500;opacity:.85;margin-bottom:8px}
         .hero-desc{font-size:.9rem;line-height:1.7;opacity:.7;margin-bottom:28px;max-width:48ch}
         .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
