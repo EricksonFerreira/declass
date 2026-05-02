@@ -135,7 +135,7 @@
                     <div class="tab-content se-tab-content">
                         <div class="tab-pane active" id="tab-hero-texto">
                             <div class="se-form-grid">
-                                <div class="form-group"><label>Etiqueta (tag)</label><input class="form-control" data-section="hero" data-key="hero_tag" value="{{ $txt('hero_tag', 'Modelo 1 - Premium Locadora') }}"></div>
+                                <div class="form-group"><label>Etiqueta (tag)</label><input class="form-control" data-section="hero" data-key="hero_tag" value="{{ $txt('hero_tag', '') }}"></div>
                                 <div class="form-group"><label>Título</label><input class="form-control" data-section="hero" data-key="hero_titulo" value="{{ $txt('hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veículos com praticidade e segurança') }}"></div>
                                 <div class="form-group"><label>Subtítulo</label><input class="form-control" data-section="hero" data-key="hero_subtitulo" value="{{ $txt('hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rápido e viaje com cobertura nacional.') }}"></div>
                                 <div class="form-group"><label>Descrição</label><textarea class="form-control" data-section="hero" data-key="hero_descricao" rows="2">{{ $txt('hero_descricao', $empresa->site_apresentacao_descricao ?: 'Planos diários, semanais e mensais para pessoas físicas e empresas.') }}</textarea></div>
@@ -293,6 +293,10 @@
                         <div class="tab-pane" id="tab-vantagens-imagem">
                             <div class="se-img-upload">
                                 <label>Imagem da seção Vantagens (recomendado: 900x600)</label>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <input type="checkbox" class="se-img-toggle" data-section="vantagens" data-key="usar_imagem_vantagens" id="toggle-vant-img" {{ ($siteImagensConfig['vantagens'] ?? true) ? 'checked' : '' }}>
+                                    <label for="toggle-vant-img" class="mb-0" style="font-size:.8rem;font-weight:500;color:#475569">Mostrar imagem na seção</label>
+                                </div>
                                 <div class="se-img-preview" id="seImgPreview-vantagens">
                                     @php $vantImg = $siteImagens['vantagens'] ?? null; @endphp
                                     @if($vantImg)
@@ -395,6 +399,10 @@
                         <div class="tab-pane" id="tab-contato-imagem">
                             <div class="se-img-upload">
                                 <label>Imagem da seção Contato (recomendado: 600x400)</label>
+                                <div class="d-flex align-items-center gap-2 mb-2">
+                                    <input type="checkbox" class="se-img-toggle" data-section="contato" data-key="usar_imagem_contato" id="toggle-contato-img" {{ ($siteImagensConfig['contato'] ?? true) ? 'checked' : '' }}>
+                                    <label for="toggle-contato-img" class="mb-0" style="font-size:.8rem;font-weight:500;color:#475569">Mostrar imagem na seção</label>
+                                </div>
                                 <div class="se-img-preview" id="seImgPreview-contato">
                                     @php $contImg = $siteImagens['contato'] ?? null; @endphp
                                     @if($contImg)
@@ -675,6 +683,7 @@ function seColetarSecao(section) {
     document.querySelectorAll(`[data-section="${section}"]`).forEach(el => {
         const key = el.dataset.key;
         if (el.type === 'file') return;
+        if (el.type === 'checkbox') { dados[key] = el.checked ? 'S' : 'N'; return; }
         dados[key] = el.value;
     });
     return dados;

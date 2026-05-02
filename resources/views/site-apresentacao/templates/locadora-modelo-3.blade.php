@@ -387,7 +387,7 @@
                     if(t&&t.trim()){c.style.display='';if(te)te.textContent=t;if(de2)de2.textContent=de||''}
                     else c.style.display='none'
                 }
-                var im={imagem_hero:'img'};for(var ik in im){if(!du[ik])continue;var ie=document.querySelector(im[ik]);if(ie)ie.src=du[ik]}
+                var im={imagem_hero:'.hero-col-img img'};for(var ik in im){if(!du[ik])continue;var ie=document.querySelector(im[ik]);if(ie)ie.src=du[ik]}
             });
             window.parent.postMessage({type:'se-pronto'},'*');
         })();
