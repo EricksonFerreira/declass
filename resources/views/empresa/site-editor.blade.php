@@ -24,10 +24,13 @@
 
 @section('content')
     <div class="se-editor-layout">
-        <div class="se-sidebar">
+        <div class="se-sidebar" id="seSidebar">
             <div class="se-sidebar-header">
                 <i class="fas fa-layer-group"></i>
                 <span>Seções</span>
+                <button class="se-sidebar-close" onclick="seToggleSidebar()" title="Fechar painel">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
             <div class="se-section-list">
                 @php
