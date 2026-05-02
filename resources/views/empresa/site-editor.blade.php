@@ -664,6 +664,9 @@
 }
 .se-img-placeholder i { font-size: 1.6rem; }
 .se-file-input { display: none; }
+.se-resp-label { display:inline-flex; align-items:center; gap:4px; font-size:.78rem; color:#475569; cursor:pointer; padding:4px 8px; border:1px solid #e2e8f0; border-radius:6px; transition:all .15s; background:#fff; }
+.se-resp-label:hover { border-color:#0ea5e9; background:#f0f9ff; }
+.se-resp-label input { margin:0; }
 
 /* ═══ CARD GROUP ═══ */
 .se-card-group {

@@ -710,6 +710,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'imagemHero' => $iv($imagens, 'hero', $imagensConfig, 'hero'),
             'imagemVantagens' => $iv($imagens, 'vantagens', $imagensConfig, 'vantagens'),
             'imagemContato' => $iv($imagens, 'contato', $imagensConfig, 'contato'),
+            'imagensConfig' => $imagensConfig,
             'estacoesRetirada' => [],
             'estacoesDevolucao' => [],
         ]);

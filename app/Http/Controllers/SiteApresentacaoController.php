@@ -150,6 +150,7 @@ class SiteApresentacaoController extends Controller
             'imagemHero' => $this->imageUrl($imagens, 'hero', $this->imageEnabled($imagensConfig, 'hero')),
             'imagemVantagens' => $this->imageUrl($imagens, 'vantagens', $this->imageEnabled($imagensConfig, 'vantagens')),
             'imagemContato' => $this->imageUrl($imagens, 'contato', $this->imageEnabled($imagensConfig, 'contato')),
+            'imagensConfig' => $imagensConfig,
             'estacoesRetirada' => $estacoesRetirada,
             'estacoesDevolucao' => $estacoesDevolucao,
         ]);

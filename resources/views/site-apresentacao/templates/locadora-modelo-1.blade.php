@@ -1321,6 +1321,12 @@
         /* ══════════════════════════════════════════
            RESPONSIVE
         ══════════════════════════════════════════ */
+        .hide-pc { display:none !important; }
+        .hide-tablet { display:none !important; }
+        .hide-mobile { display:none !important; }
+        @media (min-width:769px) { .hide-tablet, .hide-mobile { display:revert !important; } }
+        @media (max-width:768px) and (min-width:481px) { .hide-pc, .hide-mobile { display:revert !important; } }
+        @media (max-width:480px) { .hide-pc, .hide-tablet { display:revert !important; } }
         @media (max-width: 1060px) {
             .hero-inner {
                 grid-template-columns: 1fr;
