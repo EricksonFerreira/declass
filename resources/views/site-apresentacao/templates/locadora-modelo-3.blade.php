@@ -8,7 +8,7 @@
     <link rel="icon" href="{{ $empresa->logo_url ?: asset('assets/imgs/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
@@ -25,159 +25,150 @@
             --cont-b:{{$corContatoFundo}};--cont-e:{{$corContatoEtiquetaTexto}};--cont-t:{{$corContatoTituloTexto}};--cont-i:{{$corContatoInfoTexto}};
             --foot-b:{{$corFooterFundo}};--foot-t:{{$corFooterTexto}};
             --b1-b:{{$corBotaoPrimarioFundo}};--b1-t:{{$corBotaoPrimarioTexto}};--b2-b:{{$corBotaoSecundarioFundo}};--b2-t:{{$corBotaoSecundarioTexto}};
-            --ink:#0c0a09;--ink2:#1c1917;--ink3:#57534e;--line:#e7e5e4;--white:#fff;--off:#fafaf9;
-            --r:4px;--r-lg:12px;
-            --sh:0 1px 2px rgba(0,0,0,.04);--sh-md:0 4px 12px rgba(0,0,0,.06);--sh-lg:0 8px 30px rgba(0,0,0,.08);
+            --ink:#111;--ink2:#333;--ink3:#666;--line:#e5e5e5;--white:#fff;--off:#f5f5f5;
+            --r:0;--r-lg:0;
+            --sh:0 0 0 1px rgba(0,0,0,.04);--sh-md:0 4px 20px rgba(0,0,0,.06);--sh-lg:0 12px 48px rgba(0,0,0,.08);
         }
         body{font-family:Inter,sans-serif;color:var(--ink);background:var(--white);-webkit-font-smoothing:antialiased}
         a{text-decoration:none;color:inherit}
         img{display:block;max-width:100%}
-        .wrap{width:min(1200px,calc(100% - 48px));margin-inline:auto}
 
-        .topbar{position:sticky;top:0;z-index:100;background:var(--tb)}
-        .topbar-inner{display:flex;align-items:center;justify-content:space-between;height:64px;gap:16px}
-        .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.05rem;color:var(--tt);flex-shrink:0;letter-spacing:-.02em}
-        .brand img{height:34px;width:auto}
-        .topbar-nav{display:flex;align-items:center;gap:2px}
-        .topbar-nav a{padding:6px 14px;border-radius:var(--r);font-size:.82rem;font-weight:500;color:var(--tt);transition:all .15s;letter-spacing:-.01em}
-        .topbar-nav a:hover{background:var(--th)}
-        .topbar-cta{padding:8px 20px;border-radius:var(--r);font-size:.82rem;font-weight:600;background:var(--b1-b);color:var(--b1-t);transition:all .15s;flex-shrink:0;letter-spacing:-.01em}
-        .topbar-cta:hover{opacity:.9}
+        .hdr{position:sticky;top:0;z-index:100;background:var(--tb);border-bottom:1px solid var(--line)}
+        .hdr-inner{display:flex;align-items:center;justify-content:space-between;height:56px;padding:0 32px;max-width:1400px;margin-inline:auto;gap:16px}
+        .hdr-brand{font-family:Outfit,sans-serif;font-weight:700;font-size:1rem;color:var(--tt);display:flex;align-items:center;gap:8px;flex-shrink:0}
+        .hdr-brand img{height:30px;width:auto}
+        .hdr-nav{display:flex;gap:4px}
+        .hdr-nav a{padding:6px 14px;font-size:.82rem;font-weight:500;color:var(--tt);transition:all .15s;border-radius:20px}
+        .hdr-nav a:hover{background:var(--th)}
+        .hdr-cta{padding:7px 20px;font-size:.8rem;font-weight:600;border-radius:20px;background:var(--b1-b);color:var(--b1-t);transition:all .15s;flex-shrink:0}
+        .hdr-cta:hover{opacity:.85}
 
-        .hero{background:var(--hb);color:var(--ht);padding:100px 0 80px;position:relative}
-        .hero-inner{max-width:800px;margin-inline:auto;text-align:center}
-        .hero-tag{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--a);margin-bottom:16px;display:inline-block;padding:4px 14px;border:1px solid currentColor;border-radius:20px;opacity:.6}
-        .hero-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(2.2rem,4vw+1rem,4.2rem);font-weight:700;line-height:1;margin-bottom:16px;letter-spacing:-.03em}
-        .hero-sub{font-size:1.1rem;opacity:.7;margin-bottom:8px;font-weight:400}
-        .hero-desc{font-size:.92rem;line-height:1.7;opacity:.5;margin-bottom:36px;max-width:56ch;margin-inline:auto}
-        .hero-actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-        .hero-btn{padding:14px 36px;border-radius:var(--r);font-weight:600;font-size:.9rem;border:none;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+        .hero{background:var(--hb);color:var(--ht);min-height:90vh;display:flex;align-items:center;padding:80px 32px;position:relative}
+        .hero-inner{max-width:1400px;margin-inline:auto;width:100%;display:grid;grid-template-columns:1.2fr .8fr;gap:64px;align-items:center}
+        .hero-tag{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--a);margin-bottom:20px;display:inline-block;padding:6px 16px;border:1px solid;border-radius:20px}
+        .hero-title{font-family:Outfit,sans-serif;font-size:clamp(2.4rem,4vw+1rem,4.8rem);font-weight:800;line-height:.95;margin-bottom:18px;letter-spacing:-.03em}
+        .hero-sub{font-size:1.05rem;line-height:1.5;opacity:.7;margin-bottom:6px}
+        .hero-desc{font-size:.92rem;line-height:1.7;opacity:.5;margin-bottom:36px;max-width:44ch}
+        .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
+        .hero-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 32px;font-weight:600;font-size:.88rem;border:none;cursor:pointer;transition:all .2s}
         .hero-btn-p{background:var(--b1-b);color:var(--b1-t)}
-        .hero-btn-s{background:transparent;color:var(--ht);border:1px solid currentColor;opacity:.6}
+        .hero-btn-s{color:var(--ht);border:1px solid;opacity:.5;background:transparent}
         .hero-btn-s:hover{opacity:1}
-        .hero-btn:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
+        .hero-btn:hover{transform:translateY(-3px);box-shadow:var(--sh-lg)}
 
-        .hero-form{background:var(--white);border-radius:var(--r-lg);padding:32px;box-shadow:var(--sh-lg);margin-top:40px;text-align:left;color:var(--ink)}
-        .hero-form h2{font-family:'Space Grotesk',sans-serif;font-size:1.1rem;font-weight:700;margin-bottom:4px;letter-spacing:-.02em}
-        .hero-form .desc{font-size:.84rem;color:var(--ink3);margin-bottom:20px}
-        .hero-form form{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+        .hero-form{background:var(--fb);color:var(--ft);padding:32px}
+        .hero-form h2{font-family:Outfit,sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:4px}
+        .hero-form .desc{font-size:.84rem;opacity:.6;margin-bottom:20px}
+        .hero-form form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
         .hero-form .full{grid-column:1/-1}
-        .hero-form label{font-size:.76rem;font-weight:600;display:block;margin-bottom:4px;color:var(--ink2)}
-        .hero-form select,.hero-form input{padding:10px 12px;border:1px solid var(--line);border-radius:var(--r);font-size:.84rem;width:100%;background:var(--white);color:var(--ink);outline:none}
-        .hero-form select:focus,.hero-form input:focus{border-color:var(--p);box-shadow:0 0 0 2px color-mix(in srgb,var(--p) 15%,transparent)}
-        .hero-form .btn-book{padding:12px 24px;border:none;border-radius:var(--r);background:var(--b1-b);color:var(--b1-t);font-weight:600;font-size:.88rem;cursor:pointer;transition:opacity .15s;grid-column:1/-1;justify-self:start}
+        .hero-form label{font-size:.75rem;font-weight:600;display:block;margin-bottom:3px;opacity:.7}
+        .hero-form select,.hero-form input{padding:10px 12px;border:1px solid var(--line);font-size:.84rem;width:100%;background:var(--white);color:var(--ink)}
+        .hero-form .btn-book{padding:12px 24px;border:none;background:var(--b1-b);color:var(--b1-t);font-weight:600;font-size:.88rem;cursor:pointer;grid-column:1/-1;justify-self:start}
         .hero-form .btn-book:hover{opacity:.9}
-        .hero-form small{font-size:.7rem;color:var(--ink3);display:block;margin-top:2px}
-        .hero-form .note{font-size:.75rem;color:var(--ink3);margin-top:12px;grid-column:1/-1;opacity:.6}
+        .hero-form small{font-size:.7rem;opacity:.5;display:block;margin-top:2px}
+        .hero-form .note{font-size:.75rem;opacity:.5;margin-top:10px;grid-column:1/-1}
 
-        .section{padding:96px 0}
-        .section--alt{background:var(--off)}
-        .section--frota{background:var(--frota-b)}
-        .section--vant{background:var(--vant-b)}
-        .section--etapas{background:var(--etap-b)}
-        .section-head{text-align:center;margin-bottom:56px;max-width:640px;margin-inline:auto}
-        .section-head .eyebrow{font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--a);margin-bottom:10px;}
-        .section--frota .eyebrow{color:var(--frota-e)}
-        .section--vant .eyebrow{color:var(--vant-e)}
-        .section--etapas .eyebrow{color:var(--etap-e)}
-        .section-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.8rem,2.8vw+.6rem,3rem);font-weight:700;line-height:1;margin-bottom:12px;letter-spacing:-.03em}
-        .section--frota .section-title{color:var(--frota-t)}
-        .section--vant .section-title{color:var(--vant-t)}
-        .section--etapas .section-title{color:var(--etap-t)}
-        .section-desc{font-size:.9rem;line-height:1.7;color:var(--ink3)}
-        .section--frota .section-desc{color:var(--frota-d)}
-        .section--vant .section-desc{color:var(--vant-d)}
-        .section--etapas .section-desc{color:var(--etap-d)}
+        .sec{padding:96px 32px}
+        .sec--alt{background:var(--off)}
+        .sec--frota{background:var(--frota-b)}
+        .sec--vant{background:var(--vant-b)}
+        .sec--etapas{background:var(--etap-b)}
+        .sec-wrap{max-width:1400px;margin-inline:auto}
+        .sec-head{margin-bottom:56px}
+        .sec-head .eyebrow{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--a);margin-bottom:10px}
+        .sec--frota .eyebrow{color:var(--frota-e)}.sec--vant .eyebrow{color:var(--vant-e)}.sec--etapas .eyebrow{color:var(--etap-e)}
+        .sec-head h2{font-family:Outfit,sans-serif;font-size:clamp(1.8rem,3vw+.6rem,3.2rem);font-weight:800;letter-spacing:-.03em;line-height:1;margin-bottom:10px}
+        .sec--frota .sec-head h2{color:var(--frota-t)}.sec--vant .sec-head h2{color:var(--vant-t)}.sec--etapas .sec-head h2{color:var(--etap-t)}
+        .sec-head p{font-size:.92rem;line-height:1.7;color:var(--ink3);max-width:48ch}
+        .sec--frota .sec-head p{color:var(--frota-d)}.sec--vant .sec-head p{color:var(--vant-d)}.sec--etapas .sec-head p{color:var(--etap-d)}
 
-        .fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px}
-        .fleet-card{position:relative;border-radius:var(--r-lg);overflow:hidden;background:var(--frota-cb);box-shadow:var(--sh);transition:all .3s}
-        .fleet-card:hover{transform:translateY(-4px);box-shadow:var(--sh-lg)}
-        .fleet-card-img{width:100%;height:220px;object-fit:cover;transition:transform .4s}
-        .fleet-card:hover .fleet-card-img{transform:scale(1.04)}
-        .fleet-card-img-placeholder{height:220px;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.25}
-        .fleet-card-body{padding:24px 24px 28px}
-        .fleet-card-num{font-family:'Space Grotesk',sans-serif;font-size:.75rem;font-weight:700;color:var(--a);margin-bottom:6px;letter-spacing:.05em}
-        .fleet-card-title{font-family:'Space Grotesk',sans-serif;font-size:1.15rem;font-weight:700;color:var(--frota-ct);margin-bottom:6px;letter-spacing:-.02em}
+        .fleet{display:grid;grid-template-columns:1fr 1fr;gap:2px;background:var(--line)}
+        .fleet-card{background:var(--frota-cb);padding:32px;display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:center;position:relative}
+        .fleet-card:nth-child(even){direction:rtl;text-align:left}
+        .fleet-card:nth-child(even) .fleet-card-body{direction:ltr}
+        .fleet-card-img{width:100%;height:200px;object-fit:cover;filter:grayscale(1);transition:filter .4s}
+        .fleet-card:hover .fleet-card-img{filter:grayscale(0)}
+        .fleet-card-img-placeholder{height:200px;background:var(--off);display:flex;align-items:center;justify-content:center;font-size:2.5rem;color:var(--ink3);opacity:.2}
+        .fleet-card-num{font-family:Outfit,sans-serif;font-size:.7rem;font-weight:700;color:var(--a);margin-bottom:4px;letter-spacing:.05em}
+        .fleet-card-title{font-family:Outfit,sans-serif;font-size:1.1rem;font-weight:700;color:var(--frota-ct);margin-bottom:4px;letter-spacing:-.02em}
         .fleet-card-desc{font-size:.86rem;line-height:1.6;color:var(--frota-cd)}
 
-        .vant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}
-        .vant-item{padding:28px 24px;background:var(--white);border-radius:var(--r-lg);box-shadow:var(--sh);transition:all .25s;position:relative;overflow:hidden}
-        .vant-item::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--p),var(--a));opacity:0;transition:opacity .25s}
-        .vant-item:hover::before{opacity:1}
-        .vant-item:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
-        .vant-item-icon{font-size:1.6rem;margin-bottom:12px;display:block}
-        .vant-item-text{font-size:.9rem;font-weight:500;color:var(--vant-i);line-height:1.6;display:block}
+        .vant{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line)}
+        .vant-item{padding:40px 28px;background:var(--vant-b);text-align:center}
+        .vant-item-icon{font-size:2rem;margin-bottom:12px;display:block}
+        .vant-item-text{font-size:.88rem;font-weight:500;color:var(--vant-i);line-height:1.6;display:block}
 
-        .steps-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;position:relative}
-        .step-card{padding:24px;background:var(--etap-pb);border-radius:var(--r-lg);box-shadow:var(--sh);transition:all .25s;position:relative}
-        .step-card:hover{transform:translateY(-3px);box-shadow:var(--sh-md)}
-        .step-card:nth-child(odd){transform:translateY(20px)}
-        .step-card:nth-child(odd):hover{transform:translateY(16px)}
-        .step-num{font-family:'Space Grotesk',sans-serif;font-size:2rem;font-weight:700;color:var(--a);line-height:1;margin-bottom:8px;letter-spacing:-.03em}
-        .step-card-title{font-family:'Space Grotesk',sans-serif;font-size:1.05rem;font-weight:700;color:var(--etap-pt);margin-bottom:6px;letter-spacing:-.02em}
-        .step-card-desc{font-size:.86rem;line-height:1.6;color:var(--etap-pd)}
+        .etapas{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--line)}
+        .etapa-card{background:var(--etap-pb);padding:40px 32px;text-align:center}
+        .etapa-num{font-family:Outfit,sans-serif;font-size:3rem;font-weight:800;color:var(--a);line-height:1;margin-bottom:12px;letter-spacing:-.04em}
+        .etapa-title{font-family:Outfit,sans-serif;font-size:1.05rem;font-weight:700;color:var(--etap-pt);margin-bottom:6px;letter-spacing:-.02em}
+        .etapa-desc{font-size:.86rem;line-height:1.6;color:var(--etap-pd);max-width:32ch;margin-inline:auto}
 
-        .contato{background:var(--cont-b);padding:80px 0}
-        .contato-inner{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
-        .contato-eyebrow{font-size:.62rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--cont-e);margin-bottom:10px}
-        .contato-title{font-family:'Space Grotesk',sans-serif;font-size:clamp(1.6rem,2.4vw+.6rem,2.6rem);font-weight:700;color:var(--cont-t);line-height:1;margin-bottom:16px;letter-spacing:-.03em}
-        .contato-info{display:flex;flex-direction:column;gap:6px}
-        .contato-info-item{font-size:.9rem;color:var(--cont-i);display:flex;align-items:center;gap:8px}
-        .contato-info-item::before{content:'→';font-weight:700;color:var(--a)}
-        .contato-cta{padding:14px 32px;border-radius:var(--r);background:var(--b1-b);color:var(--b1-t);font-weight:600;font-size:.9rem;border:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;transition:all .2s;margin-top:20px}
+        .contato{padding:96px 32px;background:var(--cont-b)}
+        .contato-wrap{max-width:1400px;margin-inline:auto}
+        .contato-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
+        .contato-eyebrow{font-size:.65rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--cont-e);margin-bottom:10px}
+        .contato-title{font-family:Outfit,sans-serif;font-size:clamp(1.6rem,2.4vw+.6rem,2.6rem);font-weight:800;letter-spacing:-.03em;line-height:1;color:var(--cont-t);margin-bottom:20px}
+        .contato-info{display:flex;flex-direction:column;gap:4px}
+        .contato-info-item{font-size:.9rem;color:var(--cont-i)}
+        .contato-cta{display:inline-flex;align-items:center;gap:8px;margin-top:24px;padding:14px 32px;font-weight:600;font-size:.88rem;background:var(--b1-b);color:var(--b1-t);border:none;cursor:pointer;transition:all .2s}
         .contato-cta:hover{transform:translateY(-2px);box-shadow:var(--sh-lg)}
-        .contato-image{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg)}
-        .contato-image img{width:100%;height:340px;object-fit:cover}
-        .contato-image-placeholder{height:340px;background:var(--line);border-radius:var(--r-lg);display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.2}
+        .contato-image{overflow:hidden}
+        .contato-image img{width:100%;height:360px;object-fit:cover}
+        .contato-image-placeholder{height:360px;background:var(--line);display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.15}
 
-        .footer{background:var(--foot-b);color:var(--foot-t);padding:40px 0;border-top:1px solid var(--line)}
-        .footer-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
-        .footer-text{font-size:.84rem;opacity:.5}
-        .footer-nav{display:flex;gap:24px;font-size:.84rem}
-        .footer-nav a{opacity:.4;transition:opacity .2s;letter-spacing:-.01em}
-        .footer-nav a:hover{opacity:.8}
+        .footer{background:var(--foot-b);color:var(--foot-t);padding:32px;border-top:1px solid var(--line)}
+        .footer-inner{max-width:1400px;margin-inline:auto;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;font-size:.82rem}
+        .footer-text{opacity:.4}
+        .footer-nav{display:flex;gap:24px}
+        .footer-nav a{opacity:.35;transition:opacity .2s}
+        .footer-nav a:hover{opacity:.7}
 
         @media(max-width:768px){
-            .hero{padding:60px 0 48px}
+            .hero-inner{grid-template-columns:1fr;gap:40px}
+            .hero{min-height:auto;padding:48px 24px}
             .hero-form form{grid-template-columns:1fr}
-            .topbar-nav{display:none}
-            .vant-grid{grid-template-columns:1fr}
-            .steps-grid{grid-template-columns:1fr}
-            .steps-grid .step-card:nth-child(odd){transform:none}
-            .contato-inner{grid-template-columns:1fr;gap:32px}
-            .fleet-grid{grid-template-columns:1fr}
+            .hdr-nav{display:none}
+            .fleet{grid-template-columns:1fr}
+            .fleet-card,.fleet-card:nth-child(even){grid-template-columns:1fr;direction:ltr;text-align:left}
+            .vant{grid-template-columns:1fr 1fr}
+            .etapas{grid-template-columns:1fr}
+            .contato-grid{grid-template-columns:1fr;gap:32px}
+            .sec{padding:64px 24px}
         }
     </style>
 </head>
 <body>
-    <header class="topbar">
-        <div class="wrap"><div class="topbar-inner">
-            <a href="#" class="brand">
+    <header class="hdr">
+        <div class="hdr-inner">
+            <a href="#" class="hdr-brand">
                 @if(!empty($empresa->logo_url))
                     <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->nome }}">
                 @else
                     {{ $empresa->nome }}
                 @endif
             </a>
-            <nav class="topbar-nav">
+            <nav class="hdr-nav">
                 <a href="#frota">{{ $menuItemFrota }}</a>
                 <a href="#vantagens">{{ $menuItemVantagens }}</a>
                 <a href="#etapas">{{ $menuItemEtapas }}</a>
                 <a href="#contato">{{ $menuItemContato }}</a>
             </nav>
-            <a href="{{ $botaoUrl }}" class="topbar-cta">{{ $botaoTexto }}</a>
-        </div></div>
+            <a href="{{ $botaoUrl }}" class="hdr-cta">{{ $botaoTexto }}</a>
+        </div>
     </header>
 
     <section class="hero">
-        <div class="wrap"><div class="hero-inner">
-            @if(!empty($heroTag))<div class="hero-tag">{{ $heroTag }}</div>@endif
-            <h1 class="hero-title">{{ $titulo }}</h1>
-            @if(!empty($subtitulo))<div class="hero-sub">{{ $subtitulo }}</div>@endif
-            @if(!empty($descricao))<p class="hero-desc">{{ $descricao }}</p>@endif
-            <div class="hero-actions">
-                <a href="{{ $botaoUrl }}" class="hero-btn hero-btn-p">{{ $botaoTexto }}</a>
-                <a href="{{ $botaoLoginUrl }}" class="hero-btn hero-btn-s">{{ $botaoAdminTexto }}</a>
+        <div class="hero-inner">
+            <div>
+                @if(!empty($heroTag))<div class="hero-tag">{{ $heroTag }}</div>@endif
+                <h1 class="hero-title">{{ $titulo }}</h1>
+                @if(!empty($subtitulo))<div class="hero-sub">{{ $subtitulo }}</div>@endif
+                @if(!empty($descricao))<p class="hero-desc">{{ $descricao }}</p>@endif
+                <div class="hero-actions">
+                    <a href="{{ $botaoUrl }}" class="hero-btn hero-btn-p">{{ $botaoTexto }}</a>
+                    <a href="{{ $botaoLoginUrl }}" class="hero-btn hero-btn-s">{{ $botaoAdminTexto }}</a>
+                </div>
             </div>
             @if(!empty($heroFormTitulo))
             <div class="hero-form">
@@ -213,7 +204,7 @@
                                 <option value="{{ $id }}">{{ $nome }}</option>
                             @endforeach
                         </select>
-                        <small id="devolucao_feedback">Selecione a estação de devolução</small>
+                        <small id="devolucao_feedback">Selecione a estação</small>
                     </div>
                     <div>
                         <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
@@ -232,27 +223,47 @@
                 </form>
             </div>
             @endif
-        </div></div>
+        </div>
     </section>
 
-    <section id="frota" class="section section--frota">
-        <div class="wrap">
-            <div class="section-head">
-                @if(!empty($frotaLabelSuperior))<div class="eyebrow">{{ $frotaLabelSuperior }}</div>@endif
-                <h2 class="section-title">{{ $frotaTitulo }}</h2>
-                @if(!empty($frotaDescricao))<p class="section-desc">{{ $frotaDescricao }}</p>@endif
+    <section id="vantagens" class="sec sec--vant">
+        <div class="sec-wrap">
+            <div class="sec-head">
+                @if(!empty($vantagensLabelSuperior))<div class="eyebrow">{{ $vantagensLabelSuperior }}</div>@endif
+                <h2>{{ $vantagensTitulo }}</h2>
+                @if(!empty($vantagensDescricao))<p>{{ $vantagensDescricao }}</p>@endif
             </div>
-            <div class="fleet-grid">
+            <div class="vant">
+                @foreach($beneficios as $beneficio)
+                    @if(!empty($beneficio))
+                        <div class="vant-item">
+                            <span class="vant-item-icon">◆</span>
+                            <span class="vant-item-text">{{ $beneficio }}</span>
+                        </div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </section>
+
+    <section id="frota" class="sec sec--frota">
+        <div class="sec-wrap">
+            <div class="sec-head">
+                @if(!empty($frotaLabelSuperior))<div class="eyebrow">{{ $frotaLabelSuperior }}</div>@endif
+                <h2>{{ $frotaTitulo }}</h2>
+                @if(!empty($frotaDescricao))<p>{{ $frotaDescricao }}</p>@endif
+            </div>
+            <div class="fleet">
                 @for($fi = 1; $fi <= 10; $fi++)
                     @php $fCard = $frotaDestaques[$fi - 1] ?? null; $fv = $fCard && !empty($fCard['titulo']); @endphp
                     <article class="fleet-card" data-frota="{{ $fi }}" style="{{ $fv ? '' : 'display:none' }}">
                         @if($fCard && !empty($fCard['imagem']))
                             <img src="{{ $fCard['imagem'] }}" alt="{{ $fCard['titulo'] }}" class="fleet-card-img" data-frota-img="{{ $fi }}">
                         @else
-                            <div class="fleet-card-img-placeholder">▤</div>
+                            <div class="fleet-card-img-placeholder">◆</div>
                         @endif
                         <div class="fleet-card-body">
-                            <div class="fleet-card-num">C{{ str_pad($fi,2,'0',STR_PAD_LEFT) }}</div>
+                            <div class="fleet-card-num">{{ str_pad($fi,2,'0',STR_PAD_LEFT) }}</div>
                             <h3 class="fleet-card-title" data-frota-titulo="{{ $fi }}">{{ $fCard['titulo'] ?? '' }}</h3>
                             <p class="fleet-card-desc" data-frota-desc="{{ $fi }}">{{ $fCard['descricao'] ?? '' }}</p>
                         </div>
@@ -262,39 +273,19 @@
         </div>
     </section>
 
-    <section id="vantagens" class="section section--vant">
-        <div class="wrap">
-            <div class="section-head">
-                @if(!empty($vantagensLabelSuperior))<div class="eyebrow">{{ $vantagensLabelSuperior }}</div>@endif
-                <h2 class="section-title">{{ $vantagensTitulo }}</h2>
-                @if(!empty($vantagensDescricao))<p class="section-desc">{{ $vantagensDescricao }}</p>@endif
-            </div>
-            <div class="vant-grid">
-                @foreach($beneficios as $beneficio)
-                    @if(!empty($beneficio))
-                        <div class="vant-item">
-                            <span class="vant-item-icon">✦</span>
-                            <span class="vant-item-text">{{ $beneficio }}</span>
-                        </div>
-                    @endif
-                @endforeach
-            </div>
-        </div>
-    </section>
-
-    <section id="como-funciona" class="section section--etapas">
-        <div class="wrap">
-            <div class="section-head">
+    <section id="como-funciona" class="sec sec--etapas">
+        <div class="sec-wrap">
+            <div class="sec-head">
                 @if(!empty($etapasLabelSuperior))<div class="eyebrow">{{ $etapasLabelSuperior }}</div>@endif
-                <h2 class="section-title">{{ $etapasTitulo }}</h2>
+                <h2>{{ $etapasTitulo }}</h2>
             </div>
-            <div class="steps-grid">
+            <div class="etapas">
                 @foreach($etapasReserva as $idx => $etapa)
                     @if(!empty($etapa['titulo']))
-                    <div class="step-card">
-                        <div class="step-num">{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}</div>
-                        <h4 class="step-card-title">{{ $etapa['titulo'] }}</h4>
-                        <p class="step-card-desc">{{ $etapa['descricao'] ?? '' }}</p>
+                    <div class="etapa-card">
+                        <div class="etapa-num">{{ str_pad($idx + 1, 2, '0', STR_PAD_LEFT) }}</div>
+                        <h4 class="etapa-title">{{ $etapa['titulo'] }}</h4>
+                        <p class="etapa-desc">{{ $etapa['descricao'] ?? '' }}</p>
                     </div>
                     @endif
                 @endforeach
@@ -303,7 +294,7 @@
     </section>
 
     <section id="contato" class="contato">
-        <div class="wrap"><div class="contato-inner">
+        <div class="contato-wrap"><div class="contato-grid">
             <div>
                 @if(!empty($contatoLabelSuperior))<div class="contato-eyebrow">{{ $contatoLabelSuperior }}</div>@endif
                 <div class="contato-title">{{ $contatoTitulo }}</div>
@@ -317,14 +308,14 @@
                 @if(!empty($imagemContato))
                     <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}">
                 @else
-                    <div class="contato-image-placeholder">◈</div>
+                    <div class="contato-image-placeholder">◆</div>
                 @endif
             </div>
         </div></div>
     </section>
 
     <footer class="footer">
-        <div class="wrap"><div class="footer-inner">
+        <div class="footer-inner">
             <div class="footer-text">{{ $footerTexto }}</div>
             <div class="footer-nav">
                 <a href="#frota">{{ $menuItemFrota }}</a>
@@ -332,7 +323,7 @@
                 <a href="#etapas">{{ $menuItemEtapas }}</a>
                 <a href="#contato">{{ $menuItemContato }}</a>
             </div>
-        </div></div>
+        </div>
     </footer>
 
     <script>
@@ -371,7 +362,7 @@
                     if(t&&t.trim()){c.style.display='';if(te)te.textContent=t;if(de2)de2.textContent=de||''}
                     else c.style.display='none'
                 }
-                var imgMap={imagem_hero:'.hero-image img'};
+                var imgMap={imagem_hero:'img'};
                 for(var ik in imgMap){if(!du[ik])continue;var ie=document.querySelector(imgMap[ik]);if(ie)ie.src=du[ik]}
             });
             window.parent.postMessage({type:'se-pronto'},'*');
@@ -382,42 +373,33 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script>
-        (function () {
-            const R=document.getElementById('retirada'),D=document.getElementById('devolucao'),DF=document.getElementById('devolucaoField');
-            const DR=document.getElementById('data_retirada'),HR=document.getElementById('hora_retirada');
-            const DD=document.getElementById('data_devolucao'),HD=document.getElementById('hora_devolucao');
-            const F=DR?.closest('form'),DU=@json(route('reserva.diasSemDisponibilidade')),AU=@json(route('reserva.agendaDisponivelPorEstacao'));
-            const FR=document.getElementById('data_retirada_feedback'),FH=document.getElementById('hora_retirada_feedback');
-            const FD=document.getElementById('data_devolucao_feedback'),FHD=document.getElementById('hora_devolucao_feedback'),FDB=document.getElementById('devolucao_feedback');
-            const EV=new Event('change',{bubbles:true});let PR=null,PD=null;
-
-            function tld(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-            function tlt(d){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
-            function addD(d,n){const c=new Date(d);c.setDate(c.getDate()+n);return c}
-            function normDates(){if(!DR||!DD)return;const n=new Date();DR.min=tld(n);const rd=DR.value?new Date(DR.value+'T00:00:00'):n,md=addD(rd,1);DD.min=tld(md);if(DD.value&&new Date(DD.value+'T00:00:00')<md)DD.value=tld(md)}
-            function normTime(){if(!DR||!HR)return;const n=new Date(),t=tld(n);DR.value===t?HR.min=tlt(n):HR.removeAttribute('min')}
-            function valDates(){if(!DR||!HR||!DD)return true;const n=new Date(),td=new Date(n.getFullYear(),n.getMonth(),n.getDate()),rd=DR.value?new Date(DR.value+'T00:00:00'):null,dd=DD.value?new Date(DD.value+'T00:00:00'):null;if(rd&&rd<td){DR.setCustomValidity('A retirada não pode ser antes de hoje.');DR.reportValidity();return false}DR.setCustomValidity('');if(rd&&rd.getTime()===td.getTime()&&HR.value&&new Date(DR.value+'T'+HR.value)<n){HR.setCustomValidity('Hora no passado.');HR.reportValidity();return false}HR.setCustomValidity('');if(DR.value&&DD.value){const md=addD(new Date(DR.value+'T00:00:00'),1);if(dd<md){DD.setCustomValidity('Devolução deve ser 1 dia após retirada.');DD.reportValidity();return false}}DD.setCustomValidity('');return true}
-            function estOK(id){return!!D?.querySelector('option[value="'+id+'"]')}
-            function syncD(t){if(!DF||!D)return;const rid=R?.value||'',ok=estOK(rid),rt=R?.selectedOptions?.[0]?.textContent?.trim()||'';DF.style.display='block';D.disabled=false;if(ok&&rid){const va=D.value;D.value=rid;if(t&&va!==rid)D.dispatchEvent(EV);if(FDB)FDB.textContent=rt?'Auto: '+rt:'.'}else if(!ok&&D.value===rid){D.value='';if(FDB)FDB.textContent='Selecione devolução.'}else if(FDB)FDB.textContent=D.value?'OK':'Selecione.'}
-            R?.addEventListener('change',function(){syncD(true)});
-            const pt=window.flatpickr?.l10ns?.pt||{};
-            function toI(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-            function nrm(s){if(s&&typeof s==='object'){const v=String(s.value||s.hora||s.time||'').trim(),l=String(s.label||s.text||v).trim();return v?{value:v,label:l||v,taxa_extra:Boolean(s.taxa_extra||s.status==='taxa_extra')}:null}const v=String(s||'').trim();return v?{value:v,label:v,taxa_extra:false}:null}
-            function preenche(se,fe,sl,hp){const l=Array.isArray(sl)?sl.map(nrm).filter(Boolean):[];se.innerHTML='';if(!l.length){se.appendChild(new Option('Indisponível',''));se.disabled=true;fe&&(fe.textContent='Sem horários');return[]}se.appendChild(new Option('Hora',''));l.forEach(function(s){const v=s.value.includes('T')?s.value.split('T')[1].slice(0,5):s.value.slice(0,5);const o=new Option(s.taxa_extra?s.label+' • Extra':s.label,v);se.appendChild(o)});se.disabled=false;const p=hp?String(hp).slice(0,5):(l.length===1?l[0].value.slice(0,5):'');se.value=p&&[...se.options].some(o=>o.value===p)?p:'';fe&&(fe.textContent='Escolha a hora');return l}
-            function carrega(tipo,db,hp){const eid=tipo==='devolucao'?D?.value:R?.value;if(!eid||!db)return Promise.resolve([]);const sel=tipo==='devolucao'?HD:HR,fee=tipo==='devolucao'?FHD:FH;sel.innerHTML='<option>Carregando...</option>';sel.disabled=true;return fetch(AU+'?estacao_id='+eid+'&tipo='+tipo+'&data_base='+db+'&limite=1',{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){const a=Array.isArray(r.agenda)?r.agenda:[],dia=a.find(i=>String(i.date)===String(db))||a[0]||null,sl=Array.isArray(dia?.slots)?dia.slots:[];return preenche(sel,fee,sl,hp)}).catch(function(){preenche(sel,fee,[],null);return[]})}
-            function buscaDias(eid,tipo){if(!eid)return Promise.resolve([]);return fetch(DU+'?estacao_id='+eid+'&dias=90&tipo='+tipo,{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){return Array.isArray(r.dias_disponiveis)?r.dias_disponiveis:[]}).catch(function(){return[]})}
-            function pickerDate(el,dias){if(!el||!window.flatpickr)return null;const ok=new Set((dias||[]).map(function(i){return String(i.data||i).slice(0,10)}));return window.flatpickr(el,{locale:pt,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:'today',disable:[function(d){return!ok.has(toI(d))}],onChange:function(){el.dispatchEvent(new Event('change',{bubbles:true}))}})}
-            function attMD(){const rd=DR.value?new Date(DR.value+'T00:00:00'):null;if(!rd)return;const md=new Date(rd.getTime()+86400000);if(PD){PD.set('minDate',md);const s=PD.selectedDates[0]||null;if(s&&s.getTime()<md.getTime()){PD.clear();DD.value='';HD.value='';HD.disabled=true;FD&&(FD.textContent='Data inválida')}}else if(window.flatpickr)PD=window.flatpickr(DD,{locale:pt,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:md,onChange:function(){DD.dispatchEvent(new Event('change',{bubbles:true}))}})}
-            function attR(){const d=DR.value||'';if(!d){HR.value='';HR.disabled=true;FR&&(FR.textContent='Selecione estação');return}FR&&(FR.textContent='Hora:');attMD();carrega('retirada',d,HR.value)}
-            function attD(){const d=DD.value||'';if(!d){HD.value='';HD.disabled=true;FD&&(FD.textContent='Selecione estação');return}FD&&(FD.textContent='Hora:');carrega('devolucao',d,HD.value)}
-            function recarregar(){const er=R?.value||'',ed=D?.value||'';if(PR){PR.destroy();PR=null}if(PD){PD.destroy();PD=null}DR.value='';DD.value='';HR.value='';HD.value='';HR.disabled=true;HD.disabled=true;if(er){FR&&(FR.textContent='Carregando...');buscaDias(er,'retirada').then(function(d){FR&&(FR.textContent=d.length?'Data:':'Indisponível');PR=pickerDate(DR,d);attMD()})}if(ed){FD&&(FD.textContent='Carregando...');buscaDias(ed,'devolucao').then(function(d){FD&&(FD.textContent=d.length?'Data:':'Indisponível');PD=pickerDate(DD,d);attMD()})}}
-            DR.addEventListener('change',attR);HR.addEventListener('change',attR);DD.addEventListener('change',attD);HD.addEventListener('change',attD);
-            R?.addEventListener('change',function(){syncD(true);recarregar()});D?.addEventListener('change',function(){syncD(false);recarregar()});
-            if(typeof window.Choices!=='undefined'){[R,D].forEach(function(s){if(!s)return;new window.Choices(s,{searchEnabled:true,searchPlaceholderValue:'Buscar...',itemSelectText:'',shouldSort:false,noResultsText:'Nada encontrado',noChoicesText:'Indisponível'})})}
-            DR?.addEventListener('change',function(){normTime();normDates();valDates()});HR?.addEventListener('change',normTime);DD?.addEventListener('change',function(){normDates();valDates()});
-            F?.addEventListener('submit',function(e){normTime();normDates();syncD();if(!valDates())e.preventDefault()});
-            syncD();recarregar();normDates();normTime();
-        })();
+        (function(){const R=document.getElementById('retirada'),D=document.getElementById('devolucao'),DF=document.getElementById('devolucaoField'),DR=document.getElementById('data_retirada'),HR=document.getElementById('hora_retirada'),DD=document.getElementById('data_devolucao'),HD=document.getElementById('hora_devolucao'),F=DR?.closest('form'),DU=@json(route('reserva.diasSemDisponibilidade')),AU=@json(route('reserva.agendaDisponivelPorEstacao')),FR=document.getElementById('data_retirada_feedback'),FH=document.getElementById('hora_retirada_feedback'),FD=document.getElementById('data_devolucao_feedback'),FHD=document.getElementById('hora_devolucao_feedback'),FDB=document.getElementById('devolucao_feedback'),EV=new Event('change',{bubbles:true});let PR=null,PD=null;
+        function tld(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+        function tlt(d){return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}
+        function addD(d,n){const c=new Date(d);c.setDate(c.getDate()+n);return c}
+        function normD(){if(!DR||!DD)return;const n=new Date();DR.min=tld(n);const rd=DR.value?new Date(DR.value+'T00:00:00'):n,md=addD(rd,1);DD.min=tld(md);if(DD.value&&new Date(DD.value+'T00:00:00')<md)DD.value=tld(md)}
+        function normT(){if(!DR||!HR)return;const n=new Date(),t=tld(n);DR.value===t?HR.min=tlt(n):HR.removeAttribute('min')}
+        function valD(){if(!DR||!HR||!DD)return true;const n=new Date(),td=new Date(n.getFullYear(),n.getMonth(),n.getDate()),rd=DR.value?new Date(DR.value+'T00:00:00'):null,dd=DD.value?new Date(DD.value+'T00:00:00'):null;if(rd&&rd<td){DR.setCustomValidity('Inválido');DR.reportValidity();return false}DR.setCustomValidity('');if(rd&&rd.getTime()===td.getTime()&&HR.value&&new Date(DR.value+'T'+HR.value)<n){HR.setCustomValidity('Inválido');HR.reportValidity();return false}HR.setCustomValidity('');if(DR.value&&DD.value){const md=addD(new Date(DR.value+'T00:00:00'),1);if(dd<md){DD.setCustomValidity('Inválido');DD.reportValidity();return false}}DD.setCustomValidity('');return true}
+        function eok(id){return!!D?.querySelector('option[value="'+id+'"]')}
+        function sD(t){if(!DF||!D)return;const rid=R?.value||'',ok=eok(rid),rt=R?.selectedOptions?.[0]?.textContent?.trim()||'';DF.style.display='block';D.disabled=false;if(ok&&rid){const va=D.value;D.value=rid;if(t&&va!==rid)D.dispatchEvent(EV);if(FDB)FDB.textContent=rt?'Auto: '+rt:'.'}else if(!ok&&D.value===rid){D.value='';if(FDB)FDB.textContent='Selecione'}else if(FDB)FDB.textContent=D.value?'OK':'Selecione'}
+        R?.addEventListener('change',function(){sD(true)});
+        const pt=window.flatpickr?.l10ns?.pt||{};
+        function toI(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+        function nrm(s){if(s&&typeof s==='object'){const v=String(s.value||s.hora||s.time||'').trim(),l=String(s.label||s.text||v).trim();return v?{value:v,label:l||v,taxa_extra:Boolean(s.taxa_extra||s.status==='taxa_extra')}:null}const v=String(s||'').trim();return v?{value:v,label:v,taxa_extra:false}:null}
+        function preenche(se,fe,sl,hp){const l=Array.isArray(sl)?sl.map(nrm).filter(Boolean):[];se.innerHTML='';if(!l.length){se.appendChild(new Option('Indisponível',''));se.disabled=true;fe&&(fe.textContent='Sem horários');return[]}se.appendChild(new Option('Hora',''));l.forEach(function(s){const v=s.value.includes('T')?s.value.split('T')[1].slice(0,5):s.value.slice(0,5);const o=new Option(s.taxa_extra?s.label+' • Extra':s.label,v);se.appendChild(o)});se.disabled=false;const p=hp?String(hp).slice(0,5):(l.length===1?l[0].value.slice(0,5):'');se.value=p&&[...se.options].some(o=>o.value===p)?p:'';fe&&(fe.textContent='Hora');return l}
+        function carrega(tipo,db,hp){const eid=tipo==='devolucao'?D?.value:R?.value;if(!eid||!db)return Promise.resolve([]);const sel=tipo==='devolucao'?HD:HR,fee=tipo==='devolucao'?FHD:FH;sel.innerHTML='<option>Carregando...</option>';sel.disabled=true;return fetch(AU+'?estacao_id='+eid+'&tipo='+tipo+'&data_base='+db+'&limite=1',{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){const a=Array.isArray(r.agenda)?r.agenda:[],dia=a.find(i=>String(i.date)===String(db))||a[0]||null,sl=Array.isArray(dia?.slots)?dia.slots:[];return preenche(sel,fee,sl,hp)}).catch(function(){preenche(sel,fee,[],null);return[]})}
+        function buscaDias(eid,tipo){if(!eid)return Promise.resolve([]);return fetch(DU+'?estacao_id='+eid+'&dias=90&tipo='+tipo,{headers:{Accept:'application/json','X-Requested-With':'XMLHttpRequest'}}).then(r=>r.json()).then(function(r){return Array.isArray(r.dias_disponiveis)?r.dias_disponiveis:[]}).catch(function(){return[]})}
+        function pickerDate(el,dias){if(!el||!window.flatpickr)return null;const ok=new Set((dias||[]).map(function(i){return String(i.data||i).slice(0,10)}));return window.flatpickr(el,{locale:pt,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:'today',disable:[function(d){return!ok.has(toI(d))}],onChange:function(){el.dispatchEvent(new Event('change',{bubbles:true}))}})}
+        function attMD(){const rd=DR.value?new Date(DR.value+'T00:00:00'):null;if(!rd)return;const md=new Date(rd.getTime()+86400000);if(PD){PD.set('minDate',md);const s=PD.selectedDates[0]||null;if(s&&s.getTime()<md.getTime()){PD.clear();DD.value='';HD.value='';HD.disabled=true;FD&&(FD.textContent='Inválida')}}else if(window.flatpickr)PD=window.flatpickr(DD,{locale:pt,altInput:true,altFormat:'d/m/Y',dateFormat:'Y-m-d',disableMobile:true,minDate:md,onChange:function(){DD.dispatchEvent(new Event('change',{bubbles:true}))}})}
+        function attR(){const d=DR.value||'';if(!d){HR.value='';HR.disabled=true;FR&&(FR.textContent='Estação');return}FR&&(FR.textContent='Hora:');attMD();carrega('retirada',d,HR.value)}
+        function attD(){const d=DD.value||'';if(!d){HD.value='';HD.disabled=true;FD&&(FD.textContent='Estação');return}FD&&(FD.textContent='Hora:');carrega('devolucao',d,HD.value)}
+        function recarregar(){const er=R?.value||'',ed=D?.value||'';if(PR){PR.destroy();PR=null}if(PD){PD.destroy();PD=null}DR.value='';DD.value='';HR.value='';HD.value='';HR.disabled=true;HD.disabled=true;if(er){FR&&(FR.textContent='Carregando...');buscaDias(er,'retirada').then(function(d){FR&&(FR.textContent=d.length?'Data:':'Indisponível');PR=pickerDate(DR,d);attMD()})}if(ed){FD&&(FD.textContent='Carregando...');buscaDias(ed,'devolucao').then(function(d){FD&&(FD.textContent=d.length?'Data:':'Indisponível');PD=pickerDate(DD,d);attMD()})}}
+        DR.addEventListener('change',attR);HR.addEventListener('change',attR);DD.addEventListener('change',attD);HD.addEventListener('change',attD);
+        R?.addEventListener('change',function(){sD(true);recarregar()});D?.addEventListener('change',function(){sD(false);recarregar()});
+        if(typeof window.Choices!=='undefined'){[R,D].forEach(function(s){if(!s)return;new window.Choices(s,{searchEnabled:true,searchPlaceholderValue:'Buscar...',itemSelectText:'',shouldSort:false,noResultsText:'Nada',noChoicesText:'Indisponível'})})}
+        DR?.addEventListener('change',function(){normT();normD();valD()});HR?.addEventListener('change',normT);DD?.addEventListener('change',function(){normD();valD()});
+        F?.addEventListener('submit',function(e){normT();normD();sD();if(!valD())e.preventDefault()});
+        sD();recarregar();normD();normT()})();
     </script>
 </body>
 </html>
