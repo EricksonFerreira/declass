@@ -203,6 +203,55 @@ class OnboardingController extends Controller
     /**
      * Etapa final – Orientações de configuração.
      */
+    public function cores(): View|RedirectResponse
+    {
+        $empresa = Auth::user()->empresa;
+        if (!$empresa) {
+            return redirect()->route('onboarding.empresa');
+        }
+
+        return view('onboarding.cores', compact('empresa'));
+    }
+
+    public function salvarCores(Request $request): RedirectResponse
+    {
+        $empresa = Auth::user()->empresa;
+        if (!$empresa) {
+            return redirect()->route('onboarding.empresa');
+        }
+
+        $data = $request->validate([
+            'cor_primaria'   => 'nullable|string|max:20',
+            'cor_secundaria' => 'nullable|string|max:20',
+            'logo'           => 'nullable|image|mimes:png,jpeg,jpg,webp|max:2048',
+        ]);
+
+        $updateData = [];
+        if (isset($data['cor_primaria'])) {
+            $updateData['cor_primaria'] = $data['cor_primaria'];
+        }
+        if (isset($data['cor_secundaria'])) {
+            $updateData['cor_secundaria'] = $data['cor_secundaria'];
+        }
+
+        if ($request->hasFile('logo')) {
+            $path = $request->file('logo')->store('empresas/logo', 'public');
+            if ($path) {
+                if ($empresa->logo_path) {
+                    \Illuminate\Support\Facades\Storage::disk('public')->delete($empresa->logo_path);
+                }
+                $updateData['logo_path'] = $path;
+            }
+        }
+
+        if (!empty($updateData)) {
+            $empresa->update($updateData);
+        }
+
+        return redirect()->route('onboarding.orientacoes')
+            ->with('success', 'Identidade visual definida com sucesso!');
+    }
+
     public function orientacoes(): View
     {
         $empresa = Auth::user()->empresa;

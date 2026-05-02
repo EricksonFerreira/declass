@@ -133,6 +133,7 @@
             ['rota' => 'onboarding.empresa',     'label' => 'Empresa'],
             ['rota' => 'onboarding.plano',        'label' => 'Plano'],
             ['rota' => 'onboarding.pagamento',    'label' => 'Pagamento'],
+            ['rota' => 'onboarding.cores',        'label' => 'Cores'],
             ['rota' => 'onboarding.orientacoes',  'label' => 'Orientações'],
         ];
         $etapaAtiva = $etapaAtiva ?? 'onboarding.empresa';

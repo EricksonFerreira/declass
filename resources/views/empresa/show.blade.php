@@ -115,34 +115,30 @@
                                 <i class="fas fa-info-circle rs-card__icon"></i>
                                 <h2>Informacoes da Empresa</h2>
                             </div>
-                            <div class="rs-info-rows">
-                                <div class="rs-info-row">
-                                    <span>Nome</span>
-                                    <strong>{{ $empresa->nome }}</strong>
+                            <div class="rs-info-grid">
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-tag"></i> Nome</span>
+                                    <strong class="rs-info-card__value">{{ $empresa->nome }}</strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>Slug</span>
-                                    <strong>{{ $empresa->slug ?? '—' }}</strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-globe"></i> Slug</span>
+                                    <strong class="rs-info-card__value">{{ $empresa->slug ?? '—' }}</strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>CNPJ</span>
-                                    <strong>{{ $empresa->cnpj ?? '—' }}</strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-id-card"></i> CNPJ</span>
+                                    <strong class="rs-info-card__value">{{ $empresa->cnpj ?? '—' }}</strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>E-mail</span>
-                                    <strong>{{ $empresa->email ?? '—' }}</strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-envelope"></i> E-mail</span>
+                                    <strong class="rs-info-card__value">{{ $empresa->email ?? '—' }}</strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>Telefone</span>
-                                    <strong>{{ $empresa->telefone ?? '—' }}</strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-phone"></i> Telefone</span>
+                                    <strong class="rs-info-card__value">{{ $empresa->telefone ?? '—' }}</strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>Dominio</span>
-                                    <strong>{{ $empresa->dominio ?? '—' }}</strong>
-                                </div>
-                                <div class="rs-info-row">
-                                    <span>Status</span>
-                                    <strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-check-circle"></i> Status</span>
+                                    <strong class="rs-info-card__value">
                                         @if($empresa->ativo === 'S')
                                             <span class="badge bg-success">Ativo</span>
                                         @else
@@ -416,12 +412,12 @@
 .rs-card__icon { width:32px; height:32px; border-radius:9px; background:#eff6ff; color:#2563eb; display:flex; align-items:center; justify-content:center; font-size:.82rem; flex-shrink:0; }
 .rs-card__header h2 { margin:0; font-size:.92rem; font-weight:700; color:#0f172a; }
 
-.rs-info-rows { display:grid; gap:0; }
-.rs-info-row { display:flex; justify-content:space-between; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid #f1f5f9; }
-.rs-info-row:last-child { border-bottom:0; padding-bottom:0; }
-.rs-info-row span { display:flex; align-items:center; gap:6px; font-size:.78rem; color:#64748b; }
-.rs-info-row span i { width:14px; text-align:center; color:#94a3b8; }
-.rs-info-row strong { font-size:.82rem; font-weight:600; color:#0f172a; text-align:right; }
+.rs-info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; }
+.rs-info-card { background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; transition:border-color .15s,box-shadow .15s; }
+.rs-info-card:hover { border-color:#cbd5e1; box-shadow:0 2px 8px rgba(15,23,42,.06); }
+.rs-info-card__label { display:flex; align-items:center; gap:6px; font-size:.72rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:6px; }
+.rs-info-card__label i { width:14px; text-align:center; color:#94a3b8; font-size:.7rem; }
+.rs-info-card__value { display:block; font-size:.88rem; font-weight:600; color:#0f172a; word-break:break-word; }
 
 .rs-btn { display:inline-flex; align-items:center; gap:7px; padding:9px 16px; border-radius:10px; font-size:.82rem; font-weight:700; border:none; cursor:pointer; text-decoration:none; transition:all .18s; color:#fff; background:#0f172a; }
 .rs-btn:hover { color:#fff; text-decoration:none; background:#1e293b; }

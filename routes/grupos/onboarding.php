@@ -13,5 +13,7 @@ Route::prefix('onboarding')->name('onboarding.')->group(function () {
     Route::get('/downgrade',           [OnboardingController::class, 'downgrade'])->name('downgrade');
     Route::post('/downgrade',          [OnboardingController::class, 'confirmarDowngrade'])->name('downgrade.confirmar');
     Route::get('/orientacoes',         [OnboardingController::class, 'orientacoes'])->name('orientacoes');
+    Route::get('/cores',               [OnboardingController::class, 'cores'])->name('cores');
+    Route::post('/cores',              [OnboardingController::class, 'salvarCores'])->name('cores.salvar');
     Route::post('/concluir',           [OnboardingController::class, 'concluir'])->name('concluir');
 });
