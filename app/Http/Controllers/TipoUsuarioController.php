@@ -58,7 +58,7 @@ class TipoUsuarioController extends BaseController implements FiltroInterface, R
         $this->atualizarFiltros($itensFiltered, $filters);
         $this->atualizarFiltros($itensFiltered, $additionalFilters);
 
-        $perPages = [5, 10, 15, 25, 50, 100];
+        $perPages = [5, 10, 12, 15, 25, 50, 100];
         $nomeFiltro = $this->nomeFiltro;
 
         return view('tipo_usuario.index', compact(
