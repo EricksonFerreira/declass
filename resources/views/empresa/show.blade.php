@@ -83,7 +83,7 @@
     {{-- TABS --}}
     <div class="rs-tabs-wrapper">
         <ul class="nav nav-tabs rs-nav-tabs" role="tablist">
-            <li class="nav-item" style="display:flex;justify-content:space-between;align-items:center;flex:1;">
+            <li class="nav-item">
                 <a class="nav-link active" id="tab-dados" data-toggle="tab" href="#pane-dados" role="tab">
                     <i class="fas fa-building"></i>
                     <span>Dados</span>
@@ -108,11 +108,25 @@
                     <span>Plano</span>
                 </a>
             </li>
-            <li class="nav-item">
+            <li class="nav-item" style="display:flex;justify-content:space-between;align-items:center;flex:1;">
+            {{-- <li class="nav-item"> --}}
                 <a class="nav-link" id="tab-pagamentos" data-toggle="tab" href="#pane-pagamentos" role="tab">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Pagamentos</span>
                 </a>
+                 <div style="display:flex;gap:10px;">
+                    <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary rs-btn--sm">
+                        <i class="fas fa-pen mr-1"></i> Editar
+                    </a>
+                    @if($empresa->site_apresentacao_ativo && $plano?->site_vendas)
+                        <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="rs-btn rs-btn--sm">
+                            <i class="fas fa-globe mr-1"></i> Site
+                        </a>
+                    @endif
+                    <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--sm">
+                        <i class="fas fa-credit-card mr-1"></i> Assinatura
+                    </a>
+                </div>
             </li>
 
         </ul>
