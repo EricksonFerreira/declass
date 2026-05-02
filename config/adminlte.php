@@ -335,11 +335,7 @@ return [
             'route' => 'indicadores.index',
             'icon'  => 'fas fa-chart-bar',
         ],
-        [
-            'text'  => 'Meu Plano',
-            'route' => 'assinatura.meu-plano',
-            'icon'  => 'fas fa-id-card',
-        ],
+
         [
             'header'  => 'Atalhos rápidos',
             'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
