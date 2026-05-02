@@ -207,7 +207,7 @@
                                 </div>
                                 <div class="rs-info-row">
                                     <span>Status</span>
-                                    <strong><span class="badge {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span></strong>
+                                    <strong><span class="badge text-white {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span></strong>
                                 </div>
                                 <div class="rs-info-row">
                                     <span>Periodicidade</span>
