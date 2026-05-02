@@ -8,17 +8,39 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropUnique(['email']);
-            $table->unique(['email', 'empresa_id'], 'users_email_empresa_id_unique');
-        });
+        try {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropUnique(['email']);
+            });
+        } catch (\Throwable $e) {
+            // Index may already have been removed.
+        }
+
+        try {
+            Schema::table('users', function (Blueprint $table) {
+                $table->unique(['email', 'empresa_id'], 'users_email_empresa_id_unique');
+            });
+        } catch (\Throwable $e) {
+            // Index may already exist.
+        }
     }
 
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropUnique('users_email_empresa_id_unique');
-            $table->unique('email');
-        });
+        try {
+            Schema::table('users', function (Blueprint $table) {
+                $table->dropUnique('users_email_empresa_id_unique');
+            });
+        } catch (\Throwable $e) {
+            // Index may not exist.
+        }
+
+        try {
+            Schema::table('users', function (Blueprint $table) {
+                $table->unique('email');
+            });
+        } catch (\Throwable $e) {
+            // Index may already exist.
+        }
     }
 };
