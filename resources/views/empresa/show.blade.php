@@ -257,25 +257,23 @@
             {{-- TAB 2 — PLANO --}}
             <div class="tab-pane fade" id="pane-plano" role="tabpanel">
                 @if($plano)
-                <div class="rs-card">
-                    <div style="display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:start;">
-                        <div style="text-align:center;padding:12px 16px;background:linear-gradient(135deg,#0f172a,#1e293b);border-radius:14px;color:#fff;min-width:110px;">
-                            <div style="font-size:1.6rem;font-weight:900;line-height:1.2;">R$ {{ number_format($planoAtivo->valor_cobrado, 2, ',', '.') }}</div>
-                            <div style="font-size:.68rem;opacity:.7;text-transform:uppercase;letter-spacing:.05em;">{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</div>
+                <div class="rs-plan-card">
+                    <div class="rs-plan-price">
+                        <div class="rs-plan-amount">R$ {{ number_format($planoAtivo->valor_cobrado, 2, ',', '.') }}</div>
+                        <div class="rs-plan-period">{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</div>
+                    </div>
+                    <div class="rs-plan-info">
+                        <div class="rs-plan-header">
+                            <h2 class="rs-plan-name">{{ $plano->nome }}</h2>
+                            <span class="badge {{ $statusBadge['class'] }}" style="font-size:.72rem;">{{ $statusBadge['label'] }}</span>
                         </div>
-                        <div>
-                            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-                                <h2 style="margin:0;font-size:1.05rem;font-weight:700;color:#0f172a;">{{ $plano->nome }}</h2>
-                                <span class="badge {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span>
-                            </div>
-                            <div style="display:flex;flex-wrap:wrap;gap:4px 16px;margin-top:8px;">
-                                <div><span style="font-size:.72rem;color:#64748b;">Inicio</span><br><strong style="font-size:.82rem;color:#0f172a;">{{ $planoAtivo->data_inicio?->format('d/m/Y') ?? '—' }}</strong></div>
-                                <div><span style="font-size:.72rem;color:#64748b;">Vencimento</span><br><strong style="font-size:.82rem;color:#0f172a;">{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong></div>
-                                <div><span style="font-size:.72rem;color:#64748b;">Metodo</span><br><strong style="font-size:.82rem;color:#0f172a;">{{ $planoAtivo->metodo_cobranca_texto ?? ucfirst($planoAtivo->metodo_cobranca ?? '—') }}</strong></div>
-                                @if($planoAtivo->renovacao_automatica)
-                                <div><span style="font-size:.72rem;color:#64748b;">Renovacao</span><br><strong style="font-size:.82rem;color:#0f172a;"><span class="badge bg-success" style="font-size:.72rem;">Automatica</span></strong></div>
-                                @endif
-                            </div>
+                        <div class="rs-plan-dates">
+                            <div class="rs-plan-date"><span>Inicio</span><strong>{{ $planoAtivo->data_inicio?->format('d/m/Y') ?? '—' }}</strong></div>
+                            <div class="rs-plan-date"><span>Vencimento</span><strong>{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong></div>
+                            <div class="rs-plan-date"><span>Metodo</span><strong>{{ $planoAtivo->metodo_cobranca_texto ?? ucfirst($planoAtivo->metodo_cobranca ?? '—') }}</strong></div>
+                            @if($planoAtivo->renovacao_automatica)
+                            <div class="rs-plan-date"><span>Renovacao</span><strong class="text-success">Automatica</strong></div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -285,28 +283,20 @@
                     <div class="rs-card__header">
                         <i class="fas fa-list rs-card__icon"></i>
                         <h2>Recursos Inclusos</h2>
-                        <span class="ml-auto badge bg-info">{{ $plano->itens->count() }}</span>
+                        <span class="rs-badge-count">{{ $plano->itens->count() }}</span>
                     </div>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;">
+                    <div class="rs-items-grid">
                         @foreach($plano->itens as $item)
-                            <div style="display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 12px;transition:border-color .15s;">
-                                <div style="width:24px;height:24px;border-radius:6px;background:{{ $item->incluso ? '#dcfce7' : '#f1f5f9' }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                                    <i class="fas fa-{{ $item->incluso ? 'check' : 'times' }}" style="font-size:.65rem;color:{{ $item->incluso ? '#16a34a' : '#94a3b8' }};"></i>
+                            <div class="rs-item {{ $item->incluso ? '' : 'rs-item--disabled' }}">
+                                <div class="rs-item-icon {{ $item->incluso ? 'rs-item-icon--yes' : 'rs-item-icon--no' }}">
+                                    <i class="fas fa-{{ $item->incluso ? 'check' : 'times' }}"></i>
                                 </div>
-                                <span style="font-size:.8rem;color:#0f172a;">{{ $item->descricao }}</span>
+                                <span class="rs-item-text">{{ $item->descricao }}</span>
                             </div>
                         @endforeach
                     </div>
                 </div>
                 @endif
-
-                <div class="d-flex" style="gap:10px;flex-wrap:wrap;padding:4px 0;">
-                    {{-- @can('gerenciar-planos')
-                        <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--primary">
-                            <i class="fas fa-credit-card mr-1"></i> Gerenciar assinatura
-                        </a>
-                    @endcan --}}
-                </div>
                 @else
                 <div class="rs-card">
                     <div class="rs-card__header">
@@ -456,5 +446,90 @@
 .rs-table td { padding:9px 12px; color:#334155; border-bottom:1px solid #f1f5f9; vertical-align:middle; }
 .rs-table tbody tr:last-child td { border-bottom:0; }
 .rs-table tbody tr:hover td { background:#f8fafc; }
+
+/* ═══ Enhanced Info Page ═══ */
+.rs-hero {
+    position:relative; border-radius:16px; overflow:hidden; margin-bottom:24px;
+    background:linear-gradient(135deg,#1e293b 0%,#0f172a 100%);
+    box-shadow:0 4px 24px rgba(0,0,0,.08);
+}
+.rs-hero--confirmada { background:linear-gradient(135deg,#065f46 0%,#0f172a 100%); }
+.rs-hero--cancelada { background:linear-gradient(135deg,#991b1b 0%,#0f172a 100%); }
+.rs-hero__accent {
+    position:absolute; top:-60px; right:-60px; width:200px; height:200px;
+    border-radius:50%; background:rgba(255,255,255,.03);
+}
+.rs-hero__body { position:relative; z-index:1; padding:32px; display:flex; justify-content:space-between; align-items:center; gap:24px; flex-wrap:wrap; }
+.rs-hero__left { flex:1; min-width:240px; }
+.rs-hero__eyebrow { font-size:.72rem; font-weight:600; color:rgba(255,255,255,.5); text-transform:uppercase; letter-spacing:.06em; margin-bottom:6px; display:flex; align-items:center; gap:6px; }
+.rs-hero__title { font-size:1.5rem; font-weight:800; color:#fff; margin:0 0 8px; line-height:1.1; }
+.rs-hero__meta { display:flex; flex-wrap:wrap; gap:8px 16px; }
+.rs-hero__meta span { font-size:.78rem; color:rgba(255,255,255,.55); display:flex; align-items:center; gap:5px; }
+.rs-hero__meta span i { width:14px; font-size:.7rem; }
+.rs-hero__right { display:flex; align-items:center; gap:20px; flex-shrink:0; }
+.rs-status-badge { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:20px; font-size:.72rem; font-weight:700; letter-spacing:.05em; }
+.rs-status-badge.is-success { background:rgba(255,255,255,.12); color:#4ade80; }
+.rs-status-badge.is-danger { background:rgba(255,255,255,.12); color:#f87171; }
+.rs-hero__kpis { display:flex; align-items:center; gap:16px; }
+.rs-kpi { text-align:center; }
+.rs-kpi span { display:block; font-size:.65rem; color:rgba(255,255,255,.45); text-transform:uppercase; letter-spacing:.06em; font-weight:600; }
+.rs-kpi strong { display:block; font-size:1.2rem; font-weight:800; color:#fff; margin-top:2px; }
+.rs-kpi--accent strong { color:#fbbf24; }
+.rs-kpi-divider { width:1px; height:32px; background:rgba(255,255,255,.1); }
+
+.rs-card {
+    background:#fff; border-radius:14px; border:1px solid #f1f5f9;
+    box-shadow:0 1px 3px rgba(0,0,0,.04); overflow:hidden; margin-bottom:16px;
+    transition:box-shadow .2s;
+}
+.rs-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.06); }
+.rs-card__header {
+    display:flex; align-items:center; gap:10px; padding:16px 20px;
+    border-bottom:1px solid #f8fafc; background:#fafbfc;
+}
+.rs-card__header h2 { font-size:.9rem; font-weight:700; color:#0f172a; margin:0; }
+.rs-card__icon { width:20px; height:20px; border-radius:6px; background:#eef2ff; color:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:.75rem; }
+
+.rs-info-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; padding:16px 20px; }
+.rs-info-card { padding:12px; background:#f8fafc; border-radius:10px; border:1px solid #f1f5f9; }
+.rs-info-card__label { font-size:.72rem; color:#64748b; display:flex; align-items:center; gap:5px; margin-bottom:4px; }
+.rs-info-card__label i { width:12px; font-size:.65rem; color:#94a3b8; }
+.rs-info-card__value { font-size:.9rem; font-weight:700; color:#0f172a; display:block; }
+
+.rs-plan-card { display:grid; grid-template-columns:auto 1fr; gap:20px; align-items:start; background:#fff; border-radius:14px; border:1px solid #f1f5f9; box-shadow:0 1px 3px rgba(0,0,0,.04); padding:24px; margin-bottom:16px; transition:box-shadow .2s; }
+.rs-plan-card:hover { box-shadow:0 4px 16px rgba(0,0,0,.06); }
+.rs-plan-price { text-align:center; padding:16px 20px; background:linear-gradient(135deg,#0f172a,#1e293b); border-radius:12px; color:#fff; min-width:120px; }
+.rs-plan-amount { font-size:1.5rem; font-weight:900; line-height:1.2; }
+.rs-plan-period { font-size:.68rem; opacity:.6; text-transform:uppercase; letter-spacing:.05em; margin-top:2px; }
+.rs-plan-header { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.rs-plan-name { margin:0; font-size:1.05rem; font-weight:700; color:#0f172a; }
+.rs-plan-dates { display:flex; flex-wrap:wrap; gap:6px 20px; margin-top:12px; }
+.rs-plan-date { display:flex; flex-direction:column; gap:1px; }
+.rs-plan-date span { font-size:.7rem; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+.rs-plan-date strong { font-size:.85rem; font-weight:600; color:#0f172a; }
+.rs-badge-count { margin-left:auto; padding:2px 10px; border-radius:20px; background:#e0f2fe; color:#0284c7; font-size:.72rem; font-weight:700; }
+.rs-items-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:10px; padding:16px 20px; }
+.rs-item { display:flex; align-items:center; gap:10px; padding:10px 12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; transition:border-color .15s; }
+.rs-item:hover { border-color:#cbd5e1; }
+.rs-item--disabled { opacity:.5; }
+.rs-item-icon { width:24px; height:24px; border-radius:6px; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:.65rem; }
+.rs-item-icon--yes { background:#dcfce7; color:#16a34a; }
+.rs-item-icon--no { background:#f1f5f9; color:#94a3b8; }
+.rs-item-text { font-size:.8rem; color:#0f172a; font-weight:500; }
+
+.rs-color-swatch { display:flex; align-items:center; gap:10px; padding:8px 12px; background:#f8fafc; border-radius:10px; border:1px solid #f1f5f9; }
+.rs-color-swatch__dot { width:36px; height:36px; border-radius:8px; flex-shrink:0; }
+.rs-color-swatch__info { display:flex; flex-direction:column; }
+.rs-color-swatch__label { font-size:.7rem; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+.rs-color-swatch__hex { font-size:.82rem; font-weight:700; color:#0f172a; font-family:monospace; }
+
+.rs-grid { display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
+.rs-sidebar .rs-card { margin-bottom:16px; }
+
+@media(max-width:768px){
+    .rs-grid { grid-template-columns:1fr; }
+    .rs-hero__body { flex-direction:column; align-items:flex-start; }
+    .rs-hero__kpis { flex-wrap:wrap; }
+}
 </style>
 @endsection
