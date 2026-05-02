@@ -379,7 +379,7 @@ return [
             'text'  => 'Sincronizar catálogo FIPE',
             'route' => 'fipe.catalogo.run',
             'icon'  => 'fas fa-car',
-            'can'   => 'gerenciar-empresa',
+            'can'   => 'acessar-superadmin',
         ],
 
         // EMPRESA
