@@ -1160,10 +1160,15 @@ function cancelarPagamento(pagamentoId, btn) {
             if (data.success) {
                 var row = (btn || event.target).closest('tr');
                 if (row) {
+                    row.querySelectorAll('td').forEach(function(td) {
+                        td.style.textDecoration = 'line-through';
+                        td.style.opacity = '0.5';
+                    });
                     var statusCell = row.querySelector('.badge');
                     if (statusCell) {
                         statusCell.className = 'badge badge-secondary';
                         statusCell.textContent = 'Cancelado';
+                        statusCell.style.textDecoration = 'none';
                     }
                     var actionsCell = row.querySelector('td:last-child');
                     if (actionsCell) actionsCell.innerHTML = '<span class="text-muted" style="font-size:.75rem;">Cancelado</span>';
