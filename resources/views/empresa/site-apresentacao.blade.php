@@ -123,6 +123,10 @@
                     ['name' => 'frota_card_2_descricao', 'label' => 'Card 2 — Descricao',         'hint' => 'Ex: Conforto e elegancia para viagens longas',                 'type' => 'textarea', 'max' => 400],
                     ['name' => 'frota_card_3_titulo',    'label' => 'Card 3 — Titulo',            'hint' => 'Ex: SUV Familiar',                                             'type' => 'text',     'max' => 120],
                     ['name' => 'frota_card_3_descricao', 'label' => 'Card 3 — Descricao',         'hint' => 'Ex: Espaco e seguranca para toda a familia',                   'type' => 'textarea', 'max' => 400],
+                    @for($fi = 4; $fi <= 10; $fi++)
+                    ['name' => 'frota_card_{{$fi}}_titulo', 'label' => 'Card {{$fi}} — Titulo', 'hint' => 'Deixe em branco para ocultar este card', 'type' => 'text', 'max' => 120],
+                    ['name' => 'frota_card_{{$fi}}_descricao', 'label' => 'Card {{$fi}} — Descricao', 'hint' => '', 'type' => 'textarea', 'max' => 400],
+                    @endfor
                 ],
             ],
             [
@@ -137,6 +141,9 @@
                     ['name' => 'beneficio_2',              'label' => 'Vantagem 2',                'hint' => 'Ex: Frota revisada e garantida',                               'type' => 'text',     'max' => 220],
                     ['name' => 'beneficio_3',              'label' => 'Vantagem 3',                'hint' => 'Ex: Sem taxa de cancelamento',                                 'type' => 'text',     'max' => 220],
                     ['name' => 'beneficio_4',              'label' => 'Vantagem 4',                'hint' => 'Ex: Cobertura em todo o Brasil',                               'type' => 'text',     'max' => 220],
+                    @for($bi = 5; $bi <= 10; $bi++)
+                    ['name' => 'beneficio_{{$bi}}',        'label' => 'Vantagem {{$bi}}',          'hint' => 'Deixe em branco para ocultar',                                 'type' => 'text',     'max' => 220],
+                    @endfor
                 ],
             ],
             [
@@ -605,6 +612,9 @@
                                 ['key' => 'frota_1', 'upload' => 'imagem_frota_1', 'toggle' => 'usar_imagem_frota_1', 'label' => 'Frota — Card 1',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
                                 ['key' => 'frota_2', 'upload' => 'imagem_frota_2', 'toggle' => 'usar_imagem_frota_2', 'label' => 'Frota — Card 2',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
                                 ['key' => 'frota_3', 'upload' => 'imagem_frota_3', 'toggle' => 'usar_imagem_frota_3', 'label' => 'Frota — Card 3',          'icon' => 'fas fa-car',          'hint' => 'Recomendado: 900 x 600 pixels'],
+                                @for($fi = 4; $fi <= 10; $fi++)
+                                ['key' => 'frota_{{$fi}}', 'upload' => 'imagem_frota_{{$fi}}', 'toggle' => 'usar_imagem_frota_{{$fi}}', 'label' => 'Frota — Card {{$fi}}', 'icon' => 'fas fa-car', 'hint' => 'Recomendado: 900 x 600 pixels'],
+                                @endfor
                                 ['key' => 'vantagens','upload' => 'imagem_vantagens','toggle' => 'usar_imagem_vantagens','label' => 'Secao Vantagens',        'icon' => 'fas fa-thumbs-up',    'hint' => 'Recomendado: 1200 x 700 pixels'],
                                 ['key' => 'contato', 'upload' => 'imagem_contato', 'toggle' => 'usar_imagem_contato', 'label' => 'Secao Contato',           'icon' => 'fas fa-envelope',     'hint' => 'Recomendado: 900 x 500 pixels'],
                             ];

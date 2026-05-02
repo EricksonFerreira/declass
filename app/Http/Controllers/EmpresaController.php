@@ -55,6 +55,20 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         'frota_card_2_descricao',
         'frota_card_3_titulo',
         'frota_card_3_descricao',
+        'frota_card_4_titulo',
+        'frota_card_4_descricao',
+        'frota_card_5_titulo',
+        'frota_card_5_descricao',
+        'frota_card_6_titulo',
+        'frota_card_6_descricao',
+        'frota_card_7_titulo',
+        'frota_card_7_descricao',
+        'frota_card_8_titulo',
+        'frota_card_8_descricao',
+        'frota_card_9_titulo',
+        'frota_card_9_descricao',
+        'frota_card_10_titulo',
+        'frota_card_10_descricao',
         'vantagens_titulo',
         'vantagens_label_superior',
         'vantagens_descricao',
@@ -62,6 +76,12 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         'beneficio_2',
         'beneficio_3',
         'beneficio_4',
+        'beneficio_5',
+        'beneficio_6',
+        'beneficio_7',
+        'beneficio_8',
+        'beneficio_9',
+        'beneficio_10',
         'etapas_titulo',
         'etapas_label_superior',
         'etapa_1_titulo',
@@ -81,6 +101,13 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         'imagem_frota_1' => 'frota_1',
         'imagem_frota_2' => 'frota_2',
         'imagem_frota_3' => 'frota_3',
+        'imagem_frota_4' => 'frota_4',
+        'imagem_frota_5' => 'frota_5',
+        'imagem_frota_6' => 'frota_6',
+        'imagem_frota_7' => 'frota_7',
+        'imagem_frota_8' => 'frota_8',
+        'imagem_frota_9' => 'frota_9',
+        'imagem_frota_10' => 'frota_10',
         'imagem_vantagens' => 'vantagens',
         'imagem_contato' => 'contato',
     ];
@@ -90,6 +117,13 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         'usar_imagem_frota_1' => 'frota_1',
         'usar_imagem_frota_2' => 'frota_2',
         'usar_imagem_frota_3' => 'frota_3',
+        'usar_imagem_frota_4' => 'frota_4',
+        'usar_imagem_frota_5' => 'frota_5',
+        'usar_imagem_frota_6' => 'frota_6',
+        'usar_imagem_frota_7' => 'frota_7',
+        'usar_imagem_frota_8' => 'frota_8',
+        'usar_imagem_frota_9' => 'frota_9',
+        'usar_imagem_frota_10' => 'frota_10',
         'usar_imagem_vantagens' => 'vantagens',
         'usar_imagem_contato' => 'contato',
     ];
@@ -546,18 +580,28 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $corSecundaria = $cv($cores, 'brand_secundaria', $empresa->cor_secundaria ?: '#193C68');
         $corTerciaria = $cv($cores, 'brand_terciaria', $empresa->cor_terciaria ?: '#E7B93A');
 
-        $frotaDestaques = [
-            ['titulo' => $tv($textos, 'frota_card_1_titulo', 'Econômicos Urbanos'), 'descricao' => $tv($textos, 'frota_card_1_descricao', 'Carros compactos com baixo consumo.'), 'imagem' => $iv($imagens, 'frota_1', $imagensConfig, 'frota_1')],
-            ['titulo' => $tv($textos, 'frota_card_2_titulo', 'SUV e Família'), 'descricao' => $tv($textos, 'frota_card_2_descricao', 'Espaço e conforto para a família.'), 'imagem' => $iv($imagens, 'frota_2', $imagensConfig, 'frota_2')],
-            ['titulo' => $tv($textos, 'frota_card_3_titulo', 'Executivo e Premium'), 'descricao' => $tv($textos, 'frota_card_3_descricao', 'Modelos para compromissos corporativos.'), 'imagem' => $iv($imagens, 'frota_3', $imagensConfig, 'frota_3')],
+        $frotaDestaques = [];
+        $frotaDefaults = [
+            1 => ['Econômicos Urbanos', 'Carros compactos com baixo consumo.'],
+            2 => ['SUV e Família', 'Espaço e conforto para a família.'],
+            3 => ['Executivo e Premium', 'Modelos para compromissos corporativos.'],
         ];
+        for ($fi = 1; $fi <= 10; $fi++) {
+            $ft = $tv($textos, "frota_card_{$fi}_titulo", $frotaDefaults[$fi][0] ?? '');
+            if ($ft === '') continue;
+            $frotaDestaques[] = [
+                'titulo' => $ft,
+                'descricao' => $tv($textos, "frota_card_{$fi}_descricao", $frotaDefaults[$fi][1] ?? ''),
+                'imagem' => $iv($imagens, "frota_{$fi}", $imagensConfig, "frota_{$fi}"),
+            ];
+        }
 
-        $beneficios = [
-            $tv($textos, 'beneficio_1', 'Retirada ágil com pré-cadastro online'),
-            $tv($textos, 'beneficio_2', 'Proteções e adicionais sob medida'),
-            $tv($textos, 'beneficio_3', 'Atendimento para pessoa física e empresas'),
-            $tv($textos, 'beneficio_4', 'Frota revisada e higienizada regularmente'),
-        ];
+        $beneficios = [];
+        $beneficiosDefaults = ['Retirada ágil com pré-cadastro online', 'Proteções e adicionais sob medida', 'Atendimento para pessoa física e empresas', 'Frota revisada e higienizada regularmente'];
+        for ($bi = 1; $bi <= 10; $bi++) {
+            $bv = $tv($textos, "beneficio_{$bi}", $beneficiosDefaults[$bi - 1] ?? '');
+            if ($bv !== '') $beneficios[] = $bv;
+        }
 
         $etapasReserva = [
             ['titulo' => $tv($textos, 'etapa_1_titulo', 'Escolha local e datas'), 'descricao' => $tv($textos, 'etapa_1_descricao', 'Informe onde deseja retirar e devolver o veículo.')],

@@ -185,13 +185,11 @@
                                 <div class="form-group"><label>Etiqueta (rótulo superior)</label><input class="form-control" data-section="frota" data-key="frota_label_superior" value="{{ $txt('frota_label_superior', 'Frota em destaque') }}"></div>
                                 <div class="form-group"><label>Título</label><input class="form-control" data-section="frota" data-key="frota_titulo" value="{{ $txt('frota_titulo', 'Categorias para cada tipo de viagem') }}"></div>
                                 <div class="form-group"><label>Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_descricao" rows="2">{{ $txt('frota_descricao', 'Selecione o grupo ideal e reserve com condições ajustadas ao seu perfil.') }}</textarea></div>
-                                <hr><h6>Cards da Frota</h6>
-                                <div class="form-group"><label>Card 1 — Título</label><input class="form-control" data-section="frota" data-key="frota_card_1_titulo" value="{{ $txt('frota_card_1_titulo', 'Econômicos') }}"></div>
-                                <div class="form-group"><label>Card 1 — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_1_descricao" rows="1">{{ $txt('frota_card_1_descricao', 'Ideal para o dia a dia na cidade e viagens curtas.') }}</textarea></div>
-                                <div class="form-group"><label>Card 2 — Título</label><input class="form-control" data-section="frota" data-key="frota_card_2_titulo" value="{{ $txt('frota_card_2_titulo', 'SUV') }}"></div>
-                                <div class="form-group"><label>Card 2 — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_2_descricao" rows="1">{{ $txt('frota_card_2_descricao', 'Conforto e espaço para toda família.') }}</textarea></div>
-                                <div class="form-group"><label>Card 3 — Título</label><input class="form-control" data-section="frota" data-key="frota_card_3_titulo" value="{{ $txt('frota_card_3_titulo', 'Executivo') }}"></div>
-                                <div class="form-group"><label>Card 3 — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_3_descricao" rows="1">{{ $txt('frota_card_3_descricao', 'Premium para negócios e ocasiões especiais.') }}</textarea></div>
+                                <hr><h6>Cards da Frota <small class="text-muted">(deixe o título vazio para ocultar o card)</small></h6>
+                                @for($fi = 1; $fi <= 10; $fi++)
+                                <div class="form-group"><label>Card {{ $fi }} — Título</label><input class="form-control" data-section="frota" data-key="frota_card_{{$fi}}_titulo" value="{{ $txt('frota_card_'.$fi.'_titulo', '') }}"></div>
+                                <div class="form-group"><label>Card {{ $fi }} — Descrição</label><textarea class="form-control" data-section="frota" data-key="frota_card_{{$fi}}_descricao" rows="1">{{ $txt('frota_card_'.$fi.'_descricao', '') }}</textarea></div>
+                                @endfor
                             </div>
                         </div>
                         <div class="tab-pane" id="tab-frota-cores">
@@ -206,7 +204,7 @@
                             </div>
                         </div>
                         <div class="tab-pane" id="tab-frota-imagem">
-                            @for($fi = 1; $fi <= 3; $fi++)
+                            @for($fi = 1; $fi <= 10; $fi++)
                             <div class="se-img-upload mb-3">
                                 <label>Imagem do Card {{ $fi }} (recomendado: 900x600)</label>
                                 <div class="se-img-preview" id="seImgPreview-frota_{{$fi}}">
@@ -254,8 +252,8 @@
                                 <div class="form-group"><label>Etiqueta</label><input class="form-control" data-section="vantagens" data-key="vantagens_label_superior" value="{{ $txt('vantagens_label_superior', 'Diferenciais') }}"></div>
                                 <div class="form-group"><label>Título</label><input class="form-control" data-section="vantagens" data-key="vantagens_titulo" value="{{ $txt('vantagens_titulo', 'Por que escolher ' . $empresa->nome) }}"></div>
                                 <div class="form-group"><label>Descrição</label><textarea class="form-control" data-section="vantagens" data-key="vantagens_descricao" rows="2">{{ $txt('vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado.') }}</textarea></div>
-                                <hr><h6>Itens de Vantagens</h6>
-                                @for($i = 1; $i <= 4; $i++)
+                                <hr><h6>Itens de Vantagens <small class="text-muted">(deixe vazio para ocultar)</small></h6>
+                                @for($i = 1; $i <= 10; $i++)
                                 <div class="form-group"><label>Benefício {{ $i }}</label><input class="form-control" data-section="vantagens" data-key="beneficio_{{$i}}" value="{{ $txt('beneficio_'.$i, '') }}"></div>
                                 @endfor
                             </div>

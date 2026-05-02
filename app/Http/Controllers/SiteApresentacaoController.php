@@ -230,23 +230,22 @@ class SiteApresentacaoController extends Controller
 
     private function frotaDestaques(array $textos, array $imagens, array $imagensConfig): array
     {
-        return [
-            [
-                'titulo' => $this->textValue($textos, 'frota_card_1_titulo', 'Econômicos Urbanos'),
-                'descricao' => $this->textValue($textos, 'frota_card_1_descricao', 'Carros compactos com baixo consumo para o dia a dia e viagens curtas.'),
-                'imagem' => $this->imageUrl($imagens, 'frota_1', $this->imageEnabled($imagensConfig, 'frota_1')),
-            ],
-            [
-                'titulo' => $this->textValue($textos, 'frota_card_2_titulo', 'SUV e Família'),
-                'descricao' => $this->textValue($textos, 'frota_card_2_descricao', 'Mais espaço, conforto e segurança para viagens com bagagens e família.'),
-                'imagem' => $this->imageUrl($imagens, 'frota_2', $this->imageEnabled($imagensConfig, 'frota_2')),
-            ],
-            [
-                'titulo' => $this->textValue($textos, 'frota_card_3_titulo', 'Executivo e Premium'),
-                'descricao' => $this->textValue($textos, 'frota_card_3_descricao', 'Modelos com acabamento superior para compromissos corporativos e eventos.'),
-                'imagem' => $this->imageUrl($imagens, 'frota_3', $this->imageEnabled($imagensConfig, 'frota_3')),
-            ],
+        $defaults = [
+            1 => ['titulo' => 'Econômicos Urbanos', 'descricao' => 'Carros compactos com baixo consumo para o dia a dia e viagens curtas.'],
+            2 => ['titulo' => 'SUV e Família', 'descricao' => 'Mais espaço, conforto e segurança para viagens com bagagens e família.'],
+            3 => ['titulo' => 'Executivo e Premium', 'descricao' => 'Modelos com acabamento superior para compromissos corporativos e eventos.'],
         ];
+        $cards = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $titulo = $this->textValue($textos, "frota_card_{$i}_titulo", $defaults[$i]['titulo'] ?? '');
+            if (empty($titulo)) continue;
+            $cards[] = [
+                'titulo' => $titulo,
+                'descricao' => $this->textValue($textos, "frota_card_{$i}_descricao", $defaults[$i]['descricao'] ?? ''),
+                'imagem' => $this->imageUrl($imagens, "frota_{$i}", $this->imageEnabled($imagensConfig, "frota_{$i}")),
+            ];
+        }
+        return $cards;
     }
 
     private function imageEnabled(array $imagensConfig, string $key): bool
@@ -279,12 +278,18 @@ class SiteApresentacaoController extends Controller
 
     private function beneficios(array $textos): array
     {
-        return [
-            $this->textValue($textos, 'beneficio_1', 'Retirada ágil com pré-cadastro online'),
-            $this->textValue($textos, 'beneficio_2', 'Protecoes e adicionais sob medida'),
-            $this->textValue($textos, 'beneficio_3', 'Atendimento para pessoa física e empresas'),
-            $this->textValue($textos, 'beneficio_4', 'Frota revisada e higienizada regularmente'),
+        $defaults = [
+            'Retirada ágil com pré-cadastro online',
+            'Proteções e adicionais sob medida',
+            'Atendimento para pessoa física e empresas',
+            'Frota revisada e higienizada regularmente',
         ];
+        $items = [];
+        for ($i = 1; $i <= 10; $i++) {
+            $val = $this->textValue($textos, "beneficio_{$i}", $defaults[$i - 1] ?? '');
+            if ($val !== '') $items[] = $val;
+        }
+        return $items;
     }
 
     private function etapasReserva(array $textos): array

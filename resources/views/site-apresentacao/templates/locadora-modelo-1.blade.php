@@ -822,7 +822,7 @@
         ══════════════════════════════════════════ */
         .fleet-grid {
             display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
         }
 
@@ -2308,6 +2308,10 @@
                 frota_card_2_descricao: '#frota .fleet-card:nth-child(2) .fleet-card-desc',
                 frota_card_3_titulo: '#frota .fleet-card:nth-child(3) .fleet-card-title',
                 frota_card_3_descricao: '#frota .fleet-card:nth-child(3) .fleet-card-desc',
+                @for($fi = 4; $fi <= 10; $fi++)
+                frota_card_{{$fi}}_titulo: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-title',
+                frota_card_{{$fi}}_descricao: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-desc',
+                @endfor
                 vantagens_label_superior: '#vantagens .eyebrow',
                 vantagens_titulo: '#vantagens .section-title',
                 vantagens_descricao: '#vantagens .section-desc',
@@ -2343,6 +2347,9 @@
                     imagem_frota_1: '#frota .fleet-card:nth-child(1) img',
                     imagem_frota_2: '#frota .fleet-card:nth-child(2) img',
                     imagem_frota_3: '#frota .fleet-card:nth-child(3) img',
+                    @for($fi = 4; $fi <= 10; $fi++)
+                    imagem_frota_{{$fi}}: '#frota .fleet-card:nth-child({{$fi}}) img',
+                    @endfor
                     imagem_vantagens: '#vantagens img',
                     imagem_contato: '#contato img',
                 };
@@ -2392,6 +2399,10 @@
                 { sel: '#frota .fleet-card:nth-child(2) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_2_descricao' },
                 { sel: '#frota .fleet-card:nth-child(3) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_3_titulo' },
                 { sel: '#frota .fleet-card:nth-child(3) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_3_descricao' },
+                @for($fi = 4; $fi <= 10; $fi++)
+                { sel: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_{{$fi}}_titulo' },
+                { sel: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_{{$fi}}_descricao' },
+                @endfor
                 { sel: '#vantagens .eyebrow', a: 'texto', s: 'vantagens', c: 'vantagens_label_superior' },
                 { sel: '#vantagens .section-title', a: 'texto', s: 'vantagens', c: 'vantagens_titulo' },
                 { sel: '#vantagens .section-desc', a: 'texto', s: 'vantagens', c: 'vantagens_descricao' },
@@ -2443,6 +2454,9 @@
                 { sel: '#frota .fleet-card:nth-child(1) img', s: 'frota', c: 'imagem_frota_1' },
                 { sel: '#frota .fleet-card:nth-child(2) img', s: 'frota', c: 'imagem_frota_2' },
                 { sel: '#frota .fleet-card:nth-child(3) img', s: 'frota', c: 'imagem_frota_3' },
+                @for($fi = 4; $fi <= 10; $fi++)
+                { sel: '#frota .fleet-card:nth-child({{$fi}}) img', s: 'frota', c: 'imagem_frota_{{$fi}}' },
+                @endfor
                 { sel: '#vantagens img', s: 'vantagens', c: 'imagem_vantagens' },
                 { sel: '#contato img', s: 'contato', c: 'imagem_contato' },
             ];
