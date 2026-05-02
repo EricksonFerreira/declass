@@ -79,7 +79,7 @@
 
 
         .field-small{display:block;margin-top:4px;font-size:.9px;color:var(--ink3)}
-        
+
         .sec{padding:100px 24px}
         .sec--alt{background:var(--off)}
         .sec--frota{background:var(--frota-b)}
@@ -211,14 +211,14 @@
                     <div>
                         <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
                         <input id="data_retirada" name="data_retirada" type="text" readonly placeholder="Data">
-                        <small id="data_retirada_feedback">Selecione a estação</small>
+                        <small class="field-small" id="data_retirada_feedback">Selecione a estação</small>
                     </div>
                     <div>
                         <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
                         <select id="hora_retirada" name="hora_retirada" disabled>
                             <option value="">Data</option>
                         </select>
-                        <small id="hora_retirada_feedback">Escolha a data</small>
+                        <small class="field-small" id="hora_retirada_feedback">Escolha a data</small>
                     </div>
                     <div class="full" id="devolucaoField">
                         <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Devolução' }}</label>
@@ -228,19 +228,19 @@
                                 <option value="{{ $id }}">{{ $nome }}</option>
                             @endforeach
                         </select>
-                        <small id="devolucao_feedback">Selecione a estação</small>
+                        <small class="field-small" id="devolucao_feedback">Selecione a estação</small>
                     </div>
                     <div>
                         <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
                         <input id="data_devolucao" name="data_devolucao" type="text" readonly placeholder="Data">
-                        <small id="data_devolucao_feedback">Selecione a estação</small>
+                        <small class="field-small" id="data_devolucao_feedback">Selecione a estação</small>
                     </div>
                     <div>
                         <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
                         <select id="hora_devolucao" name="hora_devolucao" disabled>
                             <option value="">Data</option>
                         </select>
-                        <small id="hora_devolucao_feedback">Escolha a data</small>
+                        <small class="field-small" id="hora_devolucao_feedback">Escolha a data</small>
                     </div>
                     <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
                     @if(!empty($heroFormNota))<div class="note">{{ $heroFormNota }}</div>@endif
