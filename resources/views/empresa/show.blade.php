@@ -224,22 +224,22 @@
                                 <i class="fas fa-layer-group rs-card__icon"></i>
                                 <h2>Plano Atual</h2>
                             </div>
-                            <div class="rs-info-rows">
-                                <div class="rs-info-row">
-                                    <span>Plano</span>
-                                    <strong>{{ $plano->nome }}</strong>
+                            <div class="rs-info-grid" style="grid-template-columns:1fr;">
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-tag"></i> Plano</span>
+                                    <strong class="rs-info-card__value">{{ $plano->nome }}</strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>Status</span>
-                                    <strong><span class="badge text-white {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span></strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-circle"></i> Status</span>
+                                    <strong class="rs-info-card__value"><span class="badge text-white {{ $statusBadge['class'] }}">{{ $statusBadge['label'] }}</span></strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>Periodicidade</span>
-                                    <strong>{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-calendar-alt"></i> Periodicidade</span>
+                                    <strong class="rs-info-card__value">{{ $planoAtivo->periodicidade_texto ?? ($planoAtivo->periodicidade === 'anual' ? 'Anual' : 'Mensal') }}</strong>
                                 </div>
-                                <div class="rs-info-row">
-                                    <span>Vencimento</span>
-                                    <strong>{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-hourglass-end"></i> Vencimento</span>
+                                    <strong class="rs-info-card__value">{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
                                 </div>
                             </div>
                         </div>
