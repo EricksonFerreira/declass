@@ -658,15 +658,12 @@ var stripeNovoCard = null;
 
 function inicializarStripeNovoCartao() {
     if (stripeNovoCard) return;
-    fetch('/meu-plano/pagamento/0/cartao-intent?peek=1', {
-        method: 'POST',
-        headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ peek: true }),
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-        if (data.stripe_key) {
-            stripe = Stripe(data.stripe_key);
+    var form = document.getElementById('novoCartaoForm');
+    form.style.display = 'block';
+    setTimeout(function () {
+        var fn = function (stripeKey) {
+            if (!stripeKey) { document.getElementById('card-errors').textContent = 'Stripe não configurado.'; document.getElementById('card-errors').style.display = 'block'; return; }
+            stripe = Stripe(stripeKey);
             var elements = stripe.elements({ locale: 'pt-BR' });
             stripeNovoCard = elements.create('card', {
                 style: { base: { fontSize: '15px', color: '#0f172a', fontFamily: 'Inter, sans-serif', '::placeholder': { color: '#94a3b8' } } }
@@ -677,8 +674,17 @@ function inicializarStripeNovoCartao() {
                 if (event.error) { erroEl.textContent = event.error.message; erroEl.style.display = 'block'; }
                 else { erroEl.textContent = ''; erroEl.style.display = 'none'; }
             });
-        }
-    });
+        };
+        if (stripe && stripe._url) { fn(stripe._url); return; }
+        fetch('/meu-plano/pagamento/0/cartao-intent?peek=1', {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+            body: JSON.stringify({ peek: true }),
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) { fn(data.stripe_key); })
+        .catch(function () { document.getElementById('card-errors').textContent = 'Erro ao carregar Stripe.'; document.getElementById('card-errors').style.display = 'block'; });
+    }, 100);
 }
 
 async function processarCartao(pagamentoId, btn) {
