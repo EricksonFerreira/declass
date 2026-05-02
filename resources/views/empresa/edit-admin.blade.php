@@ -99,7 +99,7 @@
                     {{-- <a href="{{ route('empresa.minha') }}" class="btn btn-secondary btn-sm">
                         <i class="fas fa-arrow-left mr-1"></i> Voltar
                     </a> --}}
-                    <button type="submit" class="btn btn-primary">
+                    <button type="submit" class="btn btn-success">
                         <i class="fas fa-save mr-1"></i> Salvar alteracoes
                     </button>
                 </div>
