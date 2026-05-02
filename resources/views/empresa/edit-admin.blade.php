@@ -96,9 +96,9 @@
                 <hr class="my-4">
 
                 <div class="d-flex justify-content-between align-items-center" style="gap:10px;flex-wrap:wrap;">
-                    <a href="{{ route('empresa.minha') }}" class="btn btn-secondary btn-sm">
+                    {{-- <a href="{{ route('empresa.minha') }}" class="btn btn-secondary btn-sm">
                         <i class="fas fa-arrow-left mr-1"></i> Voltar
-                    </a>
+                    </a> --}}
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-save mr-1"></i> Salvar alteracoes
                     </button>
