@@ -50,7 +50,7 @@
         .hero .wrap{position:relative;z-index:1;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center}
         .hero .wrap.has-img.has-form{grid-template-columns:1fr 1fr 1fr}
         .hero .wrap.has-img:not(.has-form) .hero-col-img{grid-column:2}
-        .hero-col-img{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg);aspect-ratio:4/3;width:100%}
+        .hero-col-img{border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--sh-lg);aspect-ratio:4/3;width:100%;height: 100%;}
         .hero-col-img img{width:100%;height:100%;object-fit:cover;display:block}
         .hero-col-img-placeholder{width:100%;height:100%;background:linear-gradient(135deg,var(--off),var(--line));display:flex;align-items:center;justify-content:center;font-size:3rem;color:var(--ink3);opacity:.2;aspect-ratio:4/3}
         .hero-tag{font-family:Outfit,sans-serif;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--a);margin-bottom:20px;display:inline-flex;align-items:center;gap:8px}
@@ -181,7 +181,7 @@
 
     <section class="hero">
         <div class="wrap{{ !empty($imagemHero) ? ' has-img' : '' }}{{ !empty($heroFormTitulo) ? ' has-form' : '' }}">
-            <div>
+            <div style="height: 100%">
                 <div class="hero-tag">{{ $heroTag }}</div>
                 <h1 class="hero-title">{{ $titulo }}</h1>
                 @if(!empty($subtitulo))<div class="hero-sub">{{ $subtitulo }}</div>@endif
