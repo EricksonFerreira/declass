@@ -35,7 +35,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         BreadcrumbService $breadcrumbService,
         DiaUtilService $diaUtilService
     ) {
-        $this->titulo = "EstaÃ§Ãµes";
+        $this->titulo = "Estações";
         $this->nomeFiltro = 'estacao';
         $this->estacaoService = $estacaoService;
         $this->breadcrumbService = $breadcrumbService;
@@ -53,7 +53,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
         $estacaos = $this->estacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['pais']);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('EstaÃ§Ãµes');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Estações');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -88,7 +88,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
             }
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('EstaÃ§Ãµes', 'estacao.index', 'Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Estações', 'estacao.index', 'Criar');
 
         $paises =  $this->paisService->getAllForSelectId();
         $status = [
@@ -131,7 +131,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
         $this->estacaoService->salvarNovosHorariosDiarios($estacao);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('EstaÃ§Ãµes', 'estacao.index', "Editar: $estacao->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Estações', 'estacao.index', "Editar: $estacao->nome");
 
         $paises =  $this->paisService->getAllForSelectId();
         $status = [
@@ -184,7 +184,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     public function horarios_diarios($id)
     {
         $estacao = $this->estacaoService->getById($id);
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('HorÃ¡rios DiÃ¡rios');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Horários Diários');
 
         $horarios_diarios = $estacao->horariosDiarios;
 
@@ -194,7 +194,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     public function salvar_horarios_diarios(SalvarHorariosDiariosRequest $request, $id)
     {
         $this->estacaoService->salvarHorariosDiarios($id, $request->all());
-        return redirect()->route('estacao.horarios_diarios', $id)->with('success', 'HorÃ¡rios diÃ¡rios salvos com sucesso.');
+        return redirect()->route('estacao.horarios_diarios', $id)->with('success', 'Horários diários salvos com sucesso.');
     }
 
 

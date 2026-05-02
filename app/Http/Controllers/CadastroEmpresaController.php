@@ -98,8 +98,10 @@ class CadastroEmpresaController extends Controller
                     'status_reserva',
                     'status_veiculos',
                     'tipo_frota',
-                    'grupo_frota',
+                    'grupos_frota',
                     'catalogo_fipe',
+                    'tipo_opcional',
+                    'opcionais',
                 ]);
             } catch (\Throwable $e) {
                 Log::warning('Replicacao parcial ao criar empresa.', [
