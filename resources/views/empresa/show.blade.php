@@ -144,9 +144,9 @@
                                     <span>Status</span>
                                     <strong>
                                         @if($empresa->ativo === 'S')
-                                            <span class="badge badge-success">Ativo</span>
+                                            <span class="badge bg-success">Ativo</span>
                                         @else
-                                            <span class="badge badge-danger">Inativo</span>
+                                            <span class="badge bg-danger">Inativo</span>
                                         @endif
                                     </strong>
                                 </div>
