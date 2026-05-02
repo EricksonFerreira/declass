@@ -65,7 +65,7 @@ class CadastroEmpresaController extends Controller
         // Garante que permissões existem antes da transação.
         $permissaoSyncService->syncIfNeeded();
 
-        $payload = DB::transaction(function () use ($data, $replicacaoBaseService, $senhaPadrao) {
+        $payload = DB::transaction(function () use ($data, $replicacaoBaseService, $senhaPadrao, $permissaoSyncService) {
             $slugBase = Str::slug((string) $data['empresa_nome']);
             if ($slugBase === '') {
                 $slugBase = 'empresa';
@@ -110,12 +110,15 @@ class CadastroEmpresaController extends Controller
                 ]);
             }
 
-            // Busca ou cria o role global "Administrador".
-            // Roles são globais (sem empresa_id), portanto não criamos um novo — apenas reutilizamos.
+            // Busca ou cria o role global "Administrador" com todas as permissões.
             $role = Regra::firstOrCreate(
                 ['name' => 'administrador', 'guard_name' => 'web'],
                 []
             );
+            // Se o role foi criado agora, força a sincronização de permissões.
+            if ($role->wasRecentlyCreated) {
+                $permissaoSyncService->sync();
+            }
             $roleId = $role->id;
 
             $user = User::create([
