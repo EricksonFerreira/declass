@@ -544,7 +544,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         if ($request->has('site_apresentacao_modelo')) {
             $modelo = $request->input('site_apresentacao_modelo');
-            if (in_array($modelo, ['modelo_1', 'modelo_2'])) {
+            if (in_array($modelo, ['modelo_1', 'modelo_2', 'modelo_3'])) {
                 $data['site_apresentacao_modelo'] = $modelo;
             }
         }
