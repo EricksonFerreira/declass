@@ -1151,7 +1151,7 @@ function cancelarPagamento(pagamentoId, btn) {
         confirmButtonColor: '#dc2626',
     }).then(function(result) {
         if (!result.isConfirmed) return;
-        fetch('/meu-plano/pagamento/' + pagamentoId + '/cancelar', {
+        fetch('{{ route('assinatura.pagamento.cancelar', ['pagamento' => '__ID__']) }}'.replace('__ID__', pagamentoId), {
             method: 'POST',
             headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '', 'Accept': 'application/json' },
         })
