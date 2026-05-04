@@ -2335,7 +2335,7 @@ private function montarDiasSemanaFlags($diasUteis): array
         $dataFim    = Carbon::parse($reserva->data_fim)->format('Y-m-d H:i:s');
         $estacaoId  = (int) $reserva->estacao_retirada_id;
         $agora = now()->format('Y-m-d H:i:s');
-dump($estacaoId);
+
         $veiculos = \App\Models\Veiculo::withoutGlobalScopes()
             ->where('empresa_id', auth()->user()->empresa_id)
             ->with(['marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo', 'movimentacoes.reserva', 'movimentacoes.statusMovimentacao'])
