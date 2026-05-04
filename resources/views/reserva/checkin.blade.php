@@ -181,17 +181,14 @@
 
                         {{-- Diagnóstico de disponibilidade --}}
                         <div class="modal fade" id="modalDiagnostico" tabindex="-1">
-                            <div class="modal-dialog modal-xl">
+                            <div class="modal-dialog modal-xl modal-dialog-scrollable">
                                 <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5><i class="fas fa-stethoscope mr-2"></i>Diagnóstico de Disponibilidade</h5>
-                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    <div class="modal-header" style="background:linear-gradient(135deg,#1e293b,#0f172a);color:#fff;border-bottom:none;">
+                                        <h5 style="font-weight:700;"><i class="fas fa-stethoscope mr-2"></i>Diagnóstico de Disponibilidade</h5>
+                                        <button type="button" class="close" data-dismiss="modal" style="color:#fff;opacity:.7;">&times;</button>
                                     </div>
-                                    <div class="modal-body" id="diagnosticoResultado">
-                                        <div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Analisando veículos...</p></div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                                    <div class="modal-body" id="diagnosticoResultado" style="max-height:70vh;overflow-y:auto;">
+                                        <div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veículos...</p></div>
                                     </div>
                                 </div>
                             </div>
@@ -273,61 +270,107 @@
                                             fetch('{{ route('reserva.checkin.diagnostico', $reserva->id) }}', { headers: { 'Accept': 'application/json' } })
                                                 .then(function (r) { return r.json(); })
                                                 .then(function (data) {
-                                                    var h = '';
-                                                    if (!data.veiculos || !data.veiculos.length) {
-                                                        h = '<div class="alert alert-info text-center py-4"><i class="fas fa-car fa-3x mb-2 d-block text-muted"></i>Nenhum veículo encontrado na estação da reserva.</div>';
+                                                    var todos = data.veiculos || [];
+                                                    var h = '<div id="diagRoot" data-count="' + todos.length + '">';
+
+                                                    if (!todos.length) {
+                                                        h += '<div class="alert alert-info text-center py-5"><i class="fas fa-car-side fa-3x mb-3 d-block text-muted"></i><strong>Nenhum veículo encontrado</strong><br><span class="text-muted">Na estação da reserva ou sem estação definida.</span></div>';
                                                     } else {
-                                                        var disp = data.veiculos.filter(function(v){return v.disponivel});
-                                                        var ind = data.veiculos.filter(function(v){return !v.disponivel});
-                                                        h += '<div class="d-flex gap-3 mb-3 flex-wrap">';
-                                                        h += '<span class="badge badge-success p-2" style="font-size:.85rem;"><i class="fas fa-check-circle mr-1"></i>' + disp.length + ' disponível(is)</span>';
-                                                        h += '<span class="badge badge-secondary p-2" style="font-size:.85rem;"><i class="fas fa-times-circle mr-1"></i>' + ind.length + ' indisponível(is)</span>';
-                                                        h += '<span class="badge badge-info p-2" style="font-size:.85rem;"><i class="fas fa-car mr-1"></i>' + data.veiculos.length + ' total</span>';
+                                                        var disp = todos.filter(function(v){return v.disponivel});
+                                                        var ind = todos.filter(function(v){return !v.disponivel});
+
+                                                        h += '<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">';
+                                                        h += '<div class="input-group input-group-sm" style="max-width:260px;"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input type="text" class="form-control" id="diagFiltro" placeholder="Filtrar por nome, placa..." oninput="filtrarDiagnostico(this.value)"></div>';
+                                                        h += '<span class="badge badge-success p-2" style="font-size:.82rem;"><i class="fas fa-check-circle mr-1"></i>' + disp.length + ' disponível</span>';
+                                                        h += '<span class="badge badge-secondary p-2" style="font-size:.82rem;"><i class="fas fa-times-circle mr-1"></i>' + ind.length + ' indisponível</span>';
+                                                        h += '<span class="badge badge-info p-2" style="font-size:.82rem;"><i class="fas fa-car mr-1"></i>' + todos.length + ' total</span>';
                                                         if (data.reserva_info) {
-                                                            h += '<a href="' + (data.reserva_info.url || '#') + '" target="_blank" class="badge badge-light p-2" style="font-size:.82rem;border:1px solid #dee2e6;"><i class="fas fa-external-link-alt mr-1"></i>Reserva #' + data.reserva_info.id + '</a>';
+                                                            h += '<a href="' + data.reserva_info.url + '" target="_blank" class="badge badge-light p-2" style="font-size:.82rem;border:1px solid #dee2e6;"><i class="fas fa-external-link-alt mr-1"></i>Reserva #' + data.reserva_info.id + '</a>';
                                                         }
                                                         h += '</div>';
 
-                                                        ind.forEach(function (v) {
-                                                            var r = {};
+                                                        h += '<div id="diagLista">';
+                                                        todos.forEach(function (v, idx) {
+                                                            var r = {}, ordem = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
                                                             v.regras.forEach(function(rr) { r[rr.nome] = rr; });
-                                                            h += '<div class="card border mb-3"><div class="card-header py-2 d-flex justify-content-between align-items-center" style="background:#f8f9fa;">';
-                                                            h += '<span><strong>' + v.nome + '</strong> <small class="text-muted">' + v.placa + ' · ' + v.modelo + ' · ' + v.cor + '</small></span>';
-                                                            h += '<span class="badge badge-secondary">Indisponível</span></div><div class="card-body py-2">';
+                                                            var isDisp = v.disponivel, cardBg = isDisp ? '#f0fdf4' : '#fff', borderC = isDisp ? '#86efac' : '#e5e7eb';
+                                                            var statusBadge = isDisp
+                                                                ? '<span class="badge badge-success" style="font-size:.72rem;"><i class="fas fa-check-circle mr-1"></i>Disponível</span>'
+                                                                : '<span class="badge badge-secondary" style="font-size:.72rem;"><i class="fas fa-times-circle mr-1"></i>Indisponível</span>';
 
-                                                            var ordem = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
+                                                            var passCount = ordem.filter(function(nk){var rr=r[nk];return rr&&rr.ok}).length;
+                                                            var totalCount = ordem.length;
+
+                                                            h += '<div class="card border mb-2 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '">';
+                                                            h += '<div class="card-header py-2 px-3 d-flex justify-content-between align-items-center collapsed" data-toggle="collapse" data-target="#diagCollapse' + idx + '" style="cursor:pointer;background:' + cardBg + ';border-left:4px solid ' + (isDisp ? '#22c55e' : '#6b7280') + ';">';
+                                                            h += '<div class="d-flex align-items-center gap-3 flex-wrap"><strong style="font-size:.9rem;color:#0f172a;">' + v.nome + '</strong>';
+                                                            h += '<small class="text-muted">' + v.placa + ' · ' + v.modelo + ' · ' + v.cor + '</small>';
+                                                            h += '<small class="text-muted">Status: ' + v.status_nome + '</small></div>';
+                                                            h += '<div class="d-flex align-items-center gap-2">';
+                                                            h += statusBadge;
+                                                            h += '<span class="badge ' + (passCount === totalCount ? 'badge-success' : 'badge-warning') + '" style="font-size:.7rem;">' + passCount + '/' + totalCount + '</span>';
+                                                            h += '<i class="fas fa-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s;" data-toggle-class></i></div></div>';
+
+                                                            h += '<div class="collapse" id="diagCollapse' + idx + '"><div class="card-body py-2 px-3" style="background:#fafbfc;">';
+
                                                             ordem.forEach(function (nk) {
                                                                 var rr = r[nk];
                                                                 if (!rr) return;
-                                                                var ok = rr.ok, ic = ok ? 'fa-check-circle text-success' : 'fa-times-circle text-danger', bg = ok ? '#f0fdf4' : '#fef2f2';
-                                                                h += '<div class="d-flex align-items-start gap-2 p-2 mb-1 rounded" style="background:' + bg + ';">';
-                                                                h += '<i class="fas ' + ic + ' mt-1" style="font-size:1rem;"></i>';
-                                                                h += '<div class="flex-grow-1"><strong style="font-size:.85rem;">' + nk + '</strong>';
-                                                                h += '<div style="font-size:.8rem;color:#374151;">' + (rr.info || '') + '</div>';
-                                                                if (!ok && rr.solucao) h += '<div style="font-size:.78rem;color:#dc2626;margin-top:2px;"><i class="fas fa-lightbulb mr-1"></i>' + rr.solucao + '</div>';
+                                                                var ok = rr.ok;
+                                                                var ic = ok ? 'fa-check-circle' : 'fa-times-circle';
+                                                                var icColor = ok ? '#16a34a' : '#dc2626';
+                                                                var bg = ok ? '#f0fdf4' : '#fef2f2';
+                                                                var borderL = ok ? '#22c55e' : '#ef4444';
+
+                                                                h += '<div class="d-flex align-items-start gap-2 p-2 mb-1 rounded" style="background:' + bg + ';border-left:3px solid ' + borderL + ';">';
+                                                                h += '<i class="fas ' + ic + '" style="color:' + icColor + ';font-size:1.05rem;margin-top:2px;flex-shrink:0;"></i>';
+                                                                h += '<div class="flex-grow-1"><strong style="font-size:.85rem;color:#0f172a;">' + nk + '</strong>';
+                                                                h += '<div style="font-size:.8rem;color:#374151;margin-top:1px;">' + (rr.info || '') + '</div>';
+                                                                if (!ok && rr.solucao) {
+                                                                    h += '<div style="font-size:.78rem;color:#dc2626;margin-top:3px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #fca5a5;"><i class="fas fa-lightbulb mr-1"></i><strong>Sugestão:</strong> ' + rr.solucao + '</div>';
+                                                                }
                                                                 if (rr.itens && rr.itens.length) {
+                                                                    h += '<div class="mt-1 d-flex flex-wrap gap-1">';
                                                                     rr.itens.forEach(function (item) {
-                                                                        h += '<a href="' + item.url + '" target="_blank" class="btn btn-xs btn-outline-primary mt-1 mr-1" style="font-size:.75rem;"><i class="fas fa-external-link-alt mr-1"></i>' + item.label + '</a>';
+                                                                        var ic2 = item.tipo === 'reserva' ? 'fa-calendar-alt' : 'fa-truck-moving';
+                                                                        h += '<a href="' + item.url + '" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size:.75rem;border-radius:20px;"><i class="fas ' + ic2 + ' mr-1"></i>' + item.label + '</a>';
                                                                     });
+                                                                    h += '</div>';
                                                                 }
                                                                 h += '</div></div>';
                                                             });
-                                                            h += '</div></div>';
-                                                        });
 
-                                                        if (disp.length) {
-                                                            h += '<h6 class="mt-4 mb-2"><i class="fas fa-check-circle text-success mr-1"></i>Veículos Disponíveis</h6>';
-                                                            disp.forEach(function (v) {
-                                                                h += '<div class="d-inline-block mr-2 mb-2 p-2 rounded border" style="background:#f0fdf4;"><strong style="font-size:.82rem;">' + v.nome + '</strong> <small class="text-muted">' + v.placa + '</small></div>';
-                                                            });
-                                                        }
+                                                            h += '</div></div></div>';
+                                                        });
+                                                        h += '</div>';
                                                     }
+                                                    h += '</div>';
                                                     document.getElementById('diagnosticoResultado').innerHTML = h;
+                                                    // Chevron rotate on collapse
+                                                    document.querySelectorAll('#diagRoot [data-toggle="collapse"]').forEach(function(btn) {
+                                                        btn.addEventListener('click', function() {
+                                                            var icon = this.querySelector('[data-toggle-class]');
+                                                            if (icon) {
+                                                                var collapsed = this.classList.contains('collapsed');
+                                                                icon.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(180deg)';
+                                                            }
+                                                        });
+                                                    });
                                                 })
-                                                .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>Erro ao carregar diagnóstico.</div>'; });
+                                                .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3 d-block"></i><strong>Erro ao carregar diagnóstico.</strong><br><span class="text-muted">Tente novamente.</span></div>'; });
                                         };
                                         renderDiagnostico();
                                     }
+                                    window.filtrarDiagnostico = function(valor) {
+                                        var termo = valor.toLowerCase().trim();
+                                        document.querySelectorAll('.diag-card').forEach(function(card) {
+                                            var nome = card.dataset.nome || '';
+                                            var placa = card.dataset.placa || '';
+                                            var modelo = card.dataset.modelo || '';
+                                            var match = !termo || nome.includes(termo) || placa.includes(termo) || modelo.includes(termo);
+                                            card.style.display = match ? '' : 'none';
+                                        });
+                                    };
                                 });
                             </script>
                         @endpush
