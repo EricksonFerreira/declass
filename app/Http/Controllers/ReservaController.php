@@ -2339,14 +2339,14 @@ private function montarDiasSemanaFlags($diasUteis): array
         $veiculos = \App\Models\Veiculo::withoutGlobalScopes()
             ->where('empresa_id', auth()->user()->empresa_id)
             ->with(['marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo', 'movimentacoes.reserva', 'movimentacoes.statusMovimentacao'])
-        ->where('local_disponibilidade', $estacaoId)
+        ->where('estacao_retirada_id', $estacaoId)
         ->get()
         ->map(function ($v) use ($reserva, $dataInicio, $dataFim, $estacaoId, $agora, $reserva_id) {
             $regras = [];
             $regras[] = [
                 'nome' => 'Estação',
-                'ok' => (int) $v->local_disponibilidade === $estacaoId,
-                'info' => "Veículo em estação #{$v->local_disponibilidade}, reserva requer #{$estacaoId}"
+                'ok' => (int) $v->estacao_retirada_id === $estacaoId,
+                'info' => "Veículo em estação #{$v->estacao_retirada_id}, reserva requer #{$estacaoId}"
             ];
             $disponivelEm = $v->data_hora_disponibilidade ? Carbon::parse($v->data_hora_disponibilidade)->format('d/m/Y H:i') : '—';
             $limite = $dataInicio > $agora ? $dataInicio : $agora;
@@ -2818,8 +2818,8 @@ private function montarDiasSemanaFlags($diasUteis): array
         }
 
         // Blindagem: veiculo deve estar na estacao de retirada (quando aplicavel)
-        if (!empty($reserva->estacao_retirada_id) && !empty($veiculo->local_disponibilidade)) {
-            if ((int) $veiculo->local_disponibilidade !== (int) $reserva->estacao_retirada_id) {
+        if (!empty($reserva->estacao_retirada_id) && !empty($veiculo->estacao_retirada_id)) {
+            if ((int) $veiculo->estacao_retirada_id !== (int) $reserva->estacao_retirada_id) {
                 throw ValidationException::withMessages([
                     'veiculo_id' => 'Veiculo selecionado nao esta disponivel na estacao de retirada desta reserva.',
                 ]);
