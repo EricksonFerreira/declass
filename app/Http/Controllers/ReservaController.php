@@ -2337,7 +2337,9 @@ private function montarDiasSemanaFlags($diasUteis): array
         $agora = now()->format('Y-m-d H:i:s');
 
         $veiculos = \App\Models\Veiculo::with(['marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo', 'movimentacoes.reserva', 'movimentacoes.statusMovimentacao'])
-        ->where('local_disponibilidade', $estacaoId)
+        ->where(function ($q) use ($estacaoId) {
+            $q->where('local_disponibilidade', $estacaoId)->orWhereNull('local_disponibilidade');
+        })
         ->get()
         ->map(function ($v) use ($reserva, $dataInicio, $dataFim, $estacaoId, $agora, $reserva_id) {
             $regras = [];
@@ -2398,7 +2400,14 @@ private function montarDiasSemanaFlags($diasUteis): array
             ];
         });
 
-        return response()->json(['veiculos' => $veiculos]);
+        return response()->json([
+            'veiculos' => $veiculos,
+            'reserva_info' => [
+                'estacao_retirada_id' => $estacaoId,
+                'data_inicio' => $dataInicio,
+                'data_fim' => $dataFim,
+            ]
+        ]);
     }
 
     public function verContratoCheckin(Request $request, $reserva_id){
