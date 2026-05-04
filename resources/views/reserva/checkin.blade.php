@@ -259,11 +259,13 @@
                                     }
                                  }());
                             </script>
-                            <script>
-                                document.getElementById('btnDiagnostico')?.addEventListener('click', function () {
-                                    if (typeof renderDiagnostico === 'function') { renderDiagnostico(); }
-                                    else {
-                                        window.renderDiagnostico = function() {
+                             <script>
+                                 var btnDiag = document.getElementById('btnDiagnostico');
+                                 if (btnDiag) {
+                                 btnDiag.addEventListener('click', function () {
+                                     if (typeof renderDiagnostico === 'function') { renderDiagnostico(); }
+                                     else {
+                                         window.renderDiagnostico = function() {
                                             var modal = $('#modalDiagnostico');
                                             modal.modal('show');
                                             document.getElementById('diagnosticoResultado').innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veículos...</p></div>';
@@ -415,6 +417,7 @@
                                         filtrarDiagnostico();
                                     };
                                 });
+                                }
                             </script>
                         @endpush
 
