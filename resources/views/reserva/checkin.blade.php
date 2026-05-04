@@ -318,6 +318,7 @@
                                                         todos.forEach(function (v, idx) {
                                                             var r = {}, ordemR = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
                                                             v.regras.forEach(function(rr) { r[rr.nome] = rr; });
+                                                            var rStatus = {}; v.regras.forEach(function(rr){rStatus[rr.nome]=rr.ok?'1':'0'});
                                                             var isDisp = v.disponivel;
                                                             var grpOk = ordemR.filter(function(nk){var rr=r[nk];return rr&&rr.ok}).length;
                                                             var grpTot = ordemR.length;
@@ -375,7 +376,7 @@
                                                     }
                                                     document.getElementById('diagnosticoResultado').innerHTML = h;
                                                 })
-                                                .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3 d-block"></i><strong>Erro ao carregar diagnóstico.</strong><br><span class="text-muted">Tente novamente.</span></div>'; });
+                                                .catch(function (err) { console.error('Diagnostico error:', err, err.stack); document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3 d-block"></i><strong>Erro ao carregar diagnóstico.</strong><br><span class="text-muted">' + (err.message || 'Tente novamente.') + '</span></div>'; });
                                         };
                                         renderDiagnostico();
                                     }
