@@ -542,6 +542,15 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $data = $this->prepareSiteImagensConfigPayload($request, $empresaAtual, $data);
         $data = $this->handleSiteImagesUpload($request, $data, $empresaAtual);
 
+        // Processar flags responsivos (mostrar_*) — manter config já processada
+        $respCfg = is_array($data['site_apresentacao_imagens_config'] ?? null) ? $data['site_apresentacao_imagens_config'] : [];
+        foreach ($request->all() as $rk => $rv) {
+            if (str_starts_with($rk, 'mostrar_')) {
+                $respCfg[substr($rk, 8)] = $request->boolean($rk);
+            }
+        }
+        $data['site_apresentacao_imagens_config'] = $respCfg;
+
         if ($request->has('site_apresentacao_modelo')) {
             $modelo = $request->input('site_apresentacao_modelo');
             if (in_array($modelo, ['modelo_1', 'modelo_2', 'modelo_3'])) {
@@ -551,6 +560,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         foreach (array_keys(self::SITE_IMAGEM_FIELDS) as $imageField) {
             unset($data[$imageField]);
+        }
+        foreach (array_keys($request->all()) as $rk) {
+            if (str_starts_with($rk, 'mostrar_')) unset($data[$rk]);
         }
 
         $updated = $this->empresaService->update($id, $data);
