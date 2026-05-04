@@ -303,7 +303,9 @@
                                                         h += '<div id="diagLista" class="row" style="margin:0 -6px;">';
                                                         var iniciais = function(nome) {
                                                             var parts = (nome||'??').split(/\s+/).filter(Boolean);
-                                                            return (parts[0]?.[0]||'') + (parts[1]?.[0]||'');
+                                                            var p0 = parts[0] || '';
+                                                            var p1 = parts[1] || '';
+                                                            return (p0.charAt(0) || '') + (p1.charAt(0) || '');
                                                         };
                                                         var laranjaMedio = '#ea580c';
                                                         var verdeEstacao = '#059669';
