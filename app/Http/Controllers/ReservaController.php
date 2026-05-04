@@ -2330,7 +2330,7 @@ private function montarDiasSemanaFlags($diasUteis): array
 
     public function diagnosticoDisponibilidadeCheckin(Request $request, $reserva_id)
     {
-        $reserva = $this->reservaService->getById($reserva_id, ['modelos']);
+        $reserva = $this->reservaService->getById($reserva_id, ['modelos', 'estacaoRetirada']);
         $dataInicio = Carbon::parse($reserva->data_inicio)->format('Y-m-d H:i:s');
         $dataFim    = Carbon::parse($reserva->data_fim)->format('Y-m-d H:i:s');
         $estacaoId  = (int) $reserva->estacao_retirada_id;
@@ -2338,7 +2338,7 @@ private function montarDiasSemanaFlags($diasUteis): array
         $limite = $dataInicio > $agora ? $dataInicio : $agora;
 
         $veiculos = \App\Models\Veiculo::with([
-            'marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo',
+            'marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo', 'localDisponibilidade',
             'movimentacoes' => fn($q) => $q->with(['reserva', 'statusMovimentacao', 'localOrigem', 'localDestino']),
         ])
         ->where(function ($q) use ($estacaoId) {
@@ -2350,14 +2350,16 @@ private function montarDiasSemanaFlags($diasUteis): array
 
             // 1. Estação
             $veicEstacao = $v->local_disponibilidade ? (int) $v->local_disponibilidade : 0;
+            $veicEstacaoNome = $v->localDisponibilidade?->nome ?: "Estação #{$veicEstacao}";
+            $reservaEstacaoNome = $estacaoId > 0 ? ($reserva->estacaoRetirada?->nome ?? "Estação #{$estacaoId}") : 'nenhuma';
             $regras[] = [
                 'nome' => 'Estação',
                 'ok' => $veicEstacao === $estacaoId || ($veicEstacao === 0 && $estacaoId === 0),
                 'info' => $estacaoId > 0
-                    ? "Veículo na estação #{$veicEstacao}, reserva requer #{$estacaoId}"
+                    ? "Veículo na <strong>{$veicEstacaoNome}</strong>, reserva requer <strong>{$reservaEstacaoNome}</strong>"
                     : 'Reserva sem estação definida',
                 'solucao' => $veicEstacao !== $estacaoId && $estacaoId > 0
-                    ? "Mova o veículo para a estação #{$estacaoId} ou altere a estação de retirada da reserva."
+                    ? "Mova o veículo para a estação <strong>{$reservaEstacaoNome}</strong> ou altere a estação de retirada da reserva."
                     : null,
             ];
 
@@ -2380,9 +2382,9 @@ private function montarDiasSemanaFlags($diasUteis): array
             $regras[] = [
                 'nome' => 'Status',
                 'ok' => $statusOk,
-                'info' => "Status atual: #{$v->status_veiculo_id} ({$v->statusVeiculo?->nome})",
+                'info' => "Status atual: <strong>{$v->statusVeiculo?->nome}</strong>",
                 'solucao' => !$statusOk
-                    ? "Altere o status do veículo para um dos disponíveis (IDs: " . implode(', ', $statusDisponiveis) . ")."
+                    ? "Altere o status do veículo para um dos disponíveis."
                     : null,
             ];
 

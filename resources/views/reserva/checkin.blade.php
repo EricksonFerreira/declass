@@ -180,12 +180,12 @@
                         />
 
                         {{-- Diagnóstico de disponibilidade --}}
-                        <div class="modal fade" id="modalDiagnostico" tabindex="-1">
-                            <div class="modal-dialog modal-xl modal-dialog-scrollable">
+                        <div class="modal fade" id="modalDiagnostico" tabindex="-1" role="dialog">
+                            <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
                                 <div class="modal-content">
-                                    <div class="modal-header" style="background:linear-gradient(135deg,#1e293b,#0f172a);color:#fff;border-bottom:none;">
-                                        <h5 style="font-weight:700;"><i class="fas fa-stethoscope mr-2"></i>Diagnóstico de Disponibilidade</h5>
-                                        <button type="button" class="close" data-dismiss="modal" style="color:#fff;opacity:.7;">&times;</button>
+                                    <div class="modal-header">
+                                        <h5 class="modal-title"><i class="fas fa-stethoscope mr-1"></i>Diagnóstico de Disponibilidade</h5>
+                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                                     </div>
                                     <div class="modal-body" id="diagnosticoResultado" style="max-height:70vh;overflow-y:auto;">
                                         <div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veículos...</p></div>
@@ -288,17 +288,17 @@
                                                         }
                                                         h += '</div>';
 
-                                                        h += '<div class="d-flex gap-2 mb-3 flex-wrap align-items-center p-2 rounded" style="background:#f1f5f9;border:1px solid #e2e8f0;">';
-                                                        h += '<input type="text" class="form-control form-control-sm diag-filtro" style="max-width:140px;" data-col="nome" placeholder="🔍 Nome" oninput="filtrarDiagnostico()">';
-                                                        h += '<input type="text" class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="placa" placeholder="🔍 Placa" oninput="filtrarDiagnostico()">';
-                                                        h += '<input type="text" class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="modelo" placeholder="🔍 Modelo" oninput="filtrarDiagnostico()">';
-                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:130px;" data-col="disponivel" onchange="filtrarDiagnostico()"><option value="">Status</option><option value="1">Disponível</option><option value="0">Indisponível</option></select>';
-                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="estacao" onchange="filtrarDiagnostico()"><option value="">Estação</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
-                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="status" onchange="filtrarDiagnostico()"><option value="">Status Veic</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
-                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="reservas" onchange="filtrarDiagnostico()"><option value="">Reservas</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
-                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:130px;" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Movimentações</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
-                                                        h += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="limparFiltrosDiag()" title="Limpar filtros"><i class="fas fa-eraser"></i></button>';
-                                                        h += '</div>';
+                                                        h += '<div class="card mb-3"><div class="card-body py-2"><div class="row">';
+                                                        h += '<div class="col-md-3 form-group mb-2"><label class="small mb-1">Nome</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="nome" placeholder="Ex: Corolla" oninput="filtrarDiagnostico()"></div>';
+                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Placa</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="placa" placeholder="ABC-1234" oninput="filtrarDiagnostico()"></div>';
+                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Modelo</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="modelo" placeholder="Ex: Civic" oninput="filtrarDiagnostico()"></div>';
+                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Disponibilidade</label><select class="form-control form-control-sm diag-filtro" data-col="disponivel" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="1">Disponível</option><option value="0">Indisponível</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Estação</label><select class="form-control form-control-sm diag-filtro" data-col="estacao" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Status Veículo</label><select class="form-control form-control-sm diag-filtro" data-col="status" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Reservas</label><select class="form-control form-control-sm diag-filtro" data-col="reservas" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Movimentações</label><select class="form-control form-control-sm diag-filtro" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
+                                                        h += '<div class="col-md-1 form-group mb-2 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-secondary btn-block" onclick="limparFiltrosDiag()" title="Limpar filtros"><i class="fas fa-eraser"></i></button></div>';
+                                                        h += '</div></div></div>';
 
                                                         h += '<div id="diagLista">';
                                                         todos.forEach(function (v, idx) {
