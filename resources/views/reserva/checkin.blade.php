@@ -372,15 +372,7 @@
                                                             h += '<div id="diagExtra' + idx + '" style="display:none;padding:0 16px 14px;"></div></div></div>';
                                                         });
                                                         h += '</div>';
-                                                                }
-                                                                h += '</div></div>';
-                                                            });
-
-                                                            h += '</div></div></div>';
-                                                        });
-                                                        h += '</div>';
                                                     }
-                                                    h += '</div>';
                                                     document.getElementById('diagnosticoResultado').innerHTML = h;
                                                 })
                                                 .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3 d-block"></i><strong>Erro ao carregar diagnóstico.</strong><br><span class="text-muted">Tente novamente.</span></div>'; });
