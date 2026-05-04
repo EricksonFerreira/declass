@@ -2335,34 +2335,58 @@ private function montarDiasSemanaFlags($diasUteis): array
         $dataFim    = Carbon::parse($reserva->data_fim)->format('Y-m-d H:i:s');
         $estacaoId  = (int) $reserva->estacao_retirada_id;
         $agora = now()->format('Y-m-d H:i:s');
+        $limite = $dataInicio > $agora ? $dataInicio : $agora;
 
-        $veiculos = \App\Models\Veiculo::with(['marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo', 'movimentacoes.reserva', 'movimentacoes.statusMovimentacao'])
+        $veiculos = \App\Models\Veiculo::with([
+            'marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo',
+            'movimentacoes' => fn($q) => $q->with(['reserva', 'statusMovimentacao', 'localOrigem', 'localDestino']),
+        ])
         ->where(function ($q) use ($estacaoId) {
             $q->where('local_disponibilidade', $estacaoId)->orWhereNull('local_disponibilidade');
         })
         ->get()
-        ->map(function ($v) use ($reserva, $dataInicio, $dataFim, $estacaoId, $agora, $reserva_id) {
+        ->map(function ($v) use ($reserva, $dataInicio, $dataFim, $estacaoId, $agora, $reserva_id, $limite) {
             $regras = [];
+
+            // 1. Estação
+            $veicEstacao = $v->local_disponibilidade ? (int) $v->local_disponibilidade : 0;
             $regras[] = [
                 'nome' => 'Estação',
-                'ok' => (int) $v->local_disponibilidade === $estacaoId,
-                'info' => "Veículo em estação #{$v->local_disponibilidade}, reserva requer #{$estacaoId}"
+                'ok' => $veicEstacao === $estacaoId || ($veicEstacao === 0 && $estacaoId === 0),
+                'info' => $estacaoId > 0
+                    ? "Veículo na estação #{$veicEstacao}, reserva requer #{$estacaoId}"
+                    : 'Reserva sem estação definida',
+                'solucao' => $veicEstacao !== $estacaoId && $estacaoId > 0
+                    ? "Mova o veículo para a estação #{$estacaoId} ou altere a estação de retirada da reserva."
+                    : null,
             ];
-            $disponivelEm = $v->data_hora_disponibilidade ? Carbon::parse($v->data_hora_disponibilidade)->format('d/m/Y H:i') : '—';
-            $limite = $dataInicio > $agora ? $dataInicio : $agora;
+
+            // 2. Disponibilidade (data_hora_disponibilidade)
+            $dispDt = $v->data_hora_disponibilidade ? Carbon::parse($v->data_hora_disponibilidade) : null;
             $regras[] = [
                 'nome' => 'Disponibilidade',
-                'ok' => is_null($v->data_hora_disponibilidade) || $v->data_hora_disponibilidade <= $limite,
-                'info' => is_null($v->data_hora_disponibilidade)
-                    ? 'Sem restrição de data'
-                    : "Disponível a partir de {$disponivelEm}, limite usado: " . Carbon::parse($limite)->format('d/m/Y H:i')
+                'ok' => is_null($dispDt) || $dispDt->lte(Carbon::parse($limite)),
+                'info' => is_null($dispDt)
+                    ? 'Sem restrição — veículo disponível agora'
+                    : "Disponível a partir de " . $dispDt->format('d/m/Y H:i') . ". Limite atual: " . Carbon::parse($limite)->format('d/m/Y H:i'),
+                'solucao' => $dispDt && $dispDt->gt(Carbon::parse($limite))
+                    ? "Aguarde até " . $dispDt->format('d/m/Y H:i') . " ou antecipe a data de disponibilidade no cadastro do veículo."
+                    : null,
             ];
-            $statusOk = in_array($v->status_veiculo_id, $this->veiculoService->getStatusVeiculoDisponivelIds());
+
+            // 3. Status do veículo
+            $statusDisponiveis = $this->veiculoService->getStatusVeiculoDisponivelIds();
+            $statusOk = in_array((int) $v->status_veiculo_id, $statusDisponiveis);
             $regras[] = [
                 'nome' => 'Status',
                 'ok' => $statusOk,
-                'info' => "Status atual: #{$v->status_veiculo_id} ({$v->statusVeiculo?->nome})"
+                'info' => "Status atual: #{$v->status_veiculo_id} ({$v->statusVeiculo?->nome})",
+                'solucao' => !$statusOk
+                    ? "Altere o status do veículo para um dos disponíveis (IDs: " . implode(', ', $statusDisponiveis) . ")."
+                    : null,
             ];
+
+            // 4. Reservas conflitantes
             $movConflitantes = $v->movimentacoes->filter(function ($m) use ($reserva, $dataInicio, $dataFim, $reserva_id) {
                 if ((int) $m->reserva_id === (int) $reserva_id) return false;
                 $r = $m->reserva;
@@ -2375,26 +2399,49 @@ private function montarDiasSemanaFlags($diasUteis): array
                 ];
                 if (!in_array((int) $r->status_reserva_id, $statusPendentes)) return false;
                 return $r->data_inicio < $dataFim && $r->data_fim > $dataInicio;
-            });
+            })->values();
             $regras[] = [
                 'nome' => 'Reservas',
                 'ok' => $movConflitantes->isEmpty(),
-                'info' => $movConflitantes->isEmpty() ? 'Nenhuma reserva conflitante' : $movConflitantes->count() . ' reserva(s) conflitante(s)'
+                'info' => $movConflitantes->isEmpty() ? 'Nenhuma reserva conflitante' : $movConflitantes->count() . ' reserva(s) conflitante(s)',
+                'solucao' => !$movConflitantes->isEmpty()
+                    ? 'Finalize ou cancele as reservas conflitantes antes de prosseguir.'
+                    : null,
+                'itens' => $movConflitantes->map(fn($m) => [
+                    'tipo' => 'reserva',
+                    'id' => $m->reserva_id,
+                    'label' => 'Reserva #' . $m->reserva_id . ' — ' . ($m->reserva?->statusReserva?->nome ?? ''),
+                    'url' => route('reserva.show', $m->reserva_id),
+                ]),
             ];
+
+            // 5. Movimentações em aberto
             $movAbertas = $v->movimentacoes->filter(function ($m) use ($dataFim) {
                 if ($m->data_chegada_real) return false;
-                if (is_null($m->data_saida) || $m->data_saida < $dataFim) return true;
-                return false;
-            });
+                return is_null($m->data_saida) || $m->data_saida < $dataFim;
+            })->values();
             $regras[] = [
                 'nome' => 'Movimentações',
                 'ok' => $movAbertas->isEmpty(),
-                'info' => $movAbertas->isEmpty() ? 'Sem movimentações em aberto' : $movAbertas->count() . ' movimentação(ões) em aberto'
+                'info' => $movAbertas->isEmpty() ? 'Sem movimentações em aberto' : $movAbertas->count() . ' movimentação(ões) em aberto',
+                'solucao' => !$movAbertas->isEmpty()
+                    ? 'Finalize as movimentações pendentes antes de prosseguir.'
+                    : null,
+                'itens' => $movAbertas->map(fn($m) => [
+                    'tipo' => 'movimentacao',
+                    'id' => $m->id,
+                    'label' => 'Mov. #' . $m->id . ' — ' . ($m->localOrigem?->nome ?? '?') . ' → ' . ($m->localDestino?->nome ?? '?'),
+                    'url' => url('/admin/movimentacao/' . $m->id),
+                ]),
             ];
+
             return [
                 'id' => $v->id,
-                'nome' => $v->nome,
-                'placa' => $v->placa_licenca,
+                'nome' => $v->nome ?: '#' . $v->id,
+                'placa' => $v->placa_licenca ?: '—',
+                'cor' => $v->cor ?: '—',
+                'modelo' => $v->modelo?->nome ?: '—',
+                'status_nome' => $v->statusVeiculo?->nome ?: '—',
                 'disponivel' => collect($regras)->every(fn($r) => $r['ok']),
                 'regras' => $regras,
             ];
@@ -2403,9 +2450,11 @@ private function montarDiasSemanaFlags($diasUteis): array
         return response()->json([
             'veiculos' => $veiculos,
             'reserva_info' => [
+                'id' => $reserva->id,
                 'estacao_retirada_id' => $estacaoId,
                 'data_inicio' => $dataInicio,
                 'data_fim' => $dataFim,
+                'url' => route('reserva.show', $reserva->id),
             ]
         ]);
     }

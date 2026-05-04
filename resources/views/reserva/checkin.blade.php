@@ -264,36 +264,70 @@
                             </script>
                             <script>
                                 document.getElementById('btnDiagnostico')?.addEventListener('click', function () {
-                                    var modal = $('#modalDiagnostico');
-                                    modal.modal('show');
-                                    document.getElementById('diagnosticoResultado').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Analisando veículos...</p></div>';
-                                    fetch('{{ route('reserva.checkin.diagnostico', $reserva->id) }}', { headers: { 'Accept': 'application/json' } })
-                                        .then(function (r) { return r.json(); })
-                                        .then(function (data) {
-                                            var html = '';
-                                            if (!data.veiculos || !data.veiculos.length) {
-                                                html = '<div class="alert alert-info">Nenhum veículo encontrado na estação da reserva.</div>';
-                                            } else {
-                                                html = '<table class="table table-sm table-bordered" style="font-size:.82rem;"><thead><tr><th>Veículo</th><th>Status</th><th>Estação</th><th>Disponibilidade</th><th>Status Veículo</th><th>Reservas</th><th>Mov.</th></tr></thead><tbody>';
-                                                data.veiculos.forEach(function (v) {
-                                                    var r = {}, cor = function(ok) { return ok ? '<span class="badge badge-success">OK</span>' : '<span class="badge badge-danger">X</span>'; };
-                                                    v.regras.forEach(function(rr) { r[rr.nome] = rr; });
-                                                    html += '<tr style="' + (v.disponivel ? '' : 'opacity:.7') + '">';
-                                                    html += '<td><strong>' + (v.nome || '#' + v.id) + '</strong><br><small>' + (v.placa || '') + '</small></td>';
-                                                    html += '<td class="text-center">' + (v.disponivel ? '<span class="badge badge-success">Disponível</span>' : '<span class="badge badge-secondary">Indisponível</span>') + '</td>';
-                                                    html += '<td class="text-center">' + cor(r['Estação']?.ok) + '</td>';
-                                                    html += '<td class="text-center" title="' + (r['Disponibilidade']?.info || '') + '">' + cor(r['Disponibilidade']?.ok) + '</td>';
-                                                    html += '<td class="text-center" title="' + (r['Status']?.info || '') + '">' + cor(r['Status']?.ok) + '</td>';
-                                                    html += '<td class="text-center" title="' + (r['Reservas']?.info || '') + '">' + cor(r['Reservas']?.ok) + '</td>';
-                                                    html += '<td class="text-center" title="' + (r['Movimentações']?.info || '') + '">' + cor(r['Movimentações']?.ok) + '</td>';
-                                                    html += '</tr>';
-                                                });
-                                                html += '</tbody></table>';
-                                                html += '<small class="text-muted">Passe o mouse sobre os ícones para ver detalhes.</small>';
-                                            }
-                                            document.getElementById('diagnosticoResultado').innerHTML = html;
-                                        })
-                                        .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger">Erro ao carregar diagnóstico.</div>'; });
+                                    if (typeof renderDiagnostico === 'function') { renderDiagnostico(); }
+                                    else {
+                                        window.renderDiagnostico = function() {
+                                            var modal = $('#modalDiagnostico');
+                                            modal.modal('show');
+                                            document.getElementById('diagnosticoResultado').innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veículos...</p></div>';
+                                            fetch('{{ route('reserva.checkin.diagnostico', $reserva->id) }}', { headers: { 'Accept': 'application/json' } })
+                                                .then(function (r) { return r.json(); })
+                                                .then(function (data) {
+                                                    var h = '';
+                                                    if (!data.veiculos || !data.veiculos.length) {
+                                                        h = '<div class="alert alert-info text-center py-4"><i class="fas fa-car fa-3x mb-2 d-block text-muted"></i>Nenhum veículo encontrado na estação da reserva.</div>';
+                                                    } else {
+                                                        var disp = data.veiculos.filter(function(v){return v.disponivel});
+                                                        var ind = data.veiculos.filter(function(v){return !v.disponivel});
+                                                        h += '<div class="d-flex gap-3 mb-3 flex-wrap">';
+                                                        h += '<span class="badge badge-success p-2" style="font-size:.85rem;"><i class="fas fa-check-circle mr-1"></i>' + disp.length + ' disponível(is)</span>';
+                                                        h += '<span class="badge badge-secondary p-2" style="font-size:.85rem;"><i class="fas fa-times-circle mr-1"></i>' + ind.length + ' indisponível(is)</span>';
+                                                        h += '<span class="badge badge-info p-2" style="font-size:.85rem;"><i class="fas fa-car mr-1"></i>' + data.veiculos.length + ' total</span>';
+                                                        if (data.reserva_info) {
+                                                            h += '<a href="' + (data.reserva_info.url || '#') + '" target="_blank" class="badge badge-light p-2" style="font-size:.82rem;border:1px solid #dee2e6;"><i class="fas fa-external-link-alt mr-1"></i>Reserva #' + data.reserva_info.id + '</a>';
+                                                        }
+                                                        h += '</div>';
+
+                                                        ind.forEach(function (v) {
+                                                            var r = {};
+                                                            v.regras.forEach(function(rr) { r[rr.nome] = rr; });
+                                                            h += '<div class="card border mb-3"><div class="card-header py-2 d-flex justify-content-between align-items-center" style="background:#f8f9fa;">';
+                                                            h += '<span><strong>' + v.nome + '</strong> <small class="text-muted">' + v.placa + ' · ' + v.modelo + ' · ' + v.cor + '</small></span>';
+                                                            h += '<span class="badge badge-secondary">Indisponível</span></div><div class="card-body py-2">';
+
+                                                            var ordem = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
+                                                            ordem.forEach(function (nk) {
+                                                                var rr = r[nk];
+                                                                if (!rr) return;
+                                                                var ok = rr.ok, ic = ok ? 'fa-check-circle text-success' : 'fa-times-circle text-danger', bg = ok ? '#f0fdf4' : '#fef2f2';
+                                                                h += '<div class="d-flex align-items-start gap-2 p-2 mb-1 rounded" style="background:' + bg + ';">';
+                                                                h += '<i class="fas ' + ic + ' mt-1" style="font-size:1rem;"></i>';
+                                                                h += '<div class="flex-grow-1"><strong style="font-size:.85rem;">' + nk + '</strong>';
+                                                                h += '<div style="font-size:.8rem;color:#374151;">' + (rr.info || '') + '</div>';
+                                                                if (!ok && rr.solucao) h += '<div style="font-size:.78rem;color:#dc2626;margin-top:2px;"><i class="fas fa-lightbulb mr-1"></i>' + rr.solucao + '</div>';
+                                                                if (rr.itens && rr.itens.length) {
+                                                                    rr.itens.forEach(function (item) {
+                                                                        h += '<a href="' + item.url + '" target="_blank" class="btn btn-xs btn-outline-primary mt-1 mr-1" style="font-size:.75rem;"><i class="fas fa-external-link-alt mr-1"></i>' + item.label + '</a>';
+                                                                    });
+                                                                }
+                                                                h += '</div></div>';
+                                                            });
+                                                            h += '</div></div>';
+                                                        });
+
+                                                        if (disp.length) {
+                                                            h += '<h6 class="mt-4 mb-2"><i class="fas fa-check-circle text-success mr-1"></i>Veículos Disponíveis</h6>';
+                                                            disp.forEach(function (v) {
+                                                                h += '<div class="d-inline-block mr-2 mb-2 p-2 rounded border" style="background:#f0fdf4;"><strong style="font-size:.82rem;">' + v.nome + '</strong> <small class="text-muted">' + v.placa + '</small></div>';
+                                                            });
+                                                        }
+                                                    }
+                                                    document.getElementById('diagnosticoResultado').innerHTML = h;
+                                                })
+                                                .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-4"><i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>Erro ao carregar diagnóstico.</div>'; });
+                                        };
+                                        renderDiagnostico();
+                                    }
                                 });
                             </script>
                         @endpush
