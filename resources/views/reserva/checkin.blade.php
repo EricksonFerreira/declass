@@ -380,16 +380,6 @@
                                                     }
                                                     h += '</div>';
                                                     document.getElementById('diagnosticoResultado').innerHTML = h;
-                                                    // Chevron rotate on collapse
-                                                    document.querySelectorAll('#diagRoot [data-toggle="collapse"]').forEach(function(btn) {
-                                                        btn.addEventListener('click', function() {
-                                                            var icon = this.querySelector('[data-toggle-class]');
-                                                            if (icon) {
-                                                                var collapsed = this.classList.contains('collapsed');
-                                                                icon.style.transform = collapsed ? 'rotate(0deg)' : 'rotate(180deg)';
-                                                            }
-                                                        });
-                                                    });
                                                 })
                                                 .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3 d-block"></i><strong>Erro ao carregar diagnóstico.</strong><br><span class="text-muted">Tente novamente.</span></div>'; });
                                         };
