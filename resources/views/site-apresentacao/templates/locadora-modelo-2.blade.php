@@ -141,12 +141,9 @@
         .footer-nav a{opacity:.6;transition:opacity .15s}
         .footer-nav a:hover{opacity:1}
 
-        .hide-pc { display:none !important; }
-        .hide-tablet { display:none !important; }
-        .hide-mobile { display:none !important; }
-        @media (min-width:769px) { .hide-tablet, .hide-mobile { display:revert !important; } }
-        @media (max-width:768px) and (min-width:481px) { .hide-pc, .hide-mobile { display:revert !important; } }
-        @media (max-width:480px) { .hide-pc, .hide-tablet { display:revert !important; } }
+        @media (min-width:769px) { .hide-pc { display:none !important; } }
+        @media (max-width:768px) and (min-width:481px) { .hide-tablet { display:none !important; } }
+        @media (max-width:480px) { .hide-mobile { display:none !important; } }
         @media(max-width:768px){
             .hero-grid{grid-template-columns:1fr;gap:32px}
             .hero-image img,.hero-image-placeholder{height:280px}
