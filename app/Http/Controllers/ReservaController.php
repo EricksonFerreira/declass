@@ -2328,6 +2328,80 @@ private function montarDiasSemanaFlags($diasUteis): array
         return response()->json(['veiculos' => $veiculos->map($toArray)->values()]);
     }
 
+    public function diagnosticoDisponibilidadeCheckin(Request $request, $reserva_id)
+    {
+        $reserva = $this->reservaService->getById($reserva_id, ['modelos']);
+        $dataInicio = Carbon::parse($reserva->data_inicio)->format('Y-m-d H:i:s');
+        $dataFim    = Carbon::parse($reserva->data_fim)->format('Y-m-d H:i:s');
+        $estacaoId  = (int) $reserva->estacao_retirada_id;
+        $agora = now()->format('Y-m-d H:i:s');
+
+        $veiculos = \App\Models\Veiculo::query()
+            ->with(['marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo', 'movimentacoes.reserva', 'movimentacoes.statusMovimentacao'])
+        ->where('local_disponibilidade', $estacaoId)
+        ->get()
+        ->map(function ($v) use ($reserva, $dataInicio, $dataFim, $estacaoId, $agora, $reserva_id) {
+            $regras = [];
+            $regras[] = [
+                'nome' => 'Estação',
+                'ok' => (int) $v->local_disponibilidade === $estacaoId,
+                'info' => "Veículo em estação #{$v->local_disponibilidade}, reserva requer #{$estacaoId}"
+            ];
+            $disponivelEm = $v->data_hora_disponibilidade ? Carbon::parse($v->data_hora_disponibilidade)->format('d/m/Y H:i') : '—';
+            $limite = $dataInicio > $agora ? $dataInicio : $agora;
+            $regras[] = [
+                'nome' => 'Disponibilidade',
+                'ok' => is_null($v->data_hora_disponibilidade) || $v->data_hora_disponibilidade <= $limite,
+                'info' => is_null($v->data_hora_disponibilidade)
+                    ? 'Sem restrição de data'
+                    : "Disponível a partir de {$disponivelEm}, limite usado: " . Carbon::parse($limite)->format('d/m/Y H:i')
+            ];
+            $statusOk = in_array($v->status_veiculo_id, $this->veiculoService->getStatusVeiculoDisponivelIds());
+            $regras[] = [
+                'nome' => 'Status',
+                'ok' => $statusOk,
+                'info' => "Status atual: #{$v->status_veiculo_id} ({$v->statusVeiculo?->nome})"
+            ];
+            $movConflitantes = $v->movimentacoes->filter(function ($m) use ($reserva, $dataInicio, $dataFim, $reserva_id) {
+                if ((int) $m->reserva_id === (int) $reserva_id) return false;
+                $r = $m->reserva;
+                if (!$r) return false;
+                $statusPendentes = [
+                    StatusReservaEnum::Pendente->value,
+                    StatusReservaEnum::Confirmada->value,
+                    StatusReservaEnum::Checkout->value,
+                    StatusReservaEnum::NoShow->value,
+                ];
+                if (!in_array((int) $r->status_reserva_id, $statusPendentes)) return false;
+                return $r->data_inicio < $dataFim && $r->data_fim > $dataInicio;
+            });
+            $regras[] = [
+                'nome' => 'Reservas',
+                'ok' => $movConflitantes->isEmpty(),
+                'info' => $movConflitantes->isEmpty() ? 'Nenhuma reserva conflitante' : $movConflitantes->count() . ' reserva(s) conflitante(s)'
+            ];
+            $movAbertas = $v->movimentacoes->filter(function ($m) use ($dataFim) {
+                if ($m->data_chegada_real) return false;
+                if (is_null($m->data_saida) || $m->data_saida < $dataFim) return true;
+                return false;
+            });
+            $regras[] = [
+                'nome' => 'Movimentações',
+                'ok' => $movAbertas->isEmpty(),
+                'info' => $movAbertas->isEmpty() ? 'Sem movimentações em aberto' : $movAbertas->count() . ' movimentação(ões) em aberto'
+            ];
+            return [
+                'id' => $v->id,
+                'nome' => $v->nome,
+                'placa' => $v->placa_licenca,
+                'disponivel' => collect($regras)->every(fn($r) => $r['ok']),
+                'regras' => $regras,
+            ];
+        });
+
+        return response()->json(['veiculos' => $veiculos]);
+    }
+
     public function verContratoCheckin(Request $request, $reserva_id){
 
         // Carrega a reserva com todos os relacionamentos necessários

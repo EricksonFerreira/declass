@@ -158,6 +158,9 @@
                                             <button type="button" class="btn btn-outline-secondary" id="btnBuscarVeiculoCheckin" title="Buscar veículo disponível"><i class="fas fa-search"></i></button>
                                             <button type="button" class="btn btn-outline-danger d-none" id="btnLimparVeiculoCheckin" title="Limpar veículo"><i class="fas fa-times"></i></button>
                                         </div>
+                                        <button type="button" class="btn btn-outline-info btn-sm ml-2" id="btnDiagnostico" title="Ver diagnóstico de disponibilidade">
+                                            <i class="fas fa-stethoscope"></i> Diagnóstico
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -175,6 +178,24 @@
                             auto-fill-kms-selector="#quilometragem"
                             auto-fill-nivel-selector="#combustivel"
                         />
+
+                        {{-- Diagnóstico de disponibilidade --}}
+                        <div class="modal fade" id="modalDiagnostico" tabindex="-1">
+                            <div class="modal-dialog modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5><i class="fas fa-stethoscope mr-2"></i>Diagnóstico de Disponibilidade</h5>
+                                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                                    </div>
+                                    <div class="modal-body" id="diagnosticoResultado">
+                                        <div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Analisando veículos...</p></div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Fechar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         @push('js')
                             <script>
                                 (function () {
@@ -239,7 +260,41 @@
                                             }
                                         });
                                     }
-                                }());
+                                 }());
+                            </script>
+                            <script>
+                                document.getElementById('btnDiagnostico')?.addEventListener('click', function () {
+                                    var modal = $('#modalDiagnostico');
+                                    modal.modal('show');
+                                    document.getElementById('diagnosticoResultado').innerHTML = '<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x"></i><p class="mt-2">Analisando veículos...</p></div>';
+                                    fetch('{{ route('reserva.checkin.diagnostico', $reserva->id) }}', { headers: { 'Accept': 'application/json' } })
+                                        .then(function (r) { return r.json(); })
+                                        .then(function (data) {
+                                            var html = '';
+                                            if (!data.veiculos || !data.veiculos.length) {
+                                                html = '<div class="alert alert-info">Nenhum veículo encontrado na estação da reserva.</div>';
+                                            } else {
+                                                html = '<table class="table table-sm table-bordered" style="font-size:.82rem;"><thead><tr><th>Veículo</th><th>Status</th><th>Estação</th><th>Disponibilidade</th><th>Status Veículo</th><th>Reservas</th><th>Mov.</th></tr></thead><tbody>';
+                                                data.veiculos.forEach(function (v) {
+                                                    var r = {}, cor = function(ok) { return ok ? '<span class="badge badge-success">OK</span>' : '<span class="badge badge-danger">X</span>'; };
+                                                    v.regras.forEach(function(rr) { r[rr.nome] = rr; });
+                                                    html += '<tr style="' + (v.disponivel ? '' : 'opacity:.7') + '">';
+                                                    html += '<td><strong>' + (v.nome || '#' + v.id) + '</strong><br><small>' + (v.placa || '') + '</small></td>';
+                                                    html += '<td class="text-center">' + (v.disponivel ? '<span class="badge badge-success">Disponível</span>' : '<span class="badge badge-secondary">Indisponível</span>') + '</td>';
+                                                    html += '<td class="text-center">' + cor(r['Estação']?.ok) + '</td>';
+                                                    html += '<td class="text-center" title="' + (r['Disponibilidade']?.info || '') + '">' + cor(r['Disponibilidade']?.ok) + '</td>';
+                                                    html += '<td class="text-center" title="' + (r['Status']?.info || '') + '">' + cor(r['Status']?.ok) + '</td>';
+                                                    html += '<td class="text-center" title="' + (r['Reservas']?.info || '') + '">' + cor(r['Reservas']?.ok) + '</td>';
+                                                    html += '<td class="text-center" title="' + (r['Movimentações']?.info || '') + '">' + cor(r['Movimentações']?.ok) + '</td>';
+                                                    html += '</tr>';
+                                                });
+                                                html += '</tbody></table>';
+                                                html += '<small class="text-muted">Passe o mouse sobre os ícones para ver detalhes.</small>';
+                                            }
+                                            document.getElementById('diagnosticoResultado').innerHTML = html;
+                                        })
+                                        .catch(function () { document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger">Erro ao carregar diagnóstico.</div>'; });
+                                });
                             </script>
                         @endpush
 

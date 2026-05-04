@@ -28,6 +28,7 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/checkout/finalizar', [ReservaController::class, 'finalizarCheckoutVistoria'])->name('checkout.finalizar');
     Route::get('{id}/checkin/veiculos-disponiveis', [ReservaController::class, 'veiculosDisponiveisCheckin'])->name('checkin.veiculosDisponiveis');
     Route::get('{id}/checkin/veiculos-modal', [ReservaController::class, 'veiculosModalCheckin'])->name('checkin.veiculosModal');
+    Route::get('{id}/checkin/diagnostico', [ReservaController::class, 'diagnosticoDisponibilidadeCheckin'])->name('checkin.diagnostico');
     Route::get('{id}/checkin/status-upgrade', [ReservaController::class, 'checkinStatusUpgrade'])->name('checkin.statusUpgrade');
     Route::delete('{id}/checkin/contrato', [ReservaController::class, 'excluirContratoCheckin'])->name('checkin.excluirContrato');
     Route::get('{id}/historico', [ReservaController::class, 'historicoReserva'])->name('historico');

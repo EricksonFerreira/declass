@@ -637,8 +637,10 @@ class VeiculoService extends AbstractBaseService
             ->with(['marca', 'modelo', 'grupoFrota', 'tipoFrota', 'statusVeiculo'])
             ->where('local_disponibilidade', $estacaoId)
             ->where(function ($q) use ($dataInicio) {
+                $agora = now()->format('Y-m-d H:i:s');
+                $limite = $dataInicio > $agora ? $dataInicio : $agora;
                 $q->whereNull('data_hora_disponibilidade')
-                  ->orWhere('data_hora_disponibilidade', '<=', $dataInicio);
+                  ->orWhere('data_hora_disponibilidade', '<=', $limite);
             })
             ->whereDoesntHave('movimentacoes', function ($q) use ($dataInicio, $dataFim, $reservaId) {
                 $q->where('movimentacoes.reserva_id', '!=', $reservaId)
@@ -722,7 +724,7 @@ class VeiculoService extends AbstractBaseService
         return $query->whereIn('status_veiculo_id', $idsDisponiveis);
     }
 
-    private function getStatusVeiculoDisponivelIds(): array
+    public function getStatusVeiculoDisponivelIds(): array
     {
         if ($this->statusVeiculoDisponivelIds !== null) {
             return $this->statusVeiculoDisponivelIds;
