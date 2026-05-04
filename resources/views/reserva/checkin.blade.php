@@ -300,55 +300,74 @@
                                                         h += '<div class="col-md-1 form-group mb-2 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-secondary btn-block" onclick="limparFiltrosDiag()" title="Limpar filtros"><i class="fas fa-eraser"></i></button></div>';
                                                         h += '</div></div></div>';
 
-                                                        h += '<div id="diagLista">';
+                                                        h += '<div id="diagLista" class="row" style="margin:0 -6px;">';
+                                                        var iniciais = function(nome) {
+                                                            var parts = (nome||'??').split(/\s+/).filter(Boolean);
+                                                            return (parts[0]?.[0]||'') + (parts[1]?.[0]||'');
+                                                        };
+                                                        var laranjaMedio = '#ea580c';
+                                                        var verdeEstacao = '#059669';
+                                                        var azulEstacao  = '#2563eb';
+                                                        var cinzaEstacao = '#64748b';
+                                                        var bordaEstacao = '#e5eaf2';
+
                                                         todos.forEach(function (v, idx) {
-                                                            var r = {}, ordem = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
+                                                            var r = {}, ordemR = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
                                                             v.regras.forEach(function(rr) { r[rr.nome] = rr; });
-                                                            var isDisp = v.disponivel, cardBg = isDisp ? '#f0fdf4' : '#fff', borderC = isDisp ? '#86efac' : '#e5e7eb';
-                                                            var statusBadge = isDisp
-                                                                ? '<span class="badge badge-success" style="font-size:.72rem;"><i class="fas fa-check-circle mr-1"></i>Disponível</span>'
-                                                                : '<span class="badge badge-secondary" style="font-size:.72rem;"><i class="fas fa-times-circle mr-1"></i>Indisponível</span>';
+                                                            var isDisp = v.disponivel;
+                                                            var grpOk = ordemR.filter(function(nk){var rr=r[nk];return rr&&rr.ok}).length;
+                                                            var grpTot = ordemR.length;
+                                                            var initials = iniciais(v.nome);
+                                                            var accentC = isDisp ? verdeEstacao : cinzaEstacao;
+                                                            var cardBorder = isDisp ? '#86efac' : bordaEstacao;
+                                                            var statusTxt = isDisp ? 'Disponivel' : 'Indisponivel';
+                                                            var statusBg = isDisp ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.13)';
+                                                            var statusColor = isDisp ? verdeEstacao : cinzaEstacao;
 
-                                                            var passCount = ordem.filter(function(nk){var rr=r[nk];return rr&&rr.ok}).length;
-                                                            var totalCount = ordem.length;
+                                                            h += '<div class="col-lg-6 col-xl-4 mb-3 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
+                                                            h += '<div class="ec" style="border:1px solid ' + cardBorder + ';border-radius:14px;overflow:hidden;cursor:pointer;background:#fff;transition:box-shadow .2s,transform .2s;" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'" onclick="var c=this.nextElementSibling;c.style.display=c.style.display===\'none\'?\'\':\'none\'">';
+                                                            h += '<div style="height:5px;background:linear-gradient(90deg,' + accentC + ',' + (isDisp ? '#34d399' : '#94a3b8') + ');"></div>';
+                                                            h += '<div style="display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px;border-bottom:1px solid #f1f5f9;">';
+                                                            h += '<div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:.82rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.04em;">' + initials + '</div>';
+                                                            h += '<div style="flex:1;min-width:0;"><div style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">#' + v.id + ' · ' + (v.placa||'—') + '</div>';
+                                                            h += '<div style="font-size:.97rem;font-weight:700;color:#0f2740;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + v.nome + '</div>';
+                                                            h += '<div style="font-size:.78rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (v.modelo||'—') + ' · ' + (v.cor||'—') + '</div></div>';
+                                                            h += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">';
+                                                            h += '<span style="padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;background:' + statusBg + ';color:' + statusColor + ';">' + statusTxt + '</span>';
+                                                            h += '<span style="padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:600;background:' + (grpOk===grpTot?'rgba(16,185,129,.12)':'rgba(245,158,11,.15)') + ';color:' + (grpOk===grpTot?verdeEstacao:laranjaMedio) + ';">' + grpOk + '/' + grpTot + ' regras</span></div></div>';
 
-                                                            var ordemR = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
-                                                            var rStatus = {}; v.regras.forEach(function(rr){rStatus[rr.nome]=rr.ok?'1':'0'});
-                                                            h += '<div class="card border mb-2 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
-                                                            h += '<div class="card-header py-2 px-3 d-flex justify-content-between align-items-center collapsed" data-toggle="collapse" data-target="#diagCollapse' + idx + '" style="cursor:pointer;background:' + cardBg + ';border-left:4px solid ' + (isDisp ? '#22c55e' : '#6b7280') + ';">';
-                                                            h += '<div class="d-flex align-items-center gap-3 flex-wrap"><strong style="font-size:.9rem;color:#0f172a;">' + v.nome + '</strong>';
-                                                            h += '<small class="text-muted">' + v.placa + ' · ' + v.modelo + ' · ' + v.cor + '</small>';
-                                                            h += '<small class="text-muted">Status: ' + v.status_nome + '</small></div>';
-                                                            h += '<div class="d-flex align-items-center gap-2">';
-                                                            h += statusBadge;
-                                                            h += '<span class="badge ' + (passCount === totalCount ? 'badge-success' : 'badge-warning') + '" style="font-size:.7rem;">' + passCount + '/' + totalCount + '</span>';
-                                                            h += '<i class="fas fa-chevron-down text-muted" style="font-size:.75rem;transition:transform .2s;" data-toggle-class></i></div></div>';
-
-                                                            h += '<div class="collapse" id="diagCollapse' + idx + '"><div class="card-body py-2 px-3" style="background:#fafbfc;">';
-
-                                                            ordem.forEach(function (nk) {
+                                                            h += '<div style="display:flex;flex-direction:column;gap:6px;padding:10px 16px 14px;font-size:.78rem;">';
+                                                            ordemR.forEach(function (nk) {
                                                                 var rr = r[nk];
                                                                 if (!rr) return;
                                                                 var ok = rr.ok;
                                                                 var ic = ok ? 'fa-check-circle' : 'fa-times-circle';
-                                                                var icColor = ok ? '#16a34a' : '#dc2626';
-                                                                var bg = ok ? '#f0fdf4' : '#fef2f2';
-                                                                var borderL = ok ? '#22c55e' : '#ef4444';
-
-                                                                h += '<div class="d-flex align-items-start gap-2 p-2 mb-1 rounded" style="background:' + bg + ';border-left:3px solid ' + borderL + ';">';
-                                                                h += '<i class="fas ' + ic + '" style="color:' + icColor + ';font-size:1.05rem;margin-top:2px;flex-shrink:0;"></i>';
-                                                                h += '<div class="flex-grow-1"><strong style="font-size:.85rem;color:#0f172a;">' + nk + '</strong>';
-                                                                h += '<div style="font-size:.8rem;color:#374151;margin-top:1px;">' + (rr.info || '') + '</div>';
+                                                                var icC = ok ? verdeEstacao : '#dc2626';
+                                                                h += '<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;"><i class="fas ' + ic + '" style="color:' + icC + ';font-size:.85rem;margin-top:2px;flex-shrink:0;width:16px;"></i>';
+                                                                h += '<div style="flex:1;"><strong>' + nk + '</strong><div style="color:#475569;">' + (rr.info || '') + '</div>';
                                                                 if (!ok && rr.solucao) {
-                                                                    h += '<div style="font-size:.78rem;color:#dc2626;margin-top:3px;padding:4px 8px;background:#fff;border-radius:4px;border:1px solid #fca5a5;"><i class="fas fa-lightbulb mr-1"></i><strong>Sugestão:</strong> ' + rr.solucao + '</div>';
+                                                                    h += '<div style="font-size:.75rem;color:#dc2626;margin-top:2px;padding:3px 6px;background:#fef2f2;border-radius:4px;border:1px solid #fca5a5;"><i class="fas fa-lightbulb mr-1"></i>' + rr.solucao + '</div>';
                                                                 }
                                                                 if (rr.itens && rr.itens.length) {
-                                                                    h += '<div class="mt-1 d-flex flex-wrap gap-1">';
+                                                                    h += '<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;">';
                                                                     rr.itens.forEach(function (item) {
                                                                         var ic2 = item.tipo === 'reserva' ? 'fa-calendar-alt' : 'fa-truck-moving';
-                                                                        h += '<a href="' + item.url + '" target="_blank" class="btn btn-xs btn-outline-primary" style="font-size:.75rem;border-radius:20px;"><i class="fas ' + ic2 + ' mr-1"></i>' + item.label + '</a>';
+                                                                        h += '<a href="' + item.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;font-size:.72rem;font-weight:600;border-radius:20px;border:1px solid #3b82f6;color:#2563eb;text-decoration:none;transition:all .15s;" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'"><i class="fas ' + ic2 + '" style="font-size:.65rem;"></i>' + item.label + '</a>';
                                                                     });
                                                                     h += '</div>';
+                                                                }
+                                                                h += '</div></div>';
+                                                            });
+                                                            h += '</div>';
+
+                                                            h += '<div style="display:flex;gap:6px;padding:10px 16px;background:#fafbfc;border-top:1px solid #f1f5f9;">';
+                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-check-circle mr-1" style="color:' + verdeEstacao + ';"></i>' + grpOk + ' ok</span>';
+                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-times-circle mr-1" style="color:#dc2626;"></i>' + (grpTot - grpOk) + ' falha(s)</span>';
+                                                            h += '</div></div>';
+
+                                                            h += '<div id="diagExtra' + idx + '" style="display:none;padding:0 16px 14px;"></div></div></div>';
+                                                        });
+                                                        h += '</div>';
                                                                 }
                                                                 h += '</div></div>';
                                                             });
