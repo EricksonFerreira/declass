@@ -280,13 +280,24 @@
                                                         var ind = todos.filter(function(v){return !v.disponivel});
 
                                                         h += '<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">';
-                                                        h += '<div class="input-group input-group-sm" style="max-width:260px;"><div class="input-group-prepend"><span class="input-group-text"><i class="fas fa-search"></i></span></div><input type="text" class="form-control" id="diagFiltro" placeholder="Filtrar por nome, placa..." oninput="filtrarDiagnostico(this.value)"></div>';
                                                         h += '<span class="badge badge-success p-2" style="font-size:.82rem;"><i class="fas fa-check-circle mr-1"></i>' + disp.length + ' disponível</span>';
                                                         h += '<span class="badge badge-secondary p-2" style="font-size:.82rem;"><i class="fas fa-times-circle mr-1"></i>' + ind.length + ' indisponível</span>';
                                                         h += '<span class="badge badge-info p-2" style="font-size:.82rem;"><i class="fas fa-car mr-1"></i>' + todos.length + ' total</span>';
                                                         if (data.reserva_info) {
                                                             h += '<a href="' + data.reserva_info.url + '" target="_blank" class="badge badge-light p-2" style="font-size:.82rem;border:1px solid #dee2e6;"><i class="fas fa-external-link-alt mr-1"></i>Reserva #' + data.reserva_info.id + '</a>';
                                                         }
+                                                        h += '</div>';
+
+                                                        h += '<div class="d-flex gap-2 mb-3 flex-wrap align-items-center p-2 rounded" style="background:#f1f5f9;border:1px solid #e2e8f0;">';
+                                                        h += '<input type="text" class="form-control form-control-sm diag-filtro" style="max-width:140px;" data-col="nome" placeholder="🔍 Nome" oninput="filtrarDiagnostico()">';
+                                                        h += '<input type="text" class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="placa" placeholder="🔍 Placa" oninput="filtrarDiagnostico()">';
+                                                        h += '<input type="text" class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="modelo" placeholder="🔍 Modelo" oninput="filtrarDiagnostico()">';
+                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:130px;" data-col="disponivel" onchange="filtrarDiagnostico()"><option value="">Status</option><option value="1">Disponível</option><option value="0">Indisponível</option></select>';
+                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="estacao" onchange="filtrarDiagnostico()"><option value="">Estação</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
+                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="status" onchange="filtrarDiagnostico()"><option value="">Status Veic</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
+                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:120px;" data-col="reservas" onchange="filtrarDiagnostico()"><option value="">Reservas</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
+                                                        h += '<select class="form-control form-control-sm diag-filtro" style="max-width:130px;" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Movimentações</option><option value="ok">OK</option><option value="fail">Falhou</option></select>';
+                                                        h += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="limparFiltrosDiag()" title="Limpar filtros"><i class="fas fa-eraser"></i></button>';
                                                         h += '</div>';
 
                                                         h += '<div id="diagLista">';
@@ -301,7 +312,9 @@
                                                             var passCount = ordem.filter(function(nk){var rr=r[nk];return rr&&rr.ok}).length;
                                                             var totalCount = ordem.length;
 
-                                                            h += '<div class="card border mb-2 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '">';
+                                                            var ordemR = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
+                                                            var rStatus = {}; v.regras.forEach(function(rr){rStatus[rr.nome]=rr.ok?'1':'0'});
+                                                            h += '<div class="card border mb-2 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
                                                             h += '<div class="card-header py-2 px-3 d-flex justify-content-between align-items-center collapsed" data-toggle="collapse" data-target="#diagCollapse' + idx + '" style="cursor:pointer;background:' + cardBg + ';border-left:4px solid ' + (isDisp ? '#22c55e' : '#6b7280') + ';">';
                                                             h += '<div class="d-flex align-items-center gap-3 flex-wrap"><strong style="font-size:.9rem;color:#0f172a;">' + v.nome + '</strong>';
                                                             h += '<small class="text-muted">' + v.placa + ' · ' + v.modelo + ' · ' + v.cor + '</small>';
@@ -361,15 +374,34 @@
                                         };
                                         renderDiagnostico();
                                     }
-                                    window.filtrarDiagnostico = function(valor) {
-                                        var termo = valor.toLowerCase().trim();
-                                        document.querySelectorAll('.diag-card').forEach(function(card) {
-                                            var nome = card.dataset.nome || '';
-                                            var placa = card.dataset.placa || '';
-                                            var modelo = card.dataset.modelo || '';
-                                            var match = !termo || nome.includes(termo) || placa.includes(termo) || modelo.includes(termo);
-                                            card.style.display = match ? '' : 'none';
+                                    window.filtrarDiagnostico = function() {
+                                        var filtros = {};
+                                        document.querySelectorAll('.diag-filtro').forEach(function(el) {
+                                            var col = el.dataset.col;
+                                            var val = el.value.trim().toLowerCase();
+                                            if (val) filtros[col] = val;
                                         });
+                                        document.querySelectorAll('.diag-card').forEach(function(card) {
+                                            var show = true;
+                                            for (var col in filtros) {
+                                                var val = filtros[col];
+                                                if (col === 'nome' || col === 'placa' || col === 'modelo') {
+                                                    var campo = (card.dataset[col] || '').toLowerCase();
+                                                    if (!campo.includes(val)) { show = false; break; }
+                                                } else {
+                                                    var campo = card.dataset[col] || '0';
+                                                    if (val === 'ok' && campo !== '1') { show = false; break; }
+                                                    if (val === 'fail' && campo !== '0') { show = false; break; }
+                                                    if (val === '1' && campo !== '1') { show = false; break; }
+                                                    if (val === '0' && campo !== '0') { show = false; break; }
+                                                }
+                                            }
+                                            card.style.display = show ? '' : 'none';
+                                        });
+                                    };
+                                    window.limparFiltrosDiag = function() {
+                                        document.querySelectorAll('.diag-filtro').forEach(function(el) { el.value = ''; });
+                                        filtrarDiagnostico();
                                     };
                                 });
                             </script>
@@ -771,6 +803,14 @@
         color: rgba(0,0,0,.55);
         font-size: .9rem;
     }
+
+    /* ── Diagnóstico ── */
+    #diagRoot .diag-card { border-radius:10px; overflow:hidden; transition:box-shadow .2s; }
+    #diagRoot .diag-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
+    #diagRoot .card-header { transition:background .15s; }
+    #diagRoot .card-header:hover { filter:brightness(.97); }
+    #diagRoot .collapse .card-body { border-top:1px solid #e5e7eb; }
+    #diagFiltro:focus { border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.15); }
 </style>
 @stop
 
