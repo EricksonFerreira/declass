@@ -560,6 +560,7 @@
                         </div>
                     </div>
 
+                    <input type="hidden" id="contrato_id" value="{{ $contratoExistente->id ?? '' }}">
                     @include('reserva.components.modal_dano_checkin')
                 </section>
 

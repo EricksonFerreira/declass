@@ -2954,8 +2954,8 @@ private function montarDiasSemanaFlags($diasUteis): array
 
         $contrato->delete();
 
-        // Remove danos detectados no check-in desta reserva (e suas imagens)
-        $danos = \App\Models\VeiculoDanos::where('reserva_id', $reserva_id)->get();
+        // Remove danos vinculados a este contrato (e suas imagens)
+        $danos = \App\Models\VeiculoDanos::where('contrato_id', $contrato->id)->get();
         foreach ($danos as $dano) {
             $dano->imagem()->delete();
             $dano->delete();

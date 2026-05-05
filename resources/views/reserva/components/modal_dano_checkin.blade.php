@@ -646,6 +646,8 @@
         formData.append('quilometragem_veiculo', dano.quilometragem);
         if (dano.observacoes) formData.append('observacoes', dano.observacoes);
         formData.append('veiculo_id', dano.veiculo);
+        var contratoId = document.getElementById('contrato_id')?.value;
+        if (contratoId) formData.append('contrato_id', contratoId);
         Array.from(dano.fotos).forEach(file => formData.append('fotos[]', file));
 
         $.ajax({

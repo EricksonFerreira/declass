@@ -20,6 +20,7 @@ class VeiculoDanos extends Model
         'observacoes',
         'veiculo_id',
         'reserva_id',
+        'contrato_id',
         'correcao_descricao',
         'correcao_data',
         'correcao_user_id',
