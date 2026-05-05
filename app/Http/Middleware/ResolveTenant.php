@@ -7,6 +7,7 @@ use App\Support\EmpresaContext;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -17,13 +18,13 @@ class ResolveTenant
         $empresaContext = app(EmpresaContext::class);
         $empresaContext->setEmpresaId(null);
 
-        if (!Schema::hasTable('empresas')) {
+        if (!SchemaCache::hasTable('empresas')) {
             return $next($request);
         }
 
         if (auth()->check()) {
             $user = auth()->user();
-            if (!Schema::hasColumn($user->getTable(), 'empresa_id')) {
+            if (!SchemaCache::hasColumn($user->getTable(), 'empresa_id')) {
                 return $next($request);
             }
 

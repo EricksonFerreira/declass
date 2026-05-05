@@ -431,7 +431,7 @@ class SiteReservaController extends Controller
         }
 
         $query = Reserva::query()->with(['estacaoRetirada', 'estacaoDevolucao', 'modelos', 'usuario', 'grupoFrota', 'veiculo', 'satisfacao']);
-        if (Schema::hasColumn('reservas', 'empresa_id')) {
+        if (SchemaCache::hasColumn('reservas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
 
@@ -465,7 +465,7 @@ class SiteReservaController extends Controller
         $this->activateEmpresaContext($empresa);
 
         $query = Reserva::query();
-        if (Schema::hasColumn('reservas', 'empresa_id')) {
+        if (SchemaCache::hasColumn('reservas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
 
@@ -534,7 +534,7 @@ class SiteReservaController extends Controller
             'opcionais',
             'cupomDesconto',
         ]);
-        if (Schema::hasColumn('reservas', 'empresa_id')) {
+        if (SchemaCache::hasColumn('reservas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
 
@@ -736,7 +736,7 @@ class SiteReservaController extends Controller
             'veiculo.modelo',
             'cliente',
         ]);
-        if (Schema::hasColumn('multas', 'empresa_id')) {
+        if (SchemaCache::hasColumn('multas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
 
@@ -827,7 +827,7 @@ class SiteReservaController extends Controller
         $this->activateEmpresaContext($empresa);
 
         $multaItem = Multa::query()->with(['reserva.usuario', 'cliente']);
-        if (Schema::hasColumn('multas', 'empresa_id')) {
+        if (SchemaCache::hasColumn('multas', 'empresa_id')) {
             $multaItem->where('empresa_id', (int) $empresa->id);
         }
         $multaItem = $multaItem->find($multa);
@@ -918,7 +918,7 @@ class SiteReservaController extends Controller
         $this->activateEmpresaContext($empresa);
 
         $query = Multa::query()->with(['reserva.usuario', 'veiculo.modelo', 'cliente']);
-        if (Schema::hasColumn('multas', 'empresa_id')) {
+        if (SchemaCache::hasColumn('multas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
 
@@ -1073,7 +1073,7 @@ class SiteReservaController extends Controller
         $this->activateEmpresaContext($empresa);
 
         $query = Reserva::query();
-        if (Schema::hasColumn('reservas', 'empresa_id')) {
+        if (SchemaCache::hasColumn('reservas', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
 
@@ -1289,13 +1289,13 @@ class SiteReservaController extends Controller
             ->where('ativo', 'S')
             ->orderBy('nome');
 
-        if ($tipoOperacao === 'checkin' && Schema::hasColumn('estacoes', 'checkin')) {
+        if ($tipoOperacao === 'checkin' && SchemaCache::hasColumn('estacoes', 'checkin')) {
             $query->where(function ($subQuery) {
                 $subQuery->where('checkin', 'S')->orWhere('checkin', 1);
             });
         }
 
-        if ($tipoOperacao === 'checkout' && Schema::hasColumn('estacoes', 'checkout')) {
+        if ($tipoOperacao === 'checkout' && SchemaCache::hasColumn('estacoes', 'checkout')) {
             $query->where(function ($subQuery) {
                 $subQuery->where('checkout', 'S')->orWhere('checkout', 1);
             });
@@ -1543,7 +1543,7 @@ class SiteReservaController extends Controller
         $email = mb_strtolower(trim((string) $validated['email']));
 
         $query = User::query()->whereRaw('LOWER(email) = ?', [$email]);
-        if (Schema::hasColumn('users', 'empresa_id')) {
+        if (SchemaCache::hasColumn('users', 'empresa_id')) {
             $query->where('empresa_id', (int) $empresa->id);
         }
 

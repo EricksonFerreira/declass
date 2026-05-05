@@ -39,7 +39,7 @@ class PaisService extends AbstractBaseService
             ->select('sigla', 'nome')
             ->distinct();
 
-        if (\Illuminate\Support\Facades\Schema::hasColumn($this->model->getTable(), 'ativo')) {
+        if (\Illuminate\Support\Facades\SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
         }
 

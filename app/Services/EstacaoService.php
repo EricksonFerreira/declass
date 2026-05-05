@@ -212,11 +212,11 @@ class EstacaoService extends AbstractBaseService
             ->select(['id', 'nome'])
             ->distinct();
 
-        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
         }
 
-        if (Schema::hasColumn($this->model->getTable(), $flag)) {
+        if (SchemaCache::hasColumn($this->model->getTable(), $flag)) {
             $query->where($flag, 'S');
         }
 
@@ -242,7 +242,7 @@ class EstacaoService extends AbstractBaseService
             ->select($columns)
             ->distinct();
 
-        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
         }
 

@@ -367,7 +367,7 @@ class MultaController extends BaseController
 
             $referencia = $resultado['transaction_id'] ?? $resultado['id'] ?? $referencia;
 
-            if (Schema::hasTable('transacoes')) {
+            if (SchemaCache::hasTable('transacoes')) {
                 Transacao::create([
                     'user_id' => $user->id,
                     'pago_por_user_id' => Auth::id(),
@@ -382,7 +382,7 @@ class MultaController extends BaseController
             }
         } else {
             // Outras formas: apenas registra confirmacao (acao de funcionario)
-            if (Schema::hasTable('transacoes')) {
+            if (SchemaCache::hasTable('transacoes')) {
                 $valor = (float) ($multa->valor_final ?? $multa->valor_original ?? 0);
                 if ($valor > 0) {
                     $userId = $multa->cliente_id;

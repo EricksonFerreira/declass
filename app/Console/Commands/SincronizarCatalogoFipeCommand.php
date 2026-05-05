@@ -50,7 +50,7 @@ class SincronizarCatalogoFipeCommand extends Command
             $this->warn('Dry-run habilitado: nenhuma escrita sera feita.');
         }
 
-        if (!Schema::hasTable('empresas')) {
+        if (!SchemaCache::hasTable('empresas')) {
             $this->error('Tabela de empresas nao encontrada.');
             return self::FAILURE;
         }
@@ -58,7 +58,7 @@ class SincronizarCatalogoFipeCommand extends Command
         $empresaAnterior = $this->empresaContext->empresaId();
         $empresasDestino = $this->obterEmpresasDestino();
 
-        if (Schema::hasColumn('marcas', 'empresa_id') && !Empresa::query()->where('id', 1)->exists()) {
+        if (SchemaCache::hasColumn('marcas', 'empresa_id') && !Empresa::query()->where('id', 1)->exists()) {
             $this->error('A empresa padrao com id 1 nao existe. Nao foi possivel sincronizar o catalogo FIPE.');
             return self::FAILURE;
         }
@@ -131,8 +131,8 @@ class SincronizarCatalogoFipeCommand extends Command
         $targetIds = [1];
 
         if (
-            Schema::hasColumn('empresas', 'adicionar_novas_marcas_automaticamente')
-            && Schema::hasColumn('empresas', 'adicionar_novos_modelos_automaticamente')
+            SchemaCache::hasColumn('empresas', 'adicionar_novas_marcas_automaticamente')
+            && SchemaCache::hasColumn('empresas', 'adicionar_novos_modelos_automaticamente')
         ) {
             $targetIds = array_merge(
                 $targetIds,

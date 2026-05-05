@@ -808,7 +808,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     private function empresaTableExists(): bool
     {
-        return Schema::hasTable('empresas');
+        return SchemaCache::hasTable('empresas');
     }
 
     private function handleLogoUpload(Request $request, array $data, ?Empresa $empresaAtual = null): array
@@ -989,7 +989,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
     {
         $vazio = [null, [], collect()];
 
-        if (!Schema::hasTable('configuracoes_calcao') || !Schema::hasTable('grupos_frota') || !$empresa) {
+        if (!SchemaCache::hasTable('configuracoes_calcao') || !SchemaCache::hasTable('grupos_frota') || !$empresa) {
             return $vazio;
         }
 
@@ -1017,7 +1017,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
     private function syncCalcaoConfiguracoes(Empresa $empresa, Request $request): void
     {
-        if (!Schema::hasTable('configuracoes_calcao')) {
+        if (!SchemaCache::hasTable('configuracoes_calcao')) {
             return;
         }
 

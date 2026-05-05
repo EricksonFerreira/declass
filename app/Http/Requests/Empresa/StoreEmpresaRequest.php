@@ -33,7 +33,7 @@ class StoreEmpresaRequest extends FormRequest
         $slugRules = ['required', 'string', 'max:255'];
         $dominioRules = ['nullable', 'string', 'max:255'];
 
-        if (Schema::hasTable('empresas')) {
+        if (SchemaCache::hasTable('empresas')) {
             $slugRules[] = Rule::unique('empresas', 'slug');
             $dominioRules[] = Rule::unique('empresas', 'dominio');
         }

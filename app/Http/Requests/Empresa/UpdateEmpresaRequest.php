@@ -31,7 +31,7 @@ class UpdateEmpresaRequest extends FormRequest
         $empresaId = $this->route('empresa');
         $slugRules = ['required', 'string', 'max:255'];
 
-        if (Schema::hasTable('empresas')) {
+        if (SchemaCache::hasTable('empresas')) {
             $slugRules[] = Rule::unique('empresas', 'slug')->ignore($empresaId);
         }
 

@@ -24,8 +24,8 @@ class FinanceiroController extends Controller
     {
         $filters = $this->extractFilters($request);
         $moedaEmpresa = $this->moedaEmpresaParaConsulta();
-        $hasPagoPor = Schema::hasColumn('transacoes', 'pago_por_user_id');
-        $hasMoeda = Schema::hasColumn('transacoes', 'moeda');
+        $hasPagoPor = SchemaCache::hasColumn('transacoes', 'pago_por_user_id');
+        $hasMoeda = SchemaCache::hasColumn('transacoes', 'moeda');
 
         $base = DB::table('transacoes')
             ->leftJoin('reservas', 'reservas.id', '=', 'transacoes.reserva_id')
@@ -86,7 +86,7 @@ class FinanceiroController extends Controller
         $statusDisponiveis = DB::table('transacoes')
             ->when($this->empresaIdParaConsulta() !== null, function ($query) {
                 $empresaId = $this->empresaIdParaConsulta();
-                if ($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id')) {
+                if ($empresaId !== null && SchemaCache::hasColumn('transacoes', 'empresa_id')) {
                     $query->where('transacoes.empresa_id', $empresaId);
                 }
             })
@@ -99,7 +99,7 @@ class FinanceiroController extends Controller
         $metodosDisponiveis = DB::table('transacoes')
             ->when($this->empresaIdParaConsulta() !== null, function ($query) {
                 $empresaId = $this->empresaIdParaConsulta();
-                if ($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id')) {
+                if ($empresaId !== null && SchemaCache::hasColumn('transacoes', 'empresa_id')) {
                     $query->where('transacoes.empresa_id', $empresaId);
                 }
             })
@@ -145,7 +145,7 @@ class FinanceiroController extends Controller
 
         $transferenciasCount = 0;
         $transferenciasCanceladasCount = 0;
-        if (Schema::hasTable('movimentacoes')) {
+        if (SchemaCache::hasTable('movimentacoes')) {
             $movimentacoes = DB::table('movimentacoes');
             $movimentacoes = $this->applyEmpresaScope($movimentacoes, 'movimentacoes');
             $transferenciasCount = (int) $movimentacoes
@@ -157,10 +157,10 @@ class FinanceiroController extends Controller
             $statusTable = null;
             $statusColumn = null;
 
-            if (Schema::hasTable('status_movimentacao')) {
+            if (SchemaCache::hasTable('status_movimentacao')) {
                 $statusTable = 'status_movimentacao';
                 $statusColumn = 'status_movimentacao.nome';
-            } elseif (Schema::hasTable('status_movimentacaos')) {
+            } elseif (SchemaCache::hasTable('status_movimentacaos')) {
                 $statusTable = 'status_movimentacaos';
                 $statusColumn = 'status_movimentacaos.nome';
             }
@@ -369,11 +369,11 @@ class FinanceiroController extends Controller
 
     private function applyReservasNaoCanceladasScope($query)
     {
-        if (Schema::hasColumn('reservas', 'data_cancelamento')) {
+        if (SchemaCache::hasColumn('reservas', 'data_cancelamento')) {
             return $query->whereNull('reservas.data_cancelamento');
         }
 
-        if (Schema::hasColumn('reservas', 'status_reserva_id')) {
+        if (SchemaCache::hasColumn('reservas', 'status_reserva_id')) {
             return $query->where('reservas.status_reserva_id', '!=', StatusReservaEnum::Cancelada->value);
         }
 
@@ -382,11 +382,11 @@ class FinanceiroController extends Controller
 
     private function applyReservasCanceladasScope($query)
     {
-        if (Schema::hasColumn('reservas', 'data_cancelamento')) {
+        if (SchemaCache::hasColumn('reservas', 'data_cancelamento')) {
             return $query->whereNotNull('reservas.data_cancelamento');
         }
 
-        if (Schema::hasColumn('reservas', 'status_reserva_id')) {
+        if (SchemaCache::hasColumn('reservas', 'status_reserva_id')) {
             return $query->where('reservas.status_reserva_id', 3);
         }
 
@@ -395,7 +395,7 @@ class FinanceiroController extends Controller
 
     private function applyEmpresaScope($query, string $table)
     {
-        if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'empresa_id')) {
+        if (! SchemaCache::hasTable($table) || ! SchemaCache::hasColumn($table, 'empresa_id')) {
             return $query;
         }
 
@@ -427,7 +427,7 @@ class FinanceiroController extends Controller
     {
         $empresaId = $this->empresaIdParaConsulta();
 
-        if ($empresaId === null || ! Schema::hasTable('empresas') || ! Schema::hasColumn('empresas', 'moeda_pagamento')) {
+        if ($empresaId === null || ! SchemaCache::hasTable('empresas') || ! SchemaCache::hasColumn('empresas', 'moeda_pagamento')) {
             return 'BRL';
         }
 

@@ -68,7 +68,7 @@ class RegisteredUserController extends Controller
         $user = DB::transaction(function () use ($request) {
             // Cria uma empresa exclusiva para este novo usuário.
             $empresa = null;
-            if (Schema::hasTable('empresas')) {
+            if (SchemaCache::hasTable('empresas')) {
                 $slugBase = Str::slug($request->name);
                 $slug     = $slugBase . '-' . Str::random(5);
 
@@ -91,7 +91,7 @@ class RegisteredUserController extends Controller
                 'password'        => $request->password,
             ];
 
-            if ($request->filled('codigo_postal') && Schema::hasColumn('users', 'zip_code')) {
+            if ($request->filled('codigo_postal') && SchemaCache::hasColumn('users', 'zip_code')) {
                 $userData['zip_code'] = $request->codigo_postal;
             }
             if ($request->filled('cidade')) {
@@ -106,7 +106,7 @@ class RegisteredUserController extends Controller
                     : $request->endereco1;
             }
 
-            if ($empresa && Schema::hasColumn('users', 'empresa_id')) {
+            if ($empresa && SchemaCache::hasColumn('users', 'empresa_id')) {
                 $userData['empresa_id'] = $empresa->id;
             }
 

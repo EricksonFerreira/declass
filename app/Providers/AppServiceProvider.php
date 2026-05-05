@@ -18,6 +18,7 @@ use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Illuminate\Support\ServiceProvider;
 use JeroenNoten\LaravelAdminLte\AdminLte;
 use Laravel\Cashier\Cashier;
@@ -110,7 +111,7 @@ class AppServiceProvider extends ServiceProvider
 
     private function bootEmpresaScope(): void
     {
-        if (! Schema::hasTable('empresas')) {
+        if (! SchemaCache::hasTable('empresas')) {
             return;
         }
 
@@ -129,7 +130,7 @@ class AppServiceProvider extends ServiceProvider
             $model = app($class);
             $table = $model->getTable();
 
-            if (! Schema::hasTable($table) || ! Schema::hasColumn($table, 'empresa_id')) {
+            if (! SchemaCache::hasTable($table) || ! SchemaCache::hasColumn($table, 'empresa_id')) {
                 continue;
             }
 

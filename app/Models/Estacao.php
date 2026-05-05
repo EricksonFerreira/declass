@@ -220,7 +220,7 @@ class Estacao extends Model
         }
 
         // Se não existem tabelas de controle, todos os dias com veículo ativo são válidos
-        if (!Schema::hasTable('veiculos')) {
+        if (!SchemaCache::hasTable('veiculos')) {
             return $dias;
         }
 
@@ -235,7 +235,7 @@ class Estacao extends Model
         }
 
         // Se não há tabela de movimentações, todos os dias são livres
-        if (!Schema::hasTable('movimentacoes') || !Schema::hasTable('status_movimentacao')) {
+        if (!SchemaCache::hasTable('movimentacoes') || !SchemaCache::hasTable('status_movimentacao')) {
             return $dias;
         }
 

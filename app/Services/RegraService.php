@@ -14,7 +14,7 @@ class RegraService extends AbstractBaseService
 
     protected function shouldApplyEmpresaScope(): bool
     {
-        if (!Schema::hasColumn($this->model->getTable(), 'empresa_id')) {
+        if (!SchemaCache::hasColumn($this->model->getTable(), 'empresa_id')) {
             return false;
         }
 

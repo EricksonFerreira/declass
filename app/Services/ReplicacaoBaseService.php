@@ -67,10 +67,10 @@ class ReplicacaoBaseService
                 $tabelaVinculo = $this->resolverTabelaExistente($module['tables'] ?? []);
                 if (
                     $tabelaVinculo === null
-                    || !Schema::hasTable('roles')
-                    || !Schema::hasTable('permissions')
-                    || !Schema::hasColumn('roles', 'empresa_id')
-                    || !Schema::hasColumn('permissions', 'empresa_id')
+                    || !SchemaCache::hasTable('roles')
+                    || !SchemaCache::hasTable('permissions')
+                    || !SchemaCache::hasColumn('roles', 'empresa_id')
+                    || !SchemaCache::hasColumn('permissions', 'empresa_id')
                 ) {
                     continue;
                 }
@@ -258,9 +258,9 @@ class ReplicacaoBaseService
     {
         if (
             empty($destinos)
-            || !Schema::hasTable('segmentos')
-            || !Schema::hasTable('marcas')
-            || !Schema::hasTable('modelos')
+            || !SchemaCache::hasTable('segmentos')
+            || !SchemaCache::hasTable('marcas')
+            || !SchemaCache::hasTable('modelos')
         ) {
             return ['inseridos' => 0, 'ignorados' => 0];
         }
@@ -407,7 +407,7 @@ class ReplicacaoBaseService
 
         $inseridos = 0;
         $ignorados = 0;
-        $temSegmento = Schema::hasColumn('modelos', 'segmento_id');
+        $temSegmento = SchemaCache::hasColumn('modelos', 'segmento_id');
 
         foreach ($modelosOrigem as $modeloOrigem) {
             $marcaOrigemId = isset($modeloOrigem->marca_id) ? (int) $modeloOrigem->marca_id : null;
@@ -532,8 +532,8 @@ class ReplicacaoBaseService
     {
         if (
             empty($destinos)
-            || !Schema::hasTable('grupos_frota')
-            || !Schema::hasColumn('grupos_frota', 'empresa_id')
+            || !SchemaCache::hasTable('grupos_frota')
+            || !SchemaCache::hasColumn('grupos_frota', 'empresa_id')
         ) {
             return ['inseridos' => 0, 'ignorados' => 0];
         }
@@ -550,7 +550,7 @@ class ReplicacaoBaseService
 
         // Mapa tipo_frota_id origem → nome (para re-resolver no destino)
         $tipoNomePorId = [];
-        if ($hasTipoId && Schema::hasTable('tipo_frota')) {
+        if ($hasTipoId && SchemaCache::hasTable('tipo_frota')) {
             $tipoNomePorId = DB::table('tipo_frota')
                 ->where('empresa_id', $origem)
                 ->pluck('nome', 'id')
@@ -563,7 +563,7 @@ class ReplicacaoBaseService
         foreach ($destinos as $destinoId) {
             // Mapa nome → id dos tipos na empresa destino
             $tipoIdPorNomeDestino = [];
-            if ($hasTipoId && Schema::hasTable('tipo_frota')) {
+            if ($hasTipoId && SchemaCache::hasTable('tipo_frota')) {
                 $tipoIdPorNomeDestino = DB::table('tipo_frota')
                     ->where('empresa_id', $destinoId)
                     ->pluck('id', 'nome')
@@ -632,9 +632,9 @@ class ReplicacaoBaseService
     {
         if (
             empty($mapaGrupos)
-            || !Schema::hasTable('grupo_frota_modelo')
-            || !Schema::hasTable('modelos')
-            || !Schema::hasColumn('modelos', 'empresa_id')
+            || !SchemaCache::hasTable('grupo_frota_modelo')
+            || !SchemaCache::hasTable('modelos')
+            || !SchemaCache::hasColumn('modelos', 'empresa_id')
         ) {
             return ['inseridos' => 0, 'ignorados' => 0];
         }
@@ -715,9 +715,9 @@ class ReplicacaoBaseService
     {
         if (
             empty($destinos)
-            || !Schema::hasTable('role_has_permissions')
-            || !Schema::hasTable('roles')
-            || !Schema::hasTable('permissions')
+            || !SchemaCache::hasTable('role_has_permissions')
+            || !SchemaCache::hasTable('roles')
+            || !SchemaCache::hasTable('permissions')
         ) {
             return ['inseridos' => 0, 'ignorados' => 0];
         }
@@ -870,7 +870,7 @@ class ReplicacaoBaseService
      */
     private function apenasEmpresasExistentes(array $empresaIds): array
     {
-        if (empty($empresaIds) || !Schema::hasTable('empresas')) {
+        if (empty($empresaIds) || !SchemaCache::hasTable('empresas')) {
             return [];
         }
 
@@ -888,7 +888,7 @@ class ReplicacaoBaseService
     private function resolverTabelaComEmpresaId(array $tables): ?string
     {
         foreach ($tables as $table) {
-            if (Schema::hasTable($table) && Schema::hasColumn($table, 'empresa_id')) {
+            if (SchemaCache::hasTable($table) && SchemaCache::hasColumn($table, 'empresa_id')) {
                 return $table;
             }
         }
@@ -902,7 +902,7 @@ class ReplicacaoBaseService
     private function resolverTabelaExistente(array $tables): ?string
     {
         foreach ($tables as $table) {
-            if (Schema::hasTable($table)) {
+            if (SchemaCache::hasTable($table)) {
                 return $table;
             }
         }
@@ -919,7 +919,7 @@ class ReplicacaoBaseService
         $tablesExistentes = [];
 
         foreach ($tables as $table) {
-            if (Schema::hasTable($table) && Schema::hasColumn($table, 'empresa_id')) {
+            if (SchemaCache::hasTable($table) && SchemaCache::hasColumn($table, 'empresa_id')) {
                 $tablesExistentes[] = $table;
             }
         }

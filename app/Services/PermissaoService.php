@@ -113,7 +113,7 @@ class PermissaoService extends AbstractBaseService
             return collect();
         }
 
-        if (Schema::hasTable('plano_permissao')) {
+        if (SchemaCache::hasTable('plano_permissao')) {
             $query->with('plano.permissoes');
         } else {
             $query->with('plano');
@@ -126,7 +126,7 @@ class PermissaoService extends AbstractBaseService
 
         // Se a tabela plano_permissao existe e o plano tem permissões vinculadas,
         // usa esse conjunto como base — garantindo que o plano restringe o que é exibido.
-        if (Schema::hasTable('plano_permissao') && $plano->permissoes()->exists()) {
+        if (SchemaCache::hasTable('plano_permissao') && $plano->permissoes()->exists()) {
             $permissoes = $plano->permissoes()
                 ->where('guard_name', 'web')
                 ->orderByRaw("CASE WHEN grupo IS NULL OR grupo = '' THEN 1 ELSE 0 END")

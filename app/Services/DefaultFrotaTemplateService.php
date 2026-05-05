@@ -215,13 +215,13 @@ class DefaultFrotaTemplateService
     /** @return array<string, int>  mapa codigo => id */
     private function seedTiposFrota(int $empresaId): array
     {
-        if (!Schema::hasTable('tipo_frota')) {
+        if (!SchemaCache::hasTable('tipo_frota')) {
             return [];
         }
 
-        $hasEmpresaId = Schema::hasColumn('tipo_frota', 'empresa_id');
-        $hasCodigo    = Schema::hasColumn('tipo_frota', 'codigo');
-        $hasAtivo     = Schema::hasColumn('tipo_frota', 'ativo');
+        $hasEmpresaId = SchemaCache::hasColumn('tipo_frota', 'empresa_id');
+        $hasCodigo    = SchemaCache::hasColumn('tipo_frota', 'codigo');
+        $hasAtivo     = SchemaCache::hasColumn('tipo_frota', 'ativo');
         $mapa         = [];
 
         foreach ($this->tiposFrota() as $tipo) {
@@ -262,16 +262,16 @@ class DefaultFrotaTemplateService
      */
     private function seedGruposFrota(int $empresaId, array $mapaTipos): array
     {
-        if (!Schema::hasTable('grupos_frota')) {
+        if (!SchemaCache::hasTable('grupos_frota')) {
             return [];
         }
 
-        $hasEmpresaId = Schema::hasColumn('grupos_frota', 'empresa_id');
-        $hasCodigo    = Schema::hasColumn('grupos_frota', 'codigo');
-        $hasSipp      = Schema::hasColumn('grupos_frota', 'codigo_sipp');
-        $hasOrdem     = Schema::hasColumn('grupos_frota', 'ordem');
-        $hasValor     = Schema::hasColumn('grupos_frota', 'valor_diario');
-        $hasAtivo     = Schema::hasColumn('grupos_frota', 'ativo');
+        $hasEmpresaId = SchemaCache::hasColumn('grupos_frota', 'empresa_id');
+        $hasCodigo    = SchemaCache::hasColumn('grupos_frota', 'codigo');
+        $hasSipp      = SchemaCache::hasColumn('grupos_frota', 'codigo_sipp');
+        $hasOrdem     = SchemaCache::hasColumn('grupos_frota', 'ordem');
+        $hasValor     = SchemaCache::hasColumn('grupos_frota', 'valor_diario');
+        $hasAtivo     = SchemaCache::hasColumn('grupos_frota', 'ativo');
         $mapa         = [];
 
         foreach ($this->gruposFrota() as $grupo) {
@@ -317,12 +317,12 @@ class DefaultFrotaTemplateService
     /** @return array<string, int>  mapa nome => id */
     private function seedSegmentos(int $empresaId): array
     {
-        if (!Schema::hasTable('segmentos')) {
+        if (!SchemaCache::hasTable('segmentos')) {
             return [];
         }
 
-        $hasEmpresaId = Schema::hasColumn('segmentos', 'empresa_id');
-        $hasAtivo     = Schema::hasColumn('segmentos', 'ativo');
+        $hasEmpresaId = SchemaCache::hasColumn('segmentos', 'empresa_id');
+        $hasAtivo     = SchemaCache::hasColumn('segmentos', 'ativo');
         $mapa         = [];
 
         foreach ($this->segmentos() as $seg) {
@@ -358,16 +358,16 @@ class DefaultFrotaTemplateService
      */
     private function seedMarcasModelosVinculos(int $empresaId, array $mapaGrupos, array $mapaSegmentos): void
     {
-        if (!Schema::hasTable('marcas') || !Schema::hasTable('modelos')) {
+        if (!SchemaCache::hasTable('marcas') || !SchemaCache::hasTable('modelos')) {
             return;
         }
 
-        $hasMarcaEmpresa  = Schema::hasColumn('marcas', 'empresa_id');
-        $hasModeloEmpresa = Schema::hasColumn('modelos', 'empresa_id');
-        $hasSegmentoId    = Schema::hasColumn('modelos', 'segmento_id');
-        $hasModeloAtivo   = Schema::hasColumn('modelos', 'ativo');
-        $hasMarcaAtivo    = Schema::hasColumn('marcas', 'ativo');
-        $temPivot         = Schema::hasTable('grupo_frota_modelo');
+        $hasMarcaEmpresa  = SchemaCache::hasColumn('marcas', 'empresa_id');
+        $hasModeloEmpresa = SchemaCache::hasColumn('modelos', 'empresa_id');
+        $hasSegmentoId    = SchemaCache::hasColumn('modelos', 'segmento_id');
+        $hasModeloAtivo   = SchemaCache::hasColumn('modelos', 'ativo');
+        $hasMarcaAtivo    = SchemaCache::hasColumn('marcas', 'ativo');
+        $temPivot         = SchemaCache::hasTable('grupo_frota_modelo');
 
         foreach ($this->marcasEModelos() as $marcaDef) {
             // ── Marca ────────────────────────────────────────────────────────

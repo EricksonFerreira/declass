@@ -33,9 +33,9 @@ class NfseController extends Controller
         ];
 
         $empresaId = $this->empresaIdParaConsulta();
-        if ($empresaId !== null && Schema::hasColumn('nfse', 'empresa_id')) {
+        if ($empresaId !== null && SchemaCache::hasColumn('nfse', 'empresa_id')) {
             $query->where('empresa_id', $empresaId);
-        } elseif (!empty($filters['empresa_id']) && Auth::user()?->isAdministrador() && Schema::hasColumn('nfse', 'empresa_id')) {
+        } elseif (!empty($filters['empresa_id']) && Auth::user()?->isAdministrador() && SchemaCache::hasColumn('nfse', 'empresa_id')) {
             $query->where('empresa_id', (int) $filters['empresa_id']);
         }
 
@@ -70,7 +70,7 @@ class NfseController extends Controller
         $ambientesDisponiveis = Nfse::query()->select('ambiente')->distinct()->orderBy('ambiente')->pluck('ambiente')->filter()->values();
         $empresasDisponiveis = collect();
 
-        if (Auth::user()?->isAdministrador() && Schema::hasColumn('nfse', 'empresa_id')) {
+        if (Auth::user()?->isAdministrador() && SchemaCache::hasColumn('nfse', 'empresa_id')) {
             $empresasDisponiveis = Empresa::query()->orderBy('nome')->get(['id', 'nome']);
         }
 

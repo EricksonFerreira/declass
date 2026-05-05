@@ -154,7 +154,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 ->where('user_id', $user->id)
                 ->orderBy('id', 'desc');
 
-            if (Schema::hasColumn('reservas', 'empresa_id') && $user->empresa_id) {
+            if (SchemaCache::hasColumn('reservas', 'empresa_id') && $user->empresa_id) {
                 $query->where('empresa_id', $user->empresa_id);
             }
 
@@ -211,7 +211,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ->where('user_id', $user->id)
             ->orderBy('id', 'desc');
 
-        if (Schema::hasColumn('reservas', 'empresa_id') && $user->empresa_id) {
+        if (SchemaCache::hasColumn('reservas', 'empresa_id') && $user->empresa_id) {
             $query->where('empresa_id', $user->empresa_id);
         }
 
@@ -256,7 +256,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ->orderBy('data_vencimento')
             ->orderByDesc('id');
 
-        if (Schema::hasColumn('multas', 'empresa_id') && !empty($user->empresa_id)) {
+        if (SchemaCache::hasColumn('multas', 'empresa_id') && !empty($user->empresa_id)) {
             $query->where('empresa_id', (int) $user->empresa_id);
         }
 
@@ -278,7 +278,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $query = Multa::query()->whereNull('pago_em');
 
-        if (Schema::hasColumn('multas', 'empresa_id') && !empty($user->empresa_id)) {
+        if (SchemaCache::hasColumn('multas', 'empresa_id') && !empty($user->empresa_id)) {
             $query->where('empresa_id', (int) $user->empresa_id);
         }
 
@@ -1119,13 +1119,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ],
         ];
 
-        if (Schema::hasColumn('transacoes', 'confirmado_em')) {
+        if (SchemaCache::hasColumn('transacoes', 'confirmado_em')) {
             $payload['confirmado_em'] = now();
         }
-        if (Schema::hasColumn('transacoes', 'confirmado_por_user_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'confirmado_por_user_id')) {
             $payload['confirmado_por_user_id'] = Auth::id();
         }
-        if (Schema::hasColumn('transacoes', 'empresa_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'empresa_id')) {
             $payload['empresa_id'] = $reserva->empresa_id ?? null;
         }
 
@@ -1177,7 +1177,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     private function registrarCancelamentoTransacao(Reserva $reserva): void
     {
-        if (!Schema::hasTable('transacoes')) {
+        if (!SchemaCache::hasTable('transacoes')) {
             return;
         }
 
@@ -1223,29 +1223,29 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'updated_at' => now(),
         ];
 
-        if (Schema::hasColumn('transacoes', 'metodo_pagamento_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'metodo_pagamento_id')) {
             $metodoId = $transacaoBase?->metodo_pagamento_id;
-            if (!$metodoId && Schema::hasTable('metodo_pagamentos')) {
+            if (!$metodoId && SchemaCache::hasTable('metodo_pagamentos')) {
                 $metodoId = DB::table('metodo_pagamentos')->value('id');
             }
-            if (!$metodoId && Schema::hasTable('metodos_pagamento')) {
+            if (!$metodoId && SchemaCache::hasTable('metodos_pagamento')) {
                 $metodoId = DB::table('metodos_pagamento')->value('id');
             }
             $payload['metodo_pagamento_id'] = $metodoId ?: null;
         }
 
-        if (Schema::hasColumn('transacoes', 'tipo_pagamento_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'tipo_pagamento_id')) {
             $tipoId = $transacaoBase?->tipo_pagamento_id;
-            if (!$tipoId && Schema::hasTable('tipo_pagamentos')) {
+            if (!$tipoId && SchemaCache::hasTable('tipo_pagamentos')) {
                 $tipoId = DB::table('tipo_pagamentos')->value('id');
             }
-            if (!$tipoId && Schema::hasTable('tipos_pagamento')) {
+            if (!$tipoId && SchemaCache::hasTable('tipos_pagamento')) {
                 $tipoId = DB::table('tipos_pagamento')->value('id');
             }
             $payload['tipo_pagamento_id'] = $tipoId ?: null;
         }
 
-        if (Schema::hasColumn('transacoes', 'empresa_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'empresa_id')) {
             $payload['empresa_id'] = $reserva->empresa_id ?? null;
         }
 
@@ -1254,12 +1254,12 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     private function cancelarTransferenciasReserva(Reserva $reserva): void
     {
-        if (!Schema::hasTable('movimentacoes') || !Schema::hasColumn('movimentacoes', 'reserva_id')) {
+        if (!SchemaCache::hasTable('movimentacoes') || !SchemaCache::hasColumn('movimentacoes', 'reserva_id')) {
             return;
         }
 
         $cancelStatusId = 3;
-        if (Schema::hasTable('status_movimentacao')) {
+        if (SchemaCache::hasTable('status_movimentacao')) {
             $cancelStatusId = (int) (DB::table('status_movimentacao')
                 ->whereIn(DB::raw('LOWER(COALESCE(nome, ""))'), ['cancelado', 'cancelada', 'cancelamento', 'cancelled', 'canceled'])
                 ->value('id') ?? 3);
@@ -1267,11 +1267,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $query = DB::table('movimentacoes')->where('reserva_id', $reserva->id);
 
-        if (Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+        if (SchemaCache::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
             $query->where('tipo_movimentacao_id', 10);
         }
 
-        if (Schema::hasColumn('movimentacoes', 'status_movimentacao_id')) {
+        if (SchemaCache::hasColumn('movimentacoes', 'status_movimentacao_id')) {
             $query->update([
                 'status_movimentacao_id' => $cancelStatusId,
                 'updated_at' => now(),
@@ -1279,7 +1279,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return;
         }
 
-        if (Schema::hasColumn('movimentacoes', 'updated_at')) {
+        if (SchemaCache::hasColumn('movimentacoes', 'updated_at')) {
             $query->update(['updated_at' => now()]);
         }
     }
@@ -1359,7 +1359,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     private function criarTransacaoEstorno(Transacao $transacao, array $resultado, Reserva $reserva): void
     {
-        if (!Schema::hasTable('transacoes')) {
+        if (!SchemaCache::hasTable('transacoes')) {
             return;
         }
 
@@ -1397,15 +1397,15 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'updated_at' => now(),
         ];
 
-        if (Schema::hasColumn('transacoes', 'metodo_pagamento_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'metodo_pagamento_id')) {
             $payload['metodo_pagamento_id'] = $transacao->metodo_pagamento_id ?? 1;
         }
 
-        if (Schema::hasColumn('transacoes', 'tipo_pagamento_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'tipo_pagamento_id')) {
             $payload['tipo_pagamento_id'] = $transacao->tipo_pagamento_id ?? 1;
         }
 
-        if (Schema::hasColumn('transacoes', 'empresa_id')) {
+        if (SchemaCache::hasColumn('transacoes', 'empresa_id')) {
             $payload['empresa_id'] = $reserva->empresa_id ?? null;
         }
 
@@ -2967,7 +2967,7 @@ private function montarDiasSemanaFlags($diasUteis): array
         $updates = [
             'status_reserva_id' => StatusReservaEnum::Confirmada->value,
         ];
-        if (Schema::hasColumn('reservas', 'veiculo_id')) {
+        if (SchemaCache::hasColumn('reservas', 'veiculo_id')) {
             $updates['veiculo_id'] = null;
         }
         $reserva->update($updates);
@@ -3436,13 +3436,13 @@ private function montarDiasSemanaFlags($diasUteis): array
                     'calcao_id' => $calcao->id,
                 ],
             ];
-            if (Schema::hasColumn('transacoes', 'confirmado_em')) {
+            if (SchemaCache::hasColumn('transacoes', 'confirmado_em')) {
                 $transacaoPayload['confirmado_em'] = now();
             }
-            if (Schema::hasColumn('transacoes', 'confirmado_por_user_id')) {
+            if (SchemaCache::hasColumn('transacoes', 'confirmado_por_user_id')) {
                 $transacaoPayload['confirmado_por_user_id'] = Auth::id();
             }
-            if (Schema::hasColumn('transacoes', 'empresa_id')) {
+            if (SchemaCache::hasColumn('transacoes', 'empresa_id')) {
                 $transacaoPayload['empresa_id'] = $reserva->empresa_id ?? null;
             }
 
@@ -3526,13 +3526,13 @@ private function montarDiasSemanaFlags($diasUteis): array
                     'calcao_id' => $calcao->id,
                 ],
             ];
-            if (Schema::hasColumn('transacoes', 'confirmado_em')) {
+            if (SchemaCache::hasColumn('transacoes', 'confirmado_em')) {
                 $payload['confirmado_em'] = now();
             }
-            if (Schema::hasColumn('transacoes', 'confirmado_por_user_id')) {
+            if (SchemaCache::hasColumn('transacoes', 'confirmado_por_user_id')) {
                 $payload['confirmado_por_user_id'] = Auth::id();
             }
-            if (Schema::hasColumn('transacoes', 'empresa_id')) {
+            if (SchemaCache::hasColumn('transacoes', 'empresa_id')) {
                 $payload['empresa_id'] = $reserva->empresa_id ?? null;
             }
             Transacao::create($payload);

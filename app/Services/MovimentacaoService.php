@@ -408,8 +408,8 @@ class MovimentacaoService extends AbstractBaseService
         $query = Veiculo::query();
 
         if (
-            Schema::hasColumn('veiculos', 'empresa_id')
-            && Schema::hasColumn('movimentacoes', 'empresa_id')
+            SchemaCache::hasColumn('veiculos', 'empresa_id')
+            && SchemaCache::hasColumn('movimentacoes', 'empresa_id')
             && !empty($movimentacao->empresa_id)
         ) {
             $query->where('empresa_id', (int) $movimentacao->empresa_id);
@@ -438,7 +438,7 @@ class MovimentacaoService extends AbstractBaseService
         if (!empty($movimentacao->local_destino_id) && !empty($movimentacao->data_chegada_real)) {
             $updates['local_disponibilidade'] = (int) $movimentacao->local_destino_id;
 
-            if (Schema::hasColumn('veiculos', 'data_hora_disponibilidade')) {
+            if (SchemaCache::hasColumn('veiculos', 'data_hora_disponibilidade')) {
                 $updates['data_hora_disponibilidade'] = $movimentacao->data_chegada_real;
             }
         }
@@ -458,19 +458,19 @@ class MovimentacaoService extends AbstractBaseService
             return 0;
         }
 
-        if (!Schema::hasTable('movimentacoes') || !Schema::hasColumn('movimentacoes', 'reserva_id')) {
+        if (!SchemaCache::hasTable('movimentacoes') || !SchemaCache::hasColumn('movimentacoes', 'reserva_id')) {
             return 0;
         }
 
         $cancelStatusId = 3;
         $table = null;
-        if (Schema::hasTable('status_movimentacao')) {
+        if (SchemaCache::hasTable('status_movimentacao')) {
             $table = 'status_movimentacao';
-        } elseif (Schema::hasTable('status_movimentacaos')) {
+        } elseif (SchemaCache::hasTable('status_movimentacaos')) {
             $table = 'status_movimentacaos';
         }
 
-        if ($table && Schema::hasColumn($table, 'nome')) {
+        if ($table && SchemaCache::hasColumn($table, 'nome')) {
             $cancelStatusId = (int) (DB::table($table)
                 ->whereRaw("LOWER(COALESCE(nome, '')) LIKE ?", ['%cancel%'])
                 ->value('id') ?? 3);
@@ -478,28 +478,28 @@ class MovimentacaoService extends AbstractBaseService
 
         $query = DB::table('movimentacoes')->where('reserva_id', $reservaId);
 
-        if (!empty($tipoMovimentacaoIds) && Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+        if (!empty($tipoMovimentacaoIds) && SchemaCache::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
             $query->whereIn('tipo_movimentacao_id', array_map('intval', $tipoMovimentacaoIds));
         }
 
-        if (Schema::hasColumn('movimentacoes', 'status_movimentacao_id')) {
+        if (SchemaCache::hasColumn('movimentacoes', 'status_movimentacao_id')) {
             $query->where(function ($sub) use ($cancelStatusId) {
                 $sub->whereNull('status_movimentacao_id')->orWhere('status_movimentacao_id', '!=', $cancelStatusId);
             });
         }
 
         $updates = [];
-        if (Schema::hasColumn('movimentacoes', 'status_movimentacao_id')) {
+        if (SchemaCache::hasColumn('movimentacoes', 'status_movimentacao_id')) {
             $updates['status_movimentacao_id'] = $cancelStatusId;
         }
-        if (Schema::hasColumn('movimentacoes', 'data_chegada_real')) {
+        if (SchemaCache::hasColumn('movimentacoes', 'data_chegada_real')) {
             $updates['data_chegada_real'] = now();
         }
-        if ($observacao && Schema::hasColumn('movimentacoes', 'observacoes')) {
+        if ($observacao && SchemaCache::hasColumn('movimentacoes', 'observacoes')) {
             // sobrescreve observação apenas quando ainda vazia, para evitar apagar histórico importante
             $updates['observacoes'] = $observacao;
         }
-        if (Schema::hasColumn('movimentacoes', 'updated_at')) {
+        if (SchemaCache::hasColumn('movimentacoes', 'updated_at')) {
             $updates['updated_at'] = now();
         }
 
@@ -519,19 +519,19 @@ class MovimentacaoService extends AbstractBaseService
     {
         $afetados = $this->cancelarMovimentacoesReserva($reservaId, $tipoMovimentacaoIds, $observacao);
 
-        if (!Schema::hasTable('movimentacoes') || !Schema::hasColumn('movimentacoes', 'reserva_id')) {
+        if (!SchemaCache::hasTable('movimentacoes') || !SchemaCache::hasColumn('movimentacoes', 'reserva_id')) {
             return $afetados;
         }
 
         // Primeiro tenta desvincular reserva_id para não participar do join com reservas na disponibilidade.
         try {
             $q = DB::table('movimentacoes')->where('reserva_id', $reservaId);
-            if (Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+            if (SchemaCache::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
                 $q->whereIn('tipo_movimentacao_id', array_map('intval', $tipoMovimentacaoIds));
             }
 
             $update = ['reserva_id' => null];
-            if (Schema::hasColumn('movimentacoes', 'updated_at')) {
+            if (SchemaCache::hasColumn('movimentacoes', 'updated_at')) {
                 $update['updated_at'] = now();
             }
 
@@ -542,7 +542,7 @@ class MovimentacaoService extends AbstractBaseService
             // Fallback: remove registros (somente quando não for possível desvincular)
             try {
                 $q = DB::table('movimentacoes')->where('reserva_id', $reservaId);
-                if (Schema::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
+                if (SchemaCache::hasColumn('movimentacoes', 'tipo_movimentacao_id')) {
                     $q->whereIn('tipo_movimentacao_id', array_map('intval', $tipoMovimentacaoIds));
                 }
                 $afetados += (int) $q->delete();

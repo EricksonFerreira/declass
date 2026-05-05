@@ -146,7 +146,7 @@ class Veiculo extends Model
             return $cache;
         }
 
-        if (!Schema::hasTable('status_movimentacao')) {
+        if (!SchemaCache::hasTable('status_movimentacao')) {
             return $cache = [];
         }
 

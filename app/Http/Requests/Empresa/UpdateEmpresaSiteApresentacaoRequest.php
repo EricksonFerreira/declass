@@ -81,7 +81,7 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
         $empresaId = $this->route('empresa');
         $dominioRules = ['nullable', 'string', 'max:255'];
 
-        if (Schema::hasTable('empresas')) {
+        if (SchemaCache::hasTable('empresas')) {
             $dominioRules[] = Rule::unique('empresas', 'dominio')->ignore($empresaId);
         }
 

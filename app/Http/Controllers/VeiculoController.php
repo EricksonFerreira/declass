@@ -341,7 +341,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $empresaId = $empresaContext->empresaId() ?? Auth::user()?->empresa_id;
         }
 
-        if ($empresaId && Schema::hasTable('empresas') && Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
+        if ($empresaId && SchemaCache::hasTable('empresas') && SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
             $reservaBloqueioHoras = (int) (DB::table('empresas')->where('id', (int) $empresaId)->value('reserva_bloqueio_pos_reserva_horas') ?? 0);
             if ($reservaBloqueioHoras < 0) {
                 $reservaBloqueioHoras = 0;
@@ -814,7 +814,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 'veiculos.local_disponibilidade',
             ]);
 
-        if ($empresaId && Schema::hasColumn('veiculos', 'empresa_id')) {
+        if ($empresaId && SchemaCache::hasColumn('veiculos', 'empresa_id')) {
             $query->where('veiculos.empresa_id', $empresaId);
         }
 
@@ -960,7 +960,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $empresaId = $empresaContext->empresaId() ?? Auth::user()?->empresa_id;
         }
 
-        if ($empresaId && Schema::hasTable('empresas') && Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
+        if ($empresaId && SchemaCache::hasTable('empresas') && SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
             $reservaBloqueioHoras = (int) (DB::table('empresas')->where('id', (int) $empresaId)->value('reserva_bloqueio_pos_reserva_horas') ?? 0);
             if ($reservaBloqueioHoras < 0) {
                 $reservaBloqueioHoras = 0;
@@ -1160,11 +1160,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     private function buildOptionsByEmpresa($query, ?int $empresaId, string $label): array
     {
         $model = $query->getModel();
-        if ($empresaId !== null && Schema::hasColumn($model->getTable(), 'empresa_id')) {
+        if ($empresaId !== null && SchemaCache::hasColumn($model->getTable(), 'empresa_id')) {
             $query->where($model->getTable() . '.empresa_id', $empresaId);
         }
 
-        if (Schema::hasColumn($model->getTable(), 'ativo')) {
+        if (SchemaCache::hasColumn($model->getTable(), 'ativo')) {
             $query->where($model->getTable() . '.ativo', 'S');
         }
 

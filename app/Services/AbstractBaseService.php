@@ -7,6 +7,7 @@ use App\Support\EmpresaContext;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 abstract class AbstractBaseService implements BaseServiceInterface
@@ -134,7 +135,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             ->select($id, $nome, $subtitle)
             ->distinct();
 
-        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
         }
         if ($orderBy) {
@@ -166,7 +167,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             ->select(array_merge([$id, $nome], $attrExtra))
             ->distinct();
 
-        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
         }
         if ($orderBy) {
@@ -266,7 +267,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
     protected function shouldApplyEmpresaScope(): bool
     {
-        return Schema::hasColumn($this->model->getTable(), 'empresa_id');
+        return SchemaCache::hasColumn($this->model->getTable(), 'empresa_id');
     }
 
     protected function currentEmpresaId(): ?int
@@ -436,7 +437,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
 
         return array_values(array_filter(
             $candidates,
-            fn (string $column): bool => Schema::hasColumn($table, $column)
+            fn (string $column): bool => SchemaCache::hasColumn($table, $column)
         ));
     }
 
@@ -456,7 +457,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
             }
 
             $column = str_contains($field, '.') ? (string) str($field)->afterLast('.') : $field;
-            if (!Schema::hasColumn($table, $column)) {
+            if (!SchemaCache::hasColumn($table, $column)) {
                 unset($filters[$field]);
             }
         }

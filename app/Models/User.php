@@ -206,7 +206,7 @@ class User extends Authenticatable implements MustVerifyEmail
             return true;
         }
 
-        if (!Schema::hasColumn($this->getTable(), 'acesso_todas_estacoes')) {
+        if (!SchemaCache::hasColumn($this->getTable(), 'acesso_todas_estacoes')) {
             return true;
         }
 

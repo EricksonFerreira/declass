@@ -299,7 +299,7 @@ class NfseService
             return Empresa::query()->find($reserva->empresa_id);
         }
 
-        if (Schema::hasColumn('reservas', 'empresa_id') && !empty($reserva->empresa_id)) {
+        if (SchemaCache::hasColumn('reservas', 'empresa_id') && !empty($reserva->empresa_id)) {
             return Empresa::query()->find($reserva->empresa_id);
         }
 
@@ -345,7 +345,7 @@ class NfseService
         $cnae = $empresa->nfse_cnae ?: null;
 
         // Se houver configuração por município (tributos municipais), ela prevalece.
-        if ($municipio !== '' && Schema::hasTable('tributos_municipais')) {
+        if ($municipio !== '' && SchemaCache::hasTable('tributos_municipais')) {
             $query = DB::table('tributos_municipais')
                 ->where('empresa_id', (int) $empresa->id)
                 ->where('municipio_codigo', $municipio)

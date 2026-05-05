@@ -118,9 +118,9 @@ class VeiculoService extends AbstractBaseService
     {
         $query = $this->applyEmpresaScope($this->model->newQuery());
 
-        if (Schema::hasColumn($this->model->getTable(), 'ativo')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
-        } elseif (Schema::hasColumn($this->model->getTable(), 'status_veiculo_id')) {
+        } elseif (SchemaCache::hasColumn($this->model->getTable(), 'status_veiculo_id')) {
             $query = $this->scopeStatusVeiculoDisponivel($query);
         }
 
@@ -511,13 +511,13 @@ class VeiculoService extends AbstractBaseService
         $this->statusMovimentacaoCanceladoIds = [3];
 
         $table = null;
-        if (Schema::hasTable('status_movimentacao')) {
+        if (SchemaCache::hasTable('status_movimentacao')) {
             $table = 'status_movimentacao';
-        } elseif (Schema::hasTable('status_movimentacaos')) {
+        } elseif (SchemaCache::hasTable('status_movimentacaos')) {
             $table = 'status_movimentacaos';
         }
 
-        if ($table && Schema::hasColumn($table, 'nome')) {
+        if ($table && SchemaCache::hasColumn($table, 'nome')) {
             try {
                 $ids = DB::table($table)
                     ->select('id')
@@ -556,7 +556,7 @@ class VeiculoService extends AbstractBaseService
             return $this->reservaBloqueioPosReservaHoras;
         }
 
-        if (!Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
+        if (!SchemaCache::hasTable('empresas') || !SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
             $this->reservaBloqueioPosReservaHoras = 0;
             return 0;
         }
@@ -732,11 +732,11 @@ class VeiculoService extends AbstractBaseService
 
         $query = DB::table('status_veiculos')->select('id', 'nome');
 
-        if (Schema::hasColumn('status_veiculos', 'ativo')) {
+        if (SchemaCache::hasColumn('status_veiculos', 'ativo')) {
             $query->where('ativo', 'S');
         }
 
-        if (Schema::hasColumn('status_veiculos', 'empresa_id')) {
+        if (SchemaCache::hasColumn('status_veiculos', 'empresa_id')) {
             $empresaId = $this->currentEmpresaId();
             if ($empresaId !== null) {
                 $query->where('empresa_id', $empresaId);
@@ -756,7 +756,7 @@ class VeiculoService extends AbstractBaseService
         if (empty($ids)) {
             $fallback = DB::table('status_veiculos')->select('id');
 
-            if (Schema::hasColumn('status_veiculos', 'empresa_id')) {
+            if (SchemaCache::hasColumn('status_veiculos', 'empresa_id')) {
                 $empresaId = $this->currentEmpresaId();
                 if ($empresaId !== null) {
                     $fallback->where('empresa_id', $empresaId);

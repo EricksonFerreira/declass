@@ -49,7 +49,7 @@ class PlanoPermissaoService
 
         $query = $empresa->planoAtivo();
 
-        if (Schema::hasTable('plano_permissao')) {
+        if (SchemaCache::hasTable('plano_permissao')) {
             $query->with('plano.permissoes');
         } else {
             $query->with('plano');
@@ -60,7 +60,7 @@ class PlanoPermissaoService
 
     public function permissoesPermitidasDoPlano(Plano $plano): Collection
     {
-        if (!Schema::hasTable('plano_permissao')) {
+        if (!SchemaCache::hasTable('plano_permissao')) {
             return Permissao::query()
                 ->where('guard_name', 'web')
                 ->orderBy('grupo')
@@ -111,7 +111,7 @@ class PlanoPermissaoService
             return false;
         }
 
-        if (!Schema::hasTable('plano_permissao')) {
+        if (!SchemaCache::hasTable('plano_permissao')) {
             return true;
         }
 

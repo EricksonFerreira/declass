@@ -7,6 +7,8 @@ use App\Models\Estacao;
 use App\Services\EstacaoService;
 use App\Support\EmpresaContext;
 use App\Support\DomainNormalizer;
+use App\Support\SchemaCache;
+use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -150,7 +152,6 @@ class SiteApresentacaoController extends Controller
             'imagemHero' => $this->imageUrl($imagens, 'hero', $this->imageEnabled($imagensConfig, 'hero')),
             'imagemVantagens' => $this->imageUrl($imagens, 'vantagens', $this->imageEnabled($imagensConfig, 'vantagens')),
             'imagemContato' => $this->imageUrl($imagens, 'contato', $this->imageEnabled($imagensConfig, 'contato')),
-            'imagensConfig' => $imagensConfig,
             'estacoesRetirada' => $estacoesRetirada,
             'estacoesDevolucao' => $estacoesDevolucao,
         ]);
@@ -315,18 +316,18 @@ class SiteApresentacaoController extends Controller
 
     private function estacoesForEmpresa(Empresa $empresa): array
     {
-        if (!Schema::hasTable('estacoes')) {
+        if (!SchemaCache::hasTable('estacoes')) {
             return [];
         }
 
         $query = Estacao::query()->withoutGlobalScopes();
         $table = (new Estacao())->getTable();
 
-        if (Schema::hasColumn($table, 'empresa_id')) {
+        if (SchemaCache::hasColumn($table, 'empresa_id')) {
             $query->where($table . '.empresa_id', (int) $empresa->id);
         }
 
-        if (Schema::hasColumn($table, 'ativo')) {
+        if (SchemaCache::hasColumn($table, 'ativo')) {
             $query->where($table . '.ativo', 'S');
         }
 

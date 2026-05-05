@@ -117,7 +117,7 @@ class LoginRequest extends FormRequest
 
     private function resolveEmpresaBySlug(): ?Empresa
     {
-        if (!Schema::hasTable('empresas')) {
+        if (!SchemaCache::hasTable('empresas')) {
             return null;
         }
 
@@ -150,7 +150,7 @@ class LoginRequest extends FormRequest
 
     private function slugFromDomain(): ?string
     {
-        if (!Schema::hasTable('empresas')) {
+        if (!SchemaCache::hasTable('empresas')) {
             return null;
         }
 

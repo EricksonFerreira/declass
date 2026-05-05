@@ -92,11 +92,11 @@ class ReservaService extends AbstractBaseService
                 'updated_at' => null,
             ];
 
-            if (Schema::hasColumn($this->model->getTable(), 'criado_por_user_id')) {
+            if (SchemaCache::hasColumn($this->model->getTable(), 'criado_por_user_id')) {
                 $dadosReserva['criado_por_user_id'] = $this->resolverCriadorCadastroReserva($data);
             }
 
-            if (Schema::hasColumn($this->model->getTable(), 'origem_cadastro')) {
+            if (SchemaCache::hasColumn($this->model->getTable(), 'origem_cadastro')) {
                 $dadosReserva['origem_cadastro'] = $this->resolverOrigemCadastroReserva($data);
             }
 
@@ -179,12 +179,12 @@ class ReservaService extends AbstractBaseService
         try {
             $reserva->status_reserva_id = StatusReservaEnum::Cancelada->value;
 
-            if (Schema::hasColumn($this->model->getTable(), 'data_cancelamento')) {
+            if (SchemaCache::hasColumn($this->model->getTable(), 'data_cancelamento')) {
                 $reserva->data_cancelamento = now();
             }
 
             // Cancela reserva e libera vínculo do veículo (quando aplicável)
-            if (Schema::hasColumn($this->model->getTable(), 'veiculo_id')) {
+            if (SchemaCache::hasColumn($this->model->getTable(), 'veiculo_id')) {
                 $reserva->veiculo_id = null;
             }
 
@@ -484,7 +484,7 @@ class ReservaService extends AbstractBaseService
         }
 
         // Dias uteis (se configurado)
-        if (Schema::hasTable('estacoes_dias_uteis') && Schema::hasTable('dias_uteis')) {
+        if (SchemaCache::hasTable('estacoes_dias_uteis') && SchemaCache::hasTable('dias_uteis')) {
             $dias = DB::table('estacoes_dias_uteis')
                 ->join('dias_uteis', 'dias_uteis.id', '=', 'estacoes_dias_uteis.dia_util_id')
                 ->where('estacoes_dias_uteis.estacao_id', $estacaoId)
@@ -589,18 +589,18 @@ class ReservaService extends AbstractBaseService
 
     private function dataEhFeriadoParaEstacao(int $estacaoId, Carbon $dt): bool
     {
-        if (!Schema::hasTable('feriados') || !Schema::hasColumn('feriados', 'data')) {
+        if (!SchemaCache::hasTable('feriados') || !SchemaCache::hasColumn('feriados', 'data')) {
             return false;
         }
 
         return DB::table('feriados')
             ->whereDate('data', $dt->toDateString())
-            ->when(Schema::hasColumn('feriados', 'estacao_id'), function ($q) use ($estacaoId) {
+            ->when(SchemaCache::hasColumn('feriados', 'estacao_id'), function ($q) use ($estacaoId) {
                 $q->where(function ($sub) use ($estacaoId) {
                     $sub->where('estacao_id', $estacaoId)->orWhereNull('estacao_id');
                 });
             })
-            ->when(Schema::hasColumn('feriados', 'ativo'), function ($q) {
+            ->when(SchemaCache::hasColumn('feriados', 'ativo'), function ($q) {
                 $q->where(function ($sub) {
                     $sub->where('ativo', 'S')->orWhere('ativo', 1);
                 });
@@ -610,7 +610,7 @@ class ReservaService extends AbstractBaseService
 
     private function estacaoOperaFeriado(int $estacaoId): bool
     {
-        if (!Schema::hasTable('estacoes') || !Schema::hasColumn('estacoes', 'opera_feriado')) {
+        if (!SchemaCache::hasTable('estacoes') || !SchemaCache::hasColumn('estacoes', 'opera_feriado')) {
             return false;
         }
 
@@ -620,7 +620,7 @@ class ReservaService extends AbstractBaseService
 
     private function obterHorarioEstacaoParaData(int $estacaoId, Carbon $dt): ?object
     {
-        if (!Schema::hasTable('horarios') || !Schema::hasTable('horarios_diarios')) {
+        if (!SchemaCache::hasTable('horarios') || !SchemaCache::hasTable('horarios_diarios')) {
             return null;
         }
 
@@ -702,7 +702,7 @@ class ReservaService extends AbstractBaseService
     {
         $coluna = $tipo === 'devolucao' ? 'cobrar_na_entrega' : 'cobrar_na_coleta';
 
-        if (!Schema::hasTable('estacoes') || !Schema::hasColumn('estacoes', $coluna)) {
+        if (!SchemaCache::hasTable('estacoes') || !SchemaCache::hasColumn('estacoes', $coluna)) {
             return false;
         }
 

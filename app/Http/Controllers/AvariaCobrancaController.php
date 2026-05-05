@@ -47,7 +47,7 @@ class AvariaCobrancaController extends BaseController
         $valorSugerido = (float) $danos->sum(fn ($d) => (float) ($d->custo_estimado ?? 0));
 
         $cobrancas = [];
-        if (Schema::hasTable('avaria_cobrancas')) {
+        if (SchemaCache::hasTable('avaria_cobrancas')) {
             $cobrancas = AvariaCobranca::query()
                 ->where('reserva_id', $reserva->id)
                 ->orderByDesc('id')

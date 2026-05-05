@@ -15,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class HomeController extends Controller
 {
@@ -199,7 +200,7 @@ public function chartData(Request $request)
 
             $totalReservas = (int) (clone $reservasNoPeriodo)->count();
 
-            if (Schema::hasColumn('reservas', 'origem_cadastro') || Schema::hasColumn('reservas', 'criado_por_user_id')) {
+            if (SchemaCache::hasColumn('reservas', 'origem_cadastro') || SchemaCache::hasColumn('reservas', 'criado_por_user_id')) {
                 $baseOrigemReservas = clone $reservasNoPeriodo;
                 $origemRows = $baseOrigemReservas
                     ->selectRaw("COALESCE(NULLIF(origem_cadastro, ''), 'sem_origem') as origem")
@@ -229,7 +230,7 @@ public function chartData(Request $request)
                 ];
             }
 
-            if (Schema::hasColumn('reservas', 'criado_por_user_id')) {
+            if (SchemaCache::hasColumn('reservas', 'criado_por_user_id')) {
                 $rankingColaboradores = (clone $reservasNoPeriodo)
                     ->leftJoin('users', 'users.id', '=', 'reservas.criado_por_user_id')
                     ->whereNotNull('reservas.criado_por_user_id')
@@ -254,12 +255,12 @@ public function chartData(Request $request)
             }
         }
 
-        if ($homeSections['ocupacao'] && Schema::hasTable('grupos_frota')) {
+        if ($homeSections['ocupacao'] && SchemaCache::hasTable('grupos_frota')) {
             $totalPorGrupoBase = DB::table('veiculos')
                 ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
                 ->selectRaw('grupos_frota.id, grupos_frota.nome, COUNT(*) as total');
             $totalPorGrupoBase = $this->applyEmpresaScope($totalPorGrupoBase, 'veiculos');
-            if ($estacaoSelecionadaId !== null && Schema::hasColumn('veiculos', 'local_disponibilidade')) {
+            if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('veiculos', 'local_disponibilidade')) {
                 $totalPorGrupoBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
             }
             $totalPorGrupo = $totalPorGrupoBase
@@ -318,12 +319,12 @@ public function chartData(Request $request)
         $totalMovimentacoes = (int) (clone $movimentacoesNoPeriodo)->count();
     }
 
-    if ($homeSections['frota'] && Schema::hasTable('grupos_frota')) {
+    if ($homeSections['frota'] && SchemaCache::hasTable('grupos_frota')) {
         $gruposVeiculosBase = DB::table('veiculos')
             ->join('grupos_frota', 'veiculos.grupo_frota_id', '=', 'grupos_frota.id')
             ->selectRaw('grupos_frota.nome as label, COUNT(*) as total');
         $gruposVeiculosBase = $this->applyEmpresaScope($gruposVeiculosBase, 'veiculos');
-        if ($estacaoSelecionadaId !== null && Schema::hasColumn('veiculos', 'local_disponibilidade')) {
+        if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('veiculos', 'local_disponibilidade')) {
             $gruposVeiculosBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
         }
         $gruposVeiculos = $gruposVeiculosBase
@@ -331,11 +332,11 @@ public function chartData(Request $request)
             ->get();
     }
 
-    if ($homeSections['financeiro'] && Schema::hasTable('transacoes')) {
+    if ($homeSections['financeiro'] && SchemaCache::hasTable('transacoes')) {
         $baseFinanceiro = DB::table('transacoes')
             ->whereBetween('transacoes.created_at', [$dataInicio, $dataFim]);
         $baseFinanceiro = $this->applyEmpresaScope($baseFinanceiro, 'transacoes');
-        if ($estacaoSelecionadaId !== null && Schema::hasTable('reservas')) {
+        if ($estacaoSelecionadaId !== null && SchemaCache::hasTable('reservas')) {
             $baseFinanceiro = $baseFinanceiro->join('reservas as r_fin', 'r_fin.id', '=', 'transacoes.reserva_id')
                 ->where('r_fin.estacao_retirada_id', $estacaoSelecionadaId);
         }
@@ -387,15 +388,15 @@ public function chartData(Request $request)
             ->toArray();
     }
 
-    if ($homeSections['satisfacao'] && Schema::hasTable('reserva_satisfacoes')) {
+    if ($homeSections['satisfacao'] && SchemaCache::hasTable('reserva_satisfacoes')) {
         $baseSatisfacao = DB::table('reserva_satisfacoes as rs')
             ->join('reservas as r', 'r.id', '=', 'rs.reserva_id')
             ->whereBetween('rs.created_at', [$dataInicio, $dataFim]);
         $empresaId = $this->empresaIdParaConsulta();
         if ($empresaId !== null) {
-            if (Schema::hasColumn('reservas', 'empresa_id')) {
+            if (SchemaCache::hasColumn('reservas', 'empresa_id')) {
                 $baseSatisfacao->where('r.empresa_id', $empresaId);
-            } elseif (Schema::hasColumn('reserva_satisfacoes', 'empresa_id')) {
+            } elseif (SchemaCache::hasColumn('reserva_satisfacoes', 'empresa_id')) {
                 $baseSatisfacao->where('rs.empresa_id', $empresaId);
             }
         }
@@ -449,7 +450,7 @@ public function chartData(Request $request)
         $satisfacaoResponsaveis = $this->rankingSatisfacaoPorDimensao((clone $baseSatisfacao), 'respondente');
     }
 
-    if ($homeSections['analise_avancada'] && Schema::hasTable('veiculos')) {
+    if ($homeSections['analise_avancada'] && SchemaCache::hasTable('veiculos')) {
         [
             $analiseAvancadaResumo,
             $analiseAvancadaLucrativos,
@@ -538,7 +539,7 @@ public function dashboard()
 
     private function applyEmpresaScope($query, string $table)
     {
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'empresa_id')) {
+        if (!SchemaCache::hasTable($table) || !SchemaCache::hasColumn($table, 'empresa_id')) {
             return $query;
         }
 
@@ -570,7 +571,7 @@ public function dashboard()
     {
         $empresaId = $this->empresaIdParaConsulta();
 
-        if ($empresaId === null || !Schema::hasTable('empresas') || !Schema::hasColumn('empresas', 'moeda_pagamento')) {
+        if ($empresaId === null || !SchemaCache::hasTable('empresas') || !SchemaCache::hasColumn('empresas', 'moeda_pagamento')) {
             return 'BRL';
         }
 
@@ -687,7 +688,7 @@ public function dashboard()
             [],
         ];
 
-        if (!Schema::hasTable('veiculos')) {
+        if (!SchemaCache::hasTable('veiculos')) {
             return $defaults;
         }
 
@@ -702,15 +703,15 @@ public function dashboard()
             ->selectRaw('COALESCE(modelos.nome_fipe, modelos.nome, "") as modelo_nome')
             ->selectRaw('COALESCE(grupos_frota.nome, "") as grupo_nome');
 
-        if (Schema::hasColumn('veiculos', 'deleted_at')) {
+        if (SchemaCache::hasColumn('veiculos', 'deleted_at')) {
             $veiculosBase->whereNull('veiculos.deleted_at');
         }
 
-        if ($empresaId !== null && Schema::hasColumn('veiculos', 'empresa_id')) {
+        if ($empresaId !== null && SchemaCache::hasColumn('veiculos', 'empresa_id')) {
             $veiculosBase->where('veiculos.empresa_id', $empresaId);
         }
 
-        if ($estacaoSelecionadaId !== null && Schema::hasColumn('veiculos', 'local_disponibilidade')) {
+        if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('veiculos', 'local_disponibilidade')) {
             $veiculosBase->where('veiculos.local_disponibilidade', $estacaoSelecionadaId);
         }
 
@@ -720,11 +721,11 @@ public function dashboard()
             ->whereNull('data_cancelamento')
             ->whereBetween('reservas.created_at', [$dataInicio, $dataFim]);
 
-        if ($empresaId !== null && Schema::hasColumn('reservas', 'empresa_id')) {
+        if ($empresaId !== null && SchemaCache::hasColumn('reservas', 'empresa_id')) {
             $receitasSub->where('empresa_id', $empresaId);
         }
 
-        if ($estacaoSelecionadaId !== null && Schema::hasColumn('reservas', 'estacao_retirada_id')) {
+        if ($estacaoSelecionadaId !== null && SchemaCache::hasColumn('reservas', 'estacao_retirada_id')) {
             $receitasSub->where('estacao_retirada_id', $estacaoSelecionadaId);
         }
 
@@ -735,11 +736,11 @@ public function dashboard()
             ->whereNotNull('veiculo_id')
             ->whereBetween('data_hora_infracao', [$dataInicio, $dataFim]);
 
-        if ($empresaId !== null && Schema::hasColumn('multas', 'empresa_id')) {
+        if ($empresaId !== null && SchemaCache::hasColumn('multas', 'empresa_id')) {
             $multasSub->where('empresa_id', $empresaId);
         }
 
-        if (Schema::hasColumn('multas', 'destino_cobranca')) {
+        if (SchemaCache::hasColumn('multas', 'destino_cobranca')) {
             $multasSub->where('destino_cobranca', 'empresa');
         }
 
@@ -750,7 +751,7 @@ public function dashboard()
             ->whereNotNull('veiculo_id')
             ->whereBetween('data_hora_ocorrido', [$dataInicio, $dataFim]);
 
-        if ($empresaId !== null && Schema::hasColumn('sinistros', 'empresa_id')) {
+        if ($empresaId !== null && SchemaCache::hasColumn('sinistros', 'empresa_id')) {
             $sinistrosSub->where('empresa_id', $empresaId);
         }
 
@@ -761,11 +762,11 @@ public function dashboard()
             ->selectRaw('vd.veiculo_id, COUNT(*) as danos_qtd, COALESCE(SUM(COALESCE(vd.custo_estimado, 0)), 0) as custo_danos')
             ->whereNotNull('vd.veiculo_id');
 
-        if ($empresaId !== null && Schema::hasColumn('veiculos', 'empresa_id')) {
+        if ($empresaId !== null && SchemaCache::hasColumn('veiculos', 'empresa_id')) {
             $danosSub->where('v_danos.empresa_id', $empresaId);
         }
 
-        if (Schema::hasColumn('veiculo_danos', 'created_at')) {
+        if (SchemaCache::hasColumn('veiculo_danos', 'created_at')) {
             $danosSub->whereBetween('vd.created_at', [$dataInicio, $dataFim]);
         }
 
@@ -1002,7 +1003,7 @@ public function dashboard()
 
     private function rankingSatisfacaoPorDimensao($baseSatisfacao, string $tipo): array
     {
-        if (!Schema::hasTable('reserva_satisfacoes')) {
+        if (!SchemaCache::hasTable('reserva_satisfacoes')) {
             return ['labels' => [], 'data' => [], 'respostas' => []];
         }
 

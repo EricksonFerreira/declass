@@ -126,7 +126,7 @@ class PlanoController extends Controller
             ->orderBy('name')
             ->get();
 
-        $permitidas = Schema::hasTable('plano_permissao')
+        $permitidas = SchemaCache::hasTable('plano_permissao')
             ? $plano->permissoes()->pluck('permissions.id')->map(fn ($id) => (int) $id)->all()
             : [];
         $gruposPermissao = $this->planoPermissaoService->gruposDePermissoesParaTela($permissoes);
@@ -158,7 +158,7 @@ class PlanoController extends Controller
         $plano->update([
             'limite_permissoes_por_regra' => $data['limite_permissoes_por_regra'] ?? null,
         ]);
-        if (Schema::hasTable('plano_permissao')) {
+        if (SchemaCache::hasTable('plano_permissao')) {
             $plano->permissoes()->sync($permissionIds);
         }
 

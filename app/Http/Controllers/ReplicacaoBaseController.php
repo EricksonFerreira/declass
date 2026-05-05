@@ -23,7 +23,7 @@ class ReplicacaoBaseController extends Controller
 
     public function index(Request $request)
     {
-        if (!Schema::hasTable('empresas')) {
+        if (!SchemaCache::hasTable('empresas')) {
             return redirect()->route('home')
                 ->with('error', 'Tabela de empresas nao encontrada. Execute as migrations do modulo de empresa.');
         }

@@ -68,14 +68,14 @@ class UsuarioService extends AbstractBaseService
         $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data);
         [$acessoTodasEstacoes, $data] = $this->enforceRoleStationDefaults($data, $acessoTodasEstacoes);
 
-        if (Schema::hasColumn($this->model->getTable(), 'empresa_id')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'empresa_id')) {
             $empresaId = app(EmpresaContext::class)->empresaId();
             if ($empresaId) {
                 $data['empresa_id'] = $empresaId;
             }
         }
 
-        if (Schema::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
             $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
         }
 
@@ -94,7 +94,7 @@ class UsuarioService extends AbstractBaseService
             throw new \RuntimeException('Usuario nao encontrado para a empresa atual.');
         }
 
-        if (array_key_exists('forcar_troca_senha', $data) && Schema::hasColumn($this->model->getTable(), 'forcar_troca_senha')) {
+        if (array_key_exists('forcar_troca_senha', $data) && SchemaCache::hasColumn($this->model->getTable(), 'forcar_troca_senha')) {
             $this->model->forcar_troca_senha = (bool) $data['forcar_troca_senha'];
         }
 
@@ -115,7 +115,7 @@ class UsuarioService extends AbstractBaseService
         $acessoTodasEstacoes = $this->resolveAcessoTodasEstacoes($data, $user);
         [$acessoTodasEstacoes, $data] = $this->enforceRoleStationDefaults($data, $acessoTodasEstacoes, $user);
 
-        if (Schema::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'acesso_todas_estacoes')) {
             $data['acesso_todas_estacoes'] = $acessoTodasEstacoes;
         }
 
@@ -137,12 +137,12 @@ class UsuarioService extends AbstractBaseService
      */
     private function enforceRoleStationDefaults(array $data, bool $acessoTodasEstacoes, ?User $user = null): array
     {
-        if (!Schema::hasColumn($this->model->getTable(), 'role_id')) {
+        if (!SchemaCache::hasColumn($this->model->getTable(), 'role_id')) {
             return [$acessoTodasEstacoes, $data];
         }
 
         $roleId = (int) ($data['role_id'] ?? ($user?->role_id ?? 0));
-        if ($roleId <= 0 || !Schema::hasTable('roles')) {
+        if ($roleId <= 0 || !SchemaCache::hasTable('roles')) {
             return [$acessoTodasEstacoes, $data];
         }
 
@@ -174,7 +174,7 @@ class UsuarioService extends AbstractBaseService
 
     private function syncEstacoesPermitidas(User $user, array $data, bool $acessoTodasEstacoes): void
     {
-        if (!Schema::hasTable('estacao_user')) {
+        if (!SchemaCache::hasTable('estacao_user')) {
             return;
         }
 
@@ -195,7 +195,7 @@ class UsuarioService extends AbstractBaseService
         }
 
         $query = Estacao::query()->whereIn('id', $estacoes->all());
-        if (Schema::hasColumn('estacoes', 'empresa_id') && !empty($user->empresa_id)) {
+        if (SchemaCache::hasColumn('estacoes', 'empresa_id') && !empty($user->empresa_id)) {
             $query->where('empresa_id', $user->empresa_id);
         }
 

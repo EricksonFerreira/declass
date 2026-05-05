@@ -87,7 +87,7 @@ class PowerBIService
     }
     private function criarTabelaTokenCasoNecessario()
     {
-        if (!Schema::hasTable('powerbi_tokens')) {
+        if (!SchemaCache::hasTable('powerbi_tokens')) {
             Schema::create('powerbi_tokens', function (Blueprint $table) {
                 $table->id();
                 $table->text('access_token');

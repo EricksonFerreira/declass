@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\EmpresaContextController;
 use App\Http\Controllers\HomeController;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\TourController;
 use App\Http\Controllers\IndicadoresController;
 use App\Http\Controllers\NotificacaoController;
@@ -237,3 +238,8 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
 
     Route::post('/reserva/salvar-assinatura', [ReservaController::class, 'salvarAssinatura'])->name('reserva.salvar.assinatura');
 });
+
+Route::post('/limpar-cache', function () {
+    Artisan::call('cache:clear');
+    return back()->with('success', 'Cache limpo com sucesso!');
+})->middleware(['auth', 'can:acessar-superadmin'])->name('limpar-cache');

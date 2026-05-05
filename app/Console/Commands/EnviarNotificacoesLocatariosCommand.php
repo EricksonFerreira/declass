@@ -19,7 +19,7 @@ class EnviarNotificacoesLocatariosCommand extends Command
 
     public function handle(): int
     {
-        if (!Schema::hasTable('notifications')) {
+        if (!SchemaCache::hasTable('notifications')) {
             $this->warn('Tabela de notificações não encontrada.');
             return self::SUCCESS;
         }
@@ -38,7 +38,7 @@ class EnviarNotificacoesLocatariosCommand extends Command
 
     private function gerarNotificacoesMultas(Carbon $dataBase): void
     {
-        if (!Schema::hasTable('multas')) {
+        if (!SchemaCache::hasTable('multas')) {
             return;
         }
 
@@ -88,7 +88,7 @@ class EnviarNotificacoesLocatariosCommand extends Command
 
     private function gerarNotificacoesReservas(Carbon $dataBase): void
     {
-        if (!Schema::hasTable('reservas')) {
+        if (!SchemaCache::hasTable('reservas')) {
             return;
         }
 

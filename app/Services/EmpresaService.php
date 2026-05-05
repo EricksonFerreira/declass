@@ -43,7 +43,7 @@ class EmpresaService extends AbstractBaseService
         $data = $this->sanitizeDataForExistingColumns($data);
         $empresa = $this->model->newQuery()->create($data);
 
-        if (Schema::hasColumn($this->model->getTable(), 'empresa_id') && empty($empresa->empresa_id)) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'empresa_id') && empty($empresa->empresa_id)) {
             $empresa->empresa_id = $empresa->id;
             $empresa->save();
         }
@@ -94,7 +94,7 @@ class EmpresaService extends AbstractBaseService
 
     private function resolveDefaultTemplateEmpresaId(): ?int
     {
-        if (!Schema::hasTable('empresas')) {
+        if (!SchemaCache::hasTable('empresas')) {
             return null;
         }
 
@@ -115,7 +115,7 @@ class EmpresaService extends AbstractBaseService
             'updated_at' => now(),
         ]);
 
-        if (Schema::hasColumn($table, 'empresa_id')) {
+        if (SchemaCache::hasColumn($table, 'empresa_id')) {
             DB::table($table)->where('id', $newId)->update(['empresa_id' => $newId]);
         }
 
@@ -141,7 +141,7 @@ class EmpresaService extends AbstractBaseService
      */
     private function replicateGlobalRowsToEmpresa(string $table, int $empresaId, array $uniqueColumns): void
     {
-        if (!Schema::hasTable($table) || !Schema::hasColumn($table, 'empresa_id')) {
+        if (!SchemaCache::hasTable($table) || !SchemaCache::hasColumn($table, 'empresa_id')) {
             return;
         }
 
@@ -204,7 +204,7 @@ class EmpresaService extends AbstractBaseService
             return $this->empresaColumnsCache;
         }
 
-        if (!Schema::hasTable($this->model->getTable())) {
+        if (!SchemaCache::hasTable($this->model->getTable())) {
             $this->empresaColumnsCache = [];
             return $this->empresaColumnsCache;
         }
