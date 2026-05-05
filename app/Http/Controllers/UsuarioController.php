@@ -22,6 +22,7 @@ use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
 use App\Services\ClienteStripeService;
+use App\Support\SchemaCache;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use Illuminate\Support\Facades\Log;
 
@@ -215,7 +216,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             ->select(['id', 'nome', 'email', 'numero_identificacao', 'telefone', 'empresa_id', 'role_id', 'data_nascimento', 'created_at'])
             ->orderBy('nome');
 
-        if (\Illuminate\Support\Facades\SchemaCache::hasColumn('users', 'empresa_id')) {
+        if (SchemaCache::hasColumn('users', 'empresa_id')) {
             $empresaId = app(\App\Support\EmpresaContext::class)->empresaId()
                 ?? \Illuminate\Support\Facades\Auth::user()?->empresa_id;
             if ($empresaId) {

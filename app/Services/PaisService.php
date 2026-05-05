@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Pais;
 use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
+use App\Support\SchemaCache;
 
 class PaisService extends AbstractBaseService
 {
@@ -39,7 +40,7 @@ class PaisService extends AbstractBaseService
             ->select('sigla', 'nome')
             ->distinct();
 
-        if (\Illuminate\Support\Facades\SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
+        if (SchemaCache::hasColumn($this->model->getTable(), 'ativo')) {
             $query->where('ativo', 'S');
         }
 
