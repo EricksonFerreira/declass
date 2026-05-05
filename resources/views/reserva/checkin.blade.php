@@ -320,7 +320,7 @@
                                                         h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Movimentações</label><select class="form-control form-control-sm diag-filtro" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
                                                         h += '</div></div></div>';
 
-                                                        h += '<div id="diagLista">';
+                                                        h += '<div id="diagLista" style="display:flex;flex-wrap:wrap;gap:12px;">';
                                                         var iniciais = function(nome) {
                                                             var parts = (nome||'??').split(/\s+/).filter(Boolean);
                                                             var p0 = parts[0] || '';
@@ -838,8 +838,8 @@
     }
 
     /* ── Diagnóstico ── */
-    #diagLista { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
-    #diagRoot .diag-card { border-radius:10px; overflow:hidden; transition:box-shadow .2s; }
+    #diagLista { display:flex !important; flex-wrap:wrap !important; gap:12px !important; }
+    #diagRoot .diag-card { width:calc(25% - 9px) !important; flex:0 0 calc(25% - 9px) !important; min-width:0 !important; max-width:100% !important; box-sizing:border-box !important; border-radius:10px; overflow:hidden; transition:box-shadow .2s; }
     #diagRoot .diag-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
     #diagRoot .card-header { transition:background .15s; }
     #diagRoot .card-header:hover { filter:brightness(.97); }
