@@ -838,8 +838,7 @@
     }
 
     /* ── Diagnóstico ── */
-    #diagLista { display:flex !important; flex-wrap:wrap !important; gap:12px !important; }
-    #diagRoot .diag-card { width:calc(25% - 9px) !important; flex:0 0 calc(25% - 9px) !important; min-width:0 !important; max-width:100% !important; box-sizing:border-box !important; border-radius:10px; overflow:hidden; transition:box-shadow .2s; }
+    #diagRoot .diag-card { width:calc(25% - 9px); flex:0 0 calc(25% - 9px); box-sizing:border-box; border-radius:10px; overflow:hidden; transition:box-shadow .2s; }
     #diagRoot .diag-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
     #diagRoot .card-header { transition:background .15s; }
     #diagRoot .card-header:hover { filter:brightness(.97); }
