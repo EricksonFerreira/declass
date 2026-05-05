@@ -307,8 +307,8 @@
                             </div>
                             <div class="rs-vehicle">
                                 <div class="rs-vehicle__media">
-                                    <img src="{{ $reserva->modelos->imagem_url ?? asset('img/no-image.jpg') }}"
-                                         alt="{{ $reserva->modelos->nome ?? 'Veículo reservado' }}">
+<img src="{{ $reserva->grupoFrota->imagem_url ?? asset('img/no-image.jpg') }}"
+                                             alt="{{ $reserva->grupoFrota->nome ?? 'Grupo' }}">
                                 </div>
                                 <div class="rs-vehicle__info">
                                     @if(!empty($reserva->grupoFrota->nome))
