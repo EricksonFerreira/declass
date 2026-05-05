@@ -838,7 +838,7 @@
     }
 
     /* ── Diagnóstico ── */
-    #diagRoot .diag-card { border-radius:10px; overflow:hidden; transition:box-shadow .2s; width:calc(25% - 9px); }
+    #diagRoot .diag-card { border-radius:10px; overflow:hidden; transition:box-shadow .2s; flex:0 0 calc(25% - 9px); box-sizing:border-box; }
     #diagRoot .diag-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
     #diagRoot .card-header { transition:background .15s; }
     #diagRoot .card-header:hover { filter:brightness(.97); }
