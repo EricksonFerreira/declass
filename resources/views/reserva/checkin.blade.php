@@ -561,6 +561,7 @@
                     </div>
 
                     <input type="hidden" id="contrato_id" value="{{ $contratoExistente->id ?? '' }}">
+                    <script>window.danosModoLocal = true; window.danosCheckin = [];</script>
                     @include('reserva.components.modal_dano_checkin')
                 </section>
 
@@ -1163,6 +1164,11 @@
             }
         });
 
+        // Inclui danos coletados localmente
+        if (window.danosCheckin && window.danosCheckin.length) {
+            fd.append('danos', JSON.stringify(window.danosCheckin));
+        }
+
         // Se for upgrade, envia motivo_upgrade para auditoria
         const selectedOpt = document.querySelector('#veiculo option:checked');
         const isUpgrade = selectedOpt?.dataset?.upgrade === '1';
@@ -1243,26 +1249,35 @@
     function formatCusto(val) { if (val === null || val === undefined || val === '') return '—'; return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 
     function obterDanosDetectados() {
+        const tbody = document.getElementById('danos_detectados');
+        tbody.innerHTML = '';
+
+        var allDanos = [];
+
+        if (window.danosCheckin && window.danosCheckin.length) {
+            allDanos = allDanos.concat(window.danosCheckin);
+        }
+
         const veiculo_id = document.getElementById('veiculo')?.value;
-        const reserva_id = document.getElementById('reserva_id')?.value;
-        $.ajax({
-            url: "{{ route('dano.obterDanosDetectados') }}",
-            type: 'GET',
-            data: { veiculo_id, reserva_id },
-            success: function (data) {
-                const tbody = document.getElementById('danos_detectados');
-                tbody.innerHTML = '';
-                if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>'; return; }
-                data.forEach(dano => {
-                    const categoria = dano.categoria ?? '—';
-                    const local = dano.localizacao_problema ?? '—';
-                    const locLabel = '<strong>' + dano.localizacao + '</strong><br><small class="text-muted">' + categoria + ' · ' + local + '</small>';
-                    const descricao = dano.descricao || '<span class="text-muted">—</span>';
-                    const km = dano.quilometragem_veiculo ? '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(dano.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>' : '';
-                    const nomeDano = dano.nome_dano ? '<small class="d-block text-muted mt-1">' + dano.nome_dano + '</small>' : '';
-                    tbody.insertAdjacentHTML('beforeend', '<tr><td>' + locLabel + '</td><td>' + descricao + km + nomeDano + '</td><td>' + tipoBadge(dano.tipo_dano) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td></tr>');
-                });
+        if (veiculo_id) {
+            $.ajax({
+                url: "{{ route('dano.obterDanosDetectados') }}",
+                type: 'GET',
+                data: { veiculo_id, reserva_id: document.getElementById('reserva_id')?.value },
+                async: false,
+                success: function (data) { allDanos = allDanos.concat(data); }
+            });
+        }
+
+        if (!allDanos.length) { tbody.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>'; return; }
+        allDanos.forEach(dano => {
+            var localLabel = '<strong>' + (dano.localizacao || dano.local || '—') + '</strong>';
+            if (dano.categoria || dano.localizacao_problema) {
+                localLabel += '<br><small class="text-muted">' + (dano.categoria || '—') + ' · ' + (dano.localizacao_problema || '—') + '</small>';
             }
+            var descricao = dano.descricao || '<span class="text-muted">—</span>';
+            if (dano.quilometragem_veiculo) descricao += '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(dano.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>';
+            tbody.insertAdjacentHTML('beforeend', '<tr><td>' + localLabel + '</td><td>' + descricao + '</td><td>' + tipoBadge(dano.tipo_dano || dano.tipo) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td></tr>');
         });
     }
 

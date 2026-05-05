@@ -2638,6 +2638,7 @@ private function montarDiasSemanaFlags($diasUteis): array
     {
         $dados = $request->validated();
         $dados['reserva_id'] = $reserva_id;
+        $dados['danos'] = $request->input('danos');
 
         // Deriva marca_id e modelo_id do veículo selecionado quando não enviados pelo formulário
         if (empty($dados['marca_id']) || empty($dados['modelo_id'])) {
@@ -2708,6 +2709,20 @@ private function montarDiasSemanaFlags($diasUteis): array
                     'veiculo_id'     => $dados['veiculo_id'] ?? null,
                 ], 'Contrato de check-in criado', 'success');
                 $contrato = $this->contratoCheckinService->create($dados);
+
+                // Salva danos coletados (enviados como JSON no campo "danos")
+                if (!empty($dados['danos'])) {
+                    $danosData = is_string($dados['danos']) ? json_decode($dados['danos'], true) : $dados['danos'];
+                    if (is_array($danosData)) {
+                        foreach ($danosData as $item) {
+                            $item['veiculo_id'] = $dados['veiculo_id'];
+                            $item['reserva_id'] = $reserva_id;
+                            $item['contrato_id'] = $contrato->id;
+                            $this->veiculoDanoService->create($item);
+                        }
+                    }
+                }
+
                 return response()->json($contrato);
             }
 
