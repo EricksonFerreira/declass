@@ -101,7 +101,7 @@
 <style>
     .assinatura-page {
         max-width: 820px;
-        margin: 0 auto 40px;
+        margin: 0 0 40px;
     }
 
     /* Hero */

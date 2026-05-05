@@ -70,9 +70,9 @@
                     <span>Iniciar check-in</span>
                 </a>
             @elseif($reserva->contratoCheckin && $reserva->contratoCheckin->assinado !== 'S')
-                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="action-pill action-pill--success">
-                    <i class="fas fa-file-signature"></i>
-                    <span>Continuar check-in</span>
+                <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="action-pill action-pill--success">
+                    <i class="fas fa-pen"></i>
+                    <span>Assinar contrato</span>
                 </a>
             @endif
 

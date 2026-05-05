@@ -4476,14 +4476,16 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     $grupoMarcasModelos = [];
     if ($reserva->grupo_frota_id) {
         $veiculos = \App\Models\Veiculo::where('grupo_frota_id', $reserva->grupo_frota_id)
-            ->with('marca', 'modelo')->distinct()->get();
-        $seen = [];
+            ->with('marca', 'modelo')->get();
+        $agg = [];
         foreach ($veiculos as $v) {
-            $key = ($v->marca?->nome ?? '?') . '|' . ($v->modelo?->nome ?? '?');
-            if (isset($seen[$key])) continue;
-            $seen[$key] = true;
-            $grupoMarcasModelos[] = ['marca' => $v->marca?->nome ?? '—', 'modelo' => $v->modelo?->nome ?? '—'];
+            $marca = $v->marca?->nome ?? '—';
+            $modelo = $v->modelo?->nome ?? '—';
+            $key = $marca . '|' . $modelo;
+            if (!isset($agg[$key])) $agg[$key] = ['marca' => $marca, 'modelo' => $modelo, 'qtd' => 0];
+            $agg[$key]['qtd']++;
         }
+        $grupoMarcasModelos = array_values($agg);
     }
 @endphp
 
@@ -4496,20 +4498,24 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             </div>
             <div class="modal-body">
                 @if(count($grupoMarcasModelos))
-                    <div class="form-group mb-2">
-                        <input type="text" class="form-control form-control-sm" id="filtroGrupoModal" placeholder="Buscar por marca ou modelo..." oninput="filtrarGrupoModal(this.value)">
+                    <div class="d-flex gap-2 mb-2 align-items-center">
+                        <input type="text" class="form-control form-control-sm" id="filtroGrupoModal" placeholder="Buscar por marca ou modelo..." oninput="filtrarGrupoModal()" style="flex:1;">
+                        <div class="btn-group btn-group-sm">
+                            <button type="button" class="btn btn-primary btn-sm" id="btnTodosGrupo" onclick="filtrarGrupoTipo('todos')">Todos</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" id="btnDisponiveisGrupo" onclick="filtrarGrupoTipo('disponiveis')">Disponíveis</button>
+                        </div>
                     </div>
                     <div style="max-height:400px;overflow-y:auto;">
                     <table class="table table-sm table-bordered mb-0" style="font-size:.84rem;" id="tabelaGrupoModal">
-                        <thead><tr><th style="width:40%;">Marca</th><th>Modelo</th></tr></thead>
+                        <thead><tr><th style="width:35%;">Marca</th><th style="width:45%;">Modelo</th><th class="text-center">Qtd</th></tr></thead>
                         <tbody>
                             @foreach($grupoMarcasModelos as $gm)
-                                <tr><td>{{ $gm['marca'] }}</td><td>{{ $gm['modelo'] }}</td></tr>
+                                <tr data-qtd="{{ $gm['qtd'] }}"><td>{{ $gm['marca'] }}</td><td>{{ $gm['modelo'] }}</td><td class="text-center">{{ $gm['qtd'] }}</td></tr>
                             @endforeach
                         </tbody>
                     </table>
                     </div>
-                    <small class="text-muted mt-1 d-block">{{ count($grupoMarcasModelos) }} veículo(s) neste grupo</small>
+                    <small class="text-muted mt-1 d-block">{{ count($grupoMarcasModelos) }} modelo(s) · {{ collect($grupoMarcasModelos)->sum('qtd') }} veículo(s)</small>
                 @else
                     <p class="text-muted mb-0">Nenhum veículo cadastrado neste grupo.</p>
                 @endif
@@ -4518,11 +4524,24 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     </div>
 </div>
 <script>
-function filtrarGrupoModal(valor) {
-    var termo = valor.toLowerCase().trim();
+var grupoFiltroAtivo = 'todos';
+function filtrarGrupoModal() {
+    aplicarFiltrosGrupo();
+}
+function filtrarGrupoTipo(tipo) {
+    grupoFiltroAtivo = tipo;
+    document.getElementById('btnTodosGrupo').className = tipo === 'todos' ? 'btn btn-primary btn-sm' : 'btn btn-outline-primary btn-sm';
+    document.getElementById('btnDisponiveisGrupo').className = tipo === 'disponiveis' ? 'btn btn-primary btn-sm' : 'btn btn-outline-primary btn-sm';
+    aplicarFiltrosGrupo();
+}
+function aplicarFiltrosGrupo() {
+    var termo = (document.getElementById('filtroGrupoModal').value || '').toLowerCase().trim();
     document.querySelectorAll('#tabelaGrupoModal tbody tr').forEach(function(tr) {
         var texto = tr.textContent.toLowerCase();
-        tr.style.display = !termo || texto.includes(termo) ? '' : 'none';
+        var qtd = parseInt(tr.dataset.qtd) || 0;
+        var matchTexto = !termo || texto.includes(termo);
+        var matchTipo = grupoFiltroAtivo === 'todos' || (grupoFiltroAtivo === 'disponiveis' && qtd > 0);
+        tr.style.display = matchTexto && matchTipo ? '' : 'none';
     });
 }
 </script>
