@@ -10,21 +10,19 @@ return new class extends Migration
     {
         Schema::table('veiculos', function (Blueprint $table) {
             $foreigns = [
-                'tipo_frota_id'         => 'tipo_frotas',
-                'grupo_frota_id'        => 'grupos_frota',
-                'marca_id'              => 'marcas',
-                'modelo_id'             => 'modelos',
-                'segmento_id'           => 'segmentos',
-                'status_veiculo_id'     => 'status_veiculos',
-                'local_disponibilidade' => 'estacoes',
+                'grupo_frota_id'        => ['grupos_frota', 'id'],
+                'marca_id'              => ['marcas', 'id'],
+                'modelo_id'             => ['modelos', 'id'],
+                'segmento_id'           => ['segmentos', 'id'],
+                'status_veiculo_id'     => ['status_veiculos', 'id'],
+                'local_disponibilidade' => ['estacoes', 'id'],
             ];
-            $table->engine = 'INNODB';
 
-            foreach ($foreigns as $column => $references) {
+            foreach ($foreigns as $column => [$refTable, $refCol]) {
                 try {
-                    $table->foreign($column)->references('id')->on($references)->nullOnDelete();
+                    $table->foreign($column)->references($refCol)->on($refTable)->nullOnDelete();
                 } catch (\Throwable $e) {
-                    // Foreign key already exists or column missing — skip
+                    // skip
                 }
             }
         });
@@ -33,16 +31,14 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('veiculos', function (Blueprint $table) {
-            $columns = [
-                'tipo_frota_id', 'grupo_frota_id', 'marca_id', 'modelo_id',
-                'segmento_id', 'status_veiculo_id', 'local_disponibilidade',
-            ];
+            $columns = ['grupo_frota_id', 'marca_id', 'modelo_id',
+                'segmento_id', 'status_veiculo_id', 'local_disponibilidade'];
 
             foreach ($columns as $column) {
                 try {
                     $table->dropForeign([$column]);
                 } catch (\Throwable $e) {
-                    // Foreign key doesn't exist — skip
+                    // skip
                 }
             }
         });
