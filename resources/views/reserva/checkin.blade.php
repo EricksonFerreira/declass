@@ -321,17 +321,6 @@
                                                         h += '</div></div></div>';
 
                                                         h += '<div id="diagLista" style="display:flex;flex-wrap:wrap;gap:12px;">';
-                                                        var iniciais = function(nome) {
-                                                            var parts = (nome||'??').split(/\s+/).filter(Boolean);
-                                                            var p0 = parts[0] || '';
-                                                            var p1 = parts[1] || '';
-                                                            return (p0.charAt(0) || '') + (p1.charAt(0) || '');
-                                                        };
-                                                        var laranjaMedio = '#ea580c';
-                                                        var verdeEstacao = '#059669';
-                                                        var azulEstacao  = '#2563eb';
-                                                        var cinzaEstacao = '#64748b';
-                                                        var bordaEstacao = '#e5eaf2';
 
                                                         todos.forEach(function (v, idx) {
                                                             var r = {}, ordemR = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
@@ -340,55 +329,51 @@
                                                             var isDisp = v.disponivel;
                                                             var grpOk = ordemR.filter(function(nk){var rr=r[nk];return rr&&rr.ok}).length;
                                                             var grpTot = ordemR.length;
+                                                            var iniciais = function(n){var p=(n||'??').split(/\s+/).filter(Boolean);return(p[0]||'?')[0]+(p[1]||'')[0]};
                                                             var initials = iniciais(v.nome);
-                                                            var accentC = isDisp ? verdeEstacao : cinzaEstacao;
-                                                            var cardBorder = isDisp ? '#86efac' : bordaEstacao;
-                                                            var statusTxt = isDisp ? 'Disponivel' : 'Indisponivel';
-                                                            var statusBg = isDisp ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.13)';
-                                                            var statusColor = isDisp ? verdeEstacao : cinzaEstacao;
-
-                                                            h += '<div class="diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
-                                                            h += '<div class="ec" style="border:1px solid ' + cardBorder + ';border-radius:14px;overflow:hidden;cursor:pointer;background:#fff;transition:box-shadow .2s,transform .2s;" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'" onclick="var c=this.nextElementSibling;c.style.display=c.style.display===\'none\'?\'\':\'none\'">';
-                                                            h += '<div style="height:5px;background:linear-gradient(90deg,' + accentC + ',' + (isDisp ? '#34d399' : '#94a3b8') + ');"></div>';
-                                                            h += '<div style="display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px;border-bottom:1px solid #f1f5f9;">';
-                                                            h += '<div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:.82rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;letter-spacing:.04em;">' + initials + '</div>';
-                                                            h += '<div style="flex:1;min-width:0;"><div style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">#' + v.id + ' · ' + (v.placa||'—') + '</div>';
-                                                            h += '<div style="font-size:.97rem;font-weight:700;color:#0f2740;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + v.nome + '</div>';
-                                                            h += '<div style="font-size:.78rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (v.modelo||'—') + ' · ' + (v.cor||'—') + '</div></div>';
-                                                            h += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">';
-                                                            h += '<span style="padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;background:' + statusBg + ';color:' + statusColor + ';">' + statusTxt + '</span>';
-                                                            h += '<span style="padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:600;background:' + (grpOk===grpTot?'rgba(16,185,129,.12)':'rgba(245,158,11,.15)') + ';color:' + (grpOk===grpTot?verdeEstacao:laranjaMedio) + ';">' + grpOk + '/' + grpTot + ' regras</span></div></div>';
-
-                                                            h += '<div style="display:flex;flex-direction:column;gap:6px;padding:10px 16px 14px;font-size:.78rem;">';
+                                                            var verde = '#059669', cinza = '#64748b', laranja = '#ea580c';
+                                                            var accent = isDisp ? verde : cinza;
+                                                            var borderC = isDisp ? '#86efac' : '#e5eaf2';
+                                                            var sTxt = isDisp ? 'Disponivel' : 'Indisponivel';
+                                                            var sBg = isDisp ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.13)';
+                                                            var sCo = isDisp ? verde : cinza;
+                                                            var rulesHtml = '';
                                                             ordemR.forEach(function (nk) {
                                                                 var rr = r[nk];
                                                                 if (!rr) return;
                                                                 var ok = rr.ok;
                                                                 var ic = ok ? 'fa-check-circle' : 'fa-times-circle';
-                                                                var icC = ok ? verdeEstacao : '#dc2626';
-                                                                h += '<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;"><i class="fas ' + ic + '" style="color:' + icC + ';font-size:.85rem;margin-top:2px;flex-shrink:0;width:16px;"></i>';
-                                                                h += '<div style="flex:1;"><strong>' + nk + '</strong><div style="color:#475569;">' + (rr.info || '') + '</div>';
-                                                                if (!ok && rr.solucao) {
-                                                                    h += '<div style="font-size:.75rem;color:#dc2626;margin-top:2px;padding:3px 6px;background:#fef2f2;border-radius:4px;border:1px solid #fca5a5;"><i class="fas fa-lightbulb mr-1"></i>' + rr.solucao + '</div>';
-                                                                }
+                                                                var icC = ok ? verde : '#dc2626';
+                                                                rulesHtml += '<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;">';
+                                                                rulesHtml += '<i class="fas ' + ic + '" style="color:' + icC + ';font-size:.85rem;margin-top:2px;flex-shrink:0;width:16px;"></i>';
+                                                                rulesHtml += '<div style="flex:1;"><strong>' + nk + '</strong><div style="color:#475569;">' + (rr.info || '') + '</div>';
+                                                                if (!ok && rr.solucao) rulesHtml += '<div style="font-size:.75rem;color:#dc2626;margin-top:2px;padding:3px 6px;background:#fef2f2;border-radius:4px;border:1px solid #fca5a5;"><i class="fas fa-lightbulb mr-1"></i>' + rr.solucao + '</div>';
                                                                 if (rr.itens && rr.itens.length) {
-                                                                    h += '<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;">';
+                                                                    rulesHtml += '<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;">';
                                                                     rr.itens.forEach(function (item) {
                                                                         var ic2 = item.tipo === 'reserva' ? 'fa-calendar-alt' : 'fa-truck-moving';
-                                                                        h += '<a href="' + item.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;font-size:.72rem;font-weight:600;border-radius:20px;border:1px solid #3b82f6;color:#2563eb;text-decoration:none;transition:all .15s;" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'"><i class="fas ' + ic2 + '" style="font-size:.65rem;"></i>' + item.label + '</a>';
+                                                                        rulesHtml += '<a href="' + item.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;font-size:.72rem;font-weight:600;border-radius:20px;border:1px solid #3b82f6;color:#2563eb;text-decoration:none;transition:all .15s;" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'"><i class="fas ' + ic2 + '" style="font-size:.65rem;"></i>' + item.label + '</a>';
                                                                     });
-                                                                    h += '</div>';
+                                                                    rulesHtml += '</div>';
                                                                 }
-                                                                h += '</div></div>';
+                                                                rulesHtml += '</div></div>';
                                                             });
-                                                            h += '</div>';
 
+                                                            h += '<div class="diag-card" style="width:calc(25% - 9px);flex:0 0 calc(25% - 9px);box-sizing:border-box;">';
+                                                            h += '<div style="border:1px solid ' + borderC + ';border-radius:14px;overflow:hidden;background:#fff;">';
+                                                            h += '<div style="height:5px;background:linear-gradient(90deg,' + accent + ',' + (isDisp ? '#34d399' : '#94a3b8') + ');"></div>';
+                                                            h += '<div style="display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px;border-bottom:1px solid #f1f5f9;">';
+                                                            h += '<div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:.82rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + initials + '</div>';
+                                                            h += '<div style="flex:1;min-width:0;"><div style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">#' + v.id + ' · ' + (v.placa||'—') + '</div>';
+                                                            h += '<div style="font-size:.97rem;font-weight:700;color:#0f2740;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + v.nome + '</div>';
+                                                            h += '<div style="font-size:.78rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (v.modelo||'—') + ' · ' + (v.cor||'—') + '</div></div>';
+                                                            h += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">';
+                                                            h += '<span style="padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;background:' + sBg + ';color:' + sCo + ';">' + sTxt + '</span>';
+                                                            h += '<span style="padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:600;background:' + (grpOk===grpTot?'rgba(16,185,129,.12)':'rgba(245,158,11,.15)') + ';color:' + (grpOk===grpTot?verde:laranja) + ';">' + grpOk + '/' + grpTot + '</span></div></div>';
+                                                            h += '<div style="padding:10px 16px 14px;font-size:.78rem;">' + rulesHtml + '</div>';
                                                             h += '<div style="display:flex;gap:6px;padding:10px 16px;background:#fafbfc;border-top:1px solid #f1f5f9;">';
-                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-check-circle mr-1" style="color:' + verdeEstacao + ';"></i>' + grpOk + ' ok</span>';
-                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-times-circle mr-1" style="color:#dc2626;"></i>' + (grpTot - grpOk) + ' falha(s)</span>';
-                                                            h += '</div></div>';
-
-                                                            h += '<div id="diagExtra' + idx + '" style="display:none;padding:0 16px 14px;"></div></div></div>';
+                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-check-circle mr-1" style="color:' + verde + ';"></i>' + grpOk + ' ok</span>';
+                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-times-circle mr-1" style="color:#dc2626;"></i>' + (grpTot - grpOk) + '</span></div></div></div>';
                                                         });
                                                         h += '</div>';
                                                     }
