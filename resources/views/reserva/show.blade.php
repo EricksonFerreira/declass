@@ -311,40 +311,20 @@
                                          alt="{{ $reserva->modelos->nome ?? 'Veículo reservado' }}">
                                 </div>
                                 <div class="rs-vehicle__info">
-                                    <h3 class="rs-vehicle__name">{{ $reserva->modelos->nome ?? 'Não informado' }}</h3>
-
-                                    <div class="rs-vehicle__chips">
-                                        @if(!empty($reserva->grupoFrota->nome))
-                                            <span class="rs-chip rs-chip--blue">
-                                                <i class="fas fa-layer-group"></i>
-                                                {{ $reserva->grupoFrota->nome }}
-                                            </span>
-                                        @endif
+                                    @if(!empty($reserva->grupoFrota->nome))
+                                        <span class="rs-chip rs-chip--blue" style="cursor:pointer;font-size:.9rem;padding:6px 16px;display:inline-flex;align-items:center;gap:6px;" onclick="$('#modalGrupo').modal('show')">
+                                            <i class="fas fa-layer-group"></i>
+                                            {{ $reserva->grupoFrota->nome }}
+                                            <i class="fas fa-search-plus" style="font-size:.7rem;opacity:.6;"></i>
+                                        </span>
+                                    @endif
+                                    <div style="margin-top:8px;">
                                         @if(!empty($reserva->modelos->transmissao))
-                                            <span class="rs-chip rs-chip--slate">
-                                                <i class="fas fa-cogs"></i>
-                                                {{ $reserva->modelos->transmissao }}
-                                            </span>
+                                            <span class="rs-chip rs-chip--slate"><i class="fas fa-cogs"></i> {{ $reserva->modelos->transmissao }}</span>
                                         @endif
                                         @if(!empty($reserva->modelos->combustivel))
-                                            <span class="rs-chip rs-chip--green">
-                                                <i class="fas fa-gas-pump"></i>
-                                                {{ $reserva->modelos->combustivel }}
-                                            </span>
+                                            <span class="rs-chip rs-chip--green"><i class="fas fa-gas-pump"></i> {{ $reserva->modelos->combustivel }}</span>
                                         @endif
-                                    </div>
-
-                                    <div class="rs-vehicle__specs">
-                                        <div class="rs-spec">
-                                            <i class="fas fa-calendar-alt"></i>
-                                            <span>Ano</span>
-                                            <strong>{{ $reserva->modelos->ano ?? '-' }}</strong>
-                                        </div>
-                                        <div class="rs-spec">
-                                            <i class="fas fa-users"></i>
-                                            <span>Capacidade</span>
-                                            <strong>{{ $reserva->modelos->capacidade ? $reserva->modelos->capacidade . ' pessoas' : '-' }}</strong>
-                                        </div>
                                     </div>
 
                                     <div class="rs-vehicle__pricing">
@@ -4491,4 +4471,42 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     });
 }());
 </script>
+
+@php
+    $grupoMarcasModelos = [];
+    if ($reserva->grupo_frota_id) {
+        $gm = \App\Models\Modelo::whereHas('veiculos', fn($q) => $q->where('grupo_frota_id', $reserva->grupo_frota_id))
+            ->with('marca')->distinct()->get()->groupBy(fn($m) => $m->marca?->nome ?? 'Sem marca');
+        foreach ($gm as $marcaNome => $modelos) {
+            foreach ($modelos as $mod) {
+                $grupoMarcasModelos[] = ['marca' => $marcaNome, 'modelo' => $mod->nome];
+            }
+        }
+    }
+@endphp
+
+<div class="modal fade" id="modalGrupo" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5><i class="fas fa-layer-group mr-2"></i>{{ $reserva->grupoFrota->nome ?? 'Grupo' }}</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                @if(count($grupoMarcasModelos))
+                    <table class="table table-sm table-bordered mb-0" style="font-size:.84rem;">
+                        <thead><tr><th>Marca</th><th>Modelo</th></tr></thead>
+                        <tbody>
+                            @foreach($grupoMarcasModelos as $gm)
+                                <tr><td>{{ $gm['marca'] }}</td><td>{{ $gm['modelo'] }}</td></tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <p class="text-muted mb-0">Nenhum veículo cadastrado neste grupo.</p>
+                @endif
+            </div>
+        </div>
+    </div>
+</div>
 @stop
