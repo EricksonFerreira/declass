@@ -171,10 +171,7 @@
                                         <span><strong>Estação:</strong> {{ $reqEstacao }}</span>
                                         <span class="text-muted">|</span>
                                         <span><strong>Grupo:</strong> {{ $reqGrupo }}</span>
-                                        @if($reqModelo !== '—')
-                                        <span class="text-muted">|</span>
-                                        <span><strong>Modelo:</strong> {{ $reqModelo }}</span>
-                                        @endif
+
                                         <span class="text-muted">|</span>
                                         <span><strong>Período:</strong> {{ $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') : '—' }} → {{ $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') : '—' }}</span>
                                     </div>
