@@ -32,7 +32,7 @@
 @foreach($veiculos as $v)
     @php
         $regras = $v['regras'] ?? []; $r = []; foreach ($regras as $rr) { $r[$rr['nome']] = $rr; }
-        $ordem = ['Estacao','Disponibilidade','Status','Reservas','Movimentacoes'];
+        $ordem = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
         $isDisp = $v['disponivel']; $grpOk = count(array_filter($regras, fn($rr) => $rr['ok'])); $grpTot = count($regras);
         $accent = $isDisp ? $verde : $cinza; $borderC = $isDisp ? '#86efac' : '#e5eaf2'; $sTxt = $isDisp ? 'Disponivel' : 'Indisponivel';
         $sBg = $isDisp ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.13)'; $sCo = $isDisp ? $verde : $cinza;
