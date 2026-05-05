@@ -1227,7 +1227,7 @@
     /* ========================
        DANOS
     ======================== */
-    function rowImagensDano(dano) {
+    window.rowImagensDano = function rowImagensDano(dano) {
         const imgs = dano.imagens || [];
         if (!imgs.length) return '<span class="text-muted" style="font-size:.75rem">Sem foto</span>';
         return imgs.map(i => {
@@ -1240,7 +1240,7 @@
         }).join('');
     }
 
-    function abrirFotoDano(src) {
+    window.abrirFotoDano = function abrirFotoDano(src) {
         let modal = document.getElementById('lightboxFotoDano');
         if (!modal) {
             modal = document.createElement('div');
