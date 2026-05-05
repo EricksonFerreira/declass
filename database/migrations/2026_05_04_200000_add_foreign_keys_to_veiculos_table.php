@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('veiculos', function (Blueprint $table) {
             $foreigns = [
-                'tipo_frota_id'         => 'tipo_frota',
+                'tipo_frota_id'         => 'tipo_frotas',
                 'grupo_frota_id'        => 'grupos_frota',
                 'marca_id'              => 'marcas',
                 'modelo_id'             => 'modelos',
@@ -18,6 +18,7 @@ return new class extends Migration
                 'status_veiculo_id'     => 'status_veiculos',
                 'local_disponibilidade' => 'estacoes',
             ];
+            $table->engine = 'INNODB';
 
             foreach ($foreigns as $column => $references) {
                 try {
