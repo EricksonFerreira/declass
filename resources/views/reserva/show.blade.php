@@ -4488,7 +4488,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 @endphp
 
 <div class="modal fade" id="modalGrupo" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5><i class="fas fa-layer-group mr-2"></i>{{ $reserva->grupoFrota->nome ?? 'Grupo' }}</h5>
@@ -4496,14 +4496,20 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             </div>
             <div class="modal-body">
                 @if(count($grupoMarcasModelos))
-                    <table class="table table-sm table-bordered mb-0" style="font-size:.84rem;">
-                        <thead><tr><th>Marca</th><th>Modelo</th></tr></thead>
+                    <div class="form-group mb-2">
+                        <input type="text" class="form-control form-control-sm" id="filtroGrupoModal" placeholder="Buscar por marca ou modelo..." oninput="filtrarGrupoModal(this.value)">
+                    </div>
+                    <div style="max-height:400px;overflow-y:auto;">
+                    <table class="table table-sm table-bordered mb-0" style="font-size:.84rem;" id="tabelaGrupoModal">
+                        <thead><tr><th style="width:40%;">Marca</th><th>Modelo</th></tr></thead>
                         <tbody>
                             @foreach($grupoMarcasModelos as $gm)
                                 <tr><td>{{ $gm['marca'] }}</td><td>{{ $gm['modelo'] }}</td></tr>
                             @endforeach
                         </tbody>
                     </table>
+                    </div>
+                    <small class="text-muted mt-1 d-block">{{ count($grupoMarcasModelos) }} veículo(s) neste grupo</small>
                 @else
                     <p class="text-muted mb-0">Nenhum veículo cadastrado neste grupo.</p>
                 @endif
@@ -4511,4 +4517,13 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         </div>
     </div>
 </div>
+<script>
+function filtrarGrupoModal(valor) {
+    var termo = valor.toLowerCase().trim();
+    document.querySelectorAll('#tabelaGrupoModal tbody tr').forEach(function(tr) {
+        var texto = tr.textContent.toLowerCase();
+        tr.style.display = !termo || texto.includes(termo) ? '' : 'none';
+    });
+}
+</script>
 @stop
