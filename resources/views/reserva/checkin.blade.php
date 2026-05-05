@@ -307,7 +307,7 @@
                                                         h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Movimentações</label><select class="form-control form-control-sm diag-filtro" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
                                                         h += '</div></div></div>';
 
-                                                        h += '<div id="diagLista" class="row" style="margin:0 -6px;">';
+                                                        h += '<div><div id="diagLista" class="row" style="margin:0 -6px;">';
                                                         var iniciais = function(nome) {
                                                             var parts = (nome||'??').split(/\s+/).filter(Boolean);
                                                             var p0 = parts[0] || '';
@@ -334,7 +334,7 @@
                                                             var statusBg = isDisp ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.13)';
                                                             var statusColor = isDisp ? verdeEstacao : cinzaEstacao;
 
-                                                            h += '<div class="col-sm-6 col-lg-3 mb-3 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
+                                                            h += '</div><div class="col-sm-6 col-lg-3 mb-3 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
                                                             h += '<div class="ec" style="border:1px solid ' + cardBorder + ';border-radius:14px;overflow:hidden;cursor:pointer;background:#fff;transition:box-shadow .2s,transform .2s;" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'" onclick="var c=this.nextElementSibling;c.style.display=c.style.display===\'none\'?\'\':\'none\'">';
                                                             h += '<div style="height:5px;background:linear-gradient(90deg,' + accentC + ',' + (isDisp ? '#34d399' : '#94a3b8') + ');"></div>';
                                                             h += '<div style="display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px;border-bottom:1px solid #f1f5f9;">';
@@ -375,7 +375,7 @@
                                                             h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-times-circle mr-1" style="color:#dc2626;"></i>' + (grpTot - grpOk) + ' falha(s)</span>';
                                                             h += '</div></div>';
 
-                                                            h += '<div id="diagExtra' + idx + '" style="display:none;padding:0 16px 14px;"></div></div></div>';
+                                                            h += '<div id="diagExtra' + idx + '" style="display:none;padding:0 16px 14px;"></div></></div>';
                                                         });
                                                         h += '</div>';
                                                     }
