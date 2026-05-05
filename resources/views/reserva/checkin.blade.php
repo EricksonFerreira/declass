@@ -290,16 +290,21 @@
                                                         }
                                                         h += '</div>';
 
-                                                        h += '<div class="card mb-3"><div class="card-body py-2"><div class="row">';
-                                                        h += '<div class="col-md-3 form-group mb-2"><label class="small mb-1">Nome</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="nome" placeholder="Ex: Corolla" oninput="filtrarDiagnostico()"></div>';
-                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Placa</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="placa" placeholder="ABC-1234" oninput="filtrarDiagnostico()"></div>';
-                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Modelo</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="modelo" placeholder="Ex: Civic" oninput="filtrarDiagnostico()"></div>';
-                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Disponibilidade</label><select class="form-control form-control-sm diag-filtro" data-col="disponivel" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="1">Disponível</option><option value="0">Indisponível</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Estação</label><select class="form-control form-control-sm diag-filtro" data-col="estacao" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Status Veículo</label><select class="form-control form-control-sm diag-filtro" data-col="status" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Reservas</label><select class="form-control form-control-sm diag-filtro" data-col="reservas" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-2"><label class="small mb-1">Movimentações</label><select class="form-control form-control-sm diag-filtro" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '<div class="col-md-1 form-group mb-2 d-flex align-items-end"><button type="button" class="btn btn-sm btn-outline-secondary btn-block" onclick="limparFiltrosDiag()" title="Limpar filtros"><i class="fas fa-eraser"></i></button></div>';
+                                                        h += '<div class="card mb-2"><div class="card-body py-2"><div class="row align-items-end">';
+                                                        h += '<div class="col-md-3 form-group mb-0"><label class="small mb-1">Nome</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="nome" placeholder="Ex: Corolla" oninput="filtrarDiagnostico()"></div>';
+                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Placa</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="placa" placeholder="ABC-1234" oninput="filtrarDiagnostico()"></div>';
+                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Disponibilidade</label><select class="form-control form-control-sm diag-filtro" data-col="disponivel" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="1">Disponível</option><option value="0">Indisponível</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-0 d-flex align-items-end gap-1">';
+                                                        h += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="limparFiltrosDiag()" title="Limpar"><i class="fas fa-eraser"></i></button>';
+                                                        h += '<button type="button" class="btn btn-sm btn-outline-info" id="btnFiltroAvancado" onclick="toggleFiltrosAvancados()"><i class="fas fa-sliders-h"></i> <span>Filtros</span></button>';
+                                                        h += '</div></div>';
+
+                                                        h += '<div id="diagFiltrosAvancados" class="row" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">';
+                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Modelo</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="modelo" placeholder="Ex: Civic" oninput="filtrarDiagnostico()"></div>';
+                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Estação</label><select class="form-control form-control-sm diag-filtro" data-col="estacao" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Status Veículo</label><select class="form-control form-control-sm diag-filtro" data-col="status" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Reservas</label><select class="form-control form-control-sm diag-filtro" data-col="reservas" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
+                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Movimentações</label><select class="form-control form-control-sm diag-filtro" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
                                                         h += '</div></div></div>';
 
                                                         h += '<div id="diagLista" class="row" style="margin:0 -6px;">';
@@ -329,7 +334,7 @@
                                                             var statusBg = isDisp ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.13)';
                                                             var statusColor = isDisp ? verdeEstacao : cinzaEstacao;
 
-                                                            h += '<div class="col-sm-6 col-md-4 mb-3 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
+                                                            h += '<div class="col-md-6 col-lg-4 col-xl-3 mb-3 diag-card" data-nome="' + (v.nome||'').toLowerCase() + '" data-placa="' + (v.placa||'').toLowerCase() + '" data-modelo="' + (v.modelo||'').toLowerCase() + '" data-disponivel="' + (v.disponivel?'1':'0') + '" data-estacao="' + (rStatus['Estação']||'0') + '" data-status="' + (rStatus['Status']||'0') + '" data-reservas="' + (rStatus['Reservas']||'0') + '" data-movimentacoes="' + (rStatus['Movimentações']||'0') + '">';
                                                             h += '<div class="ec" style="border:1px solid ' + cardBorder + ';border-radius:14px;overflow:hidden;cursor:pointer;background:#fff;transition:box-shadow .2s,transform .2s;" onmouseover="this.style.boxShadow=\'0 4px 16px rgba(0,0,0,.08)\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.boxShadow=\'\';this.style.transform=\'\'" onclick="var c=this.nextElementSibling;c.style.display=c.style.display===\'none\'?\'\':\'none\'">';
                                                             h += '<div style="height:5px;background:linear-gradient(90deg,' + accentC + ',' + (isDisp ? '#34d399' : '#94a3b8') + ');"></div>';
                                                             h += '<div style="display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px;border-bottom:1px solid #f1f5f9;">';
@@ -408,6 +413,14 @@
                                     window.limparFiltrosDiag = function() {
                                         document.querySelectorAll('.diag-filtro').forEach(function(el) { el.value = ''; });
                                         filtrarDiagnostico();
+                                    };
+                                    window.toggleFiltrosAvancados = function() {
+                                        var el = document.getElementById('diagFiltrosAvancados');
+                                        var btn = document.getElementById('btnFiltroAvancado');
+                                        if (!el || !btn) return;
+                                        var aberto = el.style.display !== 'none';
+                                        el.style.display = aberto ? 'none' : '';
+                                        btn.classList.toggle('active', !aberto);
                                     };
                                 });
                                 }
