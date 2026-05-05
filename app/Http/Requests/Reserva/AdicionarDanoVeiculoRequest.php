@@ -33,6 +33,7 @@ class AdicionarDanoVeiculoRequest extends FormRequest
             'fotos' => 'nullable|array',
             'fotos.*' => 'image|mimes:jpeg,png,jpg,gif,svg|max:2048',
             'veiculo_id' => 'required|exists:veiculos,id',
+            'contrato_id' => 'nullable|integer',
         ];
     }
 
