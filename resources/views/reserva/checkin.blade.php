@@ -1227,17 +1227,65 @@
     /* ========================
        DANOS
     ======================== */
-    window.rowImagensDano = function rowImagensDano(dano) {
+    function rowImagens(dano) {
         const imgs = dano.imagens || [];
-        if (!imgs.length) return '<span class="text-muted" style="font-size:.75rem">Sem foto</span>';
-        return imgs.map(i => {
-            const src = i.url || (i.path ? `{{ asset('storage') }}/${i.path}` : null);
-            if (!src) return '';
-            return `<img src="${src}" alt="Dano"
-                style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:2px solid #e2e9f4;cursor:zoom-in;margin:2px"
-                onclick="abrirFotoDano('${src}')"
-                onerror="this.style.display='none'">`;
-        }).join('');
+        if (!imgs.length) return '<span class="text-muted small">—</span>';
+        return imgs.map(function (i) {
+            const url = i.url || (i.path ? `{{ asset('storage') }}/${i.path}` : null) || (i.imagem ? `{{ asset('storage') }}/${i.imagem}` : null);
+            if (!url) return '';
+            return `<a href="${url}" target="_blank" rel="noopener" title="Ver imagem"><img src="${url}" alt="foto" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px;" onerror="this.outerHTML='<span class=text-danger small>Erro</span>'"></a>`;
+        }).filter(Boolean).join('');
+    }
+
+    const TIPO_LABEL = { ausente:'<span class="badge badge-success">Ausente</span>', amolgadela_leve:'<span class="badge badge-warning text-dark">Amolgadela Leve</span>', amolgadela_grave:'<span class="badge badge-danger">Amolgadela Grave</span>', risco_leve:'<span class="badge badge-warning text-dark">Risco Leve</span>', risco_grave:'<span class="badge badge-danger">Risco Grave</span>' };
+    function tipoBadge(tipo) { return TIPO_LABEL[tipo] || '<span class="badge badge-secondary">' + (tipo || '—') + '</span>'; }
+    function formatCusto(val) { if (val === null || val === undefined || val === '') return '—'; return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
+
+    function obterDanosDetectados() {
+        const veiculo_id = document.getElementById('veiculo')?.value;
+        const reserva_id = document.getElementById('reserva_id')?.value;
+        $.ajax({
+            url: "{{ route('dano.obterDanosDetectados') }}",
+            type: 'GET',
+            data: { veiculo_id, reserva_id },
+            success: function (data) {
+                const tbody = document.getElementById('danos_detectados');
+                tbody.innerHTML = '';
+                if (!data.length) { tbody.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>'; return; }
+                data.forEach(dano => {
+                    const categoria = dano.categoria ?? '—';
+                    const local = dano.localizacao_problema ?? '—';
+                    const locLabel = '<strong>' + dano.localizacao + '</strong><br><small class="text-muted">' + categoria + ' · ' + local + '</small>';
+                    const descricao = dano.descricao || '<span class="text-muted">—</span>';
+                    const km = dano.quilometragem_veiculo ? '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(dano.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>' : '';
+                    const nomeDano = dano.nome_dano ? '<small class="d-block text-muted mt-1">' + dano.nome_dano + '</small>' : '';
+                    tbody.insertAdjacentHTML('beforeend', '<tr><td>' + locLabel + '</td><td>' + descricao + km + nomeDano + '</td><td>' + tipoBadge(dano.tipo) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td></tr>');
+                });
+            }
+        });
+    }
+
+    function obterDanosExistentes() {
+        const veiculo_id = document.getElementById('veiculo')?.value;
+        const reserva_id = document.getElementById('reserva_id')?.value;
+        $.ajax({
+            url: "{{ route('dano.obterDanosExistentes') }}",
+            type: 'GET',
+            data: { veiculo_id, reserva_id },
+            success: function (data) {
+                const tbody = document.getElementById('danos_existentes');
+                tbody.innerHTML = '';
+                if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="damage-empty"><i class="fas fa-check-circle"></i> Nenhum dano anterior</td></tr>'; return; }
+                data.forEach(dano => {
+                    const categoria = dano.categoria ?? '—';
+                    const local = dano.localizacao_problema ?? '—';
+                    const locLabel = '<strong>' + dano.localizacao + '</strong><br><small class="text-muted">' + categoria + ' · ' + local + '</small>';
+                    const descricao = dano.descricao || '<span class="text-muted">—</span>';
+                    const corrSpan = dano.correcao_realizada ? '<span class="text-success"><i class="fas fa-wrench"></i> Corrigido</span>' : '<span class="text-warning"><i class="fas fa-hourglass-half"></i> Pendente</span>';
+                    tbody.insertAdjacentHTML('beforeend', '<tr><td>' + locLabel + '</td><td>' + descricao + '</td><td>' + corrSpan + '</td><td>' + rowImagens(dano) + '</td></tr>');
+                });
+            }
+        });
     }
 
     window.abrirFotoDano = function abrirFotoDano(src) {
