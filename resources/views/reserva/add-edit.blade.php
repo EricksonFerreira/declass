@@ -615,7 +615,7 @@
                             {{ !$preRequisitosReserva['pode_reservar'] ? 'disabled' : '' }}>
                             <i class="fas fa-save"></i> Salvar reserva
                         </button>
-                        <button type="button" id="reservaWizardNext" class="btn-action btn-action-primary">
+                        <button type="button" id="reservaWizardNext" class="btn btn-primary">
                             Continuar <i class="fas fa-arrow-right"></i>
                         </button>
                     </div>
