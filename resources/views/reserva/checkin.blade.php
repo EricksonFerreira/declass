@@ -278,108 +278,16 @@
                                  btnDiag.addEventListener('click', function () {
                                      if (typeof renderDiagnostico === 'function') { renderDiagnostico(); }
                                      else {
-                                         window.renderDiagnostico = function() {
-                                            var modal = $('#modalDiagnostico');
-                                            modal.modal('show');
-                                            document.getElementById('diagnosticoResultado').innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veículos...</p></div>';
-                                            fetch('{{ route('reserva.checkin.diagnostico', $reserva->id) }}', { headers: { 'Accept': 'application/json' } })
-                                                .then(function (r) { return r.json(); })
-                                                .then(function (data) {
-                                                    var todos = data.veiculos || [];
-                                                    var h = '<div id="diagRoot" data-count="' + todos.length + '">';
-
-                                                    if (!todos.length) {
-                                                        h += '<div class="alert alert-info text-center py-5"><i class="fas fa-car-side fa-3x mb-3 d-block text-muted"></i><strong>Nenhum veículo encontrado</strong><br><span class="text-muted">Na estação da reserva ou sem estação definida.</span></div>';
-                                                    } else {
-                                                        var disp = todos.filter(function(v){return v.disponivel});
-                                                        var ind = todos.filter(function(v){return !v.disponivel});
-
-                                                        h += '<div class="d-flex align-items-center gap-2 mb-3 flex-wrap">';
-                                                        h += '<span class="badge badge-success p-2" style="font-size:.82rem;"><i class="fas fa-check-circle mr-1"></i>' + disp.length + ' disponível</span>';
-                                                        h += '<span class="badge badge-secondary p-2" style="font-size:.82rem;"><i class="fas fa-times-circle mr-1"></i>' + ind.length + ' indisponível</span>';
-                                                        h += '<span class="badge badge-info p-2" style="font-size:.82rem;"><i class="fas fa-car mr-1"></i>' + todos.length + ' total</span>';
-                                                        if (data.reserva_info) {
-                                                            h += '<a href="' + data.reserva_info.url + '" target="_blank" class="badge badge-light p-2" style="font-size:.82rem;border:1px solid #dee2e6;"><i class="fas fa-external-link-alt mr-1"></i>Reserva #' + data.reserva_info.id + '</a>';
-                                                        }
-                                                        h += '</div>';
-
-                                                        h += '<div class="card mb-2"><div class="card-body py-2"><div class="row align-items-end">';
-                                                        h += '<div class="col-md-3 form-group mb-0"><label class="small mb-1">Nome</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="nome" placeholder="Ex: Corolla" oninput="filtrarDiagnostico()"></div>';
-                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Placa</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="placa" placeholder="ABC-1234" oninput="filtrarDiagnostico()"></div>';
-                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Disponibilidade</label><select class="form-control form-control-sm diag-filtro" data-col="disponivel" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="1">Disponível</option><option value="0">Indisponível</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-0 d-flex align-items-end gap-1">';
-                                                        h += '<button type="button" class="btn btn-sm btn-outline-secondary" onclick="limparFiltrosDiag()" title="Limpar"><i class="fas fa-eraser"></i></button>';
-                                                        h += '<button type="button" class="btn btn-sm btn-outline-info" id="btnFiltroAvancado" onclick="toggleFiltrosAvancados()"><i class="fas fa-sliders-h"></i> <span>Filtros Avançados</span></button>';
-                                                        h += '</div></div>';
-
-                                                        h += '<div id="diagFiltrosAvancados" class="row" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">';
-                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Modelo</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="modelo" placeholder="Ex: Civic" oninput="filtrarDiagnostico()"></div>';
-                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Estação</label><select class="form-control form-control-sm diag-filtro" data-col="estacao" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Status Veículo</label><select class="form-control form-control-sm diag-filtro" data-col="status" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Reservas</label><select class="form-control form-control-sm diag-filtro" data-col="reservas" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '<div class="col-md-2 form-group mb-0"><label class="small mb-1">Movimentações</label><select class="form-control form-control-sm diag-filtro" data-col="movimentacoes" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="ok">OK</option><option value="fail">Falhou</option></select></div>';
-                                                        h += '</div></div></div>';
-
-                                                        h += '<div id="diagLista" style="display:flex;flex-wrap:wrap;gap:12px;">';
-
-                                                        todos.forEach(function (v, idx) {
-                                                            var r = {}, ordemR = ['Estação','Disponibilidade','Status','Reservas','Movimentações'];
-                                                            v.regras.forEach(function(rr) { r[rr.nome] = rr; });
-                                                            var rStatus = {}; v.regras.forEach(function(rr){rStatus[rr.nome]=rr.ok?'1':'0'});
-                                                            var isDisp = v.disponivel;
-                                                            var grpOk = ordemR.filter(function(nk){var rr=r[nk];return rr&&rr.ok}).length;
-                                                            var grpTot = ordemR.length;
-                                                            var iniciais = function(n){var p=(n||'??').split(/\s+/).filter(Boolean);return(p[0]||'?')[0]+(p[1]||'')[0]};
-                                                            var initials = iniciais(v.nome);
-                                                            var verde = '#059669', cinza = '#64748b', laranja = '#ea580c';
-                                                            var accent = isDisp ? verde : cinza;
-                                                            var borderC = isDisp ? '#86efac' : '#e5eaf2';
-                                                            var sTxt = isDisp ? 'Disponivel' : 'Indisponivel';
-                                                            var sBg = isDisp ? 'rgba(16,185,129,.15)' : 'rgba(100,116,139,.13)';
-                                                            var sCo = isDisp ? verde : cinza;
-                                                            var rulesHtml = '';
-                                                            ordemR.forEach(function (nk) {
-                                                                var rr = r[nk];
-                                                                if (!rr) return;
-                                                                var ok = rr.ok;
-                                                                var ic = ok ? 'fa-check-circle' : 'fa-times-circle';
-                                                                var icC = ok ? verde : '#dc2626';
-                                                                rulesHtml += '<div style="display:flex;align-items:flex-start;gap:8px;padding:4px 0;">';
-                                                                rulesHtml += '<i class="fas ' + ic + '" style="color:' + icC + ';font-size:.85rem;margin-top:2px;flex-shrink:0;width:16px;"></i>';
-                                                                rulesHtml += '<div style="flex:1;"><strong>' + nk + '</strong><div style="color:#475569;">' + (rr.info || '') + '</div>';
-                                                                if (!ok && rr.solucao) rulesHtml += '<div style="font-size:.75rem;color:#dc2626;margin-top:2px;padding:3px 6px;background:#fef2f2;border-radius:4px;border:1px solid #fca5a5;"><i class="fas fa-lightbulb mr-1"></i>' + rr.solucao + '</div>';
-                                                                if (rr.itens && rr.itens.length) {
-                                                                    rulesHtml += '<div style="margin-top:3px;display:flex;flex-wrap:wrap;gap:4px;">';
-                                                                    rr.itens.forEach(function (item) {
-                                                                        var ic2 = item.tipo === 'reserva' ? 'fa-calendar-alt' : 'fa-truck-moving';
-                                                                        rulesHtml += '<a href="' + item.url + '" target="_blank" style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;font-size:.72rem;font-weight:600;border-radius:20px;border:1px solid #3b82f6;color:#2563eb;text-decoration:none;transition:all .15s;" onmouseover="this.style.background=\'#eff6ff\'" onmouseout="this.style.background=\'\'"><i class="fas ' + ic2 + '" style="font-size:.65rem;"></i>' + item.label + '</a>';
-                                                                    });
-                                                                    rulesHtml += '</div>';
-                                                                }
-                                                                rulesHtml += '</div></div>';
-                                                            });
-
-                                                            h += '<div class="diag-card" style="width:calc(25% - 9px);flex:0 0 calc(25% - 9px);box-sizing:border-box;">';
-                                                            h += '<div style="border:1px solid ' + borderC + ';border-radius:14px;overflow:hidden;background:#fff;">';
-                                                            h += '<div style="height:5px;background:linear-gradient(90deg,' + accent + ',' + (isDisp ? '#34d399' : '#94a3b8') + ');"></div>';
-                                                            h += '<div style="display:flex;align-items:flex-start;gap:11px;padding:14px 16px 12px;border-bottom:1px solid #f1f5f9;">';
-                                                            h += '<div style="width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:.82rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;">' + initials + '</div>';
-                                                            h += '<div style="flex:1;min-width:0;"><div style="font-size:.72rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#94a3b8;margin-bottom:2px;">#' + v.id + ' · ' + (v.placa||'—') + '</div>';
-                                                            h += '<div style="font-size:.97rem;font-weight:700;color:#0f2740;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + v.nome + '</div>';
-                                                            h += '<div style="font-size:.78rem;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + (v.modelo||'—') + ' · ' + (v.cor||'—') + '</div></div>';
-                                                            h += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">';
-                                                            h += '<span style="padding:2px 10px;border-radius:20px;font-size:.7rem;font-weight:700;text-transform:uppercase;background:' + sBg + ';color:' + sCo + ';">' + sTxt + '</span>';
-                                                            h += '<span style="padding:2px 8px;border-radius:20px;font-size:.65rem;font-weight:600;background:' + (grpOk===grpTot?'rgba(16,185,129,.12)':'rgba(245,158,11,.15)') + ';color:' + (grpOk===grpTot?verde:laranja) + ';">' + grpOk + '/' + grpTot + '</span></div></div>';
-                                                            h += '<div style="padding:10px 16px 14px;font-size:.78rem;">' + rulesHtml + '</div>';
-                                                            h += '<div style="display:flex;gap:6px;padding:10px 16px;background:#fafbfc;border-top:1px solid #f1f5f9;">';
-                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-check-circle mr-1" style="color:' + verde + ';"></i>' + grpOk + ' ok</span>';
-                                                            h += '<span style="font-size:.72rem;color:#64748b;"><i class="fas fa-times-circle mr-1" style="color:#dc2626;"></i>' + (grpTot - grpOk) + '</span></div></div></div>';
-                                                        });
-                                                        h += '</div>';
-                                                    }
-                                                    document.getElementById('diagnosticoResultado').innerHTML = h;
-                                                })
-                                                .catch(function (err) { console.error('Diagnostico error:', err, err.stack); document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3 d-block"></i><strong>Erro ao carregar diagnóstico.</strong><br><span class="text-muted">' + (err.message || 'Tente novamente.') + '</span></div>'; });
+                                          window.renderDiagnostico = function() {
+                                             var modal = $('#modalDiagnostico');
+                                             modal.modal('show');
+                                             document.getElementById('diagnosticoResultado').innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veiculos...</p></div>';
+                                             fetch('{{ route('reserva.checkin.diagnostico', $reserva->id) }}', { headers: { 'Accept': 'application/json' } })
+                                                 .then(function (r) { return r.json(); })
+                                                 .then(function (data) {
+                                                     document.getElementById('diagnosticoResultado').innerHTML = data.html || '<div class="alert alert-danger">Erro ao carregar.</div>';
+                                                 })
+                                                 .catch(function (err) { console.error('Diagnostico error:', err); document.getElementById('diagnosticoResultado').innerHTML = '<div class="alert alert-danger text-center py-5"><i class="fas fa-exclamation-triangle fa-3x mb-3 d-block"></i><strong>Erro ao carregar diagnostico.</strong><br><span class="text-muted">' + (err.message || 'Tente novamente.') + '</span></div>'; });
                                         };
                                         renderDiagnostico();
                                     }

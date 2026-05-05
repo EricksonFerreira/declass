@@ -2445,7 +2445,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             ];
         });
 
-        return response()->json([
+        $html = view('reserva.partials.diagnostico', [
             'veiculos' => $veiculos,
             'reserva_info' => [
                 'id' => $reserva->id,
@@ -2454,7 +2454,9 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'data_fim' => $dataFim,
                 'url' => route('reserva.show', $reserva->id),
             ]
-        ]);
+        ])->render();
+
+        return response()->json(['html' => $html]);
     }
 
     public function verContratoCheckin(Request $request, $reserva_id){
