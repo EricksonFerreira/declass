@@ -502,24 +502,25 @@
                             <div class="ci-block-label">
                                 <i class="fas fa-history"></i>
                                 <div>
-                                    <strong>Danos Existentes</strong>
-                                    <span>Registros anteriores a esta reserva</span>
+                                    <strong>Histórico no Veículo</strong>
+                                    <span>Avarias de outras reservas / correções registradas</span>
                                 </div>
                             </div>
                             <div class="damage-table-wrap">
                                 <table class="damage-table">
                                     <thead>
                                         <tr>
-                                            <th>Localizacao</th>
-                                            <th>Descricao</th>
+                                            <th>Localização</th>
+                                            <th>Descrição</th>
+                                            <th>Correção</th>
                                             <th>Imagem</th>
                                         </tr>
                                     </thead>
                                     <tbody id="danos_existentes">
                                         <tr>
-                                            <td colspan="3" class="damage-empty">
+                                            <td colspan="4" class="damage-empty">
                                                 <i class="fas fa-check-circle"></i>
-                                                Selecione um veiculo para carregar os danos
+                                                Selecione um veículo para carregar os danos
                                             </td>
                                         </tr>
                                     </tbody>
@@ -531,22 +532,24 @@
                             <div class="ci-block-label">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <div>
-                                    <strong>Danos Detectados Nesta Reserva</strong>
-                                    <span>Danos registrados durante o check-in atual</span>
+                                    <strong>Danos Nesta Reserva</strong>
+                                    <span>Avarias registradas no check-in ou nesta devolução</span>
                                 </div>
                             </div>
                             <div class="damage-table-wrap">
                                 <table class="damage-table">
                                     <thead>
                                         <tr>
-                                            <th>Localizacao</th>
-                                            <th>Descricao</th>
+                                            <th>Localização</th>
+                                            <th>Descrição</th>
+                                            <th>Tipo</th>
+                                            <th>Custo Est.</th>
                                             <th>Imagem</th>
                                         </tr>
                                     </thead>
                                     <tbody id="danos_detectados">
                                         <tr>
-                                            <td colspan="3" class="damage-empty">
+                                            <td colspan="5" class="damage-empty">
                                                 <i class="fas fa-shield-alt"></i>
                                                 Nenhum dano detectado ainda
                                             </td>
@@ -1263,18 +1266,18 @@
                 const tbody = document.getElementById('danos_detectados');
                 tbody.innerHTML = '';
                 if (!data.length) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="damage-empty"><i class="fas fa-shield-alt"></i>Nenhum dano detectado</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i>Nenhum dano detectado</td></tr>';
                     return;
                 }
                 data.forEach(dano => {
-                    let extra = '';
-                    if (dano.correcao_realizada) {
-                        extra = `<br><small class="text-success"><i class="fas fa-wrench"></i> Corrigido: ${dano.correcao_descricao ?? ''} (${dano.correcao_data ?? ''})</small>`;
-                    }
+                    var tipo = dano.tipo || '—';
+                    var custo = dano.custo_estimado ? 'R$ ' + Number(dano.custo_estimado).toFixed(2).replace('.', ',') : '—';
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr>
                             <td>${dano.localizacao}</td>
-                            <td>${dano.descricao ?? ''}${extra}</td>
+                            <td>${dano.descricao ?? ''}</td>
+                            <td>${tipo}</td>
+                            <td>${custo}</td>
                             <td>${rowImagensDano(dano)}</td>
                         </tr>
                     `);
@@ -1295,20 +1298,21 @@
                 const tbody = document.getElementById('danos_existentes');
                 tbody.innerHTML = '';
                 if (!data.length) {
-                    tbody.innerHTML = '<tr><td colspan="3" class="damage-empty"><i class="fas fa-check-circle"></i>Nenhum dano anterior registrado</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="4" class="damage-empty"><i class="fas fa-check-circle"></i>Nenhum dano anterior registrado</td></tr>';
                     return;
                 }
                 data.forEach(dano => {
-                    let extra = '';
+                    var corr = '';
                     if (dano.correcao_realizada) {
-                        extra = `<br><small class="text-success"><i class="fas fa-wrench"></i> Corrigido: ${dano.correcao_descricao ?? ''} (${dano.correcao_data ?? ''})</small>`;
+                        corr = '<span class="text-success"><i class="fas fa-wrench"></i> Corrigido</span>';
                     } else {
-                        extra = `<br><small class="text-warning"><i class="fas fa-hourglass-half"></i> Correção pendente</small>`;
+                        corr = '<span class="text-warning"><i class="fas fa-hourglass-half"></i> Pendente</span>';
                     }
                     tbody.insertAdjacentHTML('beforeend', `
                         <tr>
                             <td>${dano.localizacao}</td>
-                            <td>${dano.descricao ?? ''}${extra}</td>
+                            <td>${dano.descricao ?? ''}</td>
+                            <td>${corr}</td>
                             <td>${rowImagensDano(dano)}</td>
                         </tr>
                     `);
