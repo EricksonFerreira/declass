@@ -311,7 +311,6 @@
                                          alt="{{ $reserva->modelos->nome ?? 'Veículo reservado' }}">
                                 </div>
                                 <div class="rs-vehicle__info">
-                                    <div class="rs-vehicle__brand">{{ $reserva->modelos->marca->nome ?? 'Marca não informada' }}</div>
                                     <h3 class="rs-vehicle__name">{{ $reserva->modelos->nome ?? 'Não informado' }}</h3>
 
                                     <div class="rs-vehicle__chips">
