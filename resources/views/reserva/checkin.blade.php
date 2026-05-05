@@ -147,6 +147,9 @@
                                         ? ($contratoExistente->veiculo->nome . ($contratoExistente->veiculo->placa_licenca ? ' (' . $contratoExistente->veiculo->placa_licenca . ')' : ''))
                                         : ''
                                 );
+                                $reqEstacao = $reserva->estacaoRetirada?->nome ?? 'Estação #' . $reserva->estacao_retirada_id;
+                                $reqGrupo = $reserva->grupoFrota?->nome ?? ($reserva->grupo_frota_id ? 'Grupo #' . $reserva->grupo_frota_id : '—');
+                                $reqModelo = $reserva->modelos?->nome ?? '—';
                             @endphp
                             <div class="row">
                                 <div class="col-md-6" id="veiculo_col">
@@ -161,6 +164,19 @@
                                         <button type="button" class="btn btn-outline-info btn-sm ml-2" id="btnDiagnostico" title="Ver diagnóstico de disponibilidade">
                                             <i class="fas fa-stethoscope"></i> Diagnóstico
                                         </button>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="d-flex flex-wrap gap-2 p-2 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:.78rem;">
+                                        <span><strong>Estação:</strong> {{ $reqEstacao }}</span>
+                                        <span class="text-muted">|</span>
+                                        <span><strong>Grupo:</strong> {{ $reqGrupo }}</span>
+                                        @if($reqModelo !== '—')
+                                        <span class="text-muted">|</span>
+                                        <span><strong>Modelo:</strong> {{ $reqModelo }}</span>
+                                        @endif
+                                        <span class="text-muted">|</span>
+                                        <span><strong>Período:</strong> {{ $reserva->data_inicio?->format('d/m/Y H:i') }} → {{ $reserva->data_fim?->format('d/m/Y H:i') }}</span>
                                     </div>
                                 </div>
                             </div>
