@@ -2283,20 +2283,15 @@ private function montarDiasSemanaFlags($diasUteis): array
         $filtrosVazios = collect($filtros)->filter(fn($v) => $v !== null && $v !== '')->isEmpty();
 
         if ($filtrosVazios) {
-            // Sem filtros: tenta primeiro os da marca/modelo da reserva
-            $filtrosMarcaModelo = [];
-            if (!empty($reserva->modelos?->marca_id)) {
-                $filtrosMarcaModelo['marca_id'] = $reserva->modelos->marca_id;
-            }
-            if (!empty($reserva->modelo_id)) {
-                $filtrosMarcaModelo['modelo_id_exato'] = $reserva->modelo_id;
+            $filtrosGrupo = [];
+            if (!empty($reserva->grupo_frota_id)) {
+                $filtrosGrupo['grupo_frota_id'] = $reserva->grupo_frota_id;
             }
 
             $veiculos = $this->veiculoService->buscarDisponiveisCheckin(
-                $estacaoId, $dataInicio, $dataFim, (int) $reserva_id, $filtrosMarcaModelo
+                $estacaoId, $dataInicio, $dataFim, (int) $reserva_id, $filtrosGrupo
             );
 
-            // Se não encontrou nenhum, busca todos disponíveis
             if ($veiculos->isEmpty()) {
                 $veiculos = $this->veiculoService->buscarDisponiveisCheckin(
                     $estacaoId, $dataInicio, $dataFim, (int) $reserva_id, []
