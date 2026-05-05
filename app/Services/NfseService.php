@@ -9,6 +9,7 @@ use App\Models\Reserva;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use App\Services\Nfse\Providers\NfephpProvider;
 use App\Services\Nfse\Providers\NfseProviderInterface;
 use App\Services\Nfse\Providers\NuvemFiscalProvider;

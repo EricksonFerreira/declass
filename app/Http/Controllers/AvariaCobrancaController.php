@@ -13,6 +13,7 @@ use App\Services\ReservaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class AvariaCobrancaController extends BaseController
 {

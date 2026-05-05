@@ -6,6 +6,7 @@ use App\Models\Empresa;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class EmpresaService extends AbstractBaseService
 {

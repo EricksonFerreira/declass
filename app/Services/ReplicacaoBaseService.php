@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Empresa;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 

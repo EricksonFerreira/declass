@@ -7,6 +7,7 @@ use App\Services\BreadcrumbService;
 use App\Services\ReplicacaoBaseService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use InvalidArgumentException;
 
 class ReplicacaoBaseController extends Controller

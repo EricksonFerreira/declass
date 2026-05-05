@@ -8,6 +8,7 @@ use App\Support\EmpresaContext;
 use Illuminate\Console\Command;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class SincronizarCatalogoFipeCommand extends Command
 {

@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 /**
  * Garante que a empresa-padrao tenha os dados de frota completos

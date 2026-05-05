@@ -10,6 +10,7 @@ use App\Services\PlanoPermissaoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 

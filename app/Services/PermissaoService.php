@@ -6,6 +6,7 @@ use App\Models\Permissao;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class PermissaoService extends AbstractBaseService
 {

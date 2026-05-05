@@ -5,6 +5,7 @@ namespace App\Http\Requests\Empresa;
 use App\Support\DomainNormalizer;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Illuminate\Validation\Rule;
 
 class UpdateEmpresaSiteApresentacaoRequest extends FormRequest

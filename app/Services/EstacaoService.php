@@ -10,6 +10,7 @@ use App\Services\AbstractBaseService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Illuminate\Support\Facades\DB;
 
 class EstacaoService extends AbstractBaseService

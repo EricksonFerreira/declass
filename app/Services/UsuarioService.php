@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class UsuarioService extends AbstractBaseService
 {

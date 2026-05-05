@@ -8,6 +8,7 @@ use App\Models\Plano;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class PlanoPermissaoService
 {

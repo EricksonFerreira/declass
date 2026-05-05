@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Services\AbstractBaseService;
 use DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 
 class ReservaService extends AbstractBaseService
 {

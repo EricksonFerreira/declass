@@ -6,6 +6,7 @@ use App\Models\Regra;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Schema;
+use App\Support\SchemaCache;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 
 class RegraService extends AbstractBaseService
