@@ -29,43 +29,102 @@
     {{-- Card principal --}}
     <div class="assinatura-card">
 
-        {{-- Info reserva --}}
-        <div class="assinatura-info">
-            <div class="assinatura-info__item">
-                <i class="fas fa-user"></i>
-                <div>
-                    <span class="assinatura-info__label">Cliente</span>
-                    <span class="assinatura-info__value">{{ $reserva->usuario->nome ?? '—' }}</span>
-                </div>
-            </div>
-            <div class="assinatura-info__item">
-                <i class="fas fa-car"></i>
-                <div>
-                    <span class="assinatura-info__label">Veículo</span>
-                    <span class="assinatura-info__value">
-                        {{ $reserva->contratoCheckin->marca->nome ?? '' }}
-                        {{ $reserva->contratoCheckin->modelo->nome ?? '—' }}
-                    </span>
-                </div>
-            </div>
-            <div class="assinatura-info__item">
-                <i class="fas fa-calendar"></i>
-                <div>
-                    <span class="assinatura-info__label">Período</span>
-                    <span class="assinatura-info__value">
-                        {{ \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y') }}
-                        → {{ \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y') }}
-                    </span>
-                </div>
-            </div>
-            <div class="assinatura-info__item">
-                <i class="fas fa-file-contract"></i>
-                <div>
-                    <span class="assinatura-info__label">Contrato</span>
-                    <span class="assinatura-info__value">#{{ $reserva->contratoCheckin->id ?? '—' }}</span>
-                </div>
+        {{-- Logo + dados da empresa --}}
+        @php $empresa = $reserva->empresa; $moedaSimbolo = $empresa->moeda_pagamento === 'USD' ? '$' : ($empresa->moeda_pagamento === 'EUR' ? '€' : 'R$'); @endphp
+        <div class="assinatura-empresa">
+            @if(!empty($empresa->logo_url))
+                <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->nome }}" class="assinatura-logo">
+            @endif
+            <div class="assinatura-empresa-info">
+                <strong>{{ $empresa->nome ?? '—' }}</strong>
+                <span>{{ $empresa->cnpj ?? '' }}</span>
+                <span>{{ $empresa->email ?? '' }} · {{ $empresa->telefone ?? '' }}</span>
             </div>
         </div>
+
+        {{-- Cliente --}}
+        <div class="assinatura-secao">
+            <div class="assinatura-secao-titulo"><i class="fas fa-user mr-1"></i>Cliente</div>
+            <table class="assinatura-tabela">
+                <tr><td>Nome</td><td><strong>{{ $reserva->usuario->nome ?? '—' }}</strong></td></tr>
+                <tr><td>CPF/CNPJ</td><td>{{ $reserva->usuario->documento ?? '—' }}</td></tr>
+                <tr><td>E-mail</td><td>{{ $reserva->usuario->email ?? '—' }}</td></tr>
+                <tr><td>Telefone</td><td>{{ $reserva->usuario->telefone ?? '—' }}</td></tr>
+            </table>
+        </div>
+
+        {{-- Veículo --}}
+        <div class="assinatura-secao">
+            <div class="assinatura-secao-titulo"><i class="fas fa-car mr-1"></i>Veículo</div>
+            @php $ci = $reserva->contratoCheckin; $veic = $ci->veiculo; @endphp
+            <table class="assinatura-tabela">
+                <tr><td>Marca / Modelo</td><td><strong>{{ $ci->marca->nome ?? '' }} {{ $ci->modelo->nome ?? '—' }}</strong></td></tr>
+                <tr><td>Placa</td><td>{{ $veic->placa_licenca ?? '—' }}</td></tr>
+                <tr><td>Grupo</td><td>{{ $veic->grupoFrota->nome ?? '—' }}</td></tr>
+                <tr><td>Cor</td><td>{{ $veic->cor ?? '—' }}</td></tr>
+                <tr><td>Ano</td><td>{{ $veic->ano_fabricacao ?? ($veic->modelo->ano_modelo ?? '—') }}</td></tr>
+                <tr><td>Quilometragem</td><td>{{ number_format((float)($ci->quilometragem_atual ?? 0), 0, ',', '.') }} km</td></tr>
+                <tr><td>Combustível</td><td>{{ $ci->nivel_combustivel ?? '—' }}</td></tr>
+            </table>
+        </div>
+
+        {{-- Período --}}
+        <div class="assinatura-secao">
+            <div class="assinatura-secao-titulo"><i class="fas fa-calendar mr-1"></i>Período da Locação</div>
+            <table class="assinatura-tabela">
+                <tr><td>Retirada</td><td><strong>{{ \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}</strong></td></tr>
+                <tr><td>Local de retirada</td><td>{{ $reserva->estacaoRetirada->nome ?? '—' }}</td></tr>
+                <tr><td>Devolução prevista</td><td><strong>{{ \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}</strong></td></tr>
+                <tr><td>Local de devolução</td><td>{{ $reserva->estacaoDevolucao->nome ?? '—' }}</td></tr>
+                <tr><td>Duração</td><td>{{ $diasReserva ?? $reserva->quantidade_dias ?? \Carbon\Carbon::parse($reserva->data_inicio)->diffInDays(\Carbon\Carbon::parse($reserva->data_fim)) + 1 }} dia(s)</td></tr>
+            </table>
+        </div>
+
+        {{-- Financeiro --}}
+        @php
+            $tarifaBase = $reserva->tarifa_base ?? 0;
+            $dias = $reserva->quantidade_dias ?? \Carbon\Carbon::parse($reserva->data_inicio)->diffInDays(\Carbon\Carbon::parse($reserva->data_fim)) + 1;
+            $subtotal = $tarifaBase * $dias;
+        @endphp
+        <div class="assinatura-secao">
+            <div class="assinatura-secao-titulo"><i class="fas fa-money-bill mr-1"></i>Financeiro</div>
+            <table class="assinatura-tabela">
+                <tr><td>Tarifa diária</td><td>{{ $moedaSimbolo }} {{ number_format($tarifaBase, 2, ',', '.') }}</td></tr>
+                <tr><td>Diárias</td><td>{{ $dias }} dia(s)</td></tr>
+                <tr><td>Subtotal</td><td><strong>{{ $moedaSimbolo }} {{ number_format($subtotal, 2, ',', '.') }}</strong></td></tr>
+                @if($reserva->taxa_entrega ?? false)
+                <tr><td>Taxa de entrega</td><td>{{ $moedaSimbolo }} {{ number_format($reserva->taxa_entrega, 2, ',', '.') }}</td></tr>
+                @endif
+                @if($reserva->taxa_coleta ?? false)
+                <tr><td>Taxa de coleta</td><td>{{ $moedaSimbolo }} {{ number_format($reserva->taxa_coleta, 2, ',', '.') }}</td></tr>
+                @endif
+                <tr><td style="font-weight:700;font-size:.9rem;">Valor total</td><td style="font-weight:800;font-size:.9rem;color:#059669;">{{ $moedaSimbolo }} {{ number_format($subtotal + ($reserva->taxa_entrega ?? 0) + ($reserva->taxa_coleta ?? 0), 2, ',', '.') }}</td></tr>
+            </table>
+        </div>
+
+        {{-- Observações --}}
+        @if(!empty($ci->notas_saida) || !empty($ci->observacoes_saida))
+        <div class="assinatura-secao">
+            <div class="assinatura-secao-titulo"><i class="fas fa-sticky-note mr-1"></i>Observações</div>
+            @if(!empty($ci->notas_saida))<p style="font-size:.82rem;color:#475569;margin:2px 0;">{{ $ci->notas_saida }}</p>@endif
+            @if(!empty($ci->observacoes_saida))<p style="font-size:.82rem;color:#475569;margin:2px 0;">{{ $ci->observacoes_saida }}</p>@endif
+        </div>
+        @endif
+
+        {{-- Contrato --}}
+        <div class="assinatura-secao" style="border:none;margin-bottom:0;">
+            <div class="assinatura-secao-titulo"><i class="fas fa-file-contract mr-1"></i>Contrato</div>
+            <table class="assinatura-tabela">
+                <tr><td>Nº do contrato</td><td><strong>#{{ $ci->id ?? '—' }}</strong></td></tr>
+                @if(!empty($ci->data_saida))
+                <tr><td>Data de saída</td><td>{{ \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') }} {{ $ci->hora_saida ? substr($ci->hora_saida, 0, 5) : '' }}</td></tr>
+                @endif
+                <tr><td>Reserva</td><td>#{{ $reserva->id }}</td></tr>
+            </table>
+        </div>
+
+        {{-- Linha divisória --}}
+        <hr style="margin:20px 0;border:none;border-top:2px solid #e2e8f0;">
 
         {{-- Instrução --}}
         <div class="assinatura-instruction">
@@ -170,6 +229,20 @@
         color: #93c5fd;
         font-weight: 600;
     }
+
+    /* Empresa header */
+    .assinatura-empresa { display:flex; align-items:center; gap:14px; margin-bottom:20px; padding:14px 16px; background:#f8fafc; border:1px solid #e9f0fa; border-radius:14px; }
+    .assinatura-logo { max-height:52px; width:auto; border-radius:8px; }
+    .assinatura-empresa-info { display:flex; flex-direction:column; gap:1px; font-size:.82rem; color:#475569; }
+    .assinatura-empresa-info strong { font-size:.95rem; color:#0c1428; }
+
+    /* Sections */
+    .assinatura-secao { margin-bottom:16px; border-bottom:1px solid #f1f5f9; padding-bottom:12px; }
+    .assinatura-secao-titulo { font-size:.78rem; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.06em; margin-bottom:8px; }
+    .assinatura-tabela { width:100%; font-size:.84rem; border-collapse:collapse; }
+    .assinatura-tabela td { padding:4px 6px 4px 0; color:#475569; vertical-align:top; }
+    .assinatura-tabela td:first-child { width:180px; color:#64748b; }
+    .assinatura-tabela td strong { color:#0c1428; }
 
     /* Card */
     .assinatura-card {
