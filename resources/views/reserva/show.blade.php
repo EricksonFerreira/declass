@@ -4475,12 +4475,14 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 @php
     $grupoMarcasModelos = [];
     if ($reserva->grupo_frota_id) {
-        $gm = \App\Models\Modelo::whereHas('veiculos', fn($q) => $q->where('grupo_frota_id', $reserva->grupo_frota_id))
-            ->with('marca')->distinct()->get()->groupBy(fn($m) => $m->marca?->nome ?? 'Sem marca');
-        foreach ($gm as $marcaNome => $modelos) {
-            foreach ($modelos as $mod) {
-                $grupoMarcasModelos[] = ['marca' => $marcaNome, 'modelo' => $mod->nome];
-            }
+        $veiculos = \App\Models\Veiculo::where('grupo_frota_id', $reserva->grupo_frota_id)
+            ->with('marca', 'modelo')->distinct()->get();
+        $seen = [];
+        foreach ($veiculos as $v) {
+            $key = ($v->marca?->nome ?? '?') . '|' . ($v->modelo?->nome ?? '?');
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+            $grupoMarcasModelos[] = ['marca' => $v->marca?->nome ?? '—', 'modelo' => $v->modelo?->nome ?? '—'];
         }
     }
 @endphp
