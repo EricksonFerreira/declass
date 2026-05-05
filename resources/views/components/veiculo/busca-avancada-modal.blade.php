@@ -78,9 +78,9 @@
                                 <button type="button" class="btn btn-outline-secondary btn-sm" id="{{ $prefix }}_btnLimparFiltroVeiculo">
                                     <i class="fas fa-eraser mr-1"></i> Limpar
                                 </button>
-                                <button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAvancado{{ $prefix }}()">
-                                    <i class="fas fa-sliders-h"></i> <span>Filtros</span>
-                                </button>
+<button type="button" class="btn btn-outline-info btn-sm" onclick="toggleAvancado{{ $prefix }}()">
+    <i class="fas fa-sliders-h"></i> <span>Filtros Avançados</span>
+</button>
                             </div>
                         </div>
 
