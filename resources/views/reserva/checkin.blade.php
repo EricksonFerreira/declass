@@ -1228,7 +1228,8 @@
         const imgs = dano.imagens || [];
         if (!imgs.length) return '<span class="text-muted" style="font-size:.75rem">Sem foto</span>';
         return imgs.map(i => {
-            const src = `{{ asset('storage') }}/${i.imagem}`;
+            const src = i.url || (i.path ? `{{ asset('storage') }}/${i.path}` : null);
+            if (!src) return '';
             return `<img src="${src}" alt="Dano"
                 style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:2px solid #e2e9f4;cursor:zoom-in;margin:2px"
                 onclick="abrirFotoDano('${src}')"

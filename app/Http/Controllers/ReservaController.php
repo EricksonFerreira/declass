@@ -2954,6 +2954,9 @@ private function montarDiasSemanaFlags($diasUteis): array
 
         $contrato->delete();
 
+        // Remove danos detectados no check-in desta reserva
+        \App\Models\VeiculoDanos::where('reserva_id', $reserva_id)->delete();
+
         // Cancela movimentacoes vinculadas (check-in/checkout) para liberar disponibilidade do veiculo
         $movimentacoesCanceladas = $this->movimentacaoService->liberarBloqueioDeDisponibilidadePorReserva(
             (int) $reserva_id,

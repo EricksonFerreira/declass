@@ -743,7 +743,17 @@
     });
 
     prevBtn.addEventListener('click', () => showStep(current - 1));
-    nextBtn.addEventListener('click', () => showStep(current + 1));
+    nextBtn.addEventListener('click', function () {
+        if (current === 1) {
+            var combustivel = document.getElementById('combustivel_devolucao');
+            var km = document.getElementById('quilometragem_devolucao');
+            var valido = true;
+            if (!combustivel || !combustivel.value) { valido = false; if (combustivel) combustivel.classList.add('is-invalid'); }
+            if (!km || !km.value) { valido = false; if (km) km.classList.add('is-invalid'); }
+            if (!valido) { Swal.fire({ icon: 'warning', title: 'Campos obrigatórios', text: 'Preencha o nível de combustível e a quilometragem antes de continuar.', confirmButtonColor: '#4338ca' }); return; }
+        }
+        showStep(current + 1);
+    });
 
     function triggerFinalizar() {
         document.getElementById('form_dados_devolucao').dispatchEvent(new Event('submit'));
