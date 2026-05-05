@@ -1259,7 +1259,7 @@
                     const descricao = dano.descricao || '<span class="text-muted">—</span>';
                     const km = dano.quilometragem_veiculo ? '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(dano.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>' : '';
                     const nomeDano = dano.nome_dano ? '<small class="d-block text-muted mt-1">' + dano.nome_dano + '</small>' : '';
-                    tbody.insertAdjacentHTML('beforeend', '<tr><td>' + locLabel + '</td><td>' + descricao + km + nomeDano + '</td><td>' + tipoBadge(dano.tipo) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td></tr>');
+                    tbody.insertAdjacentHTML('beforeend', '<tr><td>' + locLabel + '</td><td>' + descricao + km + nomeDano + '</td><td>' + tipoBadge(dano.tipo_dano) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td></tr>');
                 });
             }
         });
