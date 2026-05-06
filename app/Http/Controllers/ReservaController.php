@@ -2591,7 +2591,7 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'endereco' => config('app.empresa.endereco'),
                 'site' => config('app.empresa.site'),
                 'instagram' => config('app.empresa.instagram'),
-                'logo_url' => $reserva->empresa->logo_path,
+                'logo_url' => '/public/storage/' . $reserva->empresa->logo_path,
             ],
         ],
         'contrato' => [
