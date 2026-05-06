@@ -733,6 +733,7 @@
         }
         function finalizar() {
             var dano = {
+                _local: true,
                 categoria_id: document.getElementById('categoria_problema')?.value || null,
                 localizacao_problema: document.getElementById('localizacao_problema')?.value || null,
                 dano_id: document.getElementById('danos')?.value || null,

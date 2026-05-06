@@ -545,11 +545,12 @@
                                             <th>Tipo</th>
                                             <th>Custo Est.</th>
                                             <th>Imagem</th>
+                                            <th style="width:50px;">Ação</th>
                                         </tr>
                                     </thead>
                                     <tbody id="danos_detectados">
                                         <tr>
-                                            <td colspan="5" class="damage-empty">
+                                            <td colspan="6" class="damage-empty">
                                                 <i class="fas fa-shield-alt"></i>
                                                 Nenhum dano detectado ainda
                                             </td>
@@ -1253,6 +1254,26 @@
     function tipoBadge(tipo) { return TIPO_LABEL[tipo] || '<span class="badge badge-secondary">' + (tipo || '—') + '</span>'; }
     function formatCusto(val) { if (val === null || val === undefined || val === '') return '—'; return 'R$ ' + Number(val).toLocaleString('pt-BR', { minimumFractionDigits: 2 }); }
 
+    function removerDanoLocal(uid) {
+        if (!window.danosCheckin) return;
+        var idx = -1;
+        window.danosCheckin.forEach(function (d, i) { if (d._uid === uid) idx = i; });
+        if (idx < 0) return;
+        Swal.fire({ title: 'Remover dano?', text: 'Este dano será removido da lista.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar' }).then(function (r) {
+            if (!r.isConfirmed) return;
+            window.danosCheckin.splice(idx, 1);
+            obterDanosDetectados();
+        });
+    }
+
+    function removerDanoServidor(danoId) {
+        if (!danoId) return;
+        Swal.fire({ title: 'Remover dano?', text: 'Este dano será excluído permanentemente.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar' }).then(function (r) {
+            if (!r.isConfirmed) return;
+            $.ajax({ url: '/admin/dano/' + danoId + '/excluir', type: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, success: function () { obterDanosDetectados(); obterDanosExistentes(); Swal.fire({ icon: 'success', title: 'Removido!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 }); }, error: function () { Swal.fire({ icon: 'error', title: 'Erro ao remover' }); } });
+        });
+    }
+
     function obterDanosDetectados() {
         const tbody = document.getElementById('danos_detectados');
         tbody.innerHTML = '';
@@ -1274,15 +1295,21 @@
             });
         }
 
-        if (!allDanos.length) { tbody.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>'; return; }
-        allDanos.forEach(dano => {
+        if (!allDanos.length) { tbody.innerHTML = '<tr><td colspan="6" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>'; return; }
+        allDanos.forEach(function (dano, idx) {
             var localLabel = '<strong>' + (dano.localizacao || dano.local_dano || dano.local || '—') + '</strong>';
             var cat = dano.categoria || dano.categoria_nome || (dano.categoria_id ? 'Cat#' + dano.categoria_id : '');
             var locProb = dano.localizacao_problema || '';
             if (cat || locProb) localLabel += '<br><small class="text-muted">' + (cat || '—') + ' · ' + (locProb || '—') + '</small>';
             var descricao = dano.descricao || dano.observacoes || '<span class="text-muted">—</span>';
             if (dano.quilometragem_veiculo) descricao += '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(dano.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>';
-            tbody.insertAdjacentHTML('beforeend', '<tr><td>' + localLabel + '</td><td>' + descricao + '</td><td>' + tipoBadge(dano.tipo_dano || dano.tipo) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td></tr>');
+            var isLocal = dano._local === true;
+            var uid = isLocal ? Math.random().toString(36).substr(2, 9) : (dano.id || 0);
+            dano._uid = dano._uid || uid;
+            var btnRemove = isLocal
+                ? '<button type="button" class="btn btn-xs btn-outline-danger" onclick="removerDanoLocal(\'' + dano._uid + '\')" title="Remover dano"><i class="fas fa-times"></i></button>'
+                : '<button type="button" class="btn btn-xs btn-outline-danger" onclick="removerDanoServidor(' + (dano.id || 0) + ')" title="Remover dano"><i class="fas fa-times"></i></button>';
+            tbody.insertAdjacentHTML('beforeend', '<tr><td>' + localLabel + '</td><td>' + descricao + '</td><td>' + tipoBadge(dano.tipo_dano || dano.tipo) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td><td class="text-center">' + btnRemove + '</td></tr>');
         });
     }
 
