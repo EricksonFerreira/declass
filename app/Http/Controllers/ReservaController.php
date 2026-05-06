@@ -2546,9 +2546,12 @@ private function montarDiasSemanaFlags($diasUteis): array
 
     $subtotal = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
     $valorDesconto = $subtotal * ($percentualDesconto / 100);
-    $valorTotal = (float) ($reserva->valor_total_final ?? 0);
-    if ($valorTotal <= 0) {
-        $valorTotal = max(0, $subtotal - $valorDesconto);
+    $valorTotal = max(0, $subtotal - $valorDesconto);
+
+    $logoUrl = null;
+    $logoPath = is_string($reserva->empresa?->logo_path ?? null) ? trim($reserva->empresa->logo_path) : '';
+    if ($logoPath !== '' && Storage::disk('public')->exists($logoPath)) {
+        $logoUrl = Storage::disk('public')->path($logoPath);
     }
 
     $danosDetalhados = $reserva->veiculoDano
@@ -2588,7 +2591,7 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'endereco' => config('app.empresa.endereco'),
                 'site' => config('app.empresa.site'),
                 'instagram' => config('app.empresa.instagram'),
-                'logo_url' => $reserva->empresa?->logo_url ?? null,
+                'logo_url' => $logoUrl,
             ],
         ],
         'contrato' => [
