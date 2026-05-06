@@ -34,7 +34,8 @@ class PdfService
     {
         $bootstrap5 = file_get_contents(public_path() . '/css/bootstrap.min.css');
         $data['css'] = $bootstrap5;
-        $htmlContent = view('pdf.contrato-checkin', compact('data'))->render();
+        $htmlContent = view('pdf.contratos.show', compact('data'))->render();
+        // $htmlContent = view('pdf.contrato-checkin', compact('data'))->render();
         return $this->generatePdf($htmlContent, 'contrato.pdf');
 
     }
