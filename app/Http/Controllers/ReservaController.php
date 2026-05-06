@@ -478,7 +478,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $moduloNfse   = (bool) ($empresa?->planoAtivo?->plano?->modulo_nfse   ?? false);
         $moduloMultas = (bool) ($empresa?->planoAtivo?->plano?->modulo_multas ?? false);
 
-        return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
+        $css = file_get_contents(public_path('css/pdf/contrato-locacao.css'));
+
+        return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas', 'css'));
     }
 
     public function emitirNfse($id)
