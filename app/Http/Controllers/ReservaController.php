@@ -2697,7 +2697,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             })->toArray(),
         ],
         'funcionario' => [
-            'nome' => Auth::user()->nome,
+            'nome' => Auth::user()->nome ?? Auth::user()->name ?? 'Sistema',
         ],
         'opcionais' => $reserva->opcionais->map(function ($opcional) {
                 return [
@@ -2708,6 +2708,46 @@ private function montarDiasSemanaFlags($diasUteis): array
                 ];
             })->toArray(),
             'assinatura'=> $reserva->contratoCheckin->assinatura,
+            'financeiro_detalhado' => [
+                'grupo' => $safe($reserva->grupoFrota?->nome),
+                'tarifa_diaria' => $money($tarifaBase),
+                'dias_label' => $diasReserva . ' ' . ($diasReserva === 1 ? 'dia' : 'dias') . ' x tarifa',
+                'valor_tarifa_base' => $money($valorTarifaBase),
+                'opcionais' => $money($valorOpcionais),
+                'taxa_coleta' => $money($taxaColeta),
+                'taxa_entrega' => $money($taxaEntrega),
+                'subtotal' => $money($subtotal),
+                'desconto_label' => number_format($percentualDesconto, 2, ',', '.') . '%' . ($reserva->cupomDesconto?->codigo ? ' - ' . $reserva->cupomDesconto->codigo : ''),
+                'desconto_valor' => $money($valorDesconto),
+                'total' => $money($valorTotal),
+            ],
+            'pagamentos' => $reserva->transacoes->sortByDesc('id')->map(function ($transacao) use ($money, $dateTime) {
+                return [
+                    'data' => $dateTime($transacao->created_at),
+                    'valor' => $money($transacao->valor),
+                    'metodo' => $transacao->metodo_pagamento ?? '-',
+                    'status' => $transacao->status ?? '-',
+                    'confirmado_em' => $dateTime($transacao->confirmado_em),
+                    'pago_por' => $transacao->pagoPor?->nome ?? $transacao->user?->nome ?? '-',
+                ];
+            })->values()->toArray(),
+            'danos_detalhados' => $danosDetalhados,
+            'historico' => $historico,
+            'calcao' => $reserva->calcao ? [
+                'status' => $reserva->calcao->status ?? '-',
+                'valor_calculado' => $money($reserva->calcao->valor_calculado ?? 0),
+                'valor_autorizado' => $money($reserva->calcao->valor_autorizado ?? 0),
+                'valor_capturado' => $money($reserva->calcao->valor_capturado ?? 0),
+                'metodo' => $reserva->calcao->metodo ?? '-',
+            ] : null,
+            'cobrancas_avaria' => $reserva->avariaCobrancas->sortByDesc('id')->map(function ($cobranca) use ($money, $dateTime) {
+                return [
+                    'descricao' => $cobranca->descricao ?? ('Cobranca #' . $cobranca->id),
+                    'valor' => $money($cobranca->valor ?? 0),
+                    'status' => $cobranca->status ?? '-',
+                    'data' => $dateTime($cobranca->created_at),
+                ];
+            })->values()->toArray(),
     ];
 
     // dd($reserva);

@@ -160,6 +160,34 @@
         }
         .opcionais-table tr:nth-child(even) td { background: #f8fafc; }
 
+        .detail-table { width: 100%; border-collapse: collapse; margin-top: 5px; }
+        .detail-table th {
+            background: #e2e8f0;
+            color: #0f172a;
+            font-size: 7.5px;
+            font-weight: 800;
+            padding: 4px 5px;
+            text-align: left;
+            border: 1px solid #cbd5e1;
+        }
+        .detail-table td {
+            padding: 4px 5px;
+            font-size: 8px;
+            border: 1px solid #e2e8f0;
+            vertical-align: top;
+        }
+        .detail-table tr:nth-child(even) td { background: #f8fafc; }
+        .detail-table .money { text-align: right; white-space: nowrap; font-weight: 700; }
+        .detail-table .muted { color: #64748b; font-size: 7.5px; }
+        .thumb {
+            width: 38px;
+            height: 30px;
+            object-fit: cover;
+            border: 1px solid #cbd5e1;
+            border-radius: 3px;
+            margin-right: 2px;
+        }
+
         /* ── Financial highlight ── */
         .finance-box {
             background: linear-gradient(135deg, #f0f4ff 0%, #e8f2ff 100%);
