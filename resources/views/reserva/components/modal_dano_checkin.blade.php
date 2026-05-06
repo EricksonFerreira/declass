@@ -717,24 +717,41 @@
 
     function adicionarDanoLocal() {
         if (!window.danosCheckin) window.danosCheckin = [];
+        if (!window.danosCheckinFotos) window.danosCheckinFotos = [];
         var custoRaw = document.getElementById('custo_estimado')?.value || '';
-        var dano = {
-            categoria_id: document.getElementById('categoria_problema')?.value || null,
-            localizacao_problema: document.getElementById('localizacao_problema')?.value || null,
-            dano_id: document.getElementById('danos')?.value || null,
-            tipo_dano: document.querySelector('input[name="tipo"]:checked')?.value || 'ausente',
-            local_dano: document.getElementById('informacao_dano')?.innerHTML.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || null,
-            custo_estimado: parseFloat(custoRaw.replace(',', '.')) || 0,
-            quilometragem_veiculo: document.getElementById('quilometragem_dano')?.value || null,
-            observacoes: document.getElementById('observacoes_dano')?.value || null,
-        };
-        window.danosCheckin.push(dano);
-        $('#detalhesDanoModal').modal('hide');
-        document.getElementById('form_dano').reset();
-        document.getElementById('previsualizar_imagens').innerHTML = '';
-        document.getElementById('div_previsualizar').style.display = 'none';
-        window.obterDanosDetectados?.();
-        Swal.fire({ icon: 'success', title: 'Dano adicionado!', toast: true, position: 'top-right', showConfirmButton: false, timer: 1800 });
+        var fotoInput = document.getElementById('fotos-dano');
+        var fotoPreview = null;
+        if (fotoInput && fotoInput.files && fotoInput.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function (e) {
+                fotoPreview = e.target.result;
+                finalizar();
+            };
+            reader.readAsDataURL(fotoInput.files[0]);
+        } else {
+            finalizar();
+        }
+        function finalizar() {
+            var dano = {
+                categoria_id: document.getElementById('categoria_problema')?.value || null,
+                localizacao_problema: document.getElementById('localizacao_problema')?.value || null,
+                dano_id: document.getElementById('danos')?.value || null,
+                tipo_dano: document.querySelector('input[name="tipo"]:checked')?.value || 'ausente',
+                local_dano: document.getElementById('informacao_dano')?.innerHTML.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || null,
+                custo_estimado: parseFloat(custoRaw.replace(',', '.')) || 0,
+                quilometragem_veiculo: document.getElementById('quilometragem_dano')?.value || null,
+                observacoes: document.getElementById('observacoes_dano')?.value || null,
+                imagens: fotoPreview ? [{ url: fotoPreview }] : [],
+            };
+            window.danosCheckin.push(dano);
+            if (fotoInput && fotoInput.files[0]) window.danosCheckinFotos.push(fotoInput.files[0]);
+            $('#detalhesDanoModal').modal('hide');
+            document.getElementById('form_dano').reset();
+            document.getElementById('previsualizar_imagens').innerHTML = '';
+            document.getElementById('div_previsualizar').style.display = 'none';
+            window.obterDanosDetectados?.();
+            Swal.fire({ icon: 'success', title: 'Dano adicionado!', toast: true, position: 'top-right', showConfirmButton: false, timer: 1800 });
+        }
     }
 
     /* Upload preview */

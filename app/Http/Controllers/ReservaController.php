@@ -2714,11 +2714,25 @@ private function montarDiasSemanaFlags($diasUteis): array
                 if (!empty($dados['danos'])) {
                     $danosData = is_string($dados['danos']) ? json_decode($dados['danos'], true) : $dados['danos'];
                     if (is_array($danosData)) {
+                        $fotoIdx = 0;
                         foreach ($danosData as $item) {
                             $item['veiculo_id'] = $dados['veiculo_id'];
                             $item['reserva_id'] = $reserva_id;
                             $item['contrato_id'] = $contrato->id;
-                            $this->veiculoDanoService->create($item);
+                            $dano = $this->veiculoDanoService->create($item);
+                            // Salva foto se houver
+                            $fotoInput = 'danos_fotos_' . $fotoIdx;
+                            if ($dano && $request->hasFile($fotoInput)) {
+                                $dir = 'danos/reserva_' . (int) $reserva_id . '/dano_' . (int) $dano->id;
+                                $path = \App\Support\ArquivoAnexoHelper::armazenar($request->file($fotoInput), $dir);
+                                if ($path) {
+                                    $dano->imagem()->create([
+                                        'caminho_imagem' => $path,
+                                        'nome_imagem'    => basename($path),
+                                    ]);
+                                }
+                            }
+                            $fotoIdx++;
                         }
                     }
                 }

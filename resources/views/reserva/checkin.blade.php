@@ -1168,6 +1168,11 @@
         if (window.danosCheckin && window.danosCheckin.length) {
             fd.append('danos', JSON.stringify(window.danosCheckin));
         }
+        if (window.danosCheckinFotos && window.danosCheckinFotos.length) {
+            window.danosCheckinFotos.forEach(function (file, idx) {
+                fd.append('danos_fotos_' + idx, file);
+            });
+        }
 
         // Se for upgrade, envia motivo_upgrade para auditoria
         const selectedOpt = document.querySelector('#veiculo option:checked');
