@@ -2548,10 +2548,11 @@ private function montarDiasSemanaFlags($diasUteis): array
     $valorDesconto = $subtotal * ($percentualDesconto / 100);
     $valorTotal = max(0, $subtotal - $valorDesconto);
 
-    $logoUrl = null;
+    $logoData = null;
     $logoPath = is_string($reserva->empresa?->logo_path ?? null) ? trim($reserva->empresa->logo_path) : '';
-    if ($logoPath !== '') {
-        $logoUrl = 'https://decars.com.br/public/storage/' . $logoPath;
+    if ($logoPath !== '' && Storage::disk('public')->exists($logoPath)) {
+        $mime = mime_content_type(Storage::disk('public')->path($logoPath));
+        $logoData = 'data:' . $mime . ';base64,' . base64_encode(Storage::disk('public')->get($logoPath));
     }
 
     $danosDetalhados = $reserva->veiculoDano
@@ -2591,7 +2592,7 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'endereco' => config('app.empresa.endereco'),
                 'site' => config('app.empresa.site'),
                 'instagram' => config('app.empresa.instagram'),
-                'logo_url' => $reserva->empresa->logo_url,
+                'logo_url' => $logoData,
             ],
         ],
         'contrato' => [
