@@ -463,7 +463,7 @@
         </table>
     @endif
 
-    @if(!empty($data['calcao']))
+    @if(!empty($data['calcao']) && is_array($data['calcao']))
         <div class="section-title">Calcao</div>
         <table class="detail-table">
             <tbody>
