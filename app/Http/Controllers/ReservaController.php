@@ -2500,7 +2500,8 @@ private function montarDiasSemanaFlags($diasUteis): array
             ->with('error', 'Contrato de check-in nao encontrado para esta reserva.');
     }
 
-    $money = fn ($valor) => 'R$ ' . number_format((float) ($valor ?? 0), 2, ',', '.');
+    $moedaSimbolo = $this->simboloMoeda($reserva->empresa?->moeda_pagamento ?? 'BRL');
+    $money = fn ($valor) => $moedaSimbolo . ' ' . number_format((float) ($valor ?? 0), 2, ',', '.');
     $dateTime = fn ($valor) => $valor ? Carbon::parse($valor)->format('d/m/Y H:i') : '-';
     $dateOnly = fn ($valor) => $valor ? Carbon::parse($valor)->format('d/m/Y') : '-';
     $safe = fn ($valor, $fallback = '-') => filled($valor) ? $valor : $fallback;
@@ -2631,14 +2632,10 @@ private function montarDiasSemanaFlags($diasUteis): array
             'quilometros' => $reserva->contratoCheckin->quilometragem_atual,
             'combustivel' => $safe($reserva->contratoCheckin->nivel_combustivel),
             'taxas' => [
-                // 'combustivel_em_falta' => '€' . number_format($reserva->taxa_combustivel, 2) . ' + IVA / litro',
-                // 'taxa_reabastecimento' => '€' . number_format($reserva->taxa_reabastecimento, 2) . ' + IVA',
-                'combustivel_em_falta' => '€ 0',
-                'taxa_reabastecimento' => '€ 0',
+                'combustivel_em_falta' => $money(0),
+                'taxa_reabastecimento' => $money(0),
             ],
-            // 'franquia' => '€' . number_format($reserva->franquia, 2),
-            // 'kms_permitidos' => $reserva->kms_permitidos ?: 'ilimitado',
-            'franquia' => '€ 0',
+            'franquia' => $money(0),
             'kms_permitidos' => $reserva->kms_permitidos ?? $reserva->contratoCheckin->veiculo?->limite_kms ?? 'ilimitado',
         ],
         'reserva' => [
@@ -2694,12 +2691,12 @@ private function montarDiasSemanaFlags($diasUteis): array
         'funcionario' => [
             'nome' => Auth::user()->nome ?? Auth::user()->name ?? 'Sistema',
         ],
-        'opcionais' => $reserva->opcionais->map(function ($opcional) {
+        'opcionais' => $reserva->opcionais->map(function ($opcional) use ($money) {
                 return [
                     'nome' => $opcional->nome,
                     'quantidade' => $opcional->pivot->quantidade,
-                    'valor_total' => "R$ " . number_format((float) $opcional->pivot->preco_total, 2, ',', '.'),
-                    'preco_unitario' => $opcional->preco_por_dia ? "R$ " . number_format((float) $opcional->preco_por_dia, 2, ',', '.') : "R$ " . number_format((float) $opcional->preco_integral, 2, ',', '.'),
+                    'valor_total' => $money($opcional->pivot->preco_total),
+                    'preco_unitario' => $opcional->preco_por_dia ? $money($opcional->preco_por_dia) : $money($opcional->preco_integral),
                 ];
             })->toArray(),
             'assinatura'=> $reserva->contratoCheckin->assinatura,
