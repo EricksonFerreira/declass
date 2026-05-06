@@ -2586,11 +2586,19 @@ private function montarDiasSemanaFlags($diasUteis): array
         ->values()
         ->toArray();
 
+    $totalPago = (float) $reserva->transacoes
+        ->whereIn('status', ['succeeded', 'approved', 'paid', 'confirmed', 'concluido'])
+        ->sum('valor');
+    $saldoPendente = max(0, $valorTotal - $totalPago);
+
     $data = [
         'documento' => [
             'codigo_interno' => 'ARCS-' . date('y'),
             'atcud' => 'JJNXXNNC-' . date('y'),
             'data_emissao' => now()->format('d/m/Y H:i:s'),
+            'data_assinatura' => $reserva->contratoCheckin->data_assinatura
+                ? Carbon::parse($reserva->contratoCheckin->data_assinatura)->format('d/m/Y H:i')
+                : null,
             'empresa' => [
                 'nome' => $reserva->empresa->nome ?? config('app.empresa.nome'),
                 'endereco' => config('app.empresa.endereco'),
@@ -2603,6 +2611,9 @@ private function montarDiasSemanaFlags($diasUteis): array
             'numero' => '#' . str_pad($reserva->id, 5, '0', STR_PAD_LEFT),
             'titulo' => 'CONTRATO DE ALUGUEL',
             'subtitulo' => 'CONDIÇÕES PARTICULARES DO CONTRATO DE ALUGUEL',
+            'assinado_em' => $reserva->contratoCheckin->data_assinatura
+                ? Carbon::parse($reserva->contratoCheckin->data_assinatura)->format('d/m/Y H:i')
+                : ($reserva->contratoCheckin->assinado === 'S' ? now()->format('d/m/Y H:i') : null),
         ],
         'cliente' => [
             // 'nif' => $reserva->user->nif,
@@ -2674,6 +2685,9 @@ private function montarDiasSemanaFlags($diasUteis): array
             'valor_desconto' => $money($valorDesconto),
             'iva_total' => $money(0),
             'valor_total' => $money($valorTotal),
+            'total_pago' => $money($totalPago),
+            'saldo_pendente' => $money($saldoPendente),
+            'status_financeiro' => $saldoPendente <= 0 ? 'Pago' : ($totalPago > 0 ? 'Parcialmente pago' : 'Em aberto'),
         ],
         'estado_viatura' => [
             'itens' => $reserva->veiculoDano->map(function ($dano) {

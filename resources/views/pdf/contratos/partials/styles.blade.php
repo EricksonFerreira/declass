@@ -502,4 +502,17 @@
         text-align: center;
         margin-top: 4px;
     }
+
+    .status-pago {
+        color: #16a34a !important;
+        font-weight: 800;
+    }
+    .status-parcial {
+        color: #d97706 !important;
+        font-weight: 800;
+    }
+    .status-aberto {
+        color: #dc2626 !important;
+        font-weight: 800;
+    }
 </style>
