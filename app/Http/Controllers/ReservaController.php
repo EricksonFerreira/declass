@@ -2088,6 +2088,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             'customer_id' => (string) ($userReserva->stripe_id ?? ''),
             'descricao' => 'Pagamento da reserva #' . $reserva->id,
             'payer_email' => (string) ($userReserva->email ?? ''),
+            'installments' => (int) $request->input('installments', 1),
         ], $credenciais);
 
         try {

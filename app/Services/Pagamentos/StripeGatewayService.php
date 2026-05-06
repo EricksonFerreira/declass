@@ -22,6 +22,7 @@ class StripeGatewayService implements IPagamento
         }
 
         $stripe = new StripeClient($stripeSecret);
+        $installments = (int) ($dados['installments'] ?? 1);
         $payload = [
             'amount' => (int) round($valor * 100),
             'currency' => $currency,
@@ -32,6 +33,19 @@ class StripeGatewayService implements IPagamento
                 'allow_redirects' => 'never',
             ],
         ];
+        if ($installments > 1) {
+            $payload['payment_method_options'] = [
+                'card' => [
+                    'installments' => [
+                        'enabled' => true,
+                        'plan' => [
+                            'count' => $installments,
+                            'type' => 'fixed_count',
+                        ],
+                    ],
+                ],
+            ];
+        }
         if ($customerId !== '') {
             $payload['customer'] = $customerId;
         }

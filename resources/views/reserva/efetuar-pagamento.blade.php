@@ -203,6 +203,20 @@
                             <div class="ep-total-box__value">{{ $simbolo }} {{ number_format($valorTotal, 2, ',', '.') }}</div>
                         </div>
 
+                        <div class="form-group">
+                            <label class="ep-form-label"><i class="fas fa-calendar-alt mr-1"></i> Parcelamento</label>
+                            <select id="installments" name="installments" class="form-control form-control-sm">
+                                <option value="1">À vista — {{ $simbolo }} {{ number_format($valorTotal, 2, ',', '.') }}</option>
+                                @foreach([2,3,4,5,6,7,8,9,10,11,12] as $parc)
+                                    @php $valorParcela = $valorTotal / $parc; @endphp
+                                    <option value="{{ $parc }}">{{ $parc }}x de {{ $simbolo }} {{ number_format($valorParcela, 2, ',', '.') }}</option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted">Selecione a quantidade de parcelas. Consulte as taxas aplicáveis.</small>
+                        </div>
+
+                        <input type="hidden" name="payment_method_id" id="payment_method_id" value="">
+
                         <button type="submit" id="btn-submit-pagamento" class="btn btn-success btn-block ep-btn-pay">
                             <i class="fas fa-lock mr-2"></i> Confirmar e Processar Pagamento
                         </button>

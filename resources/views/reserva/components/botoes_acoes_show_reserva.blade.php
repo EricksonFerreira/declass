@@ -9,6 +9,13 @@
         'cancelada' => 'is-muted',
         default => 'is-warning',
     };
+
+    $valorTotalReserva = (float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? $reserva->valor_total_tarifa_base ?? 0);
+    $totalPagoReserva = (float) $reserva->transacoes
+        ->whereIn('status', ['succeeded', 'approved', 'paid', 'confirmed', 'concluido'])
+        ->sum('valor');
+    $saldoPendenteReserva = max(0, $valorTotalReserva - $totalPagoReserva);
+    $pagamentoEmDia = $saldoPendenteReserva <= 0;
 @endphp
 
 <section class="reservation-actions-card">
@@ -43,11 +50,29 @@
                 @endif
             @endcan
 
-            @if($reserva->podeEfetuarPagamento())
+            @if($reserva->podeEfetuarPagamento() || (!$pagamentoEmDia && $saldoPendenteReserva > 0))
                 <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="action-pill action-pill--accent">
                     <i class="fas fa-credit-card"></i>
                     <span>Efetuar pagamento</span>
+                    @if($saldoPendenteReserva > 0)
+                        <small style="display:block;font-size:9px;opacity:0.9;">R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }} pendente</small>
+                    @endif
                 </a>
+            @endif
+
+            @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
+                <div class="reservation-actions-card__alert" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-top:8px;">
+                    <div style="display:flex;align-items:flex-start;gap:10px;">
+                        <i class="fas fa-exclamation-circle" style="color:#dc2626;font-size:18px;margin-top:2px;"></i>
+                        <div>
+                            <strong style="color:#991b1b;font-size:13px;">Pagamento pendente</strong><br>
+                            <span style="color:#7f1d1d;font-size:12px;">
+                                Restam <strong>R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }}</strong> a pagar.
+                                Quite o saldo para liberar a assinatura do contrato.
+                            </span>
+                        </div>
+                    </div>
+                </div>
             @endif
 
             {{-- Calção: disponível após contrato assinado --}}
@@ -70,10 +95,18 @@
                     <span>Iniciar check-in</span>
                 </a>
             @elseif($reserva->contratoCheckin && $reserva->contratoCheckin->assinado !== 'S')
-                <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="action-pill action-pill--success">
-                    <i class="fas fa-pen"></i>
-                    <span>Assinar contrato</span>
-                </a>
+                @if($pagamentoEmDia)
+                    <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="action-pill action-pill--success">
+                        <i class="fas fa-pen"></i>
+                        <span>Assinar contrato</span>
+                    </a>
+                @else
+                    <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="action-pill action-pill--accent" style="background:linear-gradient(135deg,#dc2626,#f97316);">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>Pagar saldo pendente</span>
+                        <small style="display:block;font-size:9px;opacity:0.9;">R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }}</small>
+                    </a>
+                @endif
             @endif
 
             {{-- Check-out --}}
