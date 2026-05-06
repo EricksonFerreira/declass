@@ -2471,9 +2471,114 @@ private function montarDiasSemanaFlags($diasUteis): array
         'estacaoDevolucao',
         'opcionais',
         'contratoCheckin',
-        'veiculoDano',
+        'modelos',
+        'statusReserva',
+        'cupomDesconto',
+        'transacoes.user',
+        'transacoes.pagoPor',
+        'contratoCheckin.marca',
+        'contratoCheckin.modelo',
+        'contratoCheckin.veiculo.marca',
+        'contratoCheckin.veiculo.modelo',
+        'contratoCheckin.veiculo.grupoFrota',
+        'contratoCheckin.grupoFrotaOriginal',
+        'contratoCheckin.veiculoPrevisto',
+        'contratoCheckin.usuarioUpgrade',
+        'contratoCheckin.calcao',
+        'contratoCheckout',
+        'calcao',
+        'veiculoDano.dano.categoria',
+        'veiculoDano.imagem',
+        'veiculoDano.usuarioCorrecao',
+        'avariaCobrancas',
+        'multas',
+        'nfseAtual',
     ]);
-    // dd( $reserva->contratoCheckin->veiculo->modelo->gruposFrota[0]->nome );
+
+    if (!$reserva || !$reserva->contratoCheckin) {
+        return redirect()->route('reserva.show', $reserva_id)
+            ->with('error', 'Contrato de check-in nao encontrado para esta reserva.');
+    }
+
+    $money = fn ($valor) => 'R$ ' . number_format((float) ($valor ?? 0), 2, ',', '.');
+    $dateTime = fn ($valor) => $valor ? Carbon::parse($valor)->format('d/m/Y H:i') : '-';
+    $dateOnly = fn ($valor) => $valor ? Carbon::parse($valor)->format('d/m/Y') : '-';
+    $safe = fn ($valor, $fallback = '-') => filled($valor) ? $valor : $fallback;
+
+    $diasReserva = (int) ($reserva->quantidade_dias ?? 0);
+    $tarifaBase = (float) ($reserva->tarifa_base ?? 0);
+    $valorTarifaBase = (float) ($reserva->valor_total_tarifa_base ?? 0);
+    if ($valorTarifaBase <= 0) {
+        $valorTarifaBase = $tarifaBase * $diasReserva;
+    }
+
+    $valorOpcionais = (float) ($reserva->valor_opcionais ?? 0);
+    if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
+        $valorOpcionais = (float) $reserva->opcionais->sum(fn ($opcional) => (float) ($opcional->pivot->preco_total ?? 0));
+    }
+
+    $taxaColeta = (float) ($reserva->taxa_coleta ?? 0);
+    $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+    $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
+    if ($percentualDesconto <= 0 && $reserva->cupomDesconto) {
+        $percentualDesconto = (float) ($reserva->cupomDesconto->valor ?? 0);
+    }
+
+    $subtotal = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
+    $valorDesconto = $subtotal * ($percentualDesconto / 100);
+    $valorTotal = (float) ($reserva->valor_total_final ?? 0);
+    if ($valorTotal <= 0) {
+        $valorTotal = max(0, $subtotal - $valorDesconto);
+    }
+
+    $historico = \App\Models\ReservaLog::where('reserva_id', $reserva_id)
+        ->with('usuario:id,nome')
+        ->orderByDesc('created_at')
+        ->get()
+        ->map(function ($log) use ($dateTime) {
+            $detalhes = [];
+            if ($log->detalhes) {
+                $decoded = json_decode($log->detalhes, true);
+                $detalhes = is_array($decoded) ? $decoded : ['mensagem' => $log->detalhes];
+            }
+            unset($detalhes['acao']);
+
+            return [
+                'acao' => $log->acao ?: ($detalhes['acao'] ?? 'Acao registrada'),
+                'nivel' => $log->nivel ?? 'info',
+                'usuario' => $log->usuario?->nome ?? 'Sistema',
+                'data' => $dateTime($log->created_at),
+                'detalhes' => $detalhes,
+            ];
+        })
+        ->toArray();
+
+    $danosDetalhados = $reserva->veiculoDano
+        ->sortByDesc('id')
+        ->map(function ($dano) use ($money, $dateTime, $safe) {
+            return [
+                'id' => $dano->id,
+                'localizacao' => strtoupper((string) ($dano->local_dano ?? $dano->localizacao_problema ?? '-')),
+                'categoria' => $dano->dano?->categoria?->nome ?? '-',
+                'localizacao_problema' => $safe($dano->localizacao_problema),
+                'tipo_dano' => $safe($dano->tipo_dano),
+                'observacoes' => $safe($dano->observacoes),
+                'quilometragem' => $dano->quilometragem_veiculo ? number_format((float) $dano->quilometragem_veiculo, 0, ',', '.') . ' km' : '-',
+                'custo_estimado' => $money($dano->custo_estimado),
+                'status' => $dano->correcao_data ? 'Corrigido' : 'Pendente',
+                'correcao' => $safe($dano->correcao_descricao),
+                'correcao_data' => $dano->correcao_data ? $dateTime($dano->correcao_data) : '-',
+                'correcao_usuario' => $dano->usuarioCorrecao?->nome ?? '-',
+                'registrado_em' => $dateTime($dano->created_at),
+                'imagens' => $dano->imagem->map(function ($img) {
+                    return $img->caminho_imagem
+                        ? Storage::disk('public')->url($img->caminho_imagem)
+                        : null;
+                })->filter()->values()->toArray(),
+            ];
+        })
+        ->values()
+        ->toArray();
 
     $data = [
         'documento' => [
@@ -2516,12 +2621,13 @@ private function montarDiasSemanaFlags($diasUteis): array
             ],
         ],
         'veiculo' => [
-            'matricula' => $reserva->contratoCheckin->veiculo->id,
-            'marca' => $reserva->contratoCheckin->marca->nome,
-            'modelo' => $reserva->contratoCheckin->modelo->nome,
-            'grupo' => $reserva->contratoCheckin->veiculo->modelo->gruposFrota[0]->nome,
+            'matricula' => $safe($reserva->contratoCheckin->veiculo?->placa_licenca, '#' . $reserva->contratoCheckin->veiculo_id),
+            'marca' => $safe($reserva->contratoCheckin->marca?->nome ?? $reserva->contratoCheckin->veiculo?->marca?->nome),
+            'modelo' => $safe($reserva->contratoCheckin->modelo?->nome ?? $reserva->contratoCheckin->veiculo?->modelo?->nome),
+            'grupo' => $safe($reserva->contratoCheckin->veiculo?->grupoFrota?->nome ?? $reserva->grupoFrota?->nome),
+            'nome' => $safe($reserva->contratoCheckin->veiculo?->nome),
             'quilometros' => $reserva->contratoCheckin->quilometragem_atual,
-            'combustivel' => $reserva->contratoCheckin->nivel_combustivel,
+            'combustivel' => $safe($reserva->contratoCheckin->nivel_combustivel),
             'taxas' => [
                 // 'combustivel_em_falta' => '€' . number_format($reserva->taxa_combustivel, 2) . ' + IVA / litro',
                 // 'taxa_reabastecimento' => '€' . number_format($reserva->taxa_reabastecimento, 2) . ' + IVA',
@@ -2531,27 +2637,48 @@ private function montarDiasSemanaFlags($diasUteis): array
             // 'franquia' => '€' . number_format($reserva->franquia, 2),
             // 'kms_permitidos' => $reserva->kms_permitidos ?: 'ilimitado',
             'franquia' => '€ 0',
-            'kms_permitidos' => $reserva->kms_permitidos ?: 'ilimitado',
+            'kms_permitidos' => $reserva->kms_permitidos ?? $reserva->contratoCheckin->veiculo?->limite_kms ?? 'ilimitado',
         ],
         'reserva' => [
+            'id' => $reserva->id,
+            'status' => $safe($reserva->statusReserva?->nome),
+            'origem' => $safe($reserva->label_origem_cadastro),
+            'criada_em' => $dateTime($reserva->created_at),
+            'pagamento_efetuado' => ($reserva->pagamento_efetuado ?? 'N') === 'S' ? 'Sim' : 'Nao',
+            'grupo_reservado' => $safe($reserva->grupoFrota?->nome),
+            'modelo_reservado' => $safe($reserva->modelos?->nome),
+            'observacoes' => $safe($reserva->observacoes),
             'alugado_em' => [
-                'local' => $reserva->estacaoRetirada->nome,
-                'data' => Carbon::parse($reserva->data_inicio)->format('Y-m-d'),
-                'hora' => Carbon::parse($reserva->data_inicio)->format('H:i'),
+                'local' => $safe($reserva->estacaoRetirada?->nome),
+                'data' => $dateOnly($reserva->data_inicio),
+                'hora' => $reserva->data_inicio ? Carbon::parse($reserva->data_inicio)->format('H:i') : '-',
             ],
             'devolver_em' => [
-                'local' => $reserva->estacaoDevolucao->nome,
-                'data' => Carbon::parse($reserva->data_fim)->format('Y-m-d'),
-                'hora' => Carbon::parse($reserva->data_fim)->format('H:i'),
+                'local' => $safe($reserva->estacaoDevolucao?->nome),
+                'data' => $dateOnly($reserva->data_fim),
+                'hora' => $reserva->data_fim ? Carbon::parse($reserva->data_fim)->format('H:i') : '-',
             ],
         ],
         'faturacao' => [
             'dias_unidades' => $reserva->quantidade_dias,
+            'tarifa_diaria' => $money($tarifaBase),
+            'valor_tarifa_base' => $money($valorTarifaBase),
+            'valor_opcionais' => $money($valorOpcionais),
+            'taxa_coleta' => $money($taxaColeta),
+            'taxa_entrega' => $money($taxaEntrega),
+            'subtotal' => $money($subtotal),
+            'percentual_desconto' => number_format($percentualDesconto, 2, ',', '.') . '%',
+            'cupom' => $reserva->cupomDesconto?->codigo,
+            'valor_desconto' => $money($valorDesconto),
+            'iva_total' => $money(0),
+            'valor_total' => $money($valorTotal),
             // 'itens' => $this->obterItensFaturacao($reserva),
             'iva_total' => '€ 0',
             'valor_total' => '€ 0',
             // 'iva_total' => '€' . number_format($reserva->valor_iva, 2),
             // 'valor_total' => '€' . number_format($reserva->valor_total_final, 2),
+            'iva_total' => $money(0),
+            'valor_total' => $money($valorTotal),
         ],
         'estado_viatura' => [
             'itens' => $reserva->veiculoDano->map(function ($dano) {
