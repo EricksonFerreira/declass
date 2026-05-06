@@ -1307,8 +1307,8 @@
             var uid = isLocal ? Math.random().toString(36).substr(2, 9) : (dano.id || 0);
             dano._uid = dano._uid || uid;
             var btnRemove = isLocal
-                ? '<button type="button" class="btn btn-xs btn-outline-danger" onclick="removerDanoLocal(\'' + dano._uid + '\')" title="Remover dano"><i class="fas fa-times"></i></button>'
-                : '<button type="button" class="btn btn-xs btn-outline-danger" onclick="removerDanoServidor(' + (dano.id || 0) + ')" title="Remover dano"><i class="fas fa-times"></i></button>';
+                ? '<button type="button" class="btn btn-xs btn-outline-danger js-remover-dano" data-dano-tipo="local" data-dano-uid="' + dano._uid + '" title="Remover dano"><i class="fas fa-times"></i></button>'
+                : '<button type="button" class="btn btn-xs btn-outline-danger js-remover-dano" data-dano-tipo="servidor" data-dano-id="' + (dano.id || 0) + '" title="Remover dano"><i class="fas fa-times"></i></button>';
             tbody.insertAdjacentHTML('beforeend', '<tr><td>' + localLabel + '</td><td>' + descricao + '</td><td>' + tipoBadge(dano.tipo_dano || dano.tipo) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td><td class="text-center">' + btnRemove + '</td></tr>');
         });
     }
@@ -1354,6 +1354,21 @@
     window.obterDanosExistentes = obterDanosExistentes;
     window.removerDanoLocal = removerDanoLocal;
     window.removerDanoServidor = removerDanoServidor;
+
+    document.addEventListener('click', function (event) {
+        var btn = event.target.closest('.js-remover-dano');
+        if (!btn) return;
+
+        var tipo = btn.dataset.danoTipo;
+        if (tipo === 'local') {
+            removerDanoLocal(btn.dataset.danoUid);
+            return;
+        }
+
+        if (tipo === 'servidor') {
+            removerDanoServidor(Number(btn.dataset.danoId || 0));
+        }
+    });
 
     function setNomeDano(nome) {
         const el = document.getElementById('informacao_dano');
