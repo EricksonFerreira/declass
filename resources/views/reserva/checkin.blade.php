@@ -1352,6 +1352,8 @@
 
     window.obterDanosDetectados = obterDanosDetectados;
     window.obterDanosExistentes = obterDanosExistentes;
+    window.removerDanoLocal = removerDanoLocal;
+    window.removerDanoServidor = removerDanoServidor;
 
     function setNomeDano(nome) {
         const el = document.getElementById('informacao_dano');
