@@ -692,25 +692,6 @@
             error: function (response) {
                 const json   = response.responseJSON || {};
                 const errors = json.errors || {};
-
-    function adicionarDanoLocal() {
-        if (!window.danosCheckin) window.danosCheckin = [];
-        var custoRaw = document.getElementById('custo_estimado')?.value || '';
-        var dano = {
-            localizacao: document.getElementById('informacao_dano')?.textContent.trim() || '—',
-            descricao: document.getElementById('danos')?.selectedOptions?.[0]?.text || '—',
-            tipo_dano: document.querySelector('input[name="tipo"]:checked')?.value || 'ausente',
-            custo_estimado: parseFloat(custoRaw.replace(',', '.')) || 0,
-            quilometragem_veiculo: document.getElementById('quilometragem_dano')?.value || null,
-        };
-        window.danosCheckin.push(dano);
-        $('#detalhesDanoModal').modal('hide');
-        document.getElementById('form_dano').reset();
-        document.getElementById('previsualizar_imagens').innerHTML = '';
-        document.getElementById('div_previsualizar').style.display = 'none';
-        window.obterDanosDetectados?.();
-        Swal.fire({ icon: 'success', title: 'Dano adicionado!', toast: true, position: 'top-right', showConfirmButton: false, timer: 1800 });
-    }
                 const keys   = Object.keys(errors);
 
                 let html = `<div class="alert alert-danger alert-dismissible fade show" role="alert">`;
@@ -732,6 +713,25 @@
                 document.getElementById('mensagem_erro').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
+    }
+
+    function adicionarDanoLocal() {
+        if (!window.danosCheckin) window.danosCheckin = [];
+        var custoRaw = document.getElementById('custo_estimado')?.value || '';
+        var dano = {
+            localizacao: document.getElementById('informacao_dano')?.textContent.trim() || '—',
+            descricao: document.getElementById('danos')?.selectedOptions?.[0]?.text || '—',
+            tipo_dano: document.querySelector('input[name="tipo"]:checked')?.value || 'ausente',
+            custo_estimado: parseFloat(custoRaw.replace(',', '.')) || 0,
+            quilometragem_veiculo: document.getElementById('quilometragem_dano')?.value || null,
+        };
+        window.danosCheckin.push(dano);
+        $('#detalhesDanoModal').modal('hide');
+        document.getElementById('form_dano').reset();
+        document.getElementById('previsualizar_imagens').innerHTML = '';
+        document.getElementById('div_previsualizar').style.display = 'none';
+        window.obterDanosDetectados?.();
+        Swal.fire({ icon: 'success', title: 'Dano adicionado!', toast: true, position: 'top-right', showConfirmButton: false, timer: 1800 });
     }
 
     /* Upload preview */
