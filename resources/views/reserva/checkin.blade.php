@@ -1270,7 +1270,7 @@
         if (!danoId) return;
         Swal.fire({ title: 'Remover dano?', text: 'Este dano será excluído permanentemente.', icon: 'warning', showCancelButton: true, confirmButtonText: 'Sim, remover', cancelButtonText: 'Cancelar' }).then(function (r) {
             if (!r.isConfirmed) return;
-            $.ajax({ url: '/admin/dano/' + danoId + '/excluir', type: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }, success: function () { obterDanosDetectados(); obterDanosExistentes(); Swal.fire({ icon: 'success', title: 'Removido!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 }); }, error: function () { Swal.fire({ icon: 'error', title: 'Erro ao remover' }); } });
+            $.ajax({ url: '{{ url("/admin/veiculo-danos") }}/' + danoId, type: 'POST', data: { _method: 'DELETE', _token: '{{ csrf_token() }}' }, success: function () { obterDanosDetectados(); obterDanosExistentes(); Swal.fire({ icon: 'success', title: 'Removido!', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 }); }, error: function () { Swal.fire({ icon: 'error', title: 'Erro ao remover' }); } });
         });
     }
 

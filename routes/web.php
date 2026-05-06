@@ -239,6 +239,12 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     Route::post('/reserva/salvar-assinatura', [ReservaController::class, 'salvarAssinatura'])->name('reserva.salvar.assinatura');
 });
 
+Route::delete('/admin/veiculo-danos/{id}', function ($id) {
+    $dano = \App\Models\VeiculoDanos::find($id);
+    if ($dano) { $dano->imagem()->delete(); $dano->delete(); }
+    return response()->json(['success' => true]);
+})->middleware(['auth', 'can:acessar-superadmin']);
+
 Route::post('/limpar-cache', function () {
     Artisan::call('cache:clear');
     return back()->with('success', 'Cache limpo com sucesso!');
