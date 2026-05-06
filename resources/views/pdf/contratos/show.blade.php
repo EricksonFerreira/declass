@@ -70,22 +70,10 @@
     @include('pdf.contratos.partials.cobrancas-avaria', [
         'cobrancasAvaria' => $cobrancasAvaria,
     ])
-    <hr class="divider">
-    <div class="two-col">
-        <div class="col-left">
-            @include('pdf.contratos.partials.estado-viatura', [
-                'get' => $get,
-                'formatarTipoDano' => $formatarTipoDano,
-            ])
-        </div>
-        <div class="col-right">
-            @include('pdf.contratos.partials.faturacao', [
-                'get' => $get,
-                'opcionais' => $opcionais,
-            ])
-        </div>
-    </div>
-    <hr class="divider">
+    @include('pdf.contratos.partials.faturacao', [
+        'get' => $get,
+        'opcionais' => $opcionais,
+    ])
     @include('pdf.contratos.partials.declaracao')
     @include('pdf.contratos.partials.assinaturas', [
         'get' => $get,

@@ -2574,9 +2574,11 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'correcao_usuario' => $dano->usuarioCorrecao?->nome ?? '-',
                 'registrado_em' => $dateTime($dano->created_at),
                 'imagens' => $dano->imagem->map(function ($img) {
-                    return $img->caminho_imagem
-                        ? Storage::disk('public')->url($img->caminho_imagem)
-                        : null;
+                    if (!$img->caminho_imagem) return null;
+                    $path = $img->caminho_imagem;
+                    if (!Storage::disk('public')->exists($path)) return null;
+                    $mime = mime_content_type(Storage::disk('public')->path($path));
+                    return 'data:' . $mime . ';base64,' . base64_encode(Storage::disk('public')->get($path));
                 })->filter()->values()->toArray(),
             ];
         })

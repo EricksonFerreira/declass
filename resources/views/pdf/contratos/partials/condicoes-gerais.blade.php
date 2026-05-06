@@ -4,7 +4,7 @@
     <div class="clause-header">
         <div class="clause-header-bar"></div>
         <div class="clause-header-content">
-            <div class="clause-header-icon">&#9881;</div>
+            <div class="clause-header-icon"><i class="fas fa-cog"></i></div>
             <div>
                 <div class="clause-header-title">Condições Gerais da Locação</div>
                 <div class="clause-header-subtitle">

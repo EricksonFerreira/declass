@@ -7,11 +7,11 @@
     }
     @page {
         size: A4 portrait;
-        margin: 12mm 14mm;
+        margin: 9mm 12mm;
     }
     body {
         font-family: Arial, sans-serif;
-        font-size: 9.5px;
+        font-size: 8.5px;
         color: #1a2035;
         background: #fff;
     }
@@ -37,9 +37,9 @@
     .doc-header {
         display: table;
         width: 100%;
-        border-bottom: 3px solid #1e3a8a;
-        padding-bottom: 10px;
-        margin-bottom: 12px;
+        border-bottom: 2px solid #1e3a8a;
+        padding-bottom: 6px;
+        margin-bottom: 8px;
     }
     .doc-header__logo {
         display: table-cell;
@@ -60,62 +60,62 @@
         text-align: right;
     }
     .doc-header__title {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 900;
         color: #1e3a8a;
         letter-spacing: 0.05em;
         text-transform: uppercase;
     }
     .doc-header__subtitle {
-        font-size: 8px;
+        font-size: 7px;
         color: #475569;
-        margin-top: 3px;
+        margin-top: 2px;
         letter-spacing: 0.04em;
     }
     .doc-header__company {
-        font-size: 7.5px;
+        font-size: 6.5px;
         color: #64748b;
-        margin-top: 3px;
-        line-height: 1.35;
+        margin-top: 2px;
+        line-height: 1.3;
     }
     .doc-header__num {
         display: inline-block;
-        margin-top: 5px;
+        margin-top: 3px;
         background: #1e3a8a;
         color: #fff;
         font-weight: 800;
-        font-size: 10px;
-        padding: 3px 12px;
+        font-size: 9px;
+        padding: 2px 10px;
         border-radius: 20px;
         letter-spacing: 0.06em;
     }
     .accent-stripe {
-        height: 4px;
+        height: 3px;
         background: #1e3a8a;
         border-radius: 2px;
-        margin-bottom: 12px;
+        margin-bottom: 8px;
     }
     .section-title {
-        font-size: 8px;
+        font-size: 7.5px;
         font-weight: 900;
         letter-spacing: 0.14em;
         text-transform: uppercase;
         color: #1e3a8a;
         border-left: 3px solid #1e3a8a;
-        padding-left: 6px;
-        margin-bottom: 6px;
-        margin-top: 10px;
+        padding-left: 5px;
+        margin-bottom: 4px;
+        margin-top: 7px;
     }
     .info-table {
         width: 100%;
         border-collapse: collapse;
     }
     .info-table td {
-        padding: 3px 5px;
+        padding: 2px 4px;
         vertical-align: top;
     }
     .field-label {
-        font-size: 7.5px;
+        font-size: 6.5px;
         font-weight: 700;
         color: #64748b;
         letter-spacing: 0.06em;
@@ -123,18 +123,18 @@
         white-space: nowrap;
     }
     .field-value {
-        font-size: 9px;
+        font-size: 8px;
         color: #0f172a;
         font-weight: 500;
         border-bottom: 1px solid #cbd5e1;
         padding-bottom: 1px;
-        min-width: 60px;
-        min-height: 13px;
+        min-width: 50px;
+        min-height: 12px;
     }
     .two-col {
         display: table;
         width: 100%;
-        margin-top: 6px;
+        margin-top: 3px;
     }
     .col-left {
         display: table-cell;
@@ -187,14 +187,14 @@
     .opcionais-table th {
         background: #1e3a8a;
         color: #fff;
-        font-size: 7.5px;
+        font-size: 7px;
         font-weight: 700;
-        padding: 4px 5px;
+        padding: 3px 4px;
         text-align: left;
     }
     .opcionais-table td {
-        padding: 3px 5px;
-        font-size: 8.5px;
+        padding: 2px 4px;
+        font-size: 7.5px;
         border-bottom: 1px solid #e2e8f0;
     }
     .opcionais-table tr:nth-child(even) td {
@@ -208,15 +208,15 @@
     .detail-table th {
         background: #e2e8f0;
         color: #0f172a;
-        font-size: 7.5px;
+        font-size: 7px;
         font-weight: 800;
-        padding: 4px 5px;
+        padding: 3px 4px;
         text-align: left;
         border: 1px solid #cbd5e1;
     }
     .detail-table td {
-        padding: 4px 5px;
-        font-size: 8px;
+        padding: 2px 4px;
+        font-size: 7.5px;
         border: 1px solid #e2e8f0;
         vertical-align: top;
     }
@@ -234,24 +234,24 @@
         font-size: 7.5px;
     }
     .thumb {
-        width: 38px;
-        height: 30px;
+        width: 32px;
+        height: 24px;
         object-fit: cover;
         border: 1px solid #cbd5e1;
-        border-radius: 3px;
-        margin-right: 2px;
+        border-radius: 2px;
+        margin-right: 1px;
     }
     .finance-box {
         background: #eff6ff;
         border: 1px solid #bfdbfe;
         border-radius: 6px;
-        padding: 7px 10px;
-        margin-top: 8px;
+        padding: 5px 8px;
+        margin-top: 5px;
     }
     .finance-row {
         display: table;
         width: 100%;
-        padding: 2px 0;
+        padding: 1px 0;
     }
     .finance-row .lbl {
         display: table-cell;
@@ -274,23 +274,23 @@
     .divider {
         border: none;
         border-top: 1px dashed #cbd5e1;
-        margin: 10px 0;
+        margin: 6px 0;
     }
     .declaration {
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         border-radius: 5px;
-        padding: 7px 10px;
-        font-size: 8px;
+        padding: 5px 8px;
+        font-size: 7.5px;
         color: #475569;
         text-align: justify;
-        margin-top: 10px;
-        line-height: 1.5;
+        margin-top: 7px;
+        line-height: 1.4;
     }
     .signature-grid {
         display: table;
         width: 100%;
-        margin-top: 18px;
+        margin-top: 12px;
     }
     .signature-box {
         display: table-cell;
@@ -301,8 +301,8 @@
     }
     .signature-line {
         border-bottom: 1.5px solid #1e3a8a;
-        height: 70px;
-        margin-bottom: 5px;
+        height: 55px;
+        margin-bottom: 4px;
     }
     .signature-line img {
         max-height: 65px;
@@ -348,11 +348,10 @@
     }
 
     .clause-header {
-        margin-bottom: 16px;
+        margin-bottom: 10px;
     }
-
     .clause-header-bar {
-        height: 3px;
+        height: 2px;
         background: linear-gradient(to right, #1e3a8a, #60a5fa, #1e3a8a);
         border-radius: 2px;
         margin-bottom: 10px;
@@ -361,7 +360,7 @@
     .clause-header-content {
         display: table;
         width: 100%;
-        margin: 10px 0;
+        margin: 6px 0;
     }
 
     .clause-header-icon {
@@ -379,7 +378,7 @@
     }
 
     .clause-header-title {
-        font-size: 16px;
+        font-size: 14px;
         font-weight: 900;
         color: #1e3a8a;
         letter-spacing: 0.08em;
@@ -409,9 +408,9 @@
     .clause-item {
         background: #ffffff;
         border: 1px solid #e2e8f0;
-        border-radius: 5px;
-        padding: 6px 8px 6px 8px;
-        margin-bottom: 6px;
+        border-radius: 4px;
+        padding: 4px 6px 4px 6px;
+        margin-bottom: 4px;
         page-break-inside: avoid;
     }
 
@@ -434,8 +433,8 @@
 
     .clause-body {
         display: inline;
-        font-size: 8px;
-        line-height: 1.5;
+        font-size: 7.5px;
+        line-height: 1.4;
         color: #334155;
         text-align: justify;
     }
