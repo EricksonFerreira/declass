@@ -259,7 +259,7 @@
     <div class="doc-header">
         <div class="doc-header__logo">
             @if(!empty($data['documento']['empresa']['logo_url']))
-                <img src="/public/storage/{{ $data['documento']['empresa']['logo_url'] }}" alt="Logo da empresa">
+                <img src="{{ $data['documento']['empresa']['logo_url'] }}" alt="Logo da empresa">
             @else
                 <img class="sistema-logo" src="{!! asset('assets/imgs/logo.png') !!}" alt="DEcars">
             @endif

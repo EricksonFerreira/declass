@@ -2550,10 +2550,8 @@ private function montarDiasSemanaFlags($diasUteis): array
 
     $logoUrl = null;
     $logoPath = is_string($reserva->empresa?->logo_path ?? null) ? trim($reserva->empresa->logo_path) : '';
-    if ($logoPath !== '' && Storage::disk('public')->exists($logoPath)) {
-        $logoUrl = Storage::disk('public')->path($logoPath);
-    } elseif (!empty($reserva->empresa?->logo_url)) {
-        $logoUrl = $reserva->empresa->logo_url;
+    if ($logoPath !== '') {
+        $logoUrl = 'https://decars.com.br/public/storage/' . $logoPath;
     }
 
     $danosDetalhados = $reserva->veiculoDano
