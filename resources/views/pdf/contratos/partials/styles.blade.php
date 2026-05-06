@@ -161,9 +161,9 @@
     .dano-box {
         background: #fffbeb;
         border: 1px solid #fde68a;
-        border-radius: 5px;
-        padding: 5px 7px;
-        margin-top: 5px;
+        border-radius: 4px;
+        padding: 4px 6px;
+        margin-top: 4px;
     }
     .dano-box table {
         width: 100%;
@@ -320,13 +320,13 @@
         line-height: 1.35;
     }
     .doc-footer {
-        margin-top: 14px;
+        margin-top: 10px;
         text-align: center;
-        font-size: 7px;
+        font-size: 6.5px;
         color: #94a3b8;
         border-top: 1px solid #e2e8f0;
-        padding-top: 6px;
-        line-height: 1.35;
+        padding-top: 4px;
+        line-height: 1.3;
     }
     .qr-code {
         width: 55px;
@@ -396,7 +396,7 @@
         display: table;
         width: 100%;
         border-collapse: separate;
-        border-spacing: 6px;
+        border-spacing: 4px;
     }
 
     .clause-grid-col {
@@ -444,8 +444,8 @@
     }
 
     .clause-footer-bar {
-        margin-top: 16px;
-        padding-top: 8px;
+        margin-top: 10px;
+        padding-top: 5px;
         border-top: 1px solid #cbd5e1;
     }
 

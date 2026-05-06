@@ -20,6 +20,7 @@ use App\Models\ContratoCheckout;
 use App\Models\Estacao;
 use App\Models\Feriado;
 use App\Models\Multa;
+use App\Models\TermoConsentimento;
 use App\Models\Transacao;
 use App\Services\CalcaoService;
 use App\Services\UpgradeVeiculoService;
@@ -2741,6 +2742,11 @@ private function montarDiasSemanaFlags($diasUteis): array
                     'data' => $dateTime($cobranca->created_at),
                 ];
             })->values()->toArray(),
+            'condicoes_gerais' => TermoConsentimento::where('empresa_id', $reserva->empresa_id)
+                ->where('tipo', 'checkin')
+                ->orderBy('ordem')
+                ->get(['ordem', 'titulo', 'texto'])
+                ->toArray(),
     ];
 
     $this->tratarCamposData($data);

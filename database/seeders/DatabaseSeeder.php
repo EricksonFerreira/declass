@@ -16,6 +16,7 @@ class DatabaseSeeder extends Seeder
             PermissoesNovasFuncionalidadesSeeder::class,
             PlanoSeeder::class,
             TiposDanosPorCategoriaELocalizacaoSeeder::class,
+            CondicoesGeraisSeeder::class,
         ]);
     }
 }
