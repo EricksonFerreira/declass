@@ -2551,8 +2551,12 @@ private function montarDiasSemanaFlags($diasUteis): array
     $logoUrl = null;
     $logoPath = is_string($reserva->empresa?->logo_path ?? null) ? trim($reserva->empresa->logo_path) : '';
     if ($logoPath !== '' && Storage::disk('public')->exists($logoPath)) {
-        $logoUrl = Storage::disk('public')->path($logoPath);
-    } elseif (!empty($reserva->empresa?->logo_url)) {
+        $resolvedPath = Storage::disk('public')->path($logoPath);
+        if ($resolvedPath && file_exists($resolvedPath)) {
+            $logoUrl = 'file:///' . str_replace('\\', '/', $resolvedPath);
+        }
+    }
+    if ($logoUrl === null && !empty($reserva->empresa?->logo_url)) {
         $logoUrl = $reserva->empresa->logo_url;
     }
 
