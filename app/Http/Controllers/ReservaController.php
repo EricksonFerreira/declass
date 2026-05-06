@@ -2612,7 +2612,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             'nome' => $reserva->usuario->nome,
             'email' => $reserva->usuario->email,
             'telefone' => $reserva->usuario->telefone,
-            'passaporte' => $reserva->usuario->passaporte ?? '<br>',
+            'passaporte' => $safe($reserva->usuario->passaporte),
             'local_emissao' => $reserva->usuario->local_emissao,
             'data_nascimento' => $dateOnly($reserva->usuario->data_nascimento),
             'local_nascimento' => $reserva->usuario->local_nascimento,

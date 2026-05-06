@@ -32,12 +32,27 @@ class PdfService
     }
     public function gerarCheckinPdf($data)
     {
-        $bootstrap5 = file_get_contents(public_path() . '/css/bootstrap.min.css');
-        $data['css'] = $bootstrap5;
-        $htmlContent = view('pdf.contratos.show', compact('data'))->render();
-        // $htmlContent = view('pdf.contrato-checkin', compact('data'))->render();
-        return $this->generatePdf($htmlContent, 'contrato.pdf');
+        $data = $this->normalizarDadosContratoPdf($data);
 
+        $cssContrato = file_get_contents(public_path('css/pdf/contrato-locacao.css'));
+
+        $htmlContent = view('pdf.contratos.show', [
+            'data' => $data,
+            'css' => $cssContrato,
+        ])->render();
+
+        return $this->generatePdf($htmlContent, 'contrato-locacao-' . ($data['contrato']['numero'] ?? 'sem-numero') . '.pdf');
+    }
+
+    private function normalizarDadosContratoPdf(array $data): array
+    {
+        array_walk_recursive($data, function (&$value) {
+            if ($value === '<br>' || $value === '<br />' || $value === null || $value === '') {
+                $value = '-';
+            }
+        });
+
+        return $data;
     }
 
     public function gerarOrdemServicoPdf(array $data, string $filename = 'ordem-servico.pdf')
@@ -54,5 +69,4 @@ class PdfService
         $htmlContent = view('pdf.report', compact('reportData'))->render();
         return $this->generatePdf($htmlContent, 'report.pdf');
     }
-
 }
