@@ -1,5 +1,5 @@
 <style>
-    {!! $data['css'] ?? '' !!}
+    {!! $css ?? $data['css'] ?? '' !!}
     * {
         box-sizing: border-box;
         margin: 0;
