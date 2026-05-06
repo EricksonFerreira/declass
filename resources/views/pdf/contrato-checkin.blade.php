@@ -261,7 +261,7 @@
             @if(!empty($data['documento']['empresa']['logo_url']))
                 <img src="{{ $data['documento']['empresa']['logo_url'] }}" alt="Logo da empresa">
             @else
-                <img class="sistema-logo" src="{!! asset('assets/imgs/logo.png') !!}" alt="XpandCars">
+                <img class="sistema-logo" src="{!! asset('assets/imgs/logo.png') !!}" alt="DEcars">
             @endif
         </div>
         <div class="doc-header__info">
@@ -670,7 +670,7 @@
 
     {{-- ════ FOOTER ════ --}}
     <div class="doc-footer">
-        Documento processado pelo sistema XpandCars &bull; {{ $data['documento']['empresa']['nome'] ?? '' }} &bull; {{ now()->format('d/m/Y') }}
+        Documento processado pelo sistema DEcars &bull; {{ $data['documento']['empresa']['nome'] ?? '' }} &bull; {{ now()->format('d/m/Y') }}
         @if(!empty($data['documento']['empresa']['site']))
             &bull; {{ $data['documento']['empresa']['site'] }}
         @endif
