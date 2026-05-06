@@ -480,9 +480,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $data = [];
 
-        $css = file_get_contents(public_path('css/pdf/contrato-locacao.css'));
-
-        return view('reserva.show', compact('reserva', 'data', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas', 'css'));
+        return view('reserva.show', compact('reserva', 'data', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
     }
 
     public function emitirNfse($id)

@@ -3,7 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <style>
-        {!! $css !!}
+        {!! $css ?? '' !!}
+        * { box-sizing:border-box; margin:0; padding:0; }
+        @page { size:A4 portrait; margin:10mm; }
+        body { font-family:Arial,sans-serif; font-size:10px; color:#1a2035; background:#fff; padding:20px; }
+        .footer { width:100%; margin-top:20px; padding-top:8px; border-top:1px solid #ccc; font-size:9px; color:#666; }
+        .footer-table { width:100%; }
+        .document { width:100%; max-width:190mm; margin:0 auto; }
+        .header { width:100%; margin-bottom:15px; border-bottom:2px solid #2563eb; padding-bottom:10px; }
+        .header-table { width:100%; }
+        .logo-area { width:40%; vertical-align:top; }
+        .logo { max-height:60px; max-width:180px; }
+        .company-name { font-size:14px; font-weight:700; color:#1e3a8a; }
+        .company-meta { font-size:9px; color:#666; line-height:1.4; margin-top:4px; }
+        .contract-title-area { width:60%; text-align:right; vertical-align:top; }
+        .contract-title { font-size:16px; font-weight:900; color:#1e3a8a; letter-spacing:.05em; text-transform:uppercase; }
+        .contract-subtitle { font-size:10px; color:#475569; margin-top:3px; }
+        .contract-number { display:inline-block; margin-top:6px; background:#1e3a8a; color:#fff; font-weight:800; font-size:11px; padding:3px 14px; border-radius:20px; }
+        .info-strip { width:100%; margin-bottom:12px; }
+        .info-strip td { padding:8px 10px; background:#eff6ff; border:1px solid #bfdbfe; }
+        .info-label { font-size:9px; font-weight:700; color:#475569; text-transform:uppercase; letter-spacing:.05em; }
+        .info-value { font-size:13px; font-weight:600; color:#1e3a8a; }
+        .grid-2 { width:100%; }
+        .grid-2 td { width:50%; vertical-align:top; padding:0 5px; }
+        .section { margin-bottom:12px; }
+        .card { border:1px solid #e2e8f0; border-radius:6px; overflow:hidden; }
+        .card-highlight { border-left:3px solid #2563eb; }
+        .section-title { font-size:10px; font-weight:800; color:#1e3a8a; padding:8px 10px; background:#f8fafc; border-bottom:1px solid #e2e8f0; text-transform:uppercase; letter-spacing:.08em; }
+        .section-body { padding:8px 10px; }
+        .fields-table { width:100%; }
+        .fields-table td { padding:4px 5px; }
+        .field-label { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:.04em; }
+        .field-value { font-size:11px; color:#0f172a; font-weight:500; border-bottom:1px solid #e2e8f0; padding-bottom:2px; min-height:16px; }
+        .badge { display:inline-block; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:700; }
+        .badge-success { background:#dcfce7; color:#16a34a; }
+        .refuel-info { margin-top:10px; }
+        .refuel-info td { padding:4px 5px; }
+        .refuel-label { font-size:9px; font-weight:700; color:#64748b; text-transform:uppercase; }
+        .refuel-value { font-size:11px; color:#0f172a; font-weight:500; }
+        .total-box { margin-top:10px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:8px 12px; }
+        .total-row { display:flex; justify-content:space-between; padding:3px 0; }
+        .total-label { font-size:10px; color:#475569; }
+        .total-value { font-size:11px; font-weight:700; color:#1e3a8a; text-align:right; }
+        .opcionais-table { width:100%; border-collapse:collapse; margin-top:5px; }
+        .opcionais-table th { background:#1e3a8a; color:#fff; font-size:9px; font-weight:700; padding:5px 8px; text-align:left; }
+        .opcionais-table td { padding:4px 8px; font-size:10px; border-bottom:1px solid #e2e8f0; }
+        .data-table { width:100%; border-collapse:collapse; margin-top:5px; }
+        .data-table th { background:#e2e8f0; font-size:9px; font-weight:800; padding:5px 8px; text-align:left; border:1px solid #cbd5e1; }
+        .data-table td { padding:4px 8px; font-size:10px; border:1px solid #e2e8f0; }
+        .pulse { background:#fffbeb; border:1px solid #fde68a; border-radius:5px; padding:8px 12px; margin:8px 0; }
+        .danger-box { background:#fef2f2; border:1px solid #fecaca; border-radius:5px; padding:8px 12px; margin:8px 0; }
+        .danger-title { font-size:11px; font-weight:700; color:#991b1b; }
+        .danger-text { font-size:10px; color:#7f1d1d; }
+        .success-box { background:#f0fdf4; border:1px solid #bbf7d0; border-radius:5px; padding:8px 12px; margin:8px 0; }
+        .success-text { font-size:10px; color:#166534; }
+        .signature-grid { width:100%; margin-top:20px; }
+        .signature-grid td { width:50%; text-align:center; vertical-align:bottom; padding:0 15px; }
+        .signature-line { border-bottom:2px solid #1e3a8a; height:60px; margin-bottom:5px; }
+        .signature-line img { max-height:55px; max-width:200px; }
+        .signature-name { font-size:11px; font-weight:700; color:#0f172a; }
+        .signature-role { font-size:9px; color:#64748b; margin-top:2px; }
+        .signature-doc { font-size:9px; color:#64748b; margin-top:1px; }
+        .page-break { page-break-before:always; }
+        .clause-box { font-size:10px; line-height:1.5; color:#334155; }
+        .clause-box p { margin-bottom:8px; text-align:justify; }
     </style>
 </head>
 <body>
