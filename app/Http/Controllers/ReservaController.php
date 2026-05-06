@@ -2591,7 +2591,7 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'endereco' => config('app.empresa.endereco'),
                 'site' => config('app.empresa.site'),
                 'instagram' => config('app.empresa.instagram'),
-                'logo_url' => '/public/storage/' . $reserva->empresa->logo_path,
+                'logo_url' => $reserva->empresa->logo_url,
             ],
         ],
         'contrato' => [
@@ -2743,9 +2743,6 @@ private function montarDiasSemanaFlags($diasUteis): array
             })->values()->toArray(),
     ];
 
-dd( $data['documento']['empresa']['logo_url'] );
-    // dd($data);
-    // Percorrer todos os atributos de data e caso não tenha valor, substituir por <br>
     $this->tratarCamposData($data);
 
        $this->pdfService->gerarCheckinPdf($data);
