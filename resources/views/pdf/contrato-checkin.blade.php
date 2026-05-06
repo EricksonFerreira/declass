@@ -478,7 +478,7 @@
         </table>
     @endif
 
-    <div class="section-title">Danos e Historico de Avarias</div>
+    <div class="section-title">Danos e Avarias</div>
     @if(!empty($data['danos_detalhados']))
         <table class="detail-table">
             <thead>
@@ -541,34 +541,6 @@
                 @endforeach
             </tbody>
         </table>
-    @endif
-
-    <div class="section-title">Historico da Reserva</div>
-    @if(!empty($data['historico']))
-        <table class="detail-table">
-            <thead>
-                <tr><th>Data</th><th>Acao</th><th>Nivel</th><th>Usuario</th><th>Detalhes</th></tr>
-            </thead>
-            <tbody>
-                @foreach($data['historico'] as $log)
-                    <tr>
-                        <td>{{ $log['data'] }}</td>
-                        <td>{{ $log['acao'] }}</td>
-                        <td>{{ $log['nivel'] }}</td>
-                        <td>{{ $log['usuario'] }}</td>
-                        <td>
-                            @forelse($log['detalhes'] as $chave => $valor)
-                                <div><strong>{{ $chave }}:</strong> {{ is_scalar($valor) ? $valor : json_encode($valor, JSON_UNESCAPED_UNICODE) }}</div>
-                            @empty
-                                <span class="muted">Sem detalhes</span>
-                            @endforelse
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    @else
-        <div style="font-size:8px;color:#64748b;font-style:italic;margin-top:4px">Nenhum historico registrado.</div>
     @endif
 
     <hr class="divider">

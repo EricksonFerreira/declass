@@ -2519,6 +2519,26 @@ private function montarDiasSemanaFlags($diasUteis): array
 
     $taxaColeta = (float) ($reserva->taxa_coleta ?? 0);
     $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+    if ($taxaColeta == 0 && $reserva->estacaoRetirada && $reserva->data_inicio) {
+        $avaliacao = $this->reservaService->avaliarFuncionamentoEstacaoPublico(
+            (int) $reserva->estacao_retirada_id,
+            $reserva->data_inicio,
+            'retirada'
+        );
+        if (($avaliacao['taxa_extra'] ?? false) && ($avaliacao['ok'] ?? false)) {
+            $taxaColeta = (float) ($reserva->estacaoRetirada->valor_taxa_coleta ?? 0);
+        }
+    }
+    if ($taxaEntrega == 0 && $reserva->estacaoDevolucao && $reserva->data_fim) {
+        $avaliacao = $this->reservaService->avaliarFuncionamentoEstacaoPublico(
+            (int) $reserva->estacao_devolucao_id,
+            $reserva->data_fim,
+            'devolucao'
+        );
+        if (($avaliacao['taxa_extra'] ?? false) && ($avaliacao['ok'] ?? false)) {
+            $taxaEntrega = (float) ($reserva->estacaoDevolucao->valor_taxa_entrega ?? 0);
+        }
+    }
     $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
     if ($percentualDesconto <= 0 && $reserva->cupomDesconto) {
         $percentualDesconto = (float) ($reserva->cupomDesconto->valor ?? 0);
@@ -2530,28 +2550,6 @@ private function montarDiasSemanaFlags($diasUteis): array
     if ($valorTotal <= 0) {
         $valorTotal = max(0, $subtotal - $valorDesconto);
     }
-
-    $historico = \App\Models\ReservaLog::where('reserva_id', $reserva_id)
-        ->with('usuario:id,nome')
-        ->orderByDesc('created_at')
-        ->get()
-        ->map(function ($log) use ($dateTime) {
-            $detalhes = [];
-            if ($log->detalhes) {
-                $decoded = json_decode($log->detalhes, true);
-                $detalhes = is_array($decoded) ? $decoded : ['mensagem' => $log->detalhes];
-            }
-            unset($detalhes['acao']);
-
-            return [
-                'acao' => $log->acao ?: ($detalhes['acao'] ?? 'Acao registrada'),
-                'nivel' => $log->nivel ?? 'info',
-                'usuario' => $log->usuario?->nome ?? 'Sistema',
-                'data' => $dateTime($log->created_at),
-                'detalhes' => $detalhes,
-            ];
-        })
-        ->toArray();
 
     $danosDetalhados = $reserva->veiculoDano
         ->sortByDesc('id')
@@ -2584,7 +2582,7 @@ private function montarDiasSemanaFlags($diasUteis): array
         'documento' => [
             'codigo_interno' => 'ARCS-' . date('y'),
             'atcud' => 'JJNXXNNC-' . date('y'),
-            'data_emissao' => now()->format('Y-m-d H:i:s'),
+            'data_emissao' => now()->format('d/m/Y H:i:s'),
             'empresa' => [
                 'nome' => $reserva->empresa->nome ?? config('app.empresa.nome'),
                 'endereco' => config('app.empresa.endereco'),
@@ -2611,13 +2609,13 @@ private function montarDiasSemanaFlags($diasUteis): array
             'telefone' => $reserva->usuario->telefone,
             'passaporte' => $reserva->usuario->passaporte ?? '<br>',
             'local_emissao' => $reserva->usuario->local_emissao,
-            'data_nascimento' => $reserva->usuario->data_nascimento,
+            'data_nascimento' => $dateOnly($reserva->usuario->data_nascimento),
             'local_nascimento' => $reserva->usuario->local_nascimento,
             'carta_conducao' => [
                 'pais' => $reserva->usuario->pais_emissao,
                 'numero' => $reserva->usuario->numero_carta_conducao,
-                'data_emissao' => $reserva->usuario->data_emissao_carta_conducao,
-                'validade' => $reserva->usuario->data_validade_carta_conducao,
+                'data_emissao' => $dateOnly($reserva->usuario->data_emissao_carta_conducao),
+                'validade' => $dateOnly($reserva->usuario->data_validade_carta_conducao),
             ],
         ],
         'veiculo' => [
@@ -2672,13 +2670,6 @@ private function montarDiasSemanaFlags($diasUteis): array
             'valor_desconto' => $money($valorDesconto),
             'iva_total' => $money(0),
             'valor_total' => $money($valorTotal),
-            // 'itens' => $this->obterItensFaturacao($reserva),
-            'iva_total' => '€ 0',
-            'valor_total' => '€ 0',
-            // 'iva_total' => '€' . number_format($reserva->valor_iva, 2),
-            // 'valor_total' => '€' . number_format($reserva->valor_total_final, 2),
-            'iva_total' => $money(0),
-            'valor_total' => $money($valorTotal),
         ],
         'estado_viatura' => [
             'itens' => $reserva->veiculoDano->map(function ($dano) {
@@ -2702,8 +2693,6 @@ private function montarDiasSemanaFlags($diasUteis): array
         'opcionais' => $reserva->opcionais->map(function ($opcional) {
                 return [
                     'nome' => $opcional->nome,
-                    'valor_total' => "€ " . number_format($opcional->pivot->preco_total, 2),
-                    'preco_unitario' => $opcional->preco_por_dia ? "€ " . number_format($opcional->preco_por_dia , 2) :"€ " . number_format($opcional->preco_integral , 2) ,
                     'quantidade' => $opcional->pivot->quantidade,
                     'valor_total' => "R$ " . number_format((float) $opcional->pivot->preco_total, 2, ',', '.'),
                     'preco_unitario' => $opcional->preco_por_dia ? "R$ " . number_format((float) $opcional->preco_por_dia, 2, ',', '.') : "R$ " . number_format((float) $opcional->preco_integral, 2, ',', '.'),
@@ -2734,7 +2723,6 @@ private function montarDiasSemanaFlags($diasUteis): array
                 ];
             })->values()->toArray(),
             'danos_detalhados' => $danosDetalhados,
-            'historico' => $historico,
             'calcao' => $reserva->calcao ? [
                 'status' => $reserva->calcao->status ?? '-',
                 'valor_calculado' => $money($reserva->calcao->valor_calculado ?? 0),
