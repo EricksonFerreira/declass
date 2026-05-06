@@ -2745,7 +2745,6 @@ private function montarDiasSemanaFlags($diasUteis): array
             })->values()->toArray(),
     ];
 
-    dd($data['documento']['empresa']['logo_url']);
 
     // dd($data);
     // Percorrer todos os atributos de data e caso não tenha valor, substituir por <br>
