@@ -402,6 +402,177 @@
 
     <hr class="divider">
 
+    <div class="section-title">Resumo Detalhado da Reserva</div>
+    <table class="detail-table">
+        <tbody>
+            <tr>
+                <td><strong>Status</strong><br>{{ $data['reserva']['status'] ?? '-' }}</td>
+                <td><strong>Origem</strong><br>{{ $data['reserva']['origem'] ?? '-' }}</td>
+                <td><strong>Pagamento efetuado</strong><br>{{ $data['reserva']['pagamento_efetuado'] ?? '-' }}</td>
+                <td><strong>Criada em</strong><br>{{ $data['reserva']['criada_em'] ?? '-' }}</td>
+            </tr>
+            <tr>
+                <td><strong>Grupo reservado</strong><br>{{ $data['reserva']['grupo_reservado'] ?? '-' }}</td>
+                <td><strong>Modelo reservado</strong><br>{{ $data['reserva']['modelo_reservado'] ?? '-' }}</td>
+                <td colspan="2"><strong>Observacoes</strong><br>{{ $data['reserva']['observacoes'] ?? '-' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="section-title">Valores Detalhados</div>
+    @php($fin = $data['financeiro_detalhado'] ?? [])
+    <table class="detail-table">
+        <tbody>
+            <tr><td>Grupo</td><td class="money">{{ $fin['grupo'] ?? '-' }}</td></tr>
+            <tr><td>Tarifa diaria</td><td class="money">{{ $fin['tarifa_diaria'] ?? '-' }}</td></tr>
+            <tr><td>{{ $fin['dias_label'] ?? 'Dias x tarifa' }}</td><td class="money">{{ $fin['valor_tarifa_base'] ?? '-' }}</td></tr>
+            <tr><td>Opcionais</td><td class="money">{{ $fin['opcionais'] ?? '-' }}</td></tr>
+            <tr><td>Retirada fora do expediente</td><td class="money">{{ $fin['taxa_coleta'] ?? '-' }}</td></tr>
+            <tr><td>Devolucao fora do expediente</td><td class="money">{{ $fin['taxa_entrega'] ?? '-' }}</td></tr>
+            <tr><td>Subtotal</td><td class="money">{{ $fin['subtotal'] ?? '-' }}</td></tr>
+            <tr><td>Desconto {{ $fin['desconto_label'] ?? '' }}</td><td class="money">- {{ $fin['desconto_valor'] ?? '-' }}</td></tr>
+            <tr><td><strong>Total</strong></td><td class="money"><strong>{{ $fin['total'] ?? ($data['faturacao']['valor_total'] ?? '-') }}</strong></td></tr>
+        </tbody>
+    </table>
+
+    @if(!empty($data['pagamentos']))
+        <div class="section-title">Pagamentos e Transacoes</div>
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Data</th>
+                    <th>Valor</th>
+                    <th>Metodo</th>
+                    <th>Status</th>
+                    <th>Confirmado em</th>
+                    <th>Pago por</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($data['pagamentos'] as $pagamento)
+                    <tr>
+                        <td>{{ $pagamento['data'] }}</td>
+                        <td class="money">{{ $pagamento['valor'] }}</td>
+                        <td>{{ $pagamento['metodo'] }}</td>
+                        <td>{{ $pagamento['status'] }}</td>
+                        <td>{{ $pagamento['confirmado_em'] }}</td>
+                        <td>{{ $pagamento['pago_por'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
+    @if(!empty($data['calcao']))
+        <div class="section-title">Calcao</div>
+        <table class="detail-table">
+            <tbody>
+                <tr>
+                    <td><strong>Status</strong><br>{{ $data['calcao']['status'] }}</td>
+                    <td><strong>Metodo</strong><br>{{ $data['calcao']['metodo'] }}</td>
+                    <td><strong>Valor calculado</strong><br>{{ $data['calcao']['valor_calculado'] }}</td>
+                    <td><strong>Valor autorizado</strong><br>{{ $data['calcao']['valor_autorizado'] }}</td>
+                    <td><strong>Valor capturado</strong><br>{{ $data['calcao']['valor_capturado'] }}</td>
+                </tr>
+            </tbody>
+        </table>
+    @endif
+
+    <div class="section-title">Danos e Historico de Avarias</div>
+    @if(!empty($data['danos_detalhados']))
+        <table class="detail-table">
+            <thead>
+                <tr>
+                    <th>Local</th>
+                    <th>Descricao</th>
+                    <th>Tipo / Status</th>
+                    <th>Custo</th>
+                    <th>Correcao</th>
+                    <th>Imagens</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($data['danos_detalhados'] as $dano)
+                    <tr>
+                        <td>
+                            <strong>{{ $dano['localizacao'] }}</strong><br>
+                            <span class="muted">{{ $dano['categoria'] }} - {{ $dano['localizacao_problema'] }}</span><br>
+                            <span class="muted">{{ $dano['registrado_em'] }}</span>
+                        </td>
+                        <td>
+                            {{ $dano['observacoes'] }}<br>
+                            <span class="muted">KM: {{ $dano['quilometragem'] }}</span>
+                        </td>
+                        <td>{{ $dano['tipo_dano'] }}<br><strong>{{ $dano['status'] }}</strong></td>
+                        <td class="money">{{ $dano['custo_estimado'] }}</td>
+                        <td>
+                            {{ $dano['correcao'] }}<br>
+                            <span class="muted">{{ $dano['correcao_data'] }} - {{ $dano['correcao_usuario'] }}</span>
+                        </td>
+                        <td>
+                            @forelse($dano['imagens'] as $img)
+                                <img class="thumb" src="{{ $img }}" alt="Dano">
+                            @empty
+                                <span class="muted">Sem imagem</span>
+                            @endforelse
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <div style="font-size:8px;color:#64748b;font-style:italic;margin-top:4px">Nenhuma avaria registrada nesta reserva.</div>
+    @endif
+
+    @if(!empty($data['cobrancas_avaria']))
+        <div class="section-title">Cobrancas de Avarias</div>
+        <table class="detail-table">
+            <thead>
+                <tr><th>Data</th><th>Descricao</th><th>Status</th><th>Valor</th></tr>
+            </thead>
+            <tbody>
+                @foreach($data['cobrancas_avaria'] as $cobranca)
+                    <tr>
+                        <td>{{ $cobranca['data'] }}</td>
+                        <td>{{ $cobranca['descricao'] }}</td>
+                        <td>{{ $cobranca['status'] }}</td>
+                        <td class="money">{{ $cobranca['valor'] }}</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @endif
+
+    <div class="section-title">Historico da Reserva</div>
+    @if(!empty($data['historico']))
+        <table class="detail-table">
+            <thead>
+                <tr><th>Data</th><th>Acao</th><th>Nivel</th><th>Usuario</th><th>Detalhes</th></tr>
+            </thead>
+            <tbody>
+                @foreach($data['historico'] as $log)
+                    <tr>
+                        <td>{{ $log['data'] }}</td>
+                        <td>{{ $log['acao'] }}</td>
+                        <td>{{ $log['nivel'] }}</td>
+                        <td>{{ $log['usuario'] }}</td>
+                        <td>
+                            @forelse($log['detalhes'] as $chave => $valor)
+                                <div><strong>{{ $chave }}:</strong> {{ is_scalar($valor) ? $valor : json_encode($valor, JSON_UNESCAPED_UNICODE) }}</div>
+                            @empty
+                                <span class="muted">Sem detalhes</span>
+                            @endforelse
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <div style="font-size:8px;color:#64748b;font-style:italic;margin-top:4px">Nenhum historico registrado.</div>
+    @endif
+
+    <hr class="divider">
+
     {{-- ════ ESTADO DA VIATURA + FATURAÇÃO ════ --}}
     <div class="two-col">
         <div class="col-left">

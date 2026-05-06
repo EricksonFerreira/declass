@@ -2705,6 +2705,8 @@ private function montarDiasSemanaFlags($diasUteis): array
                     'valor_total' => "€ " . number_format($opcional->pivot->preco_total, 2),
                     'preco_unitario' => $opcional->preco_por_dia ? "€ " . number_format($opcional->preco_por_dia , 2) :"€ " . number_format($opcional->preco_integral , 2) ,
                     'quantidade' => $opcional->pivot->quantidade,
+                    'valor_total' => "R$ " . number_format((float) $opcional->pivot->preco_total, 2, ',', '.'),
+                    'preco_unitario' => $opcional->preco_por_dia ? "R$ " . number_format((float) $opcional->preco_por_dia, 2, ',', '.') : "R$ " . number_format((float) $opcional->preco_integral, 2, ',', '.'),
                 ];
             })->toArray(),
             'assinatura'=> $reserva->contratoCheckin->assinatura,
