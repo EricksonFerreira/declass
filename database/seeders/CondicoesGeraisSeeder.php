@@ -47,7 +47,7 @@ class CondicoesGeraisSeeder extends Seeder
         [
             'ordem' => 8,
             'titulo' => '08 Caução e autorização de cobrança.',
-            'texto' => 'O LOCATÁRIO autoriza a LOCADORA a realizar bloqueio, caução, pré-autorização ou retenção de valores em seu cartão de crédito ou conta bancária, bem como a efetuar cobranças referentes a diárias, taxas, multas, avarias, combustível, limpeza, quilometragem excedente, franquias, coparticipações e demais encargos previstos neste contrato.',
+            'texto' => 'O LOCATÁRIO autoriza a LOCADORA a realizar bloqueio, caução, pré-autorização ou retenção de valores em seu cartão de crédito ou conta bancária, bem como a efetuar cobranças referentes a diárias, taxas, multas, avarias, combustível, limpeza, quilometragem excedente, franquias, coparticipações e demais encargos previstos neste contrato. O prazo para liberação da caução será de até 30 dias após a devolução do veículo, salvo pendências a regularizar.',
         ],
         [
             'ordem' => 9,
@@ -68,6 +68,16 @@ class CondicoesGeraisSeeder extends Seeder
             'ordem' => 12,
             'titulo' => '12 Declaração final.',
             'texto' => 'Ao assinar este contrato, o LOCATÁRIO declara ter lido, compreendido e aceitado as Condições Particulares, as Condições Gerais, o laudo de vistoria, as regras de cobrança, as políticas de uso do veículo e demais documentos vinculados à locação, comprometendo-se a cumpri-los integralmente.',
+        ],
+        [
+            'ordem' => 13,
+            'titulo' => '13 Proteção de dados (LGPD).',
+            'texto' => 'O LOCATÁRIO declara ciência de que seus dados pessoais serão tratados pela LOCADORA para execução do contrato, cumprimento de obrigações legais, cobrança, segurança, prevenção a fraudes e gestão da locação, nos termos da Lei Geral de Proteção de Dados (Lei nº 13.709/2018). A LOCADORA compromete-se a utilizar os dados exclusivamente para as finalidades contratuais e a mantê-los em ambiente seguro, pelo prazo legal exigido.',
+        ],
+        [
+            'ordem' => 14,
+            'titulo' => '14 Foro e resolução de conflitos.',
+            'texto' => 'Fica eleito o foro da comarca da sede da LOCADORA para dirimir quaisquer controvérsias decorrentes deste contrato, com renúncia expressa a qualquer outro, por mais privilegiado que seja, sem prejuízo da faculdade de a LOCADORA requerer medidas judiciais de urgência em outro foro competente. As partes comprometem-se a buscar solução extrajudicial prévia sempre que possível.',
         ],
     ];
 

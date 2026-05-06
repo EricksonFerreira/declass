@@ -7,13 +7,23 @@
         </div>
         <div class="signature-name">{{ $get('cliente.nome', 'Locatário') }}</div>
         <div class="signature-role">Locatário</div>
-        <div class="signature-doc">Documento: {{ $get('cliente.nif', '-') }}</div>
+        <div class="signature-doc">
+            CPF: {{ $get('cliente.nif', '-') }}<br>
+            CNH: {{ $get('cliente.carta_conducao.numero', '-') }}
+        </div>
+        @if($get('documento.data_assinatura', null))
+            <div class="signature-doc" style="margin-top:2px;">
+                Assinado em: {{ $get('documento.data_assinatura') }}
+            </div>
+        @endif
     </div>
     <div class="signature-box">
         <div class="signature-line"></div>
         <div class="signature-name">{{ $get('funcionario.nome', 'Atendente') }}</div>
         <div class="signature-role">Atendente / Responsável</div>
-        <div class="signature-doc">Data: {{ $get('documento.data_emissao', now()->format('d/m/Y H:i')) }}</div>
+        <div class="signature-doc">
+            Emitido em: {{ $get('documento.data_emissao', now()->format('d/m/Y H:i')) }}
+        </div>
     </div>
 </div>
 @if($get('condutor_adicional.nome', null))
