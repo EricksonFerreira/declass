@@ -3,10 +3,9 @@
 <div class="clause-page">
     <div class="clause-header">
         <div class="clause-header-bar"></div>
-        <div class="clause-header-content">
-            <div class="clause-header-icon">&#9881;</div>
+            <div class="clause-header-content">
             <div>
-                <div class="clause-header-title">Condições Gerais da Locação</div>
+                <div class="clause-header-title">CONDIÇÕES GERAIS DA LOCAÇÃO</div>
                 <div class="clause-header-subtitle">
                     Cláusulas contratuais que regem a relação entre LOCADORA e LOCATÁRIO
                 </div>

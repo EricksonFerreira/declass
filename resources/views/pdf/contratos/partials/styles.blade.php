@@ -363,16 +363,7 @@
         margin: 6px 0;
     }
 
-    .clause-header-icon {
-        display: table-cell;
-        width: 32px;
-        font-size: 22px;
-        color: #1e3a8a;
-        vertical-align: middle;
-        text-align: center;
-    }
-
-    .clause-header-icon ~ * {
+    .clause-header-content > div {
         display: table-cell;
         vertical-align: middle;
     }
