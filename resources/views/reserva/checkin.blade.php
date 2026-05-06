@@ -1276,11 +1276,11 @@
 
         if (!allDanos.length) { tbody.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>'; return; }
         allDanos.forEach(dano => {
-            var localLabel = '<strong>' + (dano.localizacao || dano.local || '—') + '</strong>';
-            if (dano.categoria || dano.localizacao_problema) {
-                localLabel += '<br><small class="text-muted">' + (dano.categoria || '—') + ' · ' + (dano.localizacao_problema || '—') + '</small>';
-            }
-            var descricao = dano.descricao || '<span class="text-muted">—</span>';
+            var localLabel = '<strong>' + (dano.localizacao || dano.local_dano || dano.local || '—') + '</strong>';
+            var cat = dano.categoria || dano.categoria_nome || (dano.categoria_id ? 'Cat#' + dano.categoria_id : '');
+            var locProb = dano.localizacao_problema || '';
+            if (cat || locProb) localLabel += '<br><small class="text-muted">' + (cat || '—') + ' · ' + (locProb || '—') + '</small>';
+            var descricao = dano.descricao || dano.observacoes || '<span class="text-muted">—</span>';
             if (dano.quilometragem_veiculo) descricao += '<small class="text-muted d-block mt-1"><i class="fas fa-tachometer-alt mr-1"></i>KM ' + Number(dano.quilometragem_veiculo).toLocaleString('pt-BR') + '</small>';
             tbody.insertAdjacentHTML('beforeend', '<tr><td>' + localLabel + '</td><td>' + descricao + '</td><td>' + tipoBadge(dano.tipo_dano || dano.tipo) + '</td><td>' + formatCusto(dano.custo_estimado) + '</td><td>' + rowImagens(dano) + '</td></tr>');
         });
