@@ -1,0 +1,1 @@
+"use App\Models\Plano; foreach(Plano::all() as \$p) { echo \"#{\$p- {\$p- ({\$p- - limite: \" . (\$p->limite_armazenamento_mb ?? 'null') . \" MB\n\"; }" 
