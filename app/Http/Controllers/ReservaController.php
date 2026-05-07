@@ -1970,10 +1970,7 @@ private function montarDiasSemanaFlags($diasUteis): array
     public function efetuarPagamento($id)
     {
 
-        $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto', 'estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos']);
-        if ($reserva->status_reserva_id != StatusReservaEnum::Pendente->value) {
-            return redirect()->route('reserva.show', $id)->with('error', 'Reserva não pode ser paga');
-        }
+        $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto', 'estacaoRetirada', 'estacaoDevolucao', 'grupoFrota', 'modelos', 'transacoes']);
 
         // Taxas fora de expediente (igual ao show)
         $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
@@ -1993,6 +1990,29 @@ private function montarDiasSemanaFlags($diasUteis): array
         // Desconto: recuperar do cupom se não salvo
         if ((float) ($reserva->percentual_desconto ?? 0) == 0 && $reserva->cupom_desconto_id && $reserva->cupomDesconto) {
             $reserva->percentual_desconto = (float) ($reserva->cupomDesconto->valor ?? 0);
+        }
+
+        $diasReserva = (int) ($reserva->quantidade_dias ?? 0);
+        $tarifaBase = (float) ($reserva->tarifa_base ?? 0);
+        $valorTarifaBase = $tarifaBase * $diasReserva;
+        $valorOpcionais = (float) ($reserva->valor_opcionais ?? 0);
+        if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
+            $valorOpcionais = (float) $reserva->opcionais->sum(fn ($opcional) => (float) ($opcional->pivot->preco_total ?? 0));
+        }
+
+        $subtotal = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
+        $valorDesconto = $subtotal * ((float) ($reserva->percentual_desconto ?? 0) / 100);
+        $valorTotalAtual = max(0, $subtotal - $valorDesconto);
+        $statusPagamentoAprovado = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
+        $totalPagoAprovado = (float) ($reserva->transacoes ?? collect())
+            ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
+                && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
+            ->sum('valor');
+        $saldoPendente = max(0, $valorTotalAtual - $totalPagoAprovado);
+        $valorCobranca = $saldoPendente;
+
+        if ((int) $reserva->status_reserva_id !== StatusReservaEnum::Pendente->value && $saldoPendente <= 0.009) {
+            return redirect()->route('reserva.show', $id)->with('warning', 'Esta reserva não possui saldo pendente para pagamento.');
         }
 
         $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $reserva->empresa_id);
@@ -2057,14 +2077,52 @@ private function montarDiasSemanaFlags($diasUteis): array
 
         return view(
             'reserva.efetuar-pagamento',
-            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento', 'gatewayPadrao', 'gatewayNome', 'moedaPadrao', 'stripePublicKey', 'taxaColeta', 'taxaEntrega')
+            compact('reserva', 'breadcrumb', 'titulo', 'metodosPagamento', 'gatewayPadrao', 'gatewayNome', 'moedaPadrao', 'stripePublicKey', 'taxaColeta', 'taxaEntrega', 'totalPagoAprovado', 'saldoPendente', 'valorCobranca')
         );
     }
 
     public function processarPagamento(Request $request, $id)
     {
-        $reserva = $this->reservaService->getById($id);
-        $valorTotal = (float) $reserva->valor_total_final;
+        $reserva = $this->reservaService->getById($id, ['opcionais', 'cupomDesconto', 'estacaoRetirada', 'estacaoDevolucao', 'transacoes']);
+
+        $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
+        $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+        if ($taxaColeta == 0 && $reserva->estacaoRetirada && $reserva->data_inicio) {
+            $av = $this->reservaService->avaliarFuncionamentoEstacaoPublico((int) $reserva->estacao_retirada_id, $reserva->data_inicio, 'retirada');
+            if (($av['taxa_extra'] ?? false) && ($av['ok'] ?? false)) {
+                $taxaColeta = (float) ($reserva->estacaoRetirada->valor_taxa_coleta ?? 0);
+            }
+        }
+        if ($taxaEntrega == 0 && $reserva->estacaoDevolucao && $reserva->data_fim) {
+            $av = $this->reservaService->avaliarFuncionamentoEstacaoPublico((int) $reserva->estacao_devolucao_id, $reserva->data_fim, 'devolucao');
+            if (($av['taxa_extra'] ?? false) && ($av['ok'] ?? false)) {
+                $taxaEntrega = (float) ($reserva->estacaoDevolucao->valor_taxa_entrega ?? 0);
+            }
+        }
+        if ((float) ($reserva->percentual_desconto ?? 0) == 0 && $reserva->cupom_desconto_id && $reserva->cupomDesconto) {
+            $reserva->percentual_desconto = (float) ($reserva->cupomDesconto->valor ?? 0);
+        }
+
+        $diasReserva = (int) ($reserva->quantidade_dias ?? 0);
+        $tarifaBase = (float) ($reserva->tarifa_base ?? 0);
+        $valorTarifaBase = $tarifaBase * $diasReserva;
+        $valorOpcionais = (float) ($reserva->valor_opcionais ?? 0);
+        if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
+            $valorOpcionais = (float) $reserva->opcionais->sum(fn ($opcional) => (float) ($opcional->pivot->preco_total ?? 0));
+        }
+        $subtotal = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
+        $valorDesconto = $subtotal * ((float) ($reserva->percentual_desconto ?? 0) / 100);
+        $valorTotal = max(0, $subtotal - $valorDesconto);
+        $statusPagamentoAprovado = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
+        $totalPagoAprovado = (float) ($reserva->transacoes ?? collect())
+            ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
+                && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
+            ->sum('valor');
+        $valorCobranca = max(0, $valorTotal - $totalPagoAprovado);
+
+        if ($valorCobranca <= 0.009) {
+            return redirect()->route('reserva.show', $id)->with('warning', 'Esta reserva não possui saldo pendente para pagamento.');
+        }
 
         $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $reserva->empresa_id);
         if (!$empresa) {
@@ -2082,7 +2140,7 @@ private function montarDiasSemanaFlags($diasUteis): array
 
         $payload = array_merge([
             'reserva_id' => $reserva->id,
-            'valor' => $valorTotal,
+            'valor' => $valorCobranca,
             'currency' => $currency,
             'payment_method' => (string) $request->input('payment_method', ''),
             'customer_id' => (string) ($userReserva->stripe_id ?? ''),
@@ -2123,7 +2181,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             'user_id' => $reserva->user_id,
             'pago_por_user_id' => Auth::id(),
             'reserva_id' => $reserva->id,
-            'valor' => $valorTotal,
+            'valor' => $valorCobranca,
             'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency)),
             'metodo_pagamento' => $gateway,
             'gateway_transaction_id' => $resultado['transaction_id'] ?? null,
@@ -2134,6 +2192,8 @@ private function montarDiasSemanaFlags($diasUteis): array
         $json = json_encode([
             'acao' => 'Pagamento efetuado',
             'valor_total' => $valorTotal,
+            'valor_pago' => $valorCobranca,
+            'saldo_anterior' => $valorCobranca,
             'gateway' => $gateway,
             'moeda' => strtoupper((string) ($resultado['currency'] ?? $currency)),
             'usuario_pagador_id' => Auth::id(),
