@@ -9,4 +9,4 @@ Route::prefix('termo-consentimento')->name('termo_consentimento.')->group(functi
     Route::get('{id}/horariosdiarios', [TermoConsentimentoController::class, 'horarios_diarios'])->name('horarios_diarios');
     Route::post('{id}/horariosdiarios', [TermoConsentimentoController::class, 'salvar_horarios_diarios'])->name('salvar_horarios_diarios');
 });
-Route::resource('termo-consentimento', TermoConsentimentoController::class);
+Route::resource('termo-consentimento', TermoConsentimentoController::class)->as('termo_consentimento');
