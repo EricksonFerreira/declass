@@ -62,10 +62,12 @@
                 </a>
             @endif
 
+            @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
             <button type="button" class="action-pill" style="background:linear-gradient(135deg,#059669,#34d399);" data-toggle="modal" data-target="#modalPagamentoDinheiro">
                 <i class="fas fa-money-bill-wave"></i>
                 <span>Pagamento em dinheiro</span>
             </button>
+            @endif
 
             @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
                 <div class="reservation-actions-card__alert" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-top:8px;">

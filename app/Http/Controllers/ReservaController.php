@@ -4021,6 +4021,7 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'status' => 'approved',
                 'confirmado_em' => now(),
                 'confirmado_por_user_id' => Auth::id(),
+                'info_pagamento' => ['metodo' => 'dinheiro', 'registrado_por' => Auth::user()?->name ?? 'Sistema'],
             ]);
             $valorLog = $valor;
         }
