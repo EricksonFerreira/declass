@@ -54,9 +54,27 @@ class StripeGatewayService implements IPagamento
             return ['status' => 'error', 'message' => 'Falha ao processar o pagamento. Tente novamente.', 'raw_status' => 'error'];
         }
 
-        // 2. Confirma o PaymentIntent (com parcelamento se aplicavel)
-        $confirmPayload = [];
+        // 2. Verifica se o parcelamento solicitado esta disponivel
+        if ($installments > 1) {
+            $availablePlans = $intent->payment_method_options->card->installments->available_plans ?? [];
+            $availableCounts = array_map(fn($p) => $p->count ?? 0, (array)$availablePlans);
+            sort($availableCounts);
 
+            $planSupported = in_array($installments, $availableCounts, true);
+
+            if (!$planSupported) {
+                $msg = 'Este cartão não permite parcelamento em ' . $installments . 'x.';
+                if (!empty($availableCounts)) {
+                    $msg .= ' Opções disponíveis para este cartão: ' . implode('x, ', $availableCounts) . 'x.';
+                } else {
+                    $msg .= ' Este cartão não suporta parcelamento. Selecione outro cartão ou parcele em até 1x (à vista).';
+                }
+                return ['status' => 'error', 'message' => $msg, 'raw_status' => 'installments_not_supported', 'available_plans' => $availableCounts];
+            }
+        }
+
+        // 3. Confirma o PaymentIntent com parcelamento (se aplicavel)
+        $confirmPayload = [];
         if ($installments > 1) {
             $confirmPayload['payment_method_options'] = [
                 'card' => [
@@ -78,13 +96,8 @@ class StripeGatewayService implements IPagamento
             \Log::warning('Stripe card error', ['message' => $e->getMessage(), 'code' => $e->getError()?->code]);
             return ['status' => 'error', 'message' => $this->mapStripeCardError($e), 'raw_status' => 'card_error'];
         } catch (\Stripe\Exception\ApiErrorException $e) {
-            $message = $e->getMessage();
-            if (str_contains($message, 'not supported for this payment method')) {
-                \Log::warning('Stripe installment not supported', ['message' => $message, 'installments' => $installments]);
-                return ['status' => 'error', 'message' => 'Este cartão não suporta parcelamento em ' . $installments . 'x. Selecione outra quantidade de parcelas ou utilize outro cartão.', 'raw_status' => 'installments_not_supported'];
-            }
-            \Log::error('Stripe confirm error', ['message' => $message, 'installments' => $installments]);
-            return ['status' => 'error', 'message' => $message, 'raw_status' => 'api_error'];
+            \Log::error('Stripe confirm error', ['message' => $e->getMessage(), 'installments' => $installments]);
+            return ['status' => 'error', 'message' => $e->getMessage(), 'raw_status' => 'api_error'];
         } catch (\Throwable $e) {
             \Log::error('Stripe generic error', ['message' => $e->getMessage()]);
             return ['status' => 'error', 'message' => 'Falha ao processar o pagamento. Tente novamente.', 'raw_status' => 'error'];
