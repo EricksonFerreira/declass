@@ -30,6 +30,7 @@ class ContratoCheckin extends Model
         'assinatura',
         'data_assinatura',
         'assinado',
+        'pdf_path',
         // Campos de upgrade de categoria
         'grupo_frota_original_id',
         'veiculo_previsto_id',

@@ -1094,9 +1094,9 @@ return [
             ],
         ],
         [
-        [
-            'text' => 'sidebar.termo_consentimento',
-            'icon' => 'fas fa-file-signature',
+            'text'    => 'sidebar.termo_consentimento',
+            'icon'    => 'fas fa-file-signature',
+            'can'     => 'termo_consentimento.index',
             'submenu' => [
                 [
                     'text' => 'Listagem',
@@ -1110,9 +1110,8 @@ return [
                 ],
             ],
         ],
-        ],
-    ],
 
+    ],
     /*
     |--------------------------------------------------------------------------
     | Menu Filters

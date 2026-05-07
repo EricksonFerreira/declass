@@ -2523,6 +2523,19 @@ private function montarDiasSemanaFlags($diasUteis): array
 
     public function verContratoCheckin(Request $request, $reserva_id){
 
+        $reserva = $this->reservaService->getById($reserva_id, ['contratoCheckin']);
+        if (!$reserva || !$reserva->contratoCheckin) {
+            return redirect()->route('reserva.show', $reserva_id)
+                ->with('error', 'Contrato de check-in nao encontrado para esta reserva.');
+        }
+
+        if ($reserva->contratoCheckin->pdf_path && Storage::disk('public')->exists($reserva->contratoCheckin->pdf_path)) {
+            return response()->file(storage_path('app/public/' . $reserva->contratoCheckin->pdf_path), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="contrato-' . $reserva->id . '.pdf"',
+            ]);
+        }
+
         // Carrega a reserva com todos os relacionamentos necessários
     $reserva = $this->reservaService->getById($reserva_id, [
         'usuario',
@@ -2897,6 +2910,8 @@ private function montarDiasSemanaFlags($diasUteis): array
                     ['veiculo' => $contrato->veiculo?->nome ?? "ID {$contrato->veiculo_id}"],
                     'Contrato de check-in assinado', 'success'
                 );
+
+                $this->gerarESalvarPdfContrato($reserva_id);
                 
                 return response()->json(['success' => true, 'message' => 'Contrato assinado com sucesso']);
             } catch (\Exception $e) {
@@ -3070,8 +3085,120 @@ private function montarDiasSemanaFlags($diasUteis): array
         }
     }
 
+    private function gerarESalvarPdfContrato(int $reservaId): void
+    {
+        try {
+            $reserva = $this->reservaService->getById($reservaId, [
+                'usuario', 'empresa', 'veiculo', 'grupoFrota', 'estacaoRetirada',
+                'estacaoDevolucao', 'opcionais', 'contratoCheckin', 'modelos',
+                'statusReserva', 'cupomDesconto', 'transacoes.user', 'transacoes.pagoPor',
+                'contratoCheckin.marca', 'contratoCheckin.modelo', 'contratoCheckin.veiculo.marca',
+                'contratoCheckin.veiculo.modelo', 'contratoCheckin.veiculo.grupoFrota',
+                'contratoCheckin.grupoFrotaOriginal', 'contratoCheckin.veiculoPrevisto',
+                'contratoCheckin.usuarioUpgrade', 'contratoCheckin.calcao', 'contratoCheckout',
+                'calcao', 'veiculoDano.dano.categoria', 'veiculoDano.imagem',
+                'veiculoDano.usuarioCorrecao', 'avariaCobrancas', 'multas', 'nfseAtual',
+            ]);
+
+            if (!$reserva || !$reserva->contratoCheckin) return;
+
+            $moedaSimbolo = $this->simboloMoeda($reserva->empresa?->moeda_pagamento ?? 'BRL');
+            $money = fn ($v) => $moedaSimbolo . ' ' . number_format((float) ($v ?? 0), 2, ',', '.');
+            $dateTime = fn ($v) => $v ? Carbon::parse($v)->format('d/m/Y H:i') : '-';
+            $dateOnly = fn ($v) => $v ? Carbon::parse($v)->format('d/m/Y') : '-';
+            $safe = fn ($v, $d = '-') => filled($v) ? $v : $d;
+
+            $diasReserva = (int) ($reserva->quantidade_dias ?? 0);
+            $tarifaBase = (float) ($reserva->tarifa_base ?? 0);
+            $valorTarifaBase = (float) ($reserva->valor_total_tarifa_base ?? 0);
+            if ($valorTarifaBase <= 0) $valorTarifaBase = $tarifaBase * $diasReserva;
+
+            $valorOpcionais = (float) ($reserva->valor_opcionais ?? 0);
+            if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
+                $valorOpcionais = (float) $reserva->opcionais->sum(fn ($o) => (float) ($o->pivot->preco_total ?? 0));
+            }
+
+            $taxaColeta = (float) ($reserva->taxa_coleta ?? 0);
+            $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+            $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
+            $subtotal = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
+            $valorDesconto = $subtotal * ($percentualDesconto / 100);
+            $valorTotal = max(0, $subtotal - $valorDesconto);
+
+            $totalPago = (float) $reserva->transacoes
+                ->whereIn('status', ['succeeded', 'approved', 'paid', 'confirmed', 'concluido'])
+                ->sum('valor');
+            $saldoPendente = max(0, $valorTotal - $totalPago);
+
+            $logoData = null;
+            $logoPath = is_string($reserva->empresa?->logo_path ?? null) ? trim($reserva->empresa->logo_path) : '';
+            if ($logoPath !== '' && Storage::disk('public')->exists($logoPath)) {
+                $mime = mime_content_type(Storage::disk('public')->path($logoPath));
+                $logoData = 'data:' . $mime . ';base64,' . base64_encode(Storage::disk('public')->get($logoPath));
+            }
+
+            $danosDetalhados = $reserva->veiculoDano->sortByDesc('id')->map(function ($dano) use ($money, $dateTime, $safe) {
+                return [
+                    'id' => $dano->id,
+                    'localizacao' => strtoupper((string) ($dano->local_dano ?? $dano->localizacao_problema ?? '-')),
+                    'categoria' => $dano->dano?->categoria?->nome ?? '-',
+                    'localizacao_problema' => $safe($dano->localizacao_problema),
+                    'tipo_dano' => $safe($dano->tipo_dano),
+                    'observacoes' => $safe($dano->observacoes),
+                    'quilometragem' => $dano->quilometragem_veiculo ? number_format((float) $dano->quilometragem_veiculo, 0, ',', '.') . ' km' : '-',
+                    'custo_estimado' => $money($dano->custo_estimado),
+                    'status' => $dano->correcao_data ? 'Corrigido' : 'Pendente',
+                    'correcao' => $safe($dano->correcao_descricao),
+                    'correcao_data' => $dano->correcao_data ? $dateTime($dano->correcao_data) : '-',
+                    'correcao_usuario' => $dano->usuarioCorrecao?->nome ?? '-',
+                    'registrado_em' => $dateTime($dano->created_at),
+                    'imagens' => $dano->imagem->map(function ($img) {
+                        if (!$img->caminho_imagem) return null;
+                        $path = $img->caminho_imagem;
+                        if (!Storage::disk('public')->exists($path)) return null;
+                        $mime = mime_content_type(Storage::disk('public')->path($path));
+                        return 'data:' . $mime . ';base64,' . base64_encode(Storage::disk('public')->get($path));
+                    })->filter()->values()->toArray(),
+                ];
+            })->values()->toArray();
+
+            $data = [
+                'documento' => [
+                    'codigo_interno' => 'ARCS-' . date('y'),
+                    'atcud' => 'JJNXXNNC-' . date('y'),
+                    'data_emissao' => now()->format('d/m/Y H:i:s'),
+                    'data_assinatura' => $reserva->contratoCheckin->data_assinatura,
+                    'empresa' => ['nome' => $reserva->empresa->nome ?? config('app.empresa.nome'), 'endereco' => config('app.empresa.endereco'), 'site' => config('app.empresa.site'), 'instagram' => config('app.empresa.instagram'), 'logo_url' => $logoData],
+                ],
+                'contrato' => ['numero' => '#' . str_pad($reserva->id, 5, '0', STR_PAD_LEFT), 'titulo' => 'CONTRATO DE ALUGUEL', 'subtitulo' => 'CONDIÇÕES PARTICULARES DO CONTRATO DE ALUGUEL'],
+                'cliente' => ['nome' => $reserva->usuario->nome, 'endereco' => $reserva->usuario->endereco, 'pais' => $reserva->usuario->pais, 'nif' => $reserva->usuario->nif, 'email' => $reserva->usuario->email, 'telefone' => $reserva->usuario->telefone, 'passaporte' => $safe($reserva->usuario->passaporte), 'local_emissao' => $reserva->usuario->local_emissao, 'data_nascimento' => $dateOnly($reserva->usuario->data_nascimento), 'local_nascimento' => $reserva->usuario->local_nascimento, 'carta_conducao' => ['pais' => $reserva->usuario->pais_emissao, 'numero' => $reserva->usuario->numero_carta_conducao, 'data_emissao' => $dateOnly($reserva->usuario->data_emissao_carta_conducao), 'validade' => $dateOnly($reserva->usuario->data_validade_carta_conducao)]],
+                'veiculo' => ['matricula' => $safe($reserva->contratoCheckin->veiculo?->placa_licenca, '#' . $reserva->contratoCheckin->veiculo_id), 'marca' => $safe($reserva->contratoCheckin->marca?->nome ?? $reserva->contratoCheckin->veiculo?->marca?->nome), 'modelo' => $safe($reserva->contratoCheckin->modelo?->nome ?? $reserva->contratoCheckin->veiculo?->modelo?->nome), 'grupo' => $safe($reserva->contratoCheckin->veiculo?->grupoFrota?->nome ?? $reserva->grupoFrota?->nome), 'nome' => $safe($reserva->contratoCheckin->veiculo?->nome), 'quilometros' => $reserva->contratoCheckin->quilometragem_atual, 'combustivel' => $safe($reserva->contratoCheckin->nivel_combustivel), 'taxas' => ['combustivel_em_falta' => $money(0), 'taxa_reabastecimento' => $money(0)], 'franquia' => $money(0), 'kms_permitidos' => $reserva->kms_permitidos ?? $reserva->contratoCheckin->veiculo?->limite_kms ?? 'ilimitado'],
+                'reserva' => ['id' => $reserva->id, 'status' => $safe($reserva->statusReserva?->nome), 'origem' => $safe($reserva->label_origem_cadastro), 'criada_em' => $dateTime($reserva->created_at), 'pagamento_efetuado' => ($reserva->pagamento_efetuado ?? 'N') === 'S' ? 'Sim' : 'Nao', 'grupo_reservado' => $safe($reserva->grupoFrota?->nome), 'modelo_reservado' => $safe($reserva->modelos?->nome), 'observacoes' => $safe($reserva->observacoes), 'alugado_em' => ['local' => $safe($reserva->estacaoRetirada?->nome), 'data' => $dateOnly($reserva->data_inicio), 'hora' => $reserva->data_inicio ? Carbon::parse($reserva->data_inicio)->format('H:i') : '-'], 'devolver_em' => ['local' => $safe($reserva->estacaoDevolucao?->nome), 'data' => $dateOnly($reserva->data_fim), 'hora' => $reserva->data_fim ? Carbon::parse($reserva->data_fim)->format('H:i') : '-']],
+                'faturacao' => ['dias_unidades' => $reserva->quantidade_dias, 'tarifa_diaria' => $money($tarifaBase), 'valor_tarifa_base' => $money($valorTarifaBase), 'valor_opcionais' => $money($valorOpcionais), 'taxa_coleta' => $money($taxaColeta), 'taxa_entrega' => $money($taxaEntrega), 'subtotal' => $money($subtotal), 'percentual_desconto' => number_format($percentualDesconto, 2, ',', '.') . '%', 'cupom' => $reserva->cupomDesconto?->codigo, 'valor_desconto' => $money($valorDesconto), 'iva_total' => $money(0), 'valor_total' => $money($valorTotal), 'total_pago' => $money($totalPago), 'saldo_pendente' => $money($saldoPendente), 'status_financeiro' => $saldoPendente <= 0 ? 'Pago' : ($totalPago > 0 ? 'Parcialmente pago' : 'Em aberto')],
+                'estado_viatura' => ['itens' => []],
+                'funcionario' => ['nome' => Auth::user()->nome ?? Auth::user()->name ?? 'Sistema'],
+                'opcionais' => $reserva->opcionais->map(function ($o) use ($money) { return ['nome' => $o->nome, 'quantidade' => $o->pivot->quantidade, 'valor_total' => $money($o->pivot->preco_total), 'preco_unitario' => $o->preco_por_dia ? $money($o->preco_por_dia) : $money($o->preco_integral)]; })->toArray(),
+                'assinatura' => $reserva->contratoCheckin->assinatura,
+                'financeiro_detalhado' => ['grupo' => $safe($reserva->grupoFrota?->nome), 'tarifa_diaria' => $money($tarifaBase), 'dias_label' => $diasReserva . ' ' . ($diasReserva === 1 ? 'dia' : 'dias') . ' x tarifa', 'valor_tarifa_base' => $money($valorTarifaBase), 'opcionais' => $money($valorOpcionais), 'taxa_coleta' => $money($taxaColeta), 'taxa_entrega' => $money($taxaEntrega), 'subtotal' => $money($subtotal), 'desconto_label' => number_format($percentualDesconto, 2, ',', '.') . '%' . ($reserva->cupomDesconto?->codigo ? ' - ' . $reserva->cupomDesconto->codigo : ''), 'desconto_valor' => $money($valorDesconto), 'total' => $money($valorTotal)],
+                'pagamentos' => $reserva->transacoes->sortByDesc('id')->map(function ($t) use ($money, $dateTime) { return ['data' => $dateTime($t->created_at), 'valor' => $money($t->valor), 'metodo' => $t->metodo_pagamento ?? '-', 'status' => $t->status ?? '-', 'confirmado_em' => $dateTime($t->confirmado_em), 'pago_por' => $t->pagoPor?->nome ?? $t->user?->nome ?? '-']; })->values()->toArray(),
+                'danos_detalhados' => $danosDetalhados,
+                'calcao' => $reserva->calcao ? ['status' => $reserva->calcao->status ?? '-', 'valor_calculado' => $money($reserva->calcao->valor_calculado ?? 0), 'valor_autorizado' => $money($reserva->calcao->valor_autorizado ?? 0), 'valor_capturado' => $money($reserva->calcao->valor_capturado ?? 0), 'metodo' => $reserva->calcao->metodo ?? '-'] : null,
+                'cobrancas_avaria' => $reserva->avariaCobrancas->sortByDesc('id')->map(function ($c) use ($money, $dateTime) { return ['descricao' => $c->descricao ?? ('Cobranca #' . $c->id), 'valor' => $money($c->valor ?? 0), 'status' => $c->status ?? '-', 'data' => $dateTime($c->created_at)]; })->values()->toArray(),
+                'condicoes_gerais' => TermoConsentimento::where('empresa_id', $reserva->empresa_id)->where('tipo', 'checkin')->orderBy('ordem')->get(['ordem', 'titulo', 'texto'])->toArray(),
+            ];
+
+            $pdfContent = $this->pdfService->gerarCheckinPdfContent($data);
+            $filename = 'contratos/checkin_' . $reservaId . '_' . time() . '.pdf';
+            Storage::disk('public')->put($filename, $pdfContent);
+
+            $reserva->contratoCheckin->update(['pdf_path' => $filename]);
+        } catch (\Throwable $e) {
+            \Log::error('Erro ao gerar PDF do contrato', ['reserva_id' => $reservaId, 'error' => $e->getMessage()]);
+        }
+    }
+
     /**
-     * Percorre recursivamente o array e substitui valores nulos em campos de data por <br>
+     * Processa o array de dados substituindo valores vazios/nulos por um placeholder padrao.
      * 
      * @param array &$data Array de dados a ser processado
      */

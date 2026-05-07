@@ -44,6 +44,25 @@ class PdfService
         return $this->generatePdf($htmlContent, 'contrato-locacao-' . ($data['contrato']['numero'] ?? 'sem-numero') . '.pdf');
     }
 
+    public function gerarCheckinPdfContent(array $data): string
+    {
+        $data = $this->normalizarDadosContratoPdf($data);
+
+        $cssContrato = file_get_contents(public_path('css/pdf/contrato-locacao.css'));
+
+        $htmlContent = view('pdf.contratos.show', [
+            'data' => $data,
+            'css' => $cssContrato,
+        ])->render();
+
+        $this->dompdf->loadHtml($htmlContent);
+        $this->dompdf->setPaper('A4', 'portrait');
+        $this->dompdf->setBasePath(public_path());
+        $this->dompdf->render();
+
+        return $this->dompdf->output();
+    }
+
     private function normalizarDadosContratoPdf(array $data): array
     {
         array_walk_recursive($data, function (&$value) {
