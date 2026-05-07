@@ -7,7 +7,37 @@
     <x-page-title :title="$titulo" :createUrl="route('empresa.create')" />
 @stop
 
+@php
+    $storagePath = storage_path('app/public');
+    $totalBytes = 0;
+    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storagePath, FilesystemIterator::SKIP_DOTS));
+    foreach ($iterator as $file) {
+        $totalBytes += $file->getSize();
+    }
+    $totalMB = $totalBytes / 1048576;
+    if ($totalMB >= 1024) {
+        $storageFormatted = number_format($totalMB / 1024, 2, ',', '.') . ' GB';
+    } else {
+        $storageFormatted = number_format($totalMB, 2, ',', '.') . ' MB';
+    }
+@endphp
+
 @section('content')
+    <div class="row mb-3">
+        <div class="col-md-3">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ $storageFormatted }}</h3>
+                    <p>Armazenamento utilizado</p>
+                </div>
+                <div class="icon"><i class="fas fa-database"></i></div>
+                <a href="#" class="small-box-footer" onclick="event.preventDefault();alert('Armazenamento total utilizado no disco público do sistema.');">
+                    Mais info <i class="fas fa-arrow-circle-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+
     @if (!empty($filters))
         <x-filter
             :filters="$filters"
