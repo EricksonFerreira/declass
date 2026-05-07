@@ -105,15 +105,10 @@
                 @else
                     <span class="action-pill action-pill--disabled"
                           data-toggle="tooltip"
-                          title="Pagamento insuficiente. Valor atual: R$ {{ number_format($valorTotalReserva, 2, ',', '.') }}. Pago: R$ {{ number_format($totalPagoReserva, 2, ',', '.') }}. Restante: R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }}.">
+                          title="Pagamento insuficiente. Restante: R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }}. Quite o saldo clicando em 'Pagar saldo pendente' acima.">
                         <i class="fas fa-lock"></i>
                         <span>Assinar contrato</span>
                     </span>
-                    <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="action-pill action-pill--accent" style="background:linear-gradient(135deg,#dc2626,#f97316);">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>Pagar saldo pendente</span>
-                        <small style="display:block;font-size:9px;opacity:0.9;">R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }}</small>
-                    </a>
                 @endif
             @endif
 
