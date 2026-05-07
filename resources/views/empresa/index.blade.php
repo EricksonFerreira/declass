@@ -71,6 +71,7 @@
                         <th class="pl-3">Empresa</th>
                         <th>Contato</th>
                         <th>Gateway / Moeda</th>
+                        <th>Armazenamento</th>
                         <th>Cores</th>
                         <th>Status</th>
                         <th class="text-center" style="width:220px;">Acoes</th>
