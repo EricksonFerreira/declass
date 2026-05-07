@@ -1375,6 +1375,27 @@
 
             .contato-banner { padding: 28px 20px; }
         }
+
+        /* ══ Planos ══ */
+        .planos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
+        .plano-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .25s, transform .25s; position: relative; }
+        .plano-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,.08); transform: translateY(-3px); }
+        .plano-card--featured { border-color: var(--cor-primaria); box-shadow: 0 0 0 2px var(--cor-primaria); }
+        .plano-card__badge { position: absolute; top: 14px; right: 14px; background: var(--cor-primaria); color: var(--cor-texto-primario); font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .03em; }
+        .plano-card__header { padding: 28px 24px 20px; border-bottom: 1px solid #f1f5f9; }
+        .plano-card__name { font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
+        .plano-card__desc { font-size: .8rem; color: #64748b; margin: 0 0 16px; line-height: 1.4; }
+        .plano-card__price { display: flex; align-items: baseline; gap: 2px; }
+        .plano-card__currency { font-size: .85rem; color: #64748b; font-weight: 600; }
+        .plano-card__value { font-size: 2rem; font-weight: 900; color: #0f172a; line-height: 1; }
+        .plano-card__period { font-size: .8rem; color: #94a3b8; margin-left: 4px; }
+        .plano-card__body { padding: 20px 24px; flex: 1; }
+        .plano-card__features { list-style: none; margin: 0; padding: 0; font-size: .85rem; }
+        .plano-card__features li { padding: 5px 0; color: #334155; display: flex; align-items: center; gap: 8px; }
+        .plano-card__features li i { color: var(--cor-primaria); font-size: .85rem; width: 18px; text-align: center; }
+        .plano-card__features li i.fa-database { color: #64748b; }
+        .plano-card__footer { padding: 0 24px 24px; }
+        .plano-card__footer .btn { border-radius: 10px; font-weight: 700; font-size: .85rem; padding: .65rem 1rem; text-align: center; display: block; }
     </style>
 </head>
 <body>
