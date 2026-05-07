@@ -70,6 +70,7 @@
                     <tr>
                         <th class="pl-3">Empresa</th>
                         <th>Contato</th>
+                        <th>Plano</th>
                         <th>Gateway / Moeda</th>
                         <th>Armazenamento</th>
                         <th>Cores</th>
@@ -117,6 +118,31 @@
                                     <div><strong>CNPJ:</strong> {{ $empresa->cnpj ?? '-' }}</div>
                                     <div><strong>E-mail:</strong> {{ $empresa->email ?? '-' }}</div>
                                     <div><strong>Telefone:</strong> {{ $empresa->telefone ?? '-' }}</div>
+                                </div>
+                            </td>
+
+                            @php
+                                $planoAtivo = $empresa->planoAtivo;
+                            @endphp
+                            <td class="align-middle text-xs">
+                                @if($planoAtivo)
+                                    <div><strong>{{ $planoAtivo->plano?->nome ?? '-' }}</strong></div>
+                                    <div>
+                                        <span class="badge badge-xs bg-{{ $planoAtivo->status === 'ativo' ? 'success' : ($planoAtivo->status === 'trial' ? 'info' : ($planoAtivo->status === 'inadimplente' ? 'danger' : 'warning')) }}">
+                                            {{ $planoAtivo->status_badge['label'] ?? $planoAtivo->status }}
+                                        </span>
+                                    </div>
+                                    <div class="text-muted" style="font-size:10px;">
+                                        {{ $planoAtivo->periodicidade_texto }}
+                                        {{ $planoAtivo->data_vencimento ? '· até ' . $planoAtivo->data_vencimento->format('d/m/Y') : '' }}
+                                    </div>
+                                @else
+                                    <span class="text-muted font-italic">Sem plano</span>
+                                @endif
+                                <div style="margin-top:2px;">
+                                    <a href="{{ route('assinatura.index') }}" class="text-primary" style="font-size:10px;">
+                                        <i class="fas fa-external-link-alt mr-1"></i> Gerenciar assinaturas
+                                    </a>
                                 </div>
                             </td>
 
