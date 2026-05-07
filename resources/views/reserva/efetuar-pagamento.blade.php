@@ -165,7 +165,7 @@
                     <div>
                         <div class="ep-card__title">Processar Pagamento</div>
                         <div class="ep-card__sub">
-                            Gateway: <strong>{{ $gatewayNome ?? strtoupper($gateway) }}</strong>
+                            <strong>Cartão de crédito</strong>
                             &nbsp;·&nbsp; Moeda: <strong>{{ $moeda }}</strong>
                         </div>
                     </div>
