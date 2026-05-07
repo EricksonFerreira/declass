@@ -98,7 +98,7 @@
             @endif
 
             {{-- Check-in --}}
-            @if(!$reserva->contratoCheckin && ($pagamentoEfetuado ?? false))
+            @if(!$reserva->contratoCheckin && ($pagamentoEfetuado ?? false) && $pagamentoEmDia)
                 <a href="{{ route('reserva.checkin', $reserva->id) }}" class="action-pill action-pill--success">
                     <i class="fas fa-file-signature"></i>
                     <span>Iniciar check-in</span>
