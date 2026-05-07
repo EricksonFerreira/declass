@@ -45,4 +45,20 @@ class Transacao extends Model
     {
         return $this->belongsTo(User::class, 'pago_por_user_id');
     }
+
+    public function getMetodoPagamentoLabelAttribute(): string
+    {
+        return match (strtolower($this->metodo_pagamento ?? '')) {
+            'stripe' => 'Cartão',
+            'credit_card', 'card' => 'Cartão',
+            'dinheiro', 'cash', 'money' => 'Dinheiro',
+            'pix' => 'PIX',
+            'mercado_livre', 'mercadolivre', 'mercadopago' => 'Mercado Pago',
+            'paypal' => 'PayPal',
+            'boleto' => 'Boleto',
+            'transferencia', 'transfer' => 'Transferência',
+            'debito', 'debit' => 'Débito',
+            default => $this->metodo_pagamento ?? 'Não classificado',
+        };
+    }
 }

@@ -420,7 +420,7 @@ $refText = $item->reserva_id ? 'RES-#' . $item->reserva_id : 'TRA-#' . $item->id
                             <td class="align-middle text-uppercase text-muted"
                                 style="font-size:0.8rem; letter-spacing:0.02em;">
                                 <i class="fas fa-cash-register mr-1"></i>
-                                {{ $item->metodo_pagamento ?? 'Nao classificado' }}
+                                {{ $item->metodo_pagamento_label }}
                             </td>
                             <td class="align-middle">
                                 <span class="badge badge-modern {{ $badgeClass }}">
