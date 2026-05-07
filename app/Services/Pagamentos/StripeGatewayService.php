@@ -13,6 +13,7 @@ class StripeGatewayService implements IPagamento
         $customerId = (string) ($dados['customer_id'] ?? '');
         $stripeSecret = (string) ($dados['stripe_secret'] ?? '');
         $currency = strtolower((string) ($dados['currency'] ?? 'brl'));
+        $installments = (int) ($dados['installments'] ?? 1);
 
         if ($paymentMethodId === '' || $valor <= 0 || $stripeSecret === '') {
             return [
@@ -22,62 +23,98 @@ class StripeGatewayService implements IPagamento
         }
 
         $stripe = new StripeClient($stripeSecret);
-        $installments = (int) ($dados['installments'] ?? 1);
-        $payload = [
+
+        // 1. Cria PaymentIntent sem confirmar para obter planos disponiveis
+        $createPayload = [
             'amount' => (int) round($valor * 100),
             'currency' => $currency,
             'payment_method' => $paymentMethodId,
-            'confirm' => true,
-            'off_session' => true,
+            'confirm' => false,
         ];
 
         if ($installments > 1) {
-            $payload['payment_method_types'] = ['card'];
-            $payload['payment_method_options'] = [
+            $createPayload['payment_method_options'] = [
                 'card' => [
-                    'installments' => [
-                        'enabled' => true,
-                        'plan' => [
-                            'count' => $installments,
-                            'type' => 'fixed_count',
-                            'interval' => 'month',
-                        ],
-                    ],
+                    'installments' => ['enabled' => true],
                 ],
-            ];
-        } else {
-            $payload['automatic_payment_methods'] = [
-                'enabled' => true,
-                'allow_redirects' => 'never',
             ];
         }
         if ($customerId !== '') {
-            $payload['customer'] = $customerId;
+            $createPayload['customer'] = $customerId;
         }
 
         try {
-            $intent = $stripe->paymentIntents->create($payload);
-        } catch (\Stripe\Exception\CardException $e) {
-            \Log::warning('Stripe card error', ['message' => $e->getMessage(), 'code' => $e->getError()?->code, 'decline' => $e->getError()?->decline_code]);
-            return [
-                'status' => 'error',
-                'message' => $this->mapStripeCardError($e),
-                'raw_status' => 'card_error',
-            ];
+            $intent = $stripe->paymentIntents->create($createPayload);
         } catch (\Stripe\Exception\ApiErrorException $e) {
-            \Log::error('Stripe API error', ['message' => $e->getMessage(), 'type' => get_class($e), 'installments' => $installments ?? 1]);
-            return [
-                'status' => 'error',
-                'message' => 'Falha ao processar o pagamento. ' . $e->getMessage(),
-                'raw_status' => 'api_error',
-            ];
+            \Log::error('Stripe error creating intent', ['message' => $e->getMessage()]);
+            return ['status' => 'error', 'message' => $e->getMessage(), 'raw_status' => 'api_error'];
         } catch (\Throwable $e) {
-            \Log::error('Stripe generic error', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
-            return [
-                'status' => 'error',
-                'message' => 'Falha ao processar o pagamento. Tente novamente.',
-                'raw_status' => 'error',
+            \Log::error('Stripe generic error', ['message' => $e->getMessage()]);
+            return ['status' => 'error', 'message' => 'Falha ao processar o pagamento. Tente novamente.', 'raw_status' => 'error'];
+        }
+
+        // 2. Obtem planos de parcelamento disponiveis
+        $availablePlans = [];
+        if ($installments > 1) {
+            $availablePlans = $intent->payment_method_options->card->installments->available_plans ?? [];
+        }
+
+        if ($installments > 1 && !empty($availablePlans)) {
+            // Encontra um plano com o numero de parcelas solicitado
+            $selectedPlan = null;
+            foreach ($availablePlans as $plan) {
+                if (($plan->count ?? 0) === $installments) {
+                    $selectedPlan = $plan;
+                    break;
+                }
+            }
+
+            if (!$selectedPlan) {
+                // Usa o primeiro plano disponivel como fallback
+                $selectedPlan = $availablePlans[0] ?? null;
+            }
+
+            if ($selectedPlan) {
+                $confirmPayload = [
+                    'payment_method_options' => [
+                        'card' => [
+                            'installments' => [
+                                'enabled' => true,
+                                'plan' => [
+                                    'count' => $selectedPlan->count ?? $installments,
+                                    'type' => $selectedPlan->type ?? 'fixed_count',
+                                    'interval' => $selectedPlan->interval ?? 'month',
+                                ],
+                            ],
+                        ],
+                    ],
+                ];
+            } else {
+                // Nenhum plano disponivel — prossegue sem parcelamento
+                $confirmPayload = [];
+            }
+        } else {
+            $confirmPayload = [
+                'payment_method_options' => [
+                    'card' => [
+                        'installments' => ['enabled' => false],
+                    ],
+                ],
             ];
+        }
+
+        // 3. Confirma o PaymentIntent
+        try {
+            $intent = $stripe->paymentIntents->confirm($intent->id, $confirmPayload);
+        } catch (\Stripe\Exception\CardException $e) {
+            \Log::warning('Stripe card error', ['message' => $e->getMessage(), 'code' => $e->getError()?->code]);
+            return ['status' => 'error', 'message' => $this->mapStripeCardError($e), 'raw_status' => 'card_error'];
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            \Log::error('Stripe confirm error', ['message' => $e->getMessage(), 'installments' => $installments]);
+            return ['status' => 'error', 'message' => $e->getMessage(), 'raw_status' => 'api_error'];
+        } catch (\Throwable $e) {
+            \Log::error('Stripe generic error', ['message' => $e->getMessage()]);
+            return ['status' => 'error', 'message' => 'Falha ao processar o pagamento. Tente novamente.', 'raw_status' => 'error'];
         }
 
         if (in_array($intent->status, ['requires_action', 'requires_source_action'], true)) {
