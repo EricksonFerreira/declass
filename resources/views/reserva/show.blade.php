@@ -87,6 +87,12 @@
         in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoPendente, true));
     $totalPagamentos = (float) $transacoesPagamento->sum('valor');
     $totalEstornos   = abs((float) $transacoesEstorno->sum('valor'));
+    $totalPagoAprovado = (float) $transacoesReserva
+        ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
+            && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
+        ->sum('valor');
+    $saldoPendenteAssinatura = max(0, $valorTotal - $totalPagoAprovado);
+    $pagamentoEmDiaAssinatura = $saldoPendenteAssinatura <= 0.009;
 
     if ($nfseAtual && ($nfseAtual->status ?? '') === 'erro' && is_array($nfseAtual->response ?? null)) {
         $nfseErroDetalhado = $nfseAtual->response['message'] ?? $nfseAtual->response['error'] ?? $nfseAtual->response['erro'] ?? null;
@@ -650,9 +656,20 @@
                                 <i class="fas fa-eye"></i> Ver contrato
                             </a>
                             @if(!$ciAssinado && !$checkoutJaRegistrado)
-                                <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
-                                    <i class="fas fa-signature"></i> Assinar
-                                </a>
+                                @if($pagamentoEmDiaAssinatura)
+                                    <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
+                                        <i class="fas fa-signature"></i> Assinar
+                                    </a>
+                                @else
+                                    <span class="rs-ci-btn rs-ci-btn--disabled"
+                                          data-toggle="tooltip"
+                                          title="Pagamento insuficiente. Restam R$ {{ number_format($saldoPendenteAssinatura, 2, ',', '.') }} para liberar a assinatura.">
+                                        <i class="fas fa-lock"></i> Assinar
+                                    </span>
+                                    <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
+                                        <i class="fas fa-credit-card"></i> Pagar restante
+                                    </a>
+                                @endif
                                 <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--edit">
                                     <i class="fas fa-edit"></i> Editar contrato
                                 </a>
@@ -3040,6 +3057,8 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     .rs-ci-btn--sign   { background:rgba(16,185,129,.13);  color:#047857; }
     .rs-ci-btn--edit   { background:rgba(245,158,11,.14);  color:#92400e; }
     .rs-ci-btn--delete { background:rgba(239,68,68,.11);   color:#b91c1c; }
+    .rs-ci-btn--disabled { background:rgba(100,116,139,.13); color:#64748b; cursor:not-allowed; }
+    .rs-ci-btn--disabled:hover { opacity:1; transform:none; }
 
     /* ── Fotos check-in ── */
     .rs-photo-grid {
