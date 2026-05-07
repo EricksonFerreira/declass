@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" :createUrl="route('termo-consentimento.create')" />
+    <x-page-title :title="$titulo" :createUrl="route('termo_consentimento.create')" />
 @stop
 
 @section('content')
@@ -20,7 +20,7 @@
                     <span class="badge badge-success">{{ $termo_consentimentos->total() }}</span>
                 </h3>
                 <div class="align-bottom d-flex flex-row justify-between" style="gap:8px;">
-                    <form action="{{ route('termo-consentimento.setPerPage') }}" method="POST">
+                    <form action="{{ route('termo_consentimento.setPerPage') }}" method="POST">
                         @csrf
                         <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
                     </form>
@@ -64,9 +64,9 @@
                                 </span>
                             </td>
                             <td>
-                                <a href="{{ route('termo-consentimento.edit', $termo->id) }}"
+                                <a href="{{ route('termo_consentimento.edit', $termo->id) }}"
                                     class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>
-                                <x-delete-button :action="route('termo-consentimento.destroy', $termo->id)" />
+                                <x-delete-button :action="route('termo_consentimento.destroy', $termo->id)" />
                             </td>
                         </tr>
                     @empty
