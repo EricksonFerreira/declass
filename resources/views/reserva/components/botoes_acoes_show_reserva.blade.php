@@ -55,9 +55,9 @@
             @if($reserva->podeEfetuarPagamento() || (!$pagamentoEmDia && $saldoPendenteReserva > 0))
                 <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="action-pill action-pill--accent">
                     <i class="fas fa-credit-card"></i>
-                    <span>Efetuar pagamento</span>
+                    <span>{{ $saldoPendenteReserva > 0 ? 'Pagar saldo pendente' : 'Efetuar pagamento' }}</span>
                     @if($saldoPendenteReserva > 0)
-                        <small style="display:block;font-size:9px;opacity:0.9;">R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }} pendente</small>
+                        <small style="display:block;font-size:9px;opacity:0.9;">R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }}</small>
                     @endif
                 </a>
             @endif
