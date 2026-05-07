@@ -2120,6 +2120,15 @@ private function montarDiasSemanaFlags($diasUteis): array
             ->sum('valor');
         $valorCobranca = max(0, $valorTotal - $totalPagoAprovado);
 
+        $valorInformado = (float) ($request->input('valor_pagamento', $valorCobranca));
+        if ($valorInformado > $valorCobranca) {
+            return redirect()->route('reserva.show', $id)->with('error', 'Valor informado (R$ ' . number_format($valorInformado, 2, ',', '.') . ') ultrapassa o saldo pendente de R$ ' . number_format($valorCobranca, 2, ',', '.') . '.');
+        }
+        if ($valorInformado <= 0) {
+            return redirect()->route('reserva.show', $id)->with('error', 'Informe um valor válido para o pagamento.');
+        }
+        $valorCobranca = $valorInformado;
+
         if ($valorCobranca <= 0.009) {
             return redirect()->route('reserva.show', $id)->with('warning', 'Esta reserva não possui saldo pendente para pagamento.');
         }
@@ -3996,6 +4005,14 @@ private function montarDiasSemanaFlags($diasUteis): array
 
         $reserva = $this->reservaService->getById($reserva_id);
 
+        // Calcula saldo pendente
+        $statusAprovado = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
+        $valorTotalReserva = (float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? $reserva->valor_total_tarifa_base ?? 0);
+        $totalJaPago = (float) $reserva->transacoes
+            ->whereIn('status', $statusAprovado)
+            ->sum('valor');
+        $saldoPendente = max(0, $valorTotalReserva - $totalJaPago);
+
         if ($transacaoId) {
             $transacao = Transacao::where('reserva_id', $reserva_id)->where('id', $transacaoId)->firstOrFail();
             if ($transacao->confirmado_em) {
@@ -4010,6 +4027,9 @@ private function montarDiasSemanaFlags($diasUteis): array
         } else {
             if ($valor <= 0) {
                 return response()->json(['error' => 'Informe um valor válido para o pagamento.'], 422);
+            }
+            if ($valor > $saldoPendente) {
+                return response()->json(['error' => 'Valor informado (R$ ' . number_format($valor, 2, ',', '.') . ') ultrapassa o saldo pendente de R$ ' . number_format($saldoPendente, 2, ',', '.') . '. Informe um valor de até R$ ' . number_format($saldoPendente, 2, ',', '.') . '.'], 422);
             }
             $transacao = Transacao::create([
                 'user_id' => $reserva->user_id,

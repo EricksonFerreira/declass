@@ -205,8 +205,18 @@
                         </div>
                         @endif
 
+                        <div class="form-group">
+                            <label class="ep-form-label"><i class="fas fa-dollar-sign mr-1"></i> Valor a pagar</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">{{ $simbolo }}</span></div>
+                                <input type="number" id="valorPagamento" name="valor_pagamento" class="form-control form-control-sm" step="0.01" min="0.01" max="{{ $valorCobranca }}" value="{{ $valorCobranca }}" required>
+                                <div class="input-group-append"><span class="input-group-text text-muted" style="font-size:11px;">máx. {{ $simbolo }} {{ number_format($valorCobranca, 2, ',', '.') }}</span></div>
+                            </div>
+                            <small class="text-muted">Valor total do pagamento. Não pode ultrapassar o saldo pendente.</small>
+                        </div>
+
                         <div class="ep-total-box mb-3">
-                            <div class="ep-total-box__label">Saldo a cobrar</div>
+                            <div class="ep-total-box__label">Saldo pendente</div>
                             <div class="ep-total-box__value">{{ $simbolo }} {{ number_format($valorCobranca, 2, ',', '.') }}</div>
                         </div>
 
@@ -216,10 +226,10 @@
                                 @php
                                     $limiteSemJuros = 3;
                                 @endphp
-                                <option value="1">À vista — {{ $simbolo }} {{ number_format($saldoPendente ?? $valorTotal, 2, ',', '.') }}</option>
+                                <option value="1">À vista — {{ $simbolo }} {{ number_format($valorCobranca, 2, ',', '.') }}</option>
                                 @foreach([2,3,4,5,6,7,8,9,10,11,12] as $parc)
                                     @php
-                                        $valorParcela = ($saldoPendente ?? $valorTotal) / $parc;
+                                        $valorParcela = $valorCobranca / $parc;
                                         $comJuros = $parc > $limiteSemJuros;
                                     @endphp
                                     <option value="{{ $parc }}">
@@ -585,6 +595,40 @@
         saveBtn.disabled = true;
         saveBtn.title = 'Configure a chave pública do Stripe para habilitar este recurso.';
     }
+})();
+</script>
+
+<script>
+(function() {
+    const inputValor = document.getElementById('valorPagamento');
+    const selectParcelas = document.getElementById('installments');
+    const simbolo = '{{ $simbolo }}';
+    const limiteSemJuros = 3;
+
+    function atualizarParcelas() {
+        const valor = parseFloat(inputValor.value) || 0;
+        selectParcelas.innerHTML = '';
+
+        if (valor <= 0) {
+            selectParcelas.innerHTML = '<option value="1">À vista — ' + simbolo + ' 0,00</option>';
+            return;
+        }
+
+        const optAVista = document.createElement('option');
+        optAVista.value = '1';
+        optAVista.text = 'À vista — ' + simbolo + ' ' + valor.toFixed(2).replace('.', ',');
+        selectParcelas.appendChild(optAVista);
+
+        [2,3,4,5,6,7,8,9,10,11,12].forEach(function(p) {
+            const vp = valor / p;
+            const opt = document.createElement('option');
+            opt.value = p;
+            opt.text = p + 'x de ' + simbolo + ' ' + vp.toFixed(2).replace('.', ',') + (p > limiteSemJuros ? ' — Com juros' : ' — Sem juros');
+            selectParcelas.appendChild(opt);
+        });
+    }
+
+    inputValor.addEventListener('input', atualizarParcelas);
 })();
 </script>
 @stop
