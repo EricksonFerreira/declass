@@ -66,8 +66,6 @@
                 <i class="fas fa-money-bill-wave"></i>
                 <span>Pagamento em dinheiro</span>
             </button>
-                </a>
-            @endif
 
             @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
                 <div class="reservation-actions-card__alert" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-top:8px;">
