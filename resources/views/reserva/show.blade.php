@@ -525,7 +525,7 @@
                                                 <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
                                             </div>
                                             <div class="rs-tx__info">
-                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'NÃO DEFINIDO') }}</strong>
+                                                <strong>{{ $transacao->metodo_pagamento_label }}</strong>
                                                 <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
                                                 @if($jaConfirmado)
                                                     <span class="rs-tx__confirmed">
@@ -1202,7 +1202,7 @@
                                                 <i class="fas {{ $isEstorno ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
                                             </div>
                                             <div class="rs-tx__info">
-                                                <strong>{{ strtoupper($transacao->metodo_pagamento ?? 'NÃO DEFINIDO') }}</strong>
+                                                <strong>{{ $transacao->metodo_pagamento_label }}</strong>
                                                 <span>{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</span>
                                                 @if($jaConfirmado)
                                                     <span class="rs-tx__confirmed">
