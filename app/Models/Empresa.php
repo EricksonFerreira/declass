@@ -127,131 +127,107 @@ class Empresa extends Model
 
     public function getStorageUsedAttribute(): string
     {
+        $bytes = $this->storage_used_bytes;
+        if ($bytes >= 1073741824) {
+            return number_format($bytes / 1073741824, 2, ',', '.') . ' GB';
+        }
+        if ($bytes >= 1048576) {
+            return number_format($bytes / 1048576, 2, ',', '.') . ' MB';
+        }
+        if ($bytes >= 1024) {
+            return number_format($bytes / 1024, 0, ',', '.') . ' KB';
+        }
+        return $bytes . ' B';
+    }
+
+    public function getStorageUsedBytesAttribute(): int
+    {
         $totalBytes = 0;
         $disk = Storage::disk('public');
 
-        // 1. Logo da empresa
         if ($this->logo_path && $disk->exists($this->logo_path)) {
             $totalBytes += $disk->size($this->logo_path);
         }
 
-        // 2. Imagens do site (hero, frota, vantagens, contato)
         $siteImages = $this->site_apresentacao_imagens ?? [];
         if (is_array($siteImages)) {
             foreach ($siteImages as $area => $path) {
-                if ($disk->exists($path)) {
+                if (is_string($path) && $disk->exists($path)) {
                     $totalBytes += $disk->size($path);
-                }
-            }
-            // Fallback: procura paths em formato string
-            foreach ($siteImages as $key => $value) {
-                if (is_string($value) && $disk->exists($value)) {
-                    $totalBytes += $disk->size($value);
                 }
             }
         }
 
-        // 3. Contratos check-in (fotos, assinatura, pdf) → via reservas
         $reservaIds = \App\Models\Reserva::where('empresa_id', $this->id)->pluck('id');
         if ($reservaIds->isNotEmpty()) {
             $checkins = \App\Models\ContratoCheckin::whereIn('reserva_id', $reservaIds)->get();
             foreach ($checkins as $ci) {
                 foreach (['foto_direita_path','foto_esquerda_path','foto_frente_path','foto_tras_path','foto_velocimetro_path','foto_combustivel_path'] as $col) {
-                    if ($ci->$col && $disk->exists($ci->$col)) {
-                        $totalBytes += $disk->size($ci->$col);
-                    }
+                    if ($ci->$col && $disk->exists($ci->$col)) $totalBytes += $disk->size($ci->$col);
                 }
-                if ($ci->assinatura && $disk->exists('assinaturas/' . $ci->assinatura)) {
-                    $totalBytes += $disk->size('assinaturas/' . $ci->assinatura);
-                }
-                if ($ci->pdf_path && $disk->exists($ci->pdf_path)) {
-                    $totalBytes += $disk->size($ci->pdf_path);
-                }
+                if ($ci->assinatura && $disk->exists('assinaturas/' . $ci->assinatura)) $totalBytes += $disk->size('assinaturas/' . $ci->assinatura);
+                if ($ci->pdf_path && $disk->exists($ci->pdf_path)) $totalBytes += $disk->size($ci->pdf_path);
             }
-
-            // 4. Contratos check-out (fotos)
             $checkouts = \App\Models\ContratoCheckout::whereIn('reserva_id', $reservaIds)->get();
             foreach ($checkouts as $co) {
                 foreach (['foto_direita_path','foto_esquerda_path','foto_frente_path','foto_tras_path','foto_velocimetro_path','foto_combustivel_path'] as $col) {
-                    if ($co->$col && $disk->exists($co->$col)) {
-                        $totalBytes += $disk->size($co->$col);
-                    }
+                    if ($co->$col && $disk->exists($co->$col)) $totalBytes += $disk->size($co->$col);
                 }
             }
-
-            // 5. Danos (fotos)
-            $danoImagens = \App\Models\VeiculoDanosImagem::whereHas('dano', function ($q) use ($reservaIds) {
-                $q->whereIn('reserva_id', $reservaIds);
-            })->get();
+            $danoImagens = \App\Models\VeiculoDanosImagem::whereHas('dano', fn($q) => $q->whereIn('reserva_id', $reservaIds))->get();
             foreach ($danoImagens as $img) {
-                if ($img->caminho_imagem && $disk->exists($img->caminho_imagem)) {
-                    $totalBytes += $disk->size($img->caminho_imagem);
-                }
+                if ($img->caminho_imagem && $disk->exists($img->caminho_imagem)) $totalBytes += $disk->size($img->caminho_imagem);
             }
-
-            // 6. Multas (anexos)
-            $multas = \App\Models\Multa::whereIn('reserva_id', $reservaIds)->get();
-            foreach ($multas as $m) {
-                foreach (['anexo_comprovante_path', 'anexo_pdf_path'] as $col) {
-                    if ($m->$col && $disk->exists($m->$col)) {
-                        $totalBytes += $disk->size($m->$col);
-                    }
-                }
+            foreach (\App\Models\Multa::whereIn('reserva_id', $reservaIds)->get() as $m) {
+                foreach (['anexo_comprovante_path','anexo_pdf_path'] as $col) { if ($m->$col && $disk->exists($m->$col)) $totalBytes += $disk->size($m->$col); }
             }
-
-            // 7. Sinistros (anexos)
-            $sinistros = \App\Models\Sinistro::whereIn('reserva_id', $reservaIds)->get();
-            foreach ($sinistros as $s) {
-                foreach (['anexo_bo_path','anexo_foto1_path','anexo_foto2_path','anexo_foto3_path','anexo_laudo_path'] as $col) {
-                    if ($s->$col && $disk->exists($s->$col)) {
-                        $totalBytes += $disk->size($s->$col);
-                    }
-                }
+            foreach (\App\Models\Sinistro::whereIn('reserva_id', $reservaIds)->get() as $s) {
+                foreach (['anexo_bo_path','anexo_foto1_path','anexo_foto2_path','anexo_foto3_path','anexo_laudo_path'] as $col) { if ($s->$col && $disk->exists($s->$col)) $totalBytes += $disk->size($s->$col); }
             }
         }
 
-        // 8. Grupos de frota (imagens)
-        $grupos = \App\Models\GrupoFrota::where('empresa_id', $this->id)->get();
-        foreach ($grupos as $g) {
-            if ($g->imagem && $disk->exists($g->imagem)) {
-                $totalBytes += $disk->size($g->imagem);
-            }
-            $imagens = is_string($g->imagens) ? json_decode($g->imagens, true) : ($g->imagens ?? []);
-            if (is_array($imagens)) {
-                foreach ($imagens as $imgPath) {
-                    if (is_string($imgPath) && $disk->exists($imgPath)) {
-                        $totalBytes += $disk->size($imgPath);
-                    }
-                }
-            }
+        foreach (\App\Models\GrupoFrota::where('empresa_id', $this->id)->get() as $g) {
+            if ($g->imagem && $disk->exists($g->imagem)) $totalBytes += $disk->size($g->imagem);
+            $imagens = is_string($g->imagens) ? json_decode($g->imagens, true) : (($g->imagens ?? []) ?: []);
+            foreach ((array) $imagens as $imgPath) { if (is_string($imgPath) && $disk->exists($imgPath)) $totalBytes += $disk->size($imgPath); }
+        }
+        foreach (\App\Models\CaracteristicaFrota::where('empresa_id', $this->id)->get() as $c) {
+            if ($c->imagem && $disk->exists($c->imagem)) $totalBytes += $disk->size($c->imagem);
+        }
+        foreach (\App\Models\Modelo::where('empresa_id', $this->id)->get() as $m) {
+            if ($m->imagem && $disk->exists($m->imagem)) $totalBytes += $disk->size($m->imagem);
         }
 
-        // 9. Caracteristicas de frota (imagens)
-        $caracs = \App\Models\CaracteristicaFrota::where('empresa_id', $this->id)->get();
-        foreach ($caracs as $c) {
-            if ($c->imagem && $disk->exists($c->imagem)) {
-                $totalBytes += $disk->size($c->imagem);
-            }
-        }
+        return $totalBytes;
+    }
 
-        // 10. Modelos (imagens) — vinculados à empresa
-        $modelos = \App\Models\Modelo::where('empresa_id', $this->id)->get();
-        foreach ($modelos as $m) {
-            if ($m->imagem && $disk->exists($m->imagem)) {
-                $totalBytes += $disk->size($m->imagem);
-            }
+    public function getStorageLimitBytesAttribute(): int
+    {
+        $plano = $this->planoAtivo?->plano;
+        if ($plano && $plano->limite_armazenamento_mb > 0) {
+            return (int) $plano->limite_armazenamento_mb * 1048576;
         }
+        return 1073741824;
+    }
 
-        if ($totalBytes >= 1073741824) {
-            return number_format($totalBytes / 1073741824, 2, ',', '.') . ' GB';
+    public function getStoragePercentAttribute(): int
+    {
+        $limit = $this->storage_limit_bytes;
+        if ($limit <= 0) return 0;
+        return (int) round(($this->storage_used_bytes / $limit) * 100);
+    }
+
+    public function getStorageFormattedAttribute(): string
+    {
+        $used = $this->storage_used;
+        $limit = $this->storage_limit_bytes;
+        if ($limit >= 1073741824) {
+            return $used . ' / ' . number_format($limit / 1073741824, 2, ',', '.') . ' GB';
         }
-        if ($totalBytes >= 1048576) {
-            return number_format($totalBytes / 1048576, 2, ',', '.') . ' MB';
+        if ($limit >= 1048576) {
+            return $used . ' / ' . number_format($limit / 1048576, 2, ',', '.') . ' MB';
         }
-        if ($totalBytes >= 1024) {
-            return number_format($totalBytes / 1024, 0, ',', '.') . ' KB';
-        }
-        return $totalBytes . ' B';
+        return $used;
     }
 
     protected function stripeSecret(): Attribute

@@ -141,14 +141,19 @@
 
                             <td class="align-middle text-xs">
                                 @php
-                                    $storageLabel = $empresa->storage_used;
-                                    $storageValor = (float) str_replace([' GB', ' MB', ' KB', ' B', ',', ' '], ['.', '', '', '', '', ''], str_replace('.', '', str_replace(',', '.', $storageLabel)));
-                                    $classe = $storageValor > 500 ? 'text-danger' : ($storageValor > 100 ? 'text-warning' : 'text-success');
+                                    $pct = $empresa->storage_percent;
+                                    $barColor = $pct >= 90 ? '#dc2626' : ($pct >= 60 ? '#d97706' : ($pct >= 30 ? '#2563eb' : '#16a34a'));
+                                    $labelColor = $pct >= 90 ? 'text-danger' : ($pct >= 60 ? 'text-warning' : 'text-success');
                                 @endphp
-                                <div class="{{ $classe }}" style="font-weight:600;">
-                                    <i class="fas fa-database mr-1"></i> {{ $storageLabel }}
+                                <div class="{{ $labelColor }}" style="font-weight:600;font-size:11px;">
+                                    <i class="fas fa-database mr-1"></i> {{ $empresa->storage_used }}
                                 </div>
-                                <div class="text-muted" style="font-size:10px;">arquivos do sistema</div>
+                                <div style="margin-top:3px;background:#e5e7eb;border-radius:4px;height:8px;width:100px;overflow:hidden;">
+                                    <div style="width:{{ min($pct, 100) }}%;height:100%;background:{{ $barColor }};border-radius:4px;"></div>
+                                </div>
+                                <div class="text-muted" style="font-size:9px;margin-top:1px;">
+                                    {{ $pct }}% do limite ({{ $empresa->planoAtivo?->plano?->nome ?? 'Sem plano' }})
+                                </div>
                             </td>
 
                             <td class="align-middle">
