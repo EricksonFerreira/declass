@@ -14,9 +14,9 @@
         <a href="{{ route('assinatura.ajuda') }}" class="btn btn-xs btn-outline-secondary">
             <i class="fas fa-question-circle mr-1"></i> Ajuda
         </a>
-        <button type="button" class="btn btn-xs btn-primary" data-toggle="modal" data-target="#modalAtribuir">
+        <a href="{{ route('assinatura.atribuir') }}" class="btn btn-xs btn-primary">
             <i class="fa fa-plus" style="font-size:10px"></i> Atribuir
-        </button>
+        </a>
     </x-page-title>
 @stop
 
