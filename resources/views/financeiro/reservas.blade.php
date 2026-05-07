@@ -322,7 +322,7 @@
                                                                         <span
                                                                             class="text-dark font-weight-bold d-block">{{ $tipoTransacao }}</span>
                                                                         <i class="fas fa-cash-register mr-1"></i>
-                                                                        {{ $transacao->metodo_pagamento ?? 'N/A' }}
+                                                                        {{ $transacao->metodo_pagamento_label }}
                                                                     </td>
                                                                     <td class="align-middle"
                                                                         style="padding: 0.4rem !important;">
