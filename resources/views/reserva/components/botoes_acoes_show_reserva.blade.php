@@ -62,6 +62,13 @@
                 </a>
             @endif
 
+            <button type="button" class="action-pill" style="background:linear-gradient(135deg,#059669,#34d399);" data-toggle="modal" data-target="#modalPagamentoDinheiro">
+                <i class="fas fa-money-bill-wave"></i>
+                <span>Pagamento em dinheiro</span>
+            </button>
+                </a>
+            @endif
+
             @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
                 <div class="reservation-actions-card__alert" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-top:8px;">
                     <div style="display:flex;align-items:flex-start;gap:10px;">
@@ -624,4 +631,85 @@
             }
         });
     })();
+</script>
+
+{{-- Modal Pagamento em Dinheiro --}}
+<div class="modal fade" id="modalPagamentoDinheiro" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <form id="formPagamentoDinheiro" class="modal-content">
+            @csrf
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-money-bill-wave text-success mr-2"></i> Pagamento em Dinheiro</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p class="text-muted">Registre um pagamento recebido em dinheiro (ou fora do gateway online).</p>
+                <div class="form-group">
+                    <label>Valor</label>
+                    <div class="input-group">
+                        <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
+                        <input type="number" name="valor" id="inputValorDinheiro" class="form-control" step="0.01" min="0.01" placeholder="0,00" required>
+                    </div>
+                </div>
+                <div id="dinheiroFeedback" class="alert d-none mb-0"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="submit" class="btn btn-success"><i class="fas fa-check mr-1"></i> Confirmar Pagamento</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(function() {
+    const form = document.getElementById('formPagamentoDinheiro');
+    const feedback = document.getElementById('dinheiroFeedback');
+    const inputValor = document.getElementById('inputValorDinheiro');
+
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        feedback.classList.add('d-none');
+
+        const valor = parseFloat(inputValor.value);
+        if (!valor || valor <= 0) {
+            feedback.className = 'alert alert-danger';
+            feedback.textContent = 'Informe um valor válido.';
+            feedback.classList.remove('d-none');
+            return;
+        }
+
+        const btn = form.querySelector('button[type="submit"]');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Registrando...';
+
+        fetch('{{ route("reserva.confirmarPagamentoDinheiro", $reserva->id) }}', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value},
+            body: JSON.stringify({ valor: valor })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                feedback.className = 'alert alert-success';
+                feedback.textContent = data.message;
+                feedback.classList.remove('d-none');
+                setTimeout(() => location.reload(), 1500);
+            } else {
+                feedback.className = 'alert alert-danger';
+                feedback.textContent = data.error || 'Erro ao registrar pagamento.';
+                feedback.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check mr-1"></i> Confirmar Pagamento';
+            }
+        })
+        .catch(() => {
+            feedback.className = 'alert alert-danger';
+            feedback.textContent = 'Erro de conexão. Tente novamente.';
+            feedback.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check mr-1"></i> Confirmar Pagamento';
+        });
+    });
+})();
 </script>

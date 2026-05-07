@@ -1215,7 +1215,7 @@ class SiteReservaController extends Controller
         $nfse = $this->nfseService->emitirParaReserva($reservaItem);
         $nfseWarning = null;
         if ($nfse === null) {
-            $nfseWarning = 'Emissao de NFS-e nao configurada para esta empresa.';
+            $nfseWarning = 'Emissao de NFS-e não configurada para esta empresa.';
         } elseif (($nfse->status ?? '') === 'erro') {
             $nfseWarning = $this->nfseService->mensagemErro($nfse) ?? 'Falha ao emitir NFS-e.';
         }

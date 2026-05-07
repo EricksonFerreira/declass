@@ -6,7 +6,6 @@
                 <th>Data</th>
                 <th>Valor</th>
                 <th>Status</th>
-                <th>Confirmado em</th>
                 <th>Pago por</th>
             </tr>
         </thead>
@@ -29,7 +28,6 @@
                         @endphp
                         {{ $statusTraduzido }}
                     </td>
-                    <td>{{ $pagamento['confirmado_em'] ?? '-' }}</td>
                     <td>{{ $pagamento['pago_por'] ?? '-' }}</td>
                 </tr>
             @endforeach

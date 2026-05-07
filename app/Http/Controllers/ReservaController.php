@@ -498,7 +498,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $nfse = $this->nfseService->emitirParaReserva($reserva);
         $nfseWarning = null;
         if ($nfse === null) {
-            $nfseWarning = 'Emissao de NFS-e nao configurada para esta empresa.';
+            $nfseWarning = 'Emissao de NFS-e não configurada para esta empresa.';
         } elseif (($nfse->status ?? '') === 'erro') {
             $nfseWarning = $this->nfseService->mensagemErro($nfse) ?? 'Falha ao emitir NFS-e.';
         }
@@ -2207,7 +2207,7 @@ private function montarDiasSemanaFlags($diasUteis): array
         $nfse = $this->nfseService->emitirParaReserva($reserva);
         $nfseWarning = null;
         if ($nfse === null) {
-            $nfseWarning = 'Emissao de NFS-e nao configurada para esta empresa.';
+            $nfseWarning = 'Emissao de NFS-e não configurada para esta empresa.';
         } elseif (($nfse->status ?? '') === 'erro') {
             $nfseWarning = $this->nfseService->mensagemErro($nfse) ?? 'Falha ao emitir NFS-e.';
         }
@@ -3986,30 +3986,51 @@ private function montarDiasSemanaFlags($diasUteis): array
     }
 
     // ══════════════════════════════════════════════════════════════
-    // Confirmar pagamento em dinheiro
+    // Confirmar pagamento em dinheiro / criar transacao manual
     // ══════════════════════════════════════════════════════════════
 
     public function confirmarPagamentoDinheiro(Request $request, $reserva_id)
     {
         $transacaoId = $request->input('transacao_id');
-        $transacao = Transacao::where('reserva_id', $reserva_id)->where('id', $transacaoId)->firstOrFail();
+        $valor = (float) ($request->input('valor', 0));
 
-        if ($transacao->confirmado_em) {
-            return response()->json(['error' => 'Pagamento já confirmado.'], 422);
+        $reserva = $this->reservaService->getById($reserva_id);
+
+        if ($transacaoId) {
+            $transacao = Transacao::where('reserva_id', $reserva_id)->where('id', $transacaoId)->firstOrFail();
+            if ($transacao->confirmado_em) {
+                return response()->json(['error' => 'Pagamento já confirmado.'], 422);
+            }
+            $transacao->update([
+                'status' => 'approved',
+                'confirmado_em' => now(),
+                'confirmado_por_user_id' => Auth::id(),
+            ]);
+            $valorLog = $transacao->valor;
+        } else {
+            if ($valor <= 0) {
+                return response()->json(['error' => 'Informe um valor válido para o pagamento.'], 422);
+            }
+            $transacao = Transacao::create([
+                'user_id' => $reserva->user_id,
+                'pago_por_user_id' => Auth::id(),
+                'reserva_id' => $reserva->id,
+                'valor' => $valor,
+                'moeda' => 'BRL',
+                'metodo_pagamento' => 'dinheiro',
+                'status' => 'approved',
+                'confirmado_em' => now(),
+                'confirmado_por_user_id' => Auth::id(),
+            ]);
+            $valorLog = $valor;
         }
 
-        $transacao->update([
-            'status'                 => 'approved',
-            'confirmado_em'          => now(),
-            'confirmado_por_user_id' => Auth::id(),
-        ]);
-
         $this->reservaService->adicionaLog($reserva_id, Auth::id(), json_encode([
-            'acao'        => 'Pagamento em dinheiro confirmado',
-            'transacao_id'=> $transacao->id,
-            'valor'       => $transacao->valor,
+            'acao' => 'Pagamento em dinheiro confirmado',
+            'transacao_id' => $transacao->id,
+            'valor' => $valorLog,
         ]), 'success');
 
-        return response()->json(['success' => true, 'message' => 'Pagamento confirmado com sucesso.']);
+        return response()->json(['success' => true, 'message' => 'Pagamento em dinheiro registrado com sucesso.']);
     }
 }
