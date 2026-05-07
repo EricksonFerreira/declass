@@ -28,12 +28,11 @@ class StripeGatewayService implements IPagamento
             'currency' => $currency,
             'payment_method' => $paymentMethodId,
             'confirm' => true,
-            'automatic_payment_methods' => [
-                'enabled' => true,
-                'allow_redirects' => 'never',
-            ],
+            'off_session' => true,
         ];
+
         if ($installments > 1) {
+            $payload['payment_method_types'] = ['card'];
             $payload['payment_method_options'] = [
                 'card' => [
                     'installments' => [
@@ -45,6 +44,11 @@ class StripeGatewayService implements IPagamento
                     ],
                 ],
             ];
+        } else {
+            $payload['automatic_payment_methods'] = [
+                'enabled' => true,
+                'allow_redirects' => 'never',
+            ];
         }
         if ($customerId !== '') {
             $payload['customer'] = $customerId;
@@ -53,18 +57,21 @@ class StripeGatewayService implements IPagamento
         try {
             $intent = $stripe->paymentIntents->create($payload);
         } catch (\Stripe\Exception\CardException $e) {
+            \Log::warning('Stripe card error', ['message' => $e->getMessage(), 'code' => $e->getError()?->code, 'decline' => $e->getError()?->decline_code]);
             return [
                 'status' => 'error',
                 'message' => $this->mapStripeCardError($e),
                 'raw_status' => 'card_error',
             ];
         } catch (\Stripe\Exception\ApiErrorException $e) {
+            \Log::error('Stripe API error', ['message' => $e->getMessage(), 'type' => get_class($e), 'installments' => $installments ?? 1]);
             return [
                 'status' => 'error',
-                'message' => 'Falha ao processar o pagamento. Tente novamente.',
+                'message' => 'Falha ao processar o pagamento. ' . $e->getMessage(),
                 'raw_status' => 'api_error',
             ];
         } catch (\Throwable $e) {
+            \Log::error('Stripe generic error', ['message' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
             return [
                 'status' => 'error',
                 'message' => 'Falha ao processar o pagamento. Tente novamente.',
