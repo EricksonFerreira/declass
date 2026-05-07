@@ -22,7 +22,7 @@
             <div class="card-header card-header-termo-consentimento border-0">
                 <div>
                     <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Configure nome, status e texto do termo de consentimento.</p>
+                    <p class="mb-0 text-muted">Configure as condições gerais da locação para check-in e check-out.</p>
                 </div>
             </div>
 
@@ -32,16 +32,36 @@
                         <div class="termo-consentimento-section-title">Informacoes Basicas</div>
                     </div>
 
-                    <div class="col-lg-8 col-md-12">
+                    <div class="col-lg-2 col-md-12">
                         <div class="form-group form-group-termo-consentimento">
-                            <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
-                                label="Nome" value="{{ old('nome', $termo_consentimento->nome ?? '') }}" required />
+                            <x-form-input type="number" class="form-control form-control-sm" id="ordem" name="ordem"
+                                label="Ordem" value="{{ old('ordem', $termo_consentimento->ordem ?? '') }}" required />
                         </div>
                     </div>
 
-                    <div class="col-lg-4 col-md-12">
+                    <div class="col-lg-5 col-md-12">
                         <div class="form-group form-group-termo-consentimento">
-                            <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione um valor"
+                            <x-form-input type="text" class="form-control form-control-sm" id="titulo" name="titulo"
+                                label="Título" value="{{ old('titulo', $termo_consentimento->titulo ?? '') }}" required />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-3 col-md-12">
+                        <div class="form-group form-group-termo-consentimento">
+                            <x-form-select name="tipo" label="Tipo" :options="$tipos ?? []" placeholder="Selecione"
+                                :selected="old(
+                                    'tipo',
+                                    isset($termo_consentimento->tipo) && $termo_consentimento->tipo
+                                        ? $termo_consentimento->tipo
+                                        : 'checkin',
+                                )"
+                                class="form-control form-control-sm" required />
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-12">
+                        <div class="form-group form-group-termo-consentimento">
+                            <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione"
                                 :selected="old(
                                     'ativo',
                                     isset($termo_consentimento->ativo) && $termo_consentimento->ativo
@@ -53,15 +73,15 @@
                     </div>
 
                     <div class="col-12">
-                        <div class="termo-consentimento-section-title">Conteudo do Termo</div>
+                        <div class="termo-consentimento-section-title">Conteudo da Clausula</div>
                     </div>
 
                     <div class="col-12">
                         <div class="form-group form-group-termo-consentimento">
                             <label for="texto">Texto</label>
-                            <textarea name="texto" id="texto" class="form-control form-control-sm termo-textarea" rows="12" required>{{ old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : null) }}</textarea>
+                            <textarea name="texto" id="texto" class="form-control form-control-sm termo-textarea" rows="8" required>{{ old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : null) }}</textarea>
                             <small class="text-muted d-block mt-1">
-                                Escreva o texto completo que sera apresentado para o aceite.
+                                Texto completo da cláusula exibida no contrato.
                             </small>
                         </div>
                     </div>
@@ -79,114 +99,17 @@
 
 @section('css')
 <style>
-    .card-termo-consentimento {
-        border-radius: 14px;
-        overflow: hidden;
-    }
-
-    .card-header-termo-consentimento {
-        background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
-        padding: 1.1rem 1.5rem;
-    }
-
-    .card-header-termo-consentimento h4 {
-        color: #0f2740;
-        font-weight: 700;
-    }
-
-    .termo-consentimento-section-title {
-        font-size: .96rem;
-        font-weight: 700;
-        color: #21364f;
-        letter-spacing: .02em;
-        padding-bottom: 8px;
-        border-bottom: 1px solid #e5eaf2;
-        margin-bottom: 10px;
-    }
-
-    .form-group-termo-consentimento {
-        margin-bottom: 1rem;
-    }
-
-    .card-termo-consentimento .form-control,
-    .card-termo-consentimento .form-select {
-        border-radius: 10px;
-        border-color: #d8e1ec;
-        min-height: 38px;
-    }
-
-    .card-termo-consentimento .form-control:focus,
-    .card-termo-consentimento .form-select:focus {
-        border-color: #4b80ff;
-        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
-    }
-
-    .termo-textarea {
-        min-height: 260px;
-        resize: vertical;
-        line-height: 1.45;
-    }
-
-    .btn-save-termo-consentimento {
-        border-radius: 10px;
-        font-weight: 600;
-        padding-top: .58rem;
-        padding-bottom: .58rem;
-    }
-
-    @media (max-width: 991.98px) {
-        .card-header-termo-consentimento {
-            padding: .95rem 1rem;
-        }
-
-        .card-body {
-            padding: 1rem !important;
-        }
-    }
-
-    @media (max-width: 767.98px) {
-        .col-xl-10.col-lg-11.col-md-12.col-sm-12.col-xs-12.px-0 {
-            padding-left: .5rem !important;
-            padding-right: .5rem !important;
-        }
-
-        .card-header-termo-consentimento h4 {
-            font-size: 1.1rem;
-            line-height: 1.35;
-        }
-
-        .card-header-termo-consentimento p {
-            font-size: .85rem;
-        }
-
-        .termo-consentimento-section-title {
-            font-size: .9rem;
-        }
-    }
-
-    @media (max-width: 575.98px) {
-        .card-header-termo-consentimento {
-            padding: .85rem .85rem;
-        }
-
-        .card-body {
-            padding: .85rem !important;
-        }
-
-        .form-group-termo-consentimento {
-            margin-bottom: .8rem;
-        }
-
-        .card-termo-consentimento .form-control,
-        .card-termo-consentimento .form-select {
-            min-height: 36px;
-            font-size: 13px;
-        }
-
-        .termo-textarea {
-            min-height: 220px;
-        }
-    }
+    .card-termo-consentimento { border-radius: 14px; overflow: hidden; }
+    .card-header-termo-consentimento { background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%); padding: 1.1rem 1.5rem; }
+    .card-header-termo-consentimento h4 { color: #0f2740; font-weight: 700; }
+    .termo-consentimento-section-title { font-size: .96rem; font-weight: 700; color: #21364f; letter-spacing: .02em; padding-bottom: 8px; border-bottom: 1px solid #e5eaf2; margin-bottom: 10px; }
+    .form-group-termo-consentimento { margin-bottom: 1rem; }
+    .card-termo-consentimento .form-control, .card-termo-consentimento .form-select { border-radius: 10px; border-color: #d8e1ec; min-height: 38px; }
+    .card-termo-consentimento .form-control:focus, .card-termo-consentimento .form-select:focus { border-color: #4b80ff; box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18); }
+    .termo-textarea { min-height: 180px; resize: vertical; line-height: 1.45; }
+    .btn-save-termo-consentimento { border-radius: 10px; font-weight: 600; padding-top: .58rem; padding-bottom: .58rem; }
+    @media (max-width: 991.98px) { .card-header-termo-consentimento { padding: .95rem 1rem; } .card-body { padding: 1rem !important; } }
+    @media (max-width: 767.98px) { .col-xl-10.col-lg-11.col-md-12 { padding-left: .5rem !important; padding-right: .5rem !important; } }
 </style>
 @stop
 

@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Contrato de Aluguel</title>
+    <link rel="icon" href="{{ asset('favicon.ico') }}">
     @include('pdf.contratos.partials.styles')
 </head>
 @php
