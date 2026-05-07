@@ -28,11 +28,11 @@
             <div class="small-box bg-info">
                 <div class="inner">
                     <h3>{{ $storageFormatted }}</h3>
-                    <p>Armazenamento utilizado</p>
+                    <p>Armazenamento total</p>
                 </div>
                 <div class="icon"><i class="fas fa-database"></i></div>
-                <a href="#" class="small-box-footer" onclick="event.preventDefault();alert('Armazenamento total utilizado no disco público do sistema.');">
-                    Mais info <i class="fas fa-arrow-circle-right"></i>
+                <a href="#" class="small-box-footer" onclick="event.preventDefault();alert('Armazenamento total de todas as empresas somadas. O detalhamento por empresa aparece na tabela abaixo.');">
+                    <i class="fas fa-chart-simple mr-1"></i> Detalhes por empresa na tabela
                 </a>
             </div>
         </div>
@@ -137,6 +137,18 @@
                                         <span class="text-muted font-italic">nao definida</span>
                                     @endif
                                 </div>
+                            </td>
+
+                            <td class="align-middle text-xs">
+                                @php
+                                    $storageLabel = $empresa->storage_used;
+                                    $storageValor = (float) str_replace([' GB', ' MB', ' KB', ' B', ',', ' '], ['.', '', '', '', '', ''], str_replace('.', '', str_replace(',', '.', $storageLabel)));
+                                    $classe = $storageValor > 500 ? 'text-danger' : ($storageValor > 100 ? 'text-warning' : 'text-success');
+                                @endphp
+                                <div class="{{ $classe }}" style="font-weight:600;">
+                                    <i class="fas fa-database mr-1"></i> {{ $storageLabel }}
+                                </div>
+                                <div class="text-muted" style="font-size:10px;">arquivos do sistema</div>
                             </td>
 
                             <td class="align-middle">
