@@ -10,12 +10,14 @@
         default => 'is-warning',
     };
 
-    $valorTotalReserva = (float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? $reserva->valor_total_tarifa_base ?? 0);
-    $totalPagoReserva = (float) $reserva->transacoes
-        ->whereIn('status', ['succeeded', 'approved', 'paid', 'confirmed', 'concluido'])
-        ->sum('valor');
+    $valorTotalReserva = (float) ($valorTotal ?? $reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? $reserva->valor_total_tarifa_base ?? 0);
+    $statusPagamentoAprovadoReserva = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
+    $totalPagoReserva = (float) ($totalPagoAprovado ?? $reserva->transacoes
+        ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
+            && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovadoReserva, true))
+        ->sum('valor'));
     $saldoPendenteReserva = max(0, $valorTotalReserva - $totalPagoReserva);
-    $pagamentoEmDia = $saldoPendenteReserva <= 0;
+    $pagamentoEmDia = $saldoPendenteReserva <= 0.009;
 @endphp
 
 <section class="reservation-actions-card">
@@ -101,6 +103,12 @@
                         <span>Assinar contrato</span>
                     </a>
                 @else
+                    <span class="action-pill action-pill--disabled"
+                          data-toggle="tooltip"
+                          title="Pagamento insuficiente. Valor atual: R$ {{ number_format($valorTotalReserva, 2, ',', '.') }}. Pago: R$ {{ number_format($totalPagoReserva, 2, ',', '.') }}. Restante: R$ {{ number_format($saldoPendenteReserva, 2, ',', '.') }}.">
+                        <i class="fas fa-lock"></i>
+                        <span>Assinar contrato</span>
+                    </span>
                     <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="action-pill action-pill--accent" style="background:linear-gradient(135deg,#dc2626,#f97316);">
                         <i class="fas fa-exclamation-triangle"></i>
                         <span>Pagar saldo pendente</span>

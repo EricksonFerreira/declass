@@ -3595,6 +3595,10 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                 }
             }
 
+            if (window.$ && typeof window.$.fn.tooltip === 'function') {
+                window.$('[data-toggle="tooltip"]').tooltip();
+            }
+
             const forms = document.querySelectorAll('.js-nfse-form');
             if (!forms.length) return;
 
