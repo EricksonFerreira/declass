@@ -762,6 +762,7 @@
         .section--alt { background: #fff; }
         .section--frota   { background: var(--frota-bg); }
         .section--vant    { background: var(--vantagens-bg); }
+        .section--planos  { background: var(--vantagens-bg); padding: 80px 0; }
         .section--etapas  { background: var(--etapas-bg); }
         .section--contato { background: var(--contato-bg); }
 
@@ -1652,6 +1653,64 @@
                     @endforeach
                 </div>
             @endif
+        </div>
+    </section>
+
+    <!-- ══ PLANOS ══ -->
+    <section id="planos" class="section section--planos">
+        <div class="wrap">
+            <div class="section-head reveal d1">
+                @if(!empty($vantagensLabelSuperior))
+                    <div class="eyebrow">{{ $vantagensLabelSuperior }}</div>
+                @endif
+                <h2 class="section-title">Nossos Planos</h2>
+                <p class="section-desc">Escolha o plano ideal para sua locadora.</p>
+            </div>
+            <div class="planos-grid">
+                @forelse ($planos as $plano)
+                    @php
+                        $storageMb = $plano->limite_armazenamento_mb ?? 0;
+                        $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+                    @endphp
+                    <div class="plano-card reveal {{ $plano->destaque ? 'plano-card--featured' : '' }}">
+                        @if($plano->destaque)
+                            <div class="plano-card__badge">Mais popular</div>
+                        @endif
+                        <div class="plano-card__header">
+                            <h3 class="plano-card__name">{{ $plano->nome }}</h3>
+                            <p class="plano-card__desc">{{ $plano->descricao }}</p>
+                            <div class="plano-card__price">
+                                <span class="plano-card__currency">R$</span>
+                                <span class="plano-card__value">{{ number_format($plano->valor_mensal, 2, ',', '.') }}</span>
+                                <span class="plano-card__period">/mês</span>
+                            </div>
+                        </div>
+                        <div class="plano-card__body">
+                            <ul class="plano-card__features">
+                                <li><i class="fas fa-check-circle"></i> <strong>{{ $plano->limite_veiculos_texto }}</strong> veículos</li>
+                                <li><i class="fas fa-check-circle"></i> <strong>{{ $plano->limite_usuarios_texto }}</strong> usuários</li>
+                                <li><i class="fas fa-database"></i> Armazenamento: <strong>{{ $storageTxt }}</strong></li>
+                                @if($plano->site_vendas)<li><i class="fas fa-check-circle"></i> Site de vendas online</li>@endif
+                                @if($plano->modulo_multas)<li><i class="fas fa-check-circle"></i> Módulo de multas</li>@endif
+                                @if($plano->modulo_nfse)<li><i class="fas fa-check-circle"></i> NFS-e automática</li>@endif
+                                @if($plano->multi_estacao)<li><i class="fas fa-check-circle"></i> Multi-estações</li>@endif
+                                @if($plano->api_integracao)<li><i class="fas fa-check-circle"></i> API de integração</li>@endif
+                                @if($plano->destaque)<li><i class="fas fa-check-circle"></i> Prioridade no suporte</li>@endif
+                            </ul>
+                        </div>
+                        <div class="plano-card__footer">
+                            <a href="{{ $botaoUrl ?? '#' }}" class="btn btn--primary btn--block">
+                                {{ $plano->destaque ? 'Contratar agora' : 'Escolher plano' }}
+                            </a>
+                        </div>
+                    </div>
+                @empty
+                    <div class="text-center text-muted py-5" style="grid-column:1/-1;">
+                        <i class="fas fa-box-open fa-2x mb-2 d-block"></i>
+                        Nenhum plano disponível no momento.
+                    </div>
+                @endforelse
+            </div>
         </div>
     </section>
 
