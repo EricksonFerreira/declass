@@ -246,6 +246,14 @@
                                     <span class="rs-info-card__label"><i class="fas fa-hourglass-end"></i> Vencimento</span>
                                     <strong class="rs-info-card__value">{{ $planoAtivo->data_vencimento?->format('d/m/Y') ?? '—' }}</strong>
                                 </div>
+                                @php
+                                    $storageMb = $plano->limite_armazenamento_mb ?? 0;
+                                    $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+                                @endphp
+                                <div class="rs-info-card">
+                                    <span class="rs-info-card__label"><i class="fas fa-database"></i> Armazenamento</span>
+                                    <strong class="rs-info-card__value">{{ $storageTxt }}</strong>
+                                </div>
                             </div>
                         </div>
                         @endif

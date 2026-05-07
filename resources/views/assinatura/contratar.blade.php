@@ -137,6 +137,13 @@
                                 </li>
                             @endforeach
                         </ul>
+                        @php
+                            $storageMb = $plano->limite_armazenamento_mb ?? 0;
+                            $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+                        @endphp
+                        <div class="mt-2" style="font-size:.83rem;">
+                            <i class="fas fa-database text-muted mr-1" style="font-size:.7rem;"></i> Armazenamento: {{ $storageTxt }}
+                        </div>
                     </div>
                 </div>
             </div>

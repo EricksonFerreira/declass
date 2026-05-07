@@ -74,6 +74,16 @@
                             @error('limite_veiculos')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Limite de Armazenamento (MB)</label>
+                            <input type="number" name="limite_armazenamento_mb" min="1" step="1"
+                                   class="form-control @error('limite_armazenamento_mb') is-invalid @enderror"
+                                   value="{{ old('limite_armazenamento_mb', $plano->limite_armazenamento_mb ?? '') }}"
+                                   placeholder="Ex.: 5120 para 5 GB">
+                            @error('limite_armazenamento_mb')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
                 </div>
 
                 <div class="row">

@@ -127,6 +127,13 @@
                             </div>
 
                             <div class="text-muted mb-3" style="font-size:.8rem;">
+                                @php
+                                    $storageMb = $plano->limite_armazenamento_mb ?? 0;
+                                    $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+                                @endphp
+                                <i class="fas fa-database mr-1"></i>
+                                {{ $storageTxt }} de armazenamento
+                                <br>
                                 <i class="fas fa-users mr-1"></i>
                                 {{ $plano->assinaturas_count }} assinatura(s)
                                 <br>

@@ -82,7 +82,6 @@
                     </div>
                 </div>
 
-                @if ($plano->limite_veiculos || $plano->limite_usuarios)
                 <hr class="my-3">
                 <div class="d-flex" style="gap:1.5rem;flex-wrap:wrap;">
                     @if ($plano->limite_veiculos)
@@ -97,8 +96,15 @@
                             <div class="font-weight-bold" style="font-size:1.1rem;">{{ $plano->limite_usuarios }}</div>
                         </div>
                     @endif
+                    @php
+                        $storageMb = $plano->limite_armazenamento_mb ?? 0;
+                        $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+                    @endphp
+                    <div>
+                        <span class="text-muted" style="font-size:.78rem;">Armazenamento</span>
+                        <div class="font-weight-bold" style="font-size:1.1rem;"><i class="fas fa-database mr-1"></i>{{ $storageTxt }}</div>
+                    </div>
                 </div>
-                @endif
             </div>
         </div>
         @endif

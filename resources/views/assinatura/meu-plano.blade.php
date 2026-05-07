@@ -205,6 +205,14 @@
                                             {{ $item->descricao }}
                                         </li>
                                     @endforeach
+                                    @php
+                                        $storageMb = $assinatura->plano->limite_armazenamento_mb ?? 0;
+                                        $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+                                    @endphp
+                                    <li class="mb-1 d-flex align-items-start" style="font-size:.82rem;">
+                                        <i class="fas fa-database text-success mr-2 mt-1 flex-shrink-0" style="font-size:.7rem;"></i>
+                                        Armazenamento: {{ $storageTxt }}
+                                    </li>
                                 </ul>
                             </div>
                         </div>

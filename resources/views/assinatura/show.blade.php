@@ -63,6 +63,14 @@
                             <td class="text-muted pl-3">Valor</td>
                             <td class="pr-3 font-weight-bold">R$ {{ number_format($assinatura->valor_cobrado, 2, ',', '.') }}</td>
                         </tr>
+                        @php
+                            $storageMb = $assinatura->plano->limite_armazenamento_mb ?? 0;
+                            $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+                        @endphp
+                        <tr>
+                            <td class="text-muted pl-3">Armazenamento</td>
+                            <td class="pr-3"><i class="fas fa-database mr-1"></i>{{ $storageTxt }}</td>
+                        </tr>
                         <tr>
                             <td class="text-muted pl-3">Método</td>
                             <td class="pr-3">

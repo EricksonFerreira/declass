@@ -13,7 +13,7 @@
                 <div class="card-header">
                     <h3 class="card-title"><i class="fas fa-link mr-2"></i> Atribuir Plano a Empresa</h3>
                 </div>
-                <form id="formAtribuir" action="{{ route('assinatura.atribuir') }}" method="POST">
+                <form id="formAtribuir" action="{{ route('assinatura.atribuir.processar') }}" method="POST">
                     @csrf
                     <div class="card-body">
                         <div class="row">
@@ -34,7 +34,7 @@
                                     <select name="plano_id" id="plano_id" class="form-control" required>
                                         <option value="">Selecione o plano...</option>
                                         @foreach ($planos as $p)
-                                            <option value="{{ $p->id }}" data-mensal="{{ $p->valor_mensal }}" data-anual="{{ $p->valor_anual }}">
+                                            <option value="{{ $p->id }}" data-mensal="{{ $p->valor_mensal }}" data-anual="{{ $p->valor_anual }}" data-storage="{{ $p->limite_armazenamento_mb ?? 0 }}">
                                                 {{ $p->nome }} — R$ {{ number_format($p->valor_mensal, 2, ',', '.') }}/mês
                                             </option>
                                         @endforeach
@@ -55,11 +55,17 @@
                             </div>
                             <div class="col-md-4">
                                 <div class="form-group">
-                                    <label>Valor a cobrar</label>
+                                    <label>Valor a cobrar (R$) <span class="text-danger">*</span></label>
                                     <div class="input-group">
                                         <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
-                                        <input type="text" id="valorExibido" class="form-control" readonly>
+                                        <input type="text" id="valorExibido" class="form-control" readonly required>
                                     </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Data de Vencimento <span class="text-danger">*</span></label>
+                                    <input type="date" name="data_vencimento" class="form-control" value="{{ date('Y-m-d', strtotime('+1 month')) }}" required>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -71,7 +77,7 @@
                         </div>
 
                         <div class="row">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Método de Cobrança <span class="text-danger">*</span></label>
                                     <select name="metodo_cobranca" id="metodo_cobranca" class="form-control" required>
@@ -83,10 +89,16 @@
                                     </select>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="form-group">
                                     <label>Data de Início <span class="text-danger">*</span></label>
                                     <input type="date" name="data_inicio" class="form-control" value="{{ date('Y-m-d') }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="form-group">
+                                    <label>Armazenamento do Plano</label>
+                                    <input type="text" class="form-control" id="planoStorage" readonly placeholder="Selecione um plano...">
                                 </div>
                             </div>
                         </div>
@@ -184,23 +196,27 @@
     metodoSelect.addEventListener('change', toggleCard);
     toggleCard();
 
-    // ── Valor preview ──
-    function atualizarValor() {
+    // ── Valor e armazenamento preview ──
+    function atualizarPreview() {
         const plano = document.getElementById('plano_id').selectedOptions[0];
         const periodicidade = document.getElementById('periodicidade').value;
         const valorEl = document.getElementById('valorExibido');
+        const storageEl = document.getElementById('planoStorage');
         if (plano && plano.value) {
             const valor = periodicidade === 'anual'
                 ? parseFloat(plano.dataset.anual || 0)
                 : parseFloat(plano.dataset.mensal || 0);
             valorEl.value = valor.toFixed(2).replace('.', ',');
+            const mb = parseInt(plano.dataset.storage || 0);
+            storageEl.value = mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB';
         } else {
             valorEl.value = '';
+            storageEl.value = '';
         }
     }
-    document.getElementById('plano_id').addEventListener('change', atualizarValor);
-    document.getElementById('periodicidade').addEventListener('change', atualizarValor);
-    atualizarValor();
+    document.getElementById('plano_id').addEventListener('change', atualizarPreview);
+    document.getElementById('periodicidade').addEventListener('change', atualizarPreview);
+    atualizarPreview();
 
     // ── Submit ──
     form.addEventListener('submit', async function(e) {

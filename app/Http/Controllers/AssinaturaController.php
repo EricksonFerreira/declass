@@ -153,6 +153,7 @@ class AssinaturaController extends Controller
             'periodicidade'   => 'required|in:mensal,anual',
             'metodo_cobranca' => 'required|in:dinheiro,pix,cartao,boleto,automatico,manual',
             'data_inicio'     => 'required|date',
+            'data_vencimento' => 'required|date|after_or_equal:data_inicio',
             'dia_vencimento'  => 'nullable|integer|min:1|max:28',
             'observacao'      => 'nullable|string|max:500',
             'payment_method_id' => 'nullable|string',
@@ -162,19 +163,18 @@ class AssinaturaController extends Controller
         $plano   = Plano::findOrFail($data['plano_id']);
         $metodo  = $data['metodo_cobranca'];
 
-        $dataInicio = \Carbon\Carbon::parse($data['data_inicio']);
-        $dataVencimento = $metodo === 'cartao'
-            ? $dataInicio->copy()->addMonth()->subDay()
-            : $dataInicio->copy()->addMonth();
-
-        $data['data_vencimento'] = $dataVencimento->format('Y-m-d');
-
         // Cria a assinatura
+        $metodoDb = match ($metodo) {
+            'dinheiro' => 'manual',
+            'cartao'   => 'automatico',
+            default    => $metodo,
+        };
+
         $empresaPlano = $this->planoService->contratar(
             empresa:         $empresa,
             plano:           $plano,
             periodicidade:   $data['periodicidade'],
-            metodoPagamento: $metodo === 'cartao' ? 'automatico' : $metodo,
+            metodoPagamento: $metodoDb,
             diaVencimento:   $data['dia_vencimento'] ?? null,
             criadoPorUserId: Auth::id(),
         );
@@ -182,18 +182,89 @@ class AssinaturaController extends Controller
         // Se for dinheiro, ja marca como pago
         if ($metodo === 'dinheiro') {
             $empresaPlano->pagamentos()->create([
-                'empresa_id'     => $empresa->id,
-                'valor'          => $empresaPlano->valor_cobrado,
-                'metodo'         => 'dinheiro',
-                'status'         => 'pago',
-                'data_vencimento'=> $dataVencimento,
-                'data_pagamento' => now(),
-                'confirmado_por_user_id' => Auth::id(),
+                'empresa_plano_id'  => $empresaPlano->id,
+                'empresa_id'        => $empresa->id,
+                'valor'             => $empresaPlano->valor_cobrado,
+                'metodo'            => 'dinheiro',
+                'status'            => 'pago',
+                'data_vencimento'   => $data['data_vencimento'],
+                'pago_em'           => now(),
+                'registrado_por_user_id' => Auth::id(),
             ]);
             $empresaPlano->update(['status' => 'ativo']);
 
             return redirect()->route('assinatura.index')
                 ->with('success', 'Plano atribuído e pagamento em dinheiro registrado. Assinatura ativada.');
+        }
+
+        if ($metodo === 'cartao') {
+            $paymentMethodId = $data['payment_method_id'] ?? '';
+            $stripeSecret = config('services.stripe.secret');
+
+            if ($paymentMethodId && $stripeSecret) {
+                try {
+                    \Stripe\Stripe::setApiKey($stripeSecret);
+
+                    $customer = \Stripe\Customer::create([
+                        'email' => $empresa->email ?? 'admin@' . strtolower(str_replace(' ', '', $empresa->nome)) . '.com.br',
+                        'name'  => $empresa->nome,
+                    ]);
+
+                    $intent = \Stripe\PaymentIntent::create([
+                        'amount'             => (int) round($empresaPlano->valor_cobrado * 100),
+                        'currency'           => 'brl',
+                        'payment_method'     => $paymentMethodId,
+                        'customer'           => $customer->id,
+                        'confirm'            => true,
+                        'off_session'        => true,
+                        'payment_method_types' => ['card'],
+                        'description'        => 'Plano: ' . $plano->nome . ' - ' . $empresa->nome,
+                    ]);
+
+                    if ($intent->status === 'succeeded') {
+                        $empresaPlano->pagamentos()->create([
+                            'empresa_plano_id'       => $empresaPlano->id,
+                            'empresa_id'             => $empresa->id,
+                            'valor'                  => $empresaPlano->valor_cobrado,
+                            'metodo'                 => 'cartao',
+                            'status'                 => 'pago',
+                            'data_vencimento'        => $data['data_vencimento'],
+                            'pago_em'                => now(),
+                            'stripe_payment_intent_id' => $intent->id,
+                            'registrado_por_user_id' => Auth::id(),
+                        ]);
+                        $empresaPlano->update(['status' => 'ativo', 'gateway_customer_id' => $customer->id]);
+
+                        return redirect()->route('assinatura.index')
+                            ->with('success', 'Plano atribuído e pagamento aprovado. Assinatura ativada.');
+                    }
+
+                    $empresaPlano->pagamentos()->create([
+                        'empresa_plano_id'       => $empresaPlano->id,
+                        'empresa_id'             => $empresa->id,
+                        'valor'                  => $empresaPlano->valor_cobrado,
+                        'metodo'                 => 'cartao',
+                        'status'                 => $intent->status === 'requires_action' ? 'pendente' : 'cancelado',
+                        'data_vencimento'        => $data['data_vencimento'],
+                        'stripe_payment_intent_id' => $intent->id,
+                        'registrado_por_user_id' => Auth::id(),
+                    ]);
+
+                    return redirect()->route('assinatura.index')
+                        ->with('warning', 'Pagamento requer autenticação. Status: ' . $intent->status);
+                } catch (\Stripe\Exception\ApiErrorException $e) {
+                    return redirect()->route('assinatura.atribuir')
+                        ->with('error', 'Erro no pagamento: ' . $e->getMessage())
+                        ->withInput();
+                } catch (\Throwable $e) {
+                    return redirect()->route('assinatura.atribuir')
+                        ->with('error', 'Erro ao processar pagamento: ' . $e->getMessage())
+                        ->withInput();
+                }
+            }
+
+            return redirect()->route('assinatura.index')
+                ->with('warning', 'Plano atribuído, mas sem método de pagamento configurado.');
         }
 
         // Se for cartao, processa pagamento via Stripe

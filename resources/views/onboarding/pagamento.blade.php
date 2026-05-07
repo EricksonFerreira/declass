@@ -55,6 +55,13 @@
                     </span>
                 @endif
             </div>
+            @php
+                $storageMb = $plano->limite_armazenamento_mb ?? 0;
+                $storageTxt = $storageMb >= 1024 ? number_format($storageMb / 1024, 1, ',', '.') . ' GB' : $storageMb . ' MB';
+            @endphp
+            <div style="font-size:.8rem; color:#64748b; margin-top:.15rem;">
+                <i class="fas fa-database mr-1"></i> Armazenamento: {{ $storageTxt }}
+            </div>
         </div>
         <div style="text-align:right;">
             <div style="font-size:.72rem; color:#94a3b8; font-weight:600;">por mês</div>
