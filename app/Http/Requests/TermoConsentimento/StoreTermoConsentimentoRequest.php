@@ -23,10 +23,27 @@ class StoreTermoConsentimentoRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nome' => 'required|string|max:255',
+            'ordem' => 'required|integer|min:0',
+            'titulo' => 'required|string|max:255',
             'texto' => 'required|string',
-
+            'tipo' => 'required|string|in:checkin,checkout',
             'ativo' => 'required|string|max:1',
+        ];
+    }
+
+    public function messages()
+    {
+        return [
+            'ordem.required' => 'A ordem é obrigatória.',
+            'ordem.integer' => 'A ordem deve ser um número inteiro.',
+            'titulo.required' => 'O título é obrigatório.',
+            'titulo.max' => 'O título deve ter no máximo 255 caracteres.',
+            'texto.required' => 'O campo texto é obrigatório.',
+            'texto.string' => 'O campo texto deve ser uma string.',
+            'tipo.required' => 'O tipo é obrigatório.',
+            'tipo.in' => 'O tipo deve ser checkin ou checkout.',
+            'ativo.required' => 'O campo ativo é obrigatório',
+            'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
         ];
     }
 

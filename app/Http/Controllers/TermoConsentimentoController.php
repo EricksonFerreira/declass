@@ -61,15 +61,21 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
+        $tipos = [
+            'checkin' => 'Check-in',
+            'checkout' => 'Check-out',
+        ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Termos de Consentimento','termo_consentimento.index','Criar');
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('termo_consentimento.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('termo_consentimento.add-edit', compact('breadcrumb','status','tipos','metodo','rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreTermoConsentimentoRequest $request)
     {
-        $this->termo_consentimentoService->create($request->all());
+        $data = $request->all();
+        $data['empresa_id'] = auth()->user()->empresa_id;
+        $this->termo_consentimentoService->create($data);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -84,10 +90,14 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
+        $tipos = [
+            'checkin' => 'Check-in',
+            'checkout' => 'Check-out',
+        ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Termos de Consentimento','termo_consentimento.index',"Editar: $termo_consentimento->nome");
         [$metodo,$rota] = $this->getFormMethodAndRoute($termo_consentimento);
 
-        return view('termo_consentimento.add-edit', compact('termo_consentimento','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('termo_consentimento.add-edit', compact('termo_consentimento','breadcrumb','status','tipos','metodo','rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateTermoConsentimentoRequest $request, $id)
@@ -139,7 +149,12 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
     public function obterFiltrosPrincipais()
     {
         return [
-            ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'titulo', 'label' => 'Título', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'tipo', 'label' => 'Tipo', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
+                ['value' => '', 'label' => 'Selecione o tipo', 'selected' => false],
+                ['value' => 'checkin', 'label' => 'Check-in', 'selected' => false],
+                ['value' => 'checkout', 'label' => 'Check-out', 'selected' => false],
+            ]],
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
