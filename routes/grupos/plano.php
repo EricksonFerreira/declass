@@ -18,9 +18,9 @@ Route::middleware('can:acessar-superadmin')->group(function () {
 Route::middleware('can:acessar-superadmin')->prefix('assinatura')->name('assinatura.')->group(function () {
     Route::get('/',                                     [AssinaturaController::class, 'index'])->name('index');
     Route::get('/ajuda',                                [AssinaturaController::class, 'ajuda'])->name('ajuda');
-    // Backward-compatible alias (tela de regras virou modulo de ajuda).
     Route::get('/regras',                               [AssinaturaController::class, 'regras'])->name('regras');
-    Route::post('/atribuir',                            [AssinaturaController::class, 'atribuir'])->name('atribuir');
+    Route::get('/atribuir',                             [AssinaturaController::class, 'criarAtribuir'])->name('atribuir');
+    Route::post('/atribuir',                            [AssinaturaController::class, 'atribuir'])->name('atribuir.processar');
     Route::get('/{assinatura}',                         [AssinaturaController::class, 'show'])->name('show');
     Route::post('/{assinatura}/pagamento',              [AssinaturaController::class, 'registrarPagamento'])->name('pagamento.registrar');
     Route::patch('/pagamento/{pagamento}/confirmar',    [AssinaturaController::class, 'confirmarPagamento'])->name('pagamento.confirmar');
