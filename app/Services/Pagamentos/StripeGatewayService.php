@@ -40,6 +40,7 @@ class StripeGatewayService implements IPagamento
                         'plan' => [
                             'count' => $installments,
                             'type' => 'fixed_count',
+                            'interval' => 'month',
                         ],
                     ],
                 ],
