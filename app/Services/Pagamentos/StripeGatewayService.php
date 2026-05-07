@@ -30,6 +30,7 @@ class StripeGatewayService implements IPagamento
             'currency' => $currency,
             'payment_method' => $paymentMethodId,
             'confirm' => false,
+            'payment_method_types' => ['card'],
         ];
 
         if ($installments > 1) {
@@ -53,57 +54,24 @@ class StripeGatewayService implements IPagamento
             return ['status' => 'error', 'message' => 'Falha ao processar o pagamento. Tente novamente.', 'raw_status' => 'error'];
         }
 
-        // 2. Obtem planos de parcelamento disponiveis
-        $availablePlans = [];
+        // 2. Confirma o PaymentIntent (com parcelamento se aplicavel)
+        $confirmPayload = [];
+
         if ($installments > 1) {
-            $availablePlans = $intent->payment_method_options->card->installments->available_plans ?? [];
-        }
-
-        if ($installments > 1 && !empty($availablePlans)) {
-            // Encontra um plano com o numero de parcelas solicitado
-            $selectedPlan = null;
-            foreach ($availablePlans as $plan) {
-                if (($plan->count ?? 0) === $installments) {
-                    $selectedPlan = $plan;
-                    break;
-                }
-            }
-
-            if (!$selectedPlan) {
-                // Usa o primeiro plano disponivel como fallback
-                $selectedPlan = $availablePlans[0] ?? null;
-            }
-
-            if ($selectedPlan) {
-                $confirmPayload = [
-                    'payment_method_options' => [
-                        'card' => [
-                            'installments' => [
-                                'enabled' => true,
-                                'plan' => [
-                                    'count' => $selectedPlan->count ?? $installments,
-                                    'type' => $selectedPlan->type ?? 'fixed_count',
-                                    'interval' => $selectedPlan->interval ?? 'month',
-                                ],
-                            ],
+            $confirmPayload['payment_method_options'] = [
+                'card' => [
+                    'installments' => [
+                        'enabled' => true,
+                        'plan' => [
+                            'count' => $installments,
+                            'type' => 'fixed_count',
+                            'interval' => 'month',
                         ],
-                    ],
-                ];
-            } else {
-                // Nenhum plano disponivel — prossegue sem parcelamento
-                $confirmPayload = [];
-            }
-        } else {
-            $confirmPayload = [
-                'payment_method_options' => [
-                    'card' => [
-                        'installments' => ['enabled' => false],
                     ],
                 ],
             ];
         }
 
-        // 3. Confirma o PaymentIntent
         try {
             $intent = $stripe->paymentIntents->confirm($intent->id, $confirmPayload);
         } catch (\Stripe\Exception\CardException $e) {
