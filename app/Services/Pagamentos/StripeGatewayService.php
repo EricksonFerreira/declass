@@ -78,8 +78,13 @@ class StripeGatewayService implements IPagamento
             \Log::warning('Stripe card error', ['message' => $e->getMessage(), 'code' => $e->getError()?->code]);
             return ['status' => 'error', 'message' => $this->mapStripeCardError($e), 'raw_status' => 'card_error'];
         } catch (\Stripe\Exception\ApiErrorException $e) {
-            \Log::error('Stripe confirm error', ['message' => $e->getMessage(), 'installments' => $installments]);
-            return ['status' => 'error', 'message' => $e->getMessage(), 'raw_status' => 'api_error'];
+            $message = $e->getMessage();
+            if (str_contains($message, 'not supported for this payment method')) {
+                \Log::warning('Stripe installment not supported', ['message' => $message, 'installments' => $installments]);
+                return ['status' => 'error', 'message' => 'Este cartão não suporta parcelamento em ' . $installments . 'x. Selecione outra quantidade de parcelas ou utilize outro cartão.', 'raw_status' => 'installments_not_supported'];
+            }
+            \Log::error('Stripe confirm error', ['message' => $message, 'installments' => $installments]);
+            return ['status' => 'error', 'message' => $message, 'raw_status' => 'api_error'];
         } catch (\Throwable $e) {
             \Log::error('Stripe generic error', ['message' => $e->getMessage()]);
             return ['status' => 'error', 'message' => 'Falha ao processar o pagamento. Tente novamente.', 'raw_status' => 'error'];
