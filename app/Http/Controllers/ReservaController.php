@@ -2839,7 +2839,43 @@ private function montarDiasSemanaFlags($diasUteis): array
             new BreadCrumbItem('Assinar Contrato de Check-in')
         ]);
 
-        $reserva = $this->reservaService->getById($reserva_id,['contratoCheckin']);
+        $reserva = $this->reservaService->getById($reserva_id, ['contratoCheckin', 'opcionais', 'cupomDesconto', 'estacaoRetirada', 'estacaoDevolucao', 'transacoes']);
+        $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
+        $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+        if ($taxaColeta == 0 && $reserva->estacaoRetirada && $reserva->data_inicio) {
+            $av = $this->reservaService->avaliarFuncionamentoEstacaoPublico((int) $reserva->estacao_retirada_id, $reserva->data_inicio, 'retirada');
+            if (($av['taxa_extra'] ?? false) && ($av['ok'] ?? false)) {
+                $taxaColeta = (float) ($reserva->estacaoRetirada->valor_taxa_coleta ?? 0);
+            }
+        }
+        if ($taxaEntrega == 0 && $reserva->estacaoDevolucao && $reserva->data_fim) {
+            $av = $this->reservaService->avaliarFuncionamentoEstacaoPublico((int) $reserva->estacao_devolucao_id, $reserva->data_fim, 'devolucao');
+            if (($av['taxa_extra'] ?? false) && ($av['ok'] ?? false)) {
+                $taxaEntrega = (float) ($reserva->estacaoDevolucao->valor_taxa_entrega ?? 0);
+            }
+        }
+        $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
+        if ($percentualDesconto <= 0 && $reserva->cupomDesconto) {
+            $percentualDesconto = (float) ($reserva->cupomDesconto->valor ?? 0);
+        }
+        $diasReserva = (int) ($reserva->quantidade_dias ?? 0);
+        $valorTarifaBase = (float) ($reserva->tarifa_base ?? 0) * $diasReserva;
+        $valorOpcionais = (float) ($reserva->valor_opcionais ?? 0);
+        if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
+            $valorOpcionais = (float) $reserva->opcionais->sum(fn ($opcional) => (float) ($opcional->pivot->preco_total ?? 0));
+        }
+        $valorTotalAtual = max(0, ($valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega) * (1 - ($percentualDesconto / 100)));
+        $statusPagamentoAprovado = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
+        $totalPagoAprovado = (float) ($reserva->transacoes ?? collect())
+            ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
+                && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
+            ->sum('valor');
+        $saldoPendente = max(0, $valorTotalAtual - $totalPagoAprovado);
+        if ($saldoPendente > 0.009) {
+            return redirect()
+                ->route('reserva.efetuarPagamento', $reserva_id)
+                ->with('warning', 'Restam R$ ' . number_format($saldoPendente, 2, ',', '.') . ' a pagar para liberar a assinatura do contrato.');
+        }
         return view('reserva.assinar-contrato-checkin', compact('reserva','breadcrumb'))->with('titulo', 'Assinar contrato de check-in da reserva Nº ' . $reserva->id);
     }
 

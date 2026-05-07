@@ -28,6 +28,13 @@
     $subtotal      = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
     $valorDesconto = $subtotal * ($percentualDesconto / 100);
     $valorTotal    = max(0, $subtotal - $valorDesconto);
+    $statusPagamentoAprovado = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
+    $totalPagoAprovado = (float) ($totalPagoAprovado ?? ($reserva->transacoes ?? collect())
+        ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
+            && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
+        ->sum('valor'));
+    $saldoPendente = (float) ($saldoPendente ?? max(0, $valorTotal - $totalPagoAprovado));
+    $valorCobranca = (float) ($valorCobranca ?? $saldoPendente);
 
     $gateway = $gatewayPadrao ?? 'stripe';
 @endphp
@@ -47,8 +54,8 @@
         <div class="ep-hero__right">
             <div class="ep-hero__kpis">
                 <div class="ep-kpi">
-                    <div class="ep-kpi__label">VALOR TOTAL</div>
-                    <div class="ep-kpi__val">{{ $simbolo }} {{ number_format($valorTotal, 2, ',', '.') }}</div>
+                    <div class="ep-kpi__label">VALOR A COBRAR</div>
+                    <div class="ep-kpi__val">{{ $simbolo }} {{ number_format($valorCobranca, 2, ',', '.') }}</div>
                 </div>
                 <div class="ep-kpi ep-kpi--mid">
                     <div class="ep-kpi__label">DURAÇÃO</div>
@@ -166,7 +173,7 @@
                 <div class="ep-card__body">
                     <div class="ep-tip mb-3">
                         <i class="fas fa-info-circle text-primary mr-2"></i>
-                        O valor total abaixo será cobrado no método selecionado. Após confirmar, o sistema registrará a transação e atualizará o status da reserva.
+                        O saldo abaixo será cobrado no método selecionado. Após confirmar, o sistema registrará a transação e atualizará o status da reserva.
                     </div>
 
                     <form id="payment-form" action="{{ route('reserva.processarPagamento', $reserva->id) }}" method="POST">
@@ -199,16 +206,16 @@
                         @endif
 
                         <div class="ep-total-box mb-3">
-                            <div class="ep-total-box__label">Total a cobrar</div>
-                            <div class="ep-total-box__value">{{ $simbolo }} {{ number_format($valorTotal, 2, ',', '.') }}</div>
+                            <div class="ep-total-box__label">Saldo a cobrar</div>
+                            <div class="ep-total-box__value">{{ $simbolo }} {{ number_format($valorCobranca, 2, ',', '.') }}</div>
                         </div>
 
                         <div class="form-group">
                             <label class="ep-form-label"><i class="fas fa-calendar-alt mr-1"></i> Parcelamento</label>
                             <select id="installments" name="installments" class="form-control form-control-sm">
-                                <option value="1">À vista — {{ $simbolo }} {{ number_format($valorTotal, 2, ',', '.') }}</option>
+                                <option value="1">À vista — {{ $simbolo }} {{ number_format($valorCobranca, 2, ',', '.') }}</option>
                                 @foreach([2,3,4,5,6,7,8,9,10,11,12] as $parc)
-                                    @php $valorParcela = $valorTotal / $parc; @endphp
+                                    @php $valorParcela = $valorCobranca / $parc; @endphp
                                     <option value="{{ $parc }}">{{ $parc }}x de {{ $simbolo }} {{ number_format($valorParcela, 2, ',', '.') }}</option>
                                 @endforeach
                             </select>
@@ -298,6 +305,15 @@
                         @endif
                         <span class="ep-total-final__label">Total</span>
                         <strong class="ep-total-final__val">{{ $simbolo }} {{ number_format($valorTotal, 2, ',', '.') }}</strong>
+                    </div>
+
+                    <div class="ep-summary-row mt-2">
+                        <span>Pago aprovado</span>
+                        <span>{{ $simbolo }} {{ number_format($totalPagoAprovado, 2, ',', '.') }}</span>
+                    </div>
+                    <div class="ep-summary-row" style="font-weight:700;color:#b45309">
+                        <span>Saldo pendente</span>
+                        <span>{{ $simbolo }} {{ number_format($saldoPendente, 2, ',', '.') }}</span>
                     </div>
 
                     <div class="ep-note mt-3">
