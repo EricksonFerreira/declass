@@ -115,10 +115,10 @@
                     <h3 class="card-title font-weight-bold mb-2 mb-md-0">Grade diaria de disponibilidade</h3>
                     <div class="legend d-flex flex-wrap">
                         <span class="legend-item"><i class="fas fa-circle text-success"></i> Disponivel</span>
-                        <span class="legend-item"><i class="fas fa-circle text-warning"></i> Indisponivel por reserva</span>
+                        <span class="legend-item"><i class="fas fa-circle" style="color:#d97706;"></i> Reservado</span>
+                        <span class="legend-item"><i class="fas fa-circle" style="color:#92400e;"></i> Reserva nao finalizada</span>
                         <span class="legend-item"><i class="fas fa-circle text-danger"></i> Indisponivel</span>
-                        <span class="legend-item"><i class="fas fa-circle text-secondary"></i> Sem local (nao
-                            reservavel)</span>
+                        <span class="legend-item"><i class="fas fa-circle text-secondary"></i> Sem local</span>
                     </div>
                 </div>
             </div>
@@ -214,10 +214,13 @@
                                         @endphp
                                         <td class="text-center">
                                             @if (($cell['tipo'] ?? null) === 'reserved' && !empty($cell['reserva_id']))
+                                                @php
+                                                    $ehOverdue = str_starts_with($cell['titulo'] ?? '', 'Aguardando');
+                                                @endphp
                                                 <a href="{{ route('reserva.show', $cell['reserva_id']) }}"
-                                                    class="status-dot is-reserved" style="text-decoration: none;"
+                                                    class="status-dot {{ $ehOverdue ? 'is-overdue' : 'is-reserved' }}" style="text-decoration: none;"
                                                     title="{{ $cell['titulo'] ?? 'Indisponivel por reserva' }}">
-                                                    <i class="fas fa-calendar-check"></i>
+                                                    <i class="fas {{ $ehOverdue ? 'fa-clock' : 'fa-calendar-check' }}"></i>
                                                 </a>
                                             @elseif(($cell['tipo'] ?? null) === 'pending')
                                                 <span class="status-dot is-pending"
@@ -339,6 +342,13 @@
             background: #f3f4f6;
             color: #444;
             border: 1px solid #e1e3e8;
+        }
+
+        .status-dot.is-reserved { color: #d97706; }
+        .status-dot.is-overdue { color: #92400e; animation: pulse-overdue 1.5s ease-in-out infinite; }
+        @keyframes pulse-overdue {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
         }
 
         .meta-separator {

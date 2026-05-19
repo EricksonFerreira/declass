@@ -1048,6 +1048,15 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                         return false;
                     }
 
+                    $finalizada = in_array((int) $res->status_reserva_id, [
+                        StatusReservaEnum::Checkout->value,
+                        StatusReservaEnum::NoShow->value,
+                    ], true);
+
+                    if (!$finalizada && now()->gt($fim)) {
+                        return $inicio->lt($diaFim);
+                    }
+
                     $fimComFolga = $reservaBloqueioHoras > 0 ? $fim->copy()->addHours($reservaBloqueioHoras) : $fim;
 
                     return $inicio->lt($diaFim) && $fimComFolga->gt($diaInicio);
@@ -1056,7 +1065,13 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 if ($reservaIndisp) {
                     $cell['tipo'] = 'reserved';
                     $cell['reserva_id'] = (int) $reservaIndisp->id;
-                    $cell['titulo'] = 'Indisponivel por reserva #' . (int) $reservaIndisp->id . ' (clique para abrir)';
+                    $finalizada = in_array((int) $reservaIndisp->status_reserva_id, [
+                        StatusReservaEnum::Checkout->value,
+                        StatusReservaEnum::NoShow->value,
+                    ], true);
+                    $fimReserva = !empty($reservaIndisp->data_fim) ? Carbon::parse($reservaIndisp->data_fim) : null;
+                    $prefixo = $finalizada ? 'Finalizada' : (now()->gt($fimReserva) ? 'Aguardando finalizacao' : 'Reservado');
+                    $cell['titulo'] = $prefixo . ' #' . (int) $reservaIndisp->id . ' (clique para abrir)';
                     $grade[$veiculo->id][$dia] = $cell;
                     continue;
                 }

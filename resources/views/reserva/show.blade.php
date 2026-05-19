@@ -4559,13 +4559,27 @@ function filtrarGrupoTipo(tipo) {
 }
 function aplicarFiltrosGrupo() {
     var termo = (document.getElementById('filtroGrupoModal').value || '').toLowerCase().trim();
+    var totalVisiveis = 0;
     document.querySelectorAll('#tabelaGrupoModal tbody tr').forEach(function(tr) {
         var texto = tr.textContent.toLowerCase();
-        var qtd = parseInt(tr.dataset.qtd) || 0;
+        var qtd = Number(tr.dataset.qtd) || 0;
         var matchTexto = !termo || texto.includes(termo);
-        var matchTipo = grupoFiltroAtivo === 'todos' || (grupoFiltroAtivo === 'disponiveis' && qtd > 0);
-        tr.style.display = matchTexto && matchTipo ? '' : 'none';
+        var matchTipo = grupoFiltroAtivo === 'todos' || qtd > 0;
+        var mostra = matchTexto && matchTipo;
+        tr.style.display = mostra ? '' : 'none';
+        if (mostra) totalVisiveis++;
     });
+    var info = document.getElementById('filtroGrupoInfo');
+    if (!info) {
+        info = document.createElement('small');
+        info.id = 'filtroGrupoInfo';
+        info.className = 'text-muted d-block mt-1';
+        document.querySelector('#modalGrupo .modal-body').appendChild(info);
+    }
+    var total = document.querySelectorAll('#tabelaGrupoModal tbody tr').length;
+    info.textContent = grupoFiltroAtivo === 'disponiveis'
+        ? totalVisiveis + ' de ' + total + ' modelos com veículos disponíveis'
+        : 'Mostrando todos os ' + total + ' modelos';
 }
 </script>
 @stop
