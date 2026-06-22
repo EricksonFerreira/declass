@@ -17,6 +17,7 @@ use App\Services\SegmentoService;
 use App\Services\StatusVeiculoService;
 use App\Services\TipoFrotaService;
 use App\Services\VeiculoService;
+use App\Services\DisponibilidadeVeiculoService;
 use App\Support\EmpresaContext;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\JsonResponse;
@@ -51,6 +52,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     protected $segmentoService;
     protected $statusVeiculoService;
     protected $estacaoService;
+    protected $disponibilidadeVeiculoService;
 
 
     public function __construct(
@@ -62,7 +64,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         ModeloService $modeloService,
         SegmentoService $segmentoService,
         StatusVeiculoService $statusVeiculoService,
-        EstacaoService $estacaoService
+        EstacaoService $estacaoService,
+        DisponibilidadeVeiculoService $disponibilidadeVeiculoService
     ) {
         $this->titulo = "Veiculos";
         $this->nomeFiltro = 'veiculo';
@@ -75,6 +78,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->segmentoService = $segmentoService;
         $this->statusVeiculoService = $statusVeiculoService;
         $this->estacaoService = $estacaoService;
+        $this->disponibilidadeVeiculoService = $disponibilidadeVeiculoService;
     }
 
     public function index()
@@ -85,13 +89,57 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $perPage  = session()->get("$this->nomeFiltro.perPage", 10);
         $orderBy  = session()->get("$this->nomeFiltro.orderBy", 'id');
         $orderDir = session()->get("$this->nomeFiltro.orderDir", 'asc');
-        $allowedOrderBy = ['id', 'nome', 'placa_licenca', 'renavam', 'ano_fabricacao', 'kms', 'created_at'];
+
+        $allowedOrderBy = [
+            'id',
+            'nome',
+            'placa_licenca',
+            'renavam',
+            'ano_fabricacao',
+            'kms',
+            'created_at',
+        ];
 
         if (!in_array($orderBy, $allowedOrderBy, true)) {
             $orderBy = 'id';
         }
 
-        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, [], $orderBy, $orderDir);
+        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination(
+            $itensFiltered,
+            $perPage,
+            [],
+            $orderBy,
+            $orderDir
+        );
+
+        /*
+     * Correção:
+     * A listagem agora usa a mesma regra da tela de disponibilidade.
+     * Não considera apenas data_hora_disponibilidade.
+     */
+        $dispAnoIndex = (int) request()->query('disp_ano', date('Y'));
+        $dispMesIndex = (int) request()->query('disp_mes', date('n'));
+
+        if ($dispMesIndex < 1 || $dispMesIndex > 12) {
+            $dispMesIndex = (int) date('n');
+        }
+
+        if ($dispAnoIndex < 2024 || $dispAnoIndex > ((int) date('Y') + 1)) {
+            $dispAnoIndex = (int) date('Y');
+        }
+
+        $veiculosCollection = method_exists($veiculos, 'getCollection')
+            ? $veiculos->getCollection()
+            : collect($veiculos);
+
+        $resultadoDisponibilidadeIndex = $this->disponibilidadeVeiculoService->montarGradeMensal(
+            $veiculosCollection,
+            $dispAnoIndex,
+            $dispMesIndex
+        );
+
+        $resumoVeiculosIndex = $resultadoDisponibilidadeIndex['resumoVeiculos'] ?? [];
+        $gradeVeiculosIndex = $resultadoDisponibilidadeIndex['grade'] ?? [];
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Veiculos');
         $filters = $this->obterFiltrosPrincipais();
@@ -111,7 +159,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'perPages',
             'perPage',
             'orderBy',
-            'orderDir'
+            'orderDir',
+            'resumoVeiculosIndex',
+            'gradeVeiculosIndex',
+            'dispAnoIndex',
+            'dispMesIndex'
         ))->with('titulo', $this->titulo);
     }
 
@@ -172,8 +224,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $modeloExists = Rule::exists('modelos', 'id');
 
         if ($empresaId !== null) {
-            $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
-            $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $marcaExists = $marcaExists->where(fn($query) => $query->where('empresa_id', (int) $empresaId));
+            $modeloExists = $modeloExists->where(fn($query) => $query->where('empresa_id', (int) $empresaId));
         }
 
         $dados = $request->validate([
@@ -323,8 +375,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     'localOrigem:id,nome',
                     'localDestino:id,nome',
                     'reserva:id',
-                'ordemServico:id,numero,status',
-            ])->orderByDesc('id');
+                    'ordemServico:id,numero,status',
+                ])->orderByDesc('id');
             },
         ]);
 
@@ -334,137 +386,140 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         $reservaBloqueioHoras = 0;
         $empresaId = null;
+
         /** @var EmpresaContext $empresaContext */
         $empresaContext = app(EmpresaContext::class);
+
         if (Auth::user()?->isAdministrador()) {
             $empresaId = $empresaContext->empresaId();
         } else {
             $empresaId = $empresaContext->empresaId() ?? Auth::user()?->empresa_id;
         }
 
-        if ($empresaId && SchemaCache::hasTable('empresas') && SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
-            $reservaBloqueioHoras = (int) (DB::table('empresas')->where('id', (int) $empresaId)->value('reserva_bloqueio_pos_reserva_horas') ?? 0);
+        if (
+            $empresaId
+            && SchemaCache::hasTable('empresas')
+            && SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')
+        ) {
+            $reservaBloqueioHoras = (int) (
+                DB::table('empresas')
+                ->where('id', (int) $empresaId)
+                ->value('reserva_bloqueio_pos_reserva_horas') ?? 0
+            );
+
             if ($reservaBloqueioHoras < 0) {
                 $reservaBloqueioHoras = 0;
             }
         }
 
         $dispDiasNoMes = (int) cal_days_in_month(CAL_GREGORIAN, $dispMes, $dispAno);
+        $dispFirstDow = (int) Carbon::create($dispAno, $dispMes, 1)->dayOfWeekIso;
+
+        /*
+ * Correção:
+ * A tela show agora usa o mesmo service da grade mensal.
+ * Assim, index, show e disponibilidade seguem a mesma regra.
+ */
+        $resultadoDisponibilidadeShow = $this->disponibilidadeVeiculoService->montarGradeMensal(
+            collect([$veiculo]),
+            $dispAno,
+            $dispMes
+        );
+
+        $dispGradeCompleta = $resultadoDisponibilidadeShow['grade'] ?? [];
+        $dispResumoVeiculos = $resultadoDisponibilidadeShow['resumoVeiculos'] ?? [];
+        $dispCards = $resultadoDisponibilidadeShow['cards'] ?? [];
+
+        $dispGrade = $dispGradeCompleta[$veiculo->id] ?? [];
+        $dispResumo = $dispResumoVeiculos[$veiculo->id] ?? [
+            'percentual' => 0,
+            'minutos_total' => 0,
+            'minutos_disponiveis' => 0,
+            'status_mes' => 'off',
+            'dias_parciais' => 0,
+            'dias_indisponiveis' => 0,
+        ];
+
+        $dispStats = [
+            'ok' => 0,
+            'partial' => 0,
+            'reserved' => 0,
+            'overdue' => 0,
+            'off' => 0,
+            'pending' => 0,
+        ];
+
+        foreach ($dispGrade as $cell) {
+            $tipo = $cell['tipo'] ?? 'off';
+
+            if (!array_key_exists($tipo, $dispStats)) {
+                $dispStats[$tipo] = 0;
+            }
+
+            $dispStats[$tipo]++;
+        }
+
         $dispInicioMes = Carbon::create($dispAno, $dispMes, 1)->startOfDay();
-        $dispFimMes = Carbon::create($dispAno, $dispMes, $dispDiasNoMes)->endOfDay();
+        $dispFimMesExclusivo = $dispInicioMes->copy()->addMonth()->startOfDay();
         $dispInicioMesComFolga = $dispInicioMes->copy()->subHours($reservaBloqueioHoras);
-        $dispFirstDow = (int) Carbon::create($dispAno, $dispMes, 1)->dayOfWeekIso; // 1..7 (Seg..Dom)
 
         $dispReservas = Reserva::query()
             ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim', 'status_reserva_id', 'user_id'])
+            ->with(['statusReserva:id,nome'])
             ->where('veiculo_id', (int) $veiculo->id)
-            ->whereIn('status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
-            ->where('data_inicio', '<', $dispFimMes->toDateTimeString())
+            ->whereIn('status_reserva_id', [
+                StatusReservaEnum::Pendente->value,
+                StatusReservaEnum::Confirmada->value,
+                StatusReservaEnum::Checkin->value,
+                StatusReservaEnum::Checkout->value,
+                StatusReservaEnum::NoShow->value,
+            ])
+            ->where('data_inicio', '<', $dispFimMesExclusivo->toDateTimeString())
             ->where('data_fim', '>', $dispInicioMesComFolga->toDateTimeString())
             ->orderBy('data_inicio')
             ->get();
 
         $dispMovimentacoes = Movimentacao::query()
-            ->select(['id', 'veiculo_id', 'data_saida', 'data_chegada_real', 'status_movimentacao_id', 'reserva_id'])
+            ->with([
+                'usuario:id,nome',
+                'tipoMovimentacao:id,nome',
+                'statusMovimentacao:id,nome,cor',
+                'localOrigem:id,nome',
+                'localDestino:id,nome',
+                'reserva:id',
+                'ordemServico:id,numero,status',
+            ])
+            ->select([
+                'id',
+                'nome',
+                'veiculo_id',
+                'tipo_movimentacao_id',
+                'local_origem_id',
+                'local_destino_id',
+                'ordem_servico_id',
+                'data_saida',
+                'data_registro',
+                'data_chegada_prevista',
+                'data_chegada_real',
+                'km_saida',
+                'km_chegada',
+                'status_movimentacao_id',
+                'reserva_id',
+                'observacoes',
+                'user_id',
+            ])
             ->where('veiculo_id', (int) $veiculo->id)
             ->whereIn('status_movimentacao_id', [1, 2, 5, 6, 7])
-            ->where(function ($query) use ($dispFimMes) {
+            ->where(function ($query) use ($dispFimMesExclusivo) {
                 $query->whereNull('data_saida')
-                    ->orWhere('data_saida', '<=', $dispFimMes->toDateTimeString());
+                    ->orWhere('data_saida', '<', $dispFimMesExclusivo->toDateTimeString());
             })
             ->where(function ($query) use ($dispInicioMes) {
                 $query->whereNull('data_chegada_real')
                     ->orWhere('data_chegada_real', '>=', $dispInicioMes->toDateTimeString());
             })
-            ->orderBy('data_saida')
+            ->orderByDesc('id')
             ->get();
-
-        $dispGrade = [];
-        $dispStats = [
-            'ok' => 0,
-            'reserved' => 0,
-            'off' => 0,
-            'pending' => 0,
-        ];
-
-        $inicioDisponibilidade = !empty($veiculo->data_hora_disponibilidade) ? Carbon::parse($veiculo->data_hora_disponibilidade) : null;
-
-        for ($dia = 1; $dia <= $dispDiasNoMes; $dia++) {
-            $diaInicio = Carbon::create($dispAno, $dispMes, $dia)->startOfDay();
-            $diaFim = Carbon::create($dispAno, $dispMes, $dia)->endOfDay();
-
-            $cell = [
-                'tipo' => 'ok',
-                'titulo' => 'Disponivel',
-                'reserva_id' => null,
-            ];
-
-            if ($inicioDisponibilidade && $diaFim->lt($inicioDisponibilidade)) {
-                $cell['tipo'] = 'off';
-                $cell['titulo'] = 'Indisponivel (disponivel a partir de ' . $inicioDisponibilidade->format('d/m/Y H:i') . ')';
-                $dispGrade[$dia] = $cell;
-                $dispStats['off']++;
-                continue;
-            }
-
-            $movIndisp = $dispMovimentacoes->first(function ($mov) use ($diaInicio, $diaFim) {
-                $saida = !empty($mov->data_saida) ? Carbon::parse($mov->data_saida) : null;
-                $chegada = !empty($mov->data_chegada_real) ? Carbon::parse($mov->data_chegada_real) : null;
-
-                $inicio = $saida ?? $diaInicio;
-                $fim = $chegada ?? Carbon::create(2999, 12, 31)->endOfDay();
-
-                return $inicio->lt($diaFim) && $fim->gt($diaInicio);
-            });
-
-            if ($movIndisp) {
-                $cell['tipo'] = 'off';
-                $cell['titulo'] = 'Indisponivel (movimentacao)';
-                $dispGrade[$dia] = $cell;
-                $dispStats['off']++;
-                continue;
-            }
-
-            $resIndisp = $dispReservas->first(function ($res) use ($diaInicio, $diaFim, $reservaBloqueioHoras) {
-                $inicio = !empty($res->data_inicio) ? Carbon::parse($res->data_inicio) : null;
-                $fim = !empty($res->data_fim) ? Carbon::parse($res->data_fim) : null;
-                if (!$inicio || !$fim) {
-                    return false;
-                }
-
-                $fimComFolga = $reservaBloqueioHoras > 0 ? $fim->copy()->addHours($reservaBloqueioHoras) : $fim;
-
-                return $inicio->lt($diaFim) && $fimComFolga->gt($diaInicio);
-            });
-
-            if ($resIndisp) {
-                $cell['tipo'] = 'reserved';
-                $cell['reserva_id'] = (int) $resIndisp->id;
-                $cell['titulo'] = 'Indisponivel por reserva #' . (int) $resIndisp->id . ' (clique para abrir)';
-                $dispGrade[$dia] = $cell;
-                $dispStats['reserved']++;
-                continue;
-            }
-
-            if (empty($veiculo->local_disponibilidade)) {
-                $cell['tipo'] = 'pending';
-                $cell['titulo'] = 'Sem local de disponibilidade (nao aparece na reserva)';
-                $dispGrade[$dia] = $cell;
-                $dispStats['pending']++;
-                continue;
-            }
-
-            if ($dispEstacaoId > 0 && (int) $veiculo->local_disponibilidade !== $dispEstacaoId) {
-                $cell['tipo'] = 'pending';
-                $cell['titulo'] = 'Nao reservavel para a estacao selecionada (veiculo em outra estacao)';
-                $dispGrade[$dia] = $cell;
-                $dispStats['pending']++;
-                continue;
-            }
-
-            $dispGrade[$dia] = $cell;
-            $dispStats['ok']++;
-        }
 
         $dispEstacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc');
 
@@ -514,6 +569,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'dispFirstDow',
             'dispGrade',
             'dispStats',
+            'dispResumo',
             'dispReservas',
             'dispMovimentacoes',
             'reservaBloqueioHoras',
@@ -773,9 +829,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $campo  = $request->input('orderBy', 'id');
         $dir    = $request->input('orderDir', 'asc');
-        $allowed = ['id','nome','placa_licenca','renavam','ano_fabricacao','kms','created_at'];
+        $allowed = ['id', 'nome', 'placa_licenca', 'renavam', 'ano_fabricacao', 'kms', 'created_at'];
         if (!in_array($campo, $allowed)) $campo = 'id';
-        if (!in_array($dir, ['asc','desc'])) $dir = 'asc';
+        if (!in_array($dir, ['asc', 'desc'])) $dir = 'asc';
         session(['veiculo.orderBy' => $campo, 'veiculo.orderDir' => $dir]);
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
@@ -900,7 +956,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $titulo = 'Disponibilidade de Veiculos';
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex($titulo);
 
-        $anos = range(2024, date('Y'));
+        $anos = range(2024, date('Y') + 1);
+
         $meses = [
             1 => 'Janeiro',
             2 => 'Fevereiro',
@@ -915,192 +972,63 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             11 => 'Novembro',
             12 => 'Dezembro',
         ];
-        $totalVeiculos = $this->veiculoService->getTotalVeiculos();
-        $veiculosDisponiveis = $this->veiculoService->getVeiculosDisponiveis();
-        $veiculosReservados = $this->veiculoService->getVeiculosReservados();
-        $veiculosIndisponiveis = $this->veiculoService->getVeiculosIndisponiveis();
 
-        // $diasDoMes = range(1, 31);
-        // pegue os dias do mes dependendo do mês selecionado. se nao tiver mes selecionado pegue o mes atual
-        $mes = (int) ($request->mes ?? date('n'));
-        $ano = (int) ($request->ano ?? date('Y'));
-        $estacaoFiltro = $request->input('estacao_id');
-        $estacaoId = is_numeric($estacaoFiltro) ? (int) $estacaoFiltro : 0;
-        $diasNoMes = (int) cal_days_in_month(CAL_GREGORIAN, $mes, $ano);
-        $diasDoMes = range(1, $diasNoMes);
+        $mes = (int) ($request->input('mes') ?? date('n'));
+        $ano = (int) ($request->input('ano') ?? date('Y'));
 
-        $inicioMes = Carbon::create($ano, $mes, 1)->startOfDay();
-        $fimMes = Carbon::create($ano, $mes, $diasNoMes)->endOfDay();
+        if ($mes < 1 || $mes > 12) {
+            $mes = (int) date('n');
+        }
 
-        $filtros = [];
-        if ($estacaoFiltro === 'sem_estacao') {
-            $filtros['local_disponibilidade'] = [
-                'typeWhere' => 'whereNull',
-                'valor' => null,
-            ];
-        } elseif ($estacaoId > 0) {
-            $filtros['local_disponibilidade'] = [
-                'typeWhere' => 'where',
-                'valor' => $estacaoId,
-            ];
+        if ($ano < 2024 || $ano > ((int) date('Y') + 1)) {
+            $ano = (int) date('Y');
         }
 
         $estacaoFiltro = $request->input('estacao_id');
+
         $veiculos = $this->veiculoService->getVeiculosDisponibilidade($estacaoFiltro, 1000);
 
-        $veiculosCollection = method_exists($veiculos, 'getCollection') ? $veiculos->getCollection() : collect($veiculos);
-        $veiculoIds = $veiculosCollection->pluck('id')->map(static fn($id) => (int) $id)->filter()->values()->toArray();
+        $veiculosCollection = method_exists($veiculos, 'getCollection')
+            ? $veiculos->getCollection()
+            : collect($veiculos);
 
-        $reservaBloqueioHoras = 0;
-        $empresaId = null;
-        /** @var EmpresaContext $empresaContext */
-        $empresaContext = app(EmpresaContext::class);
-        if (Auth::user()?->isAdministrador()) {
-            $empresaId = $empresaContext->empresaId();
-        } else {
-            $empresaId = $empresaContext->empresaId() ?? Auth::user()?->empresa_id;
-        }
+        $resultadoDisponibilidade = $this->disponibilidadeVeiculoService->montarGradeMensal(
+            $veiculosCollection,
+            $ano,
+            $mes
+        );
 
-        if ($empresaId && SchemaCache::hasTable('empresas') && SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
-            $reservaBloqueioHoras = (int) (DB::table('empresas')->where('id', (int) $empresaId)->value('reserva_bloqueio_pos_reserva_horas') ?? 0);
-            if ($reservaBloqueioHoras < 0) {
-                $reservaBloqueioHoras = 0;
-            }
-        }
+        $diasDoMes = $resultadoDisponibilidade['diasDoMes'];
+        $grade = $resultadoDisponibilidade['grade'];
+        $resumoVeiculos = $resultadoDisponibilidade['resumoVeiculos'];
+        $reservaBloqueioHoras = $resultadoDisponibilidade['reservaBloqueioHoras'];
 
-        $inicioMesComFolga = $inicioMes->copy()->subHours($reservaBloqueioHoras);
+        $cards = $resultadoDisponibilidade['cards'];
 
-        $reservasPorVeiculo = collect();
-        $movimentacoesPorVeiculo = collect();
-
-        if (!empty($veiculoIds)) {
-            $reservasPorVeiculo = Reserva::query()
-                ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim'])
-                ->whereIn('veiculo_id', $veiculoIds)
-                ->whereIn('status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
-                ->where('data_inicio', '<', $fimMes->toDateTimeString())
-                ->where('data_fim', '>', $inicioMesComFolga->toDateTimeString())
-                ->orderBy('data_inicio')
-                ->get()
-                ->groupBy('veiculo_id');
-
-            $movimentacoesPorVeiculo = Movimentacao::query()
-                ->select(['id', 'veiculo_id', 'data_saida', 'data_chegada_real', 'status_movimentacao_id', 'reserva_id'])
-                ->whereIn('veiculo_id', $veiculoIds)
-                ->whereIn('status_movimentacao_id', [1, 2, 5, 6, 7])
-                ->where(function ($query) use ($fimMes) {
-                    $query->whereNull('data_saida')
-                        ->orWhere('data_saida', '<=', $fimMes->toDateTimeString());
-                })
-                ->where(function ($query) use ($inicioMes) {
-                    $query->whereNull('data_chegada_real')
-                        ->orWhere('data_chegada_real', '>=', $inicioMes->toDateTimeString());
-                })
-                ->orderBy('data_saida')
-                ->get()
-                ->groupBy('veiculo_id');
-        }
-
-        $grade = [];
-        foreach ($veiculosCollection as $veiculo) {
-            $veiculoReservas = $reservasPorVeiculo->get($veiculo->id, collect());
-            $veiculoMovs = $movimentacoesPorVeiculo->get($veiculo->id, collect());
-            $inicioDisponibilidade = !empty($veiculo->data_hora_disponibilidade) ? Carbon::parse($veiculo->data_hora_disponibilidade) : null;
-
-            foreach ($diasDoMes as $dia) {
-                $diaInicio = Carbon::create($ano, $mes, (int) $dia)->startOfDay();
-                $diaFim = Carbon::create($ano, $mes, (int) $dia)->endOfDay();
-
-                $cell = [
-                    'tipo' => 'ok',
-                    'titulo' => 'Disponivel',
-                    'reserva_id' => null,
-                ];
-
-                if ($inicioDisponibilidade && $diaFim->lt($inicioDisponibilidade)) {
-                    $cell['tipo'] = 'off';
-                    $cell['titulo'] = 'Indisponivel (disponivel a partir de ' . $inicioDisponibilidade->format('d/m/Y H:i') . ')';
-                    $grade[$veiculo->id][$dia] = $cell;
-                    continue;
-                }
-
-                $movIndisp = $veiculoMovs->first(function ($mov) use ($diaInicio, $diaFim) {
-                    $saida = !empty($mov->data_saida) ? Carbon::parse($mov->data_saida) : null;
-                    $chegada = !empty($mov->data_chegada_real) ? Carbon::parse($mov->data_chegada_real) : null;
-
-                    $inicio = $saida ?? $diaInicio;
-                    $fim = $chegada ?? Carbon::create(2999, 12, 31)->endOfDay();
-
-                    return $inicio->lt($diaFim) && $fim->gt($diaInicio);
-                });
-
-                if ($movIndisp) {
-                    $cell['tipo'] = 'off';
-                    $cell['titulo'] = 'Indisponivel (movimentacao)';
-                    $grade[$veiculo->id][$dia] = $cell;
-                    continue;
-                }
-
-                $reservaIndisp = $veiculoReservas->first(function ($res) use ($diaInicio, $diaFim, $reservaBloqueioHoras) {
-                    $inicio = !empty($res->data_inicio) ? Carbon::parse($res->data_inicio) : null;
-                    $fim = !empty($res->data_fim) ? Carbon::parse($res->data_fim) : null;
-                    if (!$inicio || !$fim) {
-                        return false;
-                    }
-
-                    $finalizada = in_array((int) $res->status_reserva_id, [
-                        StatusReservaEnum::Checkout->value,
-                        StatusReservaEnum::NoShow->value,
-                    ], true);
-
-                    if (!$finalizada && now()->gt($fim)) {
-                        return $inicio->lt($diaFim);
-                    }
-
-                    $fimComFolga = $reservaBloqueioHoras > 0 ? $fim->copy()->addHours($reservaBloqueioHoras) : $fim;
-
-                    return $inicio->lt($diaFim) && $fimComFolga->gt($diaInicio);
-                });
-
-                if ($reservaIndisp) {
-                    $cell['tipo'] = 'reserved';
-                    $cell['reserva_id'] = (int) $reservaIndisp->id;
-                    $finalizada = in_array((int) $reservaIndisp->status_reserva_id, [
-                        StatusReservaEnum::Checkout->value,
-                        StatusReservaEnum::NoShow->value,
-                    ], true);
-                    $fimReserva = !empty($reservaIndisp->data_fim) ? Carbon::parse($reservaIndisp->data_fim) : null;
-                    $prefixo = $finalizada ? 'Finalizada' : (now()->gt($fimReserva) ? 'Aguardando finalizacao' : 'Reservado');
-                    $cell['titulo'] = $prefixo . ' #' . (int) $reservaIndisp->id . ' (clique para abrir)';
-                    $grade[$veiculo->id][$dia] = $cell;
-                    continue;
-                }
-
-                if (empty($veiculo->local_disponibilidade)) {
-                    $cell['tipo'] = 'pending';
-                    $cell['titulo'] = 'Sem local de disponibilidade (nao aparece na reserva)';
-                }
-
-                $grade[$veiculo->id][$dia] = $cell;
-            }
-        }
+        $totalVeiculos = $cards['total'];
+        $veiculosDisponiveis = $cards['disponiveis'];
+        $veiculosParciais = $cards['parciais'];
+        $veiculosIndisponiveis = $cards['indisponiveis'];
 
         $estacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc');
 
         return view('veiculo.disponibilidade', compact(
             'totalVeiculos',
             'veiculosDisponiveis',
-            'veiculosReservados',
+            'veiculosParciais',
             'veiculosIndisponiveis',
             'diasDoMes',
             'veiculos',
             'grade',
+            'resumoVeiculos',
             'reservaBloqueioHoras',
             'anos',
             'meses',
             'estacoes',
             'titulo',
-            'breadcrumb'
+            'breadcrumb',
+            'mes',
+            'ano'
         ));
     }
 

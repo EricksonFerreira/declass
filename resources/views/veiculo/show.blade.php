@@ -593,7 +593,37 @@
                         </span>
                         <span class="vs-badge-soft {{ $veiculo->disponivel ? 'is-success' : 'is-warning' }}">
                             <i class="fas {{ $veiculo->disponivel ? 'fa-check-circle' : 'fa-clock' }}"></i>
-                            {{ $veiculo->disponivel ? 'Disponível para operação' : 'Indisponível no momento' }}
+                            @php
+                                $showPercentualDisponibilidade = (int) ($dispResumo['percentual'] ?? 0);
+                                $showStatusDisponibilidade = (string) ($dispResumo['status_mes'] ?? 'off');
+
+                                $showDisponivel = $showStatusDisponibilidade === 'ok' && $showPercentualDisponibilidade >= 100;
+                                $showParcial = $showStatusDisponibilidade === 'partial'
+                                    || ($showPercentualDisponibilidade > 0 && $showPercentualDisponibilidade < 100);
+
+                                $showLabelDisponibilidade = match (true) {
+                                    $showDisponivel => 'Disponível para operação',
+                                    $showParcial => 'Parcialmente disponível',
+                                    default => 'Indisponível no período',
+                                };
+
+                                $showIconDisponibilidade = match (true) {
+                                    $showDisponivel => 'fa-check-circle',
+                                    $showParcial => 'fa-adjust',
+                                    default => 'fa-clock',
+                                };
+
+                                $showClassDisponibilidade = match (true) {
+                                    $showDisponivel => 'is-success',
+                                    $showParcial => 'is-warning',
+                                    default => 'is-danger',
+                                };
+                            @endphp
+
+                            <span class="vs-badge-soft {{ $showClassDisponibilidade }}">
+                                <i class="fas {{ $showIconDisponibilidade }}"></i>
+                                {{ $showLabelDisponibilidade }} · {{ $showPercentualDisponibilidade }}%
+                            </span>
                         </span>
                     </div>
                 </div>
@@ -682,7 +712,7 @@
                         <div class="vs-kpis">
                             <div class="vs-kpi">
                                 <span>Status atual</span>
-                                <strong>{{ $veiculo->disponivel ? 'Disponível' : 'Indisponível' }}</strong>
+                                <strong>{{ $showLabelDisponibilidade }} · {{ $showPercentualDisponibilidade }}%</strong>
                             </div>
                             <div class="vs-kpi">
                                 <span>Reservas totais</span>

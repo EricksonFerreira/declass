@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\StatusReservaEnum;
-use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Reserva extends Model
@@ -14,6 +13,7 @@ class Reserva extends Model
         'user_id',
         'criado_por_user_id',
         'origem_cadastro',
+        'veiculo_id',
         'modelo_id',
         'estacao_retirada_id',
         'estacao_devolucao_id',
@@ -35,6 +35,19 @@ class Reserva extends Model
         'valor_total_final',
         'taxa_coleta',
         'taxa_entrega',
+    ];
+
+    protected $casts = [
+        'data_inicio' => 'datetime',
+        'data_fim' => 'datetime',
+        'data_criacao' => 'datetime',
+        'data_cancelamento' => 'datetime',
+        'pagamento_efetuado' => 'boolean',
+        'status_reserva_id' => 'integer',
+        'veiculo_id' => 'integer',
+        'modelo_id' => 'integer',
+        'estacao_retirada_id' => 'integer',
+        'estacao_devolucao_id' => 'integer',
     ];
 
     public function podeEditar(): bool
@@ -69,16 +82,14 @@ class Reserva extends Model
         return in_array($this->status_reserva_id, [
             StatusReservaEnum::Pendente->value,
             StatusReservaEnum::Confirmada->value,
-        ]);
+        ], true);
     }
 
     public function podeFazerCheckout(): bool
     {
-        return (int) $this->status_reserva_id === StatusReservaEnum::Checkin->value; // 4 = Em Andamento
+        return (int) $this->status_reserva_id === StatusReservaEnum::Checkin->value;
     }
-    
 
-    // Relacionamentos
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -98,6 +109,7 @@ class Reserva extends Model
     {
         return $this->belongsTo(Modelo::class, 'modelo_id');
     }
+
     public function veiculo()
     {
         return $this->belongsTo(Veiculo::class, 'veiculo_id');
@@ -113,34 +125,14 @@ class Reserva extends Model
         return $this->belongsTo(Estacao::class, 'estacao_devolucao_id');
     }
 
-    public function opcionais()
-    {
-        return $this->belongsToMany(Opcional::class, 'reservas_opcionais', 'reserva_id', 'opcional_id')
-            ->withPivot('quantidade', 'preco_total');
-    }
-
     public function statusReserva()
     {
         return $this->belongsTo(StatusReserva::class, 'status_reserva_id');
     }
 
-    public function cupomDesconto()
-    {
-        return $this->belongsTo(CupomDesconto::class, 'cupom_desconto_id');
-    }
-
     public function grupoFrota()
     {
         return $this->belongsTo(GrupoFrota::class, 'grupo_frota_id');
-    }
-
-    public function getLabelOrigemCadastroAttribute(): string
-    {
-        return match (strtolower((string) ($this->origem_cadastro ?? ''))) {
-            'site' => 'Site',
-            'colaborador' => 'Colaborador',
-            default => 'Sem origem',
-        };
     }
 
     public function contratoCheckin()
@@ -151,44 +143,5 @@ class Reserva extends Model
     public function contratoCheckout()
     {
         return $this->hasOne(ContratoCheckout::class, 'reserva_id');
-    }
-
-    public function veiculoDano(){
-        return $this->hasMany(VeiculoDanos::class, 'reserva_id');
-    }
-
-    public function nfse()
-    {
-        return $this->hasOne(Nfse::class, 'reserva_id');
-    }
-
-    public function nfseAtual()
-    {
-        return $this->hasOne(Nfse::class, 'reserva_id')->latestOfMany();
-    }
-
-    public function satisfacao()
-    {
-        return $this->hasOne(ReservaSatisfacao::class, 'reserva_id');
-    }
-
-    public function transacoes()
-    {
-        return $this->hasMany(Transacao::class, 'reserva_id');
-    }
-
-    public function multas()
-    {
-        return $this->hasMany(Multa::class, 'reserva_id');
-    }
-
-    public function avariaCobrancas()
-    {
-        return $this->hasMany(AvariaCobranca::class, 'reserva_id');
-    }
-
-    public function calcao()
-    {
-        return $this->hasOne(Calcao::class, 'reserva_id')->latest();
     }
 }

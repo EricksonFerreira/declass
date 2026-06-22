@@ -580,6 +580,7 @@ class MovimentacaoService extends AbstractBaseService
             'local_origem_id' => $local_origem_id ?? $local_id,
             'local_destino_id' => $local_destino_id,
             'data_registro' => Carbon::now(),
+            'data_saida' => Carbon::now(),
             'reserva_id' => $reserva_id,
             'observacoes' => $observacao,
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,

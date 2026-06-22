@@ -6,7 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Movimentacao extends Model
-{    use HasFactory;
+{
+    use HasFactory;
 
     protected $table = 'movimentacoes';
 
@@ -31,63 +32,70 @@ class Movimentacao extends Model
         'user_id',
     ];
 
-    // Relacionamento com User
+    protected $casts = [
+        'ativo' => 'boolean',
+        'veiculo_id' => 'integer',
+        'modelo_id' => 'integer',
+        'tipo_movimentacao_id' => 'integer',
+        'local_origem_id' => 'integer',
+        'local_destino_id' => 'integer',
+        'ordem_servico_id' => 'integer',
+        'status_movimentacao_id' => 'integer',
+        'reserva_id' => 'integer',
+        'data_registro' => 'datetime',
+        'data_saida' => 'datetime',
+        'data_chegada_prevista' => 'datetime',
+        'data_chegada_real' => 'datetime',
+    ];
+
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    // Relacionamento com TipoMovimentacao
     public function tipoMovimentacao()
     {
         return $this->belongsTo(TipoMovimentacao::class, 'tipo_movimentacao_id');
     }
 
-    // Relacionamento com Veiculo (opcional)
     public function veiculo()
     {
         return $this->belongsTo(Veiculo::class, 'veiculo_id');
     }
 
-    // Relacionamento com GrupoVeiculo
     public function modelo()
     {
         return $this->belongsTo(Modelo::class, 'modelo_id');
     }
 
-    // Relacionamento com Local de Origem
     public function localOrigem()
     {
         return $this->belongsTo(Estacao::class, 'local_origem_id');
     }
 
-    // Relacionamento com Local de Destino
     public function localDestino()
     {
         return $this->belongsTo(Estacao::class, 'local_destino_id');
     }
 
-    // Relacionamento com Reserva (opcional)
     public function reserva()
     {
         return $this->belongsTo(Reserva::class, 'reserva_id');
     }
 
-    // Relacionamento com Ordem de Serviço (opcional)
     public function ordemServico()
     {
         return $this->belongsTo(OrdemServico::class, 'ordem_servico_id');
     }
 
-    // Relacionamento com StatusMovimentacao
     public function statusMovimentacao()
     {
         return $this->belongsTo(StatusMovimentacao::class, 'status_movimentacao_id');
     }
 
-    // Histórico de alterações
     public function historico()
     {
-        return $this->hasMany(MovimentacaoHistorico::class, 'movimentacao_id')->orderByDesc('created_at');
+        return $this->hasMany(MovimentacaoHistorico::class, 'movimentacao_id')
+            ->orderByDesc('created_at');
     }
 }

@@ -68,8 +68,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     protected $reservaService;
     protected $breadcrumbService;
-    protected UpgradeVeiculoService $upgradeVeiculoService;
-    protected CalcaoService $calcaoService;
+    protected $upgradeVeiculoService;
+    protected $calcaoService;
     protected $userService;
     protected $veiculoService;
     protected $estacaoService;
