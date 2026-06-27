@@ -129,8 +129,6 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     {
         $estacao = $this->estacaoService->getById($id);
 
-        $this->estacaoService->salvarNovosHorariosDiarios($estacao);
-
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Estações', 'estacao.index', "Editar: $estacao->nome");
 
         $paises =  $this->paisService->getAllForSelectId();
