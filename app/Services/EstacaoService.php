@@ -228,7 +228,7 @@ class EstacaoService extends AbstractBaseService
             return [];
         }
 
-        $data = $query->where('empresa_id', $empresaId)->get();
+        $data = $query->distinct()->where('empresa_id', $empresaId)->get();
 
         return $this->formatArraySelect($data, 'id', 'nome');
     }
