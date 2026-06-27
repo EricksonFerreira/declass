@@ -202,6 +202,11 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     public function destroy($id)
     {
         $success = $this->estacaoService->delete($id);
+        if (! $success) {
+            return $this->redirecionaRotaRedirect($this->nomeFiltro)
+                ->with('error', 'Não foi possível excluir a estação. Verifique se ela ainda está em uso.');
+        }
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 

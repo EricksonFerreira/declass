@@ -73,6 +73,28 @@ class EstacaoService extends AbstractBaseService
         $this->sincronizarDiasUteis($data['diasUteis'] ?? [], $id);
     }
 
+    public function delete($id)
+    {
+        $this->ensureEmpresaSelectedForWrite();
+
+        $estacao = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))->find($id);
+        if (!$estacao) {
+            return false;
+        }
+
+        return DB::transaction(function () use ($estacao, $id) {
+            if (SchemaCache::hasTable('horarios')) {
+                Horario::where('estacao_id', $id)->delete();
+            }
+
+            if (SchemaCache::hasTable('estacoes_dias_uteis')) {
+                DB::table('estacoes_dias_uteis')->where('estacao_id', $id)->delete();
+            }
+
+            return (bool) $estacao->delete();
+        });
+    }
+
 
     public function salvarNovosHorariosDiarios($estacao)
     {
