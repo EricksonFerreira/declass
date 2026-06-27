@@ -135,6 +135,11 @@ class Reserva extends Model
         return $this->belongsTo(GrupoFrota::class, 'grupo_frota_id');
     }
 
+    public function cupomDesconto()
+    {
+        return $this->belongsTo(CupomDesconto::class, 'cupom_desconto_id');
+    }
+
     public function opcionais()
     {
         return $this->belongsToMany(Opcional::class, 'reservas_opcionais', 'reserva_id', 'opcional_id')
