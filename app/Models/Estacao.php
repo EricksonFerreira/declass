@@ -40,6 +40,19 @@ class Estacao extends Model
         'valido_no_intervalo',
     ];
 
+    protected static function booted(): void
+    {
+        static::deleting(function (self $estacao): void {
+            if (SchemaCache::hasTable('horarios')) {
+                DB::table('horarios')->where('estacao_id', $estacao->id)->delete();
+            }
+
+            if (SchemaCache::hasTable('estacoes_dias_uteis')) {
+                DB::table('estacoes_dias_uteis')->where('estacao_id', $estacao->id)->delete();
+            }
+        });
+    }
+
     public function pais()
     {
         return $this->belongsTo(Pais::class, 'pais_id');
