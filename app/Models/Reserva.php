@@ -135,6 +135,13 @@ class Reserva extends Model
         return $this->belongsTo(GrupoFrota::class, 'grupo_frota_id');
     }
 
+    public function opcionais()
+    {
+        return $this->belongsToMany(Opcional::class, 'reservas_opcionais', 'reserva_id', 'opcional_id')
+            ->withPivot('quantidade', 'preco_total')
+            ->withTimestamps();
+    }
+
     public function contratoCheckin()
     {
         return $this->hasOne(ContratoCheckin::class, 'reserva_id');
