@@ -973,7 +973,7 @@ $(function () {
                 }
 
                 const valor = ($input.val() || '').trim();
-                if (valor && valor !== '00:00') {
+                if (valor && valor !== '00:00' && valor !== '00:00:00') {
                     $input.removeClass('is-invalid');
                     return;
                 }

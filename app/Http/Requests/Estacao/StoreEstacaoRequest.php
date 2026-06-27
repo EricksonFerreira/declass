@@ -112,7 +112,9 @@ class StoreEstacaoRequest extends FormRequest
             $tipoDiaNomes = $this->input('tipo_dia_nome', []);
 
             $toMinutes = function ($value): ?int {
-                if (!is_string($value) || trim($value) === '' || $value === '00:00') {
+                $value = is_string($value) ? trim($value) : '';
+
+                if ($value === '' || in_array($value, ['00:00', '00:00:00'], true)) {
                     return null;
                 }
 
