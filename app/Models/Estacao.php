@@ -50,6 +50,12 @@ class Estacao extends Model
             if (SchemaCache::hasTable('estacoes_dias_uteis')) {
                 DB::table('estacoes_dias_uteis')->where('estacao_id', $estacao->id)->delete();
             }
+
+            if (SchemaCache::hasTable('veiculos')) {
+                DB::table('veiculos')
+                    ->where('local_disponibilidade', $estacao->id)
+                    ->update(['local_disponibilidade' => null]);
+            }
         });
     }
 
