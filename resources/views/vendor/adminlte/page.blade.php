@@ -68,7 +68,7 @@
 
                     Swal.fire({
                         icon,
-                        title,
+                        // title,
                         text: String(message),
                         toast: true,
                         position: 'top-end',
