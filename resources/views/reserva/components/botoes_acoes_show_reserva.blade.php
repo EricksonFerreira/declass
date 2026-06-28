@@ -228,7 +228,7 @@
     }
     .reservation-actions-card__content {
         display: grid;
-        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.4fr) minmax(280px, .8fr);
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 2.5fr);
         gap: 20px;
         padding: 24px 26px;
         align-items: center;
