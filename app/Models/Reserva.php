@@ -145,6 +145,11 @@ class Reserva extends Model
         return $this->hasOne(Nfse::class, 'reserva_id')->latestOfMany('id');
     }
 
+    public function calcao()
+    {
+        return $this->hasOne(Calcao::class, 'reserva_id');
+    }
+
     public function opcionais()
     {
         return $this->belongsToMany(Opcional::class, 'reservas_opcionais', 'reserva_id', 'opcional_id')
