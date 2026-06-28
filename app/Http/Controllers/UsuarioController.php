@@ -103,7 +103,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 $totalUsuarios = \App\Models\User::where('empresa_id', $empresa->id)->count();
                 if ($totalUsuarios >= $plano->limite_usuarios) {
                     return redirect()->route('usuario.index')
-                        ->with('error', "Seu plano permite ate {$plano->limite_usuarios} usuario(s). Faca upgrade para adicionar mais colaboradores.");
+                        ->with('error', "Seu plano permite até {$plano->limite_usuarios} usuario(s). Faça upgrade para adicionar mais colaboradores.");
                 }
             }
         }
