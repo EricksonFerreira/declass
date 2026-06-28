@@ -101,7 +101,7 @@
         }
     }
 
-    $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
+    $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
     $totalMultas = $reserva->multas?->count() ?? 0;
     $danosReserva = $reserva->veiculoDano ?? collect();
     $danosPendentes = $danosReserva->whereNull('correcao_data');

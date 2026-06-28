@@ -60,6 +60,11 @@ class Reserva extends Model
         return $this->status_reserva_id === StatusReservaEnum::Pendente->value;
     }
 
+    public function isPagamentoEfetuado(): bool
+    {
+        return in_array($this->pagamento_efetuado, [true, 1, '1', 'S', 's', 'sim', 'SIM'], true);
+    }
+
     public function podeCriarContrato(): bool
     {
         return $this->status_reserva_id === StatusReservaEnum::Confirmada->value

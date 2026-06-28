@@ -1007,7 +1007,7 @@ class ReservaService extends AbstractBaseService
         $reserva->observacoes = trim(($reserva->observacoes ?? '') . ' Reserva cancelada automaticamente por atraso.');
         $reserva->save();
 
-        if ($reserva->pagamento_efetuado === 'S' && $reserva->usuario) {
+        if ($reserva->isPagamentoEfetuado() && $reserva->usuario) {
             $valor = (float) ($reserva->valor_total_final ?? 0);
             if ($valor > 0) {
                 $this->saldoService->creditar($reserva->usuario, $valor, [

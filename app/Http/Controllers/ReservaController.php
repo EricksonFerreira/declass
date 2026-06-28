@@ -866,7 +866,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     {
         $reserva = $this->reservaService->getById($reserva_id, ['modelos', 'usuario', 'veiculo', 'contratoCheckin', 'calcao']);
 
-        if (($reserva->pagamento_efetuado ?? 'N') !== 'S') {
+        if (! $reserva->isPagamentoEfetuado()) {
             return redirect()
                 ->route('reserva.show', $reserva_id)
                 ->with('warning', 'O pagamento deve ser efetuado antes de realizar o check-out.');
@@ -2230,7 +2230,7 @@ private function montarDiasSemanaFlags($diasUteis): array
     {
         $reserva = $this->reservaService->getById($reserva_id, ['modelos']);
 
-        if (($reserva->pagamento_efetuado ?? 'N') !== 'S') {
+        if (! $reserva->isPagamentoEfetuado()) {
             return redirect()
                 ->route('reserva.show', $reserva_id)
                 ->with('warning', 'O pagamento deve ser efetuado antes de realizar o check-in.');
@@ -2740,7 +2740,7 @@ private function montarDiasSemanaFlags($diasUteis): array
             'status' => $safe($reserva->statusReserva?->nome),
             'origem' => $safe($reserva->label_origem_cadastro),
             'criada_em' => $dateTime($reserva->created_at),
-            'pagamento_efetuado' => ($reserva->pagamento_efetuado ?? 'N') === 'S' ? 'Sim' : 'Nao',
+            'pagamento_efetuado' => $reserva->isPagamentoEfetuado() ? 'Sim' : 'Nao',
             'grupo_reservado' => $safe($reserva->grupoFrota?->nome),
             'modelo_reservado' => $safe($reserva->modelos?->nome),
             'observacoes' => $safe($reserva->observacoes),
@@ -3182,7 +3182,7 @@ private function montarDiasSemanaFlags($diasUteis): array
                 'contrato' => ['numero' => '#' . str_pad($reserva->id, 5, '0', STR_PAD_LEFT), 'titulo' => 'CONTRATO DE ALUGUEL', 'subtitulo' => 'CONDIÇÕES PARTICULARES DO CONTRATO DE ALUGUEL'],
                 'cliente' => ['nome' => $reserva->usuario->nome, 'endereco' => $reserva->usuario->endereco, 'pais' => $reserva->usuario->pais, 'nif' => $reserva->usuario->nif, 'email' => $reserva->usuario->email, 'telefone' => $reserva->usuario->telefone, 'passaporte' => $safe($reserva->usuario->passaporte), 'local_emissao' => $reserva->usuario->local_emissao, 'data_nascimento' => $dateOnly($reserva->usuario->data_nascimento), 'local_nascimento' => $reserva->usuario->local_nascimento, 'carta_conducao' => ['pais' => $reserva->usuario->pais_emissao, 'numero' => $reserva->usuario->numero_carta_conducao, 'data_emissao' => $dateOnly($reserva->usuario->data_emissao_carta_conducao), 'validade' => $dateOnly($reserva->usuario->data_validade_carta_conducao)]],
                 'veiculo' => ['matricula' => $safe($reserva->contratoCheckin->veiculo?->placa_licenca, '#' . $reserva->contratoCheckin->veiculo_id), 'marca' => $safe($reserva->contratoCheckin->marca?->nome ?? $reserva->contratoCheckin->veiculo?->marca?->nome), 'modelo' => $safe($reserva->contratoCheckin->modelo?->nome ?? $reserva->contratoCheckin->veiculo?->modelo?->nome), 'grupo' => $safe($reserva->contratoCheckin->veiculo?->grupoFrota?->nome ?? $reserva->grupoFrota?->nome), 'nome' => $safe($reserva->contratoCheckin->veiculo?->nome), 'quilometros' => $reserva->contratoCheckin->quilometragem_atual, 'combustivel' => $safe($reserva->contratoCheckin->nivel_combustivel), 'taxas' => ['combustivel_em_falta' => $money(0), 'taxa_reabastecimento' => $money(0)], 'franquia' => $money(0), 'kms_permitidos' => $reserva->kms_permitidos ?? $reserva->contratoCheckin->veiculo?->limite_kms ?? 'ilimitado'],
-                'reserva' => ['id' => $reserva->id, 'status' => $safe($reserva->statusReserva?->nome), 'origem' => $safe($reserva->label_origem_cadastro), 'criada_em' => $dateTime($reserva->created_at), 'pagamento_efetuado' => ($reserva->pagamento_efetuado ?? 'N') === 'S' ? 'Sim' : 'Nao', 'grupo_reservado' => $safe($reserva->grupoFrota?->nome), 'modelo_reservado' => $safe($reserva->modelos?->nome), 'observacoes' => $safe($reserva->observacoes), 'alugado_em' => ['local' => $safe($reserva->estacaoRetirada?->nome), 'data' => $dateOnly($reserva->data_inicio), 'hora' => $reserva->data_inicio ? Carbon::parse($reserva->data_inicio)->format('H:i') : '-'], 'devolver_em' => ['local' => $safe($reserva->estacaoDevolucao?->nome), 'data' => $dateOnly($reserva->data_fim), 'hora' => $reserva->data_fim ? Carbon::parse($reserva->data_fim)->format('H:i') : '-']],
+                'reserva' => ['id' => $reserva->id, 'status' => $safe($reserva->statusReserva?->nome), 'origem' => $safe($reserva->label_origem_cadastro), 'criada_em' => $dateTime($reserva->created_at), 'pagamento_efetuado' => $reserva->isPagamentoEfetuado() ? 'Sim' : 'Nao', 'grupo_reservado' => $safe($reserva->grupoFrota?->nome), 'modelo_reservado' => $safe($reserva->modelos?->nome), 'observacoes' => $safe($reserva->observacoes), 'alugado_em' => ['local' => $safe($reserva->estacaoRetirada?->nome), 'data' => $dateOnly($reserva->data_inicio), 'hora' => $reserva->data_inicio ? Carbon::parse($reserva->data_inicio)->format('H:i') : '-'], 'devolver_em' => ['local' => $safe($reserva->estacaoDevolucao?->nome), 'data' => $dateOnly($reserva->data_fim), 'hora' => $reserva->data_fim ? Carbon::parse($reserva->data_fim)->format('H:i') : '-']],
                 'faturacao' => ['dias_unidades' => $reserva->quantidade_dias, 'tarifa_diaria' => $money($tarifaBase), 'valor_tarifa_base' => $money($valorTarifaBase), 'valor_opcionais' => $money($valorOpcionais), 'taxa_coleta' => $money($taxaColeta), 'taxa_entrega' => $money($taxaEntrega), 'subtotal' => $money($subtotal), 'percentual_desconto' => number_format($percentualDesconto, 2, ',', '.') . '%', 'cupom' => $reserva->cupomDesconto?->codigo, 'valor_desconto' => $money($valorDesconto), 'iva_total' => $money(0), 'valor_total' => $money($valorTotal), 'total_pago' => $money($totalPago), 'saldo_pendente' => $money($saldoPendente), 'status_financeiro' => $saldoPendente <= 0 ? 'Pago' : ($totalPago > 0 ? 'Parcialmente pago' : 'Em aberto')],
                 'estado_viatura' => ['itens' => []],
                 'funcionario' => ['nome' => Auth::user()->nome ?? Auth::user()->name ?? 'Sistema'],

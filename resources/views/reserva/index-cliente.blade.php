@@ -60,7 +60,7 @@
                             $totalCalculado = $reserva->tarifa_base * $reserva->quantidade_dias;
                         }
                         $totalCalculado    = (float) ($totalCalculado ?? 0);
-                        $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
+                        $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
                         $diasReserva       = (int) ($reserva->quantidade_dias ?? 0);
                         $statusNome        = strtolower((string) ($reserva->statusReserva?->nome ?? ''));
                         $statusClass       = match ($statusNome) {
@@ -179,7 +179,7 @@
                             @php
                                 $totalCalculado = $reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? $reserva->valor_total_tarifa_base ?? 0;
                                 $totalCalculado = (float) $totalCalculado;
-                                $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
+                                $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
                             @endphp
                             <tr onclick="window.location='{{ route('reserva.show', $reserva->id) }}';" style="cursor:pointer">
                                 <td class="text-center">{{ $reserva->id }}</td>

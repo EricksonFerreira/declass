@@ -46,7 +46,7 @@
                             $totalCalculado = $reserva->tarifa_base * $reserva->quantidade_dias;
                         }
                         $totalCalculado    = (float) ($totalCalculado ?? 0);
-                        $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
+                        $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
                         $diasReserva       = (int) ($reserva->quantidade_dias ?? 0);
                         $statusNome        = strtolower((string) ($reserva->statusReserva?->nome ?? ''));
                         $statusClass       = match ($statusNome) {
@@ -164,7 +164,7 @@
                     $totalCalculado = $reserva->tarifa_base * $reserva->quantidade_dias;
                 }
                 $totalCalculado = (float) ($totalCalculado ?? 0);
-                $pagamentoEfetuado = ($reserva->pagamento_efetuado ?? 'N') === 'S';
+                $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
             @endphp
             <tr onclick="window.location='{{ route('reserva.show', $reserva->id) }}';" style="cursor: pointer;">
                 <td class="text-center" style="font-size:1.1rem;font-weight:800;">#{{ $reserva->id }}</td>
@@ -213,7 +213,7 @@
                             <a class="dropdown-item" href="{{ route('reserva.show', $reserva->id) }}">
                                 <i class="fas fa-eye mr-2"></i> Visualizar
                             </a>
-                            @if ($reserva->pagamento_efetuado == 'N')
+                            @if (! $reserva->isPagamentoEfetuado())
                                 <a class="dropdown-item" href="{{ route('reserva.efetuarPagamento', $reserva->id) }}">
                                     <i class="fas fa-credit-card mr-2"></i> Efetuar Pagamento
                                 </a>
