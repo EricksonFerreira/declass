@@ -145,6 +145,11 @@ class Reserva extends Model
         return $this->hasOne(Nfse::class, 'reserva_id')->latestOfMany('id');
     }
 
+    public function satisfacao()
+    {
+        return $this->hasOne(ReservaSatisfacao::class, 'reserva_id');
+    }
+
     public function calcao()
     {
         return $this->hasOne(Calcao::class, 'reserva_id');
@@ -153,6 +158,16 @@ class Reserva extends Model
     public function veiculoDano()
     {
         return $this->hasMany(VeiculoDanos::class, 'reserva_id')->orderByDesc('id');
+    }
+
+    public function avariaCobrancas()
+    {
+        return $this->hasMany(AvariaCobranca::class, 'reserva_id')->orderByDesc('id');
+    }
+
+    public function multas()
+    {
+        return $this->hasMany(Multa::class, 'reserva_id')->orderByDesc('id');
     }
 
     public function opcionais()
