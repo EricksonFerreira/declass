@@ -150,6 +150,11 @@ class Reserva extends Model
         return $this->hasOne(Calcao::class, 'reserva_id');
     }
 
+    public function veiculoDano()
+    {
+        return $this->hasMany(VeiculoDanos::class, 'reserva_id')->orderByDesc('id');
+    }
+
     public function opcionais()
     {
         return $this->belongsToMany(Opcional::class, 'reservas_opcionais', 'reserva_id', 'opcional_id')
