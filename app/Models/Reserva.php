@@ -140,6 +140,11 @@ class Reserva extends Model
         return $this->belongsTo(CupomDesconto::class, 'cupom_desconto_id');
     }
 
+    public function nfseAtual()
+    {
+        return $this->hasOne(Nfse::class, 'reserva_id')->latestOfMany('id');
+    }
+
     public function opcionais()
     {
         return $this->belongsToMany(Opcional::class, 'reservas_opcionais', 'reserva_id', 'opcional_id')
