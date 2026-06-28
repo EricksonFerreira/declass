@@ -152,6 +152,11 @@ class Reserva extends Model
             ->withTimestamps();
     }
 
+    public function transacoes()
+    {
+        return $this->hasMany(Transacao::class, 'reserva_id')->orderByDesc('id');
+    }
+
     public function contratoCheckin()
     {
         return $this->hasOne(ContratoCheckin::class, 'reserva_id');
