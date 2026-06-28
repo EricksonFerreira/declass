@@ -75,7 +75,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
     public function create()
     {
-        // Bloqueia criaÃ§Ã£o de segunda estaÃ§Ã£o se o plano nÃ£o inclui multi-estaÃ§Ã£o.
+        // Bloqueia criação de segunda estação se o plano não inclui multi-estação.
         $empresa = auth()->user()?->empresa;
         if ($empresa) {
             $plano = $empresa->planoAtivo()?->with('plano')->first()?->plano;
@@ -83,7 +83,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
                 $totalEstacoes = \App\Models\Estacao::where('empresa_id', $empresa->id)->count();
                 if ($totalEstacoes >= 1) {
                     return redirect()->route('estacao.index')
-                        ->with('error', 'Seu plano permite apenas uma estaÃ§Ã£o. FaÃ§a upgrade para adicionar mais filiais.');
+                        ->with('error', 'Seu plano permite apenas uma estação. Faça upgrade para adicionar mais filiais.');
                 }
             }
         }
@@ -223,7 +223,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
     public function setPerPage(Request $request)
     {
-        // Salva o valor de paginaÃ§Ã£o na sessÃ£o
+        // Salva o valor de paginação na sessão
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
         // Redireciona de volta para a pÃ¡gina de listagem
@@ -274,7 +274,7 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * FunÃ§Ã£o para obter o mÃ©todo e a rota para o formulÃ¡rio.
+     * Função para obter o mÃ©todo e a rota para o formulÃ¡rio.
      *
      * @param  Estacao|null  $estacao
      * @return array
@@ -295,8 +295,8 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Retorna os horÃ¡rios disponÃ­veis de uma estaÃ§Ã£o em JSON,
-     * para uso no date/time picker do formulÃ¡rio de movimentaÃ§Ã£o.
+     * Retorna os horÃ¡rios disponÃ­veis de uma estação em JSON,
+     * para uso no date/time picker do formulÃ¡rio de movimentação.
      */
     public function disponibilidadeHorarios($id)
     {

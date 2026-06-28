@@ -82,10 +82,14 @@ trait FiltroTrait
         session()->forget("$sessao.filtro$atributo");
     }
 
-    public function redirecionaRotaRedirect(string $nomeFiltro, string $mensagem = 'Não há rota de redirecionamento', string $tipo = 'success')
+    public function redirecionaRotaRedirect(string $nomeFiltro, string $mensagem = 'Operação realizada com sucesso.', string $tipo = 'success')
     {
         if (session()->has($nomeFiltro . '.rotaRedirect')) {
-            return redirect()->route(session($nomeFiltro . '.rotaRedirect'));
+            $redirect = redirect()->route(session($nomeFiltro . '.rotaRedirect'));
+
+            return $mensagem !== null
+                ? $redirect->with($tipo, $mensagem)
+                : $redirect;
         }
 
         if ($mensagem) {
@@ -94,7 +98,6 @@ trait FiltroTrait
 
         return redirect()->back();
     }
-
     private function determinarTipoFiltro(string $chave): array
     {
         $typeWhere = 'where';
@@ -150,3 +153,7 @@ trait FiltroTrait
         return $options;
     }
 }
+
+
+
+
