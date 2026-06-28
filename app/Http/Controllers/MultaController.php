@@ -119,7 +119,7 @@ class MultaController extends BaseController
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Multas', 'multa.index', 'Nova Multa');
         $reservaId  = $request->query('reserva_id');
-        $reserva    = $reservaId ? $this->reservaService->getById($reservaId, ['usuario', 'grupoFrota']) : null;
+        $reserva    = $reservaId ? $this->reservaService->getById($reservaId, ['usuario', 'grupoFrota', 'veiculo']) : null;
 
         if ($reserva) {
             $reserva->load('contratoCheckin');
@@ -131,7 +131,7 @@ class MultaController extends BaseController
         }
 
         $veiculoId = $request->query('veiculo_id');
-        $veiculo   = $veiculoId ? $this->veiculoService->getById($veiculoId, ['marca', 'modelo']) : null;
+        $veiculo   = $veiculoId ? $this->veiculoService->getById($veiculoId, ['marca', 'modelo']) : ($reserva?->veiculo ?? null);
 
         return view('multa.add-edit', array_merge($this->dadosFiltroVeiculo(), [
             'multa'            => null,
@@ -148,30 +148,43 @@ class MultaController extends BaseController
 
     public function buscarReservaPorVeiculoData(Request $request): JsonResponse
     {
+        $reservaId = $request->query('reserva_id');
         $veiculoId = $request->query('veiculo_id');
         $dataHora  = $request->query('data_hora');
 
-        if (!$veiculoId || !$dataHora) {
+        if (!$reservaId && (!$veiculoId || !$dataHora)) {
             return response()->json(['reserva' => null]);
         }
 
-        try {
-            $dt = Carbon::parse($dataHora);
-        } catch (\Throwable) {
-            return response()->json(['reserva' => null]);
-        }
+        $reserva = null;
 
-        $veiculo = Veiculo::find($veiculoId);
-        if (!$veiculo) {
-            return response()->json(['reserva' => null]);
-        }
+        if ($reservaId) {
+            $reserva = Reserva::query()
+                ->with(['usuario', 'veiculo'])
+                ->find((int) $reservaId);
+        } else {
+            try {
+                $dt = Carbon::parse($dataHora);
+            } catch (\Throwable) {
+                return response()->json(['reserva' => null]);
+            }
 
-        $reserva = Reserva::where('modelo_id', $veiculo->modelo_id)
-            ->where('data_inicio', '<=', $dt->toDateTimeString())
-            ->where('data_fim', '>=', $dt->toDateString())
-            ->with(['usuario'])
-            ->orderByDesc('data_inicio')
-            ->first();
+            $veiculo = Veiculo::find($veiculoId);
+            if (!$veiculo) {
+                return response()->json(['reserva' => null]);
+            }
+
+            $reserva = Reserva::query()
+                ->with(['usuario', 'veiculo'])
+                ->where(function ($query) use ($veiculo) {
+                    $query->where('veiculo_id', (int) $veiculo->id)
+                        ->orWhere('modelo_id', (int) $veiculo->modelo_id);
+                })
+                ->where('data_inicio', '<=', $dt->toDateTimeString())
+                ->where('data_fim', '>=', $dt->toDateTimeString())
+                ->orderByDesc('data_inicio')
+                ->first();
+        }
 
         if (!$reserva) {
             return response()->json(['reserva' => null]);
@@ -181,6 +194,9 @@ class MultaController extends BaseController
             'reserva' => [
                 'id'          => $reserva->id,
                 'cliente'     => $reserva->usuario?->nome ?? 'Cliente #' . $reserva->user_id,
+                'veiculo_id'  => $reserva->veiculo_id ?? null,
+                'veiculo'     => trim((string) ($reserva->veiculo?->nome ?? $reserva->veiculo?->modelo?->nome ?? '')),
+                'placa'       => $reserva->veiculo?->placa_licenca ?? null,
                 'data_inicio' => $reserva->data_inicio,
                 'data_fim'    => $reserva->data_fim,
             ],

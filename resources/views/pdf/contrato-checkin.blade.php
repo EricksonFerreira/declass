@@ -436,7 +436,7 @@
     </table>
 
     @if(!empty($data['pagamentos']))
-        <div class="section-title">Pagamentos e Transacoes</div>
+        <div class="section-title">Pagamentos e Transações</div>
         <table class="detail-table">
             <thead>
                 <tr>

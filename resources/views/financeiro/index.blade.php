@@ -86,11 +86,360 @@
         .val-success {
             color: #38a169;
         }
+
+        .financeiro-dashboard {
+            display: grid;
+            gap: 20px;
+        }
+
+        .financeiro-hero {
+            border-radius: 24px;
+            padding: 22px 24px;
+            color: #fff;
+            background:
+                radial-gradient(circle at top right, rgba(56, 189, 248, .18), transparent 26%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, .15), transparent 22%),
+                linear-gradient(135deg, #0f172a 0%, #1e3a8a 52%, #2563eb 100%);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .financeiro-hero__eyebrow {
+            font-size: .72rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            font-weight: 800;
+            opacity: .72;
+        }
+
+        .financeiro-hero__title {
+            margin: .35rem 0 .25rem;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: -.02em;
+        }
+
+        .financeiro-hero__text {
+            margin: 0;
+            max-width: 58rem;
+            color: rgba(255,255,255,.86);
+            line-height: 1.6;
+        }
+
+        .financeiro-hero__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .financeiro-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.14);
+            color: #fff;
+            font-size: .8rem;
+            font-weight: 700;
+        }
+
+        .financeiro-panel,
+        .financeiro-card,
+        .financeiro-table-card {
+            border: 1px solid #dbe4f0;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .06);
+            overflow: hidden;
+        }
+
+        .financeiro-panel__header,
+        .financeiro-table-card__header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 18px;
+            border-bottom: 1px solid #e8eef6;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .financeiro-panel__title,
+        .financeiro-table-card__title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #0f172a;
+            letter-spacing: -.01em;
+        }
+
+        .financeiro-panel__sub {
+            margin: 4px 0 0;
+            font-size: .82rem;
+            color: #64748b;
+        }
+
+        .financeiro-panel__body {
+            padding: 18px;
+        }
+
+        .financeiro-filters {
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .financeiro-filters .form-label,
+        .financeiro-filters label {
+            display: inline-block;
+            margin-bottom: .4rem;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .financeiro-filters .form-control {
+            height: 40px;
+            border-radius: 12px;
+            border-color: #d7e0ea;
+            background: #fff;
+            box-shadow: none;
+        }
+
+        .financeiro-filters .form-control:focus {
+            border-color: #2563eb;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, .12);
+        }
+
+        .financeiro-actions {
+            display: flex;
+            gap: 10px;
+            align-items: stretch;
+        }
+
+        .financeiro-actions .btn {
+            min-height: 40px;
+            border-radius: 12px;
+            font-weight: 800;
+        }
+
+        .financeiro-kpi {
+            border: 1px solid #dbe4f0;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .06);
+            overflow: hidden;
+            height: 100%;
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .financeiro-kpi:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 18px 44px rgba(15, 23, 42, .10);
+        }
+
+        .financeiro-kpi__accent {
+            height: 4px;
+        }
+
+        .financeiro-kpi--blue .financeiro-kpi__accent { background: linear-gradient(90deg, #2563eb, #60a5fa); }
+        .financeiro-kpi--green .financeiro-kpi__accent { background: linear-gradient(90deg, #059669, #34d399); }
+        .financeiro-kpi--amber .financeiro-kpi__accent { background: linear-gradient(90deg, #d97706, #fbbf24); }
+        .financeiro-kpi--red .financeiro-kpi__accent { background: linear-gradient(90deg, #dc2626, #fb7185); }
+
+        .financeiro-kpi__body {
+            padding: 18px;
+            position: relative;
+            min-height: 128px;
+        }
+
+        .financeiro-kpi__icon {
+            position: absolute;
+            right: 18px;
+            top: 16px;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.35rem;
+            background: #f8fafc;
+            color: #94a3b8;
+        }
+
+        .financeiro-kpi--green .financeiro-kpi__icon { background: #ecfdf5; color: #10b981; }
+        .financeiro-kpi--blue .financeiro-kpi__icon { background: #eff6ff; color: #2563eb; }
+        .financeiro-kpi--amber .financeiro-kpi__icon { background: #fff7ed; color: #d97706; }
+        .financeiro-kpi--red .financeiro-kpi__icon { background: #fef2f2; color: #dc2626; }
+
+        .financeiro-kpi__label {
+            margin: 0 0 .45rem;
+            font-size: .72rem;
+            font-weight: 800;
+            letter-spacing: .14em;
+            text-transform: uppercase;
+            color: #64748b;
+        }
+
+        .financeiro-kpi__value {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: -.03em;
+            color: #0f172a;
+        }
+
+        .financeiro-kpi__value--green { color: #059669; }
+        .financeiro-kpi__value--blue { color: #2563eb; }
+        .financeiro-kpi__value--amber { color: #d97706; }
+        .financeiro-kpi__value--red { color: #dc2626; }
+
+        .financeiro-kpi__meta {
+            display: block;
+            margin-top: .35rem;
+            font-size: .82rem;
+            color: #64748b;
+        }
+
+        .financeiro-analytics {
+            border: 1px solid #dbe4f0;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .06);
+            overflow: hidden;
+        }
+
+        .financeiro-analytics__body {
+            padding: 18px;
+            background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        }
+
+        .financeiro-subcard {
+            border: 1px solid #e2e8f0;
+            border-radius: 16px;
+            background: #fff;
+            height: 100%;
+            padding: 16px;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+        }
+
+        .financeiro-table {
+            border-radius: 18px;
+            overflow: hidden;
+            border: 1px solid #dbe4f0;
+            background: #fff;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .06);
+        }
+
+        .financeiro-table thead th {
+            background: #f8fbff;
+            border-top: 0;
+            border-bottom: 1px solid #e8eef6;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            font-size: .72rem;
+            color: #64748b;
+            font-weight: 800;
+            vertical-align: middle;
+        }
+
+        .financeiro-table td {
+            vertical-align: middle;
+            border-top: 1px solid #edf2f7;
+            font-size: .86rem;
+            padding-top: .72rem !important;
+            padding-bottom: .72rem !important;
+        }
+
+        .financeiro-ref {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: #eff6ff;
+            color: #1d4ed8;
+            font-weight: 800;
+            font-size: .78rem;
+        }
+
+        .financeiro-badge {
+            padding: .42rem .78rem;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: .05em;
+        }
+
+        .financeiro-table__empty {
+            padding: 48px 16px;
+            color: #64748b;
+        }
+
+        .financeiro-table__empty i {
+            font-size: 3rem;
+            opacity: .18;
+            margin-bottom: 14px;
+        }
+
+        .financeiro-table-card__footer {
+            display: flex;
+            justify-content: flex-end;
+            padding: 14px 18px;
+            border-top: 1px solid #e8eef6;
+            background: #f8fbff;
+        }
+
+        @media (max-width: 1199px) {
+            .financeiro-hero {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 767px) {
+            .financeiro-panel__header,
+            .financeiro-table-card__header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .financeiro-kpi__body {
+                min-height: 120px;
+            }
+
+            .financeiro-kpi__value {
+                font-size: 1.28rem;
+            }
+
+            .financeiro-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 
+    <div class="financeiro-dashboard">
+        <section class="financeiro-hero">
+            <div class="financeiro-hero__eyebrow">Financeiro</div>
+            <h1 class="financeiro-hero__title">Movimentações, gateways e faturamento em um único painel</h1>
+            <p class="financeiro-hero__text">
+                Use os filtros para localizar transações com precisão e acompanhe os números principais com a mesma linguagem visual das demais telas do sistema.
+            </p>
+            <div class="financeiro-hero__chips">
+                <span class="financeiro-chip"><i class="fas fa-wallet"></i> Faturamento bruto</span>
+                <span class="financeiro-chip"><i class="fas fa-chart-line"></i> Análise por status</span>
+                <span class="financeiro-chip"><i class="fas fa-credit-card"></i> Gateways e métodos</span>
+            </div>
+        </section>
+
     <!-- Filters -->
-    <div class="card filter-card mb-4">
-        <div class="card-body py-3">
+    <div class="financeiro-panel financeiro-filters">
+        <div class="financeiro-panel__body">
             <form method="GET" action="{{ route('financeiro.index') }}" class="mb-0">
                 <div class="row align-items-end gx-2 gy-2">
                     <div class="col-xl-auto col-lg-2 col-md-3 col-sm-6 mb-2">
@@ -166,75 +515,81 @@
     <!-- KPIs -->
     <div class="row mb-4">
         <div class="col-md-3 mb-3 mb-md-0">
-            <div class="card kpi-card h-100 bg-white">
-                <div class="card-body position-relative">
-                    <div class="kpi-icon text-dark"><i class="fas fa-wallet"></i></div>
-                    <p class="text-muted font-weight-bold text-uppercase mb-1" style="font-size: 0.70rem;">Faturamento Bruto
+            <div class="financeiro-kpi financeiro-kpi--blue">
+                <div class="financeiro-kpi__accent"></div>
+                <div class="financeiro-kpi__body">
+                    <div class="financeiro-kpi__icon"><i class="fas fa-wallet"></i></div>
+                    <p class="financeiro-kpi__label">Faturamento Bruto
                     </p>
-                    <h3 class="mb-0 text-dark font-weight-bold">{{ $moedaEmpresa }}
+                    <h3 class="financeiro-kpi__value financeiro-kpi__value--blue">{{ $moedaEmpresa }}
                         {{ number_format($totalFaturado, 2, ',', '.') }}</h3>
-                    <small class="text-muted">{{ $qtdTransacoes }} transacoes computadas</small>
+                    <small class="financeiro-kpi__meta">{{ $qtdTransacoes }} transacoes computadas</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3 mb-md-0">
-            <div class="card kpi-card h-100 bg-white">
-                <div class="card-body position-relative">
-                    <div class="kpi-icon text-success"><i class="fas fa-check-circle"></i></div>
-                    <p class="text-muted font-weight-bold text-uppercase mb-1" style="font-size: 0.70rem;">Receita Aprovada
+            <div class="financeiro-kpi financeiro-kpi--green">
+                <div class="financeiro-kpi__accent"></div>
+                <div class="financeiro-kpi__body">
+                    <div class="financeiro-kpi__icon"><i class="fas fa-check-circle"></i></div>
+                    <p class="financeiro-kpi__label">Receita Aprovada
                     </p>
-                    <h3 class="mb-0 text-success font-weight-bold">{{ $moedaEmpresa }}
+                    <h3 class="financeiro-kpi__value financeiro-kpi__value--green">{{ $moedaEmpresa }}
                         {{ number_format($totalAprovado, 2, ',', '.') }}</h3>
-                    <small class="text-muted">Desempenho aprov.: {{ number_format($taxaAprovacao, 1, ',', '.') }}%</small>
+                    <small class="financeiro-kpi__meta">Desempenho aprov.: {{ number_format($taxaAprovacao, 1, ',', '.') }}%</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3 mb-md-0">
-            <div class="card kpi-card h-100 bg-white">
-                <div class="card-body position-relative">
-                    <div class="kpi-icon text-warning"><i class="fas fa-hourglass-half"></i></div>
-                    <p class="text-muted font-weight-bold text-uppercase mb-1" style="font-size: 0.70rem;">Pendentes /
+            <div class="financeiro-kpi financeiro-kpi--amber">
+                <div class="financeiro-kpi__accent"></div>
+                <div class="financeiro-kpi__body">
+                    <div class="financeiro-kpi__icon"><i class="fas fa-hourglass-half"></i></div>
+                    <p class="financeiro-kpi__label">Pendentes /
                         Falhas</p>
-                    <h3 class="mb-0 text-warning font-weight-bold">{{ $moedaEmpresa }}
+                    <h3 class="financeiro-kpi__value financeiro-kpi__value--amber">{{ $moedaEmpresa }}
                         {{ number_format($totalPendente + $totalFalha, 2, ',', '.') }}</h3>
-                    <small class="text-muted">Aguardando liquidacao</small>
+                    <small class="financeiro-kpi__meta">Aguardando liquidacao</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3 mb-3 mb-md-0">
-            <div class="card kpi-card h-100 bg-white">
-                <div class="card-body position-relative">
-                    <div class="kpi-icon text-danger"><i class="fas fa-ban"></i></div>
-                    <p class="text-muted font-weight-bold text-uppercase mb-1" style="font-size: 0.70rem;">Cancelamentos /
+            <div class="financeiro-kpi financeiro-kpi--red">
+                <div class="financeiro-kpi__accent"></div>
+                <div class="financeiro-kpi__body">
+                    <div class="financeiro-kpi__icon"><i class="fas fa-ban"></i></div>
+                    <p class="financeiro-kpi__label">Cancelamentos /
                         Estornos</p>
-                    <h3 class="mb-0 text-danger font-weight-bold">{{ $moedaEmpresa }}
+                    <h3 class="financeiro-kpi__value financeiro-kpi__value--red">{{ $moedaEmpresa }}
                         {{ number_format($totalCancelado, 2, ',', '.') }}</h3>
-                    <small class="text-muted">{{ $qtdCanceladas }} transacoes invalidadas</small>
+                    <small class="financeiro-kpi__meta">{{ $qtdCanceladas }} transacoes invalidadas</small>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Accordion For Analytical Data -->
-    <div class="accordion mb-4" id="accordionAnalitico">
-        <div class="card filter-card shadow-sm border-0 mb-0">
-            <div class="card-header bg-white p-0 border-0" id="headingAnalise">
+    <div class="financeiro-analytics mb-4" id="accordionAnalitico">
+        <div class="financeiro-table-card">
+            <div class="financeiro-table-card__header" id="headingAnalise">
+                <div>
+                    <h3 class="financeiro-table-card__title">Relatórios Dinâmicos</h3>
+                    <p class="financeiro-panel__sub mb-0">Gateways, clientes e status resumidos em painéis de apoio.</p>
+                </div>
                 <button
-                    class="btn btn-link btn-block text-left text-dark font-weight-bold text-decoration-none py-3 px-4 d-flex justify-content-between align-items-center shadow-none"
+                    class="btn btn-link text-dark font-weight-bold text-decoration-none shadow-none p-0"
                     type="button" data-toggle="collapse" data-target="#collapseAnalise" aria-expanded="false"
                     aria-controls="collapseAnalise">
-                    <span><i class="fas fa-chart-pie mr-2 text-primary"></i> Relatorios Dinamicos (Gateways, Clientes e
-                        Status)</span>
                     <i class="fas fa-chevron-down text-muted"></i>
                 </button>
             </div>
             <div id="collapseAnalise" class="collapse" aria-labelledby="headingAnalise"
                 data-parent="#accordionAnalitico">
-                <div class="card-body border-top p-4 bg-light">
+                <div class="financeiro-analytics__body">
                     <div class="row">
                         <!-- Status Table -->
                         <div class="col-md-4 mb-3">
-                            <div class="bg-white rounded-lg p-3 shadow-sm h-100 border text-sm">
+                            <div class="financeiro-subcard">
                                 <h6 class="font-weight-bold mb-3 border-bottom pb-2">Vendas por Status</h6>
                                 <table class="table table-sm table-borderless table-hover mb-0">
                                     <tbody>
@@ -256,7 +611,7 @@
                         </div>
                         <!-- Gateway Table -->
                         <div class="col-md-4 mb-3">
-                            <div class="bg-white rounded-lg p-3 shadow-sm h-100 border text-sm">
+                            <div class="financeiro-subcard">
                                 <h6 class="font-weight-bold mb-3 border-bottom pb-2">Metricas de Gateway</h6>
                                 <table class="table table-sm table-borderless table-hover mb-0">
                                     <tbody>
@@ -278,7 +633,7 @@
                         </div>
                         <!-- Top Clientes -->
                         <div class="col-md-4 mb-3">
-                            <div class="bg-white rounded-lg p-3 shadow-sm h-100 border text-sm">
+                            <div class="financeiro-subcard">
                                 <h6 class="font-weight-bold mb-3 border-bottom pb-2">Top 5 Clientes</h6>
                                 <table class="table table-sm table-borderless table-hover mb-0">
                                     <tbody>
@@ -303,7 +658,7 @@
 
                         <!-- Evolução Diária -->
                         <div class="col-12 mt-2">
-                            <div class="bg-white rounded-lg p-3 shadow-sm border">
+                            <div class="financeiro-subcard">
                                 <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-3">
                                     <h6 class="font-weight-bold mb-0">Evolucao diaria (Ultimos 30 dias)</h6>
                                     <a href="{{ route('financeiro.reservas', request()->query()) }}"
@@ -350,16 +705,18 @@
     </div>
 
     <!-- Main Transactions Table -->
-    <div class="table-modern">
-        <div class="p-4 border-bottom d-flex justify-content-between align-items-center">
-            <h5 class="mb-0 font-weight-bold text-dark"><i class="fas fa-list-ol text-primary mr-2"></i> Historico Master
-                de Movimentacoes</h5>
+    <div class="financeiro-table">
+        <div class="financeiro-table-card__header">
+            <div>
+                <h3 class="financeiro-table-card__title">Histórico Master de Movimentações</h3>
+                <p class="financeiro-panel__sub mb-0">Todas as transações consolidadas, com expansão por reserva.</p>
+            </div>
         </div>
-        <div class="card-body p-0 table-responsive">
-            <table class="table table-hover mb-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0 financeiro-table__table">
                 <thead>
                     <tr>
-                        <th class="px-4 text-center">Referencia</th>
+                        <th class="px-4 text-center">Referência</th>
                         <th>Cliente / Detalhe</th>
                         <th>Canal / Metodo</th>
                         <th>Status Processamento</th>
@@ -453,8 +810,9 @@ $refText = $item->reserva_id ? 'RES-#' . $item->reserva_id : 'TRA-#' . $item->id
                 </tbody>
             </table>
         </div>
-        <div class="card-footer bg-light border-top py-3 px-4 d-flex justify-content-end">
+        <div class="financeiro-table-card__footer">
             {{ $transacoes->links() }}
         </div>
     </div>
+</div>
 @stop

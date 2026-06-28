@@ -18,8 +18,21 @@
 
 @section('content')
     <div class="financeiro-dashboard">
+        <section class="financeiro-hero">
+            <div class="financeiro-hero__eyebrow">Financeiro</div>
+            <h1 class="financeiro-hero__title">Resumo por reserva</h1>
+            <p class="financeiro-hero__text">
+                Acompanhe faturamento, transações e detalhes por reserva com a mesma linguagem visual do restante do sistema.
+            </p>
+            <div class="financeiro-hero__chips">
+                <span class="financeiro-chip"><i class="fas fa-receipt"></i> Consolidação por reserva</span>
+                <span class="financeiro-chip"><i class="fas fa-money-bill-wave"></i> Faturamento total</span>
+                <span class="financeiro-chip"><i class="fas fa-search"></i> Expansão detalhada</span>
+            </div>
+        </section>
+
         {{-- Filtros Concisos --}}
-        <div class="card shadow-sm border-0 mb-4 rs-filters-card">
+        <div class="card shadow-sm border-0 mb-4 rs-filters-card financeiro-panel">
             <div class="card-body p-3">
                 <form method="GET" action="{{ route('financeiro.reservas') }}" class="mb-0">
                     <div class="row align-items-end gx-2 gy-2">
@@ -550,6 +563,82 @@
         /* Pagination Override */
         .pagination {
             margin-bottom: 0;
+        }
+
+        .financeiro-hero {
+            border-radius: 18px;
+            padding: 22px 24px;
+            color: #fff;
+            background:
+                radial-gradient(circle at top right, rgba(56, 189, 248, .18), transparent 26%),
+                radial-gradient(circle at bottom left, rgba(16, 185, 129, .15), transparent 22%),
+                linear-gradient(135deg, #0f172a 0%, #1e3a8a 52%, #2563eb 100%);
+            box-shadow: 0 24px 60px rgba(15, 23, 42, .18);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .financeiro-hero__eyebrow {
+            font-size: .72rem;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+            font-weight: 800;
+            opacity: .72;
+        }
+
+        .financeiro-hero__title {
+            margin: .35rem 0 .25rem;
+            font-size: 1.55rem;
+            font-weight: 900;
+            letter-spacing: -.02em;
+        }
+
+        .financeiro-hero__text {
+            margin: 0;
+            max-width: 58rem;
+            color: rgba(255,255,255,.86);
+            line-height: 1.6;
+        }
+
+        .financeiro-hero__chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 16px;
+        }
+
+        .financeiro-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.12);
+            border: 1px solid rgba(255,255,255,.14);
+            color: #fff;
+            font-size: .8rem;
+            font-weight: 700;
+        }
+
+        .financeiro-panel {
+            border-radius: 18px;
+            border: 1px solid #dbe4f0 !important;
+            background: #fff;
+            box-shadow: 0 14px 36px rgba(15, 23, 42, .06) !important;
+            overflow: hidden;
+        }
+
+        .rs-financial-table {
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .rs-group-row:hover {
+            background-color: #f8fbff !important;
+        }
+
+        .rs-filter-label {
+            letter-spacing: .12em;
         }
     </style>
 @stop

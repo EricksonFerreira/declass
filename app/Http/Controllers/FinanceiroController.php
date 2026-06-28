@@ -180,7 +180,7 @@ class FinanceiroController extends Controller
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Financeiro - Transferencias');
-        $titulo = 'Transferencias e Transacoes';
+        $titulo = 'Transferências e Transações';
         $statusAprovados = self::STATUS_APROVADOS;
         $statusPendentes = self::STATUS_PENDENTES;
         $statusCancelados = self::STATUS_CANCELADOS;
