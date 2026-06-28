@@ -16,9 +16,9 @@
 <div class="col-md-3 form-group mb-0"><label class="small mb-1">Nome</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="nome" placeholder="Ex: Corolla" oninput="filtrarDiagnostico()"></div>
 <div class="col-md-2 form-group mb-0"><label class="small mb-1">Placa</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="placa" placeholder="ABC-1234" oninput="filtrarDiagnostico()"></div>
 <div class="col-md-2 form-group mb-0"><label class="small mb-1">Disponibilidade</label><select class="form-control form-control-sm diag-filtro" data-col="disponivel" onchange="filtrarDiagnostico()"><option value="">Todos</option><option value="1">Disponivel</option><option value="0">Indisponivel</option></select></div>
-<div class="col-md-2 form-group mb-0 d-flex align-items-end gap-1">
+<div class="col-md-4 form-group mb-0 d-flex align-items-end">
 <button type="button" class="btn btn-sm btn-outline-secondary" onclick="limparFiltrosDiag()" title="Limpar"><i class="fas fa-eraser"></i></button>
-<button type="button" class="btn btn-sm btn-outline-info" onclick="toggleFiltrosAvancados()"><i class="fas fa-sliders-h"></i> <span>Filtros Avancados</span></button>
+<button type="button" class="btn btn-sm btn-outline-info ml-1" onclick="toggleFiltrosAvancados()"><i class="fas fa-sliders-h"></i> <span>Filtros Avancados</span></button>
 </div></div>
 <div id="diagFiltrosAvancados" class="row" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #e2e8f0;">
 <div class="col-md-2 form-group mb-0"><label class="small mb-1">Modelo</label><input type="text" class="form-control form-control-sm diag-filtro" data-col="modelo" placeholder="Ex: Civic" oninput="filtrarDiagnostico()"></div>

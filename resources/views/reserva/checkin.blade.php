@@ -154,14 +154,16 @@
                             <div class="row">
                                 <div class="col-md-6" id="veiculo_col">
                                     <label for="veiculo_display">Veiculo <span class="req">*</span></label>
-                                    <div class="input-group">
-                                        <input type="hidden" id="veiculo" name="veiculo" value="{{ $ciVeiculoId }}">
-                                        <input type="text" id="veiculo_display" class="form-control form-control-sm" readonly placeholder="Clique na lupa para selecionar" value="{{ $ciVeiculoTxt }}">
-                                        <div class="input-group-append">
-                                            <button type="button" class="btn btn-outline-secondary" id="btnBuscarVeiculoCheckin" title="Buscar veículo disponível"><i class="fas fa-search"></i></button>
-                                            <button type="button" class="btn btn-outline-danger d-none" id="btnLimparVeiculoCheckin" title="Limpar veículo"><i class="fas fa-times"></i></button>
+                                    <div class="checkin-veiculo-row">
+                                        <div class="input-group checkin-veiculo-group">
+                                            <input type="hidden" id="veiculo" name="veiculo" value="{{ $ciVeiculoId }}">
+                                            <input type="text" id="veiculo_display" class="form-control form-control-sm" readonly placeholder="Clique na lupa para selecionar" value="{{ $ciVeiculoTxt }}">
+                                            <div class="input-group-append">
+                                                <button type="button" class="btn btn-outline-secondary checkin-veiculo-btn" id="btnBuscarVeiculoCheckin" title="Buscar veículo disponível"><i class="fas fa-search"></i></button>
+                                                <button type="button" class="btn btn-outline-danger d-none checkin-veiculo-btn" id="btnLimparVeiculoCheckin" title="Limpar veículo"><i class="fas fa-times"></i></button>
+                                            </div>
                                         </div>
-                                        <button type="button" class="btn btn-outline-info btn-sm ml-2" id="btnDiagnostico" title="Ver diagnóstico de disponibilidade">
+                                        <button type="button" class="btn btn-outline-info btn-sm checkin-veiculo-diagnostico" id="btnDiagnostico" title="Ver diagnóstico de disponibilidade">
                                             <i class="fas fa-stethoscope"></i> Diagnóstico
                                         </button>
                                     </div>
@@ -194,14 +196,42 @@
 
                         {{-- Diagnóstico de disponibilidade --}}
                         <div class="modal fade" id="modalDiagnostico" tabindex="-1" role="dialog">
-                            <div class="modal-dialog modal-xl modal-dialog-scrollable" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title"><i class="fas fa-stethoscope mr-1"></i>Diagnóstico de Disponibilidade</h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                            <div class="modal-dialog modal-xl modal-dialog-scrollable diag-modal-dialog" role="document">
+                                <div class="modal-content diag-modal">
+                                    <div class="diag-modal__header">
+                                        <div class="diag-modal__title-wrap">
+                                            <div class="diag-modal__icon">
+                                                <i class="fas fa-stethoscope"></i>
+                                            </div>
+                                            <div>
+                                                <div class="diag-modal__eyebrow">Check-in</div>
+                                                <h5 class="diag-modal__title">Diagnóstico de Disponibilidade</h5>
+                                                <p class="diag-modal__sub">Analisa estação, agenda, status e conflitos antes de liberar o veículo.</p>
+                                            </div>
+                                        </div>
+                                        <button type="button" class="diag-modal__close" data-dismiss="modal" aria-label="Close">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
                                     </div>
-                                    <div class="modal-body" id="diagnosticoResultado" style="max-height:70vh;overflow-y:auto;">
-                                        <div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veículos...</p></div>
+                                    <div class="diag-modal__body">
+                                        <div class="diag-modal__intro">
+                                            <div class="diag-modal__intro-chip">
+                                                <i class="fas fa-info-circle"></i>
+                                                Reserva #{{ $reserva->id }}
+                                            </div>
+                                            <div class="diag-modal__intro-text">
+                                                Use os filtros para comparar os veículos disponíveis e identifique rapidamente o motivo de cada bloqueio.
+                                            </div>
+                                        </div>
+                                        <div class="diag-modal__result" id="diagnosticoResultado">
+                                            <div class="diag-loading">
+                                                <div class="diag-loading__icon">
+                                                    <i class="fas fa-stethoscope fa-spin"></i>
+                                                </div>
+                                                <div class="diag-loading__title">Analisando veículos...</div>
+                                                <div class="diag-loading__text">Carregando regras de disponibilidade e conflitos.</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -736,13 +766,215 @@
         font-size: .9rem;
     }
 
+    .checkin-veiculo-row {
+        display: flex;
+        align-items: stretch;
+        gap: 8px;
+    }
+    .checkin-veiculo-group {
+        flex: 1 1 auto;
+    }
+    .checkin-veiculo-group .form-control {
+        height: 38px;
+    }
+    .checkin-veiculo-group .input-group-append .btn,
+    .checkin-veiculo-diagnostico {
+        height: 38px;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .checkin-veiculo-diagnostico {
+        white-space: nowrap;
+    }
+
+    /* ── Modal diagnóstico ── */
+    .diag-modal-dialog {
+        max-width: 1180px;
+    }
+    .diag-modal {
+        border: 0;
+        border-radius: 20px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+        box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+    }
+    .diag-modal__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 18px 22px;
+        color: #fff;
+        background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 45%, #0f4c81 100%);
+        border-bottom: 1px solid rgba(255,255,255,.12);
+    }
+    .diag-modal__title-wrap {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        min-width: 0;
+    }
+    .diag-modal__icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.15);
+        border: 1px solid rgba(255,255,255,.18);
+        flex-shrink: 0;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.12);
+    }
+    .diag-modal__eyebrow {
+        font-size: .68rem;
+        letter-spacing: .12em;
+        text-transform: uppercase;
+        opacity: .72;
+        font-weight: 700;
+        margin-bottom: 2px;
+    }
+    .diag-modal__title {
+        font-size: 1.05rem;
+        font-weight: 800;
+        margin: 0;
+        line-height: 1.1;
+    }
+    .diag-modal__sub {
+        margin: 4px 0 0;
+        font-size: .82rem;
+        opacity: .82;
+    }
+    .diag-modal__close {
+        width: 38px;
+        height: 38px;
+        border: 0;
+        border-radius: 12px;
+        background: rgba(255,255,255,.15);
+        color: #fff;
+        font-size: 1.7rem;
+        line-height: 1;
+        opacity: .9;
+        transition: background .15s ease, transform .15s ease, opacity .15s ease;
+    }
+    .diag-modal__close:hover {
+        background: rgba(255,255,255,.24);
+        opacity: 1;
+        transform: translateY(-1px);
+    }
+    .diag-modal__body {
+        padding: 18px 20px 20px;
+    }
+    .diag-modal__intro {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 16px;
+        padding: 14px 16px;
+        border-radius: 14px;
+        border: 1px solid #dbe7f5;
+        background: linear-gradient(180deg, #f8fbff 0%, #eef6ff 100%);
+    }
+    .diag-modal__intro-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        background: rgba(37, 99, 235, .10);
+        color: #1d4ed8;
+        font-size: .78rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+    .diag-modal__intro-text {
+        font-size: .84rem;
+        color: #475569;
+        font-weight: 500;
+    }
+    .diag-modal__result {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: #fff;
+        padding: 16px;
+        min-height: 240px;
+    }
+    .diag-loading {
+        min-height: 240px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #475569;
+    }
+    .diag-loading__icon {
+        width: 64px;
+        height: 64px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+        color: #2563eb;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        margin-bottom: 12px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .diag-loading__title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .diag-loading__text {
+        font-size: .85rem;
+        margin-top: 4px;
+    }
+
     /* ── Diagnóstico ── */
-    #diagRoot .diag-card { width:calc(25% - 9px); flex:0 0 calc(25% - 9px); box-sizing:border-box; border-radius:10px; overflow:hidden; transition:box-shadow .2s; }
-    #diagRoot .diag-card:hover { box-shadow:0 2px 12px rgba(0,0,0,.08); }
-    #diagRoot .card-header { transition:background .15s; }
-    #diagRoot .card-header:hover { filter:brightness(.97); }
-    #diagRoot .collapse .card-body { border-top:1px solid #e5e7eb; }
-    #diagFiltro:focus { border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.15); }
+    #diagRoot {
+        margin-top: 4px;
+    }
+    #diagRoot > .d-flex {
+        gap: 8px;
+    }
+    #diagRoot .diag-card {
+        width: calc(25% - 9px);
+        flex: 0 0 calc(25% - 9px);
+        box-sizing: border-box;
+        border-radius: 16px;
+        overflow: hidden;
+        transition: box-shadow .2s, transform .2s;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+    }
+    #diagRoot .diag-card:hover {
+        box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
+        transform: translateY(-2px);
+    }
+    #diagRoot .diag-card a {
+        transition: background .15s ease, color .15s ease, border-color .15s ease;
+    }
+    #diagRoot .diag-card a:hover {
+        border-color: #2563eb;
+    }
+    #diagRoot .card-header {
+        transition: background .15s;
+    }
+    #diagRoot .card-header:hover {
+        filter: brightness(.97);
+    }
+    #diagRoot .collapse .card-body {
+        border-top: 1px solid #e5e7eb;
+    }
+    #diagFiltro:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+    }
 </style>
 @stop
 
