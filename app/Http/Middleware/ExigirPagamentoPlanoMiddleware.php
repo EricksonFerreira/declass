@@ -23,6 +23,7 @@ class ExigirPagamentoPlanoMiddleware
         'notificacoes.',
         'home',
         'dashboard',
+        'site.apresentacao',
         'reserva.minhas',
     ];
 
