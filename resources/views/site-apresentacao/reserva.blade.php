@@ -174,7 +174,7 @@
                 @if(!empty($empresa->logo_url))
                     <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}">
                 @endif
-                <span style="text-decoration: none">{{ $empresa->nome }}</span>
+                <span style="color: #334155;">{{ $empresa->nome }}</span>
             </a>
             <a class="back" href="{{ route('site.apresentacao') }}">Voltar para o site</a>
         </div>
