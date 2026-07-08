@@ -108,6 +108,112 @@
         margin-bottom: 16px;
     }
 
+    .quick-access {
+        margin: 18px 0 16px;
+    }
+
+    .quick-access__title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+
+    .quick-access__title h2 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0;
+        letter-spacing: -.02em;
+    }
+
+    .quick-access__title p {
+        margin: 4px 0 0;
+        color: #64748b;
+        font-size: 13px;
+    }
+
+    .quick-access-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 14px;
+    }
+
+    .quick-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 18px 18px;
+        background: linear-gradient(135deg, #0f172a, #1e293b 55%, #0f766e);
+        color: #fff;
+        border-radius: 18px;
+        text-decoration: none;
+        overflow: hidden;
+        box-shadow: 0 18px 36px rgba(15, 23, 42, .18);
+        transition: transform .18s ease, box-shadow .18s ease;
+    }
+
+    .quick-card::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at top right, rgba(255,255,255,.22), transparent 34%);
+        pointer-events: none;
+    }
+
+    .quick-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 24px 44px rgba(15, 23, 42, .22);
+        color: #fff;
+        text-decoration: none;
+    }
+
+    .quick-card__icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.16);
+        border: 1px solid rgba(255,255,255,.18);
+        font-size: 20px;
+        flex-shrink: 0;
+    }
+
+    .quick-card__meta {
+        position: relative;
+        z-index: 1;
+        min-width: 0;
+    }
+
+    .quick-card__meta h3 {
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 18px;
+        font-weight: 800;
+        margin: 0 0 4px;
+        letter-spacing: -.02em;
+    }
+
+    .quick-card__meta p {
+        margin: 0;
+        color: rgba(255,255,255,.82);
+        font-size: 13px;
+        line-height: 1.45;
+    }
+
+    .quick-card__arrow {
+        margin-left: auto;
+        position: relative;
+        z-index: 1;
+        font-size: 18px;
+        color: rgba(255,255,255,.92);
+        flex-shrink: 0;
+    }
+
     .kpi-card {
         background: #fff;
         border: 1px solid #e2e5ef;
@@ -628,6 +734,32 @@
 @endif
 
 <x-onboarding-widget />
+
+<div class="quick-access">
+    <div class="quick-access__title">
+        <div>
+            <h2>Acesso rapido</h2>
+            <p>Um atalho direto para as telas mais usadas.</p>
+        </div>
+    </div>
+    <div class="quick-access-grid">
+        @can('reserva.minhas')
+            <a href="{{ route('reserva.minhas') }}" class="quick-card">
+                <div class="quick-card__icon">
+                    <i class="fas fa-bookmark"></i>
+                </div>
+                <div class="quick-card__meta">
+                    <h3>Minhas reservas</h3>
+                    <p>Veja e acompanhe as suas reservas abertas, futuras e finalizadas.</p>
+                </div>
+                <div class="quick-card__arrow">
+                    <i class="fas fa-arrow-right"></i>
+                </div>
+            </a>
+        @endcan
+    </div>
+</div>
+
 @if ($hasVisibleCharts)
 <div class="period-bar">
     <label for="data_inicio">Periodo:</label>

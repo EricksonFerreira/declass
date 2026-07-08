@@ -331,6 +331,12 @@ return [
             'icon' => 'fas fa-tachometer-alt',
         ],
         [
+            'text' => 'sidebar.minhas_reservas',
+            'route' => 'reserva.minhas',
+            'icon' => 'fas fa-bookmark',
+            'can' => 'reserva.minhas',
+        ],
+        [
             'text'  => 'Indicadores',
             'route' => 'indicadores.index',
             'icon'  => 'fas fa-chart-bar',
