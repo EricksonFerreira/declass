@@ -1429,15 +1429,19 @@
             }
             maskCelular();
             // Init pickers for pre-selected stations
-            (function() {
+            (async function() {
                 const estRet = document.getElementById('estacao_retirada_id').value;
                 const estDev = document.getElementById('estacao_devolucao_id').value;
-                if (estRet) criarPickerInicio(estRet);
+                if (estRet) await criarPickerInicio(estRet);
                 else { pickerInicio = flatpickr('#picker_data_inicio', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0]||null; syncHiddenInicio(); onDateHoraChanged(); } }); }
-                if (estDev) criarPickerFim(estDev);
+                if (estDev) await criarPickerFim(estDev);
                 else { pickerFim = flatpickr('#picker_data_fim', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0]||null; syncHiddenFim(); onDateHoraChanged(); } }); }
                 if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
-                    $('#estacao_devolucao_id').val(estRet).trigger('change');
+                    const devolucaoSelect = document.getElementById('estacao_devolucao_id');
+                    if (devolucaoSelect) {
+                        devolucaoSelect.value = String(estRet);
+                        devolucaoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                    }
                 }
                 const oldInicio = dataInicio.value;
                 const oldFim = dataFim.value;
@@ -1459,7 +1463,7 @@
                 if (oldInicio && oldInicio.includes('T') && estRet) {
                     const [datePart, timePart] = oldInicio.split('T');
                     if (pickerInicio) {
-                        pickerInicio.setDate(datePart, false, 'Y-m-d');
+                        pickerInicio.setDate(datePart, true, 'Y-m-d');
                         pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
                     }
                     restauracoes.push(
@@ -1482,7 +1486,7 @@
                 if (oldFim && oldFim.includes('T') && estDev) {
                     const [datePart, timePart] = oldFim.split('T');
                     if (pickerFim) {
-                        pickerFim.setDate(datePart, false, 'Y-m-d');
+                        pickerFim.setDate(datePart, true, 'Y-m-d');
                         pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
                     }
                     restauracoes.push(
