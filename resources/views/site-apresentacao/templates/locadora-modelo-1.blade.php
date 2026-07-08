@@ -2259,51 +2259,60 @@
                 }
             }
 
-            function recarregarPickersPorEstacao() {
+            function recarregarPickerRetirada() {
                 const estRet = retiradaSelect?.value || '';
-                const estDev = devolucaoSelect?.value || '';
 
                 if (pickerRetirada) {
                     pickerRetirada.destroy();
                     pickerRetirada = null;
                 }
+
+                dataRetirada.value = '';
+                horaRetirada.value = '';
+                horaRetirada.disabled = true;
+
+                if (!estRet) {
+                    return;
+                }
+
+                mostrarCarregandoDatas(dataRetiradaFeedback, 'Carregando datas de retirada...');
+                buscarDiasDisponiveis(estRet, 'retirada').then(function(dias) {
+                    if (dataRetiradaFeedback) {
+                        dataRetiradaFeedback.textContent = dias.length
+                            ? 'Selecione a data de retirada.'
+                            : 'Não há dias disponíveis para retirada nesta estação.';
+                    }
+                    pickerRetirada = criarPickerDate(dataRetirada, dias);
+                    atualizarMinDateDevolucao();
+                });
+            }
+
+            function recarregarPickerDevolucao() {
+                const estDev = devolucaoSelect?.value || '';
+
                 if (pickerDevolucao) {
                     pickerDevolucao.destroy();
                     pickerDevolucao = null;
                 }
 
-                dataRetirada.value = '';
                 dataDevolucao.value = '';
-                horaRetirada.value = '';
                 horaDevolucao.value = '';
-                horaRetirada.disabled = true;
                 horaDevolucao.disabled = true;
 
-                if (estRet) {
-                    mostrarCarregandoDatas(dataRetiradaFeedback, 'Carregando datas de retirada...');
-                    buscarDiasDisponiveis(estRet, 'retirada').then(function(dias) {
-                        if (dataRetiradaFeedback) {
-                            dataRetiradaFeedback.textContent = dias.length
-                                ? 'Selecione a data de retirada.'
-                                : 'Não há dias disponíveis para retirada nesta estação.';
-                        }
-                        pickerRetirada = criarPickerDate(dataRetirada, dias);
-                        atualizarMinDateDevolucao();
-                    });
+                if (!estDev) {
+                    return;
                 }
 
-                if (estDev) {
-                    mostrarCarregandoDatas(dataDevolucaoFeedback, 'Carregando datas de devolução...');
-                    buscarDiasDisponiveis(estDev, 'devolucao').then(function(dias) {
-                        if (dataDevolucaoFeedback) {
-                            dataDevolucaoFeedback.textContent = dias.length
-                                ? 'Selecione a data de devolução.'
-                                : 'Não há dias disponíveis para devolução nesta estação.';
-                        }
-                        pickerDevolucao = criarPickerDate(dataDevolucao, dias);
-                        atualizarMinDateDevolucao();
-                    });
-                }
+                mostrarCarregandoDatas(dataDevolucaoFeedback, 'Carregando datas de devolução...');
+                buscarDiasDisponiveis(estDev, 'devolucao').then(function(dias) {
+                    if (dataDevolucaoFeedback) {
+                        dataDevolucaoFeedback.textContent = dias.length
+                            ? 'Selecione a data de devolução.'
+                            : 'Não há dias disponíveis para devolução nesta estação.';
+                    }
+                    pickerDevolucao = criarPickerDate(dataDevolucao, dias);
+                    atualizarMinDateDevolucao();
+                });
             }
 
             dataRetirada.addEventListener('change', atualizarRetirada);
@@ -2313,11 +2322,11 @@
 
             retiradaSelect?.addEventListener('change', function() {
                 syncDevolucao(true);
-                recarregarPickersPorEstacao();
+                recarregarPickerRetirada();
             });
             devolucaoSelect?.addEventListener('change', function() {
                 syncDevolucao(false);
-                recarregarPickersPorEstacao();
+                recarregarPickerDevolucao();
             });
 
             if (typeof window.Choices !== 'undefined') {
@@ -2365,7 +2374,8 @@
             });
 
             syncDevolucao();
-            recarregarPickersPorEstacao();
+            recarregarPickerRetirada();
+            recarregarPickerDevolucao();
             normalizeMinDates();
             normalizeMinTime();
         })();
