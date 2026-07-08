@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,700;0,800;0,900;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
@@ -1419,24 +1420,24 @@
 
         <nav class="drawer-nav">
             <a href="#frota" class="drawer-link">
-                <span class="drawer-nav-icon">&#9632;</span>
+                <span class="drawer-nav-icon"><i class="fa-solid fa-car-side"></i></span>
                 {{ $menuItemFrota }}
             </a>
             <a href="#vantagens" class="drawer-link">
-                <span class="drawer-nav-icon">&#9650;</span>
+                <span class="drawer-nav-icon"><i class="fa-solid fa-star"></i></span>
                 {{ $menuItemVantagens }}
             </a>
             <a href="#como-funciona" class="drawer-link">
-                <span class="drawer-nav-icon">&#9679;</span>
+                <span class="drawer-nav-icon"><i class="fa-solid fa-list-check"></i></span>
                 {{ $menuItemEtapas }}
             </a>
             <a href="#contato" class="drawer-link">
-                <span class="drawer-nav-icon">&#9993;</span>
+                <span class="drawer-nav-icon"><i class="fa-solid fa-envelope"></i></span>
                 {{ $menuItemContato }}
             </a>
             <div class="drawer-nav-divider"></div>
             <a href="{{ $botaoLoginUrl }}" class="drawer-link">
-                <span class="drawer-nav-icon">&#128274;</span>
+                <span class="drawer-nav-icon"><i class="fa-solid fa-lock"></i></span>
                 {{ $botaoAdminTexto }}
             </a>
         </nav>
