@@ -761,6 +761,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $queryTexto = trim((string) $request->input('q', ''));
         $marcaId = (int) $request->input('marca_id', 0);
+        $grupoFrotaId = (int) $request->input('grupo_frota_id', 0);
 
         $query = $this->modeloService->getModel()->newQuery()
             ->from('modelos')
@@ -780,6 +781,12 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         if ($marcaId > 0) {
             $query->where('modelos.marca_id', $marcaId);
+        }
+
+        if ($grupoFrotaId > 0) {
+            $query->whereHas('gruposFrota', function ($sub) use ($grupoFrotaId) {
+                $sub->where('grupos_frota.id', $grupoFrotaId);
+            });
         }
 
         if ($queryTexto !== '') {

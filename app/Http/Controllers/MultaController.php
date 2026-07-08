@@ -192,13 +192,16 @@ class MultaController extends BaseController
 
         return response()->json([
             'reserva' => [
-                'id'          => $reserva->id,
-                'cliente'     => $reserva->usuario?->nome ?? 'Cliente #' . $reserva->user_id,
-                'veiculo_id'  => $reserva->veiculo_id ?? null,
-                'veiculo'     => trim((string) ($reserva->veiculo?->nome ?? $reserva->veiculo?->modelo?->nome ?? '')),
-                'placa'       => $reserva->veiculo?->placa_licenca ?? null,
-                'data_inicio' => $reserva->data_inicio,
-                'data_fim'    => $reserva->data_fim,
+                'id'                  => $reserva->id,
+                'cliente'             => $reserva->usuario?->nome ?? 'Cliente #' . $reserva->user_id,
+                'veiculo_id'          => $reserva->veiculo_id ?? null,
+                'veiculo'             => trim((string) ($reserva->veiculo?->nome ?? $reserva->veiculo?->modelo?->nome ?? '')),
+                'placa'               => $reserva->veiculo?->placa_licenca ?? null,
+                'data_inicio'         => $reserva->data_inicio,
+                'data_fim'            => $reserva->data_fim,
+                'data_hora_infracao'  => $reserva->data_inicio
+                    ? Carbon::parse($reserva->data_inicio)->format('Y-m-d\TH:i')
+                    : null,
             ],
         ]);
     }

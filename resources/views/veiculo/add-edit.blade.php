@@ -573,6 +573,7 @@
                     target-display-id="modelo_display"
                     placeholder="Digite o nome do modelo"
                     :extra-params="[
+                        ['name' => 'grupo_frota_id', 'selector' => '#grupo_frota_id'],
                         ['name' => 'marca_id', 'selector' => '#marca_id']
                     ]"
                     after-select="veiculoModeloSelecionadoFromModal" />
