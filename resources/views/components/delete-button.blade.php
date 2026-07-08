@@ -1,47 +1,51 @@
-<!-- Formulário de exclusão -->
 <form action="{{ $action }}" method="POST" class="d-inline delete-form">
     @csrf
     @method('DELETE')
-    <button type="button" class="btn btn-xs btn-danger delete-button"><i class="fa fa-trash"></i> Excluir</button>
+    <button type="button" class="btn btn-xs btn-danger delete-button">
+        <i class="fa fa-trash"></i> Excluir
+    </button>
 </form>
 
-<!-- Inclua o SweetAlert -->
-<script src="{{ asset('js/sweetAlert.min.js') }}"></script>
-<script src="{{ asset('vendor/jquery/jquery.min.js') }}"></script>
-<script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
-<!-- Script para interceptar a submissão do formulário e exibir o SweetAlert -->
-<script>
-    $(document).ready(function() {
-        $('.delete-button').on('click', function(event) {
+@once
+    <script>
+        document.addEventListener('click', function (event) {
+            var button = event.target.closest('.delete-button');
+            if (!button) {
+                return;
+            }
+
             event.preventDefault();
-            const form = $(this).closest('form');
-console.log(2);
-            swal({
-                title: "Você tem certeza?",
-                text: "Esta ação não pode ser desfeita!",
-                icon: "warning",
-                buttons: {
-                    cancel: {
-                        text: "Cancelar",
-                        value: null,
-                        visible: true,
-                        className: "btn-cancel",
-                        closeModal: true,
-                    },
-                    confirm: {
-                        text: "Sim, excluir!",
-                        value: true,
-                        visible: true,
-                        className: "btn-confirm",
-                        closeModal: true
-                    }
-                },
-                dangerMode: true,
-            }).then((willDelete) => {
-                if (willDelete) {
+
+            var form = button.closest('form.delete-form');
+            if (!form) {
+                return;
+            }
+
+            var confirmDelete = function () {
+                if (typeof window.Swal !== 'undefined' && typeof window.Swal.fire === 'function') {
+                    return window.Swal.fire({
+                        title: 'Você tem certeza?',
+                        text: 'Esta ação não pode ser desfeita!',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Sim, excluir!',
+                        cancelButtonText: 'Cancelar',
+                        confirmButtonColor: '#d33',
+                        cancelButtonColor: '#6c757d',
+                        focusCancel: true,
+                    }).then(function (result) {
+                        if (result && result.isConfirmed) {
+                            form.submit();
+                        }
+                    });
+                }
+
+                if (window.confirm('Você tem certeza? Esta ação não pode ser desfeita!')) {
                     form.submit();
                 }
-            });
+            };
+
+            confirmDelete();
         });
-    });
-</script>
+    </script>
+@endonce
