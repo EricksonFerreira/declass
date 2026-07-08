@@ -85,6 +85,7 @@ Route::get('/reserva/login', [SiteReservaController::class, 'loginRedirect'])->n
 Route::post('/reserva', [SiteReservaController::class, 'store'])->name('site.reserva.store');
 Route::get('/reserva/disponibilidade', [SiteReservaController::class, 'disponibilidade'])->name('site.reserva.disponibilidade');
 Route::get('/reserva/dias-disponiveis', [SiteReservaController::class, 'diasDisponiveisPorEstacao'])->name('site.reserva.diasDisponiveisPorEstacao');
+Route::get('/reserva/agenda-disponivel', [SiteReservaController::class, 'agendaDisponivelPorEstacao'])->name('site.reserva.agendaDisponivelPorEstacao');
 Route::get('/reserva/estacoes-disponiveis', [SiteReservaController::class, 'estacoesDisponiveis'])->name('site.reserva.estacoesDisponiveis');
 Route::post('/reserva/verificar-cupom', [SiteReservaController::class, 'verificarCupom'])->name('site.reserva.verificarCupom');
 Route::get('/reserva/{reserva}/sucesso', [SiteReservaController::class, 'success'])->name('site.reserva.success');

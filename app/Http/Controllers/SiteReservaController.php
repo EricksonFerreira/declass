@@ -296,6 +296,36 @@ class SiteReservaController extends Controller
         ]);
     }
 
+    public function agendaDisponivelPorEstacao(Request $request): JsonResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return response()->json(['message' => 'Empresa nao encontrada para este dominio.'], 404);
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $request->validate([
+            'estacao_id' => ['required', 'integer', 'exists:estacoes,id'],
+            'tipo' => ['nullable', 'string', 'max:20'],
+            'data_base' => ['nullable', 'date'],
+            'limite' => ['nullable', 'integer', 'min:1', 'max:60'],
+            'reserva_id' => ['nullable', 'integer'],
+        ]);
+
+        $agenda = $this->reservaService->obterAgendaDisponivelPorEstacao(
+            (int) $request->input('estacao_id'),
+            (string) ($request->input('tipo') ?: 'retirada'),
+            $request->filled('data_base') ? (string) $request->input('data_base') : null,
+            $request->filled('limite') ? (int) $request->input('limite') : 14,
+            $request->filled('reserva_id') ? (int) $request->input('reserva_id') : null,
+        );
+
+        return response()->json([
+            'agenda' => $agenda,
+        ]);
+    }
+
     public function verificarCupom(Request $request): JsonResponse
     {
         $empresa = $this->resolveEmpresaAtivaByHost($request);

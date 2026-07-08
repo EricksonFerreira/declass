@@ -524,7 +524,7 @@
             const disponibilidadeUrl = @json(route('site.reserva.disponibilidade'));
             const cupomUrl = @json(route('site.reserva.verificarCupom'));
             const diasDisponiveisUrl = @json(route('reserva.diasSemDisponibilidade'));
-            const agendaUrl = @json(route('reserva.agendaDisponivelPorEstacao'));
+            const agendaUrl = @json(route('site.reserva.agendaDisponivelPorEstacao'));
             const pesquisarGruposUrl = @json(route('reserva.pesquisarGruposVeiculos'));
             const ESTACOES_TAXAS = @json($estacoesTaxasMap);
             const oldModelId = @json(old('modelo_id', ''));
