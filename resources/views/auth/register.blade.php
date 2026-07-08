@@ -248,6 +248,68 @@
             font-size: .72rem;
         }
 
+        .label-tooltip {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            gap: .35rem;
+        }
+
+        .label-tooltip__icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            border: 1px solid color-mix(in srgb, var(--brand) 28%, #cbd5e1 72%);
+            color: color-mix(in srgb, var(--brand) 80%, #111827 20%);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .68rem;
+            font-weight: 700;
+            line-height: 1;
+            cursor: help;
+            background: #fff;
+            flex-shrink: 0;
+        }
+
+        .label-tooltip__bubble {
+            position: absolute;
+            left: 0;
+            top: calc(100% + .45rem);
+            z-index: 30;
+            min-width: 220px;
+            max-width: 280px;
+            padding: .65rem .75rem;
+            border-radius: 10px;
+            background: #111827;
+            color: #fff;
+            font-size: .76rem;
+            line-height: 1.35;
+            box-shadow: 0 12px 30px rgba(15, 23, 42, .2);
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-4px);
+            transition: opacity .15s ease, transform .15s ease;
+        }
+
+        .label-tooltip__bubble::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: 14px;
+            width: 10px;
+            height: 10px;
+            background: #111827;
+            transform: rotate(45deg);
+        }
+
+        .label-tooltip:hover .label-tooltip__bubble,
+        .label-tooltip:focus-within .label-tooltip__bubble {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+
         .input-wrap {
             position: relative;
             display: flex;
@@ -575,8 +637,15 @@
 
                     <div class="row row--2">
                         <div class="field {{ $errors->has('password') ? 'field--error' : '' }}">
-                            <label class="field__label" for="password">Senha <span class="req">*</span></label>
-                            <small>Use pelo menos 8 caracteres, com maiuscula, minuscula e numero.</small>
+                            <label class="field__label" for="password">
+                                <span class="label-tooltip">
+                                    Senha <span class="req">*</span>
+                                    <span class="label-tooltip__icon" tabindex="0" aria-label="Informacao sobre senha">i</span>
+                                    <span class="label-tooltip__bubble" role="tooltip">
+                                        Use pelo menos 8 caracteres, com maiuscula, minuscula e numero.
+                                    </span>
+                                </span>
+                            </label>
                             <div class="input-wrap">
                                 <span class="input-wrap__icon">
                                     <svg width="14" height="14" viewBox="0 0 14 14" fill="none">

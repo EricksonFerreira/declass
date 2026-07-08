@@ -21,6 +21,7 @@ class ExigirPagamentoPlanoMiddleware
         'onboarding.',
         'assinatura.',
         'notificacoes.',
+        'reserva.minhas',
     ];
 
     public function handle(Request $request, Closure $next): Response
