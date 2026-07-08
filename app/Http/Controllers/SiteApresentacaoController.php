@@ -40,7 +40,7 @@ class SiteApresentacaoController extends Controller
     public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
         if (auth()->check()) {
-            return redirect()->route('home');
+            return redirect()->route('reserva.minhas');
         }
 
         $host = DomainNormalizer::normalize($request->getHost());
