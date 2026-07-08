@@ -40,6 +40,8 @@ class PlanoPermissaoService
         'home',
         'dashboard',
         'home.chart-data',
+        'site.apresentacao',
+        'reserva.minhas',
     ];
 
     public function planoAtivoDaEmpresa(?Empresa $empresa): ?Plano
