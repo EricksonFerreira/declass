@@ -1426,6 +1426,10 @@
             (function() {
                 const estRet = document.getElementById('estacao_retirada_id').value;
                 const estDev = document.getElementById('estacao_devolucao_id').value;
+                if (estRet) criarPickerInicio(estRet);
+                else { pickerInicio = flatpickr('#picker_data_inicio', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0]||null; syncHiddenInicio(); onDateHoraChanged(); } }); }
+                if (estDev) criarPickerFim(estDev);
+                else { pickerFim = flatpickr('#picker_data_fim', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0]||null; syncHiddenFim(); onDateHoraChanged(); } }); }
                 if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
                     $('#estacao_devolucao_id').val(estRet).trigger('change');
                 }
@@ -1443,88 +1447,66 @@
                     return false;
                 };
 
-                const prefillCompleto = Boolean(oldInicio && oldFim && estRet && estDev);
+                const restauracoes = [];
+                let prefillCompleto = Boolean(oldInicio && oldFim && estRet && estDev);
 
-                const initPickerInicio = estRet
-                    ? criarPickerInicio(estRet)
-                    : Promise.resolve(pickerInicio = flatpickr('#picker_data_inicio', {
-                        locale: 'pt',
-                        dateFormat: 'd/m/Y',
-                        minDate: 'today',
-                        onChange: function(sel) { if (pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0] || null; syncHiddenInicio(); onDateHoraChanged(); }
-                    }));
-
-                const initPickerFim = estDev
-                    ? criarPickerFim(estDev)
-                    : Promise.resolve(pickerFim = flatpickr('#picker_data_fim', {
-                        locale: 'pt',
-                        dateFormat: 'd/m/Y',
-                        minDate: 'today',
-                        onChange: function(sel) { if (pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0] || null; syncHiddenFim(); onDateHoraChanged(); }
-                    }));
-
-                Promise.all([initPickerInicio, initPickerFim]).then(function() {
-                    const restauracoes = [];
-                    let okFinal = prefillCompleto;
-
-                    if (oldInicio && oldInicio.includes('T') && estRet) {
-                        const [datePart, timePart] = oldInicio.split('T');
-                        if (pickerInicio) {
-                            pickerInicio.setDate(datePart, false, 'Y-m-d');
-                            pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
-                        }
-                        restauracoes.push(
-                            carregarHorariosInicio(estRet, datePart).then(function() {
-                                const ok = restaurarHora('hora_inicio', timePart);
-                                if (!ok) {
-                                    okFinal = false;
-                                    feedback('step1Feedback', 'A hora de retirada informada nao esta disponivel. Escolha outra data e horario.', 'warn');
-                                } else {
-                                    syncHiddenInicio();
-                                    updateTaxaInicio();
-                                }
-                                return ok;
-                            })
-                        );
-                    } else {
-                        okFinal = false;
+                if (oldInicio && oldInicio.includes('T') && estRet) {
+                    const [datePart, timePart] = oldInicio.split('T');
+                    if (pickerInicio) {
+                        pickerInicio.setDate(datePart, false, 'Y-m-d');
+                        pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
                     }
+                    restauracoes.push(
+                        carregarHorariosInicio(estRet, datePart).then(function() {
+                            const ok = restaurarHora('hora_inicio', timePart);
+                            if (!ok) {
+                                prefillCompleto = false;
+                                feedback('step1Feedback', 'A hora de retirada informada nao esta disponivel. Escolha outra data e horario.', 'warn');
+                            } else {
+                                syncHiddenInicio();
+                                updateTaxaInicio();
+                            }
+                            return ok;
+                        })
+                    );
+                } else {
+                    prefillCompleto = false;
+                }
 
-                    if (oldFim && oldFim.includes('T') && estDev) {
-                        const [datePart, timePart] = oldFim.split('T');
-                        if (pickerFim) {
-                            pickerFim.setDate(datePart, false, 'Y-m-d');
-                            pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
-                        }
-                        restauracoes.push(
-                            carregarHorariosFim(estDev, datePart).then(function() {
-                                const ok = restaurarHora('hora_fim', timePart);
-                                if (!ok) {
-                                    okFinal = false;
-                                    feedback('step1Feedback', 'A hora de devolucao informada nao esta disponivel. Escolha outra data e horario.', 'warn');
-                                } else {
-                                    syncHiddenFim();
-                                    updateTaxaFim();
-                                }
-                                return ok;
-                            })
-                        );
-                    } else {
-                        okFinal = false;
+                if (oldFim && oldFim.includes('T') && estDev) {
+                    const [datePart, timePart] = oldFim.split('T');
+                    if (pickerFim) {
+                        pickerFim.setDate(datePart, false, 'Y-m-d');
+                        pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
                     }
+                    restauracoes.push(
+                        carregarHorariosFim(estDev, datePart).then(function() {
+                            const ok = restaurarHora('hora_fim', timePart);
+                            if (!ok) {
+                                prefillCompleto = false;
+                                feedback('step1Feedback', 'A hora de devolucao informada nao esta disponivel. Escolha outra data e horario.', 'warn');
+                            } else {
+                                syncHiddenFim();
+                                updateTaxaFim();
+                            }
+                            return ok;
+                        })
+                    );
+                } else {
+                    prefillCompleto = false;
+                }
 
-                    Promise.all(restauracoes).then(function() {
-                        refresh();
-                        updatePrefill();
-                        const step1Ok = validStep1(false);
-                        if (okFinal && step1Ok) {
-                            state.step = 2;
-                            renderStep();
-                        } else {
-                            state.step = 1;
-                            renderStep();
-                        }
-                    });
+                Promise.all(restauracoes).then(function() {
+                    refresh();
+                    updatePrefill();
+                    const step1Ok = validStep1(false);
+                    if (prefillCompleto && step1Ok) {
+                        state.step = 2;
+                        renderStep();
+                    } else {
+                        state.step = 1;
+                        renderStep();
+                    }
                 });
             })();
 
