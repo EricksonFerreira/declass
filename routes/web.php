@@ -98,7 +98,6 @@ Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'a
 Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('job.fipe.catalogo.run');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
-    Route::get('reserva/agenda-disponivel', [ReservaController::class, 'agendaDisponivelPorEstacao'])->name('reserva.agendaDisponivelPorEstacao');
     // Comecar agora (cadastro rapido de empresa + usuario unico com senha padrao).
     Route::middleware('guest')->get('/comecar', [CadastroEmpresaController::class, 'create'])->name('cadastro.empresa.create');
     Route::middleware('guest')->post('/comecar', [CadastroEmpresaController::class, 'store'])->name('cadastro.empresa.store');
