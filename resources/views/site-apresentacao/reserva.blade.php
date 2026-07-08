@@ -750,11 +750,29 @@
                 }
                 const now = new Date();
                 now.setSeconds(0, 0);
-                const retirada = new Date(dataInicio.value);
-                if (!Number.isNaN(retirada.getTime()) && retirada < now) {
-                    if (show) feedback('step1Feedback', 'A retirada nao pode ser antes de agora.', 'warn');
+                const retirada = dataInicio.value ? new Date(dataInicio.value) : null;
+                const devolucao = dataFim.value ? new Date(dataFim.value) : null;
+
+                if (retirada && !Number.isNaN(retirada.getTime()) && retirada < now) {
+                    if (show) feedback('step1Feedback', 'O horario de retirada nao pode ser antes de agora.', 'warn');
                     return false;
                 }
+
+                if (devolucao && !Number.isNaN(devolucao.getTime()) && devolucao < now) {
+                    if (show) feedback('step1Feedback', 'O horario de devolucao nao pode ser antes de agora.', 'warn');
+                    return false;
+                }
+
+                if (retirada && devolucao) {
+                    const retiradaDia = new Date(retirada.getFullYear(), retirada.getMonth(), retirada.getDate());
+                    const devolucaoDia = new Date(devolucao.getFullYear(), devolucao.getMonth(), devolucao.getDate());
+                    const minDevolucao = new Date(retiradaDia.getTime() + 86400000);
+                    if (devolucaoDia < minDevolucao) {
+                        if (show) feedback('step1Feedback', 'A data de devolucao deve ser ao menos 1 dia apos a retirada.', 'warn');
+                        return false;
+                    }
+                }
+
                 if (dias() <= 0) {
                     if (show) feedback('step1Feedback', 'A devolucao deve ser ao menos 1 dia depois da retirada.', 'warn');
                     return false;
