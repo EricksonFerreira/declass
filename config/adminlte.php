@@ -331,12 +331,12 @@ return [
             'icon' => 'fas fa-tachometer-alt',
             'can'  => 'tem-perfil',
         ],
-        [
-            'text' => 'sidebar.minhas_reservas',
-            'route' => 'reserva.minhas',
-            'icon' => 'fas fa-bookmark',
-            'can' => 'reserva.minhas',
-        ],
+        // [
+        //     'text' => 'sidebar.minhas_reservas',
+        //     'route' => 'reserva.minhas',
+        //     'icon' => 'fas fa-bookmark',
+        //     'can' => 'reserva.minhas',
+        // ],
         [
             'text'  => 'Indicadores',
             'route' => 'indicadores.index',
