@@ -44,8 +44,8 @@
         .page{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:2rem 1rem}
         .wrap{width:100%;max-width:400px;display:flex;flex-direction:column;align-items:center;gap:1.5rem}
         .logo{display:flex;align-items:center;justify-content:center}
-        .logo__mark{width:44px;height:44px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-        .logo__mark img{width:44px;height:44px;object-fit:contain;display:block}
+        .logo__mark{display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .logo__mark img{max-width:160px;max-height:72px;object-fit:contain;display:block}
         .card{background:#fff;border-radius:18px;width:100%;box-shadow:0 0 0 1px rgba(0,0,0,.05),0 4px 6px rgba(0,0,0,.04),0 16px 48px rgba(0,0,0,.09);overflow:hidden}
         .card__body{padding:2.25rem 2.375rem 2rem}
         .card__footer{border-top:1px solid #f3f4f6;padding:1.1rem 2.375rem;text-align:center;font-size:.8rem;color:#9ca3af}
@@ -80,7 +80,11 @@
 
         <div class="logo">
             <div class="logo__mark">
-                <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Ícone DeCars">
+                @if(!empty($loginEmpresa?->logo_url))
+                    <img src="{{ $loginEmpresa->logo_url }}" alt="Logo {{ $loginTitle }}">
+                @else
+                    <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Ícone DeCars">
+                @endif
             </div>
         </div>
 

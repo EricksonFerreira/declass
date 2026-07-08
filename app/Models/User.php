@@ -6,6 +6,7 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
+use App\Notifications\ResetPasswordCustom;
 use App\Notifications\VerifyEmailCustom;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -77,6 +78,11 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     $this->notify(new VerifyEmailCustom);
 }
+
+    public function sendPasswordResetNotification($token): void
+    {
+        $this->notify(new ResetPasswordCustom($token));
+    }
 
     public function getNameAttribute(): ?string
     {
