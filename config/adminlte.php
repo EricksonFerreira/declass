@@ -329,6 +329,7 @@ return [
             'text' => 'sidebar.home',
             'url'  => 'home',
             'icon' => 'fas fa-tachometer-alt',
+            'can'  => 'tem-perfil',
         ],
         [
             'text' => 'sidebar.minhas_reservas',

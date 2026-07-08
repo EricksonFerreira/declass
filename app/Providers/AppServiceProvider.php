@@ -61,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
                 return true;
             }
 
+            if ($ability === 'reserva.minhas') {
+                return true;
+            }
+
             if (in_array($ability, ['gerenciar-empresa', 'gerenciar-planos', 'acessar-superadmin', 'acessar-perfil'], true)) {
                 return null;
             }
@@ -83,6 +87,10 @@ class AppServiceProvider extends ServiceProvider
 
         Gate::define('acessar-perfil', function (User $user) {
             return $user->id !== null;
+        });
+
+        Gate::define('tem-perfil', function (User $user) {
+            return ! empty($user->role_id);
         });
 
         $this->bootEmpresaScope();
