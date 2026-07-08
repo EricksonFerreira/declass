@@ -39,6 +39,10 @@ class SiteApresentacaoController extends Controller
 
     public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
+        if (auth()->check()) {
+            return redirect()->route('home');
+        }
+
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
@@ -426,6 +430,10 @@ class SiteApresentacaoController extends Controller
 
     private function defaultResponse(): \Illuminate\Http\Response|RedirectResponse
     {
+        if (auth()->check()) {
+            return redirect()->route('home');
+        }
+
         return response()->view('welcome');
     }
 
