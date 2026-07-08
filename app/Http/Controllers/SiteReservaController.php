@@ -276,7 +276,7 @@ class SiteReservaController extends Controller
         $proximosDias = $this->removerFeriados(
             $proximosDias,
             $estacao->id,
-            $estacao->opera_feriado
+            (bool) ($estacao->opera_feriado ?? false)
         );
 
         if (empty($proximosDias)) {
@@ -296,9 +296,9 @@ class SiteReservaController extends Controller
         ]);
     }
 
-    private function removerFeriados(array $dados, int $estacaoId, bool $operaFeriado): array
+    private function removerFeriados(array $dados, int $estacaoId, ?bool $operaFeriado): array
     {
-        if ($operaFeriado || empty($dados)) {
+        if ((bool) $operaFeriado || empty($dados)) {
             return $dados;
         }
 
