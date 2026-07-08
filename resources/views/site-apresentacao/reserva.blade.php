@@ -1107,6 +1107,26 @@
                 return flatpickr.formatDate(new Date(), 'Y-m-d');
             }
 
+            function filtrarHorariosPassados(dataBase, slots, tipo) {
+                const lista = Array.isArray(slots) ? slots : [];
+                if ((tipo || 'retirada') !== 'retirada' || !dataBase) {
+                    return lista;
+                }
+
+                if (String(dataBase).slice(0, 10) !== obterDataHojeIso()) {
+                    return lista;
+                }
+
+                const agora = new Date();
+                return lista.filter(function(slot) {
+                    const raw = String(slot?.value || slot?.hora || slot?.time || '').trim();
+                    if (!raw) return false;
+                    const hora = String(raw).includes('T') ? String(raw).split('T')[1].slice(0, 5) : String(raw).slice(0, 5);
+                    const dt = new Date(`${dataBase}T${hora}:00`);
+                    return !Number.isNaN(dt.getTime()) && dt >= agora;
+                });
+            }
+
             function fetchDiasRetiradaDisponiveis(estacaoId) {
                 return fetch(`${diasDisponiveisUrl}?estacao_id=${estacaoId}&dias=90&tipo=retirada`)
                     .then(r => r.json())
@@ -1194,7 +1214,8 @@
                 return fetch(`${agendaUrl}?estacao_id=${estacaoId}&tipo=retirada&data_base=${data}&limite=1`)
                     .then(r => r.json()).then(function(d) {
                         const agenda = Array.isArray(d.agenda) ? d.agenda : [];
-                        const slots = agenda[0]?.slots || [];
+                        const slotsOrig = agenda[0]?.slots || [];
+                        const slots = filtrarHorariosPassados(data, slotsOrig, 'retirada');
                         sel.innerHTML = '<option value="">Selecione o horario...</option>';
                         if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return []; }
                         slots.forEach(function(s) {

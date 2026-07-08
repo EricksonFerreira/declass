@@ -1861,6 +1861,27 @@
                 return copy;
             }
 
+            function filtrarHorariosPassadosRetirada(dataBase, slots) {
+                const lista = Array.isArray(slots) ? slots : [];
+                if (!dataBase) {
+                    return lista;
+                }
+
+                const hoje = toLocalDateInput(new Date());
+                if (String(dataBase).slice(0, 10) !== hoje) {
+                    return lista;
+                }
+
+                const agora = new Date();
+                return lista.filter(function(slot) {
+                    const raw = String(slot?.value || slot?.hora || slot?.time || '').trim();
+                    if (!raw) return false;
+                    const hora = String(raw).includes('T') ? String(raw).split('T')[1].slice(0, 5) : String(raw).slice(0, 5);
+                    const dt = new Date(`${dataBase}T${hora}:00`);
+                    return !Number.isNaN(dt.getTime()) && dt >= agora;
+                });
+            }
+
             function normalizeMinDates() {
                 if (!dataRetirada || !dataDevolucao) return;
                 const now = new Date();
@@ -2084,7 +2105,9 @@
                 .then(function(response) {
                     const agenda = Array.isArray(response.agenda) ? response.agenda : [];
                     const dia = agenda.find(item => String(item.date) === String(dataBase)) || agenda[0] || null;
-                    const slots = Array.isArray(dia?.slots) ? dia.slots : [];
+                    const slots = tipo === 'retirada'
+                        ? filtrarHorariosPassadosRetirada(dataBase, Array.isArray(dia?.slots) ? dia.slots : [])
+                        : (Array.isArray(dia?.slots) ? dia.slots : []);
 
                     if (tipo === 'devolucao') {
                         return preencherHorarios(horaDevolucao, horaDevolucaoFeedback, slots, horaPreferida);
