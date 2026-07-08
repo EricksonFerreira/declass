@@ -1574,6 +1574,7 @@
                             </div>
 
                             <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
+                            <small class="text-muted" id="booking_form_feedback" style="display:block;margin-top:8px;"></small>
                         </form>
 
                         @if(!empty($heroFormNota))
@@ -1836,6 +1837,7 @@
             const dataDevolucaoFeedback = document.getElementById('data_devolucao_feedback');
             const horaDevolucaoFeedback = document.getElementById('hora_devolucao_feedback');
             const devolucaoFeedback = document.getElementById('devolucao_feedback');
+            const bookingFormFeedback = document.getElementById('booking_form_feedback');
             const eventoChange = new Event('change', { bubbles: true });
             let pickerRetirada = null;
             let pickerDevolucao = null;
@@ -2222,6 +2224,18 @@
                 carregarHorariosAgenda('devolucao', data, hora);
             }
 
+            function limparFeedbackReserva() {
+                if (bookingFormFeedback) {
+                    bookingFormFeedback.textContent = '';
+                }
+            }
+
+            function marcarFeedbackReserva(mensagem) {
+                if (bookingFormFeedback) {
+                    bookingFormFeedback.textContent = mensagem || '';
+                }
+            }
+
             function recarregarPickersPorEstacao() {
                 const estRet = retiradaSelect?.value || '';
                 const estDev = devolucaoSelect?.value || '';
@@ -2305,7 +2319,26 @@
                 normalizeMinTime();
                 normalizeMinDates();
                 syncDevolucao();
-                if (!validateDates()) e.preventDefault();
+                const camposOk = !!retiradaSelect?.value
+                    && !!devolucaoSelect?.value
+                    && !!dataRetirada?.value
+                    && !!horaRetirada?.value
+                    && !!dataDevolucao?.value
+                    && !!horaDevolucao?.value;
+
+                if (!camposOk) {
+                    e.preventDefault();
+                    marcarFeedbackReserva('Selecione retirada, devolução, datas e horários antes de continuar.');
+                    return;
+                }
+
+                if (!validateDates()) {
+                    e.preventDefault();
+                    marcarFeedbackReserva('Revise as datas e horários selecionados.');
+                    return;
+                }
+
+                limparFeedbackReserva();
             });
 
             syncDevolucao();

@@ -906,8 +906,10 @@
                 }).join('');
                 refresh();
             }
-            async function loadDisponibilidade() {
-                if (!validStep1(false) || !grupo.value) return;
+            async function loadDisponibilidade({ autoAdvance = false } = {}) {
+                if (!validStep1(false) || !grupo.value) {
+                    return false;
+                }
                 const params = new URLSearchParams({ grupo_frota_id: grupo.value, estacao_retirada_id: document.getElementById('estacao_retirada_id').value, estacao_devolucao_id: document.getElementById('estacao_devolucao_id').value, data_inicio: dataInicio.value, data_fim: dataFim.value });
                 feedback('disponibilidadeFeedback', 'Carregando disponibilidade...', null);
                 try {
@@ -917,6 +919,7 @@
                     state.tarifa = Number(data.grupo_frota?.valor_diario || 0);
                     const modelosDisponiveisList = Array.isArray(data.modelos) ? data.modelos : [];
                     const modelosVinculadosList = Array.isArray(data.modelos_vinculados) ? data.modelos_vinculados : [];
+                    const temDisponibilidade = modelosDisponiveisList.length > 0;
                     if (reservaSelecionarModelo) {
                         const listaModelos = modelosDisponiveisList.length ? modelosDisponiveisList : modelosVinculadosList;
                         renderModelos(listaModelos);
@@ -932,10 +935,25 @@
                         }
                     }
                     renderOpc(data.tipo_opcional || []);
-                    if (data.aviso_modelos) feedback('disponibilidadeFeedback', data.aviso_modelos, 'warn');
-                    else feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veiculos na estacao: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
+                    if (!temDisponibilidade) {
+                        const aviso = data.aviso_modelos || 'Nao ha disponibilidade para a data e horario selecionados. Selecione outra data e horario.';
+                        feedback('disponibilidadeFeedback', aviso, 'warn');
+                        feedback('step1Feedback', aviso, 'warn');
+                        state.step = 1;
+                        renderStep();
+                        return false;
+                    }
+
+                    feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veiculos na estacao: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
+                    if (autoAdvance && state.step < 2) {
+                        state.step = 2;
+                        renderStep();
+                    }
+                    return true;
                 } catch (e) {
-                    feedback('disponibilidadeFeedback', e.message || 'Erro ao carregar disponibilidade.', 'warn');
+                    const aviso = e.message || 'Erro ao carregar disponibilidade.';
+                    feedback('disponibilidadeFeedback', aviso, 'warn');
+                    feedback('step1Feedback', aviso, 'warn');
                     modelo.value = '';
                     state.modeloNome = null;
                     modelosDisponiveis = {};
@@ -947,6 +965,9 @@
                     state.tarifa = 0;
                     state.opcionais = {};
                     refresh();
+                    state.step = 1;
+                    renderStep();
+                    return false;
                 }
             }
             async function applyCupom() {
@@ -1496,7 +1517,7 @@
             highlightModelo();
             (async function initOld() {
                 if (grupo.value) {
-                    await loadDisponibilidade();
+                    await loadDisponibilidade({ autoAdvance: true });
                     if (oldOpcionaisPayload) {
                         try {
                             const arr = JSON.parse(oldOpcionaisPayload);
