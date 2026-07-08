@@ -1173,12 +1173,12 @@
             function carregarHorariosInicio(estacaoId, data) {
                 const sel = document.getElementById('hora_inicio');
                 sel.innerHTML = '<option value="">Carregando...</option>';
-                fetch(`${agendaUrl}?estacao_id=${estacaoId}&tipo=retirada&data_base=${data}&limite=1`)
+                return fetch(`${agendaUrl}?estacao_id=${estacaoId}&tipo=retirada&data_base=${data}&limite=1`)
                     .then(r => r.json()).then(function(d) {
                         const agenda = Array.isArray(d.agenda) ? d.agenda : [];
                         const slots = agenda[0]?.slots || [];
                         sel.innerHTML = '<option value="">Selecione o horario...</option>';
-                        if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return; }
+                        if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return []; }
                         slots.forEach(function(s) {
                             const val = _toHHmm(s.value);
                             const label = s.taxa_extra ? `${s.label} • Taxa extra` : s.label;
@@ -1193,18 +1193,19 @@
                         syncHiddenInicio();
                         updateTaxaInicio();
                         onDateHoraChanged();
-                    }).catch(function() { sel.innerHTML = '<option value="">Erro ao carregar</option>'; sel.style.display=''; });
+                        return slots;
+                    }).catch(function() { sel.innerHTML = '<option value="">Erro ao carregar</option>'; sel.style.display=''; return []; });
             }
 
             function carregarHorariosFim(estacaoId, data) {
                 const sel = document.getElementById('hora_fim');
                 sel.innerHTML = '<option value="">Carregando...</option>';
-                fetch(`${agendaUrl}?estacao_id=${estacaoId}&tipo=devolucao&data_base=${data}&limite=1`)
+                return fetch(`${agendaUrl}?estacao_id=${estacaoId}&tipo=devolucao&data_base=${data}&limite=1`)
                     .then(r => r.json()).then(function(d) {
                         const agenda = Array.isArray(d.agenda) ? d.agenda : [];
                         const slots = agenda[0]?.slots || [];
                         sel.innerHTML = '<option value="">Selecione o horario...</option>';
-                        if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return; }
+                        if (!slots.length) { sel.innerHTML = '<option value="">Sem horarios disponiveis</option>'; sel.style.display=''; return []; }
                         slots.forEach(function(s) {
                             const val = _toHHmm(s.value);
                             const label = s.taxa_extra ? `${s.label} • Taxa extra` : s.label;
@@ -1218,7 +1219,8 @@
                         syncHiddenFim();
                         updateTaxaFim();
                         onDateHoraChanged();
-                    }).catch(function() { sel.innerHTML = '<option value="">Erro ao carregar</option>'; sel.style.display=''; });
+                        return slots;
+                    }).catch(function() { sel.innerHTML = '<option value="">Erro ao carregar</option>'; sel.style.display=''; return []; });
             }
 
             function updateTaxaInicio() {
@@ -1388,24 +1390,81 @@
                 if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
                     $('#estacao_devolucao_id').val(estRet).trigger('change');
                 }
-                // Restore from old() values if present
                 const oldInicio = dataInicio.value;
                 const oldFim = dataFim.value;
-                if (oldInicio && oldInicio.includes('T')) {
+                const restaurarHora = function(selectId, hora) {
+                    const sel = document.getElementById(selectId);
+                    if (!sel || !hora) return false;
+                    const valor = String(hora).slice(0, 5);
+                    const existe = Array.from(sel.options).some((option) => option.value === valor);
+                    if (existe) {
+                        sel.value = valor;
+                        return true;
+                    }
+                    return false;
+                };
+
+                const restauracoes = [];
+                let prefillCompleto = Boolean(oldInicio && oldFim && estRet && estDev);
+
+                if (oldInicio && oldInicio.includes('T') && estRet) {
                     const [datePart, timePart] = oldInicio.split('T');
-                    setTimeout(function() {
-                        if (pickerInicio) pickerInicio.setDate(datePart.replace(/-/g,'/'), true, 'Y/m/d');
-                        const sel = document.getElementById('hora_inicio');
-                        if (sel && timePart) { if (estRet) carregarHorariosInicio(estRet, datePart); }
-                    }, 500);
+                    if (pickerInicio) {
+                        pickerInicio.setDate(datePart, false, 'Y-m-d');
+                        pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
+                    }
+                    restauracoes.push(
+                        carregarHorariosInicio(estRet, datePart).then(function() {
+                            const ok = restaurarHora('hora_inicio', timePart);
+                            if (!ok) {
+                                prefillCompleto = false;
+                                feedback('step1Feedback', 'A hora de retirada informada nao esta disponivel. Escolha outra data e horario.', 'warn');
+                            } else {
+                                syncHiddenInicio();
+                                updateTaxaInicio();
+                            }
+                            return ok;
+                        })
+                    );
+                } else {
+                    prefillCompleto = false;
                 }
-                if (oldFim && oldFim.includes('T')) {
+
+                if (oldFim && oldFim.includes('T') && estDev) {
                     const [datePart, timePart] = oldFim.split('T');
-                    setTimeout(function() {
-                        if (pickerFim) pickerFim.setDate(datePart.replace(/-/g,'/'), true, 'Y/m/d');
-                        if (estDev) carregarHorariosFim(estDev, datePart);
-                    }, 500);
+                    if (pickerFim) {
+                        pickerFim.setDate(datePart, false, 'Y-m-d');
+                        pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
+                    }
+                    restauracoes.push(
+                        carregarHorariosFim(estDev, datePart).then(function() {
+                            const ok = restaurarHora('hora_fim', timePart);
+                            if (!ok) {
+                                prefillCompleto = false;
+                                feedback('step1Feedback', 'A hora de devolucao informada nao esta disponivel. Escolha outra data e horario.', 'warn');
+                            } else {
+                                syncHiddenFim();
+                                updateTaxaFim();
+                            }
+                            return ok;
+                        })
+                    );
+                } else {
+                    prefillCompleto = false;
                 }
+
+                Promise.all(restauracoes).then(function() {
+                    refresh();
+                    updatePrefill();
+                    const step1Ok = validStep1(false);
+                    if (prefillCompleto && step1Ok) {
+                        state.step = 2;
+                        renderStep();
+                    } else {
+                        state.step = 1;
+                        renderStep();
+                    }
+                });
             })();
 
             // ---- Search modal ----
