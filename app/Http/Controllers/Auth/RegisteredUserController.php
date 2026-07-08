@@ -13,6 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use App\Support\DomainNormalizer;
 use App\Support\SchemaCache;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -25,8 +26,9 @@ class RegisteredUserController extends Controller
     public function create(): View
     {
         $planos = \App\Models\Plano::ativos()->with('itens')->get();
+        $empresa = $this->resolveEmpresaAtivaByHost(request());
 
-        return view('auth.register', compact('planos'));
+        return view('auth.register', compact('planos', 'empresa'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -67,21 +69,7 @@ class RegisteredUserController extends Controller
         ]);
 
         $user = DB::transaction(function () use ($request) {
-            // Cria uma empresa exclusiva para este novo usuário.
-            $empresa = null;
-            if (SchemaCache::hasTable('empresas')) {
-                $slugBase = Str::slug($request->name);
-                $slug     = $slugBase . '-' . Str::random(5);
-
-                $empresa = Empresa::create([
-                    'nome'  => $request->name . "'s Locadora",
-                    'slug'  => $slug,
-                    'ativo' => 'S',
-                    'email' => $request->email,
-                ]);
-
-                OnboardingStep::create(['empresa_id' => $empresa->id]);
-            }
+            $empresa = $this->resolveEmpresaAtivaByHost($request);
 
             $userData = [
                 'nome'            => $request->name,
@@ -122,8 +110,37 @@ class RegisteredUserController extends Controller
             $user->sendEmailVerificationNotification();
         }
 
-        // Redireciona direto ao onboarding para configurar empresa e escolher plano.
-        return redirect()->route('onboarding.empresa')
-            ->with('status', 'Cadastro realizado! Configure sua locadora para começar.');
+        return redirect()->route('home')
+            ->with('status', 'Cadastro realizado com sucesso!');
+    }
+
+    private function resolveEmpresaAtivaByHost(Request $request): ?Empresa
+    {
+        if (!SchemaCache::hasTable('empresas')) {
+            return null;
+        }
+
+        $host = DomainNormalizer::normalize($request->getHost());
+        $query = Empresa::query()
+            ->withoutGlobalScopes()
+            ->where('ativo', 'S');
+
+        if ($host) {
+            $empresa = $query->whereNotNull('dominio')
+                ->get()
+                ->first(function (Empresa $empresa) use ($host): bool {
+                    return DomainNormalizer::normalize($empresa->dominio) === $host;
+                });
+
+            if ($empresa) {
+                return $empresa;
+            }
+        }
+
+        return Empresa::query()
+            ->withoutGlobalScopes()
+            ->where('ativo', 'S')
+            ->orderBy('id')
+            ->first();
     }
 }
