@@ -4,7 +4,11 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" :createUrl="route('reserva.create')" createCan="tem-perfil" />
+    <x-page-title
+        :title="$titulo"
+        :createUrl="request()->routeIs('reserva.minhas') ? null : route('reserva.create')"
+        createCan="tem-perfil"
+    />
 @stop
 
 @section('content')
