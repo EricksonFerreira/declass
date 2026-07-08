@@ -28,7 +28,7 @@ Route::middleware('can:acessar-superadmin')->prefix('assinatura')->name('assinat
 });
 
 // ── Área da própria empresa — qualquer usuário autenticado ───────────────────
-Route::prefix('meu-plano')->name('assinatura.')->group(function () {
+Route::middleware(['auth', 'can:gerenciar-empresa'])->prefix('meu-plano')->name('assinatura.')->group(function () {
     // Visualização e histórico
     Route::get('/',                 [AssinaturaController::class, 'meuPlano'])->name('meu-plano');
     // Tela de pagamento dedicada para o onboarding
