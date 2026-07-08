@@ -99,6 +99,10 @@ Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'a
 Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('job.fipe.catalogo.run');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
+    Route::middleware(['auth', 'verified'])->get('/', function () {
+        return redirect()->route('reserva.minhas');
+    })->name('admin.index');
+
     // Comecar agora (cadastro rapido de empresa + usuario unico com senha padrao).
     Route::middleware('guest')->get('/comecar', [CadastroEmpresaController::class, 'create'])->name('cadastro.empresa.create');
     Route::middleware('guest')->post('/comecar', [CadastroEmpresaController::class, 'store'])->name('cadastro.empresa.store');
@@ -108,11 +112,15 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         return view('auth.register-success');
     })->name('register.success');
 
-    Route::get('home', [HomeController::class, 'home'])->middleware(['auth', 'verified'])->name('home');
+    Route::get('home', function () {
+        return redirect()->route('reserva.minhas');
+    })->middleware('auth')->name('home');
     Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth', 'verified'])->name('home.chart-data');
     Route::get('indicadores', [IndicadoresController::class, 'index'])->middleware(['auth', 'verified'])->name('indicadores.index');
     Route::get('indicadores/{slug}', [IndicadoresController::class, 'show'])->middleware(['auth', 'verified'])->name('indicadores.show');
-    Route::get('/dashboard', [HomeController::class, 'dashboard'])->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', function () {
+        return redirect()->route('reserva.minhas');
+    })->middleware('auth')->name('dashboard');
 
     Route::post('tipotransacao/setperpage', [TipoTransacaoController::class, 'setPerPage'])->name('tipotransacao.setPerPage');
     Route::get('tipotransacao/removerfiltro', [TipoTransacaoController::class, 'removerFiltro']);

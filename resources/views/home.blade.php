@@ -735,31 +735,6 @@
 
 <x-onboarding-widget />
 
-<div class="quick-access">
-    <div class="quick-access__title">
-        <div>
-            <h2>Acesso rapido</h2>
-            <p>Um atalho direto para as telas mais usadas.</p>
-        </div>
-    </div>
-    <div class="quick-access-grid">
-        @can('reserva.minhas')
-            <a href="{{ route('reserva.minhas') }}" class="quick-card">
-                <div class="quick-card__icon">
-                    <i class="fas fa-bookmark"></i>
-                </div>
-                <div class="quick-card__meta">
-                    <h3>Minhas reservas</h3>
-                    <p>Veja e acompanhe as suas reservas abertas, futuras e finalizadas.</p>
-                </div>
-                <div class="quick-card__arrow">
-                    <i class="fas fa-arrow-right"></i>
-                </div>
-            </a>
-        @endcan
-    </div>
-</div>
-
 @if ($hasVisibleCharts)
 <div class="period-bar">
     <label for="data_inicio">Periodo:</label>
