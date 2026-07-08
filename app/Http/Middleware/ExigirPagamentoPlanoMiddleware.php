@@ -24,6 +24,8 @@ class ExigirPagamentoPlanoMiddleware
         'home',
         'dashboard',
         'site.apresentacao',
+        'site.reserva.',
+        'site.multa.',
         'reserva.minhas',
     ];
 

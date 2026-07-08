@@ -29,6 +29,8 @@ class PlanoPermissaoService
         'profile.',
         'onboarding.',
         'assinatura.',
+        'site.reserva.',
+        'site.multa.',
     ];
 
     /**
@@ -41,6 +43,11 @@ class PlanoPermissaoService
         'dashboard',
         'home.chart-data',
         'site.apresentacao',
+        'site.reserva.diasDisponiveisPorEstacao',
+        'site.reserva.agendaDisponivelPorEstacao',
+        'site.reserva.estacoesDisponiveis',
+        'site.reserva.disponibilidade',
+        'site.reserva.index',
         'reserva.minhas',
     ];
 
