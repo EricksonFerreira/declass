@@ -40,7 +40,6 @@ class SiteApresentacaoController extends Controller
     public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
         if (auth()->check()) {
-            dd(2);
             return redirect()->route('home');
         }
 

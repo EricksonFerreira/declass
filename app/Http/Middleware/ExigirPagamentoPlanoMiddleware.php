@@ -21,6 +21,8 @@ class ExigirPagamentoPlanoMiddleware
         'onboarding.',
         'assinatura.',
         'notificacoes.',
+        'home',
+        'dashboard',
         'reserva.minhas',
     ];
 
