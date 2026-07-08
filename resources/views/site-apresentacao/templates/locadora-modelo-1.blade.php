@@ -1829,7 +1829,7 @@
             const dataDevolucao   = document.getElementById('data_devolucao');
             const horaDevolucao   = document.getElementById('hora_devolucao');
             const form            = dataRetirada?.closest('form');
-            const diasDisponiveisUrl = @json(route('reserva.diasSemDisponibilidade'));
+            const diasDisponiveisUrl = @json(route('site.reserva.diasDisponiveisPorEstacao'));
             const agendaUrl = @json(route('reserva.agendaDisponivelPorEstacao'));
             const dataRetiradaFeedback = document.getElementById('data_retirada_feedback');
             const horaRetiradaFeedback = document.getElementById('hora_retirada_feedback');

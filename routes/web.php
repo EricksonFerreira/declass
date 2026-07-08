@@ -84,6 +84,7 @@ Route::get('/reserva/novo', [SiteReservaController::class, 'index'])->name('site
 Route::get('/reserva/login', [SiteReservaController::class, 'loginRedirect'])->name('site.reserva.login');
 Route::post('/reserva', [SiteReservaController::class, 'store'])->name('site.reserva.store');
 Route::get('/reserva/disponibilidade', [SiteReservaController::class, 'disponibilidade'])->name('site.reserva.disponibilidade');
+Route::get('/reserva/dias-disponiveis', [SiteReservaController::class, 'diasDisponiveisPorEstacao'])->name('site.reserva.diasDisponiveisPorEstacao');
 Route::get('/reserva/estacoes-disponiveis', [SiteReservaController::class, 'estacoesDisponiveis'])->name('site.reserva.estacoesDisponiveis');
 Route::post('/reserva/verificar-cupom', [SiteReservaController::class, 'verificarCupom'])->name('site.reserva.verificarCupom');
 Route::get('/reserva/{reserva}/sucesso', [SiteReservaController::class, 'success'])->name('site.reserva.success');
@@ -97,6 +98,7 @@ Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'a
 Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('job.fipe.catalogo.run');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
+    Route::get('reserva/agenda-disponivel', [ReservaController::class, 'agendaDisponivelPorEstacao'])->name('reserva.agendaDisponivelPorEstacao');
     // Comecar agora (cadastro rapido de empresa + usuario unico com senha padrao).
     Route::middleware('guest')->get('/comecar', [CadastroEmpresaController::class, 'create'])->name('cadastro.empresa.create');
     Route::middleware('guest')->post('/comecar', [CadastroEmpresaController::class, 'store'])->name('cadastro.empresa.store');
