@@ -23,13 +23,14 @@
   .alert { background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:14px 16px; font-size:.86rem; color:#9a3412; line-height:1.6; margin:18px 0; }
   .footer { background:#f8fafc; border-top:1px solid #e5e7eb; padding:18px 36px; text-align:center; font-size:.78rem; color:#64748b; line-height:1.6; }
   .muted { color:#64748b; }
-  .company { margin-top:4px; font-size:.86rem; color:#475569; }
 </style>
 </head>
 <body>
 <div class="wrapper">
   <div class="header">
-    @if(!empty($empresa?->logo_url))
+    @if(!empty($logoInline))
+      <img src="{{ $logoInline }}" alt="Logo {{ $empresa?->nome ?? config('adminlte.title', 'Sistema') }}">
+    @elseif(!empty($empresa?->logo_url))
       <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}">
     @else
       <img src="{{ asset('assets/imgs/logo-sem-texto.png') }}" alt="Logo do sistema">
@@ -81,7 +82,7 @@
     </div>
 
     <div class="alert">
-      <strong>Segurança:</strong> esse link expira em segurança conforme a política do sistema.
+      <strong>Segurança:</strong> esse link expira conforme a política do sistema.
       Se alguém solicitou isso por engano, nenhuma ação adicional é necessária.
     </div>
 
