@@ -629,7 +629,12 @@
                     return false;
                 }
 
-                return $('#estacao_devolucao_id option[value="' + estacaoId + '"]').length > 0;
+                const select = document.getElementById('estacao_devolucao_id');
+                if (!select) {
+                    return false;
+                }
+
+                return !!select.querySelector(`option[value="${String(estacaoId)}"]`);
             }
             function highlightGrupo() {
                 if (!gruposGrid) {
@@ -1309,11 +1314,12 @@
                 if (pickerInicio) { pickerInicio.clear(); }
                 if (estId) criarPickerInicio(estId);
                 if (estacaoPodeSerDevolucao(estId)) {
-                    const $devolucao = $('#estacao_devolucao_id');
-                    if (String($devolucao.val() || '') !== String(estId)) {
-                        $devolucao.val(estId).trigger('change');
+                    const devolucaoSelect = document.getElementById('estacao_devolucao_id');
+                    if (devolucaoSelect && String(devolucaoSelect.value || '') !== String(estId)) {
+                        devolucaoSelect.value = String(estId);
+                        devolucaoSelect.dispatchEvent(new Event('change', { bubbles: true }));
                     } else {
-                        $devolucao.trigger('change');
+                        devolucaoSelect?.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                     if (estacaoDevolucaoFeedback) {
                         estacaoDevolucaoFeedback.textContent = 'Devolução ajustada automaticamente para a mesma estação, pois ela aceita checkout.';
@@ -1634,4 +1640,3 @@
     </script>
 </body>
 </html>
-
