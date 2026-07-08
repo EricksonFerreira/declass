@@ -264,7 +264,7 @@ class SiteReservaController extends Controller
 
         $estacao = Estacao::with(['diasUteis'])->findOrFail($estacaoId);
         $quantidadeVeiculosAtivos = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao([$estacaoId]);
-        if ((int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) <= 0) {
+        if (!$isDevolucao && (int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) <= 0) {
             return response()->json([
                 'estacao_id' => $estacao->id,
                 'dias_disponiveis' => [],
@@ -296,6 +296,31 @@ class SiteReservaController extends Controller
         ]);
     }
 
+    private function removerFeriados(array $dados, int $estacaoId, bool $operaFeriado): array
+    {
+        if ($operaFeriado || empty($dados)) {
+            return $dados;
+        }
+
+        $dataInicial = $dados[0]['data'];
+        $dataFinal = end($dados)['data'];
+
+        $feriados = Feriado::query()
+            ->where('estacao_id', $estacaoId)
+            ->whereBetween('data', [$dataInicial, $dataFinal])
+            ->where('ativo', 'S')
+            ->pluck('data')
+            ->map(fn ($data) => (string) $data)
+            ->all();
+
+        if (empty($feriados)) {
+            return $dados;
+        }
+
+        return array_values(array_filter($dados, static function (array $dia) use ($feriados): bool {
+            return !in_array((string) ($dia['data'] ?? ''), $feriados, true);
+        }));
+    }
     public function agendaDisponivelPorEstacao(Request $request): JsonResponse
     {
         $empresa = $this->resolveEmpresaAtivaByHost($request);
@@ -1899,3 +1924,4 @@ class SiteReservaController extends Controller
         return url($path);
     }
 }
+
