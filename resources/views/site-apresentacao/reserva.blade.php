@@ -1854,15 +1854,15 @@
                 state.step = 5;
                 renderStep();
                 refresh();
-                if (loginPopupContinue) {
-                    sessionStorage.removeItem('site_reserva_auto_continue');
-                    autoSubmitAfterLogin = true;
-                    setTimeout(function () {
+                sessionStorage.removeItem('site_reserva_auto_continue');
+                autoSubmitAfterLogin = true;
+                setTimeout(function () {
+                    if (form && typeof form.requestSubmit === 'function') {
                         form.requestSubmit();
-                    }, 120);
-                } else {
-                    sessionStorage.removeItem('site_reserva_auto_continue');
-                }
+                    } else if (form) {
+                        form.submit();
+                    }
+                }, 120);
             }
 
             function refresh() {
