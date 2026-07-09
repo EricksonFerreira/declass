@@ -93,6 +93,7 @@ class SiteReservaController extends Controller
         ];
 
         $prefillCompleto = $this->prefillReservaCompleta($prefill);
+        $loginSuccess = $request->boolean('login_success');
         $qtdVeiculosEstacao = $prefillCompleto
             ? $this->veiculoService->getQuantidadeVeiculosDisponiveisPorEstacaoEPeriodo(
                 (int) $prefill['estacao_retirada_id'],
@@ -100,7 +101,9 @@ class SiteReservaController extends Controller
                 (string) $prefill['data_fim']
             )
             : 0;
-        $initialStepServer = $prefillCompleto && $qtdVeiculosEstacao > 0 ? 2 : 1;
+        $initialStepServer = $loginSuccess
+            ? 5
+            : ($prefillCompleto && $qtdVeiculosEstacao > 0 ? 2 : 1);
         $gruposFrota = $this->gruposFrotaAtivos(
             $prefillCompleto ? (int) $prefill['estacao_retirada_id'] : null,
             $prefillCompleto ? (string) $prefill['data_inicio'] : null,

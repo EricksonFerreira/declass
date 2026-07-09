@@ -4,11 +4,12 @@
     $initialStepServer = isset($initialStepServer)
         ? (int) $initialStepServer
         : (int) old('step', $errors->any() ? 4 : 2);
-    $initialStepServer = in_array($initialStepServer, [1, 2, 3, 4], true) ? $initialStepServer : 2;
+    $initialStepServer = in_array($initialStepServer, [1, 2, 3, 4, 5], true) ? $initialStepServer : 2;
     $isInitialStep1 = $initialStepServer === 1;
     $isInitialStep2 = $initialStepServer === 2;
     $isInitialStep3 = $initialStepServer === 3;
     $isInitialStep4 = $initialStepServer === 4;
+    $isInitialStep5 = $initialStepServer === 5;
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -1235,7 +1236,7 @@
                         class="num">3</span><span>Opcionais</span></div>
                 <div class="step-pill {{ $isInitialStep4 ? 'active' : '' }}" data-step="4"><span
                         class="num">4</span><span>Cliente</span></div>
-                <div class="step-pill disabled" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
+                <div class="step-pill {{ $isInitialStep5 ? 'active' : 'disabled' }}" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
             </div>
 
             <form id="reservaForm" class="body" method="POST" action="{{ route('site.reserva.store') }}" novalidate>
@@ -1419,7 +1420,7 @@
                     <div id="opcionaisGrid" class="opcionais"></div>
                 </section>
 
-                <section class="panel {{ $isInitialStep4 ? 'active' : '' }}" data-panel="4">
+                <section class="panel {{ $isInitialStep4 || $isInitialStep5 ? 'active' : '' }}" data-panel="4">
                     <h2 class="title">Dados do cliente</h2>
                     <p class="subtitle">
                         @if (!empty($isAuth) && $isAuth)
@@ -1693,7 +1694,7 @@
             const loginRedirectUrl = @json($loginRedirectUrl);
             const reservaSelecionarModelo = @json($reservaSelecionarModelo ?? false);
             const initialStepServer = Number(@json($initialStepServer));
-            const initialStep = !Number.isNaN(initialStepServer) && initialStepServer >= 1 && initialStepServer <= 4 ?
+            const initialStep = !Number.isNaN(initialStepServer) && initialStepServer >= 1 && initialStepServer <= 5 ?
                 initialStepServer : 2;
             const state = {
                 step: initialStep,
@@ -3133,125 +3134,132 @@
                 });
             }
             maskCelular();
-            // Init pickers for pre-selected stations
-            (async function() {
-                const estRet = document.getElementById('estacao_retirada_id').value;
-                const estDev = document.getElementById('estacao_devolucao_id').value;
-                if (estRet) await criarPickerInicio(estRet);
-                else {
-                    pickerInicio = flatpickr('#picker_data_inicio', {
-                        locale: 'pt',
-                        dateFormat: 'd/m/Y',
-                        minDate: 'today',
-                        onChange: function(sel) {
-                            if (pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0] ||
-                                null;
-                            syncHiddenInicio();
-                            onDateHoraChanged();
-                        }
-                    });
-                }
-                if (estDev) await criarPickerFim(estDev);
-                else {
-                    pickerFim = flatpickr('#picker_data_fim', {
-                        locale: 'pt',
-                        dateFormat: 'd/m/Y',
-                        minDate: 'today',
-                        onChange: function(sel) {
-                            if (pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0] || null;
-                            syncHiddenFim();
-                            onDateHoraChanged();
-                        }
-                    });
-                }
-                if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
-                    const devoluçãoSelect = document.getElementById('estacao_devolucao_id');
-                    if (devolucaoSelect) {
-                        devoluçãoSelect.value = String(estRet);
-                        devoluçãoSelect.dispatchEvent(new Event('change', {
-                            bubbles: true
-                        }));
-                    }
-                }
-                const oldInicio = dataInicio.value;
-                const oldFim = dataFim.value;
-                const restaurarHora = function(selectId, hora) {
-                    const sel = document.getElementById(selectId);
-                    if (!sel || !hora) return false;
-                    const valor = String(hora).slice(0, 5);
-                    const existe = Array.from(sel.options).some((option) => option.value === valor);
-                    if (existe) {
-                        sel.value = valor;
-                        return true;
-                    }
-                    return false;
-                };
-
-                const restauracoes = [];
-                let prefillCompleto = Boolean(oldInicio && oldFim && estRet && estDev);
-
-                if (oldInicio && oldInicio.includes('T') && estRet) {
-                    const [datePart, timePart] = oldInicio.split('T');
-                    if (pickerInicio) {
-                        pickerInicio.setDate(datePart, true, 'Y-m-d');
-                        pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
-                    }
-                    restauracoes.push(
-                        carregarHorariosInicio(estRet, datePart).then(function() {
-                            const ok = restaurarHora('hora_inicio', timePart);
-                            if (!ok) {
-                                prefillCompleto = false;
-                                feedback('step1Feedback',
-                                    'A hora de retirada informada nao esta disponivel. Escolha outra data e horario.',
-                                    'warn');
-                            } else {
+            if (loginPopupSuccess) {
+                state.step = 5;
+                renderStep();
+                refresh();
+                isBootstrapping = false;
+            } else {
+                // Init pickers for pre-selected stations
+                (async function() {
+                    const estRet = document.getElementById('estacao_retirada_id').value;
+                    const estDev = document.getElementById('estacao_devolucao_id').value;
+                    if (estRet) await criarPickerInicio(estRet);
+                    else {
+                        pickerInicio = flatpickr('#picker_data_inicio', {
+                            locale: 'pt',
+                            dateFormat: 'd/m/Y',
+                            minDate: 'today',
+                            onChange: function(sel) {
+                                if (pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0] ||
+                                    null;
                                 syncHiddenInicio();
-                                updateTaxaInicio();
+                                onDateHoraChanged();
                             }
-                            return ok;
-                        })
-                    );
-                } else {
-                    prefillCompleto = false;
-                }
-
-                if (oldFim && oldFim.includes('T') && estDev) {
-                    const [datePart, timePart] = oldFim.split('T');
-                    if (pickerFim) {
-                        pickerFim.setDate(datePart, true, 'Y-m-d');
-                        pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
-                    }
-                    restauracoes.push(
-                        carregarHorariosFim(estDev, datePart).then(function() {
-                            const ok = restaurarHora('hora_fim', timePart);
-                            if (!ok) {
-                                prefillCompleto = false;
-                                feedback('step1Feedback',
-                                    'A hora de devolução informada nao esta disponivel. Escolha outra data e horario.',
-                                    'warn');
-                            } else {
-                                syncHiddenFim();
-                                updateTaxaFim();
-                            }
-                            return ok;
-                        })
-                    );
-                } else {
-                    prefillCompleto = false;
-                }
-
-                Promise.all(restauracoes).then(function() {
-                    refresh();
-                    updatePrefill();
-                    state.step = initialStepServer;
-                    renderStep();
-                    if (initialStepServer === 2 && grupo.value) {
-                        carregarDisponibilidadeGrupos().then(function() {
-                            loadDisponibilidade();
                         });
                     }
-                });
-            })();
+                    if (estDev) await criarPickerFim(estDev);
+                    else {
+                        pickerFim = flatpickr('#picker_data_fim', {
+                            locale: 'pt',
+                            dateFormat: 'd/m/Y',
+                            minDate: 'today',
+                            onChange: function(sel) {
+                                if (pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0] || null;
+                                syncHiddenFim();
+                                onDateHoraChanged();
+                            }
+                        });
+                    }
+                    if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
+                        const devolucaoSelect = document.getElementById('estacao_devolucao_id');
+                        if (devolucaoSelect) {
+                            devolucaoSelect.value = String(estRet);
+                            devolucaoSelect.dispatchEvent(new Event('change', {
+                                bubbles: true
+                            }));
+                        }
+                    }
+                    const oldInicio = dataInicio.value;
+                    const oldFim = dataFim.value;
+                    const restaurarHora = function(selectId, hora) {
+                        const sel = document.getElementById(selectId);
+                        if (!sel || !hora) return false;
+                        const valor = String(hora).slice(0, 5);
+                        const existe = Array.from(sel.options).some((option) => option.value === valor);
+                        if (existe) {
+                            sel.value = valor;
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    const restauracoes = [];
+                    let prefillCompleto = Boolean(oldInicio && oldFim && estRet && estDev);
+
+                    if (oldInicio && oldInicio.includes('T') && estRet) {
+                        const [datePart, timePart] = oldInicio.split('T');
+                        if (pickerInicio) {
+                            pickerInicio.setDate(datePart, true, 'Y-m-d');
+                            pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
+                        }
+                        restauracoes.push(
+                            carregarHorariosInicio(estRet, datePart).then(function() {
+                                const ok = restaurarHora('hora_inicio', timePart);
+                                if (!ok) {
+                                    prefillCompleto = false;
+                                    feedback('step1Feedback',
+                                        'A hora de retirada informada nao esta disponivel. Escolha outra data e horario.',
+                                        'warn');
+                                } else {
+                                    syncHiddenInicio();
+                                    updateTaxaInicio();
+                                }
+                                return ok;
+                            })
+                        );
+                    } else {
+                        prefillCompleto = false;
+                    }
+
+                    if (oldFim && oldFim.includes('T') && estDev) {
+                        const [datePart, timePart] = oldFim.split('T');
+                        if (pickerFim) {
+                            pickerFim.setDate(datePart, true, 'Y-m-d');
+                            pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
+                        }
+                        restauracoes.push(
+                            carregarHorariosFim(estDev, datePart).then(function() {
+                                const ok = restaurarHora('hora_fim', timePart);
+                                if (!ok) {
+                                    prefillCompleto = false;
+                                    feedback('step1Feedback',
+                                        'A hora de devolução informada nao esta disponivel. Escolha outra data e horario.',
+                                        'warn');
+                                } else {
+                                    syncHiddenFim();
+                                    updateTaxaFim();
+                                }
+                                return ok;
+                            })
+                        );
+                    } else {
+                        prefillCompleto = false;
+                    }
+
+                    Promise.all(restauracoes).then(function() {
+                        refresh();
+                        updatePrefill();
+                        state.step = initialStepServer;
+                        renderStep();
+                        if (initialStepServer === 2 && grupo.value) {
+                            carregarDisponibilidadeGrupos().then(function() {
+                                loadDisponibilidade();
+                            });
+                        }
+                    });
+                })();
+            }
 
             // ---- Search modal ----
             (function() {
