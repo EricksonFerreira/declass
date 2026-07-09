@@ -124,19 +124,48 @@
             height: 40px;
             padding: 0 10px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, .38);
+            border: 1px solid #cbd5e1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             font-weight: 800;
-            background: rgba(255, 255, 255, .08);
+            background: #fff;
+            color: #0f172a;
             transition: all .15s ease;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
         }
 
         .survey-option input:checked + span {
-            background: #fff;
             color: #0f172a;
-            border-color: #fff;
+            border-color: rgba(15, 23, 42, .2);
+            box-shadow: 0 10px 18px rgba(15, 23, 42, .08);
+        }
+
+        .survey-tone--1 { background: #ef4444 !important; color: #fff !important; border-color: #dc2626 !important; }
+        .survey-tone--2 { background: #f87171 !important; color: #fff !important; border-color: #ef4444 !important; }
+        .survey-tone--3 { background: #facc15 !important; color: #0f172a !important; border-color: #eab308 !important; }
+        .survey-tone--4 { background: #86efac !important; color: #064e3b !important; border-color: #4ade80 !important; }
+        .survey-tone--5 { background: #15803d !important; color: #fff !important; border-color: #166534 !important; }
+
+        .survey-tone--0 { background: #b91c1c !important; color: #fff !important; border-color: #991b1b !important; }
+        .survey-tone--6 { background: #f97316 !important; color: #fff !important; border-color: #ea580c !important; }
+        .survey-tone--7 { background: #facc15 !important; color: #0f172a !important; border-color: #eab308 !important; }
+        .survey-tone--8 { background: #4ade80 !important; color: #064e3b !important; border-color: #22c55e !important; }
+        .survey-tone--9 { background: #16a34a !important; color: #fff !important; border-color: #15803d !important; }
+        .survey-tone--10 { background: #14532d !important; color: #fff !important; border-color: #14532d !important; }
+
+        .survey-option input:checked + span.survey-tone--1,
+        .survey-option input:checked + span.survey-tone--2,
+        .survey-option input:checked + span.survey-tone--3,
+        .survey-option input:checked + span.survey-tone--4,
+        .survey-option input:checked + span.survey-tone--5,
+        .survey-option input:checked + span.survey-tone--0,
+        .survey-option input:checked + span.survey-tone--6,
+        .survey-option input:checked + span.survey-tone--7,
+        .survey-option input:checked + span.survey-tone--8,
+        .survey-option input:checked + span.survey-tone--9,
+        .survey-option input:checked + span.survey-tone--10 {
+            transform: translateY(-1px) scale(1.03);
         }
 
         .survey-textarea {
@@ -243,9 +272,19 @@
                         <label class="survey-label">1. Como foi sua experiência geral?</label>
                         <div class="survey-options">
                             @for($i = 1; $i <= 5; $i++)
+                                @php
+                                    $surveyToneClass = match ($i) {
+                                        1 => 'survey-tone--1',
+                                        2 => 'survey-tone--2',
+                                        3 => 'survey-tone--3',
+                                        4 => 'survey-tone--4',
+                                        5 => 'survey-tone--5',
+                                        default => '',
+                                    };
+                                @endphp
                                 <label class="survey-option">
                                     <input type="radio" name="satisfacao_geral" value="{{ $i }}" {{ old('satisfacao_geral') == $i ? 'checked' : '' }} required>
-                                    <span>{{ $i }}</span>
+                                    <span class="{{ $surveyToneClass }}">{{ $i }}</span>
                                 </label>
                             @endfor
                         </div>
@@ -255,9 +294,19 @@
                         <label class="survey-label">2. Foi fácil concluir a reserva?</label>
                         <div class="survey-options">
                             @for($i = 1; $i <= 5; $i++)
+                                @php
+                                    $surveyToneClass = match ($i) {
+                                        1 => 'survey-tone--1',
+                                        2 => 'survey-tone--2',
+                                        3 => 'survey-tone--3',
+                                        4 => 'survey-tone--4',
+                                        5 => 'survey-tone--5',
+                                        default => '',
+                                    };
+                                @endphp
                                 <label class="survey-option">
                                     <input type="radio" name="facilidade_reserva" value="{{ $i }}" {{ old('facilidade_reserva') == $i ? 'checked' : '' }} required>
-                                    <span>{{ $i }}</span>
+                                    <span class="{{ $surveyToneClass }}">{{ $i }}</span>
                                 </label>
                             @endfor
                         </div>
@@ -267,9 +316,25 @@
                         <label class="survey-label">3. De 0 a 10, quanto você recomendaria a empresa?</label>
                         <div class="survey-options">
                             @for($i = 0; $i <= 10; $i++)
+                                @php
+                                    $surveyToneClass = match (true) {
+                                        $i === 0 => 'survey-tone--0',
+                                        $i === 1 => 'survey-tone--1',
+                                        $i === 2 => 'survey-tone--2',
+                                        $i === 3 => 'survey-tone--3',
+                                        $i === 4 => 'survey-tone--4',
+                                        $i === 5 => 'survey-tone--5',
+                                        $i === 6 => 'survey-tone--6',
+                                        $i === 7 => 'survey-tone--7',
+                                        $i === 8 => 'survey-tone--8',
+                                        $i === 9 => 'survey-tone--9',
+                                        $i === 10 => 'survey-tone--10',
+                                        default => '',
+                                    };
+                                @endphp
                                 <label class="survey-option">
                                     <input type="radio" name="nps_nota" value="{{ $i }}" {{ old('nps_nota') !== null && (string) old('nps_nota') === (string) $i ? 'checked' : '' }} required>
-                                    <span>{{ $i }}</span>
+                                    <span class="{{ $surveyToneClass }}">{{ $i }}</span>
                                 </label>
                             @endfor
                         </div>
