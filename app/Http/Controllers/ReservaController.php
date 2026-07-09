@@ -1781,7 +1781,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         if ($modelos->isEmpty()) {
             $avisoModelos = $modelosVinculados->isNotEmpty()
-                ? 'Este grupo possui modelos vinculados, mas nao ha veiculos disponiveis para a estacao/data selecionadas.'
+                ? 'Nao ha veiculos disponiveis neste grupo de frota para a estacao e periodo selecionados.'
                 : 'Este grupo de veiculos ainda nao possui modelos vinculados.';
         }
 

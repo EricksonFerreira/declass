@@ -173,7 +173,7 @@ class SiteReservaController extends Controller
         $avisoModelos = null;
         if ($modelosDisponiveis->isEmpty()) {
             $avisoModelos = $modelosVinculados->isNotEmpty()
-                ? 'Este grupo possui modelos vinculados, mas nao ha veiculos disponiveis para a estacao/data selecionadas.'
+                ? 'Nao ha veiculos disponiveis neste grupo de frota para a estacao e periodo selecionados.'
                 : 'Este grupo de veiculos ainda nao possui modelos vinculados.';
         }
 

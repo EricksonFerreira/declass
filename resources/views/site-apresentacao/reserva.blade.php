@@ -939,7 +939,7 @@
                 if (!disponiveis.length) {
                     modelo.value = '';
                     setModelosDisponiveis([]);
-                    updateModeloAutoNote('Nenhum modelo disponivel para este grupo no periodo selecionado.', 'warn');
+                    updateModeloAutoNote('Nao ha veiculos disponiveis neste grupo de frota para a estacao e periodo selecionados.', 'warn');
                     return false;
                 }
                 const escolhido = disponiveis.find(m => String(m.id) === String(modelo.value)) || disponiveis[0];
@@ -1084,7 +1084,7 @@
                     }
                     renderOpc(data.tipo_opcional || []);
                     if (!temDisponibilidade) {
-                        const aviso = data.aviso_modelos || 'Nao ha disponibilidade para a data e horario selecionados. Selecione outra data e horario.';
+                        const aviso = data.aviso_modelos || 'Nao ha veiculos disponiveis neste grupo de frota para a estacao e periodo selecionados. Selecione outro grupo ou outro periodo.';
                         feedback('disponibilidadeFeedback', aviso, 'warn');
                         feedback('step1Feedback', aviso, 'warn');
                         state.step = 1;
