@@ -254,10 +254,10 @@
             </div>
 
             <div class="prefill" id="prefillSummary">
-                <strong>Resumo da selecao</strong>
+                <strong>Resumo da seleção</strong>
                 <div class="prefill-grid">
                     <span id="prefRet">Retirada: -</span>
-                    <span id="prefDev">Devolucao: -</span>
+                    <span id="prefDev">Devolução: -</span>
                     <span id="prefDatas">Datas: -</span>
                 </div>
             </div>
