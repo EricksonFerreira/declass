@@ -269,9 +269,6 @@
                     </div>
 
                     <div class="rs-actions">
-                        <a href="{{ route('reserva.minhas') }}" class="rs-btn rs-btn--light">
-                            <i class="fas fa-arrow-left"></i> Voltar para minhas reservas
-                        </a>
                         @if($podeCancelarMinhaReserva)
                             <form method="POST" action="{{ route('reserva.cancelar', $reserva->id) }}" class="m-0" onsubmit="return confirm('Deseja realmente cancelar esta reserva?');">
                                 @csrf
