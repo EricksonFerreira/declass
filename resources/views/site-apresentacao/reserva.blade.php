@@ -1848,12 +1848,10 @@
                 if (clientFeedback) {
                     feedback('clientFeedback', 'Login realizado com sucesso. Você pode seguir para o pagamento.', 'ok');
                 }
-                if (state.step < 4) {
-                    state.step = 4;
-                    renderStep();
-                }
+                state.step = 5;
+                renderStep();
                 refresh();
-                if (loginPopupContinue && state.step === 4) {
+                if (loginPopupContinue) {
                     sessionStorage.removeItem('site_reserva_auto_continue');
                     autoSubmitAfterLogin = true;
                     setTimeout(function () {
@@ -2075,18 +2073,19 @@
             }
 
             function renderStep() {
+                const visualStep = state.step === 5 ? 4 : state.step;
                 pills.forEach(p => p.classList.toggle('active', Number(p.dataset.step) === state.step));
-                panels.forEach(p => p.classList.toggle('active', Number(p.dataset.panel) === state.step));
-                document.getElementById('btnPrev').classList.toggle('hidden', state.step === 1);
-                document.getElementById('btnNext').classList.toggle('hidden', state.step === 4);
-                document.getElementById('btnSubmit').classList.toggle('hidden', state.step !== 4);
+                panels.forEach(p => p.classList.toggle('active', Number(p.dataset.panel) === visualStep));
+                document.getElementById('btnPrev').classList.toggle('hidden', visualStep === 1);
+                document.getElementById('btnNext').classList.toggle('hidden', visualStep === 4);
+                document.getElementById('btnSubmit').classList.toggle('hidden', visualStep !== 4);
                 const stepInput = document.getElementById('step_input');
                 if (stepInput) {
                     stepInput.value = String(state.step);
                 }
                 const cupomBox = document.getElementById('cupomSummary');
                 if (cupomBox) {
-                    cupomBox.classList.toggle('hidden', !(state.step === 3 || state.step === 4));
+                    cupomBox.classList.toggle('hidden', !(visualStep === 3 || visualStep === 4));
                 }
                 if (modelosSection) {
                     modelosSection.classList.toggle('hidden', !reservaSelecionarModelo);
@@ -2094,7 +2093,7 @@
                 if (modelosAutoNote && reservaSelecionarModelo) {
                     modelosAutoNote.classList.add('hidden');
                 }
-                if (state.step === 2) {
+                if (visualStep === 2) {
                     highlightGrupo();
                     highlightModelo();
                     if (reservaSelecionarModelo && modelo.value) {
