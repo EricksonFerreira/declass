@@ -2100,21 +2100,21 @@
                 const now = new Date();
                 now.setSeconds(0, 0);
                 const retirada = dataInicio.value ? new Date(dataInicio.value) : null;
-                const devolução = dataFim.value ? new Date(dataFim.value) : null;
+                const devolucao = dataFim.value ? new Date(dataFim.value) : null;
 
                 if (retirada && !Number.isNaN(retirada.getTime()) && retirada < now) {
                     if (show) feedback('step1Feedback', 'O horario de retirada nao pode ser antes de agora.', 'warn');
                     return false;
                 }
 
-                if (devolucao && !Number.isNaN(devolucao.getTime()) && devolução < now) {
-                    if (show) feedback('step1Feedback', 'O horario de devolução nao pode ser antes de agora.', 'warn');
+                if (devolucao && !Number.isNaN(devolucao.getTime()) && devolucao < now) {
+                    if (show) feedback('step1Feedback', 'O horario de devolucao nao pode ser antes de agora.', 'warn');
                     return false;
                 }
 
-                if (retirada && devolução) {
+                if (retirada && devolucao) {
                     const retiradaDia = new Date(retirada.getFullYear(), retirada.getMonth(), retirada.getDate());
-                    const devoluçãoDia = new Date(devolucao.getFullYear(), devolução.getMonth(), devolução.getDate());
+                    const devolucaoDia = new Date(devolucao.getFullYear(), devolucao.getMonth(), devolucao.getDate());
                     const minDevolucao = new Date(retiradaDia.getTime() + 86400000);
                     if (devolucaoDia < minDevolucao) {
                         if (show) feedback('step1Feedback',
