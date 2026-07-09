@@ -264,7 +264,7 @@
 
             <div class="steps" id="stepsHeader">
                 <div class="step-pill {{ $isInitialStep1 ? 'active' : '' }}" data-step="1"><span class="num">1</span><span>Viagem</span></div>
-                <div class="step-pill {{ $isInitialStep2 ? 'active' : '' }}" data-step="2"><span class="num">2</span><span>Veiculo</span></div>
+                <div class="step-pill {{ $isInitialStep2 ? 'active' : '' }}" data-step="2"><span class="num">2</span><span>Veículo</span></div>
                 <div class="step-pill {{ $isInitialStep3 ? 'active' : '' }}" data-step="3"><span class="num">3</span><span>Opcionais</span></div>
                 <div class="step-pill {{ $isInitialStep4 ? 'active' : '' }}" data-step="4"><span class="num">4</span><span>Cliente</span></div>
                 <div class="step-pill disabled" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
@@ -279,7 +279,7 @@
 
                 <section class="panel {{ $isInitialStep1 ? 'active' : '' }}" data-panel="1">
                     <h2 class="title">Onde e quando?</h2>
-                    <p class="subtitle">Defina retirada, devolucao e datas.</p>
+                    <p class="subtitle">Defina retirada, devolução e datas.</p>
                     <div class="grid">
                         <div class="field">
                             <label for="estacao_retirada_id">Estacao de retirada</label>
@@ -293,7 +293,7 @@
                             </select>
                         </div>
                         <div class="field">
-                            <label for="estacao_devolucao_id">Estacao de devolucao</label>
+                            <label for="estacao_devolucao_id">Estacao de devolução</label>
                             <select id="estacao_devolucao_id" name="estacao_devolucao_id" required>
                                 <option value="">Selecione...</option>
                         @foreach($estacoesDevolucao ?? $estacoes as $estacao)
@@ -314,7 +314,7 @@
                             <input type="hidden" id="data_inicio" name="data_inicio" value="{{ old('data_inicio', $prefill['data_inicio'] ?? '') }}">
                         </div>
                         <div class="field">
-                            <label for="picker_data_fim">Data de devolucao</label>
+                            <label for="picker_data_fim">Data de devolução</label>
                             <input id="picker_data_fim" type="text" placeholder="Selecione a data..." autocomplete="off" readonly>
                             <select id="hora_fim" style="margin-top:6px;display:none">
                                 <option value="">Selecione o horario...</option>
@@ -335,7 +335,7 @@
                         @if(!empty($reservaSelecionarModelo))
                             Selecione um grupo e um modelo pelos cards.
                         @else
-                            Selecione o grupo e escolheremos o melhor modelo disponivel para voce.
+                            Selecione o grupo e escolheremos o melhor modelo disponivel para você.
                         @endif
                     </p>
                     <div class="grupos-grid" id="gruposGrid">
@@ -457,7 +457,7 @@
                     </div>
 
                     <div id="clientCadastroPanel" class="client-panel">
-                        <p class="client-note">Se o e-mail ja existir, voce precisara fazer login.</p>
+                        <p class="client-note">Se o e-mail ja existir, você precisara fazer login.</p>
                         <div class="grid" id="clientCadastroFields">
                             <div class="field"><label for="nome">Nome</label><input id="nome" name="nome" value="{{ old('nome', '') }}" maxlength="255" required></div>
                             <div class="field"><label for="email">E-mail</label><input id="email" type="email" name="email" value="{{ old('email', '') }}" maxlength="150" required></div>
@@ -481,7 +481,7 @@
                     <div class="feedback" id="clientFeedback">
                         {{ !empty($isAuth) && $isAuth ? 'Escolha usar o usuario logado ou cadastrar outro.' : 'Escolha uma opcao para continuar.' }}
                     </div>
-                    <div class="feedback" style="margin-top: 10px;">Ao finalizar, voce sera direcionado para o pagamento.</div>
+                    <div class="feedback" style="margin-top: 10px;">Ao finalizar, você sera direcionado para o pagamento.</div>
                 </section>
 
                 <div class="actions">
@@ -868,7 +868,7 @@
                 prefillBox.style.display = hasAny ? 'block' : 'none';
                 document.getElementById('prefRet').textContent = `Retirada: ${eRet.options[eRet.selectedIndex]?.text || '-'}`;
                 document.getElementById('prefDev').textContent = `Devolucao: ${eDev.options[eDev.selectedIndex]?.text || '-'}`;
-                document.getElementById('prefDatas').textContent = `Datas: ${dateLabel(dataInicio.value)} ate ${dateLabel(dataFim.value)}`;
+                document.getElementById('prefDatas').textContent = `Datas: ${dateLabel(dataInicio.value)} até ${dateLabel(dataFim.value)}`;
             }
             function renderStep() {
                 pills.forEach(p => p.classList.toggle('active', Number(p.dataset.step) === state.step));
@@ -920,30 +920,30 @@
                 const now = new Date();
                 now.setSeconds(0, 0);
                 const retirada = dataInicio.value ? new Date(dataInicio.value) : null;
-                const devolucao = dataFim.value ? new Date(dataFim.value) : null;
+                const devolução = dataFim.value ? new Date(dataFim.value) : null;
 
                 if (retirada && !Number.isNaN(retirada.getTime()) && retirada < now) {
                     if (show) feedback('step1Feedback', 'O horario de retirada nao pode ser antes de agora.', 'warn');
                     return false;
                 }
 
-                if (devolucao && !Number.isNaN(devolucao.getTime()) && devolucao < now) {
-                    if (show) feedback('step1Feedback', 'O horario de devolucao nao pode ser antes de agora.', 'warn');
+                if (devolucao && !Number.isNaN(devolucao.getTime()) && devolução < now) {
+                    if (show) feedback('step1Feedback', 'O horario de devolução nao pode ser antes de agora.', 'warn');
                     return false;
                 }
 
-                if (retirada && devolucao) {
+                if (retirada && devolução) {
                     const retiradaDia = new Date(retirada.getFullYear(), retirada.getMonth(), retirada.getDate());
-                    const devolucaoDia = new Date(devolucao.getFullYear(), devolucao.getMonth(), devolucao.getDate());
+                    const devoluçãoDia = new Date(devolucao.getFullYear(), devolução.getMonth(), devolução.getDate());
                     const minDevolucao = new Date(retiradaDia.getTime() + 86400000);
                     if (devolucaoDia < minDevolucao) {
-                        if (show) feedback('step1Feedback', 'A data de devolucao deve ser ao menos 1 dia apos a retirada.', 'warn');
+                        if (show) feedback('step1Feedback', 'A data de devolução deve ser ao menos 1 dia apos a retirada.', 'warn');
                         return false;
                     }
                 }
 
                 if (dias() <= 0) {
-                    if (show) feedback('step1Feedback', 'A devolucao deve ser ao menos 1 dia depois da retirada.', 'warn');
+                    if (show) feedback('step1Feedback', 'A devolução deve ser ao menos 1 dia depois da retirada.', 'warn');
                     return false;
                 }
                 if (show) feedback('step1Feedback', 'Passo valido.', 'ok');
@@ -1524,12 +1524,12 @@
                 if (pickerInicio) { pickerInicio.clear(); }
                 if (estId) criarPickerInicio(estId);
                 if (estacaoPodeSerDevolucao(estId)) {
-                    const devolucaoSelect = document.getElementById('estacao_devolucao_id');
+                    const devoluçãoSelect = document.getElementById('estacao_devolucao_id');
                     if (devolucaoSelect && String(devolucaoSelect.value || '') !== String(estId)) {
-                        devolucaoSelect.value = String(estId);
-                        devolucaoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        devoluçãoSelect.value = String(estId);
+                        devoluçãoSelect.dispatchEvent(new Event('change', { bubbles: true }));
                     } else {
-                        devolucaoSelect?.dispatchEvent(new Event('change', { bubbles: true }));
+                        devoluçãoSelect?.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                     if (estacaoDevolucaoFeedback) {
                         estacaoDevolucaoFeedback.textContent = 'Devolução ajustada automaticamente para a mesma estação, pois ela aceita checkout.';
@@ -1683,10 +1683,10 @@
                 if (estDev) await criarPickerFim(estDev);
                 else { pickerFim = flatpickr('#picker_data_fim', { locale: 'pt', dateFormat: 'd/m/Y', minDate: 'today', onChange: function(sel) { if(pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0]||null; syncHiddenFim(); onDateHoraChanged(); } }); }
                 if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
-                    const devolucaoSelect = document.getElementById('estacao_devolucao_id');
+                    const devoluçãoSelect = document.getElementById('estacao_devolucao_id');
                     if (devolucaoSelect) {
-                        devolucaoSelect.value = String(estRet);
-                        devolucaoSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                        devoluçãoSelect.value = String(estRet);
+                        devoluçãoSelect.dispatchEvent(new Event('change', { bubbles: true }));
                     }
                 }
                 const oldInicio = dataInicio.value;
@@ -1740,7 +1740,7 @@
                             const ok = restaurarHora('hora_fim', timePart);
                             if (!ok) {
                                 prefillCompleto = false;
-                                feedback('step1Feedback', 'A hora de devolucao informada nao esta disponivel. Escolha outra data e horario.', 'warn');
+                                feedback('step1Feedback', 'A hora de devolução informada nao esta disponivel. Escolha outra data e horario.', 'warn');
                             } else {
                                 syncHiddenFim();
                                 updateTaxaFim();
