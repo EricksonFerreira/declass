@@ -1740,6 +1740,7 @@
             let gruposDisponibilidade = {};
             let gruposQuantidade = {};
             let isBootstrapping = true;
+            let autoSubmitAfterLogin = false;
 
             function money(v) {
                 return new Intl.NumberFormat('pt-BR', {
@@ -1854,10 +1855,9 @@
                 refresh();
                 if (loginPopupContinue && state.step === 4) {
                     sessionStorage.removeItem('site_reserva_auto_continue');
+                    autoSubmitAfterLogin = true;
                     setTimeout(function () {
-                        if (validStep1(false) && validStep2(false) && validCliente()) {
-                            form.requestSubmit();
-                        }
+                        form.requestSubmit();
                     }, 120);
                 } else {
                     sessionStorage.removeItem('site_reserva_auto_continue');
@@ -2587,10 +2587,12 @@
                 const submitButton = document.getElementById('btnSubmit');
                 const loading = document.getElementById('submitLoading');
 
-                if (!validStep1(true) || !validStep2(true) || !validCliente()) {
+                if (!autoSubmitAfterLogin && (!validStep1(true) || !validStep2(true) || !validCliente())) {
                     e.preventDefault();
                     return;
                 }
+
+                autoSubmitAfterLogin = false;
 
                 if (form.dataset.submitting === '1') {
                     e.preventDefault();
