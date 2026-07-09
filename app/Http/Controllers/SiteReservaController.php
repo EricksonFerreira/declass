@@ -731,7 +731,7 @@ class SiteReservaController extends Controller
         if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== StatusReservaEnum::Pendente->value) {
             return redirect()
                 ->route('site.reserva.success', ['reserva' => $reservaItem->id])
-                ->withErrors(['reserva' => 'Reserva nao pode ser paga no status atual.']);
+                ->withErrors(['reserva' => 'Reserva não pode ser paga no status atual.']);
         }
 
         $gatewayPadrao = $this->gatewayEmpresaConfigService->gateway($empresa);
@@ -1264,7 +1264,7 @@ class SiteReservaController extends Controller
         if (isset($reservaItem->status_reserva_id) && (int) $reservaItem->status_reserva_id !== StatusReservaEnum::Pendente->value) {
             return redirect()
                 ->route('site.reserva.success', ['reserva' => $reservaItem->id])
-                ->withErrors(['reserva' => 'Reserva nao pode ser paga no status atual.']);
+                ->withErrors(['reserva' => 'Reserva não pode ser paga no status atual.']);
         }
 
         $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);

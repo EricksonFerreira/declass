@@ -411,40 +411,6 @@
 
         .textarea::placeholder { color: #94a3b8; }
 
-        .toast-wrap {
-            position: fixed;
-            top: 16px;
-            right: 16px;
-            display: grid;
-            gap: 8px;
-            z-index: 60;
-        }
-
-        .toast {
-            min-width: 260px;
-            max-width: 360px;
-            border-radius: 14px;
-            padding: 12px 14px;
-            font-size: 13px;
-            font-weight: 700;
-            box-shadow: 0 18px 30px rgba(15, 23, 42, .12);
-            border: 1px solid #e2e8f0;
-            background: #fff;
-            color: #0f172a;
-        }
-
-        .toast.ok {
-            background: #f0fdf4;
-            color: #166534;
-            border-color: #bbf7d0;
-        }
-
-        .toast.err {
-            background: #fef2f2;
-            color: #991b1b;
-            border-color: #fecaca;
-        }
-
         .section-title {
             margin: 0 0 14px;
             font-size: 1.08rem;
@@ -477,7 +443,6 @@
     </style>
 </head>
 <body>
-    <div class="toast-wrap" id="toastWrap"></div>
     @php
         $satisfacao = $reserva->satisfacao;
         $surveyToneMap15 = [
@@ -692,30 +657,38 @@
         </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         (function () {
-            const toastWrap = document.getElementById('toastWrap');
             const successMessage = @json(session('success'));
             const errorMessages = @json($errors->all());
 
-            function showToast(message, type) {
-                if (!toastWrap || !message) return;
-                const toast = document.createElement('div');
-                toast.className = `toast ${type}`;
-                toast.textContent = message;
-                toastWrap.appendChild(toast);
-                setTimeout(function () {
-                    toast.remove();
-                }, 5000);
+            function showToast(message, icon) {
+                if (!message || typeof Swal === 'undefined' || typeof Swal.fire !== 'function') {
+                    return;
+                }
+
+                Swal.fire({
+                    toast: true,
+                    position: 'top-end',
+                    icon: icon,
+                    title: message,
+                    showConfirmButton: false,
+                    timer: 4500,
+                    timerProgressBar: true,
+                    width: 360,
+                    background: icon === 'success' ? '#f0fdf4' : '#fef2f2',
+                    color: icon === 'success' ? '#166534' : '#991b1b',
+                });
             }
 
             if (successMessage) {
-                showToast(successMessage, 'ok');
+                showToast(successMessage, 'success');
             }
 
             if (Array.isArray(errorMessages)) {
                 errorMessages.forEach(function (msg) {
-                    showToast(msg, 'err');
+                    showToast(msg, 'error');
                 });
             }
         })();
