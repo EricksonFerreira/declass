@@ -867,7 +867,7 @@
                 const hasAny = Boolean(eRet.value || eDev.value || dataInicio.value || dataFim.value);
                 prefillBox.style.display = hasAny ? 'block' : 'none';
                 document.getElementById('prefRet').textContent = `Retirada: ${eRet.options[eRet.selectedIndex]?.text || '-'}`;
-                document.getElementById('prefDev').textContent = `Devolucao: ${eDev.options[eDev.selectedIndex]?.text || '-'}`;
+                document.getElementById('prefDev').textContent = `Devolução: ${eDev.options[eDev.selectedIndex]?.text || '-'}`;
                 document.getElementById('prefDatas').textContent = `Datas: ${dateLabel(dataInicio.value)} até ${dateLabel(dataFim.value)}`;
             }
             function renderStep() {
