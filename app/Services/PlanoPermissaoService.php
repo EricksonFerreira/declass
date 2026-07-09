@@ -50,6 +50,7 @@ class PlanoPermissaoService
         'site.reserva.index',
         'reserva.minhas',
         'reserva.minhas.show',
+        'reserva.minhas.multa.show',
         'reserva.show',
         'reserva.cancelar',
         'reserva.efetuarPagamento',

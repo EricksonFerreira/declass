@@ -218,7 +218,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         $reservas = $query->paginate($perPage);
-        $multas   = $this->multasDoCliente($user);
+        $multas   = $this->multasDoCliente($user, false);
         $multasPendentesCount = $this->multasPendentesCount($user);
 
         $breadcrumb        = $this->breadcrumbService->prepararBreadcrumbIndex('Minhas Reservas');
@@ -246,7 +246,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         return $roleName === 'cliente';
     }
 
-    private function multasDoCliente($user)
+    private function multasDoCliente($user, bool $apenasPendentes = true)
     {
         if (!$user) {
             return collect();
@@ -254,10 +254,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $query = Multa::query()
             ->with(['reserva.usuario', 'veiculo.modelo', 'cliente'])
-            ->whereNull('pago_em')
             ->orderByRaw('CASE WHEN data_vencimento IS NULL THEN 1 ELSE 0 END')
             ->orderBy('data_vencimento')
             ->orderByDesc('id');
+
+        if ($apenasPendentes) {
+            $query->whereNull('pago_em');
+        }
 
         if (SchemaCache::hasColumn('multas', 'empresa_id') && !empty($user->empresa_id)) {
             $query->where('empresa_id', (int) $user->empresa_id);
@@ -574,6 +577,51 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $moduloMultas = (bool) ($empresa?->planoAtivo?->plano?->modulo_multas ?? false);
 
         return view('reserva.show-cliente', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
+    }
+
+    public function showMinhaMulta($id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $multa = Multa::query()
+            ->with([
+                'reserva.usuario',
+                'veiculo.modelo',
+                'veiculo.marca',
+                'cliente',
+                'responsavelLancamento',
+            ])
+            ->findOrFail($id);
+
+        $pertenceAoUsuario = (int) ($multa->cliente_id ?? 0) === (int) $user->id
+            || (int) ($multa->reserva?->user_id ?? 0) === (int) $user->id;
+
+        if (!$pertenceAoUsuario) {
+            return redirect()->route('reserva.minhas')->with('error', 'Voce nao tem permissao para ver essa multa.');
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Minhas Reservas', route('reserva.minhas')),
+            new BreadCrumbItem('Multa #' . $multa->id),
+        ]);
+
+        $valorMulta = (float) ($multa->valor_final ?? $multa->valor_original ?? 0);
+        $statusMulta = strtolower((string) ($multa->status_multa ?? 'pendente'));
+        $podePagar = empty($multa->pago_em);
+        $urlPagamento = route('site.multa.pagamento', ['multa' => $multa->id]);
+
+        return view('reserva.multa-cliente-show', compact(
+            'multa',
+            'breadcrumb',
+            'valorMulta',
+            'statusMulta',
+            'podePagar',
+            'urlPagamento'
+        ))->with('titulo', 'Multa #' . $multa->id);
     }
 
     public function emitirNfse($id)

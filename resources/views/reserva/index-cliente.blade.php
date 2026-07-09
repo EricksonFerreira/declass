@@ -16,7 +16,7 @@
         </button>
         <button type="button" class="btn btn-outline-danger" data-portal-tab="multas">
             <i class="fas fa-exclamation-triangle mr-1"></i> Multas
-            <span class="badge badge-light ml-1">{{ $multasPendentesCount ?? $multas->count() }}</span>
+            <span class="badge badge-light ml-1">{{ $multas->count() }}</span>
         </button>
     </div>
 
@@ -228,14 +228,14 @@
             <div class="card-header px-0 pt-0 pb-1">
                 <div class="d-flex justify-content-between align-items-center">
                     <h3 class="card-title text-sm text-bold">
-                        MULTAS PENDENTES <span class="badge badge-danger">{{ $multasPendentesCount ?? $multas->count() }}</span>
+                        MINHAS MULTAS <span class="badge badge-danger">{{ $multas->count() }}</span>
                     </h3>
                 </div>
             </div>
 
             <div class="card-body px-0 pt-0 pb-1">
                 @if($multas->isEmpty())
-                    <div class="alert alert-success m-3">Nenhuma multa pendente no momento.</div>
+                    <div class="alert alert-success m-3">Nenhuma multa encontrada no momento.</div>
                 @else
                     <div class="multa-cards">
                         @foreach($multas as $multa)
@@ -243,9 +243,13 @@
                                 $valorMulta = (float) ($multa->valor_final ?? $multa->valor_original ?? 0);
                                 $vencimento = $multa->data_vencimento ? \Carbon\Carbon::parse($multa->data_vencimento) : null;
                                 $diasParaVencer = $vencimento ? now()->startOfDay()->diffInDays($vencimento->copy()->startOfDay(), false) : null;
+                                $estaPaga = !empty($multa->pago_em);
                                 $badgeClass = 'badge-info';
                                 $badgeLabel = 'Em aberto';
-                                if ($vencimento && $vencimento->lt(now()->startOfDay())) {
+                                if ($estaPaga) {
+                                    $badgeClass = 'badge-success';
+                                    $badgeLabel = 'Paga';
+                                } elseif ($vencimento && $vencimento->lt(now()->startOfDay())) {
                                     $badgeClass = 'badge-danger';
                                     $badgeLabel = 'Vencida';
                                 } elseif ($vencimento && $diasParaVencer !== null && $diasParaVencer <= 3) {
@@ -253,7 +257,7 @@
                                     $badgeLabel = 'Vencimento próximo';
                                 }
                             @endphp
-                            <article class="multa-card">
+                            <article class="multa-card" onclick="window.location='{{ route('reserva.minhas.multa.show', $multa->id) }}';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.minhas.multa.show', $multa->id) }}';}">
                                 <div class="multa-card__head">
                                     <div>
                                         <div class="multa-card__eyebrow">Multa #{{ $multa->id }}</div>
@@ -281,7 +285,9 @@
                                 </div>
                                 <div class="multa-card__foot">
                                     <div class="multa-card__meta">
-                                        @if($diasParaVencer !== null && $diasParaVencer < 0)
+                                        @if($estaPaga)
+                                            Pagamento concluído
+                                        @elseif($diasParaVencer !== null && $diasParaVencer < 0)
                                             Vencida há {{ abs($diasParaVencer) }} dia(s)
                                         @elseif($diasParaVencer !== null && $diasParaVencer <= 3)
                                             Vence em breve
@@ -289,8 +295,8 @@
                                             Aguardando pagamento
                                         @endif
                                     </div>
-                                    <a href="{{ route('site.multa.pagamento', ['multa' => $multa->id]) }}" class="btn btn-sm btn-danger">
-                                        Pagar multa
+                                    <a href="{{ route('reserva.minhas.multa.show', $multa->id) }}" class="btn btn-sm btn-outline-primary" onclick="event.stopPropagation();">
+                                        Ver detalhes
                                     </a>
                                 </div>
                             </article>
