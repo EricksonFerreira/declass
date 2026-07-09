@@ -1745,6 +1745,7 @@
             let autoSubmitAfterLogin = false;
             let pendingLoginAutoSubmit = false;
             let loginAutoSubmitTimer = null;
+            let loginSignalWatcher = null;
             let loginFlowCompleted = loginPopupSuccess;
             let loginSuccessProcessed = false;
 
@@ -1861,6 +1862,11 @@
                 }
                 refresh();
                 sessionStorage.removeItem('site_reserva_auto_continue');
+                try {
+                    localStorage.removeItem(loginSyncKey);
+                } catch (error) {
+                    // ignore
+                }
                 pendingLoginAutoSubmit = true;
                 triggerLoginAutoSubmit();
             }
@@ -1891,6 +1897,41 @@
                         form.submit();
                     }
                 }, 350);
+            }
+
+            function startLoginSignalWatcher() {
+                if (loginPopupSuccess || loginSignalWatcher) {
+                    return;
+                }
+
+                loginSignalWatcher = setInterval(function() {
+                    if (loginSuccessProcessed) {
+                        clearInterval(loginSignalWatcher);
+                        loginSignalWatcher = null;
+                        return;
+                    }
+
+                    try {
+                        const rawSignal = localStorage.getItem(loginSyncKey);
+                        if (!rawSignal) {
+                            return;
+                        }
+
+                        const payload = JSON.parse(rawSignal);
+                        handleLoginSuccess(payload || {});
+                        clearInterval(loginSignalWatcher);
+                        loginSignalWatcher = null;
+                    } catch (error) {
+                        // ignore
+                    }
+                }, 400);
+
+                setTimeout(function() {
+                    if (loginSignalWatcher) {
+                        clearInterval(loginSignalWatcher);
+                        loginSignalWatcher = null;
+                    }
+                }, 8000);
             }
 
             function refresh() {
@@ -3155,28 +3196,37 @@
                     localStorage.removeItem(loginSyncKey);
                 }
             });
-            if (loginPopupSuccess && window.opener) {
-                const loginPayload = {
+            function publishLoginSuccessSignal(payload) {
+                try {
+                    localStorage.setItem(loginSyncKey, JSON.stringify({
+                        name: payload?.name || authUserName || '',
+                        email: payload?.email || authUserEmail || '',
+                        ts: Date.now(),
+                    }));
+                } catch (error) {
+                    // ignore
+                }
+
+                if (window.opener) {
+                    try {
+                        window.opener.postMessage({
+                            type: 'site-reserva-login-success',
+                            payload: {
+                                name: payload?.name || authUserName,
+                                email: payload?.email || authUserEmail,
+                            }
+                        }, window.location.origin);
+                    } catch (error) {
+                        // ignore
+                    }
+                }
+            }
+
+            if (loginPopupSuccess) {
+                publishLoginSuccessSignal({
                     name: authUserName,
                     email: authUserEmail,
-                    ts: Date.now(),
-                };
-                try {
-                    localStorage.setItem(loginSyncKey, JSON.stringify(loginPayload));
-                } catch (error) {
-                    // ignore
-                }
-                try {
-                    window.opener.postMessage({
-                        type: 'site-reserva-login-success',
-                        payload: {
-                            name: authUserName,
-                            email: authUserEmail,
-                        }
-                    }, window.location.origin);
-                } catch (error) {
-                    // ignore
-                }
+                });
             }
             if (loginPopupSuccess) {
                 setTimeout(function() {
@@ -3313,6 +3363,7 @@
                 })();
             } else {
                 isBootstrapping = false;
+                startLoginSignalWatcher();
             }
 
             // ---- Search modal ----
