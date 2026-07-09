@@ -642,6 +642,7 @@
             let modelosDisponiveis = {};
             let gruposDisponibilidade = {};
             let gruposQuantidade = {};
+            let isBootstrapping = true;
 
             function money(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: moeda || 'BRL' }).format(Number(v || 0)); }
             function dateLabel(v) { const d = new Date(v); if (Number.isNaN(d.getTime())) return '-'; return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(d); }
@@ -686,10 +687,8 @@
                         modalGrupoModelosList.innerHTML = '<div class="feedback">Sem modelos vinculados.</div>';
                     } else {
                         modalGrupoModelosList.innerHTML = modelos.map(function (m) {
-                            const img = m.imagem_url ? `<div class="modelo-thumb"><img src="${m.imagem_url}" alt="${m.nome}"></div>` : '<div class="modelo-thumb"><span>Sem imagem</span></div>';
                             return `
                                 <div class="modelo-card" style="cursor:default">
-                                    ${img}
                                     <div class="modelo-title">${m.nome || ''}</div>
                                 </div>
                             `;
@@ -1311,6 +1310,9 @@
             }
 
             function onDateHoraChanged() {
+                if (isBootstrapping) {
+                    return;
+                }
                 refresh();
                 enforceStep1Gate(false);
                 updatePrefill();
@@ -1756,18 +1758,12 @@
                 Promise.all(restauracoes).then(function() {
                     refresh();
                     updatePrefill();
-                    const step1Ok = validStep1(false);
-                    if (initialStepServer === 2 && prefillCompleto && step1Ok) {
-                        state.step = 2;
-                        renderStep();
+                    state.step = initialStepServer;
+                    renderStep();
+                    if (initialStepServer === 2 && grupo.value) {
                         carregarDisponibilidadeGrupos().then(function() {
-                            if (grupo.value) {
-                                loadDisponibilidade();
-                            }
+                            loadDisponibilidade();
                         });
-                    } else {
-                        state.step = 1;
-                        renderStep();
                     }
                 });
             })();
@@ -1876,7 +1872,6 @@
             })();
 
             renderStep();
-            enforceStep1Gate(false);
             if (!reservaSelecionarModelo) {
                 updateModeloAutoNote('Selecione um grupo para escolher o modelo automaticamente.', null);
             }
@@ -1887,7 +1882,7 @@
             (async function initOld() {
                 await carregarDisponibilidadeGrupos();
                 if (grupo.value) {
-                    await loadDisponibilidade({ autoAdvance: true });
+                    await loadDisponibilidade();
                     if (oldOpcionaisPayload) {
                         try {
                             const arr = JSON.parse(oldOpcionaisPayload);
@@ -1897,6 +1892,7 @@
                 }
                 if (cupomInput.value.trim()) await applyCupom();
                 refresh();
+                isBootstrapping = false;
             })();
         })();
     </script>
