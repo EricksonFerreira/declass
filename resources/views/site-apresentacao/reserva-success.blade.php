@@ -5,107 +5,341 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reserva confirmada | {{ $empresa->nome }}</title>
     <style>
+        :root {
+            --bg: #f4f7fb;
+            --card: #ffffff;
+            --text: #0f172a;
+            --muted: #64748b;
+            --line: #dbe4f0;
+            --primary: #111827;
+            --primary-2: #1e293b;
+            --accent: #22c55e;
+            --accent-soft: #e8f8ef;
+            --shadow: 0 24px 60px rgba(15, 23, 42, .08);
+        }
+
+        * { box-sizing: border-box; }
+
         body {
             margin: 0;
             min-height: 100vh;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: #ffffff;
-            color: #0f172a;
-            display: grid;
-            place-items: center;
-            padding: 18px;
+            background:
+                radial-gradient(circle at top left, rgba(255,255,255,.9), transparent 42%),
+                radial-gradient(circle at 85% 15%, rgba(34,197,94,.10), transparent 24%),
+                linear-gradient(180deg, #fafcff 0%, var(--bg) 100%);
+            color: var(--text);
+            padding: 24px 16px 40px;
         }
 
-        .card {
-            width: min(720px, 100%);
-            background: #ffffff;
-            border-radius: 18px;
-            border: 1px solid #e2e8f0;
+        .wrap {
+            width: min(980px, 100%);
+            margin: 0 auto;
+        }
+
+        .shell {
+            background: rgba(255,255,255,.72);
+            border: 1px solid rgba(219,228,240,.95);
+            border-radius: 24px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+
+        .hero {
             padding: 24px;
-            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
+            background:
+                linear-gradient(135deg, rgba(17,24,39,.96), rgba(31,41,55,.92) 45%, rgba(34,197,94,.92));
+            color: #fff;
+            border-bottom: 1px solid rgba(255,255,255,.08);
         }
 
-        .header {
+        .brand {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 16px;
+            gap: 14px;
+            margin-bottom: 22px;
         }
 
         .logo {
-            width: 48px;
-            height: 48px;
-            border-radius: 12px;
+            width: 56px;
+            height: 56px;
             object-fit: contain;
-            background: #f8fafc;
-            padding: 4px;
-            border: 1px solid #e2e8f0;
+            border-radius: 14px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.14);
+            padding: 5px;
+            flex: 0 0 auto;
         }
 
-        h1 { margin: 0 0 8px; font-size: 1.65rem; }
-        p { margin: 0 0 14px; color: #475569; }
-
-        .details {
-            background: #f8fafc;
-            border-radius: 12px;
-            border: 1px solid #e2e8f0;
-            padding: 12px;
-            margin-bottom: 16px;
+        .brand strong {
+            font-size: 1.08rem;
+            letter-spacing: .01em;
         }
 
-        .row {
-            padding: 6px 0;
-            font-size: .92rem;
-            border-bottom: 1px dashed #e2e8f0;
+        .brand small {
+            display: block;
+            color: rgba(255,255,255,.76);
+            margin-top: 2px;
         }
 
-        .row:last-child { border-bottom: 0; }
+        .hero-grid {
+            display: grid;
+            grid-template-columns: 72px 1fr;
+            gap: 18px;
+            align-items: center;
+        }
 
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
+        .hero-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 999px;
+            background: rgba(255,255,255,.16);
+            display: grid;
+            place-items: center;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
+        }
+
+        .hero-icon svg {
+            width: 34px;
+            height: 34px;
+            fill: #fff;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: clamp(1.75rem, 3vw, 2.5rem);
+            line-height: 1.05;
+        }
+
+        .hero p {
+            margin: 0;
+            color: rgba(255,255,255,.84);
+            font-size: 1.02rem;
+            line-height: 1.55;
+        }
+
+        .content {
+            padding: 22px 24px 26px;
+        }
+
+        .actions-top {
+            display: grid;
+            grid-template-columns: 1.3fr .8fr .8fr;
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             gap: 10px;
+            min-height: 58px;
+            border-radius: 999px;
+            padding: 14px 20px;
+            text-decoration: none;
+            font-weight: 800;
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
         }
 
-        .survey {
+        .btn:hover { transform: translateY(-1px); }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: #fff;
+            box-shadow: 0 16px 28px rgba(15,23,42,.18);
+        }
+
+        .btn-secondary {
+            background: #fff;
+            border: 1px solid var(--line);
+            color: var(--text);
+            box-shadow: 0 8px 18px rgba(15,23,42,.04);
+        }
+
+        .btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+            flex: 0 0 auto;
+        }
+
+        .quick-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding-bottom: 18px;
+            margin-bottom: 18px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .info-card {
+            border: 1px solid var(--line);
+            border-radius: 20px;
+            background: #fff;
+            padding: 18px;
+        }
+
+        .info-card h2 {
+            margin: 0 0 14px;
+            font-size: 1.15rem;
+        }
+
+        .summary-grid {
+            display: grid;
+            gap: 0;
+        }
+
+        .summary-row {
+            display: grid;
+            grid-template-columns: 170px 1fr;
+            gap: 16px;
+            align-items: start;
+            padding: 14px 0;
+            border-bottom: 1px dashed #dce5f0;
+        }
+
+        .summary-row:last-child { border-bottom: 0; }
+
+        .summary-k {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 800;
+            color: #1f2937;
+        }
+
+        .summary-k .mini {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: grid;
+            place-items: center;
+            background: #f1f5f9;
+            color: #475569;
+            flex: 0 0 auto;
+        }
+
+        .summary-v {
+            color: #334155;
+            line-height: 1.4;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 12px;
+            border-radius: 999px;
+            font-size: .78rem;
+            font-weight: 800;
+            letter-spacing: .02em;
+            text-transform: uppercase;
+        }
+
+        .badge-success {
+            background: var(--accent-soft);
+            color: #166534;
+            border: 1px solid #bbf7d0;
+        }
+
+        .badge-neutral {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+
+        .survey-wrap {
             margin-top: 18px;
-            padding-top: 18px;
-            border-top: 1px solid #e2e8f0;
+            border: 1px solid #d9eadf;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #fff;
+            box-shadow: 0 16px 36px rgba(15,23,42,.05);
         }
 
-        .survey h2 {
-            margin: 0 0 6px;
-            font-size: 1.05rem;
+        .survey-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 20px;
+            background: linear-gradient(135deg, #f3fbf5, #eefaf1);
+            border-bottom: 1px solid #d9eadf;
         }
 
-        .survey p.small {
-            font-size: .88rem;
-            color: #64748b;
+        .survey-head-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .survey-head-icon {
+            width: 54px;
+            height: 54px;
+            border-radius: 999px;
+            background: #dcfce7;
+            color: #166534;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+        }
+
+        .survey-head-icon svg {
+            width: 26px;
+            height: 26px;
+            fill: currentColor;
+        }
+
+        .survey-head h3 {
+            margin: 0 0 4px;
+            font-size: 1.08rem;
+        }
+
+        .survey-head p {
+            margin: 0;
+            color: var(--muted);
+        }
+
+        .survey-head .btn {
+            min-height: 48px;
+            padding-inline: 18px;
+        }
+
+        .survey-body {
+            padding: 18px 20px 20px;
+        }
+
+        .survey-submitted {
+            padding: 16px;
+            border-radius: 16px;
+            background: #f8fafc;
+            border: 1px solid #dbe4f0;
+            color: #334155;
         }
 
         .survey-card {
-            margin-top: 14px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 14px;
-            padding: 14px;
+            display: grid;
+            gap: 18px;
         }
 
         .survey-block {
-            margin-bottom: 14px;
+            padding: 14px 0 4px;
         }
 
         .survey-label {
             display: block;
-            font-weight: 700;
-            margin-bottom: 8px;
-            font-size: .92rem;
+            margin: 0 0 10px;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #111827;
         }
 
         .survey-options {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
         }
 
         .survey-option {
@@ -120,258 +354,371 @@
         }
 
         .survey-option span {
-            min-width: 42px;
-            height: 40px;
-            padding: 0 10px;
+            min-width: 52px;
+            height: 44px;
+            padding: 0 14px;
             border-radius: 999px;
             border: 1px solid #cbd5e1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-weight: 800;
+            font-weight: 900;
+            font-size: 1rem;
             background: #fff;
             color: #0f172a;
-            transition: all .15s ease;
-            box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+            box-shadow: 0 1px 2px rgba(15,23,42,.04);
+            transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
         }
 
         .survey-option input:checked + span {
-            color: #0f172a;
-            border-color: rgba(15, 23, 42, .2);
-            box-shadow: 0 10px 18px rgba(15, 23, 42, .08);
-        }
-
-        .survey-tone--0 { background: #B91C1C !important; color: #fff !important; border-color: #991B1B !important; }
-        .survey-tone--1 { background: #B91C1C !important; color: #fff !important; border-color: #991B1B !important; }
-        .survey-tone--2 { background: #DC2626 !important; color: #fff !important; border-color: #B91C1C !important; }
-        .survey-tone--3 { background: #FACC15 !important; color: #111827 !important; border-color: #EAB308 !important; }
-        .survey-tone--4 { background: #4ADE80 !important; color: #064E3B !important; border-color: #22C55E !important; }
-        .survey-tone--5 { background: #166534 !important; color: #fff !important; border-color: #14532D !important; }
-        .survey-tone--6 { background: #EAB308 !important; color: #fff !important; border-color: #CA8A04 !important; }
-        .survey-tone--7 { background: #FACC15 !important; color: #111827 !important; border-color: #EAB308 !important; }
-        .survey-tone--8 { background: #4ADE80 !important; color: #064E3B !important; border-color: #22C55E !important; }
-        .survey-tone--9 { background: #16A34A !important; color: #fff !important; border-color: #15803D !important; }
-        .survey-tone--10 { background: #166534 !important; color: #fff !important; border-color: #14532D !important; }
-
-        .nps-tone--0 { background: #B91C1C !important; color: #fff !important; border-color: #991B1B !important; }
-        .nps-tone--1 { background: #DC2626 !important; color: #fff !important; border-color: #B91C1C !important; }
-        .nps-tone--2 { background: #EF4444 !important; color: #fff !important; border-color: #DC2626 !important; }
-        .nps-tone--3 { background: #F97316 !important; color: #fff !important; border-color: #EA580C !important; }
-        .nps-tone--4 { background: #FB923C !important; color: #fff !important; border-color: #F97316 !important; }
-        .nps-tone--5 { background: #F59E0B !important; color: #fff !important; border-color: #D97706 !important; }
-        .nps-tone--6 { background: #EAB308 !important; color: #fff !important; border-color: #CA8A04 !important; }
-        .nps-tone--7 { background: #FACC15 !important; color: #111827 !important; border-color: #EAB308 !important; }
-        .nps-tone--8 { background: #4ADE80 !important; color: #064E3B !important; border-color: #22C55E !important; }
-        .nps-tone--9 { background: #16A34A !important; color: #fff !important; border-color: #15803D !important; }
-        .nps-tone--10 { background: #166534 !important; color: #fff !important; border-color: #14532D !important; }
-
-        .survey-option input:checked + span.survey-tone--1,
-        .survey-option input:checked + span.survey-tone--2,
-        .survey-option input:checked + span.survey-tone--3,
-        .survey-option input:checked + span.survey-tone--4,
-        .survey-option input:checked + span.survey-tone--5,
-        .survey-option input:checked + span.survey-tone--0,
-        .survey-option input:checked + span.survey-tone--6,
-        .survey-option input:checked + span.survey-tone--7,
-        .survey-option input:checked + span.survey-tone--8,
-        .survey-option input:checked + span.survey-tone--9,
-        .survey-option input:checked + span.survey-tone--10 {
             transform: translateY(-1px) scale(1.03);
+            box-shadow: 0 10px 18px rgba(15,23,42,.08);
         }
 
-        .survey-textarea {
-            width: 100%;
-            min-height: 84px;
-            border-radius: 12px;
-            border: 1px solid #cbd5e1;
-            background: #ffffff;
-            color: #0f172a;
-            padding: 10px 12px;
-            resize: vertical;
-            outline: none;
-        }
+        .survey-tone--1 { background:#b91c1c !important; color:#fff !important; border-color:#991b1b !important; }
+        .survey-tone--2 { background:#dc2626 !important; color:#fff !important; border-color:#b91c1c !important; }
+        .survey-tone--3 { background:#fde047 !important; color:#111827 !important; border-color:#facc15 !important; }
+        .survey-tone--4 { background:#86efac !important; color:#064e3b !important; border-color:#4ade80 !important; }
+        .survey-tone--5 { background:#166534 !important; color:#fff !important; border-color:#14532d !important; }
 
-        .survey-textarea::placeholder { color: #94a3b8; }
+        .nps-tone--0 { background:#b91c1c !important; color:#fff !important; border-color:#991b1b !important; }
+        .nps-tone--1 { background:#dc2626 !important; color:#fff !important; border-color:#b91c1c !important; }
+        .nps-tone--2 { background:#ef4444 !important; color:#fff !important; border-color:#dc2626 !important; }
+        .nps-tone--3 { background:#f97316 !important; color:#fff !important; border-color:#ea580c !important; }
+        .nps-tone--4 { background:#fb923c !important; color:#fff !important; border-color:#f97316 !important; }
+        .nps-tone--5 { background:#f59e0b !important; color:#fff !important; border-color:#d97706 !important; }
+        .nps-tone--6 { background:#eab308 !important; color:#fff !important; border-color:#ca8a04 !important; }
+        .nps-tone--7 { background:#facc15 !important; color:#111827 !important; border-color:#eab308 !important; }
+        .nps-tone--8 { background:#4ade80 !important; color:#064e3b !important; border-color:#22c55e !important; }
+        .nps-tone--9 { background:#16a34a !important; color:#fff !important; border-color:#15803d !important; }
+        .nps-tone--10 { background:#166534 !important; color:#fff !important; border-color:#14532d !important; }
 
         .survey-note {
-            font-size: .78rem;
+            margin-top: 8px;
+            font-size: .82rem;
             color: #64748b;
-            margin-top: 6px;
         }
 
-        .survey-submitted {
-            margin-top: 14px;
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-        }
-
-        .btn {
-            border-radius: 999px;
-            padding: 10px 14px;
-            font-weight: 700;
-            text-decoration: none;
-            font-size: .86rem;
-        }
-
-        .btn-primary {
-            background: #0f172a;
-            color: #ffffff;
-        }
-
-        .btn-secondary {
+        .textarea {
+            width: 100%;
+            min-height: 120px;
+            resize: vertical;
+            border-radius: 16px;
             border: 1px solid #cbd5e1;
-            color: #0f172a;
             background: #fff;
+            color: #0f172a;
+            padding: 12px 14px;
+            outline: none;
+            font: inherit;
         }
-        .toast-wrap { position: fixed; top: 16px; right: 16px; display: grid; gap: 8px; z-index: 60; }
-        .toast { min-width: 260px; max-width: 360px; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700; box-shadow: 0 18px 30px rgba(15, 23, 42, .12); border: 1px solid #e2e8f0; background: #fff; color: #0f172a; }
-        .toast.ok { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
-        .toast.err { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
+
+        .textarea::placeholder { color: #94a3b8; }
+
+        .toast-wrap {
+            position: fixed;
+            top: 16px;
+            right: 16px;
+            display: grid;
+            gap: 8px;
+            z-index: 60;
+        }
+
+        .toast {
+            min-width: 260px;
+            max-width: 360px;
+            border-radius: 14px;
+            padding: 12px 14px;
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: 0 18px 30px rgba(15, 23, 42, .12);
+            border: 1px solid #e2e8f0;
+            background: #fff;
+            color: #0f172a;
+        }
+
+        .toast.ok {
+            background: #f0fdf4;
+            color: #166534;
+            border-color: #bbf7d0;
+        }
+
+        .toast.err {
+            background: #fef2f2;
+            color: #991b1b;
+            border-color: #fecaca;
+        }
+
+        .section-title {
+            margin: 0 0 14px;
+            font-size: 1.08rem;
+        }
+
+        .muted {
+            color: var(--muted);
+        }
+
+        @media (max-width: 860px) {
+            .actions-top,
+            .quick-row {
+                grid-template-columns: 1fr;
+            }
+
+            .summary-row {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+
+            .survey-head {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .survey-head-left {
+                align-items: flex-start;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="toast-wrap" id="toastWrap"></div>
-    <section class="card">
-        @php
-            $satisfacao = $reserva->satisfacao;
-            $surveyToneMap15 = [
-                1 => 'survey-tone--1',
-                2 => 'survey-tone--2',
-                3 => 'survey-tone--3',
-                4 => 'survey-tone--4',
-                5 => 'survey-tone--5',
-            ];
-            $surveyToneMap010 = [
-                0 => 'nps-tone--0',
-                1 => 'nps-tone--1',
-                2 => 'nps-tone--2',
-                3 => 'nps-tone--3',
-                4 => 'nps-tone--4',
-                5 => 'nps-tone--5',
-                6 => 'nps-tone--6',
-                7 => 'nps-tone--7',
-                8 => 'nps-tone--8',
-                9 => 'nps-tone--9',
-                10 => 'nps-tone--10',
-            ];
-        @endphp
-        <div class="header">
-            @if(!empty($empresa->logo_url))
-                <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}" class="logo">
-            @endif
-            <strong>{{ $empresa->nome }}</strong>
-        </div>
+    @php
+        $satisfacao = $reserva->satisfacao;
+        $surveyToneMap15 = [
+            1 => 'survey-tone--1',
+            2 => 'survey-tone--2',
+            3 => 'survey-tone--3',
+            4 => 'survey-tone--4',
+            5 => 'survey-tone--5',
+        ];
+        $surveyToneMap010 = [
+            0 => 'nps-tone--0',
+            1 => 'nps-tone--1',
+            2 => 'nps-tone--2',
+            3 => 'nps-tone--3',
+            4 => 'nps-tone--4',
+            5 => 'nps-tone--5',
+            6 => 'nps-tone--6',
+            7 => 'nps-tone--7',
+            8 => 'nps-tone--8',
+            9 => 'nps-tone--9',
+            10 => 'nps-tone--10',
+        ];
+        $dataInicio = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio) : null;
+        $dataFim = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
+        $retiradaTexto = trim(($reserva->estacaoRetirada?->nome ?? '-') . ' ' . ($dataInicio ? $dataInicio->format('d/m/Y H:i') : '-'));
+        $devolucaoTexto = trim(($reserva->estacaoDevolucao?->nome ?? '-') . ' ' . ($dataFim ? $dataFim->format('d/m/Y H:i') : '-'));
+        $totalReserva = $reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? $reserva->valor_total_tarifa_base ?? $reserva->tarifa_base * max(1, (int) ($reserva->quantidade_dias ?? 1)) ?? 0;
+        $pagamentoPendente = !$reserva->isPagamentoEfetuado();
+    @endphp
 
-        <h1>Reserva recebida com sucesso</h1>
-        <p>Seu atendimento foi registrado. Para seguir com o pagamento, clique no botao abaixo.</p>
-
-        <div class="details">
-            <div class="row"><strong>Protocolo:</strong> #{{ $reserva->id }}</div>
-            <div class="row"><strong>Cliente:</strong> {{ $reserva->usuario?->nome ?? 'Nao informado' }}</div>
-            <div class="row"><strong>Retirada:</strong> {{ $reserva->estacaoRetirada?->nome ?? '-' }} em {{ \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}</div>
-            <div class="row"><strong>Devolucao:</strong> {{ $reserva->estacaoDevolucao?->nome ?? '-' }} em {{ \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}</div>
-            <div class="row"><strong>Modelo:</strong> {{ $reserva->modelos?->nome ?? '-' }}</div>
-        </div>
-
-        <div class="actions">
-            <a href="{{ $urlNovaReserva }}" class="btn btn-primary">Nova reserva</a>
-            <a href="{{ route('site.apresentacao') }}" class="btn btn-secondary">Voltar ao site</a>
-            @if(!empty($urlPagamento))
-                @if($isAuth)
-                    <a href="{{ $urlPagamento }}" class="btn btn-secondary">Ir para pagamento</a>
-                @else
-                    <a href="{{ $loginUrl }}" class="btn btn-secondary">Fazer login para pagar</a>
-                @endif
-            @endif
-            <a href="{{ $urlAdmin }}" class="btn btn-secondary">Area administrativa</a>
-        </div>
-
-        <div class="survey">
-            <h2>Ajude a gente a melhorar</h2>
-            <p class="small">Leva menos de 30 segundos. São perguntas rápidas para entendermos sua experiência.</p>
-
-            @if($satisfacao)
-                <div class="survey-submitted">
-                    <strong>Feedback registrado.</strong>
-                    <div class="mt-1">Obrigado pela contribuição! Sua resposta já foi salva.</div>
+    <main class="wrap">
+        <section class="shell">
+            <div class="hero">
+                <div class="brand">
+                    @if(!empty($empresa->logo_url))
+                        <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}" class="logo">
+                    @endif
+                    <div>
+                        <strong>{{ $empresa->nome }}</strong>
+                        <small>Reserva criada com sucesso</small>
+                    </div>
                 </div>
-            @else
-                <form method="POST" action="{{ route('site.reserva.satisfacao.store', $reserva->id) }}" class="survey-card">
-                    @csrf
 
-                    <div class="survey-block">
-                        <label class="survey-label">1. Como foi sua experiência geral?</label>
-                        <div class="survey-options">
-                            @for($i = 1; $i <= 5; $i++)
-                                <label class="survey-option">
-                                    <input type="radio" name="satisfacao_geral" value="{{ $i }}" {{ old('satisfacao_geral') == $i ? 'checked' : '' }} required>
-                                    <span class="{{ $surveyToneMap15[$i] ?? '' }}">{{ $i }}</span>
-                                </label>
-                            @endfor
+                <div class="hero-grid">
+                    <div class="hero-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                    </div>
+                    <div>
+                        <h1>Reserva recebida com sucesso!</h1>
+                        <p>Sua reserva foi registrada. Para confirmar sua locação, siga para o pagamento e finalize os próximos passos com segurança.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content">
+                <div class="actions-top">
+                    @if(!empty($urlPagamento))
+                        @if($isAuth)
+                            <a href="{{ $urlPagamento }}" class="btn btn-primary">
+                                <svg viewBox="0 0 24 24"><path d="M20 8V7a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4v-1h2v-2H2V8h18Zm-6 8H4V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2Z"/></svg>
+                                Ir para pagamento
+                            </a>
+                        @else
+                            <a href="{{ $loginUrl }}" class="btn btn-primary">
+                                <svg viewBox="0 0 24 24"><path d="M20 8V7a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4v-1h2v-2H2V8h18Zm-6 8H4V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2Z"/></svg>
+                                Fazer login para pagar
+                            </a>
+                        @endif
+                    @endif
+                    <a href="{{ $urlNovaReserva }}" class="btn btn-secondary">
+                        <svg viewBox="0 0 24 24"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6 0 1.03-.26 1.99-.72 2.84l1.46 1.46A8.95 8.95 0 0 0 21 15c0-4.97-4.03-9-9-9Zm-6.74.16A8.95 8.95 0 0 0 3 9c0 4.97 4.03 9 9 9v3l5-5-5-5v3c-3.31 0-6-2.69-6-6 0-1.03.26-1.99.72-2.84L5.26 5.16Z"/></svg>
+                        Nova reserva
+                    </a>
+                    <a href="{{ $urlAdmin }}" class="btn btn-secondary">
+                        <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4Zm0 18c-3.88-1.02-7-5.14-7-8.97V7.3l7-3.11 7 3.11v3.73C19 14.86 15.88 18.98 12 20Zm-1-5h2v2h-2v-2Zm0-8h2v6h-2V7Z"/></svg>
+                        Voltar ao site
+                    </a>
+                </div>
+
+                <div class="quick-row">
+                    <div class="info-card">
+                        <h2>Resumo da reserva</h2>
+                        <div class="summary-grid">
+                            <div class="summary-row">
+                                <div class="summary-k"><span class="mini">#</span> Protocolo</div>
+                                <div class="summary-v">#{{ $reserva->id }}</div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-k"><span class="mini">👤</span> Cliente</div>
+                                <div class="summary-v">{{ $reserva->usuario?->nome ?? 'Nao informado' }}</div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-k"><span class="mini">📍</span> Retirada</div>
+                                <div class="summary-v">{{ $retiradaTexto }}</div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-k"><span class="mini">↩</span> Devolução</div>
+                                <div class="summary-v">{{ $devolucaoTexto }}</div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-k"><span class="mini">🚗</span> Modelo</div>
+                                <div class="summary-v">
+                                    {{ $reserva->modelos?->nome ?? '-' }}
+                                    @if(!empty($reserva->grupoFrota?->nome))
+                                        <div class="muted">{{ $reserva->grupoFrota->nome }}</div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-k"><span class="mini">R$</span> Total</div>
+                                <div class="summary-v"><strong>{{ $empresa->simbolo_moeda ?? 'R$' }} {{ number_format((float) $totalReserva, 2, ',', '.') }}</strong></div>
+                            </div>
+                            <div class="summary-row">
+                                <div class="summary-k"><span class="mini">⏱</span> Pagamento</div>
+                                <div class="summary-v">
+                                    <span class="badge {{ $pagamentoPendente ? 'badge-neutral' : 'badge-success' }}">
+                                        {{ $pagamentoPendente ? 'Pendente' : 'Pago' }}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="survey-block">
-                        <label class="survey-label">2. Foi fácil concluir a reserva?</label>
-                        <div class="survey-options">
-                            @for($i = 1; $i <= 5; $i++)
-                                <label class="survey-option">
-                                    <input type="radio" name="facilidade_reserva" value="{{ $i }}" {{ old('facilidade_reserva') == $i ? 'checked' : '' }} required>
-                                    <span class="{{ $surveyToneMap15[$i] ?? '' }}">{{ $i }}</span>
-                                </label>
-                            @endfor
+                    <div class="info-card">
+                        <h2>Próximos passos</h2>
+                        <p class="muted" style="margin-top:0;line-height:1.6">
+                            Revise os dados acima. Se o pagamento ainda não foi concluído, use o botão principal para finalizar.
+                            Depois disso, sua reserva segue para confirmação operacional.
+                        </p>
+                        <div style="display:grid;gap:10px;margin-top:18px">
+                            <div class="badge badge-success" style="justify-content:flex-start;">Reserva registrada</div>
+                            <div class="badge badge-neutral" style="justify-content:flex-start;">Pagamento e validação</div>
                         </div>
                     </div>
+                </div>
 
-                    <div class="survey-block">
-                        <label class="survey-label">3. De 0 a 10, quanto você recomendaria a empresa?</label>
-                        <div class="survey-options">
-                            @for($i = 0; $i <= 10; $i++)
-                                <label class="survey-option">
-                                    <input type="radio" name="nps_nota" value="{{ $i }}" {{ old('nps_nota') !== null && (string) old('nps_nota') === (string) $i ? 'checked' : '' }} required>
-                                    <span class="{{ $surveyToneMap010[$i] ?? '' }}">{{ $i }}</span>
-                                </label>
-                            @endfor
+                <section class="survey-wrap">
+                    <div class="survey-head">
+                        <div class="survey-head-left">
+                            <div class="survey-head-icon" aria-hidden="true">
+                                <svg viewBox="0 0 24 24"><path d="M12 3C6.48 3 2 6.91 2 11.75c0 2.82 1.51 5.31 3.86 6.93L5 22l3.69-2.32c1.03.23 2.13.35 3.31.35 5.52 0 10-3.91 10-8.75S17.52 3 12 3Zm-1 13H9v-2h2v2Zm1.8-5.75-.9.92c-.72.73-.9 1.18-.9 2.08h-2v-.5c0-1.08.18-1.72.9-2.44l1.24-1.26A1.99 1.99 0 0 0 12 8a2 2 0 0 0-2 2H8a4 4 0 1 1 4.8 3.91Z"/></svg>
+                            </div>
+                            <div>
+                                <h3>Ajude a gente a melhorar</h3>
+                                <p>Leva menos de 30 segundos.</p>
+                            </div>
                         </div>
-                        <div class="survey-note">0 = não recomendaria | 10 = recomendaria com certeza</div>
+                        <a href="#avaliacao" class="btn btn-secondary">Responder avaliação</a>
                     </div>
 
-                    <div class="survey-block mb-0">
-                        <label class="survey-label" for="comentario">O que podemos melhorar? <span style="font-weight:400;">(opcional)</span></label>
-                        <textarea id="comentario" name="comentario" class="survey-textarea" placeholder="Uma sugestão rápida já ajuda bastante.">{{ old('comentario') }}</textarea>
-                    </div>
+                    <div class="survey-body" id="avaliacao">
+                        @if($satisfacao)
+                            <div class="survey-submitted">
+                                <strong>Feedback já enviado.</strong>
+                                <div style="margin-top:6px;">Obrigado pela sua avaliação. Sua resposta já foi salva.</div>
+                            </div>
+                        @else
+                            <form method="POST" action="{{ route('site.reserva.satisfacao.store', $reserva->id) }}" class="survey-card">
+                                @csrf
 
-                    <div class="mt-3">
-                        <button type="submit" class="btn btn-primary">Enviar feedback</button>
+                                <div class="survey-block">
+                                    <label class="survey-label">1. Como foi sua experiência geral?</label>
+                                    <div class="survey-options">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <label class="survey-option">
+                                                <input type="radio" name="satisfacao_geral" value="{{ $i }}" {{ old('satisfacao_geral') == $i ? 'checked' : '' }} required>
+                                                <span class="{{ $surveyToneMap15[$i] ?? '' }}">{{ $i }}</span>
+                                            </label>
+                                        @endfor
+                                    </div>
+                                </div>
+
+                                <div class="survey-block">
+                                    <label class="survey-label">2. Foi fácil concluir a reserva?</label>
+                                    <div class="survey-options">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            <label class="survey-option">
+                                                <input type="radio" name="facilidade_reserva" value="{{ $i }}" {{ old('facilidade_reserva') == $i ? 'checked' : '' }} required>
+                                                <span class="{{ $surveyToneMap15[$i] ?? '' }}">{{ $i }}</span>
+                                            </label>
+                                        @endfor
+                                    </div>
+                                </div>
+
+                                <div class="survey-block">
+                                    <label class="survey-label">3. De 0 a 10, quanto você recomendaria a empresa?</label>
+                                    <div class="survey-options">
+                                        @for($i = 0; $i <= 10; $i++)
+                                            <label class="survey-option">
+                                                <input type="radio" name="nps_nota" value="{{ $i }}" {{ old('nps_nota') !== null && (string) old('nps_nota') === (string) $i ? 'checked' : '' }} required>
+                                                <span class="{{ $surveyToneMap010[$i] ?? '' }}">{{ $i }}</span>
+                                            </label>
+                                        @endfor
+                                    </div>
+                                    <div class="survey-note">0 = não recomendaria | 10 = recomendaria com certeza</div>
+                                </div>
+
+                                <div class="survey-block">
+                                    <label class="survey-label" for="comentario">O que podemos melhorar? <span style="font-weight:400;">(opcional)</span></label>
+                                    <textarea id="comentario" name="comentario" class="textarea" placeholder="Uma sugestão rápida já ajuda bastante.">{{ old('comentario') }}</textarea>
+                                </div>
+
+                                <div style="display:flex;justify-content:flex-start;gap:10px;">
+                                    <button type="submit" class="btn btn-primary">Enviar feedback</button>
+                                </div>
+                            </form>
+                        @endif
                     </div>
-                </form>
-            @endif
-        </div>
-    </section>
+                </section>
+            </div>
+        </section>
+    </main>
+
     <script>
         (function () {
             const toastWrap = document.getElementById('toastWrap');
             const successMessage = @json(session('success'));
             const errorMessages = @json($errors->all());
 
-            const showToast = (message, type) => {
+            function showToast(message, type) {
                 if (!toastWrap || !message) return;
                 const toast = document.createElement('div');
                 toast.className = `toast ${type}`;
                 toast.textContent = message;
                 toastWrap.appendChild(toast);
-                setTimeout(() => {
+                setTimeout(function () {
                     toast.remove();
                 }, 5000);
-            };
+            }
 
             if (successMessage) {
                 showToast(successMessage, 'ok');
             }
+
             if (Array.isArray(errorMessages)) {
-                errorMessages.forEach((msg) => showToast(msg, 'err'));
+                errorMessages.forEach(function (msg) {
+                    showToast(msg, 'err');
+                });
             }
         })();
     </script>
