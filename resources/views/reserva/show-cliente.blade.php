@@ -470,7 +470,7 @@
 
             <div class="rs-card mb-3">
                 <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-list-check"></i></div>
+                    <div class="rs-card__icon"><i class="fas fa-list"></i></div>
                     <div>
                         <div class="rs-card__title">Resumo rápido</div>
                         <div class="rs-card__sub">As informações que mais importam</div>
