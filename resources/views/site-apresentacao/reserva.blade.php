@@ -492,6 +492,22 @@
             </form>
         </section>
 
+        <div class="site-modal-backdrop" id="modalGrupoModelosBackdrop" aria-hidden="true">
+            <div class="site-modal" role="dialog" aria-modal="true" aria-labelledby="modalGrupoModelosTitle">
+                <div class="site-modal-header">
+                    <h2 id="modalGrupoModelosTitle">Modelos do grupo</h2>
+                    <button type="button" class="site-modal-close" id="modalGrupoModelosClose">&times;</button>
+                </div>
+                <div class="site-modal-body">
+                    <div id="modalGrupoModelosInfo" class="feedback" style="margin-top:0;margin-bottom:12px;">Selecione um grupo para ver os modelos.</div>
+                    <div id="modalGrupoModelosList" class="modelos-grid"></div>
+                </div>
+                <div class="site-modal-footer">
+                    <button type="button" class="btn btn-secondary" id="modalGrupoModelosFechar">Fechar</button>
+                </div>
+            </div>
+        </div>
+
         <aside class="card summary">
             <h3>Resumo</h3>
             <div class="sum"><span>Diarias</span><strong id="sDias">0 dias</strong></div>
@@ -612,11 +628,18 @@
             const clientCadastroFields = document.querySelectorAll('#clientCadastroFields input, #clientCadastroFields select, #clientCadastroFields textarea');
             const clientFeedback = document.getElementById('clientFeedback');
             const estacaoDevolucaoFeedback = document.getElementById('estacao_devolucao_feedback');
+            const modalGrupoModelosBackdrop = document.getElementById('modalGrupoModelosBackdrop');
+            const modalGrupoModelosTitle = document.getElementById('modalGrupoModelosTitle');
+            const modalGrupoModelosInfo = document.getElementById('modalGrupoModelosInfo');
+            const modalGrupoModelosList = document.getElementById('modalGrupoModelosList');
+            const modalGrupoModelosClose = document.getElementById('modalGrupoModelosClose');
+            const modalGrupoModelosFechar = document.getElementById('modalGrupoModelosFechar');
             const modoInput = document.getElementById('modo_cliente');
             const usarUsuarioLogadoInput = document.getElementById('usar_usuario_logado');
             let clientMode = isAuth ? 'login' : 'cadastro';
             let modelosDisponiveis = {};
             let gruposDisponibilidade = {};
+            let gruposQuantidade = {};
 
             function money(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: moeda || 'BRL' }).format(Number(v || 0)); }
             function dateLabel(v) { const d = new Date(v); if (Number.isNaN(d.getTime())) return '-'; return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(d); }
@@ -638,6 +661,49 @@
                 return Math.max(0, subtotal - desconto + state.taxaColeta + state.taxaEntrega);
             }
             function feedback(id, msg, tone) { const el = document.getElementById(id); el.textContent = msg; el.classList.remove('ok', 'warn'); if (tone) el.classList.add(tone); }
+            function openGrupoModelosModal(grupoData) {
+                if (!modalGrupoModelosBackdrop) {
+                    return;
+                }
+
+                const modelos = Array.isArray(grupoData?.modelos) ? grupoData.modelos : [];
+                const nome = grupoData?.nome || 'Grupo';
+                if (modalGrupoModelosTitle) {
+                    modalGrupoModelosTitle.textContent = `Modelos do grupo: ${nome}`;
+                }
+                if (modalGrupoModelosInfo) {
+                    const qtd = Number(grupoData?.qtd_veiculos_disponiveis || 0);
+                    modalGrupoModelosInfo.textContent = qtd > 0
+                        ? `${qtd} veiculo(s) disponivel(is) neste grupo para o periodo selecionado.`
+                        : 'Nenhum veiculo disponivel neste grupo para o periodo selecionado.';
+                    modalGrupoModelosInfo.classList.toggle('ok', qtd > 0);
+                    modalGrupoModelosInfo.classList.toggle('warn', qtd <= 0);
+                }
+                if (modalGrupoModelosList) {
+                    if (!modelos.length) {
+                        modalGrupoModelosList.innerHTML = '<div class="feedback">Sem modelos vinculados.</div>';
+                    } else {
+                        modalGrupoModelosList.innerHTML = modelos.map(function (m) {
+                            const img = m.imagem_url ? `<div class="modelo-thumb"><img src="${m.imagem_url}" alt="${m.nome}"></div>` : '<div class="modelo-thumb"><span>Sem imagem</span></div>';
+                            return `
+                                <div class="modelo-card" style="cursor:default">
+                                    ${img}
+                                    <div class="modelo-title">${m.nome || ''}</div>
+                                </div>
+                            `;
+                        }).join('');
+                    }
+                }
+                modalGrupoModelosBackdrop.classList.add('open');
+                modalGrupoModelosBackdrop.setAttribute('aria-hidden', 'false');
+            }
+            function closeGrupoModelosModal() {
+                if (!modalGrupoModelosBackdrop) {
+                    return;
+                }
+                modalGrupoModelosBackdrop.classList.remove('open');
+                modalGrupoModelosBackdrop.setAttribute('aria-hidden', 'true');
+            }
             function refresh() {
                 state.dias = dias();
                 document.getElementById('sDias').textContent = `${state.dias || 0} dias`;
@@ -708,12 +774,21 @@
                     const id = String(card.getAttribute('data-grupo-id') || '');
                     const disponivel = gruposDisponibilidade[id];
                     const isAvailable = disponivel !== false;
+                    const qtd = Number(gruposQuantidade[id] || 0);
                     card.dataset.disponivel = isAvailable ? '1' : '0';
+                    card.dataset.qtdVeiculos = String(qtd);
                     card.classList.toggle('disabled', !isAvailable);
                     card.setAttribute('aria-disabled', isAvailable ? 'false' : 'true');
                     card.title = isAvailable
-                        ? 'Grupo disponível neste período.'
+                        ? `${qtd} veículo(s) disponível(is) neste período.`
                         : 'Este grupo de frota não possui veículos disponíveis para a estação e período selecionados.';
+                    const availability = card.querySelector('.grupo-availability');
+                    if (availability) {
+                        availability.classList.toggle('no', !isAvailable);
+                        availability.textContent = isAvailable
+                            ? `${qtd} veiculo(s) disponivel(is)`
+                            : 'Indisponivel no periodo';
+                    }
                 });
 
                 if (grupo.value) {
@@ -1032,6 +1107,7 @@
                 try {
                     feedback('disponibilidadeFeedback', 'Verificando disponibilidade dos grupos...', null);
                     gruposDisponibilidade = {};
+                    gruposQuantidade = {};
                     let page = 1;
                     let lastPage = 1;
 
@@ -1043,6 +1119,7 @@
 
                         (Array.isArray(data.data) ? data.data : []).forEach(function (item) {
                             gruposDisponibilidade[String(item.id)] = item.disponivel !== false;
+                            gruposQuantidade[String(item.id)] = Number(item.qtd_veiculos_disponiveis || 0);
                         });
 
                         lastPage = Number(data.last_page || 1);
@@ -1549,6 +1626,28 @@
             }
             if (gruposGrid) {
                 gruposGrid.addEventListener('click', function (ev) {
+                    const modelosBtn = ev.target instanceof HTMLElement ? ev.target.closest('.grupo-modelos-open') : null;
+                    if (modelosBtn) {
+                        const card = modelosBtn.closest('.grupo-card');
+                        if (!card) {
+                            return;
+                        }
+                        try {
+                            const modelos = JSON.parse(card.getAttribute('data-modelos') || '[]');
+                            openGrupoModelosModal({
+                                nome: card.getAttribute('data-grupo-nome') || 'Grupo',
+                                modelos: Array.isArray(modelos) ? modelos : [],
+                                qtd_veiculos_disponiveis: Number(card.getAttribute('data-qtd-veiculos') || 0),
+                            });
+                        } catch (error) {
+                            openGrupoModelosModal({
+                                nome: card.getAttribute('data-grupo-nome') || 'Grupo',
+                                modelos: [],
+                                qtd_veiculos_disponiveis: Number(card.getAttribute('data-qtd-veiculos') || 0),
+                            });
+                        }
+                        return;
+                    }
                     const card = ev.target instanceof HTMLElement ? ev.target.closest('.grupo-card') : null;
                     if (!card) return;
                       if (card.dataset.disponivel === '0') return;
@@ -1558,6 +1657,15 @@
                     highlightGrupo();
                     const changeEvent = new Event('change', { bubbles: true });
                     grupo.dispatchEvent(changeEvent);
+                });
+            }
+            if (modalGrupoModelosClose) modalGrupoModelosClose.addEventListener('click', closeGrupoModelosModal);
+            if (modalGrupoModelosFechar) modalGrupoModelosFechar.addEventListener('click', closeGrupoModelosModal);
+            if (modalGrupoModelosBackdrop) {
+                modalGrupoModelosBackdrop.addEventListener('click', function (e) {
+                    if (e.target === modalGrupoModelosBackdrop) {
+                        closeGrupoModelosModal();
+                    }
                 });
             }
             maskCelular();
@@ -1707,13 +1815,16 @@
                                 const marcas = (g.marcas||[]).map(function(m){ return `<span class="pgf-badge">${m}</span>`; }).join('');
                                 const segs = (g.segmentos||[]).map(function(s){ return `<span class="pgf-badge">${s}</span>`; }).join('');
                                 const modelos = (g.modelos||[]).slice(0,3).map(function(m){ return `<span class="pgf-badge">${m.nome}</span>`; }).join('');
+                                const qtd = Number(g.qtd_veiculos_disponiveis || 0);
+                                const disponivel = g.disponivel !== false && qtd > 0;
                                 return `<tr>
                                     <td>${img}</td>
                                     <td><strong style="font-size:13px">${g.nome}</strong>${marcas ? '<br>'+marcas : ''}</td>
                                     <td>${modelos}</td>
                                     <td>${segs}</td>
                                     <td style="text-align:right;font-weight:700">${money(g.valor_diario)}</td>
-                                    <td><button type="button" class="btn ${g.disponivel === false ? 'btn-secondary' : 'btn-primary'} pgf-selecionar" data-grupo-id="${g.id}" data-grupo-nome="${g.nome}" data-tarifa="${g.valor_diario}" data-disponivel="${g.disponivel === false ? '0' : '1'}" style="min-height:30px;font-size:12px;padding:4px 10px" ${g.disponivel === false ? 'disabled' : ''}>${g.disponivel === false ? 'Indisponível' : 'Selecionar'}</button></td>
+                                    <td style="font-weight:700">${qtd} veiculo(s)</td>
+                                    <td><button type="button" class="btn ${disponivel ? 'btn-primary' : 'btn-secondary'} pgf-selecionar" data-grupo-id="${g.id}" data-grupo-nome="${g.nome}" data-tarifa="${g.valor_diario}" data-disponivel="${disponivel ? '1' : '0'}" data-qtd-veiculos="${qtd}" style="min-height:30px;font-size:12px;padding:4px 10px" ${!disponivel ? 'disabled' : ''}>${disponivel ? 'Selecionar' : 'Indisponível'}</button></td>
                                 </tr>`;
                             }).join('');
                             // pagination

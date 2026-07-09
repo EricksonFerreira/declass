@@ -1468,7 +1468,7 @@ class SiteReservaController extends Controller
             ->with(['caracteristicas', 'modelos'])
             ->get(['id', 'nome', 'valor_diario', 'imagem', 'imagens'])
             ->map(function (GrupoFrota $grupo) use ($temDisponibilidade, $estacaoRetiradaId, $dataInicio, $dataFim): array {
-                $qtdVeiculosDisponiveis = 0;
+                $qtdVeiculosDisponiveis = null;
                 if ($temDisponibilidade) {
                     $qtdVeiculosDisponiveis = $this->veiculoService->getQuantidadeVeiculosDisponiveisPorGrupoEEstacaoEPeriodo(
                         (int) $grupo->id,
