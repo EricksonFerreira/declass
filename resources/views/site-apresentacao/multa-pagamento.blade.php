@@ -256,7 +256,7 @@
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" id="saveMetodoButton">Salvar cartao</button>
-                    <button type="button" class="btn btn-primary" id="payNoSaveButton">Pagar sem salvar</button>
+                    {{-- <button type="button" class="btn btn-primary" id="payNoSaveButton">Pagar sem salvar</button> --}}
                 </div>
             </div>
         </div>
