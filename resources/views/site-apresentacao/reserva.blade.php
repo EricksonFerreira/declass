@@ -1728,6 +1728,7 @@
             const estacaoDevolucaoFeedback = document.getElementById('estacao_devolucao_feedback');
             const loginPopupSuccess = new URLSearchParams(window.location.search).get('login_success') === '1';
             const loginPopupContinue = sessionStorage.getItem('site_reserva_auto_continue') === '1';
+            const loginPopupHandled = sessionStorage.getItem('site_reserva_login_popup_handled') === '1';
             const modalGrupoModelosBackdrop = document.getElementById('modalGrupoModelosBackdrop');
             const modalGrupoModelosTitle = document.getElementById('modalGrupoModelosTitle');
             const modalGrupoModelosInfo = document.getElementById('modalGrupoModelosInfo');
@@ -3125,6 +3126,7 @@
                 handleLoginSuccess(event.data.payload || {});
             });
             if (loginPopupSuccess && window.opener) {
+                sessionStorage.setItem('site_reserva_login_popup_handled', '1');
                 try {
                     window.opener.postMessage({
                         type: 'site-reserva-login-success',
@@ -3139,6 +3141,12 @@
                 setTimeout(function() {
                     window.close();
                 }, 150);
+            } else if (loginPopupSuccess && !loginPopupHandled) {
+                sessionStorage.setItem('site_reserva_login_popup_handled', '1');
+                handleLoginSuccess({
+                    name: authUserName,
+                    email: authUserEmail,
+                });
             }
             maskCelular();
             if (loginPopupSuccess) {
