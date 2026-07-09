@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\StatusReservaEnum;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Reserva extends Model
@@ -88,6 +89,25 @@ class Reserva extends Model
             StatusReservaEnum::Pendente->value,
             StatusReservaEnum::Confirmada->value,
         ], true);
+    }
+
+    public function podeCancelarComoCliente(): bool
+    {
+        if (!$this->podeFazerCancelamento()) {
+            return false;
+        }
+
+        $baseCriacao = $this->created_at ?? $this->data_criacao ?? null;
+        if (!$baseCriacao) {
+            return false;
+        }
+
+        return Carbon::parse($baseCriacao)->addDay()->gt(now());
+    }
+
+    public function podeResponderSatisfacao(): bool
+    {
+        return $this->contratoCheckout()->exists() && !$this->satisfacao()->exists();
     }
 
     public function podeFazerCheckout(): bool

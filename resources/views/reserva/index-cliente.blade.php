@@ -81,7 +81,7 @@
                         $nfse         = $reserva->nfseAtual;
                     @endphp
 
-                    <article class="rc {{ $statusClass }}" onclick="window.location='{{ route('reserva.show', $reserva->id) }}';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.show', $reserva->id) }}';}">
+                    <article class="rc {{ $statusClass }}" onclick="window.location='{{ route('reserva.minhas.show', $reserva->id) }}';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.minhas.show', $reserva->id) }}';}">
 
                         {{-- Accent top bar --}}
                         <div class="rc__accent"></div>
@@ -151,7 +151,7 @@
                                     <span>R$</span>
                                     <strong>{{ number_format($totalCalculado, 2, ',', '.') }}</strong>
                                 </div>
-                                <a href="{{ route('reserva.show', $reserva->id) }}" class="btn btn-xs btn-outline-primary" onclick="event.stopPropagation();">
+                                <a href="{{ route('reserva.minhas.show', $reserva->id) }}" class="btn btn-xs btn-outline-primary" onclick="event.stopPropagation();">
                                     Ver detalhes
                                 </a>
                             </div>
@@ -184,7 +184,7 @@
                                 $totalCalculado = (float) $totalCalculado;
                                 $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
                             @endphp
-                            <tr onclick="window.location='{{ route('reserva.show', $reserva->id) }}';" style="cursor:pointer" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.show', $reserva->id) }}';}">
+                            <tr onclick="window.location='{{ route('reserva.minhas.show', $reserva->id) }}';" style="cursor:pointer" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.minhas.show', $reserva->id) }}';}">
                                 <td class="text-center">{{ $reserva->id }}</td>
                                 <td>
                                     <strong>{{ $reserva->grupoFrota?->nome ?? '-' }}</strong><br>

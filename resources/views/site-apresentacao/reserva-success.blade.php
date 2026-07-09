@@ -153,6 +153,18 @@
         .survey-tone--9 { background: #16A34A !important; color: #fff !important; border-color: #15803D !important; }
         .survey-tone--10 { background: #166534 !important; color: #fff !important; border-color: #14532D !important; }
 
+        .nps-tone--0 { background: #B91C1C !important; color: #fff !important; border-color: #991B1B !important; }
+        .nps-tone--1 { background: #DC2626 !important; color: #fff !important; border-color: #B91C1C !important; }
+        .nps-tone--2 { background: #EF4444 !important; color: #fff !important; border-color: #DC2626 !important; }
+        .nps-tone--3 { background: #F97316 !important; color: #fff !important; border-color: #EA580C !important; }
+        .nps-tone--4 { background: #FB923C !important; color: #fff !important; border-color: #F97316 !important; }
+        .nps-tone--5 { background: #F59E0B !important; color: #fff !important; border-color: #D97706 !important; }
+        .nps-tone--6 { background: #EAB308 !important; color: #fff !important; border-color: #CA8A04 !important; }
+        .nps-tone--7 { background: #FACC15 !important; color: #111827 !important; border-color: #EAB308 !important; }
+        .nps-tone--8 { background: #4ADE80 !important; color: #064E3B !important; border-color: #22C55E !important; }
+        .nps-tone--9 { background: #16A34A !important; color: #fff !important; border-color: #15803D !important; }
+        .nps-tone--10 { background: #166534 !important; color: #fff !important; border-color: #14532D !important; }
+
         .survey-option input:checked + span.survey-tone--1,
         .survey-option input:checked + span.survey-tone--2,
         .survey-option input:checked + span.survey-tone--3,
@@ -232,17 +244,17 @@
                 5 => 'survey-tone--5',
             ];
             $surveyToneMap010 = [
-                0 => 'survey-tone--0',
-                1 => 'survey-tone--1',
-                2 => 'survey-tone--2',
-                3 => 'survey-tone--3',
-                4 => 'survey-tone--4',
-                5 => 'survey-tone--5',
-                6 => 'survey-tone--6',
-                7 => 'survey-tone--7',
-                8 => 'survey-tone--8',
-                9 => 'survey-tone--9',
-                10 => 'survey-tone--10',
+                0 => 'nps-tone--0',
+                1 => 'nps-tone--1',
+                2 => 'nps-tone--2',
+                3 => 'nps-tone--3',
+                4 => 'nps-tone--4',
+                5 => 'nps-tone--5',
+                6 => 'nps-tone--6',
+                7 => 'nps-tone--7',
+                8 => 'nps-tone--8',
+                9 => 'nps-tone--9',
+                10 => 'nps-tone--10',
             ];
         @endphp
         <div class="header">

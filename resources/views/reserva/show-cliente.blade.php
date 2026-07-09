@@ -51,6 +51,10 @@
     $clienteNome = $reserva->usuario?->nome ?? auth()->user()?->nome ?? 'Cliente';
     $clienteEmail = $reserva->usuario?->email ?? auth()->user()?->email ?? '-';
     $clienteTelefone = $reserva->usuario?->telefone ?? auth()->user()?->telefone ?? '-';
+    $podeCancelarMinhaReserva = method_exists($reserva, 'podeCancelarComoCliente') ? $reserva->podeCancelarComoCliente() : false;
+    $podeCancelarReserva = method_exists($reserva, 'podeFazerCancelamento') ? $reserva->podeFazerCancelamento() : false;
+    $jaSatisfacao = $reserva->satisfacao()->exists();
+    $podeResponderSatisfacao = $reserva->contratoCheckout()->exists() && !$jaSatisfacao;
 @endphp
 
 <style>
@@ -174,6 +178,29 @@
     .rs-status.is-warning { background:rgba(245,158,11,.14); color:#b45309; border:1px solid rgba(245,158,11,.26); }
     .rs-status.is-danger { background:rgba(239,68,68,.12); color:#b91c1c; border:1px solid rgba(239,68,68,.22); }
     .rs-status.is-neutral { background:rgba(100,116,139,.12); color:#475569; border:1px solid rgba(100,116,139,.18); }
+    .rs-survey { display:grid; gap:14px; }
+    .rs-survey__group { display:grid; gap:8px; }
+    .rs-survey__label { font-size:.92rem; font-weight:700; color:var(--ink); }
+    .rs-survey__options { display:flex; flex-wrap:wrap; gap:8px; }
+    .rs-survey__option { position:relative; display:inline-flex; }
+    .rs-survey__option input { position:absolute; opacity:0; pointer-events:none; }
+    .rs-survey__option span {
+        min-width:42px; height:40px; padding:0 10px; border-radius:999px;
+        border:1px solid #cbd5e1; display:inline-flex; align-items:center; justify-content:center;
+        font-weight:800; background:#fff; color:#0f172a; transition:all .15s ease;
+        box-shadow:0 1px 2px rgba(15,23,42,.04);
+    }
+    .rs-survey__option input:checked + span { transform:translateY(-1px) scale(1.03); border-color:rgba(15,23,42,.2); box-shadow:0 10px 18px rgba(15,23,42,.08); }
+    .rs-survey__textarea {
+        width:100%; min-height:84px; border-radius:12px; border:1px solid #cbd5e1; background:#fff;
+        color:#0f172a; padding:10px 12px; resize:vertical; outline:none;
+    }
+    .rs-nps--red { background:#B91C1C !important; color:#fff !important; border-color:#991B1B !important; }
+    .rs-nps--orange { background:#F59E0B !important; color:#fff !important; border-color:#D97706 !important; }
+    .rs-nps--yellow { background:#FACC15 !important; color:#111827 !important; border-color:#EAB308 !important; }
+    .rs-nps--lightgreen { background:#4ADE80 !important; color:#064E3B !important; border-color:#22C55E !important; }
+    .rs-nps--green { background:#16A34A !important; color:#fff !important; border-color:#15803D !important; }
+    .rs-nps--darkgreen { background:#166534 !important; color:#fff !important; border-color:#14532D !important; }
     @media (max-width: 992px) {
         .rs-client-grid { grid-template-columns: 1fr; }
     }
@@ -242,14 +269,21 @@
                     </div>
 
                     <div class="rs-actions">
-                        @if(!$pagamentoEfetuado)
-                            <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="rs-btn rs-btn--primary">
-                                <i class="fas fa-credit-card"></i> Efetuar pagamento
-                            </a>
-                        @endif
                         <a href="{{ route('reserva.minhas') }}" class="rs-btn rs-btn--light">
                             <i class="fas fa-arrow-left"></i> Voltar para minhas reservas
                         </a>
+                        @if($podeCancelarMinhaReserva)
+                            <form method="POST" action="{{ route('reserva.cancelar', $reserva->id) }}" class="m-0" onsubmit="return confirm('Deseja realmente cancelar esta reserva?');">
+                                @csrf
+                                <button type="submit" class="rs-btn" style="background:#fee2e2;color:#991b1b;border-color:#fecaca;">
+                                    <i class="fas fa-ban"></i> Cancelar reserva
+                                </button>
+                            </form>
+                        @elseif($podeCancelarReserva)
+                            <span class="rs-btn" data-toggle="tooltip" title="O cancelamento só fica disponível até 24 horas após a criação da reserva." style="opacity:.5;cursor:not-allowed;">
+                                <i class="fas fa-ban"></i> Cancelar reserva
+                            </span>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -327,6 +361,87 @@
                     </div>
                 </div>
             </div>
+
+            <div class="rs-card mt-3">
+                <div class="rs-card__head">
+                    <div class="rs-card__icon"><i class="fas fa-star"></i></div>
+                    <div>
+                        <div class="rs-card__title">Sua avaliação</div>
+                        <div class="rs-card__sub">Pode ser preenchida apenas uma vez</div>
+                    </div>
+                </div>
+                <div class="rs-card__body">
+                    @if($podeResponderSatisfacao)
+                        <form method="POST" action="{{ route('reserva.satisfacao.store', $reserva->id) }}" class="rs-survey">
+                            @csrf
+                            <div class="rs-survey__group">
+                                <label class="rs-survey__label">1. Como foi sua experiência geral?</label>
+                                <div class="rs-survey__options">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <label class="rs-survey__option">
+                                            <input type="radio" name="satisfacao_geral" value="{{ $i }}" required>
+                                            <span>{{ $i }}</span>
+                                        </label>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <div class="rs-survey__group">
+                                <label class="rs-survey__label">2. Foi fácil concluir a reserva?</label>
+                                <div class="rs-survey__options">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <label class="rs-survey__option">
+                                            <input type="radio" name="facilidade_reserva" value="{{ $i }}" required>
+                                            <span>{{ $i }}</span>
+                                        </label>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <div class="rs-survey__group">
+                                <label class="rs-survey__label">3. De 0 a 10, quanto você recomendaria a empresa?</label>
+                                <div class="rs-survey__options rs-survey__options--nps">
+                                    @for($i = 0; $i <= 10; $i++)
+                                        @php
+                                            $npsClass = match (true) {
+                                                $i <= 2 => 'rs-nps rs-nps--red',
+                                                $i <= 5 => 'rs-nps rs-nps--orange',
+                                                $i <= 7 => 'rs-nps rs-nps--yellow',
+                                                $i === 8 => 'rs-nps rs-nps--lightgreen',
+                                                $i === 9 => 'rs-nps rs-nps--green',
+                                                default => 'rs-nps rs-nps--darkgreen',
+                                            };
+                                        @endphp
+                                        <label class="rs-survey__option">
+                                            <input type="radio" name="nps_nota" value="{{ $i }}" required>
+                                            <span class="{{ $npsClass }}">{{ $i }}</span>
+                                        </label>
+                                    @endfor
+                                </div>
+                            </div>
+
+                            <div class="rs-survey__group mb-0">
+                                <label class="rs-survey__label" for="comentario">O que podemos melhorar? <span style="font-weight:400;">(opcional)</span></label>
+                                <textarea id="comentario" name="comentario" class="rs-survey__textarea" placeholder="Deixe uma observação rápida."></textarea>
+                            </div>
+
+                            <div class="rs-actions" style="margin-top:14px;">
+                                <button type="submit" class="rs-btn rs-btn--primary">
+                                    <i class="fas fa-paper-plane"></i> Enviar avaliação
+                                </button>
+                            </div>
+                        </form>
+                    @else
+                        <div class="rs-note">
+                            @if($jaSatisfacao)
+                                Obrigado! Sua avaliação já foi enviada e não pode ser alterada.
+                            @else
+                                A avaliação ficará disponível após a conclusão da reserva.
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
         </div>
 
         <aside class="rs-sidebar">
@@ -389,4 +504,3 @@
     </div>
 </div>
 @stop
-

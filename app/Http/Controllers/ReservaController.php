@@ -484,10 +484,89 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 return redirect()->route('reserva.minhas')->with('error', 'Você não tem permissão para ver essa reserva.');
             }
 
-            return view('reserva.show-cliente', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega'));
+            return redirect()->route('reserva.minhas.show', $reserva->id);
         }
 
         return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
+    }
+
+    public function showMinhas($id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+
+        $titulo = "Detalhes da Reserva";
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Reservas', route('reserva.minhas')),
+            new BreadCrumbItem('Detalhes da Reserva NÂº' . $id)
+        ]);
+        $reserva = $this->reservaService->getById($id, ['contratoCheckin', 'contratoCheckout']);
+        if (!$reserva) {
+            return redirect()->route('reserva.minhas')->with('error', 'Reserva nao encontrada.');
+        }
+
+        if ((int) $reserva->user_id !== (int) $user->id) {
+            return redirect()->route('reserva.minhas')->with('error', 'Você não tem permissão para ver essa reserva.');
+        }
+
+        $reserva->load([
+            'criadoPor',
+            'nfseAtual',
+            'estacaoRetirada',
+            'estacaoDevolucao',
+            'grupoFrota',
+            'cupomDesconto',
+            'opcionais',
+            'transacoes' => function ($query) {
+                $query->with(['user', 'pagoPor'])->orderByDesc('id');
+            },
+            'contratoCheckin.grupoFrotaOriginal',
+            'contratoCheckin.veiculo.marca',
+            'contratoCheckin.usuarioUpgrade',
+            'contratoCheckout',
+            'calcao',
+            'veiculoDano' => fn ($q) => $q->with('imagem')->orderByDesc('id')->take(10),
+            'avariaCobrancas' => fn ($q) => $q->orderByDesc('id')->take(10),
+            'multas' => fn ($q) => $q->orderByDesc('id')->take(5),
+        ]);
+
+        $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
+        $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
+
+        if ($taxaColeta == 0 && $reserva->estacaoRetirada && $reserva->data_inicio) {
+            $avaliacao = $this->reservaService->avaliarFuncionamentoEstacaoPublico(
+                (int) $reserva->estacao_retirada_id,
+                $reserva->data_inicio,
+                'retirada'
+            );
+            if (($avaliacao['taxa_extra'] ?? false) && ($avaliacao['ok'] ?? false)) {
+                $taxaColeta = (float) ($reserva->estacaoRetirada->valor_taxa_coleta ?? 0);
+            }
+        }
+
+        if ($taxaEntrega == 0 && $reserva->estacaoDevolucao && $reserva->data_fim) {
+            $avaliacao = $this->reservaService->avaliarFuncionamentoEstacaoPublico(
+                (int) $reserva->estacao_devolucao_id,
+                $reserva->data_fim,
+                'devolucao'
+            );
+            if (($avaliacao['taxa_extra'] ?? false) && ($avaliacao['ok'] ?? false)) {
+                $taxaEntrega = (float) ($reserva->estacaoDevolucao->valor_taxa_entrega ?? 0);
+            }
+        }
+
+        if ((float) ($reserva->percentual_desconto ?? 0) == 0 && $reserva->cupom_desconto_id && $reserva->cupomDesconto) {
+            $reserva->percentual_desconto = (float) ($reserva->cupomDesconto->valor ?? 0);
+        }
+
+        $empresa = \App\Models\Empresa::with('planoAtivo.plano')->find($reserva->empresa_id);
+        $moduloNfse   = (bool) ($empresa?->planoAtivo?->plano?->modulo_nfse   ?? false);
+        $moduloMultas = (bool) ($empresa?->planoAtivo?->plano?->modulo_multas ?? false);
+
+        return view('reserva.show-cliente', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
     }
 
     public function emitirNfse($id)
@@ -1027,6 +1106,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return response()->json(['message' => 'Reserva não encontrada.'], 404);
         }
 
+        if ($reserva->satisfacao()->exists()) {
+            return response()->json(['success' => false, 'message' => 'Esta avaliação já foi enviada e não pode ser alterada.'], 409);
+        }
+
         $validated = $request->validate([
             'satisfacao_geral'   => ['required', 'integer', 'min:1', 'max:5'],
             'facilidade_reserva' => ['required', 'integer', 'min:1', 'max:5'],
@@ -1034,17 +1117,15 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'comentario'         => ['nullable', 'string', 'max:1000'],
         ]);
 
-        \App\Models\ReservaSatisfacao::updateOrCreate(
-            ['reserva_id' => (int) $reserva_id],
-            [
-                'empresa_id'          => session('empresa_id') ?? $reserva->empresa_id ?? null,
-                'respondente_user_id' => Auth::id(),
-                'satisfacao_geral'    => (int) $validated['satisfacao_geral'],
-                'facilidade_reserva'  => (int) $validated['facilidade_reserva'],
-                'nps_nota'            => (int) $validated['nps_nota'],
-                'comentario'          => trim((string) ($validated['comentario'] ?? '')) ?: null,
-            ]
-        );
+        \App\Models\ReservaSatisfacao::create([
+            'empresa_id'          => session('empresa_id') ?? $reserva->empresa_id ?? null,
+            'reserva_id'          => (int) $reserva_id,
+            'respondente_user_id' => Auth::id(),
+            'satisfacao_geral'    => (int) $validated['satisfacao_geral'],
+            'facilidade_reserva'  => (int) $validated['facilidade_reserva'],
+            'nps_nota'            => (int) $validated['nps_nota'],
+            'comentario'          => trim((string) ($validated['comentario'] ?? '')) ?: null,
+        ]);
 
         return response()->json(['success' => true, 'message' => 'Avaliação registrada com sucesso!']);
     }
@@ -1152,6 +1233,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     public function cancelar($id)
     {
         $reservaAntes = $this->reservaService->getById((int) $id);
+        if (!$reservaAntes) {
+            return redirect()->route('reserva.minhas')->with('error', 'Reserva nao encontrada.');
+        }
+
+        $user = Auth::user();
+        if ($user && $this->isCliente($user) && !$reservaAntes->podeCancelarComoCliente()) {
+            return redirect()->route('reserva.minhas.show', $reservaAntes->id)
+                ->with('error', 'O cancelamento só pode ser feito até 24 horas após a criação da reserva.');
+        }
+
         $this->reservaService->cancelar($id);
         $reserva = $this->reservaService->getById($id);
         if ($reserva) {

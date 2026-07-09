@@ -4,6 +4,7 @@ use App\Http\Controllers\ReservaController;
 use App\Http\Controllers\AvariaCobrancaController;
 
 Route::get('reserva/minhas', [ReservaController::class, 'minhas'])->name('reserva.minhas');
+Route::get('reserva/minhas/{id}', [ReservaController::class, 'showMinhas'])->name('reserva.minhas.show');
 
 Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('obterOpcionais', [ReservaController::class, 'obterOpcionais'])->name('obterOpcionais');
