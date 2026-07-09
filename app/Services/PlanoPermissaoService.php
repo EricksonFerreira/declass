@@ -49,6 +49,7 @@ class PlanoPermissaoService
         'site.reserva.disponibilidade',
         'site.reserva.index',
         'reserva.minhas',
+        'reserva.minhas.show',
         'reserva.show',
         'reserva.efetuarPagamento',
         'reserva.processarPagamento',
