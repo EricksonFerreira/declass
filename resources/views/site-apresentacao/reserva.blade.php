@@ -605,11 +605,8 @@
             const authUserEmail = @json($authUserEmail);
             const loginRedirectUrl = @json($loginRedirectUrl);
             const reservaSelecionarModelo = @json($reservaSelecionarModelo ?? false);
-            const stepFromUrl = Number(new URLSearchParams(window.location.search).get('step'));
             const initialStepServer = Number(@json($initialStepServer));
-            const initialStep = !Number.isNaN(stepFromUrl) && stepFromUrl >= 1 && stepFromUrl <= 4
-                ? stepFromUrl
-                : (!Number.isNaN(initialStepServer) && initialStepServer >= 1 && initialStepServer <= 4 ? initialStepServer : 2);
+            const initialStep = !Number.isNaN(initialStepServer) && initialStepServer >= 1 && initialStepServer <= 4 ? initialStepServer : 2;
             const state = { step: initialStep, tarifa: 0, dias: 0, cupom: null, opcionais: {}, modeloNome: null, taxaColeta: 0, taxaEntrega: 0 };
             const panels = [...document.querySelectorAll('[data-panel]')];
             const pills = [...document.querySelectorAll('[data-step]')];
@@ -1881,7 +1878,7 @@
             highlightModelo();
             (async function initOld() {
                 await carregarDisponibilidadeGrupos();
-                if (grupo.value) {
+                if (initialStepServer === 2 && grupo.value) {
                     await loadDisponibilidade();
                     if (oldOpcionaisPayload) {
                         try {
