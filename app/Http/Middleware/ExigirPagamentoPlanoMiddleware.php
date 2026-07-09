@@ -27,6 +27,10 @@ class ExigirPagamentoPlanoMiddleware
         'site.reserva.',
         'site.multa.',
         'reserva.minhas',
+        'reserva.show',
+        'reserva.efetuarPagamento',
+        'reserva.processarPagamento',
+        'reserva.historico',
     ];
 
     public function handle(Request $request, Closure $next): Response
