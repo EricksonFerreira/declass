@@ -19,7 +19,7 @@
         .container { width: min(1060px, calc(100% - 24px)); margin: 0 auto; }
         .top { background: #fff; border-bottom: 1px solid var(--line); }
         .top .inner { min-height: 70px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; }
+        .brand { text-decoration: none;display: flex; align-items: center; gap: 10px; font-weight: 700; }
         .brand img { width: 42px; height: 42px; border-radius: 10px; object-fit: contain; background: var(--p); border: 1px solid #e2e8f0; padding: 4px; }
         .back { text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 10px 14px; color: #334155; font-size: 13px; font-weight: 700; background: #fff; }
         .layout { display: grid; grid-template-columns: 1fr 320px; gap: 14px; padding: 16px 0 24px; }
@@ -85,7 +85,7 @@
                 @if(!empty($empresa->logo_url))
                     <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}">
                 @endif
-                <span>{{ $empresa->nome }}</span>
+                <span style="color: #334155;" >{{ $empresa->nome }}</span>
             </a>
             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                 <a class="back" href="{{ $urlVoltarCliente }}">Voltar para cliente</a>
