@@ -1743,6 +1743,7 @@
             let isBootstrapping = true;
             let autoSubmitAfterLogin = false;
             let pendingLoginAutoSubmit = false;
+            let loginAutoSubmitTimer = null;
             let loginFlowCompleted = loginPopupSuccess;
 
             function money(v) {
@@ -1859,8 +1860,21 @@
             }
 
             function triggerLoginAutoSubmit() {
-                if (!pendingLoginAutoSubmit || isBootstrapping) {
+                if (!pendingLoginAutoSubmit) {
                     return;
+                }
+                if (isBootstrapping) {
+                    if (!loginAutoSubmitTimer) {
+                        loginAutoSubmitTimer = setTimeout(function() {
+                            loginAutoSubmitTimer = null;
+                            triggerLoginAutoSubmit();
+                        }, 300);
+                    }
+                    return;
+                }
+                if (loginAutoSubmitTimer) {
+                    clearTimeout(loginAutoSubmitTimer);
+                    loginAutoSubmitTimer = null;
                 }
                 pendingLoginAutoSubmit = false;
                 autoSubmitAfterLogin = true;
@@ -1870,7 +1884,7 @@
                     } else if (form) {
                         form.submit();
                     }
-                }, 80);
+                }, 350);
             }
 
             function refresh() {
