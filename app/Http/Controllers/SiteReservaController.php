@@ -72,10 +72,40 @@ class SiteReservaController extends Controller
 
         $estacoesRetirada = $this->estacoesForEmpresa('checkin');
         $estacoesDevolucao = $this->estacoesForEmpresa('checkout');
-        $gruposFrota = $this->gruposFrotaAtivos();
         $paises = $this->paisService->getAllForSelectSigla();
         $moedaEmpresa = strtoupper($this->gatewayEmpresaConfigService->moeda($empresa));
         $reservaSelecionarModelo = ($empresa->reserva_selecionar_modelo ?? 'N') === 'S';
+
+        $prefill = [
+            'estacao_retirada_id' => old('estacao_retirada_id', $this->normalizeInt($request->query('retirada'))),
+            'estacao_devolucao_id' => old(
+                'estacao_devolucao_id',
+                $this->normalizeInt($request->query('devolucao')) ?? $this->normalizeInt($request->query('retirada'))
+            ),
+            'data_inicio' => old('data_inicio', $this->buildDateTimeLocal(
+                $request->query('data_retirada'),
+                $request->query('hora_retirada')
+            )),
+            'data_fim' => old('data_fim', $this->buildDateTimeLocal(
+                $request->query('data_devolucao'),
+                $request->query('hora_devolucao')
+            )),
+        ];
+
+        $prefillCompleto = $this->prefillReservaCompleta($prefill);
+        $qtdVeiculosEstacao = $prefillCompleto
+            ? $this->veiculoService->getQuantidadeVeiculosDisponiveisPorEstacaoEPeriodo(
+                (int) $prefill['estacao_retirada_id'],
+                (string) $prefill['data_inicio'],
+                (string) $prefill['data_fim']
+            )
+            : 0;
+        $initialStepServer = $prefillCompleto && $qtdVeiculosEstacao > 0 ? 2 : 1;
+        $gruposFrota = $this->gruposFrotaAtivos(
+            $prefillCompleto ? (int) $prefill['estacao_retirada_id'] : null,
+            $prefillCompleto ? (string) $prefill['data_inicio'] : null,
+            $prefillCompleto ? (string) $prefill['data_fim'] : null
+        );
 
         return view('site-apresentacao.reserva', [
             'empresa' => $empresa,
@@ -91,21 +121,8 @@ class SiteReservaController extends Controller
             'authUserEmail' => auth()->user()?->email,
             'loginRedirectUrl' => Route::has('site.reserva.login') ? route('site.reserva.login', ['step' => 4]) : null,
             'reservaSelecionarModelo' => $reservaSelecionarModelo,
-            'prefill' => [
-                'estacao_retirada_id' => old('estacao_retirada_id', $this->normalizeInt($request->query('retirada'))),
-                'estacao_devolucao_id' => old(
-                    'estacao_devolucao_id',
-                    $this->normalizeInt($request->query('devolucao')) ?? $this->normalizeInt($request->query('retirada'))
-                ),
-                'data_inicio' => old('data_inicio', $this->buildDateTimeLocal(
-                    $request->query('data_retirada'),
-                    $request->query('hora_retirada')
-                )),
-                'data_fim' => old('data_fim', $this->buildDateTimeLocal(
-                    $request->query('data_devolucao'),
-                    $request->query('hora_devolucao')
-                )),
-            ],
+            'initialStepServer' => $initialStepServer,
+            'prefill' => $prefill,
         ]);
     }
 
@@ -1427,20 +1444,47 @@ class SiteReservaController extends Controller
             ->all();
     }
 
-    private function gruposFrotaAtivos(): array
+    private function prefillReservaCompleta(array $prefill): bool
     {
+        $estacaoRetiradaId = (int) ($prefill['estacao_retirada_id'] ?? 0);
+        $estacaoDevolucaoId = (int) ($prefill['estacao_devolucao_id'] ?? 0);
+        $dataInicio = (string) ($prefill['data_inicio'] ?? '');
+        $dataFim = (string) ($prefill['data_fim'] ?? '');
+
+        if ($estacaoRetiradaId <= 0 || $estacaoDevolucaoId <= 0 || trim($dataInicio) === '' || trim($dataFim) === '') {
+            return false;
+        }
+
+        return $this->dataInicioValida($dataInicio)
+            && $this->dataFimMinimaValida($dataInicio, $dataFim);
+    }
+
+    private function gruposFrotaAtivos(?int $estacaoRetiradaId = null, ?string $dataInicio = null, ?string $dataFim = null): array
+    {
+        $temDisponibilidade = $estacaoRetiradaId && !empty($dataInicio) && !empty($dataFim);
         return GrupoFrota::query()
             ->where('ativo', 'S')
             ->orderBy('nome')
             ->with(['caracteristicas', 'modelos'])
             ->get(['id', 'nome', 'valor_diario', 'imagem', 'imagens'])
-            ->map(function (GrupoFrota $grupo): array {
+            ->map(function (GrupoFrota $grupo) use ($temDisponibilidade, $estacaoRetiradaId, $dataInicio, $dataFim): array {
+                $qtdVeiculosDisponiveis = 0;
+                if ($temDisponibilidade) {
+                    $qtdVeiculosDisponiveis = $this->veiculoService->getQuantidadeVeiculosDisponiveisPorGrupoEEstacaoEPeriodo(
+                        (int) $grupo->id,
+                        (int) $estacaoRetiradaId,
+                        (string) $dataInicio,
+                        (string) $dataFim
+                    );
+                }
+
                 return [
                     'id' => (int) $grupo->id,
                     'nome' => (string) $grupo->nome,
                     'valor_diario' => (float) $grupo->valor_diario,
                     'imagem_url' => $this->grupoImagemUrl($grupo),
                     'imagens_urls' => $this->grupoImagensUrls($grupo),
+                    'qtd_veiculos_disponiveis' => $qtdVeiculosDisponiveis,
                     'caracteristicas' => $grupo->caracteristicas
                         ? $grupo->caracteristicas->map(function ($caracteristica): array {
                             return [

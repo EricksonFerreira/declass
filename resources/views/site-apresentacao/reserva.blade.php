@@ -2,7 +2,7 @@
 @php
     $corPrimaria = $empresa->cor_primaria ?: '#1f4f7a';
     $corSecundaria = $empresa->cor_secundaria ?: '#14324d';
-    $initialStepServer = (int) old('step', $errors->any() ? 4 : 2);
+    $initialStepServer = isset($initialStepServer) ? (int) $initialStepServer : (int) old('step', $errors->any() ? 4 : 2);
     $initialStepServer = in_array($initialStepServer, [1, 2, 3, 4], true) ? $initialStepServer : 2;
     $isInitialStep1 = $initialStepServer === 1;
     $isInitialStep2 = $initialStepServer === 2;
@@ -164,13 +164,18 @@
         .grupo-thumbs img { width: 100%; height: 100%; object-fit: cover; }
         .grupo-title { font-size: 14px; font-weight: 800; color: #0f172a; }
         .grupo-price { font-size: 12px; color: #334155; font-weight: 700; }
+        .grupo-availability { display: inline-flex; align-items: center; gap: 6px; width: fit-content; padding: 5px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; background: #eff6ff; color: #1d4ed8; }
+        .grupo-availability.no { background: #fef2f2; color: #b91c1c; }
         .grupo-features { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 12px; color: #475569; }
         .grupo-features li { display: flex; align-items: center; gap: 6px; }
         .feat-img { width: 20px; height: 20px; border-radius: 6px; border: 1px solid var(--line); background: #f8fbff; display: inline-flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; }
         .feat-img img { width: 100%; height: 100%; object-fit: cover; }
         .feat-img span { font-size: 10px; color: #94a3b8; }
         .grupo-modelos { border-top: 1px dashed var(--line); padding-top: 8px; display: grid; gap: 6px; }
+        .grupo-modelos-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
         .grupo-modelos strong { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: .03em; }
+        .grupo-modelos-total { font-size: 11px; color: #475569; }
+        .grupo-modelos-btn { min-height: 30px; padding: 4px 10px; font-size: 11px; border-radius: 999px; }
         .grupo-modelos-list { display: flex; flex-wrap: wrap; gap: 6px; }
         .grupo-modelo-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); border-radius: 999px; padding: 4px 8px; font-size: 11px; font-weight: 700; color: #334155; background: #f8fbff; }
         .grupo-modelo-chip img { width: 20px; height: 20px; border-radius: 999px; object-fit: cover; border: 1px solid #e2e8f0; background: #fff; }
@@ -338,8 +343,10 @@
                             @php
                                 $caracteristicas = $grupo['caracteristicas'] ?? [];
                                 $listaCaracteristicas = array_slice($caracteristicas, 0, 4);
+                                $qtdVeiculosDisponiveis = (int) ($grupo['qtd_veiculos_disponiveis'] ?? 0);
+                                $modeloTotal = count($grupo['modelos'] ?? []);
                             @endphp
-                            <article class="grupo-card" data-grupo-id="{{ $grupo['id'] }}" data-grupo-nome="{{ $grupo['nome'] }}" data-tarifa="{{ $grupo['valor_diario'] }}" data-disponivel="1">
+                            <article class="grupo-card {{ $qtdVeiculosDisponiveis > 0 ? '' : 'disabled' }}" data-grupo-id="{{ $grupo['id'] }}" data-grupo-nome="{{ $grupo['nome'] }}" data-tarifa="{{ $grupo['valor_diario'] }}" data-disponivel="{{ $qtdVeiculosDisponiveis > 0 ? '1' : '0' }}" data-qtd-veiculos="{{ $qtdVeiculosDisponiveis }}" data-modelos='@json($grupo["modelos"] ?? [])'>
                                 <div class="grupo-thumb">
                                     @if(!empty($grupo['imagens_urls']))
                                         <img src="{{ $grupo['imagens_urls'][0] }}" alt="{{ $grupo['nome'] }}">
@@ -358,6 +365,9 @@
                                 @endif
                                 <div class="grupo-title">{{ $grupo['nome'] }}</div>
                                 <div class="grupo-price">{{ $simboloMoedaEmpresa }} {{ number_format((float) $grupo['valor_diario'], 2, ',', '.') }} / dia</div>
+                                <div class="grupo-availability {{ $qtdVeiculosDisponiveis > 0 ? '' : 'no' }}">
+                                    {{ $qtdVeiculosDisponiveis > 0 ? $qtdVeiculosDisponiveis . ' veiculo(s) disponivel(is)' : 'Indisponivel no periodo' }}
+                                </div>
                                 <ul class="grupo-features">
                                     @forelse($listaCaracteristicas as $caracteristica)
                                         <li>
@@ -379,22 +389,14 @@
                                 </ul>
                                 @if(empty($reservaSelecionarModelo))
                                     <div class="grupo-modelos">
-                                        <strong>Modelos do grupo</strong>
-                                        <div class="grupo-modelos-list">
-                                            @forelse($grupo['modelos'] ?? [] as $modeloItem)
-                                                <span class="grupo-modelo-chip">
-                                                    @if(!empty($modeloItem['imagem_url']))
-                                                        <img src="{{ $modeloItem['imagem_url'] }}" alt="{{ $modeloItem['nome'] }}">
-                                                    @endif
-                                                    <span>{{ $modeloItem['nome'] }}</span>
-                                                </span>
-                                            @empty
-                                                <span class="grupo-modelo-chip">Sem modelos vinculados</span>
-                                            @endforelse
+                                        <div class="grupo-modelos-head">
+                                            <strong>Modelos do grupo</strong>
+                                            <button type="button" class="btn btn-secondary grupo-modelos-btn grupo-modelos-open">Ver modelos</button>
                                         </div>
+                                        <div class="grupo-modelos-total">{{ $modeloTotal }} modelo(s) vinculados</div>
                                     </div>
                                 @endif
-                                <button type="button" class="btn btn-secondary grupo-action">Escolher grupo</button>
+                                <button type="button" class="btn btn-secondary grupo-action" {{ $qtdVeiculosDisponiveis > 0 ? '' : 'disabled' }}>Escolher grupo</button>
                             </article>
                         @endforeach
                     </div>

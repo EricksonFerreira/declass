@@ -333,6 +333,51 @@ class VeiculoService extends AbstractBaseService
     }
 
     /**
+     * Obtém a quantidade de veículos disponíveis de um grupo de frota em uma estação e período.
+     */
+    public function getQuantidadeVeiculosDisponiveisPorGrupoEEstacaoEPeriodo(
+        int $idGrupoFrota,
+        int $idLocal,
+        string $data_inicio,
+        string $data_fim
+    ): int {
+        if ($idGrupoFrota <= 0 || $idLocal <= 0 || trim($data_inicio) === '' || trim($data_fim) === '') {
+            return 0;
+        }
+
+        $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($data_inicio);
+
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->where('grupo_frota_id', $idGrupoFrota)
+            ->where('local_disponibilidade', $idLocal)
+            ->where(function ($subQuery) use ($data_inicio) {
+                $subQuery->whereNull('data_hora_disponibilidade')
+                    ->orWhere('data_hora_disponibilidade', '<=', $data_inicio);
+            })
+            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicioComFolga, $data_fim) {
+                $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
+                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
+                    ->where('reservas.data_inicio', '<', $data_fim)
+                    ->where('reservas.data_fim', '>', $dataInicioComFolga);
+            })
+            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($data_fim) {
+                $subQuery->whereNull('data_chegada_real')
+                    ->where(function ($sub) use ($data_fim) {
+                        $sub->whereNull('data_saida')->orWhere('data_saida', '<', $data_fim);
+                    });
+
+                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
+                if (!empty($cancelados)) {
+                    $subQuery->whereNotIn('status_movimentacao_id', $cancelados);
+                }
+            });
+
+        $query = $this->scopeStatusVeiculoDisponivel($query);
+
+        return (int) $query->count();
+    }
+
+    /**
      * Retorna o total de veiculos ativos por estacao.
      *
      * @param array<int, int|string> $estacoesIds
