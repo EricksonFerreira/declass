@@ -27,6 +27,7 @@ class FinanceiroController extends Controller
         $moedaEmpresa = $this->moedaEmpresaParaConsulta();
         $hasPagoPor = SchemaCache::hasColumn('transacoes', 'pago_por_user_id');
         $hasMoeda = SchemaCache::hasColumn('transacoes', 'moeda');
+        $positiveAmountExpr = 'SUM(CASE WHEN COALESCE(transacoes.valor, 0) > 0 THEN COALESCE(transacoes.valor, 0) ELSE 0 END)';
 
         $base = DB::table('transacoes')
             ->leftJoin('reservas', 'reservas.id', '=', 'transacoes.reserva_id')
@@ -68,7 +69,7 @@ class FinanceiroController extends Controller
 
         $baseAgg = $this->forAggregation($base);
 
-        $totalGeral = (float) (clone $baseAgg)->sum('transacoes.valor');
+        $totalGeral = (float) (clone $baseAgg)->selectRaw("$positiveAmountExpr as total_positivo")->value('total_positivo');
         $totalFaturado = $totalGeral;
         $qtdTransacoes = (int) (clone $baseAgg)->count('transacoes.id');
         $qtdReservas = (int) (clone $baseAgg)->distinct()->count('transacoes.reserva_id');
@@ -76,7 +77,7 @@ class FinanceiroController extends Controller
 
         $totalAprovado = $this->sumByStatus((clone $baseAgg), self::STATUS_APROVADOS);
         $totalPendente = $this->sumByStatus((clone $baseAgg), self::STATUS_PENDENTES);
-        $totalCancelado = $this->sumByStatus((clone $baseAgg), self::STATUS_CANCELADOS);
+        $totalCancelado = abs($this->sumByStatus((clone $baseAgg), self::STATUS_CANCELADOS));
         $totalFalha = max(0.0, $totalGeral - $totalAprovado - $totalPendente - $totalCancelado);
 
         $qtdAprovadas = $this->countByStatus((clone $baseAgg), self::STATUS_APROVADOS);
@@ -113,7 +114,7 @@ class FinanceiroController extends Controller
         $statusBreakdown = (clone $baseAgg)
             ->selectRaw('COALESCE(transacoes.status, "sem_status") as status')
             ->selectRaw('COUNT(transacoes.id) as quantidade')
-            ->selectRaw('SUM(transacoes.valor) as total')
+            ->selectRaw($positiveAmountExpr . ' as total')
             ->groupBy('status')
             ->orderByDesc('total')
             ->get();
@@ -121,7 +122,7 @@ class FinanceiroController extends Controller
         $gatewayBreakdown = (clone $baseAgg)
             ->selectRaw('COALESCE(transacoes.metodo_pagamento, "nao_definido") as gateway')
             ->selectRaw('COUNT(transacoes.id) as quantidade')
-            ->selectRaw('SUM(transacoes.valor) as total')
+            ->selectRaw($positiveAmountExpr . ' as total')
             ->groupBy('gateway')
             ->orderByDesc('total')
             ->get();
@@ -129,7 +130,7 @@ class FinanceiroController extends Controller
         $topClientes = (clone $baseAgg)
             ->selectRaw('COALESCE(users.nome, "Sem usuario") as cliente')
             ->selectRaw('COUNT(transacoes.id) as quantidade')
-            ->selectRaw('SUM(transacoes.valor) as total')
+            ->selectRaw($positiveAmountExpr . ' as total')
             ->groupBy('cliente')
             ->orderByDesc('total')
             ->limit(5)
@@ -139,7 +140,7 @@ class FinanceiroController extends Controller
             ->whereDate('transacoes.created_at', '>=', now()->subDays(30)->toDateString())
             ->selectRaw('DATE(transacoes.created_at) as dia')
             ->selectRaw('COUNT(transacoes.id) as quantidade')
-            ->selectRaw('SUM(transacoes.valor) as total')
+            ->selectRaw($positiveAmountExpr . ' as total')
             ->groupBy('dia')
             ->orderBy('dia')
             ->get();
@@ -235,7 +236,7 @@ class FinanceiroController extends Controller
         $baseAgg = $this->forAggregation($base);
         $baseCanceladas = $this->applyReservasCanceladasScope((clone $base));
         $baseFaturamento = $this->applyReservasNaoCanceladasScope((clone $base));
-        $totalCancelado = (float) (clone $baseCanceladas)->sum('transacoes.valor');
+        $totalCancelado = abs((float) (clone $baseCanceladas)->sum('transacoes.valor'));
 
         $faturamentoPorReserva = (clone $baseFaturamento)
             ->select([

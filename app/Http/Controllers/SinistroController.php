@@ -91,7 +91,20 @@ class SinistroController extends BaseController
         $empresaId = app(EmpresaContext::class)->empresaId()
             ?? Auth::user()?->empresa_id;
 
-        $scope = fn ($q) => $empresaId ? $q->where('empresa_id', $empresaId) : $q;
+        $scope = function ($q) use ($empresaId) {
+            if (!$empresaId) {
+                return $q;
+            }
+
+            $model = method_exists($q, 'getModel') ? $q->getModel() : null;
+            $table = $model ? $model->getTable() : null;
+
+            if ($table && SchemaCache::hasTable($table) && SchemaCache::hasColumn($table, 'empresa_id')) {
+                return $q->where('empresa_id', $empresaId);
+            }
+
+            return $q;
+        };
 
         return [
             'filtroMarcas'  => $scope(Marca::query())->orderBy('nome')->pluck('nome', 'id'),

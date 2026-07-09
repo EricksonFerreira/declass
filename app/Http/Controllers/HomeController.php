@@ -333,6 +333,7 @@ public function chartData(Request $request)
     }
 
     if ($homeSections['financeiro'] && SchemaCache::hasTable('transacoes')) {
+        $positiveAmountExpr = 'SUM(CASE WHEN COALESCE(transacoes.valor, 0) > 0 THEN COALESCE(transacoes.valor, 0) ELSE 0 END)';
         $baseFinanceiro = DB::table('transacoes')
             ->whereBetween('transacoes.created_at', [$dataInicio, $dataFim]);
         $baseFinanceiro = $this->applyEmpresaScope($baseFinanceiro, 'transacoes');
@@ -343,7 +344,7 @@ public function chartData(Request $request)
 
         $financeiroMensal = (clone $baseFinanceiro)
             ->selectRaw('YEAR(transacoes.created_at) as ano, MONTH(transacoes.created_at) as mes')
-            ->selectRaw('SUM(transacoes.valor) as total')
+            ->selectRaw($positiveAmountExpr . ' as total')
             ->selectRaw('COUNT(transacoes.id) as quantidade')
             ->groupBy('ano', 'mes')
             ->get()
@@ -355,7 +356,8 @@ public function chartData(Request $request)
             $financeiroQuantidades[$index] = (int) ($financeiroMensal[$key]->quantidade ?? 0);
         }
 
-        $totalFinanceiro = (float) (clone $baseFinanceiro)->sum('transacoes.valor');
+        $totalFinanceiroQuery = (clone $baseFinanceiro)->selectRaw($positiveAmountExpr . ' as total_pos');
+        $totalFinanceiro = (float) ($totalFinanceiroQuery->value('total_pos') ?? 0);
         $qtdTransacoesFinanceiro = (int) (clone $baseFinanceiro)->count('transacoes.id');
         $ticketMedioFinanceiro = $qtdTransacoesFinanceiro > 0 ? $totalFinanceiro / $qtdTransacoesFinanceiro : 0.0;
 
@@ -375,7 +377,7 @@ public function chartData(Request $request)
 
         $gatewayRows = (clone $baseFinanceiro)
             ->selectRaw('COALESCE(transacoes.metodo_pagamento, "nao_definido") as gateway')
-            ->selectRaw('SUM(transacoes.valor) as total')
+            ->selectRaw($positiveAmountExpr . ' as total')
             ->groupBy('gateway')
             ->orderByDesc('total')
             ->limit(6)
