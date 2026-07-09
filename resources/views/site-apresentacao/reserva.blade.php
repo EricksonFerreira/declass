@@ -1742,6 +1742,7 @@
             let gruposQuantidade = {};
             let isBootstrapping = true;
             let autoSubmitAfterLogin = false;
+            let pendingLoginAutoSubmit = false;
             let loginFlowCompleted = loginPopupSuccess;
 
             function money(v) {
@@ -1855,14 +1856,23 @@
                 renderStep();
                 refresh();
                 sessionStorage.removeItem('site_reserva_auto_continue');
+                pendingLoginAutoSubmit = true;
+                triggerLoginAutoSubmit();
+            }
+
+            function triggerLoginAutoSubmit() {
+                if (!pendingLoginAutoSubmit || isBootstrapping) {
+                    return;
+                }
+                pendingLoginAutoSubmit = false;
                 autoSubmitAfterLogin = true;
-                setTimeout(function () {
+                setTimeout(function() {
                     if (form && typeof form.requestSubmit === 'function') {
                         form.requestSubmit();
                     } else if (form) {
                         form.submit();
                     }
-                }, 120);
+                }, 80);
             }
 
             function refresh() {
@@ -3129,11 +3139,6 @@
                 setTimeout(function() {
                     window.close();
                 }, 150);
-            } else if (loginPopupSuccess && !window.opener) {
-                handleLoginSuccess({
-                    name: authUserName,
-                    email: authUserEmail,
-                });
             }
             maskCelular();
             if (loginPopupSuccess) {
@@ -3141,6 +3146,7 @@
                 renderStep();
                 refresh();
                 isBootstrapping = false;
+                triggerLoginAutoSubmit();
             } else {
                 // Init pickers for pre-selected stations
                 (async function() {
@@ -3256,6 +3262,7 @@
                             state.step = 5;
                             renderStep();
                             isBootstrapping = false;
+                            triggerLoginAutoSubmit();
                             return;
                         }
                         state.step = initialStepServer;
@@ -3443,6 +3450,7 @@
                 if (cupomInput.value.trim()) await applyCupom();
                 refresh();
                 isBootstrapping = false;
+                triggerLoginAutoSubmit();
             })();
         })();
     </script>
