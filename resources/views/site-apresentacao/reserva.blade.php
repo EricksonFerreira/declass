@@ -232,7 +232,7 @@
         <section class="card">
             <div class="head">
                 <h1>Reserva em passos</h1>
-                <p>Preencha viagem, escolha veiculo, informe seus dados e finalize.</p>
+                <p>Preencha viagem, escolha veículo, informe seus dados e finalize.</p>
             </div>
 
             <div class="alerts">
@@ -323,7 +323,7 @@
 
                 <section class="panel {{ $isInitialStep2 ? 'active' : '' }}" data-panel="2">
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
-                        <h2 class="title" style="margin:0">Escolha o veiculo</h2>
+                        <h2 class="title" style="margin:0">Escolha o veículo</h2>
                         <button type="button" class="btn btn-secondary" id="btnBuscarGrupo" style="min-height:34px;font-size:12px;border-radius:999px">&#128269; Buscar grupo</button>
                     </div>
                     <p class="subtitle">
@@ -515,7 +515,7 @@
     <div class="site-modal-backdrop" id="modalBuscarGrupo">
         <div class="site-modal">
             <div class="site-modal-header">
-                <h2>&#128269; Buscar Grupo de Veiculos</h2>
+                <h2>&#128269; Buscar Grupo de Veículos</h2>
                 <button class="site-modal-close" id="modalBuscarGrupoClose">&times;</button>
             </div>
             <div class="site-modal-body">
@@ -939,7 +939,7 @@
                 if (!disponiveis.length) {
                     modelo.value = '';
                     setModelosDisponiveis([]);
-                    updateModeloAutoNote('Nao ha veiculos disponiveis neste grupo de frota para a estacao e periodo selecionados.', 'warn');
+                    updateModeloAutoNote('Nao ha veículos disponiveis neste grupo de frota para a estacao e periodo selecionados.', 'warn');
                     return false;
                 }
                 const escolhido = disponiveis.find(m => String(m.id) === String(modelo.value)) || disponiveis[0];
@@ -1084,7 +1084,7 @@
                     }
                     renderOpc(data.tipo_opcional || []);
                     if (!temDisponibilidade) {
-                        const aviso = data.aviso_modelos || 'Nao ha veiculos disponiveis neste grupo de frota para a estacao e periodo selecionados. Selecione outro grupo ou outro periodo.';
+                        const aviso = data.aviso_modelos || 'Nao ha veículos disponiveis neste grupo de frota para a estacao e periodo selecionados. Selecione outro grupo ou outro periodo.';
                         feedback('disponibilidadeFeedback', aviso, 'warn');
                         feedback('step1Feedback', aviso, 'warn');
                         state.step = 1;
@@ -1092,7 +1092,7 @@
                         return false;
                     }
 
-                    feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veiculos na estacao: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
+                    feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veículos na estacao: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
                     sincronizarCardsGrupoDisponibilidade();
                     if (autoAdvance && state.step < 2) {
                         state.step = 2;
