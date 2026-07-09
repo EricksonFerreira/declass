@@ -1742,6 +1742,7 @@
             let gruposQuantidade = {};
             let isBootstrapping = true;
             let autoSubmitAfterLogin = false;
+            let loginFlowCompleted = loginPopupSuccess;
 
             function money(v) {
                 return new Intl.NumberFormat('pt-BR', {
@@ -1842,6 +1843,7 @@
             }
 
             function handleLoginSuccess(payload) {
+                loginFlowCompleted = true;
                 isAuth = true;
                 authUserName = payload?.name || authUserName;
                 authUserEmail = payload?.email || authUserEmail;
@@ -3250,6 +3252,12 @@
                     Promise.all(restauracoes).then(function() {
                         refresh();
                         updatePrefill();
+                        if (loginFlowCompleted) {
+                            state.step = 5;
+                            renderStep();
+                            isBootstrapping = false;
+                            return;
+                        }
                         state.step = initialStepServer;
                         renderStep();
                         if (initialStepServer === 2 && grupo.value) {
