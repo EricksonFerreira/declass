@@ -1295,7 +1295,7 @@
     ];
 @endphp
 
-{{-- <p class="section-label">Atalhos rápidos</p>
+<p class="section-label">Atalhos rápidos</p>
 <div class="stat-grid">
     <a href="{{ route('veiculo.index') }}" class="stat-card c-teal">
         <div class="stat-icon"><i class="fas fa-car"></i></div>
@@ -1318,7 +1318,7 @@
             <p class="stat-value">{{ \App\Models\Reserva::count() }}</p>
         </div>
     </a>
-</div> --}}
+</div>
 @stop
 
 @section('js')
