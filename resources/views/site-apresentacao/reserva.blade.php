@@ -1454,7 +1454,7 @@
                         @else
                             <p class="client-note">Para continuar com o pagamento, faca login na sua conta.</p>
                             @if (!empty($loginRedirectUrl))
-                                <a class="btn btn-primary" id="btnAbrirLoginReserva" href="{{ $loginRedirectUrl }}" target="_blank">Fazer login</a>
+                                <a class="btn btn-primary" id="btnAbrirLoginReserva" href="{{ $loginRedirectUrl }}">Fazer login</a>
                             @else
                                 <div class="feedback warn">Login indisponivel no momento.</div>
                             @endif

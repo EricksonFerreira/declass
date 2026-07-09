@@ -69,6 +69,10 @@
                             'criada', 'pendente' => 'rc-status--amber',
                             default              => 'rc-status--slate',
                         };
+                        $statusCor = strtolower(trim((string) ($reserva->statusReserva?->cor ?? 'secondary')));
+                        if (!preg_match('/^[a-z0-9_-]+$/', $statusCor)) {
+                            $statusCor = 'secondary';
+                        }
                         $nomeCliente  = auth()->user()->nome ?? auth()->user()->name ?? 'Cliente';
                         $partesNome   = preg_split('/\s+/', trim($nomeCliente)) ?: [];
                         $iniciais     = collect($partesNome)->filter()->take(2)
@@ -99,7 +103,7 @@
                                 <span class="rc__badge {{ $pagamentoEfetuado ? 'rc__badge--green' : 'rc__badge--amber' }}">
                                     {{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}
                                 </span>
-                                <span class="rc__badge rc__badge--status rc__badge--{{ strtolower(str_replace(' ', '-', $statusNome)) }}"
+                                <span class="badge badge-xs bg-{{ $statusCor }} rc__badge--status"
                                       title="{{ $reserva->statusReserva?->descricao }}">
                                     {{ $reserva->statusReserva?->nome ?? 'Status' }}
                                 </span>
@@ -208,7 +212,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <span class="badge badge-xs bg-{{ $reserva->statusReserva?->cor }}"
+                                    <span class="badge badge-xs bg-{{ $statusCor }}"
                                           data-toggle="tooltip" title="{{ $reserva->statusReserva?->descricao }}">
                                         {{ $reserva->statusReserva?->nome ?? '-' }}
                                     </span>
@@ -435,7 +439,7 @@
     .rc__badge--cancelada  { background: rgba(239,68,68,.12);   color: #b91c1c; border: 1px solid rgba(239,68,68,.22); }
     .rc__badge--criada,
     .rc__badge--pendente   { background: rgba(245,158,11,.14);  color: #b45309; border: 1px solid rgba(245,158,11,.28); }
-    .rc__badge--status     { background: rgba(100,116,139,.12); color: #475569; border: 1px solid rgba(100,116,139,.2); }
+    .rc__badge--status     { border: 1px solid rgba(100,116,139,.2); }
 
     /* route */
     .rc__route {
