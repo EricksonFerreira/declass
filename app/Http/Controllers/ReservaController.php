@@ -192,7 +192,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $perPages = [5, 10, 15, 25, 50, 100];
 
-        return view('reserva.index', compact(
+        return view('reserva.index-cliente', compact(
             'reservas',
             'breadcrumb',
             'filters',
