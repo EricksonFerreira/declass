@@ -32,7 +32,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('profile.force-password.edit');
         }
 
-        return redirect()->route('reserva.minhas');
+        return redirect()->intended(route('reserva.minhas'));
     }
 
     /**
