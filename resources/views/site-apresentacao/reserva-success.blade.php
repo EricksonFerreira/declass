@@ -141,18 +141,17 @@
             box-shadow: 0 10px 18px rgba(15, 23, 42, .08);
         }
 
-        .survey-tone--1 { background: #ef4444 !important; color: #fff !important; border-color: #dc2626 !important; }
-        .survey-tone--2 { background: #f87171 !important; color: #fff !important; border-color: #ef4444 !important; }
-        .survey-tone--3 { background: #facc15 !important; color: #0f172a !important; border-color: #eab308 !important; }
-        .survey-tone--4 { background: #86efac !important; color: #064e3b !important; border-color: #4ade80 !important; }
-        .survey-tone--5 { background: #15803d !important; color: #fff !important; border-color: #166534 !important; }
-
-        .survey-tone--0 { background: #b91c1c !important; color: #fff !important; border-color: #991b1b !important; }
-        .survey-tone--6 { background: #f97316 !important; color: #fff !important; border-color: #ea580c !important; }
-        .survey-tone--7 { background: #facc15 !important; color: #0f172a !important; border-color: #eab308 !important; }
-        .survey-tone--8 { background: #4ade80 !important; color: #064e3b !important; border-color: #22c55e !important; }
-        .survey-tone--9 { background: #16a34a !important; color: #fff !important; border-color: #15803d !important; }
-        .survey-tone--10 { background: #14532d !important; color: #fff !important; border-color: #14532d !important; }
+        .survey-tone--0 { background: #B91C1C !important; color: #fff !important; border-color: #991B1B !important; }
+        .survey-tone--1 { background: #DC2626 !important; color: #fff !important; border-color: #B91C1C !important; }
+        .survey-tone--2 { background: #EF4444 !important; color: #fff !important; border-color: #DC2626 !important; }
+        .survey-tone--3 { background: #F97316 !important; color: #fff !important; border-color: #EA580C !important; }
+        .survey-tone--4 { background: #FB923C !important; color: #fff !important; border-color: #F97316 !important; }
+        .survey-tone--5 { background: #F59E0B !important; color: #fff !important; border-color: #D97706 !important; }
+        .survey-tone--6 { background: #EAB308 !important; color: #fff !important; border-color: #CA8A04 !important; }
+        .survey-tone--7 { background: #FACC15 !important; color: #111827 !important; border-color: #EAB308 !important; }
+        .survey-tone--8 { background: #4ADE80 !important; color: #064E3B !important; border-color: #22C55E !important; }
+        .survey-tone--9 { background: #16A34A !important; color: #fff !important; border-color: #15803D !important; }
+        .survey-tone--10 { background: #166534 !important; color: #fff !important; border-color: #14532D !important; }
 
         .survey-option input:checked + span.survey-tone--1,
         .survey-option input:checked + span.survey-tone--2,
