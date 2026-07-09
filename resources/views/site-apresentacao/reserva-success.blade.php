@@ -223,7 +223,29 @@
 <body>
     <div class="toast-wrap" id="toastWrap"></div>
     <section class="card">
-        @php($satisfacao = $reserva->satisfacao)
+        @php
+            $satisfacao = $reserva->satisfacao;
+            $surveyToneMap15 = [
+                1 => 'survey-tone--1',
+                2 => 'survey-tone--2',
+                3 => 'survey-tone--3',
+                4 => 'survey-tone--4',
+                5 => 'survey-tone--5',
+            ];
+            $surveyToneMap010 = [
+                0 => 'survey-tone--0',
+                1 => 'survey-tone--1',
+                2 => 'survey-tone--2',
+                3 => 'survey-tone--3',
+                4 => 'survey-tone--4',
+                5 => 'survey-tone--5',
+                6 => 'survey-tone--6',
+                7 => 'survey-tone--7',
+                8 => 'survey-tone--8',
+                9 => 'survey-tone--9',
+                10 => 'survey-tone--10',
+            ];
+        @endphp
         <div class="header">
             @if(!empty($empresa->logo_url))
                 <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}" class="logo">
@@ -272,19 +294,9 @@
                         <label class="survey-label">1. Como foi sua experiência geral?</label>
                         <div class="survey-options">
                             @for($i = 1; $i <= 5; $i++)
-                                @php
-                                    $surveyToneClass = match ($i) {
-                                        1 => 'survey-tone--1',
-                                        2 => 'survey-tone--2',
-                                        3 => 'survey-tone--3',
-                                        4 => 'survey-tone--4',
-                                        5 => 'survey-tone--5',
-                                        default => '',
-                                    };
-                                @endphp
                                 <label class="survey-option">
                                     <input type="radio" name="satisfacao_geral" value="{{ $i }}" {{ old('satisfacao_geral') == $i ? 'checked' : '' }} required>
-                                    <span class="{{ $surveyToneClass }}">{{ $i }}</span>
+                                    <span class="{{ $surveyToneMap15[$i] ?? '' }}">{{ $i }}</span>
                                 </label>
                             @endfor
                         </div>
@@ -294,19 +306,9 @@
                         <label class="survey-label">2. Foi fácil concluir a reserva?</label>
                         <div class="survey-options">
                             @for($i = 1; $i <= 5; $i++)
-                                @php
-                                    $surveyToneClass = match ($i) {
-                                        1 => 'survey-tone--1',
-                                        2 => 'survey-tone--2',
-                                        3 => 'survey-tone--3',
-                                        4 => 'survey-tone--4',
-                                        5 => 'survey-tone--5',
-                                        default => '',
-                                    };
-                                @endphp
                                 <label class="survey-option">
                                     <input type="radio" name="facilidade_reserva" value="{{ $i }}" {{ old('facilidade_reserva') == $i ? 'checked' : '' }} required>
-                                    <span class="{{ $surveyToneClass }}">{{ $i }}</span>
+                                    <span class="{{ $surveyToneMap15[$i] ?? '' }}">{{ $i }}</span>
                                 </label>
                             @endfor
                         </div>
@@ -316,25 +318,9 @@
                         <label class="survey-label">3. De 0 a 10, quanto você recomendaria a empresa?</label>
                         <div class="survey-options">
                             @for($i = 0; $i <= 10; $i++)
-                                @php
-                                    $surveyToneClass = match (true) {
-                                        $i === 0 => 'survey-tone--0',
-                                        $i === 1 => 'survey-tone--1',
-                                        $i === 2 => 'survey-tone--2',
-                                        $i === 3 => 'survey-tone--3',
-                                        $i === 4 => 'survey-tone--4',
-                                        $i === 5 => 'survey-tone--5',
-                                        $i === 6 => 'survey-tone--6',
-                                        $i === 7 => 'survey-tone--7',
-                                        $i === 8 => 'survey-tone--8',
-                                        $i === 9 => 'survey-tone--9',
-                                        $i === 10 => 'survey-tone--10',
-                                        default => '',
-                                    };
-                                @endphp
                                 <label class="survey-option">
                                     <input type="radio" name="nps_nota" value="{{ $i }}" {{ old('nps_nota') !== null && (string) old('nps_nota') === (string) $i ? 'checked' : '' }} required>
-                                    <span class="{{ $surveyToneClass }}">{{ $i }}</span>
+                                    <span class="{{ $surveyToneMap010[$i] ?? '' }}">{{ $i }}</span>
                                 </label>
                             @endfor
                         </div>
