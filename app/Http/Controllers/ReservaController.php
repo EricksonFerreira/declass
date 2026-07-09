@@ -509,7 +509,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.minhas')),
-            new BreadCrumbItem('Detalhes da Reserva NÂº' . $id)
+            new BreadCrumbItem('Detalhes da Reserva Nº' . $id)
         ]);
         $reserva = $this->reservaService->getById($id, ['contratoCheckin', 'contratoCheckout']);
         if (!$reserva) {
