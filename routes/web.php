@@ -100,7 +100,7 @@ Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::middleware(['auth', 'verified'])->get('/', function () {
-        return redirect()->route('reserva.minhas');
+        return redirect()->route('home');
     })->name('admin.index');
 
     // Comecar agora (cadastro rapido de empresa + usuario unico com senha padrao).
@@ -112,9 +112,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         return view('auth.register-success');
     })->name('register.success');
 
-    Route::get('home', function () {
-        return redirect()->route('reserva.minhas');
-    })->middleware('auth')->name('home');
+    Route::get('home', [HomeController::class, 'home'])->middleware(['auth', 'verified'])->name('home');
     Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth', 'verified'])->name('home.chart-data');
     Route::get('indicadores', [IndicadoresController::class, 'index'])->middleware(['auth', 'verified'])->name('indicadores.index');
     Route::get('indicadores/{slug}', [IndicadoresController::class, 'show'])->middleware(['auth', 'verified'])->name('indicadores.show');

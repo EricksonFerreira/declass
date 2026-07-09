@@ -67,8 +67,8 @@ class ExigirPagamentoPlanoMiddleware
             return $next($request);
         }
 
-        return redirect()->route('assinatura.meu-plano')
-            ->with('warning', 'Acesse seu plano e conclua o pagamento para liberar o sistema.');
+        return redirect()->route('home')
+            ->with('warning', 'Acesse a area administrativa para continuar.');
     }
 
     private function isAllowedRoute(?string $routeName): bool
