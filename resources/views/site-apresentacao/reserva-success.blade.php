@@ -624,7 +624,9 @@
                                 <p>Leva menos de 30 segundos.</p>
                             </div>
                         </div>
-                        <a href="#avaliacao" class="btn btn-secondary">Responder avaliação</a>
+                        @if(!$satisfacao)
+                            <a href="#avaliacao" class="btn btn-secondary">Responder avaliação</a>
+                        @endif
                     </div>
 
                     <div class="survey-body" id="avaliacao">
