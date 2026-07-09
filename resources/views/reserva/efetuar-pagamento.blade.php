@@ -37,6 +37,8 @@
     $valorCobranca = (float) ($valorCobranca ?? $saldoPendente);
 
     $gateway = $gatewayPadrao ?? 'stripe';
+    $temMetodosPagamento = !empty($metodosPagamento) && count($metodosPagamento) > 0;
+    $tooltipSemMetodoPagamento = 'Adicione um método de pagamento salvo para habilitar o pagamento.';
 @endphp
 
 <div class="ep-page">
@@ -247,9 +249,16 @@
 
                         <input type="hidden" name="payment_method_id" id="payment_method_id" value="">
 
-                        <button type="submit" id="btn-submit-pagamento" class="btn btn-success btn-block ep-btn-pay">
-                            <i class="fas fa-lock mr-2"></i> Confirmar e Processar Pagamento
-                        </button>
+                        <span class="ep-pay-btn-wrap" data-tooltip="{{ $temMetodosPagamento ? '' : $tooltipSemMetodoPagamento }}" title="{{ $temMetodosPagamento ? '' : $tooltipSemMetodoPagamento }}">
+                            <button
+                                type="submit"
+                                id="btn-submit-pagamento"
+                                class="btn btn-success btn-block ep-btn-pay"
+                                {{ $temMetodosPagamento ? '' : 'disabled aria-disabled=true' }}
+                            >
+                                <i class="fas fa-lock mr-2"></i> Confirmar e Processar Pagamento
+                            </button>
+                        </span>
                     </form>
                 </div>
             </div>
@@ -474,6 +483,54 @@
 .ep-total-box__label { font-size: .82rem; font-weight: 600; color: #4a7a5a; }
 .ep-total-box__value { font-size: 1.5rem; font-weight: 700; color: #1a5c35; }
 .ep-btn-pay { border-radius: 10px; font-weight: 600; font-size: .95rem; padding: .65rem; }
+.ep-pay-btn-wrap {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+.ep-pay-btn-wrap .btn:disabled {
+    cursor: not-allowed;
+    opacity: .56;
+    filter: grayscale(.15);
+    box-shadow: none;
+}
+.ep-pay-btn-wrap::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    background: rgba(15, 23, 42, .96);
+    color: #fff;
+    font-size: 11px;
+    line-height: 1.35;
+    padding: 7px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s ease, transform .15s ease;
+    z-index: 20;
+}
+.ep-pay-btn-wrap::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 2px);
+    transform: translateX(-50%);
+    border: 6px solid transparent;
+    border-top-color: rgba(15, 23, 42, .96);
+    opacity: 0;
+    transition: opacity .15s ease;
+    z-index: 21;
+}
+.ep-pay-btn-wrap:hover::after,
+.ep-pay-btn-wrap:hover::before {
+    opacity: 1;
+}
+.ep-pay-btn-wrap:hover::after {
+    transform: translateX(-50%) translateY(-2px);
+}
 
 /* Summary rows */
 .ep-summary-row {
@@ -518,6 +575,22 @@
     const saveBtn    = document.getElementById('btnSalvarMetodo');
     const cardErrors = document.getElementById('card-errors');
     const csrf       = @json(csrf_token());
+    const temMetodosIniciais = @json($temMetodosPagamento);
+
+    function atualizarBotaoPagamento() {
+        if (!submitBtn) return;
+        const temMetodoSelecionavel = !!(paySelect && paySelect.options && paySelect.options.length > 0 && !(paySelect.options.length === 1 && !paySelect.value));
+        const habilitar = temMetodosIniciais || temMetodoSelecionavel;
+        submitBtn.disabled = !habilitar;
+        submitBtn.setAttribute('aria-disabled', habilitar ? 'false' : 'true');
+        const wrapper = submitBtn.closest('.ep-pay-btn-wrap');
+        if (wrapper) {
+            wrapper.dataset.tooltip = habilitar
+                ? ''
+                : 'Adicione um método de pagamento salvo para habilitar o pagamento.';
+            wrapper.title = habilitar ? '' : 'Adicione um método de pagamento salvo para habilitar o pagamento.';
+        }
+    }
 
     if (form && submitBtn) {
         form.addEventListener('submit', function () {
@@ -525,6 +598,11 @@
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm mr-2" role="status"></span> Processando...';
         });
     }
+
+    if (paySelect) {
+        paySelect.addEventListener('change', atualizarBotaoPagamento);
+    }
+    atualizarBotaoPagamento();
 
     if (gateway !== 'stripe') return;
 
@@ -571,6 +649,7 @@
                         paySelect.appendChild(opt);
                     });
                     if (paySelect.options.length) paySelect.value = paySelect.options[paySelect.options.length - 1].value;
+                    atualizarBotaoPagamento();
                 }
                 $('#modalMetodoPagamento').modal('hide');
             } catch (err) {

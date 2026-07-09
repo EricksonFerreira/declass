@@ -60,6 +60,48 @@
         .client-tabs { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
         .client-tab { border: 1px solid var(--line); background: #f8fbff; border-radius: 999px; padding: 8px 14px; font-size: 12px; font-weight: 700; cursor: pointer; color: #334155; }
         .client-tab.active { border-color: var(--p); background: #fff; color: var(--p); }
+        .client-tab:disabled { cursor: not-allowed; opacity: .58; background: #f3f4f6; color: #94a3b8; border-color: #d1d5db; box-shadow: none; }
+        .client-tab-tip { position: relative; display: inline-flex; }
+        .client-tab-tip::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 8px);
+            transform: translateX(-50%);
+            min-width: max-content;
+            max-width: 240px;
+            padding: 7px 10px;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, .96);
+            color: #fff;
+            font-size: 11px;
+            line-height: 1.35;
+            white-space: nowrap;
+            box-shadow: 0 10px 20px rgba(15, 23, 42, .18);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .15s ease, transform .15s ease;
+            z-index: 30;
+        }
+        .client-tab-tip::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 2px);
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: rgba(15, 23, 42, .96);
+            opacity: 0;
+            transition: opacity .15s ease;
+            z-index: 31;
+        }
+        .client-tab-tip:hover::after,
+        .client-tab-tip:hover::before {
+            opacity: 1;
+        }
+        .client-tab-tip:hover::after {
+            transform: translateX(-50%) translateY(-2px);
+        }
         .client-panel { border: 1px solid var(--line); border-radius: 12px; background: #f8fbff; padding: 12px; margin-bottom: 12px; }
         .client-panel.hidden { display: none; }
         .client-note { margin: 0 0 10px; font-size: 13px; color: #475569; }
@@ -381,7 +423,9 @@
                     <div class="client-tabs">
                         @if(!empty($isAuth) && $isAuth)
                             <button type="button" class="client-tab active" data-client-tab="login">Usar usuario logado</button>
-                            <button type="button" class="client-tab" data-client-tab="cadastro">Cadastrar outro usuario</button>
+                            <span class="client-tab-tip" data-tooltip="Você já está logado. Para cadastrar outro usuário, saia da conta atual.">
+                                <button type="button" class="client-tab" data-client-tab="cadastro" disabled aria-disabled="true">Cadastrar outro usuario</button>
+                            </span>
                         @else
                             <button type="button" class="client-tab active" data-client-tab="cadastro">Cadastrar</button>
                             <button type="button" class="client-tab" data-client-tab="login">Ja tenho conta</button>
