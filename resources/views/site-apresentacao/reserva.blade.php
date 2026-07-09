@@ -1441,7 +1441,7 @@
                         @else
                             <button type="button" class="client-tab active"
                                 data-client-tab="cadastro">Cadastrar</button>
-                            <button type="button" class="client-tab" data-client-tab="login">Ja tenho conta</button>
+                            <button type="button" class="client-tab" data-client-tab="login">Já tenho conta</button>
                         @endif
                     </div>
 
