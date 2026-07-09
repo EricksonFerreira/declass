@@ -192,9 +192,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         $perPages = [5, 10, 15, 25, 50, 100];
 
-        return view('reserva.index-cliente', compact(
+        return view('reserva.index', compact(
             'reservas',
-            'multas',
             'breadcrumb',
             'filters',
             'itensFiltered',
@@ -230,6 +229,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         return view('reserva.index-cliente', compact(
             'reservas',
+            'multas',
             'breadcrumb',
             'filters',
             'itensFiltered',
@@ -537,6 +537,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'avariaCobrancas' => fn ($q) => $q->orderByDesc('id')->take(10),
             'multas' => fn ($q) => $q->orderByDesc('id')->take(5),
         ]);
+
+        $multas = $this->multasDoCliente($user);
 
         $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
         $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
