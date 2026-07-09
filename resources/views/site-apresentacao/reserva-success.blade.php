@@ -9,8 +9,8 @@
             margin: 0;
             min-height: 100vh;
             font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(140deg, {{ $empresa->cor_primaria ?: '#2F6F3F' }}, {{ $empresa->cor_secundaria ?: '#193C68' }});
-            color: #fff;
+            background: #ffffff;
+            color: #0f172a;
             display: grid;
             place-items: center;
             padding: 18px;
@@ -18,11 +18,11 @@
 
         .card {
             width: min(720px, 100%);
-            background: rgba(3, 7, 18, 0.3);
+            background: #ffffff;
             border-radius: 18px;
-            border: 1px solid rgba(255, 255, 255, 0.22);
+            border: 1px solid #e2e8f0;
             padding: 24px;
-            box-shadow: 0 18px 36px rgba(0, 0, 0, 0.25);
+            box-shadow: 0 18px 36px rgba(15, 23, 42, 0.08);
         }
 
         .header {
@@ -37,17 +37,18 @@
             height: 48px;
             border-radius: 12px;
             object-fit: contain;
-            background: {{ $empresa->cor_primaria ?: '#2F6F3F' }};
+            background: #f8fafc;
             padding: 4px;
+            border: 1px solid #e2e8f0;
         }
 
         h1 { margin: 0 0 8px; font-size: 1.65rem; }
-        p { margin: 0 0 14px; color: rgba(255, 255, 255, .9); }
+        p { margin: 0 0 14px; color: #475569; }
 
         .details {
-            background: rgba(255, 255, 255, .12);
+            background: #f8fafc;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, .25);
+            border: 1px solid #e2e8f0;
             padding: 12px;
             margin-bottom: 16px;
         }
@@ -55,7 +56,7 @@
         .row {
             padding: 6px 0;
             font-size: .92rem;
-            border-bottom: 1px dashed rgba(255, 255, 255, .28);
+            border-bottom: 1px dashed #e2e8f0;
         }
 
         .row:last-child { border-bottom: 0; }
@@ -69,7 +70,7 @@
         .survey {
             margin-top: 18px;
             padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, .18);
+            border-top: 1px solid #e2e8f0;
         }
 
         .survey h2 {
@@ -79,13 +80,13 @@
 
         .survey p.small {
             font-size: .88rem;
-            color: rgba(255, 255, 255, .82);
+            color: #64748b;
         }
 
         .survey-card {
             margin-top: 14px;
-            background: rgba(255, 255, 255, .1);
-            border: 1px solid rgba(255, 255, 255, .2);
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             border-radius: 14px;
             padding: 14px;
         }
@@ -142,19 +143,19 @@
             width: 100%;
             min-height: 84px;
             border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, .3);
-            background: rgba(255, 255, 255, .1);
-            color: #fff;
+            border: 1px solid #cbd5e1;
+            background: #ffffff;
+            color: #0f172a;
             padding: 10px 12px;
             resize: vertical;
             outline: none;
         }
 
-        .survey-textarea::placeholder { color: rgba(255, 255, 255, .65); }
+        .survey-textarea::placeholder { color: #94a3b8; }
 
         .survey-note {
             font-size: .78rem;
-            color: rgba(255, 255, 255, .72);
+            color: #64748b;
             margin-top: 6px;
         }
 
@@ -162,8 +163,8 @@
             margin-top: 14px;
             padding: 12px 14px;
             border-radius: 12px;
-            background: rgba(22, 101, 52, .22);
-            border: 1px solid rgba(187, 247, 208, .35);
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
         }
 
         .btn {
@@ -175,18 +176,19 @@
         }
 
         .btn-primary {
-            background: #ffffff;
-            color: #0f172a;
+            background: #0f172a;
+            color: #ffffff;
         }
 
         .btn-secondary {
-            border: 1px solid rgba(255, 255, 255, .38);
-            color: #fff;
+            border: 1px solid #cbd5e1;
+            color: #0f172a;
+            background: #fff;
         }
         .toast-wrap { position: fixed; top: 16px; right: 16px; display: grid; gap: 8px; z-index: 60; }
-        .toast { min-width: 260px; max-width: 360px; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700; box-shadow: 0 18px 30px rgba(0, 0, 0, .25); border: 1px solid rgba(255,255,255,.3); background: rgba(15, 23, 42, .8); color: #fff; }
-        .toast.ok { background: rgba(22, 101, 52, .92); }
-        .toast.err { background: rgba(153, 27, 27, .92); }
+        .toast { min-width: 260px; max-width: 360px; border-radius: 12px; padding: 12px 14px; font-size: 13px; font-weight: 700; box-shadow: 0 18px 30px rgba(15, 23, 42, .12); border: 1px solid #e2e8f0; background: #fff; color: #0f172a; }
+        .toast.ok { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
+        .toast.err { background: #fef2f2; color: #991b1b; border-color: #fecaca; }
     </style>
 </head>
 <body>
