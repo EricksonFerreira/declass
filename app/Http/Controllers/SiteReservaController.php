@@ -921,7 +921,7 @@ class SiteReservaController extends Controller
             'moedaPadrao' => $moedaPadrao,
             'metodosPagamento' => $metodosPagamento,
             'stripePublicKey' => $stripePublicKey,
-            'urlVoltarPortal' => route('reserva.index'),
+              'urlVoltarPortal' => route('reserva.minhas'),
             'urlProcessar' => route('site.multa.processarPagamento', ['multa' => $multaItem->id]),
             'urlAdicionarMetodo' => route('site.multa.pagamento.metodo', ['multa' => $multaItem->id]),
             'urlLogin' => Route::has('login') ? route('login') : $this->adminLoginFallbackUrl(),
@@ -944,11 +944,11 @@ class SiteReservaController extends Controller
         }
         $multaItem = $multaItem->find($multa);
 
-        if (!$multaItem) {
-            return redirect()
-                ->route('site.reserva.index')
-                ->withErrors(['multa' => 'Multa nao encontrada.']);
-        }
+          if (!$multaItem) {
+              return redirect()
+                  ->route('site.reserva.index')
+                  ->withErrors(['multa' => 'Multa nao encontrada.']);
+          }
 
         if (!auth()->check()) {
             session()->put('url.intended', route('site.multa.pagamento', ['multa' => $multaItem->id]));
@@ -1052,17 +1052,17 @@ class SiteReservaController extends Controller
         }
 
         $usuarioMulta = $multaItem->reserva?->usuario ?? $multaItem->cliente;
-        if (!$usuarioMulta || (int) auth()->id() !== (int) $usuarioMulta->id) {
-            return redirect()
-                ->route('site.reserva.index')
-                ->withErrors(['multa' => 'Esta multa nao pertence ao usuario autenticado.']);
-        }
+          if (!$usuarioMulta || (int) auth()->id() !== (int) $usuarioMulta->id) {
+              return redirect()
+                  ->route('reserva.minhas')
+                  ->withErrors(['multa' => 'Esta multa nao pertence ao usuario autenticado.']);
+          }
 
-        if (!empty($multaItem->pago_em)) {
-            return redirect()
-                ->route('site.reserva.index')
-                ->with('success', 'Esta multa ja foi paga.');
-        }
+          if (!empty($multaItem->pago_em)) {
+              return redirect()
+                  ->route('reserva.minhas.multa.show', ['id' => $multaItem->id])
+                  ->with('success', 'Esta multa ja foi paga.');
+          }
 
         $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
         $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
@@ -1116,16 +1116,16 @@ class SiteReservaController extends Controller
                 ->withErrors(['pagamento' => 'Falha ao processar o pagamento. Tente novamente.']);
         }
 
-        if (
-            $gateway === 'mercado_livre'
-            && ($resultado['status'] ?? '') === 'pending'
-            && ($resultado['payment_method_id'] ?? '') === 'pix'
-        ) {
-            return redirect()
-                ->route('site.multa.pagamento', ['multa' => $multaItem->id])
-                ->with('success', 'Pix gerado. Escaneie o QR Code para concluir o pagamento.')
-                ->with('pix', $resultado);
-        }
+          if (
+              $gateway === 'mercado_livre'
+              && ($resultado['status'] ?? '') === 'pending'
+              && ($resultado['payment_method_id'] ?? '') === 'pix'
+          ) {
+              return redirect()
+                  ->route('site.multa.pagamento', ['multa' => $multaItem->id])
+                  ->with('success', 'Pix gerado. Escaneie o QR Code para concluir o pagamento.')
+                  ->with('pix', $resultado);
+          }
 
         if (($resultado['status'] ?? 'error') !== 'success') {
             return redirect()
@@ -1170,10 +1170,10 @@ class SiteReservaController extends Controller
             ]));
         }
 
-        return redirect()
-            ->route('reserva.index')
-            ->with('success', 'Pagamento da multa efetuado com sucesso.');
-    }
+          return redirect()
+              ->route('reserva.minhas.multa.show', ['id' => $multaItem->id])
+              ->with('success', 'Pagamento da multa efetuado com sucesso.');
+      }
 
     public function processarPagamento(Request $request, int $reserva): RedirectResponse
     {

@@ -1296,17 +1296,17 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         $user = Auth::user();
-        $ehCliente = $user && $this->isCliente($user);
-        $ehDonoDaReserva = !$user || (int) $reservaAntes->user_id === (int) $user->id;
+        $ehDonoDaReserva = $user && (int) $reservaAntes->user_id === (int) $user->id;
+        $redirectRoute = $ehDonoDaReserva ? 'reserva.minhas' : 'reserva.index';
 
-        if ($ehCliente && !$ehDonoDaReserva) {
+        if ($user && !$ehDonoDaReserva) {
             $message = 'Sem permissao para cancelar esta reserva.';
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $message], 403)
                 : redirect()->route('reserva.minhas.show', $reservaAntes->id)->with('error', $message);
         }
 
-        if ($ehCliente && !$reservaAntes->podeCancelarComoCliente()) {
+        if ($ehDonoDaReserva && !$reservaAntes->podeCancelarComoCliente()) {
             $message = 'O cancelamento so pode ser feito ate 24 horas apos a criacao da reserva.';
             return $request->expectsJson()
                 ? response()->json(['success' => false, 'message' => $message], 422)
@@ -1344,11 +1344,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return response()->json([
                 'success' => true,
                 'message' => $message,
-                'redirect' => route($ehCliente ? 'reserva.minhas' : 'reserva.index'),
+                'redirect' => route($redirectRoute),
             ]);
         }
 
-        $redirect = redirect()->route($ehCliente ? 'reserva.minhas' : 'reserva.index');
+        $redirect = redirect()->route($redirectRoute);
         if ($cancelamentoMensagem) {
             $redirect->with('warning', $cancelamentoMensagem);
         }
