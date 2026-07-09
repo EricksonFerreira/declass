@@ -227,7 +227,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $additionalFilters = [];
         $itensFiltered     = [];
 
-        return view('reserva.index', compact(
+        return view('reserva.index-cliente', compact(
             'reservas',
             'breadcrumb',
             'filters',
