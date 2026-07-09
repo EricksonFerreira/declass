@@ -4,6 +4,10 @@
     $corSecundaria = $empresa->cor_secundaria ?: '#14324d';
     $initialStepServer = (int) old('step', $errors->any() ? 4 : 2);
     $initialStepServer = in_array($initialStepServer, [1, 2, 3, 4], true) ? $initialStepServer : 2;
+    $isInitialStep1 = $initialStepServer === 1;
+    $isInitialStep2 = $initialStepServer === 2;
+    $isInitialStep3 = $initialStepServer === 3;
+    $isInitialStep4 = $initialStepServer === 4;
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -150,6 +154,8 @@
         .grupo-card { border: 1px solid var(--line); border-radius: 14px; background: #fff; padding: 10px; display: grid; gap: 8px; cursor: pointer; transition: transform .15s ease, box-shadow .2s ease, border-color .2s ease; }
         .grupo-card:hover { transform: translateY(-1px); box-shadow: 0 10px 18px rgba(15, 23, 42, .08); }
         .grupo-card.active { border-color: var(--p); box-shadow: 0 12px 24px rgba(15, 23, 42, .12); background: #f4f9ff; }
+        .grupo-card.disabled { opacity: .5; cursor: not-allowed; filter: grayscale(.1); }
+        .grupo-card.disabled:hover { transform: none; box-shadow: none; }
         .grupo-thumb { width: 100%; height: 150px; border-radius: 12px; border: 1px solid var(--line); background: #f8fbff; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .grupo-thumb img { width: 100%; height: 100%; object-fit: cover; }
         .grupo-thumb span { font-size: 12px; color: #94a3b8; }
@@ -252,10 +258,10 @@
             </div>
 
             <div class="steps" id="stepsHeader">
-                <div class="step-pill active" data-step="1"><span class="num">1</span><span>Viagem</span></div>
-                <div class="step-pill" data-step="2"><span class="num">2</span><span>Veiculo</span></div>
-                <div class="step-pill" data-step="3"><span class="num">3</span><span>Opcionais</span></div>
-                <div class="step-pill" data-step="4"><span class="num">4</span><span>Cliente</span></div>
+                <div class="step-pill {{ $isInitialStep1 ? 'active' : '' }}" data-step="1"><span class="num">1</span><span>Viagem</span></div>
+                <div class="step-pill {{ $isInitialStep2 ? 'active' : '' }}" data-step="2"><span class="num">2</span><span>Veiculo</span></div>
+                <div class="step-pill {{ $isInitialStep3 ? 'active' : '' }}" data-step="3"><span class="num">3</span><span>Opcionais</span></div>
+                <div class="step-pill {{ $isInitialStep4 ? 'active' : '' }}" data-step="4"><span class="num">4</span><span>Cliente</span></div>
                 <div class="step-pill disabled" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
             </div>
 
@@ -266,7 +272,7 @@
                 <input type="hidden" id="usar_usuario_logado" name="usar_usuario_logado" value="{{ !empty($isAuth) && $isAuth ? 'S' : 'N' }}">
                 <input type="hidden" id="step_input" name="step" value="{{ old('step', $initialStepServer) }}">
 
-                <section class="panel active" data-panel="1">
+                <section class="panel {{ $isInitialStep1 ? 'active' : '' }}" data-panel="1">
                     <h2 class="title">Onde e quando?</h2>
                     <p class="subtitle">Defina retirada, devolucao e datas.</p>
                     <div class="grid">
@@ -315,7 +321,7 @@
                     <div class="feedback" id="step1Feedback">Preencha os dados para continuar.</div>
                 </section>
 
-                <section class="panel" data-panel="2">
+                <section class="panel {{ $isInitialStep2 ? 'active' : '' }}" data-panel="2">
                     <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px">
                         <h2 class="title" style="margin:0">Escolha o veiculo</h2>
                         <button type="button" class="btn btn-secondary" id="btnBuscarGrupo" style="min-height:34px;font-size:12px;border-radius:999px">&#128269; Buscar grupo</button>
@@ -333,7 +339,7 @@
                                 $caracteristicas = $grupo['caracteristicas'] ?? [];
                                 $listaCaracteristicas = array_slice($caracteristicas, 0, 4);
                             @endphp
-                            <article class="grupo-card" data-grupo-id="{{ $grupo['id'] }}" data-grupo-nome="{{ $grupo['nome'] }}" data-tarifa="{{ $grupo['valor_diario'] }}">
+                            <article class="grupo-card" data-grupo-id="{{ $grupo['id'] }}" data-grupo-nome="{{ $grupo['nome'] }}" data-tarifa="{{ $grupo['valor_diario'] }}" data-disponivel="1">
                                 <div class="grupo-thumb">
                                     @if(!empty($grupo['imagens_urls']))
                                         <img src="{{ $grupo['imagens_urls'][0] }}" alt="{{ $grupo['nome'] }}">
@@ -404,13 +410,13 @@
                     </div>
                     <div class="feedback" id="disponibilidadeFeedback">Informe o grupo para carregar disponibilidade.</div>
                 </section>
-                <section class="panel" data-panel="3">
+                <section class="panel {{ $isInitialStep3 ? 'active' : '' }}" data-panel="3">
                     <h2 class="title">Opcionais</h2>
                     <p class="subtitle">Adicione opcionais e aplique cupom se desejar.</p>
                     <div id="opcionaisGrid" class="opcionais"></div>
                 </section>
 
-                <section class="panel" data-panel="4">
+                <section class="panel {{ $isInitialStep4 ? 'active' : '' }}" data-panel="4">
                     <h2 class="title">Dados do cliente</h2>
                     <p class="subtitle">
                         @if(!empty($isAuth) && $isAuth)
@@ -608,6 +614,7 @@
             const usarUsuarioLogadoInput = document.getElementById('usar_usuario_logado');
             let clientMode = isAuth ? 'login' : 'cadastro';
             let modelosDisponiveis = {};
+            let gruposDisponibilidade = {};
 
             function money(v) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: moeda || 'BRL' }).format(Number(v || 0)); }
             function dateLabel(v) { const d = new Date(v); if (Number.isNaN(d.getTime())) return '-'; return new Intl.DateTimeFormat('pt-BR', { dateStyle: 'short', timeStyle: 'short' }).format(d); }
@@ -689,6 +696,39 @@
                 gruposGrid.querySelectorAll('.grupo-card').forEach((card) => {
                     card.classList.toggle('active', card.getAttribute('data-grupo-id') === selectedId);
                 });
+            }
+            function sincronizarCardsGrupoDisponibilidade() {
+                if (!gruposGrid) {
+                    return;
+                }
+
+                gruposGrid.querySelectorAll('.grupo-card').forEach((card) => {
+                    const id = String(card.getAttribute('data-grupo-id') || '');
+                    const disponivel = gruposDisponibilidade[id];
+                    const isAvailable = disponivel !== false;
+                    card.dataset.disponivel = isAvailable ? '1' : '0';
+                    card.classList.toggle('disabled', !isAvailable);
+                    card.setAttribute('aria-disabled', isAvailable ? 'false' : 'true');
+                    card.title = isAvailable
+                        ? 'Grupo disponível neste período.'
+                        : 'Grupo indisponível para a data e estação selecionadas.';
+                });
+
+                if (grupo.value) {
+                    const selectedCard = gruposGrid.querySelector(`.grupo-card[data-grupo-id="${grupo.value}"]`);
+                    if (selectedCard && selectedCard.dataset.disponivel === '0') {
+                        grupo.value = '';
+                        modelo.value = '';
+                        state.modeloNome = null;
+                        modelosDisponiveis = {};
+                        if (modelosGrid) {
+                            modelosGrid.innerHTML = '';
+                        }
+                        updateModeloAutoNote('Este grupo não possui carros disponíveis no período selecionado.', 'warn');
+                    }
+                }
+
+                highlightGrupo();
             }
             function highlightModelo() {
                 if (!modelosGrid) {
@@ -897,7 +937,7 @@
             function autoSelectModelo(list) {
                 const disponiveis = Array.isArray(list) ? list.filter(m => m.disponivel !== false) : [];
                 if (!disponiveis.length) {
-                    modelo.valpue = '';
+                    modelo.value = '';
                     setModelosDisponiveis([]);
                     updateModeloAutoNote('Nenhum modelo disponivel para este grupo no periodo selecionado.', 'warn');
                     return false;
@@ -973,6 +1013,47 @@
                 }).join('');
                 refresh();
             }
+            async function carregarDisponibilidadeGrupos() {
+                if (!validStep1(false)) {
+                    gruposDisponibilidade = {};
+                    sincronizarCardsGrupoDisponibilidade();
+                    return false;
+                }
+
+                const paramsBase = {
+                    por_pagina: 50,
+                    estacao_retirada_id: document.getElementById('estacao_retirada_id').value,
+                    data_inicio: dataInicio.value,
+                    data_fim: dataFim.value
+                };
+
+                try {
+                    feedback('disponibilidadeFeedback', 'Verificando disponibilidade dos grupos...', null);
+                    gruposDisponibilidade = {};
+                    let page = 1;
+                    let lastPage = 1;
+
+                    do {
+                        const params = new URLSearchParams({ ...paramsBase, page });
+                        const res = await fetch(`${pesquisarGruposUrl}?${params.toString()}`, { headers: { Accept: 'application/json' } });
+                        const data = await res.json();
+                        if (!res.ok) throw new Error(data.message || 'Falha ao verificar grupos.');
+
+                        (Array.isArray(data.data) ? data.data : []).forEach(function (item) {
+                            gruposDisponibilidade[String(item.id)] = item.disponivel !== false;
+                        });
+
+                        lastPage = Number(data.last_page || 1);
+                        page += 1;
+                    } while (page <= lastPage);
+
+                    sincronizarCardsGrupoDisponibilidade();
+                    return true;
+                } catch (e) {
+                    feedback('disponibilidadeFeedback', e.message || 'Erro ao verificar disponibilidade dos grupos.', 'warn');
+                    return false;
+                }
+            }
             async function loadDisponibilidade({ autoAdvance = false } = {}) {
                 if (!validStep1(false) || !grupo.value) {
                     return false;
@@ -1012,6 +1093,7 @@
                     }
 
                     feedback('disponibilidadeFeedback', `Disponibilidade carregada. Veiculos na estacao: ${Number(data.qtd_veiculos_estacao || 0)}.`, 'ok');
+                    sincronizarCardsGrupoDisponibilidade();
                     if (autoAdvance && state.step < 2) {
                         state.step = 2;
                         renderStep();
@@ -1371,7 +1453,7 @@
                 } else if (estacaoDevolucaoFeedback) {
                     estacaoDevolucaoFeedback.textContent = 'Selecione uma estação de devolução disponível.';
                 }
-                refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade();
+                    refresh(); enforceStep1Gate(false); updatePrefill(); carregarDisponibilidadeGrupos().then(function() { if (grupo.value) loadDisponibilidade(); });
             });
             document.getElementById('estacao_devolucao_id').addEventListener('change', function () {
                 const estId = this.value;
@@ -1387,7 +1469,7 @@
                         ? 'Selecione a data de devolução. A hora será carregada de acordo com o expediente da estação.'
                         : 'Se a estação de retirada também aceitar checkout, a devolução será ajustada automaticamente.';
                 }
-                refresh(); enforceStep1Gate(false); updatePrefill(); if (grupo.value) loadDisponibilidade();
+                refresh(); enforceStep1Gate(false); updatePrefill(); carregarDisponibilidadeGrupos().then(function() { if (grupo.value) loadDisponibilidade(); });
             });
             grupo.addEventListener('change', function () {
                 const card = selectedGrupoCard();
@@ -1403,7 +1485,11 @@
                 highlightGrupo();
                 refresh();
                 if (validStep1(false)) {
-                    loadDisponibilidade();
+                    carregarDisponibilidadeGrupos().then(function() {
+                        if (grupo.value) {
+                            loadDisponibilidade();
+                        }
+                    });
                 } else {
                     feedback('disponibilidadeFeedback', 'Preencha as datas e estacoes no passo 1 para ver disponibilidade.', 'warn');
                 }
@@ -1463,7 +1549,8 @@
                 gruposGrid.addEventListener('click', function (ev) {
                     const card = ev.target instanceof HTMLElement ? ev.target.closest('.grupo-card') : null;
                     if (!card) return;
-                    const id = card.getAttribute('data-grupo-id');
+                      if (card.dataset.disponivel === '0') return;
+                      const id = card.getAttribute('data-grupo-id');
                     if (!id) return;
                     grupo.value = id;
                     highlightGrupo();
@@ -1619,7 +1706,7 @@
                                     <td>${modelos}</td>
                                     <td>${segs}</td>
                                     <td style="text-align:right;font-weight:700">${money(g.valor_diario)}</td>
-                                    <td><button type="button" class="btn btn-primary pgf-selecionar" data-grupo-id="${g.id}" data-grupo-nome="${g.nome}" data-tarifa="${g.valor_diario}" style="min-height:30px;font-size:12px;padding:4px 10px">Selecionar</button></td>
+                                    <td><button type="button" class="btn ${g.disponivel === false ? 'btn-secondary' : 'btn-primary'} pgf-selecionar" data-grupo-id="${g.id}" data-grupo-nome="${g.nome}" data-tarifa="${g.valor_diario}" data-disponivel="${g.disponivel === false ? '0' : '1'}" style="min-height:30px;font-size:12px;padding:4px 10px" ${g.disponivel === false ? 'disabled' : ''}>${g.disponivel === false ? 'Indisponível' : 'Selecionar'}</button></td>
                                 </tr>`;
                             }).join('');
                             // pagination
@@ -1645,10 +1732,11 @@
                 document.getElementById('pgf_tbody').addEventListener('click', function(e) {
                     const btn = e.target instanceof HTMLElement ? e.target.closest('.pgf-selecionar') : null;
                     if (!btn) return;
-                    const id = btn.dataset.grupoId;
-                    const tarifa = btn.dataset.tarifa;
-                    if (!id) return;
-                    modal.classList.remove('open');
+                      const id = btn.dataset.grupoId;
+                      const tarifa = btn.dataset.tarifa;
+                      if (!id) return;
+                      if (btn.dataset.disponivel === '0') return;
+                      modal.classList.remove('open');
                     // Set tarifa BEFORE dispatching change (handler will keep it if no card found)
                     grupo.value = id;
                     state.tarifa = Number(tarifa || 0);
@@ -1672,6 +1760,7 @@
             highlightGrupo();
             highlightModelo();
             (async function initOld() {
+                await carregarDisponibilidadeGrupos();
                 if (grupo.value) {
                     await loadDisponibilidade({ autoAdvance: true });
                     if (oldOpcionaisPayload) {
