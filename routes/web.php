@@ -99,7 +99,7 @@ Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'a
 Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('job.fipe.catalogo.run');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
-    Route::middleware(['auth', 'verified'])->get('/', function () {
+    Route::middleware(['auth'])->get('/', function () {
         return redirect('/admin/home');
     })->name('admin.index');
 
@@ -112,10 +112,10 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         return view('auth.register-success');
     })->name('register.success');
 
-    Route::get('home', [HomeController::class, 'home'])->middleware(['auth', 'verified'])->name('home');
-    Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth', 'verified'])->name('home.chart-data');
-    Route::get('indicadores', [IndicadoresController::class, 'index'])->middleware(['auth', 'verified'])->name('indicadores.index');
-    Route::get('indicadores/{slug}', [IndicadoresController::class, 'show'])->middleware(['auth', 'verified'])->name('indicadores.show');
+    Route::get('home', [HomeController::class, 'home'])->middleware(['auth'])->name('home');
+    Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth'])->name('home.chart-data');
+    Route::get('indicadores', [IndicadoresController::class, 'index'])->middleware(['auth'])->name('indicadores.index');
+    Route::get('indicadores/{slug}', [IndicadoresController::class, 'show'])->middleware(['auth'])->name('indicadores.show');
     Route::get('/dashboard', function () {
         return redirect()->route('reserva.minhas');
     })->middleware('auth')->name('dashboard');
