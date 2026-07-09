@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reserva confirmada | {{ $empresa->nome }}</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <style>
         :root {
             --bg: #f4f7fb;
@@ -100,10 +101,9 @@
             box-shadow: inset 0 0 0 1px rgba(255,255,255,.12);
         }
 
-        .hero-icon svg {
-            width: 34px;
-            height: 34px;
-            fill: #fff;
+        .hero-icon i {
+            font-size: 1.8rem;
+            color: #fff;
         }
 
         .hero h1 {
@@ -158,10 +158,8 @@
             box-shadow: 0 8px 18px rgba(15,23,42,.04);
         }
 
-        .btn svg {
-            width: 18px;
-            height: 18px;
-            fill: currentColor;
+        .btn i {
+            font-size: .95rem;
             flex: 0 0 auto;
         }
 
@@ -286,10 +284,9 @@
             flex: 0 0 auto;
         }
 
-        .survey-head-icon svg {
-            width: 26px;
-            height: 26px;
-            fill: currentColor;
+        .survey-head-icon i {
+            font-size: 1.15rem;
+            color: currentColor;
         }
 
         .survey-head h3 {
@@ -520,13 +517,12 @@
                     @endif
                     <div>
                         <strong>{{ $empresa->nome }}</strong>
-                        <small>Reserva criada com sucesso</small>
                     </div>
                 </div>
 
                 <div class="hero-grid">
                     <div class="hero-icon" aria-hidden="true">
-                        <svg viewBox="0 0 24 24"><path d="M9 16.17 4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+                        <i class="fas fa-circle-check"></i>
                     </div>
                     <div>
                         <h1>Reserva recebida com sucesso!</h1>
@@ -540,22 +536,22 @@
                     @if(!empty($urlPagamento))
                         @if($isAuth)
                             <a href="{{ $urlPagamento }}" class="btn btn-primary">
-                                <svg viewBox="0 0 24 24"><path d="M20 8V7a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4v-1h2v-2H2V8h18Zm-6 8H4V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2Z"/></svg>
+                                <i class="fas fa-credit-card"></i>
                                 Ir para pagamento
                             </a>
                         @else
                             <a href="{{ $loginUrl }}" class="btn btn-primary">
-                                <svg viewBox="0 0 24 24"><path d="M20 8V7a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v10a4 4 0 0 0 4 4h10a4 4 0 0 0 4-4v-1h2v-2H2V8h18Zm-6 8H4V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2Z"/></svg>
+                                <i class="fas fa-right-to-bracket"></i>
                                 Fazer login para pagar
                             </a>
                         @endif
                     @endif
                     <a href="{{ $urlNovaReserva }}" class="btn btn-secondary">
-                        <svg viewBox="0 0 24 24"><path d="M12 5V2L7 7l5 5V9c3.31 0 6 2.69 6 6 0 1.03-.26 1.99-.72 2.84l1.46 1.46A8.95 8.95 0 0 0 21 15c0-4.97-4.03-9-9-9Zm-6.74.16A8.95 8.95 0 0 0 3 9c0 4.97 4.03 9 9 9v3l5-5-5-5v3c-3.31 0-6-2.69-6-6 0-1.03.26-1.99.72-2.84L5.26 5.16Z"/></svg>
+                        <i class="fas fa-rotate-left"></i>
                         Nova reserva
                     </a>
                     <a href="{{ $urlAdmin }}" class="btn btn-secondary">
-                        <svg viewBox="0 0 24 24"><path d="M12 2 3 6v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V6l-9-4Zm0 18c-3.88-1.02-7-5.14-7-8.97V7.3l7-3.11 7 3.11v3.73C19 14.86 15.88 18.98 12 20Zm-1-5h2v2h-2v-2Zm0-8h2v6h-2V7Z"/></svg>
+                        <i class="fas fa-globe"></i>
                         Voltar ao site
                     </a>
                 </div>
@@ -565,23 +561,23 @@
                         <h2>Resumo da reserva</h2>
                         <div class="summary-grid">
                             <div class="summary-row">
-                                <div class="summary-k"><span class="mini">#</span> Protocolo</div>
+                            <div class="summary-k"><span class="mini"><i class="fas fa-file-lines"></i></span> Protocolo</div>
                                 <div class="summary-v">#{{ $reserva->id }}</div>
                             </div>
                             <div class="summary-row">
-                                <div class="summary-k"><span class="mini">👤</span> Cliente</div>
+                            <div class="summary-k"><span class="mini"><i class="fas fa-user"></i></span> Cliente</div>
                                 <div class="summary-v">{{ $reserva->usuario?->nome ?? 'Nao informado' }}</div>
                             </div>
                             <div class="summary-row">
-                                <div class="summary-k"><span class="mini">📍</span> Retirada</div>
+                            <div class="summary-k"><span class="mini"><i class="fas fa-location-dot"></i></span> Retirada</div>
                                 <div class="summary-v">{{ $retiradaTexto }}</div>
                             </div>
                             <div class="summary-row">
-                                <div class="summary-k"><span class="mini">↩</span> Devolução</div>
+                            <div class="summary-k"><span class="mini"><i class="fas fa-rotate-left"></i></span> Devolução</div>
                                 <div class="summary-v">{{ $devolucaoTexto }}</div>
                             </div>
                             <div class="summary-row">
-                                <div class="summary-k"><span class="mini">🚗</span> Modelo</div>
+                            <div class="summary-k"><span class="mini"><i class="fas fa-car-side"></i></span> Modelo</div>
                                 <div class="summary-v">
                                     {{ $reserva->modelos?->nome ?? '-' }}
                                     @if(!empty($reserva->grupoFrota?->nome))
@@ -590,11 +586,11 @@
                                 </div>
                             </div>
                             <div class="summary-row">
-                                <div class="summary-k"><span class="mini">R$</span> Total</div>
+                            <div class="summary-k"><span class="mini"><i class="fas fa-money-bill-wave"></i></span> Total</div>
                                 <div class="summary-v"><strong>{{ $empresa->simbolo_moeda ?? 'R$' }} {{ number_format((float) $totalReserva, 2, ',', '.') }}</strong></div>
                             </div>
                             <div class="summary-row">
-                                <div class="summary-k"><span class="mini">⏱</span> Pagamento</div>
+                            <div class="summary-k"><span class="mini"><i class="fas fa-clock"></i></span> Pagamento</div>
                                 <div class="summary-v">
                                     <span class="badge {{ $pagamentoPendente ? 'badge-neutral' : 'badge-success' }}">
                                         {{ $pagamentoPendente ? 'Pendente' : 'Pago' }}
@@ -621,7 +617,7 @@
                     <div class="survey-head">
                         <div class="survey-head-left">
                             <div class="survey-head-icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24"><path d="M12 3C6.48 3 2 6.91 2 11.75c0 2.82 1.51 5.31 3.86 6.93L5 22l3.69-2.32c1.03.23 2.13.35 3.31.35 5.52 0 10-3.91 10-8.75S17.52 3 12 3Zm-1 13H9v-2h2v2Zm1.8-5.75-.9.92c-.72.73-.9 1.18-.9 2.08h-2v-.5c0-1.08.18-1.72.9-2.44l1.24-1.26A1.99 1.99 0 0 0 12 8a2 2 0 0 0-2 2H8a4 4 0 1 1 4.8 3.91Z"/></svg>
+                                <i class="fas fa-comment-dots"></i>
                             </div>
                             <div>
                                 <h3>Ajude a gente a melhorar</h3>
