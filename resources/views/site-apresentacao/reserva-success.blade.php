@@ -142,11 +142,11 @@
         }
 
         .survey-tone--0 { background: #B91C1C !important; color: #fff !important; border-color: #991B1B !important; }
-        .survey-tone--1 { background: #DC2626 !important; color: #fff !important; border-color: #B91C1C !important; }
-        .survey-tone--2 { background: #EF4444 !important; color: #fff !important; border-color: #DC2626 !important; }
-        .survey-tone--3 { background: #F97316 !important; color: #fff !important; border-color: #EA580C !important; }
-        .survey-tone--4 { background: #FB923C !important; color: #fff !important; border-color: #F97316 !important; }
-        .survey-tone--5 { background: #F59E0B !important; color: #fff !important; border-color: #D97706 !important; }
+        .survey-tone--1 { background: #B91C1C !important; color: #fff !important; border-color: #991B1B !important; }
+        .survey-tone--2 { background: #DC2626 !important; color: #fff !important; border-color: #B91C1C !important; }
+        .survey-tone--3 { background: #FACC15 !important; color: #111827 !important; border-color: #EAB308 !important; }
+        .survey-tone--4 { background: #4ADE80 !important; color: #064E3B !important; border-color: #22C55E !important; }
+        .survey-tone--5 { background: #166534 !important; color: #fff !important; border-color: #14532D !important; }
         .survey-tone--6 { background: #EAB308 !important; color: #fff !important; border-color: #CA8A04 !important; }
         .survey-tone--7 { background: #FACC15 !important; color: #111827 !important; border-color: #EAB308 !important; }
         .survey-tone--8 { background: #4ADE80 !important; color: #064E3B !important; border-color: #22C55E !important; }
