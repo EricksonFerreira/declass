@@ -1453,7 +1453,7 @@
                         @else
                             <p class="client-note">Para continuar com o pagamento, faca login na sua conta.</p>
                             @if (!empty($loginRedirectUrl))
-                                <a class="btn btn-primary" href="{{ $loginRedirectUrl }}">Fazer login</a>
+                                <a class="btn btn-primary" id="btnAbrirLoginReserva" href="{{ $loginRedirectUrl }}" target="_blank">Fazer login</a>
                             @else
                                 <div class="feedback warn">Login indisponivel no momento.</div>
                             @endif
@@ -1687,9 +1687,9 @@
             const oldModelId = @json(old('modelo_id', ''));
             const oldOpcionaisPayload = @json(old('opcionais_payload', ''));
             const csrf = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-            const isAuth = @json($isAuth);
-            const authUserName = @json($authUserName);
-            const authUserEmail = @json($authUserEmail);
+            let isAuth = @json($isAuth);
+            let authUserName = @json($authUserName);
+            let authUserEmail = @json($authUserEmail);
             const loginRedirectUrl = @json($loginRedirectUrl);
             const reservaSelecionarModelo = @json($reservaSelecionarModelo ?? false);
             const initialStepServer = Number(@json($initialStepServer));
@@ -1725,6 +1725,8 @@
                 '#clientCadastroFields input, #clientCadastroFields select, #clientCadastroFields textarea');
             const clientFeedback = document.getElementById('clientFeedback');
             const estacaoDevolucaoFeedback = document.getElementById('estacao_devolucao_feedback');
+            const loginPopupSuccess = new URLSearchParams(window.location.search).get('login_success') === '1';
+            const loginPopupContinue = sessionStorage.getItem('site_reserva_auto_continue') === '1';
             const modalGrupoModelosBackdrop = document.getElementById('modalGrupoModelosBackdrop');
             const modalGrupoModelosTitle = document.getElementById('modalGrupoModelosTitle');
             const modalGrupoModelosInfo = document.getElementById('modalGrupoModelosInfo');
@@ -1835,6 +1837,31 @@
                 }
                 modalGrupoModelosBackdrop.classList.remove('open');
                 modalGrupoModelosBackdrop.setAttribute('aria-hidden', 'true');
+            }
+
+            function handleLoginSuccess(payload) {
+                isAuth = true;
+                authUserName = payload?.name || authUserName;
+                authUserEmail = payload?.email || authUserEmail;
+                setClientMode('login');
+                if (clientFeedback) {
+                    feedback('clientFeedback', 'Login realizado com sucesso. Você pode seguir para o pagamento.', 'ok');
+                }
+                if (state.step < 4) {
+                    state.step = 4;
+                    renderStep();
+                }
+                refresh();
+                if (loginPopupContinue && state.step === 4) {
+                    sessionStorage.removeItem('site_reserva_auto_continue');
+                    setTimeout(function () {
+                        if (validStep1(false) && validStep2(false) && validCliente()) {
+                            form.requestSubmit();
+                        }
+                    }, 120);
+                } else {
+                    sessionStorage.removeItem('site_reserva_auto_continue');
+                }
             }
 
             function refresh() {
@@ -3066,6 +3093,42 @@
                     if (e.target === modalGrupoModelosBackdrop) {
                         closeGrupoModelosModal();
                     }
+                });
+            }
+            const btnAbrirLoginReserva = document.getElementById('btnAbrirLoginReserva');
+            if (btnAbrirLoginReserva) {
+                btnAbrirLoginReserva.addEventListener('click', function() {
+                    sessionStorage.setItem('site_reserva_auto_continue', '1');
+                });
+            }
+            window.addEventListener('message', function(event) {
+                if (event.origin !== window.location.origin) {
+                    return;
+                }
+                if (!event.data || event.data.type !== 'site-reserva-login-success') {
+                    return;
+                }
+                handleLoginSuccess(event.data.payload || {});
+            });
+            if (loginPopupSuccess && window.opener) {
+                try {
+                    window.opener.postMessage({
+                        type: 'site-reserva-login-success',
+                        payload: {
+                            name: authUserName,
+                            email: authUserEmail,
+                        }
+                    }, window.location.origin);
+                } catch (error) {
+                    // ignore
+                }
+                setTimeout(function() {
+                    window.close();
+                }, 150);
+            } else if (loginPopupSuccess && !window.opener) {
+                handleLoginSuccess({
+                    name: authUserName,
+                    email: authUserEmail,
                 });
             }
             maskCelular();

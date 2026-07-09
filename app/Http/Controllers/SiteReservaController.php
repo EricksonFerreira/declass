@@ -119,7 +119,13 @@ class SiteReservaController extends Controller
             'isAuth' => auth()->check(),
             'authUserName' => auth()->user()?->nome,
             'authUserEmail' => auth()->user()?->email,
-            'loginRedirectUrl' => Route::has('site.reserva.login') ? route('site.reserva.login', ['step' => 4]) : null,
+            'loginRedirectUrl' => Route::has('site.reserva.login')
+                ? route('site.reserva.login', [
+                    'step' => 4,
+                    'return_to' => $request->fullUrl(),
+                    'popup' => 1,
+                ])
+                : null,
             'reservaSelecionarModelo' => $reservaSelecionarModelo,
             'initialStepServer' => $initialStepServer,
             'prefill' => $prefill,
@@ -636,7 +642,30 @@ class SiteReservaController extends Controller
             $step = 4;
         }
 
-        session()->put('url.intended', route('site.reserva.index', ['step' => $step]));
+        $defaultReturnTo = route('site.reserva.index', ['step' => $step]);
+        $returnTo = trim((string) $request->query('return_to', ''));
+        $safeReturnTo = $defaultReturnTo;
+
+        if ($returnTo !== '' && filter_var($returnTo, FILTER_VALIDATE_URL)) {
+            $baseHost = parse_url(url('/'), PHP_URL_HOST);
+            $returnHost = parse_url($returnTo, PHP_URL_HOST);
+            if ($baseHost && $returnHost && strcasecmp((string) $baseHost, (string) $returnHost) === 0) {
+                $parsed = parse_url($returnTo);
+                $query = [];
+                if (!empty($parsed['query'])) {
+                    parse_str((string) $parsed['query'], $query);
+                }
+                $query['login_success'] = 1;
+                $safeReturnTo = ($parsed['scheme'] ?? request()->getScheme()) . '://' .
+                    $parsed['host'] .
+                    (isset($parsed['port']) ? ':' . $parsed['port'] : '') .
+                    ($parsed['path'] ?? '') .
+                    (!empty($query) ? '?' . http_build_query($query) : '') .
+                    (!empty($parsed['fragment']) ? '#' . $parsed['fragment'] : '');
+            }
+        }
+
+        session()->put('url.intended', $safeReturnTo);
 
         if (Route::has('login')) {
             return redirect()->route('login');
