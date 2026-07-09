@@ -487,6 +487,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return redirect()->route('reserva.minhas.show', $reserva->id);
         }
 
+        if ($user && !$user->isAdministrador() && !$user->hasPermissao('reserva.show')) {
+            abort(403, 'Sem permissao para acessar esta acao.');
+        }
+
         return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
     }
 
