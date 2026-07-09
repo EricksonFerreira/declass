@@ -711,7 +711,7 @@
                     card.setAttribute('aria-disabled', isAvailable ? 'false' : 'true');
                     card.title = isAvailable
                         ? 'Grupo disponível neste período.'
-                        : 'Grupo indisponível para a data e estação selecionadas.';
+                        : 'Este grupo de frota não possui veículos disponíveis para a estação e período selecionados.';
                 });
 
                 if (grupo.value) {
@@ -724,7 +724,7 @@
                         if (modelosGrid) {
                             modelosGrid.innerHTML = '';
                         }
-                        updateModeloAutoNote('Este grupo não possui carros disponíveis no período selecionado.', 'warn');
+                        updateModeloAutoNote('Este grupo de frota não possui veículos disponíveis para a estação e período selecionados.', 'warn');
                     }
                 }
 
@@ -1644,6 +1644,11 @@
                     if (prefillCompleto && step1Ok) {
                         state.step = 2;
                         renderStep();
+                        carregarDisponibilidadeGrupos().then(function() {
+                            if (grupo.value) {
+                                loadDisponibilidade();
+                            }
+                        });
                     } else {
                         state.step = 1;
                         renderStep();
