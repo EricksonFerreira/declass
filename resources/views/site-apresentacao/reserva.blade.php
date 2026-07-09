@@ -1728,6 +1728,7 @@
             const estacaoDevolucaoFeedback = document.getElementById('estacao_devolucao_feedback');
             const loginPopupSuccess = new URLSearchParams(window.location.search).get('login_success') === '1';
             const loginPopupContinue = sessionStorage.getItem('site_reserva_auto_continue') === '1';
+            const loginSyncKey = 'site_reserva_login_sync';
             const modalGrupoModelosBackdrop = document.getElementById('modalGrupoModelosBackdrop');
             const modalGrupoModelosTitle = document.getElementById('modalGrupoModelosTitle');
             const modalGrupoModelosInfo = document.getElementById('modalGrupoModelosInfo');
@@ -1745,6 +1746,7 @@
             let pendingLoginAutoSubmit = false;
             let loginAutoSubmitTimer = null;
             let loginFlowCompleted = loginPopupSuccess;
+            let loginSuccessProcessed = false;
 
             function money(v) {
                 return new Intl.NumberFormat('pt-BR', {
@@ -1845,6 +1847,10 @@
             }
 
             function handleLoginSuccess(payload) {
+                if (loginSuccessProcessed) {
+                    return;
+                }
+                loginSuccessProcessed = true;
                 loginFlowCompleted = true;
                 isAuth = true;
                 authUserName = payload?.name || authUserName;
@@ -3136,7 +3142,30 @@
                 }
                 handleLoginSuccess(event.data.payload || {});
             });
+            window.addEventListener('storage', function(event) {
+                if (event.storageArea !== localStorage || event.key !== loginSyncKey || !event.newValue) {
+                    return;
+                }
+                try {
+                    const payload = JSON.parse(event.newValue);
+                    handleLoginSuccess(payload || {});
+                } catch (error) {
+                    handleLoginSuccess({});
+                } finally {
+                    localStorage.removeItem(loginSyncKey);
+                }
+            });
             if (loginPopupSuccess && window.opener) {
+                const loginPayload = {
+                    name: authUserName,
+                    email: authUserEmail,
+                    ts: Date.now(),
+                };
+                try {
+                    localStorage.setItem(loginSyncKey, JSON.stringify(loginPayload));
+                } catch (error) {
+                    // ignore
+                }
                 try {
                     window.opener.postMessage({
                         type: 'site-reserva-login-success',
@@ -3148,16 +3177,14 @@
                 } catch (error) {
                     // ignore
                 }
+            }
+            if (loginPopupSuccess) {
                 setTimeout(function() {
                     window.close();
                 }, 150);
             }
             maskCelular();
-            if (loginPopupSuccess) {
-                refresh();
-                isBootstrapping = false;
-                triggerLoginAutoSubmit();
-            } else {
+            if (!loginPopupSuccess) {
                 // Init pickers for pre-selected stations
                 (async function() {
                     const estRet = document.getElementById('estacao_retirada_id').value;
@@ -3284,6 +3311,8 @@
                         }
                     });
                 })();
+            } else {
+                isBootstrapping = false;
             }
 
             // ---- Search modal ----
