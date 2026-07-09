@@ -53,6 +53,11 @@
     $clienteTelefone = $reserva->usuario?->telefone ?? auth()->user()?->telefone ?? '-';
     $podeCancelarMinhaReserva = method_exists($reserva, 'podeCancelarComoCliente') ? $reserva->podeCancelarComoCliente() : false;
     $podeCancelarReserva = method_exists($reserva, 'podeFazerCancelamento') ? $reserva->podeFazerCancelamento() : false;
+    $usuarioEhCriador = auth()->check() && (int) auth()->id() === (int) ($reserva->user_id ?? 0);
+    $podeExibirBotaoCancelar = $usuarioEhCriador || $podeCancelarReserva;
+    $textoBotaoCancelar = ($usuarioEhCriador && !$podeCancelarMinhaReserva)
+        ? 'O cancelamento so fica disponivel ate 24 horas apos a criacao da reserva.'
+        : 'Cancelar esta reserva.';
     $jaSatisfacao = $reserva->satisfacao()->exists();
     $podeResponderSatisfacao = $reserva->contratoCheckout()->exists() && !$jaSatisfacao;
 @endphp
@@ -269,17 +274,19 @@
                     </div>
 
                     <div class="rs-actions">
-                        @if($podeCancelarMinhaReserva)
-                            <form method="POST" action="{{ route('reserva.cancelar', $reserva->id) }}" class="m-0" onsubmit="return confirm('Deseja realmente cancelar esta reserva?');">
-                                @csrf
-                                <button type="submit" class="rs-btn" style="background:#fee2e2;color:#991b1b;border-color:#fecaca;">
-                                    <i class="fas fa-ban"></i> Cancelar reserva
-                                </button>
-                            </form>
-                        @elseif($podeCancelarReserva)
-                            <span class="rs-btn" data-toggle="tooltip" title="O cancelamento só fica disponível até 24 horas após a criação da reserva." style="opacity:.5;cursor:not-allowed;">
+                        @if($podeExibirBotaoCancelar)
+                            <button
+                                type="button"
+                                class="rs-btn"
+                                data-cancelar-reserva="1"
+                                data-action="{{ route('reserva.cancelar', $reserva->id) }}"
+                                data-pode-cancelar="{{ ($podeCancelarMinhaReserva || $podeCancelarReserva) ? '1' : '0' }}"
+                                data-toggle="tooltip"
+                                title="{{ $textoBotaoCancelar }}"
+                                style="background:#fee2e2;color:#991b1b;border-color:#fecaca;{{ ($usuarioEhCriador && !$podeCancelarMinhaReserva) ? 'opacity:.7;' : '' }}"
+                            >
                                 <i class="fas fa-ban"></i> Cancelar reserva
-                            </span>
+                            </button>
                         @endif
                     </div>
                 </div>
@@ -500,4 +507,89 @@
         </aside>
     </div>
 </div>
+@section('js')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const btn = document.querySelector('[data-cancelar-reserva="1"]');
+            if (!btn) return;
+
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+            const defaultRedirect = @json(route('reserva.minhas'));
+
+            const toast = (icon, title, text = '') => {
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    window.Swal.fire({
+                        icon,
+                        title,
+                        text,
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3800,
+                        timerProgressBar: true
+                    });
+                    return;
+                }
+
+                alert(text || title);
+            };
+
+            btn.addEventListener('click', async function () {
+                const podeCancelar = btn.dataset.podeCancelar === '1';
+                if (!podeCancelar) {
+                    toast('error', 'Cancelamento indisponivel', 'O cancelamento so pode ser feito ate 24 horas apos a criacao da reserva.');
+                    return;
+                }
+
+                const confirmacao = await window.Swal.fire({
+                    icon: 'warning',
+                    title: 'Cancelar reserva?',
+                    text: 'Deseja realmente cancelar esta reserva?',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, cancelar',
+                    cancelButtonText: 'Voltar',
+                    confirmButtonColor: '#b91c1c',
+                    cancelButtonColor: '#6b7280'
+                });
+
+                if (!confirmacao.isConfirmed) {
+                    return;
+                }
+
+                const originalHtml = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cancelando...';
+
+                try {
+                    const response = await fetch(btn.dataset.action, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    const data = await response.json().catch(() => ({}));
+
+                    if (!response.ok || !data.success) {
+                        toast('error', 'Nao foi possivel cancelar', data.message || 'Nao foi possivel cancelar a reserva.');
+                        return;
+                    }
+
+                    toast('success', 'Reserva cancelada', data.message || 'Reserva cancelada com sucesso.');
+                    setTimeout(() => {
+                        window.location.href = data.redirect || defaultRedirect;
+                    }, 900);
+                } catch (error) {
+                    toast('error', 'Erro de conexao', 'Tente novamente em instantes.');
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            });
+        });
+    </script>
+@endsection
 @stop

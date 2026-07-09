@@ -51,6 +51,7 @@ class PlanoPermissaoService
         'reserva.minhas',
         'reserva.minhas.show',
         'reserva.show',
+        'reserva.cancelar',
         'reserva.efetuarPagamento',
         'reserva.processarPagamento',
         'reserva.historico',

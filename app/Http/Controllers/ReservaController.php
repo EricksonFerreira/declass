@@ -1237,17 +1237,32 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         ]));
     }
 
-    public function cancelar($id)
+    public function cancelar(Request $request, $id)
     {
         $reservaAntes = $this->reservaService->getById((int) $id);
         if (!$reservaAntes) {
-            return redirect()->route('reserva.minhas')->with('error', 'Reserva nao encontrada.');
+            $message = 'Reserva nao encontrada.';
+            return $request->expectsJson()
+                ? response()->json(['success' => false, 'message' => $message], 404)
+                : redirect()->route('reserva.minhas')->with('error', $message);
         }
 
         $user = Auth::user();
-        if ($user && $this->isCliente($user) && !$reservaAntes->podeCancelarComoCliente()) {
-            return redirect()->route('reserva.minhas.show', $reservaAntes->id)
-                ->with('error', 'O cancelamento só pode ser feito até 24 horas após a criação da reserva.');
+        $ehCliente = $user && $this->isCliente($user);
+        $ehDonoDaReserva = !$user || (int) $reservaAntes->user_id === (int) $user->id;
+
+        if ($ehCliente && !$ehDonoDaReserva) {
+            $message = 'Sem permissao para cancelar esta reserva.';
+            return $request->expectsJson()
+                ? response()->json(['success' => false, 'message' => $message], 403)
+                : redirect()->route('reserva.minhas.show', $reservaAntes->id)->with('error', $message);
+        }
+
+        if ($ehCliente && !$reservaAntes->podeCancelarComoCliente()) {
+            $message = 'O cancelamento so pode ser feito ate 24 horas apos a criacao da reserva.';
+            return $request->expectsJson()
+                ? response()->json(['success' => false, 'message' => $message], 422)
+                : redirect()->route('reserva.minhas.show', $reservaAntes->id)->with('error', $message);
         }
 
         $this->reservaService->cancelar($id);
@@ -1276,7 +1291,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ]));
         }
 
-        $redirect = redirect()->route('reserva.index');
+        if ($request->expectsJson()) {
+            $message = $cancelamentoMensagem ?: 'Reserva cancelada com sucesso.';
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'redirect' => route($ehCliente ? 'reserva.minhas' : 'reserva.index'),
+            ]);
+        }
+
+        $redirect = redirect()->route($ehCliente ? 'reserva.minhas' : 'reserva.index');
         if ($cancelamentoMensagem) {
             $redirect->with('warning', $cancelamentoMensagem);
         }
