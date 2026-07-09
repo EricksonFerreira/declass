@@ -478,6 +478,15 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $moduloNfse   = (bool) ($empresa?->planoAtivo?->plano?->modulo_nfse   ?? false);
         $moduloMultas = (bool) ($empresa?->planoAtivo?->plano?->modulo_multas ?? false);
 
+        $user = Auth::user();
+        if ($user && $this->isCliente($user)) {
+            if ((int) $reserva->user_id !== (int) $user->id) {
+                return redirect()->route('reserva.minhas')->with('error', 'Você não tem permissão para ver essa reserva.');
+            }
+
+            return view('reserva.show-cliente', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega'));
+        }
+
         return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
     }
 
