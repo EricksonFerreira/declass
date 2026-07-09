@@ -653,18 +653,7 @@ class SiteReservaController extends Controller
             $baseHost = parse_url(url('/'), PHP_URL_HOST);
             $returnHost = parse_url($returnTo, PHP_URL_HOST);
             if ($baseHost && $returnHost && strcasecmp((string) $baseHost, (string) $returnHost) === 0) {
-                $parsed = parse_url($returnTo);
-                $query = [];
-                if (!empty($parsed['query'])) {
-                    parse_str((string) $parsed['query'], $query);
-                }
-                $query['login_success'] = 1;
-                $safeReturnTo = ($parsed['scheme'] ?? request()->getScheme()) . '://' .
-                    $parsed['host'] .
-                    (isset($parsed['port']) ? ':' . $parsed['port'] : '') .
-                    ($parsed['path'] ?? '') .
-                    (!empty($query) ? '?' . http_build_query($query) : '') .
-                    (!empty($parsed['fragment']) ? '#' . $parsed['fragment'] : '');
+                $safeReturnTo = route('site.reserva.login.callback');
             }
         }
 
@@ -675,6 +664,23 @@ class SiteReservaController extends Controller
         }
 
         return redirect($this->adminLoginFallbackUrl());
+    }
+
+    public function loginCallback(Request $request): View|RedirectResponse
+    {
+        if (!auth()->check()) {
+            return redirect()->route('login');
+        }
+
+        return view('site-apresentacao.login-callback', [
+            'usuarioNome' => auth()->user()?->nome,
+            'usuarioEmail' => auth()->user()?->email,
+            'payload' => [
+                'name' => auth()->user()?->nome,
+                'email' => auth()->user()?->email,
+            ],
+            'redirectTo' => route('site.reserva.index'),
+        ]);
     }
 
     public function pagamento(Request $request, int $reserva): View|RedirectResponse

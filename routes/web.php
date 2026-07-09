@@ -82,6 +82,7 @@ Route::get('/administrativa', [SiteReservaController::class, 'adminEntry'])->nam
 Route::get('/reserva', [SiteReservaController::class, 'index'])->name('site.reserva.index');
 Route::get('/reserva/novo', [SiteReservaController::class, 'index'])->name('site.reserva.create');
 Route::get('/reserva/login', [SiteReservaController::class, 'loginRedirect'])->name('site.reserva.login');
+Route::get('/reserva/login/callback', [SiteReservaController::class, 'loginCallback'])->middleware('auth')->name('site.reserva.login.callback');
 Route::post('/reserva', [SiteReservaController::class, 'store'])->name('site.reserva.store');
 Route::get('/reserva/disponibilidade', [SiteReservaController::class, 'disponibilidade'])->name('site.reserva.disponibilidade');
 Route::get('/reserva/dias-disponiveis', [SiteReservaController::class, 'diasDisponiveisPorEstacao'])->name('site.reserva.diasDisponiveisPorEstacao');
