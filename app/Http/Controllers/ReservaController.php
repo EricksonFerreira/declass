@@ -194,6 +194,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         return view('reserva.index-cliente', compact(
             'reservas',
+            'multas',
             'breadcrumb',
             'filters',
             'itensFiltered',
