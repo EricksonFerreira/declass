@@ -1853,8 +1853,6 @@
                 if (clientFeedback) {
                     feedback('clientFeedback', 'Login realizado com sucesso. Você pode seguir para o pagamento.', 'ok');
                 }
-                state.step = 5;
-                renderStep();
                 refresh();
                 sessionStorage.removeItem('site_reserva_auto_continue');
                 pendingLoginAutoSubmit = true;
@@ -3150,8 +3148,6 @@
             }
             maskCelular();
             if (loginPopupSuccess) {
-                state.step = 5;
-                renderStep();
                 refresh();
                 isBootstrapping = false;
                 triggerLoginAutoSubmit();

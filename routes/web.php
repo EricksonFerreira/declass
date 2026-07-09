@@ -100,7 +100,7 @@ Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::middleware(['auth', 'verified'])->get('/', function () {
-        return redirect()->route('home');
+        return redirect('/admin/home');
     })->name('admin.index');
 
     // Comecar agora (cadastro rapido de empresa + usuario unico com senha padrao).
