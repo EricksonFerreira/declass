@@ -1726,9 +1726,7 @@
                 '#clientCadastroFields input, #clientCadastroFields select, #clientCadastroFields textarea');
             const clientFeedback = document.getElementById('clientFeedback');
             const estacaoDevolucaoFeedback = document.getElementById('estacao_devolucao_feedback');
-            const loginPopupSuccess = new URLSearchParams(window.location.search).get('login_success') === '1';
-            const loginPopupContinue = sessionStorage.getItem('site_reserva_auto_continue') === '1';
-            const loginSyncKey = 'site_reserva_login_sync';
+            const reservaLoginDraftKey = 'site_reserva_login_draft';
             const modalGrupoModelosBackdrop = document.getElementById('modalGrupoModelosBackdrop');
             const modalGrupoModelosTitle = document.getElementById('modalGrupoModelosTitle');
             const modalGrupoModelosInfo = document.getElementById('modalGrupoModelosInfo');
@@ -1742,12 +1740,6 @@
             let gruposDisponibilidade = {};
             let gruposQuantidade = {};
             let isBootstrapping = true;
-            let autoSubmitAfterLogin = false;
-            let pendingLoginAutoSubmit = false;
-            let loginAutoSubmitTimer = null;
-            let loginSignalWatcher = null;
-            let loginFlowCompleted = loginPopupSuccess;
-            let loginSuccessProcessed = false;
 
             function money(v) {
                 return new Intl.NumberFormat('pt-BR', {
@@ -1845,93 +1837,6 @@
                 }
                 modalGrupoModelosBackdrop.classList.remove('open');
                 modalGrupoModelosBackdrop.setAttribute('aria-hidden', 'true');
-            }
-
-            function handleLoginSuccess(payload) {
-                if (loginSuccessProcessed) {
-                    return;
-                }
-                loginSuccessProcessed = true;
-                loginFlowCompleted = true;
-                isAuth = true;
-                authUserName = payload?.name || authUserName;
-                authUserEmail = payload?.email || authUserEmail;
-                setClientMode('login');
-                if (clientFeedback) {
-                    feedback('clientFeedback', 'Login realizado com sucesso. Você pode seguir para o pagamento.', 'ok');
-                }
-                refresh();
-                sessionStorage.removeItem('site_reserva_auto_continue');
-                try {
-                    localStorage.removeItem(loginSyncKey);
-                } catch (error) {
-                    // ignore
-                }
-                pendingLoginAutoSubmit = true;
-                triggerLoginAutoSubmit();
-            }
-
-            function triggerLoginAutoSubmit() {
-                if (!pendingLoginAutoSubmit) {
-                    return;
-                }
-                if (isBootstrapping) {
-                    if (!loginAutoSubmitTimer) {
-                        loginAutoSubmitTimer = setTimeout(function() {
-                            loginAutoSubmitTimer = null;
-                            triggerLoginAutoSubmit();
-                        }, 300);
-                    }
-                    return;
-                }
-                if (loginAutoSubmitTimer) {
-                    clearTimeout(loginAutoSubmitTimer);
-                    loginAutoSubmitTimer = null;
-                }
-                pendingLoginAutoSubmit = false;
-                autoSubmitAfterLogin = true;
-                setTimeout(function() {
-                    if (form && typeof form.requestSubmit === 'function') {
-                        form.requestSubmit();
-                    } else if (form) {
-                        form.submit();
-                    }
-                }, 350);
-            }
-
-            function startLoginSignalWatcher() {
-                if (loginPopupSuccess || loginSignalWatcher) {
-                    return;
-                }
-
-                loginSignalWatcher = setInterval(function() {
-                    if (loginSuccessProcessed) {
-                        clearInterval(loginSignalWatcher);
-                        loginSignalWatcher = null;
-                        return;
-                    }
-
-                    try {
-                        const rawSignal = localStorage.getItem(loginSyncKey);
-                        if (!rawSignal) {
-                            return;
-                        }
-
-                        const payload = JSON.parse(rawSignal);
-                        handleLoginSuccess(payload || {});
-                        clearInterval(loginSignalWatcher);
-                        loginSignalWatcher = null;
-                    } catch (error) {
-                        // ignore
-                    }
-                }, 400);
-
-                setTimeout(function() {
-                    if (loginSignalWatcher) {
-                        clearInterval(loginSignalWatcher);
-                        loginSignalWatcher = null;
-                    }
-                }, 8000);
             }
 
             function refresh() {
@@ -3171,200 +3076,147 @@
             const btnAbrirLoginReserva = document.getElementById('btnAbrirLoginReserva');
             if (btnAbrirLoginReserva) {
                 btnAbrirLoginReserva.addEventListener('click', function() {
-                    sessionStorage.setItem('site_reserva_auto_continue', '1');
-                });
-            }
-            window.addEventListener('message', function(event) {
-                if (event.origin !== window.location.origin) {
-                    return;
-                }
-                if (!event.data || event.data.type !== 'site-reserva-login-success') {
-                    return;
-                }
-                handleLoginSuccess(event.data.payload || {});
-            });
-            window.addEventListener('storage', function(event) {
-                if (event.storageArea !== localStorage || event.key !== loginSyncKey || !event.newValue) {
-                    return;
-                }
-                try {
-                    const payload = JSON.parse(event.newValue);
-                    handleLoginSuccess(payload || {});
-                } catch (error) {
-                    handleLoginSuccess({});
-                } finally {
-                    localStorage.removeItem(loginSyncKey);
-                }
-            });
-            function publishLoginSuccessSignal(payload) {
-                try {
-                    localStorage.setItem(loginSyncKey, JSON.stringify({
-                        name: payload?.name || authUserName || '',
-                        email: payload?.email || authUserEmail || '',
-                        ts: Date.now(),
-                    }));
-                } catch (error) {
-                    // ignore
-                }
-
-                if (window.opener) {
                     try {
-                        window.opener.postMessage({
-                            type: 'site-reserva-login-success',
-                            payload: {
-                                name: payload?.name || authUserName,
-                                email: payload?.email || authUserEmail,
-                            }
-                        }, window.location.origin);
+                        localStorage.setItem(reservaLoginDraftKey, JSON.stringify({
+                            estacao_retirada_id: document.getElementById('estacao_retirada_id')?.value || '',
+                            estacao_devolucao_id: document.getElementById('estacao_devolucao_id')?.value || '',
+                            data_inicio: document.getElementById('data_inicio')?.value || '',
+                            data_fim: document.getElementById('data_fim')?.value || '',
+                            hora_inicio: document.getElementById('hora_inicio')?.value || '',
+                            hora_fim: document.getElementById('hora_fim')?.value || '',
+                            grupo_frota_id: document.getElementById('grupo_frota_id')?.value || '',
+                            modelo_id: document.getElementById('modelo_id')?.value || '',
+                            cupom_codigo: document.getElementById('cupom_codigo')?.value || '',
+                            opcionais_payload: document.getElementById('opcionais_payload')?.value || '[]',
+                            modo_cliente: 'login',
+                            usar_usuario_logado: 'S'
+                        }));
                     } catch (error) {
                         // ignore
                     }
-                }
-            }
-
-            if (loginPopupSuccess) {
-                publishLoginSuccessSignal({
-                    name: authUserName,
-                    email: authUserEmail,
                 });
             }
-            if (loginPopupSuccess) {
-                setTimeout(function() {
-                    window.close();
-                }, 150);
-            }
             maskCelular();
-            if (!loginPopupSuccess) {
-                // Init pickers for pre-selected stations
-                (async function() {
-                    const estRet = document.getElementById('estacao_retirada_id').value;
-                    const estDev = document.getElementById('estacao_devolucao_id').value;
-                    if (estRet) await criarPickerInicio(estRet);
-                    else {
-                        pickerInicio = flatpickr('#picker_data_inicio', {
-                            locale: 'pt',
-                            dateFormat: 'd/m/Y',
-                            minDate: 'today',
-                            onChange: function(sel) {
-                                if (pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0] ||
-                                    null;
-                                syncHiddenInicio();
-                                onDateHoraChanged();
-                            }
-                        });
-                    }
-                    if (estDev) await criarPickerFim(estDev);
-                    else {
-                        pickerFim = flatpickr('#picker_data_fim', {
-                            locale: 'pt',
-                            dateFormat: 'd/m/Y',
-                            minDate: 'today',
-                            onChange: function(sel) {
-                                if (pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0] || null;
-                                syncHiddenFim();
-                                onDateHoraChanged();
-                            }
-                        });
-                    }
-                    if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
-                        const devolucaoSelect = document.getElementById('estacao_devolucao_id');
-                        if (devolucaoSelect) {
-                            devolucaoSelect.value = String(estRet);
-                            devolucaoSelect.dispatchEvent(new Event('change', {
-                                bubbles: true
-                            }));
-                        }
-                    }
-                    const oldInicio = dataInicio.value;
-                    const oldFim = dataFim.value;
-                    const restaurarHora = function(selectId, hora) {
-                        const sel = document.getElementById(selectId);
-                        if (!sel || !hora) return false;
-                        const valor = String(hora).slice(0, 5);
-                        const existe = Array.from(sel.options).some((option) => option.value === valor);
-                        if (existe) {
-                            sel.value = valor;
-                            return true;
-                        }
-                        return false;
-                    };
-
-                    const restauracoes = [];
-                    let prefillCompleto = Boolean(oldInicio && oldFim && estRet && estDev);
-
-                    if (oldInicio && oldInicio.includes('T') && estRet) {
-                        const [datePart, timePart] = oldInicio.split('T');
-                        if (pickerInicio) {
-                            pickerInicio.setDate(datePart, true, 'Y-m-d');
-                            pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
-                        }
-                        restauracoes.push(
-                            carregarHorariosInicio(estRet, datePart).then(function() {
-                                const ok = restaurarHora('hora_inicio', timePart);
-                                if (!ok) {
-                                    prefillCompleto = false;
-                                    feedback('step1Feedback',
-                                        'A hora de retirada informada nao esta disponivel. Escolha outra data e horario.',
-                                        'warn');
-                                } else {
-                                    syncHiddenInicio();
-                                    updateTaxaInicio();
-                                }
-                                return ok;
-                            })
-                        );
-                    } else {
-                        prefillCompleto = false;
-                    }
-
-                    if (oldFim && oldFim.includes('T') && estDev) {
-                        const [datePart, timePart] = oldFim.split('T');
-                        if (pickerFim) {
-                            pickerFim.setDate(datePart, true, 'Y-m-d');
-                            pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
-                        }
-                        restauracoes.push(
-                            carregarHorariosFim(estDev, datePart).then(function() {
-                                const ok = restaurarHora('hora_fim', timePart);
-                                if (!ok) {
-                                    prefillCompleto = false;
-                                    feedback('step1Feedback',
-                                        'A hora de devolução informada nao esta disponivel. Escolha outra data e horario.',
-                                        'warn');
-                                } else {
-                                    syncHiddenFim();
-                                    updateTaxaFim();
-                                }
-                                return ok;
-                            })
-                        );
-                    } else {
-                        prefillCompleto = false;
-                    }
-
-                    Promise.all(restauracoes).then(function() {
-                        refresh();
-                        updatePrefill();
-                        if (loginFlowCompleted) {
-                            state.step = 5;
-                            renderStep();
-                            isBootstrapping = false;
-                            triggerLoginAutoSubmit();
-                            return;
-                        }
-                        state.step = initialStepServer;
-                        renderStep();
-                        if (initialStepServer === 2 && grupo.value) {
-                            carregarDisponibilidadeGrupos().then(function() {
-                                loadDisponibilidade();
-                            });
+            // Init pickers for pre-selected stations
+            (async function() {
+                const estRet = document.getElementById('estacao_retirada_id').value;
+                const estDev = document.getElementById('estacao_devolucao_id').value;
+                if (estRet) await criarPickerInicio(estRet);
+                else {
+                    pickerInicio = flatpickr('#picker_data_inicio', {
+                        locale: 'pt',
+                        dateFormat: 'd/m/Y',
+                        minDate: 'today',
+                        onChange: function(sel) {
+                            if (pickerInicio) pickerInicio.input._flatpickrSelectedDate = sel[0] ||
+                                null;
+                            syncHiddenInicio();
+                            onDateHoraChanged();
                         }
                     });
-                })();
-            } else {
-                isBootstrapping = false;
-                startLoginSignalWatcher();
-            }
+                }
+                if (estDev) await criarPickerFim(estDev);
+                else {
+                    pickerFim = flatpickr('#picker_data_fim', {
+                        locale: 'pt',
+                        dateFormat: 'd/m/Y',
+                        minDate: 'today',
+                        onChange: function(sel) {
+                            if (pickerFim) pickerFim.input._flatpickrSelectedDate = sel[0] || null;
+                            syncHiddenFim();
+                            onDateHoraChanged();
+                        }
+                    });
+                }
+                if (estRet && estacaoPodeSerDevolucao(estRet) && !estDev) {
+                    const devolucaoSelect = document.getElementById('estacao_devolucao_id');
+                    if (devolucaoSelect) {
+                        devolucaoSelect.value = String(estRet);
+                        devolucaoSelect.dispatchEvent(new Event('change', {
+                            bubbles: true
+                        }));
+                    }
+                }
+                const oldInicio = dataInicio.value;
+                const oldFim = dataFim.value;
+                const restaurarHora = function(selectId, hora) {
+                    const sel = document.getElementById(selectId);
+                    if (!sel || !hora) return false;
+                    const valor = String(hora).slice(0, 5);
+                    const existe = Array.from(sel.options).some((option) => option.value === valor);
+                    if (existe) {
+                        sel.value = valor;
+                        return true;
+                    }
+                    return false;
+                };
+
+                const restauracoes = [];
+                let prefillCompleto = Boolean(oldInicio && oldFim && estRet && estDev);
+
+                if (oldInicio && oldInicio.includes('T') && estRet) {
+                    const [datePart, timePart] = oldInicio.split('T');
+                    if (pickerInicio) {
+                        pickerInicio.setDate(datePart, true, 'Y-m-d');
+                        pickerInicio.input._flatpickrSelectedDate = pickerInicio.selectedDates[0] || null;
+                    }
+                    restauracoes.push(
+                        carregarHorariosInicio(estRet, datePart).then(function() {
+                            const ok = restaurarHora('hora_inicio', timePart);
+                            if (!ok) {
+                                prefillCompleto = false;
+                                feedback('step1Feedback',
+                                    'A hora de retirada informada nao esta disponivel. Escolha outra data e horario.',
+                                    'warn');
+                            } else {
+                                syncHiddenInicio();
+                                updateTaxaInicio();
+                            }
+                            return ok;
+                        })
+                    );
+                } else {
+                    prefillCompleto = false;
+                }
+
+                if (oldFim && oldFim.includes('T') && estDev) {
+                    const [datePart, timePart] = oldFim.split('T');
+                    if (pickerFim) {
+                        pickerFim.setDate(datePart, true, 'Y-m-d');
+                        pickerFim.input._flatpickrSelectedDate = pickerFim.selectedDates[0] || null;
+                    }
+                    restauracoes.push(
+                        carregarHorariosFim(estDev, datePart).then(function() {
+                            const ok = restaurarHora('hora_fim', timePart);
+                            if (!ok) {
+                                prefillCompleto = false;
+                                feedback('step1Feedback',
+                                    'A hora de devolução informada nao esta disponivel. Escolha outra data e horario.',
+                                    'warn');
+                            } else {
+                                syncHiddenFim();
+                                updateTaxaFim();
+                            }
+                            return ok;
+                        })
+                    );
+                } else {
+                    prefillCompleto = false;
+                }
+
+                Promise.all(restauracoes).then(function() {
+                    refresh();
+                    updatePrefill();
+                    state.step = initialStepServer;
+                    renderStep();
+                    if (initialStepServer === 2 && grupo.value) {
+                        carregarDisponibilidadeGrupos().then(function() {
+                            loadDisponibilidade();
+                        });
+                    }
+                    isBootstrapping = false;
+                });
+            })();
 
             // ---- Search modal ----
             (function() {
@@ -3540,7 +3392,6 @@
                 if (cupomInput.value.trim()) await applyCupom();
                 refresh();
                 isBootstrapping = false;
-                triggerLoginAutoSubmit();
             })();
         })();
     </script>
