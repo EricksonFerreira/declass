@@ -1930,9 +1930,16 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ]);
 
             $disponivel         = null;
+            $qtdVeiculosDisponiveis = null;
             $qtdModelosDisponiveis = null;
 
             if ($verificarDisponibilidade) {
+                $qtdVeiculosDisponiveis = $this->veiculoService->getQuantidadeVeiculosDisponiveisPorGrupoEEstacaoEPeriodo(
+                    (int) $grupo->id,
+                    (int) $estacaoId,
+                    (string) $dataInicio,
+                    (string) $dataFim
+                );
                 $modelosDisponiveis = $this->veiculoService->getModelosComVeiculosDisponiveis(
                     (int) $grupo->id,
                     (int) $estacaoId,
@@ -1940,7 +1947,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                     (string) $dataFim
                 );
                 $qtdModelosDisponiveis = $modelosDisponiveis->count();
-                $disponivel = $qtdModelosDisponiveis > 0;
+                $disponivel = $qtdVeiculosDisponiveis > 0;
             }
 
             return [
@@ -1952,6 +1959,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'marcas'                 => $modelos->pluck('marca')->filter()->unique()->values(),
                 'segmentos'              => $modelos->pluck('segmento')->filter()->unique()->values(),
                 'disponivel'             => $disponivel,
+                'qtd_veiculos_disponiveis'=> $qtdVeiculosDisponiveis,
                 'qtd_modelos_disponiveis'=> $qtdModelosDisponiveis,
             ];
         });

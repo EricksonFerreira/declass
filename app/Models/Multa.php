@@ -78,7 +78,7 @@ class Multa extends Model
     ];
 
     const STATUS_DESCONTO = [
-        'nao_aplicado' => 'Nao Aplicado',
+        'nao_aplicado' => 'Não Aplicado',
         'pendente'     => 'Pendente',
         'descontado'   => 'Descontado',
         'nao_descontar' => 'Nao Descontar',

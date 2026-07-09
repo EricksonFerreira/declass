@@ -343,10 +343,12 @@
                             @php
                                 $caracteristicas = $grupo['caracteristicas'] ?? [];
                                 $listaCaracteristicas = array_slice($caracteristicas, 0, 4);
-                                $qtdVeiculosDisponiveis = (int) ($grupo['qtd_veiculos_disponiveis'] ?? 0);
+                                $qtdVeiculosDisponiveis = array_key_exists('qtd_veiculos_disponiveis', $grupo) && $grupo['qtd_veiculos_disponiveis'] !== null
+                                    ? (int) $grupo['qtd_veiculos_disponiveis']
+                                    : null;
                                 $modeloTotal = count($grupo['modelos'] ?? []);
                             @endphp
-                            <article class="grupo-card {{ $qtdVeiculosDisponiveis > 0 ? '' : 'disabled' }}" data-grupo-id="{{ $grupo['id'] }}" data-grupo-nome="{{ $grupo['nome'] }}" data-tarifa="{{ $grupo['valor_diario'] }}" data-disponivel="{{ $qtdVeiculosDisponiveis > 0 ? '1' : '0' }}" data-qtd-veiculos="{{ $qtdVeiculosDisponiveis }}" data-modelos='@json($grupo["modelos"] ?? [])'>
+                            <article class="grupo-card {{ $qtdVeiculosDisponiveis !== null && $qtdVeiculosDisponiveis <= 0 ? 'disabled' : '' }}" data-grupo-id="{{ $grupo['id'] }}" data-grupo-nome="{{ $grupo['nome'] }}" data-tarifa="{{ $grupo['valor_diario'] }}" data-disponivel="{{ $qtdVeiculosDisponiveis !== null && $qtdVeiculosDisponiveis <= 0 ? '0' : '1' }}" data-qtd-veiculos="{{ $qtdVeiculosDisponiveis !== null ? $qtdVeiculosDisponiveis : '' }}" data-modelos='@json($grupo["modelos"] ?? [])'>
                                 <div class="grupo-thumb">
                                     @if(!empty($grupo['imagens_urls']))
                                         <img src="{{ $grupo['imagens_urls'][0] }}" alt="{{ $grupo['nome'] }}">
@@ -365,8 +367,8 @@
                                 @endif
                                 <div class="grupo-title">{{ $grupo['nome'] }}</div>
                                 <div class="grupo-price">{{ $simboloMoedaEmpresa }} {{ number_format((float) $grupo['valor_diario'], 2, ',', '.') }} / dia</div>
-                                <div class="grupo-availability {{ $qtdVeiculosDisponiveis > 0 ? '' : 'no' }}">
-                                    {{ $qtdVeiculosDisponiveis > 0 ? $qtdVeiculosDisponiveis . ' veiculo(s) disponivel(is)' : 'Indisponivel no periodo' }}
+                                <div class="grupo-availability {{ $qtdVeiculosDisponiveis !== null && $qtdVeiculosDisponiveis <= 0 ? 'no' : '' }}">
+                                    {{ $qtdVeiculosDisponiveis === null ? 'Disponibilidade sera verificada ao informar a viagem' : ($qtdVeiculosDisponiveis > 0 ? $qtdVeiculosDisponiveis . ' veiculo(s) disponivel(is)' : 'Indisponivel no periodo') }}
                                 </div>
                                 <ul class="grupo-features">
                                     @forelse($listaCaracteristicas as $caracteristica)
@@ -396,7 +398,7 @@
                                         <div class="grupo-modelos-total">{{ $modeloTotal }} modelo(s) vinculados</div>
                                     </div>
                                 @endif
-                                <button type="button" class="btn btn-secondary grupo-action" {{ $qtdVeiculosDisponiveis > 0 ? '' : 'disabled' }}>Escolher grupo</button>
+                                <button type="button" class="btn btn-secondary grupo-action" {{ $qtdVeiculosDisponiveis !== null && $qtdVeiculosDisponiveis <= 0 ? 'disabled' : '' }}>Escolher grupo</button>
                             </article>
                         @endforeach
                     </div>
@@ -774,19 +776,24 @@
                     const id = String(card.getAttribute('data-grupo-id') || '');
                     const disponivel = gruposDisponibilidade[id];
                     const isAvailable = disponivel !== false;
-                    const qtd = Number(gruposQuantidade[id] || 0);
+                    const qtdRaw = Object.prototype.hasOwnProperty.call(gruposQuantidade, id)
+                        ? gruposQuantidade[id]
+                        : card.getAttribute('data-qtd-veiculos');
+                    const qtd = qtdRaw === null || qtdRaw === '' || Number.isNaN(Number(qtdRaw)) ? null : Number(qtdRaw);
                     card.dataset.disponivel = isAvailable ? '1' : '0';
-                    card.dataset.qtdVeiculos = String(qtd);
+                    if (qtd !== null) {
+                        card.dataset.qtdVeiculos = String(qtd);
+                    }
                     card.classList.toggle('disabled', !isAvailable);
                     card.setAttribute('aria-disabled', isAvailable ? 'false' : 'true');
                     card.title = isAvailable
-                        ? `${qtd} veículo(s) disponível(is) neste período.`
+                        ? (qtd !== null ? `${qtd} veículo(s) disponível(is) neste período.` : 'Grupo disponível neste período.')
                         : 'Este grupo de frota não possui veículos disponíveis para a estação e período selecionados.';
                     const availability = card.querySelector('.grupo-availability');
                     if (availability) {
                         availability.classList.toggle('no', !isAvailable);
                         availability.textContent = isAvailable
-                            ? `${qtd} veiculo(s) disponivel(is)`
+                            ? (qtd !== null ? `${qtd} veiculo(s) disponivel(is)` : 'Grupo disponivel neste periodo')
                             : 'Indisponivel no periodo';
                     }
                 });
@@ -1093,7 +1100,6 @@
             async function carregarDisponibilidadeGrupos() {
                 if (!validStep1(false)) {
                     gruposDisponibilidade = {};
-                    sincronizarCardsGrupoDisponibilidade();
                     return false;
                 }
 
@@ -1751,7 +1757,7 @@
                     refresh();
                     updatePrefill();
                     const step1Ok = validStep1(false);
-                    if (prefillCompleto && step1Ok) {
+                    if (initialStepServer === 2 && prefillCompleto && step1Ok) {
                         state.step = 2;
                         renderStep();
                         carregarDisponibilidadeGrupos().then(function() {
@@ -1815,15 +1821,16 @@
                                 const marcas = (g.marcas||[]).map(function(m){ return `<span class="pgf-badge">${m}</span>`; }).join('');
                                 const segs = (g.segmentos||[]).map(function(s){ return `<span class="pgf-badge">${s}</span>`; }).join('');
                                 const modelos = (g.modelos||[]).slice(0,3).map(function(m){ return `<span class="pgf-badge">${m.nome}</span>`; }).join('');
-                                const qtd = Number(g.qtd_veiculos_disponiveis || 0);
-                                const disponivel = g.disponivel !== false && qtd > 0;
+                                const qtdRaw = g.qtd_veiculos_disponiveis;
+                                const qtd = qtdRaw === null || qtdRaw === undefined ? null : Number(qtdRaw);
+                                const disponivel = qtd === null ? true : qtd > 0;
                                 return `<tr>
                                     <td>${img}</td>
                                     <td><strong style="font-size:13px">${g.nome}</strong>${marcas ? '<br>'+marcas : ''}</td>
                                     <td>${modelos}</td>
                                     <td>${segs}</td>
                                     <td style="text-align:right;font-weight:700">${money(g.valor_diario)}</td>
-                                    <td style="font-weight:700">${qtd} veiculo(s)</td>
+                                    <td style="font-weight:700">${qtd === null ? '—' : `${qtd} veiculo(s)`}</td>
                                     <td><button type="button" class="btn ${disponivel ? 'btn-primary' : 'btn-secondary'} pgf-selecionar" data-grupo-id="${g.id}" data-grupo-nome="${g.nome}" data-tarifa="${g.valor_diario}" data-disponivel="${disponivel ? '1' : '0'}" data-qtd-veiculos="${qtd}" style="min-height:30px;font-size:12px;padding:4px 10px" ${!disponivel ? 'disabled' : ''}>${disponivel ? 'Selecionar' : 'Indisponível'}</button></td>
                                 </tr>`;
                             }).join('');
