@@ -498,7 +498,7 @@
 
             <div class="content">
                 <div class="actions-top">
-                    @if(!empty($urlPagamento))
+                    @if($pagamentoPendente && !empty($urlPagamento))
                         @if($isAuth)
                             <a href="{{ $urlPagamento }}" class="btn btn-primary">
                                 <i class="fas fa-credit-card"></i>
