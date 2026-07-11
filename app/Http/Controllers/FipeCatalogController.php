@@ -16,8 +16,28 @@ class FipeCatalogController extends Controller
             abort(403, 'Token inválido para execução do catálogo FIPE.');
         }
 
+        return $this->executarSincronizacao(
+            $request,
+            (string) $request->query('vehicle_types', (string) $request->query('vehicle_type', 'cars'))
+        );
+    }
+
+    public function runMotorcyclesAndTrucks(Request $request)
+    {
+        $allowedToken = config('app.migration_route_token');
+        $token = (string) $request->query('token', '');
+
+        if ($allowedToken && $allowedToken !== '' && $token !== $allowedToken) {
+            abort(403, 'Token inválido para execução do catálogo FIPE.');
+        }
+
+        return $this->executarSincronizacao($request, 'motorcycles,trucks');
+    }
+
+    private function executarSincronizacao(Request $request, string $vehicleTypes)
+    {
         $params = [
-            '--vehicle-types' => (string) $request->query('vehicle_types', (string) $request->query('vehicle_type', 'cars')),
+            '--vehicle-types' => $vehicleTypes,
         ];
 
         $brand = trim((string) $request->query('brand', ''));

@@ -98,6 +98,7 @@ Route::get('/multa/{multa}/pagamento', [SiteReservaController::class, 'pagamento
 Route::post('/multa/{multa}/pagamento', [SiteReservaController::class, 'processarPagamentoMulta'])->name('site.multa.processarPagamento');
 Route::post('/multa/{multa}/pagamento/metodo', [SiteReservaController::class, 'adicionarMetodoPagamentoMulta'])->name('site.multa.pagamento.metodo');
 Route::get('/job/fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('job.fipe.catalogo.run');
+Route::get('/job/fipe/sincronizar-catalogo/motos-caminhoes', [FipeCatalogController::class, 'runMotorcyclesAndTrucks'])->name('job.fipe.catalogo.motos-caminhoes.run');
 
 Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(function (): void {
     Route::middleware(['auth'])->get('/', function () {
@@ -160,6 +161,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
         Route::get('migrations/fix-gateway-customer', [MigrationController::class, 'fixGatewayCustomer'])->name('migrations.fix-gateway-customer');
         Route::get('fipe/sincronizar-catalogo', [FipeCatalogController::class, 'run'])->name('fipe.catalogo.run');
+        Route::get('fipe/sincronizar-catalogo/motos-caminhoes', [FipeCatalogController::class, 'runMotorcyclesAndTrucks'])->name('fipe.catalogo.motos-caminhoes.run');
     });
 
     require __DIR__ . '/auth.php';
