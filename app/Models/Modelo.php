@@ -15,6 +15,7 @@ class Modelo extends Model
         'nome',
         'nome_fipe',
         'codigo_fipe',
+        'vehicle_type',
         'ano_modelo',
         'imagem',
         'ativo',

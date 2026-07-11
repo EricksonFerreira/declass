@@ -13,7 +13,8 @@ use App\Support\SchemaCache;
 class SincronizarCatalogoFipeCommand extends Command
 {
     protected $signature = 'fipe:sincronizar-catalogo
-        {--vehicle-type=cars : Tipo de veiculo na FIPE}
+        {--vehicle-type=cars : Tipo principal de veiculo na FIPE}
+        {--vehicle-types= : Lista de tipos de veiculo na FIPE, separados por virgula}
         {--brand= : Filtro opcional por codigo ou nome da marca, separado por virgula}
         {--refresh-existing : Atualiza nomes locais com o nome FIPE}
         {--dry-run : Simula a sincronizacao sem persistir}
@@ -30,14 +31,21 @@ class SincronizarCatalogoFipeCommand extends Command
 
     public function handle(): int
     {
-        $vehicleType = (string) $this->option('vehicle-type');
+        $vehicleTypesOption = trim((string) $this->option('vehicle-types'));
+        $vehicleTypeFallback = trim((string) $this->option('vehicle-type'));
+        $vehicleTypes = $vehicleTypesOption !== ''
+            ? array_filter(array_map('trim', explode(',', $vehicleTypesOption)))
+            : ($vehicleTypeFallback !== '' ? [$vehicleTypeFallback] : []);
+        if (empty($vehicleTypes)) {
+            $vehicleTypes = (array) config('services.fipe.vehicle_types', ['cars']);
+        }
         $brandOption = trim((string) $this->option('brand'));
         $brandFilters = $brandOption !== '' ? array_filter(array_map('trim', explode(',', $brandOption))) : [];
         $refreshExisting = (bool) $this->option('refresh-existing');
         $dryRun = (bool) $this->option('dry-run');
 
         $this->info('Sincronizando catalogo FIPE...');
-        $this->line('Tipo: ' . $vehicleType);
+        $this->line('Tipos: ' . implode(', ', $vehicleTypes));
 
         if (!empty($brandFilters)) {
             $this->line('Filtro de marcas: ' . implode(', ', $brandFilters));
@@ -79,7 +87,7 @@ class SincronizarCatalogoFipeCommand extends Command
             foreach ($empresasDestino as $empresaId) {
                 $this->empresaContext->setEmpresaId($empresaId);
 
-                $stats = $this->fipeCatalogService->syncCatalog($vehicleType, $brandFilters, $refreshExisting, $dryRun);
+                $stats = $this->fipeCatalogService->syncCatalog($vehicleTypes, $brandFilters, $refreshExisting, $dryRun);
                 $totais['companies']++;
                 $totais['brands_api'] += (int) $stats['brands_api'];
                 $totais['brands_created'] += (int) $stats['brands_created'];

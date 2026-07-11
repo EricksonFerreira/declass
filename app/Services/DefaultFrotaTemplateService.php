@@ -382,6 +382,7 @@ class DefaultFrotaTemplateService
                 $marcaId = (int) $marcaExistente->id;
             } else {
                 $payload = ['nome' => $marcaDef['nome']];
+                if (SchemaCache::hasColumn('marcas', 'vehicle_type')) { $payload['vehicle_type'] = 'cars'; }
                 if ($hasMarcaAtivo)    { $payload['ativo']      = 'S'; }
                 if ($hasMarcaEmpresa)  { $payload['empresa_id'] = $empresaId; }
                 $payload['created_at'] = now();
@@ -404,6 +405,7 @@ class DefaultFrotaTemplateService
                     $modeloId = (int) $modeloExistente->id;
                 } else {
                     $mp = ['nome' => $modeloDef['nome'], 'marca_id' => $marcaId];
+                    if (SchemaCache::hasColumn('modelos', 'vehicle_type')) { $mp['vehicle_type'] = 'cars'; }
                     if ($hasModeloAtivo)   { $mp['ativo']      = 'S'; }
                     if ($hasModeloEmpresa) { $mp['empresa_id'] = $empresaId; }
                     if ($hasSegmentoId && $segmentoId !== null) { $mp['segmento_id'] = $segmentoId; }

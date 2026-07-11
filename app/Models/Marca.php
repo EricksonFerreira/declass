@@ -15,6 +15,7 @@ class Marca extends Model
         'nome',
         'nome_fipe',
         'codigo_fipe',
+        'vehicle_type',
         'ativo',
     ];
 

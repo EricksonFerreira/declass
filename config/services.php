@@ -46,7 +46,12 @@ return [
     ],
     'fipe' => [
         'base_url' => env('FIPE_API_BASE_URL', 'https://fipe.parallelum.com.br/api/v2'),
+        'legacy_base_url' => env('FIPE_API_LEGACY_BASE_URL', 'https://parallelum.com.br/fipe/api/v1'),
         'vehicle_type' => env('FIPE_VEHICLE_TYPE', 'cars'),
+        'vehicle_types' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', env('FIPE_VEHICLE_TYPES', 'cars,motorcycles,trucks'))
+        ))),
         'reference' => env('FIPE_API_REFERENCE'),
         'token' => env('FIPE_API_TOKEN'),
     ],

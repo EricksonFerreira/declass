@@ -17,7 +17,7 @@ class FipeCatalogController extends Controller
         }
 
         $params = [
-            '--vehicle-type' => (string) $request->query('vehicle_type', 'cars'),
+            '--vehicle-types' => (string) $request->query('vehicle_types', (string) $request->query('vehicle_type', 'cars')),
         ];
 
         $brand = trim((string) $request->query('brand', ''));

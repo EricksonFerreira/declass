@@ -18,6 +18,7 @@ use App\Services\StatusVeiculoService;
 use App\Services\TipoFrotaService;
 use App\Services\VeiculoService;
 use App\Services\DisponibilidadeVeiculoService;
+use App\Services\FipeCatalogService;
 use App\Support\EmpresaContext;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\JsonResponse;
@@ -33,7 +34,6 @@ use App\Models\StatusVeiculo;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
 use Illuminate\Validation\Rule;
@@ -53,6 +53,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     protected $statusVeiculoService;
     protected $estacaoService;
     protected $disponibilidadeVeiculoService;
+    protected $fipeCatalogService;
 
 
     public function __construct(
@@ -65,7 +66,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         SegmentoService $segmentoService,
         StatusVeiculoService $statusVeiculoService,
         EstacaoService $estacaoService,
-        DisponibilidadeVeiculoService $disponibilidadeVeiculoService
+        DisponibilidadeVeiculoService $disponibilidadeVeiculoService,
+        FipeCatalogService $fipeCatalogService
     ) {
         $this->titulo = "Veiculos";
         $this->nomeFiltro = 'veiculo';
@@ -79,6 +81,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->statusVeiculoService = $statusVeiculoService;
         $this->estacaoService = $estacaoService;
         $this->disponibilidadeVeiculoService = $disponibilidadeVeiculoService;
+        $this->fipeCatalogService = $fipeCatalogService;
     }
 
     public function index()
@@ -245,12 +248,10 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             return response()->json(['message' => 'O modelo selecionado nao possui ano modelo cadastrado.'], 422);
         }
 
-        $baseUrl = rtrim((string) config('services.fipe.base_url', 'https://fipe.parallelum.com.br/api/v2'), '/');
-        $vehicleType = (string) config('services.fipe.vehicle_type', 'cars');
+        $vehicleType = (string) ($modelo->vehicle_type ?? $marca->vehicle_type ?? config('services.fipe.vehicle_type', 'cars'));
 
         try {
-            $urlMarcas = $baseUrl . '/' . $vehicleType . '/brands';
-            $marcas = Http::acceptJson()->timeout(15)->get($urlMarcas)->throw()->json();
+            $marcas = $this->fipeCatalogService->fetchJsonForVehicleType($vehicleType, 'brands');
             $marcaApi = collect($marcas)->first(function (array $item) use ($marca) {
                 $nomeApi = $this->normalizarTextoFipe((string) ($item['name'] ?? $item['nome'] ?? ''));
                 $nomeSistema = $this->normalizarTextoFipe((string) ($marca->nome_fipe ?? $marca->nome ?? ''));
@@ -268,12 +269,10 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             }
 
             $codigoMarcaApi = (string) ($marcaApi['code'] ?? $marcaApi['codigo'] ?? '');
-            $urlMarcaModelos = $baseUrl . '/' . $vehicleType . '/brands/' . $codigoMarcaApi . '/models';
-            $modelosResponse = Http::acceptJson()
-                ->timeout(15)
-                ->get($urlMarcaModelos)
-                ->throw()
-                ->json();
+            $modelosResponse = $this->fipeCatalogService->fetchJsonForVehicleType(
+                $vehicleType,
+                'brands/' . $codigoMarcaApi . '/models'
+            );
 
             $modelosApi = collect($modelosResponse);
             $modeloApi = $modelosApi->first(function (array $item) use ($modelo) {
@@ -293,12 +292,10 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             }
 
             $codigoModeloApi = (string) ($modeloApi['code'] ?? $modeloApi['codigo'] ?? '');
-            $urlMarcaModeloAnos = $baseUrl . '/' . $vehicleType . '/brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years';
-            $anosResponse = Http::acceptJson()
-                ->timeout(15)
-                ->get($urlMarcaModeloAnos)
-                ->throw()
-                ->json();
+            $anosResponse = $this->fipeCatalogService->fetchJsonForVehicleType(
+                $vehicleType,
+                'brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years'
+            );
 
             $anoApi = collect($anosResponse)->first(function (array $item) use ($anoModelo) {
                 return Str::contains((string) ($item['name'] ?? $item['nome'] ?? ''), (string) $anoModelo);
@@ -307,14 +304,10 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             if (!$anoApi) {
                 return response()->json(['message' => 'Nao foi possivel localizar o ano/modelo na FIPE.'], 422);
             }
-
-
-            $urlDetalhe = $baseUrl . '/' . $vehicleType . '/brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years/' . $anoApi['code'];
-            $detalhe = Http::acceptJson()
-                ->timeout(15)
-                ->get($urlDetalhe)
-                ->throw()
-                ->json();
+            $detalhe = $this->fipeCatalogService->fetchJsonForVehicleType(
+                $vehicleType,
+                'brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years/' . $anoApi['code']
+            );
 
             return response()->json([
                 'marca' => $marcaApi['name'] ?? $marcaApi['nome'] ?? $marca->nome,

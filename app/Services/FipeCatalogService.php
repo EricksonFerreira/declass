@@ -5,54 +5,66 @@ namespace App\Services;
 use App\Models\Marca;
 use App\Models\Modelo;
 use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 class FipeCatalogService
 {
-    public function syncCatalog(string $vehicleType = 'cars', array $brandFilters = [], bool $refreshExisting = false, bool $dryRun = false): array
+    /**
+     * @param string|array<int, string> $vehicleTypes
+     */
+    public function syncCatalog(string|array $vehicleTypes = 'cars', array $brandFilters = [], bool $refreshExisting = false, bool $dryRun = false): array
     {
-        $brands = collect($this->requestJson($vehicleType . '/brands'));
-
-        if (!empty($brandFilters)) {
-            $filters = array_map('trim', $brandFilters);
-            $brands = $brands->filter(function (array $brand) use ($filters) {
-                $code = (string) ($brand['code'] ?? $brand['codigo'] ?? '');
-                $name = (string) ($brand['name'] ?? $brand['nome'] ?? '');
-
-                return in_array($code, $filters, true) || in_array($name, $filters, true);
-            })->values();
-        }
-
         $stats = [
-            'brands_api' => $brands->count(),
+            'brands_api' => 0,
             'brands_created' => 0,
             'brands_updated' => 0,
             'models_api' => 0,
             'models_created' => 0,
             'models_updated' => 0,
             'models_skipped' => 0,
+            'brands_skipped' => 0,
         ];
 
-        foreach ($brands as $brandApi) {
-            $brand = $this->syncBrand($brandApi, $refreshExisting, $dryRun, $stats);
-            if (!$brand) {
-                continue;
+        foreach ($this->normalizeVehicleTypes($vehicleTypes) as $vehicleType) {
+            $brands = collect($this->fetchJsonForVehicleType($vehicleType, 'brands'));
+
+            if (!empty($brandFilters)) {
+                $filters = array_map('trim', $brandFilters);
+                $brands = $brands->filter(function (array $brand) use ($filters) {
+                    $code = (string) ($brand['code'] ?? $brand['codigo'] ?? '');
+                    $name = (string) ($brand['name'] ?? $brand['nome'] ?? '');
+
+                    return in_array($code, $filters, true) || in_array($name, $filters, true);
+                })->values();
             }
 
-            $models = collect($this->requestJson($vehicleType . '/brands/' . ($brandApi['code'] ?? $brandApi['codigo']) . '/models'));
-            $stats['models_api'] += $models->count();
+            $stats['brands_api'] += $brands->count();
 
-            foreach ($models as $modelApi) {
-                $result = $this->syncModel($vehicleType, $brand, $modelApi, $refreshExisting, $dryRun);
-                $stats[$result['action']]++;
+            foreach ($brands as $brandApi) {
+                $brand = $this->syncBrand($vehicleType, $brandApi, $refreshExisting, $dryRun, $stats);
+                if (!$brand) {
+                    continue;
+                }
+
+                $models = collect($this->fetchJsonForVehicleType(
+                    $vehicleType,
+                    'brands/' . ($brandApi['code'] ?? $brandApi['codigo']) . '/models'
+                ));
+                $stats['models_api'] += $models->count();
+
+                foreach ($models as $modelApi) {
+                    $result = $this->syncModel($vehicleType, $brand, $modelApi, $refreshExisting, $dryRun);
+                    $stats[$result['action']]++;
+                }
             }
         }
 
         return $stats;
     }
 
-    private function syncBrand(array $brandApi, bool $refreshExisting, bool $dryRun, array &$stats): ?Marca
+    private function syncBrand(string $vehicleType, array $brandApi, bool $refreshExisting, bool $dryRun, array &$stats): ?Marca
     {
         $codigoFipe = trim((string) ($brandApi['code'] ?? $brandApi['codigo'] ?? ''));
         $nomeFipe = trim((string) ($brandApi['name'] ?? $brandApi['nome'] ?? ''));
@@ -63,13 +75,17 @@ class FipeCatalogService
         }
 
         $marca = Marca::query()
+            ->when($this->supportsVehicleType('marcas'), fn ($query) => $query->where('vehicle_type', $vehicleType))
             ->when($codigoFipe !== '', fn ($query) => $query->where('codigo_fipe', $codigoFipe))
             ->first();
 
         if (!$marca) {
-            $marca = Marca::query()->get()->first(function (Marca $item) use ($nomeFipe) {
+            $marca = Marca::query()
+                ->when($this->supportsVehicleType('marcas'), fn ($query) => $query->where('vehicle_type', $vehicleType))
+                ->get()
+                ->first(function (Marca $item) use ($nomeFipe) {
                 return $this->normalize((string) ($item->nome_fipe ?? $item->nome ?? '')) === $this->normalize($nomeFipe);
-            });
+                });
         }
 
         $payload = [
@@ -78,6 +94,9 @@ class FipeCatalogService
             'nome_fipe' => $nomeFipe,
             'ativo' => 'S',
         ];
+        if ($this->supportsVehicleType('marcas')) {
+            $payload['vehicle_type'] = $vehicleType;
+        }
 
         if (!$marca) {
             $payload['nome'] = $this->displayBrandName($nomeFipe);
@@ -115,12 +134,14 @@ class FipeCatalogService
 
         $modelo = Modelo::query()
             ->where('marca_id', (int) $marca->id)
+            ->when($this->supportsVehicleType('modelos'), fn ($query) => $query->where('vehicle_type', $vehicleType))
             ->when($codigoFipe !== '', fn ($query) => $query->where('codigo_fipe', $codigoFipe))
             ->first();
 
         if (!$modelo) {
             $modelo = Modelo::query()
                 ->where('marca_id', (int) $marca->id)
+                ->when($this->supportsVehicleType('modelos'), fn ($query) => $query->where('vehicle_type', $vehicleType))
                 ->get()
                 ->first(function (Modelo $item) use ($nomeFipe) {
                     $nomeLocal = (string) ($item->nome_fipe ?? $item->nome ?? '');
@@ -138,6 +159,9 @@ class FipeCatalogService
             'nome_fipe' => $nomeFipe,
             'ativo' => 'S',
         ];
+        if ($this->supportsVehicleType('modelos')) {
+            $payload['vehicle_type'] = $vehicleType;
+        }
 
         $brandCode = (string) ($marca->codigo_fipe ?? '');
         $anoModelo = $this->resolveModelYear(
@@ -176,7 +200,7 @@ class FipeCatalogService
         }
 
         try {
-            $years = collect($this->requestJson($vehicleType . '/brands/' . $brandCode . '/models/' . $modelCode . '/years'));
+            $years = collect($this->fetchJsonForVehicleType($vehicleType, 'brands/' . $brandCode . '/models/' . $modelCode . '/years'));
         } catch (\Throwable) {
             return null;
         }
@@ -200,9 +224,9 @@ class FipeCatalogService
         return $yearValues->isEmpty() ? null : (int) $yearValues->max();
     }
 
-    private function requestJson(string $path): array
+    private function requestJson(string $path, ?string $baseUrl = null): array
     {
-        $baseUrl = rtrim((string) config('services.fipe.base_url', 'https://fipe.parallelum.com.br/api/v2'), '/');
+        $baseUrl = rtrim((string) ($baseUrl ?? config('services.fipe.base_url', 'https://fipe.parallelum.com.br/api/v2')), '/');
         $token = trim((string) config('services.fipe.token', ''));
         $reference = trim((string) config('services.fipe.reference', ''));
 
@@ -223,6 +247,95 @@ class FipeCatalogService
         $response->throw();
 
         return $response->json() ?? [];
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function normalizeVehicleTypes(string|array $vehicleTypes): array
+    {
+        $items = is_array($vehicleTypes) ? $vehicleTypes : explode(',', $vehicleTypes);
+        $items = array_values(array_filter(array_map(
+            fn ($item) => $this->normalizeVehicleType((string) $item),
+            $items
+        )));
+
+        if (empty($items)) {
+            $fallback = config('services.fipe.vehicle_types', ['cars']);
+            $items = array_values(array_filter(array_map(
+                fn ($item) => $this->normalizeVehicleType((string) $item),
+                is_array($fallback) ? $fallback : [$fallback]
+            )));
+        }
+
+        return array_values(array_unique($items));
+    }
+
+    private function normalizeVehicleType(string $vehicleType): string
+    {
+        $vehicleType = trim(mb_strtolower($vehicleType));
+
+        return match ($vehicleType) {
+            'car', 'carro', 'carros', 'cars' => 'cars',
+            'moto', 'motos', 'motorcycle', 'motorcycles' => 'motorcycles',
+            'truck', 'trucks', 'truk', 'truks', 'caminhao', 'caminhoes', 'caminhão', 'caminhões' => 'trucks',
+            default => $vehicleType,
+        };
+    }
+
+    /**
+     * @return array<int, array{base_url: string, path: string}>
+     */
+    private function vehicleTypeEndpoints(string $vehicleType): array
+    {
+        $vehicleType = $this->normalizeVehicleType($vehicleType);
+        $modernBase = rtrim((string) config('services.fipe.base_url', 'https://fipe.parallelum.com.br/api/v2'), '/');
+        $legacyBase = rtrim((string) config('services.fipe.legacy_base_url', 'https://parallelum.com.br/fipe/api/v1'), '/');
+
+        return match ($vehicleType) {
+            'motorcycles' => [
+                ['base_url' => $modernBase, 'path' => 'motorcycles'],
+                ['base_url' => $modernBase, 'path' => 'motos'],
+                ['base_url' => $legacyBase, 'path' => 'motos'],
+            ],
+            'trucks' => [
+                ['base_url' => $modernBase, 'path' => 'trucks'],
+                ['base_url' => $modernBase, 'path' => 'caminhoes'],
+                ['base_url' => $legacyBase, 'path' => 'caminhoes'],
+            ],
+            default => [
+                ['base_url' => $modernBase, 'path' => 'cars'],
+                ['base_url' => $modernBase, 'path' => 'carros'],
+                ['base_url' => $legacyBase, 'path' => 'carros'],
+            ],
+        };
+    }
+
+    public function fetchJsonForVehicleType(string $vehicleType, string $path): array
+    {
+        $lastException = null;
+
+        foreach ($this->vehicleTypeEndpoints($vehicleType) as $endpoint) {
+            try {
+                return $this->requestJson(
+                    $endpoint['path'] . '/' . ltrim($path, '/'),
+                    $endpoint['base_url']
+                );
+            } catch (\Throwable $exception) {
+                $lastException = $exception;
+            }
+        }
+
+        if ($lastException) {
+            throw $lastException;
+        }
+
+        return [];
+    }
+
+    private function supportsVehicleType(string $table): bool
+    {
+        return SchemaCache::hasColumn($table, 'vehicle_type');
     }
 
     private function normalize(string $value): string

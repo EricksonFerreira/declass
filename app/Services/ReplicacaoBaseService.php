@@ -376,6 +376,9 @@ class ReplicacaoBaseService
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
+            if (SchemaCache::hasColumn('marcas', 'vehicle_type')) {
+                $payload['vehicle_type'] = $marcaOrigem->vehicle_type ?? 'cars';
+            }
 
             $existente = $destinoPorChave->get($chave);
             if ($existente) {
@@ -438,6 +441,9 @@ class ReplicacaoBaseService
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
+            if (SchemaCache::hasColumn('modelos', 'vehicle_type')) {
+                $payload['vehicle_type'] = $modeloOrigem->vehicle_type ?? 'cars';
+            }
 
             if ($temSegmento) {
                 $payload['segmento_id'] = $segmentoDestinoId;
@@ -485,38 +491,48 @@ class ReplicacaoBaseService
 
     private function chaveMarcaCatalogo(mixed $row): string
     {
+        $vehicleType = $this->normalizarChaveCatalogo(data_get($row, 'vehicle_type'));
+        if ($vehicleType !== '') {
+            $vehicleType = 'tipo:' . $vehicleType . '|';
+        }
+
         $codigoFipe = $this->normalizarChaveCatalogo(data_get($row, 'codigo_fipe'));
         if ($codigoFipe !== '') {
-            return 'codigo:' . $codigoFipe;
+            return $vehicleType . 'codigo:' . $codigoFipe;
         }
 
         $nomeFipe = $this->normalizarChaveCatalogo(data_get($row, 'nome_fipe'));
         if ($nomeFipe !== '') {
-            return 'nome_fipe:' . $nomeFipe;
+            return $vehicleType . 'nome_fipe:' . $nomeFipe;
         }
 
         $nome = $this->normalizarChaveCatalogo(data_get($row, 'nome'));
 
-        return $nome === '' ? '' : 'nome:' . $nome;
+        return $nome === '' ? '' : $vehicleType . 'nome:' . $nome;
     }
 
     private function chaveModeloCatalogo(mixed $row): string
     {
+        $vehicleType = $this->normalizarChaveCatalogo(data_get($row, 'vehicle_type'));
+        if ($vehicleType !== '') {
+            $vehicleType = 'tipo:' . $vehicleType . '|';
+        }
+
         $codigoFipe = $this->normalizarChaveCatalogo(data_get($row, 'codigo_fipe'));
         if ($codigoFipe !== '') {
-            return 'codigo:' . $codigoFipe;
+            return $vehicleType . 'codigo:' . $codigoFipe;
         }
 
         $nomeFipe = $this->normalizarChaveCatalogo(data_get($row, 'nome_fipe'));
         if ($nomeFipe !== '') {
-            return 'nome_fipe:' . $nomeFipe
+            return $vehicleType . 'nome_fipe:' . $nomeFipe
                 . '|marca:' . (data_get($row, 'marca_id') ?? 'null')
                 . '|segmento:' . (data_get($row, 'segmento_id') ?? 'null');
         }
 
         $nome = $this->normalizarChaveCatalogo(data_get($row, 'nome'));
 
-        return $nome === '' ? '' : 'nome:' . $nome
+        return $nome === '' ? '' : $vehicleType . 'nome:' . $nome
             . '|marca:' . (data_get($row, 'marca_id') ?? 'null')
             . '|segmento:' . (data_get($row, 'segmento_id') ?? 'null');
     }
