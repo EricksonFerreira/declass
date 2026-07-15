@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Opcional;
 
+use App\Support\EmpresaContext;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreOpcionalRequest extends FormRequest
 {
@@ -14,7 +16,6 @@ class StoreOpcionalRequest extends FormRequest
         return true;
     }
 
-   
     /**
      * Get the validation rules that apply to the request.
      *
@@ -22,8 +23,15 @@ class StoreOpcionalRequest extends FormRequest
      */
     public function rules(): array
     {
+        $empresaId = app(EmpresaContext::class)->empresaId() ?? auth()->user()?->empresa_id;
+
         return [
-            'nome' => 'required|string|max:255',
+            'nome' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('opcionais', 'nome')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
+            ],
             'ativo' => 'required|string|max:1',
         ];
     }
@@ -33,6 +41,7 @@ class StoreOpcionalRequest extends FormRequest
         return [
             'nome.required' => 'O campo nome é obrigatório',
             'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
+            'nome.unique' => 'O nome informado já está em uso para esta empresa',
             'ativo.required' => 'O campo ativo é obrigatório',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere',
         ];

@@ -29,7 +29,7 @@
             <div class="card-body p-4">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
                     <div class="col-12">
-                        <div class="pais-section-title">Informacoes Basicas</div>
+                        <div class="pais-section-title">Informações Básicas</div>
                     </div>
 
                     <div class="col-lg-6 col-md-12">

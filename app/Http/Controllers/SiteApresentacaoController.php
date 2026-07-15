@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Empresa;
 use App\Models\Estacao;
+use App\Models\PlanoMotoristaApp;
 use App\Services\EstacaoService;
 use App\Support\EmpresaContext;
 use App\Support\DomainNormalizer;
@@ -42,7 +43,7 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
+        if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->aluguel_app_ativo ?? 'N') !== 'S') {
             return $this->defaultResponse();
         }
 
@@ -65,10 +66,31 @@ class SiteApresentacaoController extends Controller
         $urlAdminEntrada = Route::has('site.admin.entry')
             ? route('site.admin.entry')
             : (Route::has('login') ? route('login') : $this->adminLoginFallbackUrl());
+        $heroTrustChips = [];
+
+        if (!empty($empresa->telefone)) {
+            $heroTrustChips[] = $this->formatTelefone($empresa->telefone);
+        }
+
+        if (!empty($empresa->email)) {
+            $heroTrustChips[] = $empresa->email;
+        }
+
+        if (!empty($empresa->cnpj)) {
+            $heroTrustChips[] = $this->formatCnpj($empresa->cnpj);
+        }
+
+        $heroTrustChips[] = 'Reserva sem burocracia';
+        $heroTrustChips[] = 'Pagamento seguro';
+
+        if (($empresa->aluguel_app_ativo ?? 'N') === 'S') {
+            $heroTrustChips[] = 'Aluguel para motorista de app';
+        }
 
         return view($this->resolveTemplate($modelo), [
             'empresa' => $empresa,
             'modelo' => $modelo,
+            'aluguelAppAtivo' => ($empresa->aluguel_app_ativo ?? 'N') === 'S',
             'heroTag' => $this->textValue($textos, 'hero_tag', ''),
             'titulo' => $this->textValue($textos, 'hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veículos com praticidade e segurança'),
             'subtitulo' => $this->textValue($textos, 'hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rápido e viaje com cobertura nacional.'),
@@ -76,6 +98,7 @@ class SiteApresentacaoController extends Controller
             'botaoTexto' => $empresa->site_apresentacao_botao_texto ?: 'Reservar agora',
             'botaoUrl' => $urlReserva,
             'botaoLoginUrl' => $urlAdminEntrada,
+            'heroTrustChips' => $heroTrustChips,
             'corPrimaria' => $corPrimaria,
             'corSecundaria' => $corSecundaria,
             'corTerciaria' => $corTerciaria,
@@ -169,6 +192,56 @@ class SiteApresentacaoController extends Controller
 
         return response()->json([
             'estacoes' => $this->estacoesForEmpresa($empresa),
+        ]);
+    }
+
+    public function motoristaApp(Request $request): View|RedirectResponse
+    {
+        $host = DomainNormalizer::normalize($request->getHost());
+        $empresa = $this->resolveEmpresaByHost($host);
+
+        if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
+            return $this->defaultResponse();
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $modelo = $this->resolveModelo((string) ($empresa->site_apresentacao_modelo ?? self::MODELO_1));
+        $estacoesRetirada = $this->estacaoService->getEstacoesParaRetiradaSelect();
+        $estacoesDevolucao = $this->estacaoService->getEstacoesParaDevolucaoSelect();
+        $planos = PlanoMotoristaApp::query()
+            ->where('empresa_id', $empresa->id)
+            ->where('ativo', 'S')
+            ->with('opcionais')
+            ->orderBy('ordem')
+            ->orderBy('nome')
+            ->get();
+
+        $docsObrigatorios = is_array($empresa->aluguel_app_documentos_obrigatorios ?? null)
+            ? $empresa->aluguel_app_documentos_obrigatorios
+            : [];
+
+        return view('site-apresentacao.motorista-app', [
+            'empresa' => $empresa,
+            'modelo' => $modelo,
+            'planos' => $planos,
+            'estacoesRetirada' => $estacoesRetirada,
+            'estacoesDevolucao' => $estacoesDevolucao,
+            'aluguelAppAtivo' => ($empresa->aluguel_app_ativo ?? 'N') === 'S',
+            'exigirAprovacaoDocumentos' => ($empresa->aluguel_app_exigir_aprovacao_documentos ?? 'N') === 'S',
+            'docsObrigatorios' => $docsObrigatorios,
+            'documentoAdicionalLabel' => (string) ($empresa->aluguel_app_documento_adicional_label ?? ''),
+            'selecionados' => [
+                'estacao_retirada' => (string) $request->query('estacao_retirada', ''),
+                'data_retirada' => (string) $request->query('data_retirada', ''),
+                'hora_retirada' => (string) $request->query('hora_retirada', ''),
+                'estacao_devolucao' => (string) $request->query('estacao_devolucao', ''),
+                'data_devolucao' => (string) $request->query('data_devolucao', ''),
+                'hora_devolucao' => (string) $request->query('hora_devolucao', ''),
+            ],
+            'botaoLoginUrl' => Route::has('site.admin.entry')
+                ? route('site.admin.entry')
+                : (Route::has('login') ? route('login') : $this->adminLoginFallbackUrl()),
         ]);
     }
 

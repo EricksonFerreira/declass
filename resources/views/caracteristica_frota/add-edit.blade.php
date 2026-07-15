@@ -36,7 +36,7 @@
                 </div>
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" enctype="multipart/form-data">
                     <div class="col-12">
-                        <div class="caracteristica-frota-section-title">Informacoes Basicas</div>
+                        <div class="caracteristica-frota-section-title">Informações Básicas</div>
                     </div>
 
                     <div class="col-lg-4 col-md-6">
@@ -85,7 +85,7 @@
 
                     <div class="col-12">
                         <div class="form-group form-group-caracteristica-frota">
-                            <label for="descricao">Descricao</label>
+                            <label for="descricao">Descrição</label>
                             <textarea class="form-control form-control-sm" name="descricao" id="descricao" rows="7">{{ old('descricao', $caracteristicaFrota->descricao ?? null) }}</textarea>
                         </div>
                     </div>

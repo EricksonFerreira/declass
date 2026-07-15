@@ -63,7 +63,7 @@
                     @endif
                     @csrf
 
-                    <div class="opcional-section-title">Informacoes Basicas</div>
+                    <div class="opcional-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-6">
                             <div class="form-group form-group-opcional">
@@ -95,7 +95,7 @@
                         @endif
                     </div>
 
-                    <div class="opcional-section-title">Precificacao</div>
+                    <div class="opcional-section-title">Precificação</div>
                     <div class="form-row">
                         <div class="col-lg-4 col-md-6">
                             <div class="form-group form-group-opcional">
@@ -107,24 +107,24 @@
                         <div class="col-lg-4 col-md-6" id="preco_por_dia_div">
                             <div class="form-group form-group-opcional">
                                 <x-form-input type="text" class="form-control form-control-sm" id="preco_por_dia"
-                                    name="preco_por_dia" label="Preco por Dia"
+                                    name="preco_por_dia" label="Preço por Dia"
                                     value="{{ old('preco_por_dia', $opcional->preco_por_dia ?? '') }}" />
                             </div>
                         </div>
                         <div class="col-lg-4 col-md-6" id="preco_integral_div">
                             <div class="form-group form-group-opcional">
                                 <x-form-input type="text" class="form-control form-control-sm" id="preco_integral"
-                                    name="preco_integral" label="Preco Integral"
+                                    name="preco_integral" label="Preço Integral"
                                     value="{{ old('preco_integral', $opcional->preco_integral ?? '') }}" />
                             </div>
                         </div>
                     </div>
 
-                    <div class="opcional-section-title">Descricao</div>
+                    <div class="opcional-section-title">Descrição</div>
                     <div class="form-row">
                         <div class="col-12">
                             <div class="form-group form-group-opcional">
-                                <label for="descricao" class="form-label-opcional">Descricao</label>
+                                <label for="descricao" class="form-label-opcional">Descrição</label>
                                 <textarea class="form-control form-control-sm" name="descricao" id="descricao" rows="4">{{ old('descricao', $opcional->descricao ?? '') }}</textarea>
                             </div>
                         </div>

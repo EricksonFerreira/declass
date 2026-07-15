@@ -69,6 +69,10 @@
                         <button type="button" class="empresa-wizard-step" data-empresa-step-btn="7">
                             <span class="num">7</span> Fiscal
                         </button>
+                        <div class="div"></div>
+                        <button type="button" class="empresa-wizard-step" data-empresa-step-btn="8">
+                            <span class="num">8</span> App
+                        </button>
                     </div>
                 </div>
 
@@ -126,12 +130,12 @@
                     <div class="empresa-section-title" id="sec-dominio">Domínio e Reserva</div>
                 </div>
 
-                <div class="col-12" data-empresa-step="3">
-                    <div class="form-group form-group-empresa">
+                <div class="row" data-empresa-step="3">
+                    <div class="form-group form-group-empresa col-4">
                         <x-form-input type="text" class="form-control form-control-sm" id="dominio" name="dominio"
                             label="Domínio" value="{{ $empresa->dominio ?? '' }}" />
                     </div>
-                    <div class="form-group form-group-empresa">
+                    <div class="form-group form-group-empresa  col-3 ">
                         <label for="reserva_selecionar_modelo">Selecionar modelo na reserva</label>
                         @php
                             $selecionarModeloReserva = old('reserva_selecionar_modelo', $empresa->reserva_selecionar_modelo ?? 'N');
@@ -142,7 +146,7 @@
                         </select>
                         <small class="text-muted d-block mt-1">Se "Não", o modelo será escolhido automaticamente após selecionar o grupo.</small>
                     </div>
-                    <div class="form-group form-group-empresa">
+                    <div class="form-group form-group-empresa  col-3 ">
                         <label for="reserva_atraso_max_minutos">Máximo de minutos de atraso para cancelamento automático</label>
                         <input
                             type="number"
@@ -154,7 +158,7 @@
                         >
                         <small class="text-muted d-block mt-1">Após esse tempo, reservas atrasadas são canceladas e o valor pago vira saldo.</small>
                     </div>
-                    <div class="form-group form-group-empresa">
+                    <div class="form-group form-group-empresa  col-3">
                         <label for="reserva_bloqueio_pos_reserva_horas">Horas de indisponibilidade após o fim da reserva</label>
                         <input
                             type="number"
@@ -166,7 +170,7 @@
                         >
                         <small class="text-muted d-block mt-1">Usado como "folga" para limpeza/revisão: o veículo só fica disponível para nova reserva após o fim + X horas.</small>
                     </div>
-                    <div class="form-group form-group-empresa">
+                    <div class="form-group form-group-empresa  col-3">
                         <label for="adicionar_novas_marcas_automaticamente">Adicionar novas marcas automaticamente</label>
                         @php
                             $adicionarMarcasAutomaticamente = old('adicionar_novas_marcas_automaticamente', $empresa->adicionar_novas_marcas_automaticamente ?? 'S');
@@ -177,7 +181,7 @@
                         </select>
                         <small class="text-muted d-block mt-1">Quando ativo, a sincronização FIPE replica novas marcas para esta empresa.</small>
                     </div>
-                    <div class="form-group form-group-empresa">
+                    <div class="form-group form-group-empresa  col-3">
                         <label for="adicionar_novos_modelos_automaticamente">Adicionar novos modelos automaticamente</label>
                         @php
                             $adicionarModelosAutomaticamente = old('adicionar_novos_modelos_automaticamente', $empresa->adicionar_novos_modelos_automaticamente ?? 'S');
@@ -616,6 +620,94 @@
                     </div>
                 </div>
 
+                <div class="col-12 mt-2" data-empresa-step="8">
+                    <div class="empresa-section-title" id="sec-app">Motorista de App</div>
+                </div>
+
+                <div class="col-lg-3" data-empresa-step="8">
+                    <div class="form-group form-group-empresa">
+                        <label for="aluguel_app_ativo">Habilitar aluguel para app?</label>
+                        @php
+                            $aluguelAppAtivo = old('aluguel_app_ativo', $empresa->aluguel_app_ativo ?? 'N');
+                        @endphp
+                        <select class="form-control form-control-sm" id="aluguel_app_ativo" name="aluguel_app_ativo">
+                            <option value="N" {{ $aluguelAppAtivo === 'N' ? 'selected' : '' }}>Não</option>
+                            <option value="S" {{ $aluguelAppAtivo === 'S' ? 'selected' : '' }}>Sim</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">Ativa a vitrine e o fluxo específico para motorista de aplicativo.</small>
+                    </div>
+                </div>
+
+                <div class="col-lg-3" data-empresa-step="8">
+                    <div class="form-group form-group-empresa">
+                        <label for="aluguel_app_exigir_aprovacao_documentos">Exigir aprovação dos documentos?</label>
+                        @php
+                            $exigirAprovacao = old('aluguel_app_exigir_aprovacao_documentos', $empresa->aluguel_app_exigir_aprovacao_documentos ?? 'N');
+                        @endphp
+                        <select class="form-control form-control-sm" id="aluguel_app_exigir_aprovacao_documentos" name="aluguel_app_exigir_aprovacao_documentos">
+                            <option value="N" {{ $exigirAprovacao === 'N' ? 'selected' : '' }}>Não</option>
+                            <option value="S" {{ $exigirAprovacao === 'S' ? 'selected' : '' }}>Sim</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">Quando ativo, a locadora precisa aprovar o cadastro antes da liberação.</small>
+                    </div>
+                </div>
+
+                <div class="col-lg-6" data-empresa-step="8">
+                    <div class="form-group form-group-empresa">
+                        <label for="aluguel_app_documento_adicional_label">Nome do documento adicional</label>
+                        <input type="text" class="form-control form-control-sm" id="aluguel_app_documento_adicional_label" name="aluguel_app_documento_adicional_label"
+                               value="{{ old('aluguel_app_documento_adicional_label', $empresa->aluguel_app_documento_adicional_label ?? '') }}"
+                               placeholder="Ex: autorização, declaração, comprovante extra">
+                        <small class="text-muted d-block mt-1">Preencha se a empresa quiser pedir um documento extra. Se não, deixe em branco.</small>
+                    </div>
+                </div>
+
+                <div class="col-12" data-empresa-step="8">
+                    @php
+                        $docsApp = old('aluguel_app_documentos_obrigatorios', $empresa->aluguel_app_documentos_obrigatorios ?? []);
+                        if (!is_array($docsApp)) {
+                            $docsApp = [];
+                        }
+                        $docsApp = array_values(array_filter($docsApp, fn ($item) => is_string($item) && trim($item) !== ''));
+                        $opcoesDocs = [
+                            'cnh_definitiva' => 'CNH definitiva',
+                            'cnh_ear' => 'CNH com EAR',
+                            'comprovante_residencia' => 'Comprovante de residência',
+                            'comprovante_cadastro_app' => 'Comprovante de cadastro ativo no aplicativo',
+                            'documento_adicional' => 'Documento adicional',
+                            'nenhum' => 'Nenhum documento',
+                        ];
+                    @endphp
+                    <div class="empresa-subsection empresa-subsection--calcao">
+                        <div class="empresa-subsection__head">
+                            <div>
+                                <h5>Documentos do motorista de app</h5>
+                                <p>Escolha quais documentos serão solicitados no cadastro público. Se preferir, marque apenas "Nenhum documento".</p>
+                            </div>
+                            <div class="empresa-subsection__badge">
+                                <i class="fas fa-file-signature"></i> Configuração aberta
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            @foreach($opcoesDocs as $valor => $rotulo)
+                                <div class="col-lg-4 col-md-6 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox"
+                                               id="aluguel_app_documentos_obrigatorios_{{ $valor }}"
+                                               name="aluguel_app_documentos_obrigatorios[]"
+                                               value="{{ $valor }}"
+                                               {{ in_array($valor, $docsApp, true) ? 'checked' : '' }}>
+                                        <label class="form-check-label" for="aluguel_app_documentos_obrigatorios_{{ $valor }}">
+                                            {{ $rotulo }}
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-12 empresa-wizard-footer">
                     <button type="button" class="btn btn-outline-secondary btn-sm empresa-wizard-btn" id="empresaWizardPrev">
                         <i class="fas fa-arrow-left mr-1"></i>Anterior
@@ -1038,7 +1130,7 @@
 
         // Wizard/Steps do cadastro de empresa (igual ao admin reserva)
         (function initEmpresaWizard() {
-            const maxStep = 7;
+            const maxStep = 8;
             const storageKey = 'empresaWizardStep';
 
             const prevBtn = document.getElementById('empresaWizardPrev');
@@ -1143,6 +1235,8 @@
                     nfse_codigo_servico: 7, nfse_cnae: 7, nfse_descricao_servico: 7,
                     nfse_aliquota: 7, nfse_tributacao_issqn: 7,
                     nfse_tomador_numero_padrao: 7, nfse_tomador_bairro_padrao: 7,
+                    aluguel_app_ativo: 8, aluguel_app_exigir_aprovacao_documentos: 8,
+                    aluguel_app_documento_adicional_label: 8, aluguel_app_documentos_obrigatorios: 8,
                 };
 
                 for (const campo of errosCampos) {

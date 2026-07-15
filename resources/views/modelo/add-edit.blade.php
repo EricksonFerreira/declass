@@ -63,7 +63,7 @@
             <div class="card-body p-4">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" enctype="multipart/form-data">
                     <div class="col-12">
-                        <div class="modelo-section-title">Informacoes Basicas</div>
+                        <div class="modelo-section-title">Informações Básicas</div>
                     </div>
 
                     <div class="col-lg-3 col-md-6">

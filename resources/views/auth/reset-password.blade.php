@@ -65,6 +65,9 @@
         .input::placeholder{color:#c5ccd7}
         .input:hover{border-color:#d1d5db;background:#f3f4f8}
         .input:focus{border-color:{{ $resetBrandColor }};background:#fff;box-shadow:0 0 0 3.5px color-mix(in srgb, {{ $resetBrandColor }} 14%, transparent)}
+        .input[readonly]{background:#eef2f7;color:#4b5563;cursor:not-allowed}
+        .input[readonly]:hover{border-color:#e9eaee;background:#eef2f7}
+        .input[readonly]:focus{border-color:#e9eaee;background:#eef2f7;box-shadow:none}
         .field--error .input{border-color:#f05252;background:#fef7f7}
         .field--error .input:focus{box-shadow:0 0 0 3.5px rgba(240,82,82,.1)}
         .field--error .input-wrap__icon{color:#f05252}
@@ -110,7 +113,7 @@
                             <input id="email" class="input" type="email" name="email"
                                 value="{{ old('email', $request->email) }}"
                                 placeholder="seu@email.com"
-                                required autofocus autocomplete="username">
+                                required autofocus autocomplete="username" readonly>
                         </div>
                         @error('email')
                             <p class="field__error">{{ $message }}</p>

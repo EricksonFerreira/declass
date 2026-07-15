@@ -12,6 +12,7 @@ class Opcional extends Model
 
     protected $fillable = [
         'nome',
+        'ativo',
         'tipo_cobranca',
         'preco_por_dia',
         'preco_integral',

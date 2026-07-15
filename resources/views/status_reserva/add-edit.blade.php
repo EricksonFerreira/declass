@@ -49,7 +49,7 @@
             <div class="card-body p-4">
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
                     <div class="col-12">
-                        <div class="status-reserva-section-title">Informacoes Basicas</div>
+                        <div class="status-reserva-section-title">Informações Básicas</div>
                     </div>
 
                     <div class="col-lg-7 col-md-6">
@@ -99,7 +99,7 @@
 
                     <div class="col-12">
                         <div class="form-group form-group-status-reserva">
-                            <label for="descricao">Descricao</label>
+                            <label for="descricao">Descrição</label>
                             <textarea name="descricao" id="descricao" class="form-control form-control-sm text-xs" rows="5">{{ old('descricao', isset($status_reserva->descricao) && $status_reserva->descricao ? $status_reserva->descricao : '') }}</textarea>
                             <x-form-errors name="descricao" />
                         </div>

@@ -35,7 +35,7 @@
                         <th>Imagem</th>
                         <th>Nome</th>
                         <th>Status</th>
-                        <th>Descricao</th>
+                        <th>Descrição</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
                 </thead>

@@ -41,7 +41,7 @@
                     @endif
                     @csrf
 
-                    <div class="tempo-estacao-section-title">Informacoes Basicas</div>
+                    <div class="tempo-estacao-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-4 col-md-6">
                             <div class="form-group form-group-tempo-estacao">

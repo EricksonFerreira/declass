@@ -81,18 +81,31 @@
                                 <span class="ec__meta-label"><i class="fas fa-phone mr-1"></i>Telefone</span>
                                 <strong class="ec__meta-value">{{ $estacao->telefone ?? $estacao->celular ?? '-' }}</strong>
                             </div>
-                            <div class="ec__meta-row">
-                                <span class="ec__meta-label"><i class="fas fa-sign-in-alt mr-1"></i>Check-in</span>
-                                <strong class="ec__meta-value">{{ $estacao->checkin === 'S' ? 'Sim' : 'Não' }}</strong>
-                            </div>
-                            <div class="ec__meta-row">
-                                <span class="ec__meta-label"><i class="fas fa-sign-out-alt mr-1"></i>Check-out</span>
-                                <strong class="ec__meta-value">{{ $estacao->checkout === 'S' ? 'Sim' : 'Não' }}</strong>
-                            </div>
                             <div class="ec__meta-row ec__meta-row--full">
                                 <span class="ec__meta-label"><i class="fas fa-map-marker-alt mr-1"></i>Endereço</span>
                                 <strong class="ec__meta-value">{{ $estacao->endereco ? ($estacao->endereco . ($estacao->numero ? ', ' . $estacao->numero : '')) : '-' }}</strong>
                             </div>
+                            <div class="ec__meta-row ec__meta-row--pair">
+                                <span class="ec__meta-pair">
+                                    <span class="ec__meta-label"><i class="fas fa-sign-in-alt mr-1"></i>Check-in</span>
+                                    <span class="badge badge-{{ $estacao->checkin === 'S' ? 'success' : 'danger' }}">{{ $estacao->checkin === 'S' ? 'Sim' : 'Não' }}</span>
+                                </span>
+                                <span class="ec__meta-pair">
+                                    <span class="ec__meta-label"><i class="fas fa-sign-out-alt mr-1"></i>Check-out</span>
+                                    <span class="badge badge-{{ $estacao->checkout === 'S' ? 'success' : 'danger' }}">{{ $estacao->checkout === 'S' ? 'Sim' : 'Não' }}</span>
+                                </span>
+                            </div>
+                            <div class="ec__meta-row ec__meta-row--pair">
+                                <span class="ec__meta-pair">
+                                    <span class="ec__meta-label"><i class="fas fa-check-circle mr-1"></i>Veículos ativos</span>
+                                    <span class="badge badge-success">{{ $estacao->veiculos_ativos_count ?? 0 }}</span>
+                                </span>
+                                <span class="ec__meta-pair">
+                                    <span class="ec__meta-label"><i class="fas fa-ban mr-1"></i>Veículos inativos</span>
+                                    <span class="badge badge-danger">{{ $estacao->veiculos_inativos_count ?? 0 }}</span>
+                                </span>
+                            </div>
+
                         </div>
 
                         <div class="ec__foot">
@@ -137,8 +150,14 @@
                                     <small class="text-muted">{{ $estacao->endereco ?? '' }}{{ $estacao->numero ? ', '.$estacao->numero : '' }}</small>
                                 </td>
                                 <td>
-                                    <span class="badge badge-light border mr-1">CI: {{ $estacao->checkin === 'S' ? 'Sim' : 'Não' }}</span>
-                                    <span class="badge badge-light border">CO: {{ $estacao->checkout === 'S' ? 'Sim' : 'Não' }}</span>
+                                    <div class="d-flex flex-wrap" style="gap:6px;">
+                                        <span class="badge badge-light border">CI: {{ $estacao->checkin === 'S' ? 'Sim' : 'Não' }}</span>
+                                        <span class="badge badge-light border">CO: {{ $estacao->checkout === 'S' ? 'Sim' : 'Não' }}</span>
+                                    </div>
+                                    <div class="d-flex flex-wrap mt-1" style="gap:6px;">
+                                        <span class="badge badge-success">Ativos: {{ $estacao->veiculos_ativos_count ?? 0 }}</span>
+                                        <span class="badge badge-danger">Inativos: {{ $estacao->veiculos_inativos_count ?? 0 }}</span>
+                                    </div>
                                 </td>
                                 <td>
                                     <span class="badge badge-xs bg-{{ $estacao->ativo === 'S' ? 'success' : 'danger' }}">
@@ -299,6 +318,14 @@
 /* meta */
 .ec__meta { display:flex; flex-direction:column; gap:4px; padding:6px 16px 10px; flex:1; }
 .ec__meta-row { display:flex; align-items:baseline; gap:6px; font-size:.8rem; }
+.ec__meta-row--pair { gap:10px; align-items:flex-start; }
+.ec__meta-pair {
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    min-width:0;
+    flex:1;
+}
 .ec__meta-row--full { flex-wrap:wrap; }
 .ec__meta-label { color:#64748b; min-width:90px; flex-shrink:0; }
 .ec__meta-value { color:#1e293b; font-size:.8rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; }

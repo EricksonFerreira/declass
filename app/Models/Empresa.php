@@ -41,6 +41,10 @@ class Empresa extends Model
         'cor_primaria',
         'cor_secundaria',
         'cor_terciaria',
+        'aluguel_app_ativo',
+        'aluguel_app_exigir_aprovacao_documentos',
+        'aluguel_app_documentos_obrigatorios',
+        'aluguel_app_documento_adicional_label',
         'gateway_pagamento',
         'gateway_customer_id',
         'moeda_pagamento',
@@ -80,6 +84,7 @@ class Empresa extends Model
         'site_apresentacao_imagens' => 'array',
         'site_apresentacao_cores' => 'array',
         'site_apresentacao_imagens_config' => 'array',
+        'aluguel_app_documentos_obrigatorios' => 'array',
         'nfse_ultima_importacao_em' => 'datetime',
     ];
 

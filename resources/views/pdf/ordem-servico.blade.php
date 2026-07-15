@@ -237,7 +237,7 @@
         <table class="items-table">
             <thead>
                 <tr>
-                    <th style="width:34%">Descricao</th>
+                    <th style="width:34%">Descrição</th>
                     <th style="width:26%">Resultado</th>
                     <th style="width:14%">Avaria</th>
                     <th style="width:26%">Obs avaria / Correcao</th>

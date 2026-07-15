@@ -33,7 +33,7 @@
                     @endif
                     @csrf
 
-                    <div class="tipo-movimentacao-section-title">Informacoes Basicas</div>
+                    <div class="tipo-movimentacao-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-6">
                             <div class="form-group form-group-tipo-movimentacao">
@@ -51,11 +51,11 @@
                         </div>
                     </div>
 
-                    <div class="tipo-movimentacao-section-title">Descricao</div>
+                    <div class="tipo-movimentacao-section-title">Descrição</div>
                     <div class="form-row">
                         <div class="col-12">
                             <div class="form-group form-group-tipo-movimentacao mb-0">
-                                <label for="descricao" class="form-label-tipo-movimentacao">Descricao</label>
+                                <label for="descricao" class="form-label-tipo-movimentacao">Descrição</label>
                                 <textarea name="descricao" id="descricao" rows="5" class="form-control form-control-sm">{{ old('descricao', isset($tipo_movimentacao->descricao) ? $tipo_movimentacao->descricao : '') }}</textarea>
                                 <x-form-errors name="descricao" />
                             </div>

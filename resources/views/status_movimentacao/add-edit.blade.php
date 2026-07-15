@@ -53,7 +53,7 @@
                     @endif
                     @csrf
 
-                    <div class="status-movimentacao-section-title">Informacoes Basicas</div>
+                    <div class="status-movimentacao-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-5">
                             <div class="form-group form-group-status-movimentacao">

@@ -17,6 +17,8 @@ use Illuminate\Validation\ValidationException;
 
 class LoginRequest extends FormRequest
 {
+    private ?Empresa $resolvedEmpresa = null;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -61,7 +63,7 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        $empresa = $this->resolveEmpresaBySlug();
+        $empresa = $this->resolveEmpresa();
         $user = $empresa ? $this->resolveUserForEmpresa($empresa->id) : null;
 
         if (! $user || ! Hash::check((string) $this->input('password'), (string) $user->password)) {
@@ -79,6 +81,10 @@ class LoginRequest extends FormRequest
         }
 
         Auth::login($user, $this->boolean('remember'));
+
+        if ($empresa) {
+            $this->session()->put('empresa_context_id', (int) $empresa->id);
+        }
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -99,7 +105,7 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('adminlte.auth.throttle', [
+            'email' => trans('adminlte::auth.throttle', [
                 'seconds' => $seconds,
                 'minutes' => ceil($seconds / 60),
             ]),
@@ -111,9 +117,23 @@ class LoginRequest extends FormRequest
      */
     public function throttleKey(): string
     {
+        $empresa = $this->resolveEmpresa();
+
         return Str::transliterate(
-            Str::lower($this->string('slug')).'|'.Str::lower($this->string('email')).'|'.$this->ip()
+            ($empresa?->id ? 'empresa:'.$empresa->id : 'slug:'.Str::lower($this->string('slug'))).'|'
+            .Str::lower($this->string('email')).'|'.$this->ip()
         );
+    }
+
+    private function resolveEmpresa(): ?Empresa
+    {
+        if ($this->resolvedEmpresa !== null) {
+            return $this->resolvedEmpresa;
+        }
+
+        $this->resolvedEmpresa = $this->resolveEmpresaBySlug() ?? $this->resolveEmpresaByDomain();
+
+        return $this->resolvedEmpresa;
     }
 
     private function resolveEmpresaBySlug(): ?Empresa
@@ -134,6 +154,27 @@ class LoginRequest extends FormRequest
             ->first();
     }
 
+    private function resolveEmpresaByDomain(): ?Empresa
+    {
+        if (!SchemaCache::hasTable('empresas')) {
+            return null;
+        }
+
+        $host = DomainNormalizer::normalize($this->getHost());
+        if (!$host) {
+            return null;
+        }
+
+        return Empresa::query()
+            ->withoutGlobalScopes()
+            ->where('ativo', 'S')
+            ->whereNotNull('dominio')
+            ->get(['id', 'slug', 'dominio'])
+            ->first(function (Empresa $empresa) use ($host) {
+                return DomainNormalizer::normalize($empresa->dominio) === $host;
+            });
+    }
+
     private function resolveUserForEmpresa(int $empresaId): ?User
     {
         $email = Str::lower(trim((string) $this->input('email', '')));
@@ -151,24 +192,6 @@ class LoginRequest extends FormRequest
 
     private function slugFromDomain(): ?string
     {
-        if (!SchemaCache::hasTable('empresas')) {
-            return null;
-        }
-
-        $host = DomainNormalizer::normalize($this->getHost());
-        if (!$host) {
-            return null;
-        }
-
-        $empresa = Empresa::query()
-            ->withoutGlobalScopes()
-            ->where('ativo', 'S')
-            ->whereNotNull('dominio')
-            ->get(['id', 'slug', 'dominio'])
-            ->first(function (Empresa $empresa) use ($host) {
-                return DomainNormalizer::normalize($empresa->dominio) === $host;
-            });
-
-        return $empresa?->slug;
+        return $this->resolveEmpresaByDomain()?->slug;
     }
 }

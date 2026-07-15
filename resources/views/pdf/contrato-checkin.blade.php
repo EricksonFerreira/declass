@@ -484,7 +484,7 @@
             <thead>
                 <tr>
                     <th>Local</th>
-                    <th>Descricao</th>
+                    <th>Descrição</th>
                     <th>Tipo / Status</th>
                     <th>Custo</th>
                     <th>Correcao</th>
@@ -528,7 +528,7 @@
         <div class="section-title">Cobrancas de Avarias</div>
         <table class="detail-table">
             <thead>
-                <tr><th>Data</th><th>Descricao</th><th>Status</th><th>Valor</th></tr>
+                <tr><th>Data</th><th>Descrição</th><th>Status</th><th>Valor</th></tr>
             </thead>
             <tbody>
                 @foreach($data['cobrancas_avaria'] as $cobranca)

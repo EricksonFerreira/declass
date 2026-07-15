@@ -33,7 +33,7 @@
                     @endif
                     @csrf
 
-                    <div class="cupom-desconto-section-title">Informacoes Basicas</div>
+                    <div class="cupom-desconto-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-5">
                             <div class="form-group form-group-cupom-desconto">

@@ -58,7 +58,7 @@
                     @endif
                     @csrf
 
-                    <div class="dano-section-title">Informacoes Basicas</div>
+                    <div class="dano-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-6">
                             <div class="form-group form-group-dano">

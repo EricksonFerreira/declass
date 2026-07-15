@@ -33,7 +33,7 @@
                     @endif
                     @csrf
 
-                    <div class="item-checklist-section-title">Informacoes Basicas</div>
+                    <div class="item-checklist-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-8 col-md-7">
                             <div class="form-group form-group-item-checklist">

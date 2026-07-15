@@ -40,6 +40,7 @@ Route::post('/webhook/stripe', [StripeWebhookController::class, 'handle'])
 Route::get('/', [SiteApresentacaoController::class, 'index'])->name('site.apresentacao');
 Route::get('/sobre', [SiteApresentacaoController::class, 'sobre'])->name('site.sobre');
 Route::get('/site/estacoes', [SiteApresentacaoController::class, 'estacoesOptions'])->name('site.apresentacao.estacoes');
+Route::get('/motorista-app', [SiteApresentacaoController::class, 'motoristaApp'])->name('site.apresentacao.motorista-app');
 Route::get('/sitemap.xml', function (Request $request) {
     $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
     $lastMod = now()->toAtomString();

@@ -158,7 +158,7 @@
                     <div class="tab-content" id="grupo-frota-tab-content">
                         <div id="geral-content" class="tab-pane fade show active" role="tabpanel"
                             aria-labelledby="geral-tab">
-                            <div class="grupo-frota-section-title">Informacoes Basicas</div>
+                            <div class="grupo-frota-section-title">Informações Básicas</div>
                             <div class="form-row">
                                 <div class="col-lg-6">
                                     <div class="form-group form-group-grupo-frota">

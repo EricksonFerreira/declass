@@ -52,6 +52,14 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         $estacaos = $this->estacaoService->getAllWithFiltersAndPagination($itensFiltered, $perPage, ['pais']);
+        $estacaos->getCollection()->loadCount([
+            'veiculos as veiculos_ativos_count' => function ($query) {
+                $query->where('ativo', 'S');
+            },
+            'veiculos as veiculos_inativos_count' => function ($query) {
+                $query->where('ativo', 'N');
+            },
+        ]);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Estações');
         $filters = $this->obterFiltrosPrincipais();
@@ -109,9 +117,24 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
 
         $horariosDiarios = $this->horarioDiarioService->getAllAtivos();
         $paisBrasilId = $this->paisService->getPaisBrasilId();
+        $totalVeiculosAtivos = 0;
+        $totalVeiculosInativos = 0;
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
-        return view('estacao.add-edit', compact('breadcrumb', 'paises', 'status', 'diasUteis', 'metodo', 'rota', 'checkin', 'checkout', 'horariosDiarios', 'paisBrasilId'))->with('titulo', $this->titulo);
+        return view('estacao.add-edit', compact(
+            'breadcrumb',
+            'paises',
+            'status',
+            'diasUteis',
+            'metodo',
+            'rota',
+            'checkin',
+            'checkout',
+            'horariosDiarios',
+            'paisBrasilId',
+            'totalVeiculosAtivos',
+            'totalVeiculosInativos'
+        ))->with('titulo', $this->titulo);
     }
 
     public function store(StoreEstacaoRequest $request)
@@ -148,6 +171,14 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
         [$metodo, $rota]  = $this->getFormMethodAndRoute($estacao);
         $diasUteisEstacao = $estacao->diasUteis->pluck('id')->toArray();
         $paisBrasilId     = $this->paisService->getPaisBrasilId();
+        $totalVeiculosAtivos = (int) DB::table('veiculos')
+            ->where('local_disponibilidade', $estacao->id)
+            ->where('ativo', 'S')
+            ->count();
+        $totalVeiculosInativos = (int) DB::table('veiculos')
+            ->where('local_disponibilidade', $estacao->id)
+            ->where('ativo', 'N')
+            ->count();
 
         return view(
             'estacao.add-edit',
@@ -166,7 +197,9 @@ class EstacaoController extends BaseController implements FiltroInterface, Resou
                 'cobrarEntrega',
                 'validoIntervalo',
                 'diasUteisEstacao',
-                'paisBrasilId'
+                'paisBrasilId',
+                'totalVeiculosAtivos',
+                'totalVeiculosInativos'
             )
         )
             ->with('titulo', $this->titulo);

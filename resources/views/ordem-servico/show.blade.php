@@ -177,7 +177,7 @@
                         <thead class="thead-light">
                             <tr>
                                 <th class="text-center">#</th>
-                                <th>Descricao</th>
+                                <th>Descrição</th>
                                 <th>Vinculo com avaria</th>
                                 <th>Resultado</th>
                             </tr>

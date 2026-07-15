@@ -204,7 +204,7 @@
                 </div>
                 <div class="modal-body">
                     <p class="text-muted small mb-2">Veiculo: <strong id="modalVeiculoNome">-</strong></p>
-                    <label for="correcaoTexto">Descricao da correcao realizada</label>
+                    <label for="correcaoTexto">Descrição da correcao realizada</label>
                     <textarea id="correcaoTexto" class="form-control" rows="4" placeholder="Descreva a correcao realizada..."></textarea>
                 </div>
                 <div class="modal-footer">

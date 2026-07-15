@@ -409,25 +409,49 @@
                 <div class="ec-step-pane d-none" data-pane="5">
                     <div class="estacao-section-title"><i class="fas fa-cogs mr-1"></i>Configurações de Operação</div>
                     <div class="form-row">
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-6 col-md-12">
+                            <div class="ec-station-summary-card">
+                                <div class="ec-station-summary-card__label">
+                                    <i class="fas fa-check-circle mr-1 text-success"></i>Total de veículos ativos
+                                </div>
+                                <div class="ec-station-summary-card__value text-success">
+                                    {{ $totalVeiculosAtivos ?? 0 }}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-md-12">
+                            <div class="ec-station-summary-card">
+                                <div class="ec-station-summary-card__label">
+                                    <i class="fas fa-ban mr-1 text-danger"></i>Total de veículos inativos
+                                </div>
+                                <div class="ec-station-summary-card__value text-danger">
+                                    {{ $totalVeiculosInativos ?? 0 }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-lg-6 col-md-6">
                             <div class="form-group form-group-estacao">
                                 <x-form-select name="checkin" label="Permitir retirada de veículo" :options="$checkin" placeholder="Selecione"
                                     :selected="old('checkin', $estacao->checkin ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                        <div class="col-lg-6 col-md-6">
                             <div class="form-group form-group-estacao">
                                 <x-form-select name="checkout" label="Permitir devolução de veículo" :options="$checkout" placeholder="Selecione"
                                     :selected="old('checkout', $estacao->checkout ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                    </div>
+                    <div class="form-row">
+                        <div class="col-lg-6 col-md-6">
                             <div class="form-group form-group-estacao">
                                 <x-form-select name="cobrar_na_coleta" id="cobrar_na_coleta" label="Cobrar taxa de retirada fora do horário" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
-                        <div class="col-lg-4 col-md-6 js-taxa-coleta-wrap {{ old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N') === 'S' ? '' : 'd-none' }}">
+                        <div class="col-lg-6 col-md-6 js-taxa-coleta-wrap {{ old('cobrar_na_coleta', $estacao->cobrar_na_coleta ?? 'N') === 'S' ? '' : 'd-none' }}">
                             <div class="form-group form-group-estacao">
                                 <label class="mb-1">Valor da taxa de retirada <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
@@ -439,13 +463,15 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                    </div>
+                    <div class="form-row">
+                        <div class="col-lg-6 col-md-6">
                             <div class="form-group form-group-estacao">
                                 <x-form-select name="cobrar_na_entrega" id="cobrar_na_entrega" label="Cobrar taxa de devolução fora do horário" :options="$checkin" placeholder="Selecione"
                                     :selected="old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N')" class="form-control form-control-sm" required />
                             </div>
                         </div>
-                        <div class="col-lg-4 col-md-6 js-taxa-entrega-wrap {{ old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N') === 'S' ? '' : 'd-none' }}">
+                        <div class="col-lg-6 col-md-6 js-taxa-entrega-wrap {{ old('cobrar_na_entrega', $estacao->cobrar_na_entrega ?? 'N') === 'S' ? '' : 'd-none' }}">
                             <div class="form-group form-group-estacao">
                                 <label class="mb-1">Valor da taxa de devolução <span class="text-danger">*</span></label>
                                 <div class="input-group input-group-sm">
@@ -457,7 +483,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-lg-4 col-md-6">
+                    </div>
+                    <div class="form-row">
+                        <div class="col-lg-6 col-md-6">
                             <div class="form-group form-group-estacao">
                                 <x-form-select name="valido_no_intervalo" label="Permitir atendimento no horário de almoço" :options="$checkin" placeholder="Selecione"
                                     :selected="old('valido_no_intervalo', $estacao->valido_no_intervalo ?? 'N')" class="form-control form-control-sm" required />
@@ -577,6 +605,25 @@
 }
 
 .form-group-estacao { margin-bottom: 1rem; }
+
+.ec-station-summary-card {
+    border: 1px solid #dbe6f3;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #fbfdff 0%, #f6f9ff 100%);
+    padding: 12px 14px;
+    margin-bottom: 1rem;
+}
+.ec-station-summary-card__label {
+    font-size: .78rem;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 6px;
+}
+.ec-station-summary-card__value {
+    font-size: 1.35rem;
+    line-height: 1;
+    font-weight: 800;
+}
 
 /* ── Location panel ── */
 .estacao-location-panel {

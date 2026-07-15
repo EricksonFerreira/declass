@@ -466,6 +466,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $data = $this->prepareSiteCoresPayload($request, $empresaAtual, $data);
         $data = $this->prepareSiteImagensConfigPayload($request, $empresaAtual, $data);
         $data = $this->handleSiteImagesUpload($request, $data, $empresaAtual);
+        if ($request->has('aluguel_app_ativo')) {
+            $data['aluguel_app_ativo'] = (string) $request->input('aluguel_app_ativo', 'N') === 'S' ? 'S' : 'N';
+        }
 
         foreach (array_keys(self::SITE_IMAGEM_FIELDS) as $imageField) {
             unset($data[$imageField]);
@@ -638,8 +641,30 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             default => 'locadora-modelo-1',
         };
 
+        $heroTrustChips = [];
+
+        if (!empty($empresa->telefone)) {
+            $heroTrustChips[] = $empresa->telefone;
+        }
+
+        if (!empty($empresa->email)) {
+            $heroTrustChips[] = $empresa->email;
+        }
+
+        if (!empty($empresa->cnpj)) {
+            $heroTrustChips[] = $empresa->cnpj;
+        }
+
+        $heroTrustChips[] = 'Reserva sem burocracia';
+        $heroTrustChips[] = 'Pagamento seguro';
+
+        if (($empresa->aluguel_app_ativo ?? 'N') === 'S') {
+            $heroTrustChips[] = 'Aluguel para motorista de app';
+        }
+
         return view('site-apresentacao.templates.' . $modeloPref, [
             'empresa' => $empresa,
+            'aluguelAppAtivo' => ($empresa->aluguel_app_ativo ?? 'N') === 'S',
             'heroTag' => $tv($textos, 'hero_tag', ''),
             'titulo' => $tv($textos, 'hero_titulo', 'Aluguel de veículos com praticidade e segurança'),
             'subtitulo' => $tv($textos, 'hero_subtitulo', 'Reserve online, retire rápido e viaje com cobertura nacional.'),
@@ -647,6 +672,7 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'botaoTexto' => $empresa->site_apresentacao_botao_texto ?: 'Reservar agora',
             'botaoUrl' => $urlReserva,
             'botaoLoginUrl' => $urlAdminEntrada,
+            'heroTrustChips' => $heroTrustChips,
             'corPrimaria' => $corPrimaria,
             'corSecundaria' => $corSecundaria,
             'corTerciaria' => $corTerciaria,

@@ -76,7 +76,7 @@
                     @endif
                     @csrf
 
-                    <div class="config-checklist-section-title">Informacoes Basicas</div>
+                    <div class="config-checklist-section-title">Informações Básicas</div>
                     <div class="form-row">
                         <div class="col-lg-5 col-md-7">
                             <div class="form-group form-group-config-checklist">

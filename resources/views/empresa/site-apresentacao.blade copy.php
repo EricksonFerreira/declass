@@ -320,7 +320,7 @@
                                         value="{{ old('site_apresentacao_subtitulo', $empresa->site_apresentacao_subtitulo ?? '') }}">
                                 </div>
                                 <div class="col-12 mt-2">
-                                    <label for="site_apresentacao_descricao">Descricao do site</label>
+                                    <label for="site_apresentacao_descricao">Descrição do site</label>
                                     <textarea class="form-control form-control-sm" id="site_apresentacao_descricao"
                                         name="site_apresentacao_descricao" rows="3" maxlength="2000"
                                         placeholder="Ex: Somos especializados em aluguel de veiculos...">{{ old('site_apresentacao_descricao', $empresa->site_apresentacao_descricao ?? '') }}</textarea>

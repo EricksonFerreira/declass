@@ -942,6 +942,11 @@ return [
                     'icon'  => 'fas fa-key',
                 ],
                 [
+                    'text'  => 'Planos Motorista App',
+                    'route' => 'plano_motorista_app.index',
+                    'icon'  => 'fas fa-car-side',
+                ],
+                [
                     'text'  => 'Empresas',
                     'route' => 'empresa.index',
                     'icon'  => 'fas fa-building',

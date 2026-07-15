@@ -89,6 +89,18 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
         return [
             'dominio' => $dominioRules,
             'site_apresentacao_ativo' => ['nullable', Rule::in(['S', 'N'])],
+            'aluguel_app_ativo' => ['nullable', Rule::in(['S', 'N'])],
+            'aluguel_app_exigir_aprovacao_documentos' => ['nullable', Rule::in(['S', 'N'])],
+            'aluguel_app_documentos_obrigatorios' => ['nullable', 'array'],
+            'aluguel_app_documentos_obrigatorios.*' => ['nullable', Rule::in([
+                'cnh_definitiva',
+                'cnh_ear',
+                'comprovante_residencia',
+                'comprovante_cadastro_app',
+                'documento_adicional',
+                'nenhum',
+            ])],
+            'aluguel_app_documento_adicional_label' => ['nullable', 'string', 'max:120'],
             'site_apresentacao_modelo' => ['nullable', Rule::in(['modelo_1', 'modelo_2', 'modelo_3'])],
             'site_apresentacao_titulo' => ['nullable', 'string', 'max:120'],
             'site_apresentacao_subtitulo' => ['nullable', 'string', 'max:180'],

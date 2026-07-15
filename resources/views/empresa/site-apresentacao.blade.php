@@ -328,6 +328,27 @@
                             </div>
                         </div>
 
+                        <div class="config-block">
+                            <div class="config-block-label">
+                                <i class="fas fa-car-side"></i>
+                                <div>
+                                    <strong>Fluxo para motorista de aplicativo</strong>
+                                    <span>Mostra uma versão especial do modelo 1 para reservas de app</span>
+                                </div>
+                            </div>
+                            @php $appAtual = old('aluguel_app_ativo', $empresa->aluguel_app_ativo ?? 'N'); @endphp
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <label for="aluguel_app_ativo">Empresa aluga para motorista de aplicativo</label>
+                                    <select class="form-control form-control-sm" id="aluguel_app_ativo" name="aluguel_app_ativo">
+                                        <option value="N" {{ $appAtual === 'N' ? 'selected' : '' }}>Não</option>
+                                        <option value="S" {{ $appAtual === 'S' ? 'selected' : '' }}>Sim</option>
+                                    </select>
+                                    <small class="field-hint-text">Quando ativado, o modelo 1 passa a mostrar uma tela própria para esse perfil, sem alterar o visual base do site.</small>
+                                </div>
+                            </div>
+                        </div>
+
                         
                         {{-- Bloco: Modelo de layout --}}
                         <div class="config-block">

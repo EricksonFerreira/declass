@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,74 +10,85 @@
     <link rel="apple-touch-icon" href="{{ $empresa->logo_url ?: asset('assets/imgs/logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,700;0,800;0,900;1,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,500;0,700;0,800;0,900;1,700&family=Inter:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <style>
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            TOKENS
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         :root {
-            --brand-primary:          {{ $corPrimaria }};
-            --brand-secondary:        {{ $corSecundaria }};
-            --brand-accent:           {{ $corTerciaria }};
-            --brand-primary-text:     {{ $corTextoPrimario }};
-            --topbar-bg:              {{ $corTopbarFundo }};
-            --topbar-text:            {{ $corTopbarTexto }};
-            --topbar-hover:           {{ $corTopbarLinkHover }};
-            --hero-bg:                {{ $corHeroFundo }};
-            --hero-text:              {{ $corHeroTexto }};
-            --form-bg:                {{ $corFormFundo }};
-            --form-text:              {{ $corFormTexto }};
-            --frota-bg:               {{ $corFrotaFundo }};
-            --frota-etiqueta-texto:   {{ $corFrotaEtiquetaTexto }};
-            --frota-titulo-texto:     {{ $corFrotaTituloTexto }};
-            --frota-descricao-texto:  {{ $corFrotaDescricaoTexto }};
+            --brand-primary: {{ $corPrimaria }};
+            --brand-secondary: {{ $corSecundaria }};
+            --brand-accent: {{ $corTerciaria }};
+            --brand-primary-text: {{ $corTextoPrimario }};
+            --topbar-bg: {{ $corTopbarFundo }};
+            --topbar-text: {{ $corTopbarTexto }};
+            --topbar-hover: {{ $corTopbarLinkHover }};
+            --hero-bg: {{ $corHeroFundo }};
+            --hero-text: {{ $corHeroTexto }};
+            --form-bg: {{ $corFormFundo }};
+            --form-text: {{ $corFormTexto }};
+            --frota-bg: {{ $corFrotaFundo }};
+            --frota-etiqueta-texto: {{ $corFrotaEtiquetaTexto }};
+            --frota-titulo-texto: {{ $corFrotaTituloTexto }};
+            --frota-descricao-texto: {{ $corFrotaDescricaoTexto }};
             --frota-card-titulo-texto: {{ $corFrotaCardTituloTexto }};
-            --frota-card-desc-texto:  {{ $corFrotaCardDescricaoTexto }};
-            --frota-card-bg:          {{ $corFrotaCardFundo }};
-            --vantagens-bg:           {{ $corVantagensFundo }};
+            --frota-card-desc-texto: {{ $corFrotaCardDescricaoTexto }};
+            --frota-card-bg: {{ $corFrotaCardFundo }};
+            --vantagens-bg: {{ $corVantagensFundo }};
             --vantagens-etiqueta-texto: {{ $corVantagensEtiquetaTexto }};
             --vantagens-titulo-texto: {{ $corVantagensTituloTexto }};
-            --vantagens-desc-texto:   {{ $corVantagensDescricaoTexto }};
-            --vantagens-item-texto:   {{ $corVantagensItemTexto }};
-            --etapas-bg:              {{ $corEtapasFundo }};
-            --etapas-etiqueta-texto:  {{ $corEtapasEtiquetaTexto }};
-            --etapas-titulo-texto:    {{ $corEtapasTituloTexto }};
-            --etapas-desc-texto:      {{ $corEtapasDescricaoTexto }};
-            --etapas-passo-texto:     {{ $corEtapasPassoTexto }};
+            --vantagens-desc-texto: {{ $corVantagensDescricaoTexto }};
+            --vantagens-item-texto: {{ $corVantagensItemTexto }};
+            --etapas-bg: {{ $corEtapasFundo }};
+            --etapas-etiqueta-texto: {{ $corEtapasEtiquetaTexto }};
+            --etapas-titulo-texto: {{ $corEtapasTituloTexto }};
+            --etapas-desc-texto: {{ $corEtapasDescricaoTexto }};
+            --etapas-passo-texto: {{ $corEtapasPassoTexto }};
             --etapas-passo-desc-texto: {{ $corEtapasPassoDescricaoTexto }};
-            --etapas-passo-bg:        {{ $corEtapasPassoFundo }};
-            --contato-bg:             {{ $corContatoFundo }};
+            --etapas-passo-bg: {{ $corEtapasPassoFundo }};
+            --contato-bg: {{ $corContatoFundo }};
             --contato-etiqueta-texto: {{ $corContatoEtiquetaTexto }};
-            --contato-titulo-texto:   {{ $corContatoTituloTexto }};
-            --contato-info-texto:     {{ $corContatoInfoTexto }};
-            --footer-bg:              {{ $corFooterFundo }};
-            --footer-text:            {{ $corFooterTexto }};
-            --btn-p-bg:               {{ $corBotaoPrimarioFundo }};
-            --btn-p-text:             {{ $corBotaoPrimarioTexto }};
-            --btn-s-bg:               {{ $corBotaoSecundarioFundo }};
-            --btn-s-text:             {{ $corBotaoSecundarioTexto }};
+            --contato-titulo-texto: {{ $corContatoTituloTexto }};
+            --contato-info-texto: {{ $corContatoInfoTexto }};
+            --footer-bg: {{ $corFooterFundo }};
+            --footer-text: {{ $corFooterTexto }};
+            --btn-p-bg: {{ $corBotaoPrimarioFundo }};
+            --btn-p-text: {{ $corBotaoPrimarioTexto }};
+            --btn-s-bg: {{ $corBotaoSecundarioFundo }};
+            --btn-s-text: {{ $corBotaoSecundarioTexto }};
 
-            --ink:   #0b1220;
+            --ink: #0b1220;
             --ink-2: #2d3a4f;
             --ink-3: #5e6e85;
-            --line:  #dde4ef;
+            --line: #dde4ef;
             --white: #ffffff;
-            --off:   #f5f7fb;
+            --off: #f5f7fb;
 
             --r: 16px;
             --r-lg: 24px;
 
-            --sh-sm:  0 2px 10px rgba(11,18,32,.06);
-            --sh-md:  0 8px 28px rgba(11,18,32,.10);
-            --sh-lg:  0 20px 56px rgba(11,18,32,.14);
-            --sh-xl:  0 32px 80px rgba(11,18,32,.18);
+            --sh-sm: 0 2px 10px rgba(11, 18, 32, .06);
+            --sh-md: 0 8px 28px rgba(11, 18, 32, .10);
+            --sh-lg: 0 20px 56px rgba(11, 18, 32, .14);
+            --sh-xl: 0 32px 80px rgba(11, 18, 32, .18);
         }
 
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
 
         body {
             font-family: 'Inter', sans-serif;
@@ -85,24 +97,30 @@
             -webkit-font-smoothing: antialiased;
         }
 
-        a { text-decoration: none; color: inherit; }
-        img { display: block; }
+        a {
+            text-decoration: none;
+            color: inherit;
+        }
+
+        img {
+            display: block;
+        }
 
         .wrap {
             width: min(1160px, calc(100% - 40px));
             margin-inline: auto;
         }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            TOPBAR
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .topbar {
             position: sticky;
             top: 0;
             z-index: 100;
             background: var(--topbar-bg);
-            border-bottom: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 2px 20px rgba(11,18,32,.12);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 2px 20px rgba(11, 18, 32, .12);
         }
 
         .topbar-inner {
@@ -126,16 +144,16 @@
             border-radius: 10px;
             object-fit: contain;
             padding: 4px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.18);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.18);
         }
 
         .brand-logo-fallback {
             width: 42px;
             height: 42px;
             border-radius: 10px;
-            background: rgba(255,255,255,0.15);
-            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -176,7 +194,7 @@
         .nav a:hover {
             opacity: 1;
             color: var(--topbar-hover);
-            background: rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .nav-cta {
@@ -188,19 +206,19 @@
             opacity: 1 !important;
             font-size: 0.84rem !important;
             font-weight: 700 !important;
-            box-shadow: 0 4px 14px rgba(0,0,0,.18);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, .18);
             transition: transform .16s, box-shadow .16s !important;
         }
 
         .nav-cta:hover {
             transform: translateY(-1px);
-            box-shadow: 0 7px 22px rgba(0,0,0,.24) !important;
+            box-shadow: 0 7px 22px rgba(0, 0, 0, .24) !important;
             background: var(--btn-p-bg) !important;
         }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            HAMBURGER BUTTON
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .nav-toggle {
             display: flex;
             flex-direction: column;
@@ -210,8 +228,8 @@
             width: 42px;
             height: 42px;
             border-radius: 10px;
-            background: rgba(255,255,255,0.10);
-            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.16);
             cursor: pointer;
             flex-shrink: 0;
             transition: background .18s;
@@ -219,7 +237,7 @@
         }
 
         .nav-toggle:hover {
-            background: rgba(255,255,255,0.18);
+            background: rgba(255, 255, 255, 0.18);
         }
 
         .nav-toggle-bar {
@@ -233,17 +251,26 @@
         }
 
         /* X state */
-        .nav-toggle.is-open .nav-toggle-bar:nth-child(1) { transform: translateY(7px) rotate(45deg); }
-        .nav-toggle.is-open .nav-toggle-bar:nth-child(2) { opacity: 0; width: 0; }
-        .nav-toggle.is-open .nav-toggle-bar:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+        .nav-toggle.is-open .nav-toggle-bar:nth-child(1) {
+            transform: translateY(7px) rotate(45deg);
+        }
 
-        /* ══════════════════════════════════════════
+        .nav-toggle.is-open .nav-toggle-bar:nth-child(2) {
+            opacity: 0;
+            width: 0;
+        }
+
+        .nav-toggle.is-open .nav-toggle-bar:nth-child(3) {
+            transform: translateY(-7px) rotate(-45deg);
+        }
+
+        /* ------------------------------------------
            SIDE DRAWER
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .drawer-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(11,18,32,0.52);
+            background: rgba(11, 18, 32, 0.52);
             z-index: 200;
             opacity: 0;
             pointer-events: none;
@@ -267,8 +294,8 @@
             display: flex;
             flex-direction: column;
             transform: translateX(100%);
-            transition: transform .3s cubic-bezier(.22,.68,0,1.2);
-            box-shadow: -20px 0 60px rgba(11,18,32,.28);
+            transition: transform .3s cubic-bezier(.22, .68, 0, 1.2);
+            box-shadow: -20px 0 60px rgba(11, 18, 32, .28);
             overflow-y: auto;
         }
 
@@ -281,7 +308,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 20px 22px 16px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
         }
 
@@ -297,16 +324,16 @@
             border-radius: 8px;
             object-fit: contain;
             padding: 3px;
-            background: rgba(255,255,255,0.12);
-            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.16);
         }
 
         .drawer-brand-logo-fallback {
             width: 34px;
             height: 34px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.14);
-            border: 1px solid rgba(255,255,255,0.16);
+            background: rgba(255, 255, 255, 0.14);
+            border: 1px solid rgba(255, 255, 255, 0.16);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -329,8 +356,8 @@
             width: 32px;
             height: 32px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.08);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: var(--topbar-text);
             font-size: 1rem;
             display: flex;
@@ -342,7 +369,9 @@
             line-height: 1;
         }
 
-        .drawer-close:hover { background: rgba(239,68,68,0.25); }
+        .drawer-close:hover {
+            background: rgba(239, 68, 68, 0.25);
+        }
 
         .drawer-nav {
             display: flex;
@@ -366,7 +395,7 @@
         }
 
         .drawer-nav a:hover {
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             opacity: 1;
         }
 
@@ -374,7 +403,7 @@
             width: 30px;
             height: 30px;
             border-radius: 8px;
-            background: rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.08);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -385,7 +414,7 @@
 
         .drawer-nav-divider {
             height: 1px;
-            background: rgba(255,255,255,0.07);
+            background: rgba(255, 255, 255, 0.07);
             margin: 8px 0;
         }
 
@@ -405,18 +434,18 @@
             color: var(--btn-p-text);
             font-size: .9rem;
             font-weight: 800;
-            box-shadow: 0 6px 20px rgba(0,0,0,.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .2);
             transition: transform .16s, box-shadow .16s;
         }
 
         .drawer-cta a:hover {
             transform: translateY(-1px);
-            box-shadow: 0 10px 26px rgba(0,0,0,.26);
+            box-shadow: 0 10px 26px rgba(0, 0, 0, .26);
         }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            HERO — full bleed
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .hero {
             background: var(--hero-bg);
             padding: 0;
@@ -430,8 +459,8 @@
             position: absolute;
             inset: 0;
             background-image:
-                radial-gradient(ellipse 80% 60% at 60% 120%, rgba(255,255,255,0.04) 0%, transparent 70%),
-                radial-gradient(ellipse 50% 40% at 10% -10%, rgba(255,255,255,0.06) 0%, transparent 60%);
+                radial-gradient(ellipse 80% 60% at 60% 120%, rgba(255, 255, 255, 0.04) 0%, transparent 70%),
+                radial-gradient(ellipse 50% 40% at 10% -10%, rgba(255, 255, 255, 0.06) 0%, transparent 60%);
             pointer-events: none;
         }
 
@@ -439,7 +468,9 @@
         .hero::after {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--brand-accent), var(--brand-primary), var(--brand-secondary));
         }
@@ -503,7 +534,7 @@
         .hero-subtitle {
             font-size: clamp(.95rem, 1vw + .5rem, 1.1rem);
             line-height: 1.7;
-            color: rgba(255,255,255,0.78);
+            color: rgba(255, 255, 255, 0.78);
             max-width: 46ch;
             margin-bottom: 14px;
         }
@@ -511,7 +542,7 @@
         .hero-description {
             font-size: .88rem;
             line-height: 1.75;
-            color: rgba(255,255,255,0.58);
+            color: rgba(255, 255, 255, 0.58);
             max-width: 52ch;
             margin-bottom: 32px;
         }
@@ -537,23 +568,29 @@
             transition: transform .16s, box-shadow .16s, filter .16s;
         }
 
-        .btn:hover { transform: translateY(-2px); }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
 
         .btn-primary {
             background: var(--btn-p-bg);
             color: var(--btn-p-text);
-            box-shadow: 0 6px 20px rgba(0,0,0,.22);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .22);
         }
 
-        .btn-primary:hover { box-shadow: 0 12px 28px rgba(0,0,0,.28); }
+        .btn-primary:hover {
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .28);
+        }
 
         .btn-ghost {
-            background: rgba(255,255,255,0.10);
+            background: rgba(255, 255, 255, 0.10);
             color: var(--hero-text);
-            border: 1px solid rgba(255,255,255,0.22);
+            border: 1px solid rgba(255, 255, 255, 0.22);
         }
 
-        .btn-ghost:hover { background: rgba(255,255,255,0.16); }
+        .btn-ghost:hover {
+            background: rgba(255, 255, 255, 0.16);
+        }
 
         .hero-trust {
             display: flex;
@@ -568,16 +605,16 @@
             gap: 6px;
             font-size: .73rem;
             font-weight: 600;
-            color: rgba(255,255,255,0.64);
+            color: rgba(255, 255, 255, 0.64);
         }
 
         .trust-chip::before {
-            content: '✓';
+            content: '?';
             display: inline-flex;
             width: 18px;
             height: 18px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.12);
             align-items: center;
             justify-content: center;
             font-size: .68rem;
@@ -585,7 +622,12 @@
             color: var(--brand-accent);
         }
 
-        .hero-image-placeholder { width:100%; height:180px; background:linear-gradient(135deg,var(--off),#e8edf5); }
+        .hero-image-placeholder {
+            width: 100%;
+            height: 180px;
+            background: linear-gradient(135deg, var(--off), #e8edf5);
+        }
+
         .hero-image-strip {
             margin-top: 28px;
         }
@@ -595,15 +637,24 @@
             max-height: 220px;
             object-fit: cover;
             border-radius: 14px;
-            border: 1px solid rgba(255,255,255,0.12);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             box-shadow: var(--sh-lg);
         }
 
         /* RIGHT — booking form */
         .hero-form-col {
             background: var(--form-bg);
-            border-left: 1px solid rgba(255,255,255,0.08);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
+            align-items: stretch;
+            min-width: 0;
+        }
+
+        .hero-form-row {
+            background: var(--form-bg);
+            border-left: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
             align-items: stretch;
             min-width: 0;
         }
@@ -635,6 +686,20 @@
             margin-bottom: 22px;
         }
 
+        #bookingRegularForm.is-hidden {
+            display: none;
+        }
+
+        .booking-form--app {
+            display: none;
+            padding-top: 24px;
+            flex-direction: column;
+        }
+
+        .booking-form--app.is-visible {
+            display: flex;
+        }
+
         .field-group {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -650,7 +715,9 @@
             min-width: 0;
         }
 
-        .field-full { grid-column: 1 / -1; }
+        .field-full {
+            grid-column: 1 / -1;
+        }
 
         .field small {
             display: block;
@@ -688,7 +755,7 @@
         .field select:focus {
             outline: none;
             border-color: var(--brand-primary);
-            box-shadow: 0 0 0 3px rgba(11,18,32,.07);
+            box-shadow: 0 0 0 3px rgba(11, 18, 32, .07);
         }
 
         .field .choices__inner {
@@ -704,8 +771,14 @@
             transition: border-color .18s;
         }
 
-        .field .choices__input { background: transparent; font-size: .88rem; }
-        .field .choices.is-focused .choices__inner { border-color: var(--brand-primary); }
+        .field .choices__input {
+            background: transparent;
+            font-size: .88rem;
+        }
+
+        .field .choices.is-focused .choices__inner {
+            border-color: var(--brand-primary);
+        }
 
         .toggle-row {
             display: flex;
@@ -736,13 +809,13 @@
             color: var(--btn-p-text);
             cursor: pointer;
             font-family: inherit;
-            box-shadow: 0 6px 20px rgba(0,0,0,.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .2);
             transition: transform .16s, box-shadow .16s;
         }
 
         .btn-book:hover {
             transform: translateY(-2px);
-            box-shadow: 0 12px 28px rgba(0,0,0,.26);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, .26);
         }
 
         .booking-note {
@@ -753,19 +826,297 @@
             text-align: center;
         }
 
-        /* ══════════════════════════════════════════
+        .booking-mode-switch {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+
+        .booking-mode-btn {
+            appearance: none;
+            border: 1px solid rgba(17, 24, 39, .12);
+            background: #fff;
+            color: var(--ink-2);
+            border-radius: 18px;
+            padding: 14px 16px;
+            text-align: left;
+            cursor: pointer;
+            transition: transform .16s, box-shadow .16s, border-color .16s, background .16s;
+            box-shadow: 0 8px 22px rgba(11, 18, 32, .06);
+            min-height: 84px;
+        }
+
+        .booking-mode-btn:hover {
+            transform: translateY(-1px);
+            border-color: rgba(17, 24, 39, .18);
+        }
+
+        .booking-mode-btn.is-active {
+            background: linear-gradient(180deg, rgba(57, 87, 153, .10), rgba(57, 87, 153, .02));
+            border-color: var(--brand-primary);
+            box-shadow: 0 10px 26px rgba(57, 87, 153, .16);
+        }
+
+        .booking-mode-btn__eyebrow {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: .7rem;
+            font-weight: 800;
+            letter-spacing: .06em;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            color: var(--brand-primary);
+        }
+
+        .booking-mode-btn__title {
+            display: block;
+            font-size: .96rem;
+            line-height: 1.15;
+            font-weight: 900;
+            color: var(--ink);
+            margin-bottom: 4px;
+        }
+
+        .booking-mode-btn__desc {
+            display: block;
+            font-size: .78rem;
+            line-height: 1.35;
+            color: var(--ink-3);
+        }
+
+        .booking-flow-panel {
+            width: 100%;
+        }
+
+        .booking-flow-panel.is-hidden {
+            display: none;
+        }
+
+        .booking-mode-panel[hidden] {
+            display: none !important;
+        }
+
+        .booking-mode-panel {
+            width: 100%;
+        }
+
+        .booking-form--app {
+            display: none;
+            padding-top: 24px;
+            flex-direction: column;
+        }
+
+        .booking-form--app.is-visible {
+            display: flex;
+        }
+
+        .booking-flow-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .booking-flow-tab {
+            border: 1px solid rgba(17, 24, 39, .10);
+            background: #fff;
+            border-radius: 14px;
+            padding: 10px 12px;
+            cursor: pointer;
+            font-size: .78rem;
+            font-weight: 800;
+            color: var(--ink-2);
+            transition: border-color .16s, box-shadow .16s, transform .16s, background .16s;
+        }
+
+        .booking-flow-tab:hover {
+            transform: translateY(-1px);
+            border-color: rgba(17, 24, 39, .18);
+        }
+
+        .booking-flow-tab.active,
+        .booking-flow-tab.is-active {
+            background: linear-gradient(180deg, rgba(57, 87, 153, .10), rgba(57, 87, 153, .02));
+            border-color: var(--brand-primary);
+            box-shadow: 0 10px 26px rgba(57, 87, 153, .16);
+            color: var(--ink);
+        }
+
+        .app-wizard {
+            border: 1px solid rgba(17, 24, 39, .08);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(247, 250, 255, .98), rgba(255, 255, 255, .95));
+            padding: 14px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .6);
+        }
+
+        .app-stepper {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .app-stepper-btn {
+            border: 1px solid rgba(17, 24, 39, .10);
+            background: #fff;
+            border-radius: 14px;
+            padding: 10px 8px;
+            text-align: left;
+            cursor: pointer;
+            color: var(--ink-2);
+            transition: border-color .16s, box-shadow .16s, transform .16s;
+        }
+
+        .app-stepper-btn strong {
+            display: block;
+            font-size: .78rem;
+            margin-bottom: 2px;
+        }
+
+        .app-stepper-btn span {
+            display: block;
+            font-size: .68rem;
+            line-height: 1.3;
+            color: var(--ink-3);
+        }
+
+        .app-stepper-btn.is-complete {
+            border-color: rgba(57, 87, 153, .24);
+        }
+
+        .app-stepper-btn.active {
+            border-color: var(--brand-primary);
+            box-shadow: 0 10px 20px rgba(11, 18, 32, .08);
+            transform: translateY(-1px);
+        }
+
+        .app-panel {
+            display: none;
+            animation: appFade .22s ease;
+        }
+
+        .app-panel.active {
+            display: block;
+        }
+
+        @keyframes appFade {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        .app-panel-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px 12px;
+        }
+
+        .booking-form-stack {
+            display: grid;
+            gap: 14px;
+        }
+
+        .app-panel-grid .field-full {
+            grid-column: 1 / -1;
+        }
+
+        .app-info-box {
+            border: 1px solid rgba(17, 24, 39, .08);
+            border-radius: 14px;
+            background: #fff;
+            padding: 12px;
+            margin-bottom: 12px;
+            font-size: .76rem;
+            color: var(--ink-2);
+            line-height: 1.55;
+        }
+
+        .app-info-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .app-info-chip {
+            border-radius: 12px;
+            background: rgba(47, 111, 63, .08);
+            border: 1px solid rgba(47, 111, 63, .12);
+            padding: 8px 10px;
+            font-size: .72rem;
+            color: var(--ink-2);
+        }
+
+        .app-doc-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        .wizard-actions {
+            display: flex;
+            gap: 8px;
+            flex-direction: column;
+            justify-content: flex-start;
+            margin-top: 14px;
+        }
+
+        .wizard-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .app-footer-note {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(11, 18, 32, .04);
+            border: 1px dashed rgba(11, 18, 32, .12);
+            font-size: .73rem;
+            color: var(--ink-3);
+            line-height: 1.5;
+        }
+
+        /* ------------------------------------------
            SECTION BASE
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .section {
             padding: 80px 0;
         }
 
-        .section--alt { background: #fff; }
-        .section--frota   { background: var(--frota-bg); }
-        .section--vant    { background: var(--vantagens-bg); }
-        .section--planos  { background: var(--vantagens-bg); padding: 80px 0; }
-        .section--etapas  { background: var(--etapas-bg); }
-        .section--contato { background: var(--contato-bg); }
+        .section--alt {
+            background: #fff;
+        }
+
+        .section--frota {
+            background: var(--frota-bg);
+        }
+
+        .section--vant {
+            background: var(--vantagens-bg);
+        }
+
+        .section--planos {
+            background: var(--vantagens-bg);
+            padding: 80px 0;
+        }
+
+        .section--etapas {
+            background: var(--etapas-bg);
+        }
+
+        .section--contato {
+            background: var(--contato-bg);
+        }
 
         .section-head {
             margin-bottom: 48px;
@@ -810,19 +1161,45 @@
             max-width: 64ch;
         }
 
-        .section--frota .eyebrow { color: var(--frota-etiqueta-texto); }
-        .section--vant .eyebrow  { color: var(--vantagens-etiqueta-texto); }
-        .section--etapas .eyebrow { color: var(--etapas-etiqueta-texto); }
-        .section--frota .section-title { color: var(--frota-titulo-texto); }
-        .section--vant .section-title  { color: var(--vantagens-titulo-texto); }
-        .section--etapas .section-title { color: var(--etapas-titulo-texto); }
-        .section--frota .section-desc { color: var(--frota-descricao-texto); }
-        .section--vant .section-desc  { color: var(--vantagens-desc-texto); }
-        .section--etapas .section-desc { color: var(--etapas-desc-texto); }
+        .section--frota .eyebrow {
+            color: var(--frota-etiqueta-texto);
+        }
 
-        /* ══════════════════════════════════════════
+        .section--vant .eyebrow {
+            color: var(--vantagens-etiqueta-texto);
+        }
+
+        .section--etapas .eyebrow {
+            color: var(--etapas-etiqueta-texto);
+        }
+
+        .section--frota .section-title {
+            color: var(--frota-titulo-texto);
+        }
+
+        .section--vant .section-title {
+            color: var(--vantagens-titulo-texto);
+        }
+
+        .section--etapas .section-title {
+            color: var(--etapas-titulo-texto);
+        }
+
+        .section--frota .section-desc {
+            color: var(--frota-descricao-texto);
+        }
+
+        .section--vant .section-desc {
+            color: var(--vantagens-desc-texto);
+        }
+
+        .section--etapas .section-desc {
+            color: var(--etapas-desc-texto);
+        }
+
+        /* ------------------------------------------
            FROTA
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .fleet-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -844,7 +1221,10 @@
             box-shadow: var(--sh-lg);
         }
 
-        .fleet-card-img-wrap { position: relative; }
+        .fleet-card-img-wrap {
+            position: relative;
+        }
+
         .fleet-card-img {
             width: 100%;
             height: 180px;
@@ -852,6 +1232,7 @@
             display: block;
             background: linear-gradient(135deg, var(--off), #e8edf5);
         }
+
         .fleet-card-img-wrap .fleet-card-img-placeholder {
             width: 100%;
             height: 180px;
@@ -911,18 +1292,22 @@
         .fleet-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 0; right: 0;
+            top: 0;
+            left: 0;
+            right: 0;
             height: 3px;
             background: linear-gradient(90deg, var(--brand-primary), var(--brand-accent));
             opacity: 0;
             transition: opacity .22s;
         }
 
-        .fleet-card:hover::before { opacity: 1; }
+        .fleet-card:hover::before {
+            opacity: 1;
+        }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            VANTAGENS
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .vant-layout {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -994,7 +1379,7 @@
 
         /* Checkmark icon via CSS */
         .vant-item-icon::after {
-            content: '✓';
+            content: '?';
             color: var(--brand-primary-text);
             font-size: 1rem;
             font-weight: 800;
@@ -1015,11 +1400,13 @@
             gap: 12px;
         }
 
-        .vant-grid .vant-item { margin: 0; }
+        .vant-grid .vant-item {
+            margin: 0;
+        }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            ETAPAS — timeline
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .steps-track {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1051,8 +1438,13 @@
             transition: transform .2s, box-shadow .2s;
         }
 
-        .step-card:first-child { margin-left: 0; }
-        .step-card:last-child  { margin-right: 0; }
+        .step-card:first-child {
+            margin-left: 0;
+        }
+
+        .step-card:last-child {
+            margin-right: 0;
+        }
 
         .step-card:hover {
             transform: translateY(-4px);
@@ -1072,7 +1464,7 @@
             font-size: 1.5rem;
             font-weight: 900;
             margin-bottom: 18px;
-            box-shadow: 0 6px 18px rgba(0,0,0,.18);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, .18);
             position: relative;
         }
 
@@ -1082,7 +1474,7 @@
             position: absolute;
             inset: -5px;
             border-radius: 18px;
-            border: 1.5px dashed rgba(0,0,0,.10);
+            border: 1.5px dashed rgba(0, 0, 0, .10);
         }
 
         .step-card-title {
@@ -1099,9 +1491,9 @@
             color: var(--etapas-passo-desc-texto);
         }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            CONTATO — CTA banner
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .contato-banner {
             background: var(--brand-primary);
             border-radius: var(--r-lg);
@@ -1122,7 +1514,7 @@
             width: 320px;
             height: 320px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(255,255,255,0.10) 0%, transparent 65%);
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.10) 0%, transparent 65%);
             pointer-events: none;
         }
 
@@ -1134,11 +1526,14 @@
             width: 200px;
             height: 200px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,0,0,0.08) 0%, transparent 65%);
+            background: radial-gradient(circle, rgba(0, 0, 0, 0.08) 0%, transparent 65%);
             pointer-events: none;
         }
 
-        .contato-text { position: relative; z-index: 1; }
+        .contato-text {
+            position: relative;
+            z-index: 1;
+        }
 
         .contato-eyebrow {
             font-size: .68rem;
@@ -1182,7 +1577,11 @@
             background: var(--brand-accent);
         }
 
-        .contato-cta { position: relative; z-index: 1; flex-shrink: 0; }
+        .contato-cta {
+            position: relative;
+            z-index: 1;
+            flex-shrink: 0;
+        }
 
         .btn-contato {
             display: inline-flex;
@@ -1195,14 +1594,14 @@
             font-size: .92rem;
             font-weight: 800;
             letter-spacing: .01em;
-            border: 1.5px solid rgba(255,255,255,0.3);
-            box-shadow: 0 8px 24px rgba(0,0,0,.22);
+            border: 1.5px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, .22);
             transition: transform .16s, box-shadow .16s;
         }
 
         .btn-contato:hover {
             transform: translateY(-2px);
-            box-shadow: 0 14px 32px rgba(0,0,0,.28);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, .28);
         }
 
         .contato-image-wrap {
@@ -1220,14 +1619,14 @@
             display: block;
         }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            FOOTER
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .footer {
             background: var(--footer-bg);
             color: var(--footer-text);
             padding: 52px 0 28px;
-            border-top: 1px solid rgba(255,255,255,0.06);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .footer-top {
@@ -1235,7 +1634,7 @@
             grid-template-columns: 1.2fr 1fr;
             gap: 48px;
             padding-bottom: 36px;
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             margin-bottom: 24px;
         }
 
@@ -1282,7 +1681,9 @@
             word-break: break-word;
         }
 
-        .footer-col-item:last-child { margin-bottom: 0; }
+        .footer-col-item:last-child {
+            margin-bottom: 0;
+        }
 
         .footer-bottom {
             display: flex;
@@ -1300,32 +1701,63 @@
             transition: opacity .16s;
         }
 
-        .footer-bottom a:hover { opacity: .85; }
+        .footer-bottom a:hover {
+            opacity: .85;
+        }
 
-        /* ══════════════════════════════════════════
+        /* ------------------------------------------
            SCROLL REVEAL
-        ══════════════════════════════════════════ */
+        ------------------------------------------ */
         .reveal {
             opacity: 0;
             transform: translateY(20px);
             animation: appear .6s ease forwards;
         }
 
-        .d1 { animation-delay: .06s; }
-        .d2 { animation-delay: .14s; }
-        .d3 { animation-delay: .22s; }
-        .d4 { animation-delay: .30s; }
-
-        @keyframes appear {
-            to { opacity: 1; transform: none; }
+        .d1 {
+            animation-delay: .06s;
         }
 
-        /* ══════════════════════════════════════════
+        .d2 {
+            animation-delay: .14s;
+        }
+
+        .d3 {
+            animation-delay: .22s;
+        }
+
+        .d4 {
+            animation-delay: .30s;
+        }
+
+        @keyframes appear {
+            to {
+                opacity: 1;
+                transform: none;
+            }
+        }
+
+        /* ------------------------------------------
            RESPONSIVE
-        ══════════════════════════════════════════ */
-        @media (min-width:769px) { .hide-pc { display:none !important; } }
-        @media (max-width:768px) and (min-width:481px) { .hide-tablet { display:none !important; } }
-        @media (max-width:480px) { .hide-mobile { display:none !important; } }
+        ------------------------------------------ */
+        @media (min-width:769px) {
+            .hide-pc {
+                display: none !important;
+            }
+        }
+
+        @media (max-width:768px) and (min-width:481px) {
+            .hide-tablet {
+                display: none !important;
+            }
+        }
+
+        @media (max-width:480px) {
+            .hide-mobile {
+                display: none !important;
+            }
+        }
+
         @media (max-width: 1060px) {
             .hero-inner {
                 grid-template-columns: 1fr;
@@ -1338,18 +1770,36 @@
 
             .hero-form-col {
                 border-left: none;
-                border-top: 1px solid rgba(255,255,255,0.08);
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
             }
 
-            .nav { display: none; }
+            .nav {
+                display: none;
+            }
 
-            .fleet-grid { grid-template-columns: 1fr 1fr; }
+            .fleet-grid {
+                grid-template-columns: 1fr 1fr;
+            }
 
-            .steps-track { grid-template-columns: 1fr; }
-            .steps-track::before { display: none; }
-            .step-card { margin: 0; }
-            .vant-layout { grid-template-columns: 1fr; }
-            .vant-image-wrap img { height: 280px; }
+            .steps-track {
+                grid-template-columns: 1fr;
+            }
+
+            .steps-track::before {
+                display: none;
+            }
+
+            .step-card {
+                margin: 0;
+            }
+
+            .vant-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .vant-image-wrap img {
+                height: 280px;
+            }
 
             .contato-banner {
                 flex-direction: column;
@@ -1357,58 +1807,195 @@
                 text-align: center;
             }
 
-            .contato-info { justify-content: center; }
+            .contato-info {
+                justify-content: center;
+            }
 
-            .footer-top { grid-template-columns: 1fr; gap: 32px; }
+            .footer-top {
+                grid-template-columns: 1fr;
+                gap: 32px;
+            }
         }
 
         @media (max-width: 700px) {
-            .section { padding: 56px 0; }
+            .section {
+                padding: 56px 0;
+            }
 
-            .hero-content { padding: 40px 0 0; }
+            .hero-content {
+                padding: 40px 0 0;
+            }
 
-            .booking-form { padding: 28px 22px; }
+            .booking-form {
+                padding: 28px 22px;
+            }
+
+            .booking-mode-switch {
+                grid-template-columns: 1fr;
+            }
+
+            .booking-mode-btn {
+                min-height: auto;
+                padding: 12px 14px;
+            }
 
             .fleet-grid,
-            .vant-grid { grid-template-columns: 1fr; }
+            .vant-grid {
+                grid-template-columns: 1fr;
+            }
 
-            .footer-cols { grid-template-columns: 1fr; }
+            .footer-cols {
+                grid-template-columns: 1fr;
+            }
 
-            .contato-banner { padding: 28px 20px; }
+            .contato-banner {
+                padding: 28px 20px;
+            }
         }
 
-        /* ══ Planos ══ */
-        .planos-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; max-width: 1100px; margin: 0 auto; }
-        .plano-card { background: #fff; border-radius: 16px; border: 1px solid #e2e8f0; overflow: hidden; display: flex; flex-direction: column; transition: box-shadow .25s, transform .25s; position: relative; }
-        .plano-card:hover { box-shadow: 0 12px 32px rgba(0,0,0,.08); transform: translateY(-3px); }
-        .plano-card--featured { border-color: var(--cor-primaria); box-shadow: 0 0 0 2px var(--cor-primaria); }
-        .plano-card__badge { position: absolute; top: 14px; right: 14px; background: var(--cor-primaria); color: var(--cor-texto-primario); font-size: .7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; letter-spacing: .03em; }
-        .plano-card__header { padding: 28px 24px 20px; border-bottom: 1px solid #f1f5f9; }
-        .plano-card__name { font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 4px; }
-        .plano-card__desc { font-size: .8rem; color: #64748b; margin: 0 0 16px; line-height: 1.4; }
-        .plano-card__price { display: flex; align-items: baseline; gap: 2px; }
-        .plano-card__currency { font-size: .85rem; color: #64748b; font-weight: 600; }
-        .plano-card__value { font-size: 2rem; font-weight: 900; color: #0f172a; line-height: 1; }
-        .plano-card__period { font-size: .8rem; color: #94a3b8; margin-left: 4px; }
-        .plano-card__body { padding: 20px 24px; flex: 1; }
-        .plano-card__features { list-style: none; margin: 0; padding: 0; font-size: .85rem; }
-        .plano-card__features li { padding: 5px 0; color: #334155; display: flex; align-items: center; gap: 8px; }
-        .plano-card__features li i { color: var(--cor-primaria); font-size: .85rem; width: 18px; text-align: center; }
-        .plano-card__features li i.fa-database { color: #64748b; }
-        .plano-card__footer { padding: 0 24px 24px; }
-        .plano-card__footer .btn { border-radius: 10px; font-weight: 700; font-size: .85rem; padding: .65rem 1rem; text-align: center; display: block; }
+        /* -- Planos -- */
+        .planos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .plano-card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow .25s, transform .25s;
+            position: relative;
+        }
+
+        .plano-card:hover {
+            box-shadow: 0 12px 32px rgba(0, 0, 0, .08);
+            transform: translateY(-3px);
+        }
+
+        .plano-card--featured {
+            border-color: var(--cor-primaria);
+            box-shadow: 0 0 0 2px var(--cor-primaria);
+        }
+
+        .plano-card__badge {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            background: var(--cor-primaria);
+            color: var(--cor-texto-primario);
+            font-size: .7rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 20px;
+            letter-spacing: .03em;
+        }
+
+        .plano-card__header {
+            padding: 28px 24px 20px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .plano-card__name {
+            font-size: 1.15rem;
+            font-weight: 800;
+            color: #0f172a;
+            margin: 0 0 4px;
+        }
+
+        .plano-card__desc {
+            font-size: .8rem;
+            color: #64748b;
+            margin: 0 0 16px;
+            line-height: 1.4;
+        }
+
+        .plano-card__price {
+            display: flex;
+            align-items: baseline;
+            gap: 2px;
+        }
+
+        .plano-card__currency {
+            font-size: .85rem;
+            color: #64748b;
+            font-weight: 600;
+        }
+
+        .plano-card__value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #0f172a;
+            line-height: 1;
+        }
+
+        .plano-card__period {
+            font-size: .8rem;
+            color: #94a3b8;
+            margin-left: 4px;
+        }
+
+        .plano-card__body {
+            padding: 20px 24px;
+            flex: 1;
+        }
+
+        .plano-card__features {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            font-size: .85rem;
+        }
+
+        .plano-card__features li {
+            padding: 5px 0;
+            color: #334155;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .plano-card__features li i {
+            color: var(--cor-primaria);
+            font-size: .85rem;
+            width: 18px;
+            text-align: center;
+        }
+
+        .plano-card__features li i.fa-database {
+            color: #64748b;
+        }
+
+        .plano-card__footer {
+            padding: 0 24px 24px;
+        }
+
+        .plano-card__footer .btn {
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: .85rem;
+            padding: .65rem 1rem;
+            text-align: center;
+            display: block;
+        }
     </style>
 </head>
+
 <body>
 
-    <!-- ══ DRAWER OVERLAY ══ -->
+    <!-- -- DRAWER OVERLAY -- -->
     <div class="drawer-overlay" id="drawerOverlay"></div>
 
-    <!-- ══ DRAWER ══ -->
+    <!-- -- DRAWER -- -->
     <aside class="drawer" id="siteDrawer" aria-label="Menu lateral">
         <div class="drawer-header">
             <div class="drawer-brand">
-                @if(!empty($empresa->logo_url))
+                @if (!empty($empresa->logo_url))
                     <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}" class="drawer-brand-logo">
                 @else
                     <div class="drawer-brand-logo-fallback">{{ mb_strtoupper(mb_substr($empresa->nome, 0, 1)) }}</div>
@@ -1447,11 +2034,11 @@
         </div>
     </aside>
 
-    <!-- ══ TOPBAR ══ -->
+    <!-- -- TOPBAR -- -->
     <header class="topbar">
         <div class="wrap topbar-inner">
             <div class="brand">
-                @if(!empty($empresa->logo_url))
+                @if (!empty($empresa->logo_url))
                     <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}" class="brand-logo">
                 @else
                     <div class="brand-logo-fallback">{{ mb_strtoupper(mb_substr($empresa->nome, 0, 1)) }}</div>
@@ -1475,23 +2062,23 @@
         </div>
     </header>
 
-    <!-- ══ HERO ══ -->
+    <!-- -- HERO -- -->
     <section class="hero">
         <div class="wrap">
             <div class="hero-inner">
 
                 <div class="hero-content reveal d1">
-                    {{-- @if(!empty($heroTag)) --}}
-                        <span class="hero-tag">{{ $heroTag }}</span>
+                    {{-- @if (!empty($heroTag)) --}}
+                    <span class="hero-tag">{{ $heroTag }}</span>
                     {{-- @endif --}}
 
                     <h1 class="hero-title">{{ $titulo }}</h1>
 
-                    @if(!empty($subtitulo))
+                    @if (!empty($subtitulo))
                         <p class="hero-subtitle">{{ $subtitulo }}</p>
                     @endif
 
-                    @if(!empty($descricao))
+                    @if (!empty($descricao))
                         <p class="hero-description">{{ $descricao }}</p>
                     @endif
 
@@ -1501,24 +2088,52 @@
                     </div>
 
                     <div class="hero-trust">
-                        @if(!empty($contatoTelefone))
-                            <span class="trust-chip">{{ $contatoTelefone }}</span>
-                        @endif
-                        <span class="trust-chip">Reserva sem burocracia</span>
-                        <span class="trust-chip">Pagamento seguro</span>
+                        @foreach ($heroTrustChips ?? [] as $trustChip)
+                            @if (!empty($trustChip))
+                                <span class="trust-chip">{{ $trustChip }}</span>
+                            @endif
+                        @endforeach
                     </div>
 
-                    @php $imgCfg = $imagensConfig ?? []; $heroResp = (!($imgCfg['hero_pc'] ?? true)?' hide-pc':'').(!($imgCfg['hero_tablet'] ?? true)?' hide-tablet':'').(!($imgCfg['hero_celular'] ?? true)?' hide-mobile':''); @endphp
-                    <div class="hero-image-strip{{ $heroResp }}" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
-                        <img src="{{ $imagemHero ?? '' }}" alt="Destaque {{ $empresa->nome }}" class="hero-main-img" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
-                        <div class="hero-image-placeholder" style="{{ empty($imagemHero) ? '' : 'display:none' }}"></div>
+                    @php
+                        $imgCfg = $imagensConfig ?? [];
+                        $heroResp = (!($imgCfg['hero_pc'] ?? true) ? ' hide-pc' : '') . (!($imgCfg['hero_tablet'] ?? true) ? ' hide-tablet' : '') . (!($imgCfg['hero_celular'] ?? true) ? ' hide-mobile' : '');
+                    @endphp
+                    <div class="hero-image-strip{{ $heroResp }}"
+                        style="{{ empty($imagemHero) ? 'display:none' : '' }}">
+                        <img src="{{ $imagemHero ?? '' }}" alt="Destaque {{ $empresa->nome }}"
+                            class="hero-main-img" style="{{ empty($imagemHero) ? 'display:none' : '' }}">
+                        <div class="hero-image-placeholder" style="{{ empty($imagemHero) ? '' : 'display:none' }}">
+                        </div>
                     </div>
                 </div>
 
-                <div class="hero-form-col">
-                    <div class="booking-form reveal d2">
+                <div class="hero-form-row">
+                    <div class="booking-mode-switch"
+                        @if (!$aluguelAppAtivo) style="margin-bottom: 0;" @endif>
+                        <button type="button" class="booking-mode-btn is-active" data-booking-mode="regular"
+                            aria-pressed="true"
+                            onclick="(function(){var regular=document.getElementById('bookingRegularForm');var app=document.getElementById('bookingAppForm');if(regular){regular.style.display='flex';}if(app){app.style.display='none';}})()">
+                            <span class="booking-mode-btn__eyebrow">Modo padrão</span>
+                            <span class="booking-mode-btn__title">Reserva comum</span>
+                            <span class="booking-mode-btn__desc">Fluxo tradicional com retirada, devolução, datas e
+                                horários.</span>
+                        </button>
+                        @if ($aluguelAppAtivo)
+                            <button type="button" class="booking-mode-btn" data-booking-mode="app"
+                                aria-pressed="false"
+                                onclick="(function(){var regular=document.getElementById('bookingRegularForm');var app=document.getElementById('bookingAppForm');if(regular){regular.style.display='none';}if(app){app.style.display='flex';}})()">
+                                <span class="booking-mode-btn__eyebrow">Opção da empresa</span>
+                                <span class="booking-mode-btn__title">Motorista de app</span>
+                                <span class="booking-mode-btn__desc">Jornada em 3 passos com validação de
+                                    documentos.</span>
+                            </button>
+                        @endif
+                    </div>
+
+                    <div class="booking-form reveal d2" id="bookingRegularForm">
                         <h2 class="booking-form-title">{{ $heroFormTitulo }}</h2>
-                        @if(!empty($heroFormDescricao))
+                        @if (!empty($heroFormDescricao))
                             <p class="booking-form-desc">{{ $heroFormDescricao }}</p>
                         @endif
 
@@ -1528,7 +2143,7 @@
                                     <label for="retirada">{{ $heroFormLabelRetirada }}</label>
                                     <select id="retirada" name="retirada">
                                         <option value="">Selecione uma estação</option>
-                                        @foreach($estacoesRetirada as $estacao_id => $nome)
+                                        @foreach ($estacoesRetirada as $estacao_id => $nome)
                                             <option value="{{ $estacao_id }}">{{ $nome }}</option>
                                         @endforeach
                                     </select>
@@ -1536,8 +2151,10 @@
 
                                 <div class="field">
                                     <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
-                                    <input id="data_retirada" name="data_retirada" type="text" readonly placeholder="Selecione a data">
-                                    <small class="text-muted" id="data_retirada_feedback">Selecione uma estação de retirada para ver os dias disponíveis.</small>
+                                    <input id="data_retirada" name="data_retirada" type="text" readonly
+                                        placeholder="Selecione a data">
+                                    <small class="text-muted" id="data_retirada_feedback">Selecione uma estação de
+                                        retirada para ver os dias disponíveis.</small>
                                 </div>
 
                                 <div class="field">
@@ -1545,24 +2162,29 @@
                                     <select id="hora_retirada" name="hora_retirada" disabled>
                                         <option value="">Selecione a data</option>
                                     </select>
-                                    <small class="text-muted" id="hora_retirada_feedback">Escolha uma data para ver os horários disponíveis.</small>
+                                    <small class="text-muted" id="hora_retirada_feedback">Escolha uma data para ver os
+                                        horários disponíveis.</small>
                                 </div>
 
                                 <div class="field field-full" id="devolucaoField">
-                                    <label for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolução' }}</label>
+                                    <label
+                                        for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolução' }}</label>
                                     <select id="devolucao" name="devolucao">
                                         <option value="">Selecione uma estação</option>
-                                        @foreach($estacoesDevolucao as  $estacao_id => $nome)
-                                            <option value="{{ $estacao_id }}">{{ $nome }}</option>
+                                        @foreach ($estacoesDevolucao as $estação_id => $nome)
+                                            <option value="{{ $estação_id }}">{{ $nome }}</option>
                                         @endforeach
                                     </select>
-                                    <small class="text-muted" id="devolucao_feedback">Selecione uma estação de devolução.</small>
+                                    <small class="text-muted" id="devolucao_feedback">Selecione uma estação de
+                                        devolução.</small>
                                 </div>
 
                                 <div class="field">
                                     <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
-                                    <input id="data_devolucao" name="data_devolucao" type="text" readonly placeholder="Selecione a data">
-                                    <small class="text-muted" id="data_devolucao_feedback">Selecione uma estação de devolução para ver os dias disponíveis.</small>
+                                    <input id="data_devolucao" name="data_devolucao" type="text" readonly
+                                        placeholder="Selecione a data">
+                                    <small class="text-muted" id="data_devolucao_feedback">Selecione uma estação de
+                                        devolução para ver os dias disponíveis.</small>
                                 </div>
 
                                 <div class="field">
@@ -1570,64 +2192,114 @@
                                     <select id="hora_devolucao" name="hora_devolucao" disabled>
                                         <option value="">Selecione a data</option>
                                     </select>
-                                    <small class="text-muted" id="hora_devolucao_feedback">Escolha uma data para ver os horários disponíveis.</small>
+                                    <small class="text-muted" id="hora_devolucao_feedback">Escolha uma data para ver
+                                        os horários disponíveis.</small>
                                 </div>
                             </div>
 
                             <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
-                            <small class="text-muted" id="booking_form_feedback" style="display:block;margin-top:8px;"></small>
+                            <small class="text-muted" id="booking_form_feedback"
+                                style="display:block;margin-top:8px;"></small>
                         </form>
 
-                        @if(!empty($heroFormNota))
+                        @if (!empty($heroFormNota))
                             <p class="booking-note">{{ $heroFormNota }}</p>
                         @endif
                     </div>
+
+                    @if ($aluguelAppAtivo)
+                        <div class="booking-form booking-form--app" id="bookingAppForm"
+                            style="border-top:1px solid rgba(17,24,39,.08);">
+                            <h2 class="booking-form-title">Motorista de app</h2>
+                            <p class="booking-form-desc">Escolha a estação, a data e o horário para seguir para a tela de planos.</p>
+
+                            <div class="field-group">
+                                <div class="field field-full">
+                                    <label for="app_estacao_retirada">Local de retirada</label>
+                                    <select id="app_estacao_retirada" name="app_estacao_retirada" required>
+                                        <option value="">Selecione uma estação</option>
+                                        @foreach ($estacoesRetirada as $estacao_id => $nome)
+                                            <option value="{{ $estacao_id }}">{{ $nome }}</option>
+                                        @endforeach
+                                    </select>
+                                    <small class="text-muted" id="app_estacao_retirada_feedback">Selecione uma estação.</small>
+                                </div>
+
+                                <div class="field">
+                                    <label for="app_data_retirada">Data de retirada</label>
+                                    <input id="app_data_retirada" name="app_data_retirada" type="text" readonly placeholder="Selecione a data">
+                                    <small class="text-muted" id="app_data_retirada_feedback">Selecione uma estação de retirada para ver os dias disponíveis.</small>
+                                </div>
+
+                                <div class="field">
+                                    <label for="app_hora_retirada">Hora de retirada</label>
+                                    <select id="app_hora_retirada" name="app_hora_retirada" disabled>
+                                        <option value="">Selecione a data</option>
+                                    </select>
+                                    <small class="text-muted" id="app_hora_retirada_feedback">Escolha uma data para ver os horários disponíveis.</small>
+                                </div>
+                            </div>
+
+                            <div class="wizard-actions">
+                                <button type="button" class="btn btn-primary" data-app-view-plans>Ver planos</button>
+                            </div>
+                        </div>
+                    @endif
                 </div>
 
             </div>
         </div>
     </section>
 
-    <!-- ══ FROTA ══ -->
+    <!-- -- FROTA -- -->
     <section id="frota" class="section section--frota">
         <div class="wrap">
             <div class="section-head reveal d1">
-                @if(!empty($frotaLabelSuperior))
+                @if (!empty($frotaLabelSuperior))
                     <div class="eyebrow">{{ $frotaLabelSuperior }}</div>
                 @endif
                 <h2 class="section-title">{{ $frotaTitulo }}</h2>
-                @if(!empty($frotaDescricao))
+                @if (!empty($frotaDescricao))
                     <p class="section-desc">{{ $frotaDescricao }}</p>
                 @endif
             </div>
 
             <div class="fleet-grid">
-                @for($fi = 1; $fi <= 10; $fi++)
+                @for ($fi = 1; $fi <= 10; $fi++)
                     @php
                         $fCard = null;
                         foreach ($frotaDestaques as $fd) {
-                            if (($fd['titulo'] ?? '') === $fi) break;
+                            if (($fd['titulo'] ?? '') === $fi) {
+                                break;
+                            }
                         }
                         $fIdx = $fi - 1;
                         $fCard = $frotaDestaques[$fIdx] ?? null;
                         $fVisivel = $fCard && !empty($fCard['titulo']);
                     @endphp
-                    <article class="fleet-card reveal d{{ $fi + 1 }}" data-frota="{{ $fi }}" style="{{ $fVisivel ? '' : 'display:none' }}">
+                    <article class="fleet-card reveal d{{ $fi + 1 }}" data-frota="{{ $fi }}"
+                        style="{{ $fVisivel ? '' : 'display:none' }}">
                         <div class="fleet-card-img-wrap">
-                            <img src="{{ $fCard['imagem'] ?? '' }}" alt="{{ $fCard['titulo'] ?? '' }}" class="fleet-card-img" data-frota-img="{{ $fi }}" style="{{ ($fCard && !empty($fCard['imagem'])) ? '' : 'display:none' }}">
-                            <div class="fleet-card-img-placeholder" style="{{ ($fCard && !empty($fCard['imagem'])) ? 'display:none' : '' }}">
+                            <img src="{{ $fCard['imagem'] ?? '' }}" alt="{{ $fCard['titulo'] ?? '' }}"
+                                class="fleet-card-img" data-frota-img="{{ $fi }}"
+                                style="{{ $fCard && !empty($fCard['imagem']) ? '' : 'display:none' }}">
+                            <div class="fleet-card-img-placeholder"
+                                style="{{ $fCard && !empty($fCard['imagem']) ? 'display:none' : '' }}">
                                 <svg viewBox="0 0 64 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <rect x="4" y="10" width="56" height="16" rx="4" fill="currentColor"/>
-                                    <circle cx="14" cy="26" r="5" fill="currentColor"/>
-                                    <circle cx="50" cy="26" r="5" fill="currentColor"/>
-                                    <path d="M10 10 L18 4 H46 L56 10" stroke="currentColor" stroke-width="2"/>
+                                    <rect x="4" y="10" width="56" height="16" rx="4"
+                                        fill="currentColor" />
+                                    <circle cx="14" cy="26" r="5" fill="currentColor" />
+                                    <circle cx="50" cy="26" r="5" fill="currentColor" />
+                                    <path d="M10 10 L18 4 H46 L56 10" stroke="currentColor" stroke-width="2" />
                                 </svg>
                             </div>
                         </div>
                         <div class="fleet-card-body">
                             <div class="fleet-card-num">{{ str_pad($fi, 2, '0', STR_PAD_LEFT) }}</div>
-                            <h3 class="fleet-card-title" data-frota-titulo="{{ $fi }}">{{ $fCard['titulo'] ?? '' }}</h3>
-                            <p class="fleet-card-desc" data-frota-desc="{{ $fi }}">{{ $fCard['descricao'] ?? '' }}</p>
+                            <h3 class="fleet-card-title" data-frota-titulo="{{ $fi }}">
+                                {{ $fCard['titulo'] ?? '' }}</h3>
+                            <p class="fleet-card-desc" data-frota-desc="{{ $fi }}">
+                                {{ $fCard['descricao'] ?? '' }}</p>
                         </div>
                     </article>
                 @endfor
@@ -1635,27 +2307,27 @@
         </div>
     </section>
 
-    <!-- ══ VANTAGENS ══ -->
+    <!-- -- VANTAGENS -- -->
     <section id="vantagens" class="section section--alt section--vant">
         <div class="wrap">
             <div class="section-head reveal d1">
-                @if(!empty($vantagensLabelSuperior))
+                @if (!empty($vantagensLabelSuperior))
                     <div class="eyebrow">{{ $vantagensLabelSuperior }}</div>
                 @endif
                 <h2 class="section-title">{{ $vantagensTitulo }}</h2>
-                @if(!empty($vantagensDescricao))
+                @if (!empty($vantagensDescricao))
                     <p class="section-desc">{{ $vantagensDescricao }}</p>
                 @endif
             </div>
 
-            @if(!empty($imagemVantagens))
+            @if (!empty($imagemVantagens))
                 <div class="vant-layout reveal d2">
                     <div class="vant-image-wrap">
                         <img src="{{ $imagemVantagens }}" alt="Diferenciais {{ $empresa->nome }}">
                     </div>
                     <div class="vant-list">
-                        @foreach($beneficios as $beneficio)
-                            @if(!empty($beneficio))
+                        @foreach ($beneficios as $beneficio)
+                            @if (!empty($beneficio))
                                 <div class="vant-item">
                                     <div class="vant-item-icon"></div>
                                     <span class="vant-item-text">{{ $beneficio }}</span>
@@ -1666,8 +2338,8 @@
                 </div>
             @else
                 <div class="vant-grid reveal d2">
-                    @foreach($beneficios as $beneficio)
-                        @if(!empty($beneficio))
+                    @foreach ($beneficios as $beneficio)
+                        @if (!empty($beneficio))
                             <div class="vant-item">
                                 <div class="vant-item-icon"></div>
                                 <span class="vant-item-text">{{ $beneficio }}</span>
@@ -1679,18 +2351,18 @@
         </div>
     </section>
 
-    <!-- ══ COMO FUNCIONA ══ -->
+    <!-- -- COMO FUNCIONA -- -->
     <section id="como-funciona" class="section section--etapas">
         <div class="wrap">
             <div class="section-head reveal d1">
-                @if(!empty($etapasLabelSuperior))
+                @if (!empty($etapasLabelSuperior))
                     <div class="eyebrow">{{ $etapasLabelSuperior }}</div>
                 @endif
                 <h2 class="section-title">{{ $etapasTitulo }}</h2>
             </div>
 
             <div class="steps-track">
-                @foreach($etapasReserva as $index => $etapa)
+                @foreach ($etapasReserva as $index => $etapa)
                     <article class="step-card reveal d{{ $index + 2 }}">
                         <div class="step-num">{{ $index + 1 }}</div>
                         <h4 class="step-card-title">{{ $etapa['titulo'] }}</h4>
@@ -1701,23 +2373,23 @@
         </div>
     </section>
 
-    <!-- ══ CONTATO ══ -->
+    <!-- -- CONTATO -- -->
     <section id="contato" class="section section--contato">
         <div class="wrap">
             <div class="contato-banner reveal d1">
                 <div class="contato-text">
-                    @if(!empty($contatoLabelSuperior))
+                    @if (!empty($contatoLabelSuperior))
                         <div class="contato-eyebrow">{{ $contatoLabelSuperior }}</div>
                     @endif
                     <div class="contato-title">{{ $contatoTitulo }}</div>
                     <div class="contato-info">
-                        @if(!empty($contatoTelefone))
+                        @if (!empty($contatoTelefone))
                             <span class="contato-info-item">{{ $contatoTelefone }}</span>
                         @endif
-                        @if(!empty($contatoEmail))
+                        @if (!empty($contatoEmail))
                             <span class="contato-info-item">{{ $contatoEmail }}</span>
                         @endif
-                        @if(!empty($contatoEndereco))
+                        @if (!empty($contatoEndereco))
                             <span class="contato-info-item">{{ $contatoEndereco }}</span>
                         @endif
                     </div>
@@ -1727,9 +2399,9 @@
                 </div>
             </div>
 
-            @if(!empty($imagemContato))
+            @if (!empty($imagemContato))
                 <div class="contato-image-wrap reveal d2" style="{{ empty($imagemContato) ? 'display:none' : '' }}">
-                    @if(!empty($imagemContato))
+                    @if (!empty($imagemContato))
                         <img src="{{ $imagemContato }}" alt="Contato {{ $empresa->nome }}">
                     @endif
                 </div>
@@ -1737,26 +2409,26 @@
         </div>
     </section>
 
-    <!-- ══ FOOTER ══ -->
+    <!-- -- FOOTER -- -->
     <footer class="footer">
         <div class="wrap">
             <div class="footer-top">
                 <div class="footer-brand">
                     <div class="footer-brand-name">{{ $empresa->nome }}</div>
-                    @if(!empty($footerTexto))
+                    @if (!empty($footerTexto))
                         <div class="footer-brand-desc">{{ $footerTexto }}</div>
                     @endif
                 </div>
                 <div class="footer-cols">
                     <div>
                         <div class="footer-col-title">Contato</div>
-                        @if(!empty($contatoTelefone))
+                        @if (!empty($contatoTelefone))
                             <div class="footer-col-item">{{ $contatoTelefone }}</div>
                         @endif
-                        @if(!empty($contatoEmail))
+                        @if (!empty($contatoEmail))
                             <div class="footer-col-item">{{ $contatoEmail }}</div>
                         @endif
-                        @if(!empty($contatoEndereco))
+                        @if (!empty($contatoEndereco))
                             <div class="footer-col-item">{{ $contatoEndereco }}</div>
                         @endif
                     </div>
@@ -1779,13 +2451,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
     <script>
-        /* ── DRAWER ── */
-        (function () {
-            const toggle  = document.getElementById('navToggle');
-            const drawer  = document.getElementById('siteDrawer');
+        /* -- DRAWER -- */
+        (function() {
+            const toggle = document.getElementById('navToggle');
+            const drawer = document.getElementById('siteDrawer');
             const overlay = document.getElementById('drawerOverlay');
-            const close   = document.getElementById('drawerClose');
-            const links   = drawer.querySelectorAll('.drawer-link');
+            const close = document.getElementById('drawerClose');
+            const links = drawer.querySelectorAll('.drawer-link');
 
             function openDrawer() {
                 drawer.classList.add('is-open');
@@ -1822,15 +2494,15 @@
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/pt.js"></script>
     <script>
-        (function () {
-            const retiradaSelect  = document.getElementById('retirada');
+        (function() {
+            const retiradaSelect = document.getElementById('retirada');
             const devolucaoSelect = document.getElementById('devolucao');
-            const devolucaoField  = document.getElementById('devolucaoField');
-            const dataRetirada    = document.getElementById('data_retirada');
-            const horaRetirada    = document.getElementById('hora_retirada');
-            const dataDevolucao   = document.getElementById('data_devolucao');
-            const horaDevolucao   = document.getElementById('hora_devolucao');
-            const form            = dataRetirada?.closest('form');
+            const devolucaoField = document.getElementById('devolucaoField');
+            const dataRetirada = document.getElementById('data_retirada');
+            const horaRetirada = document.getElementById('hora_retirada');
+            const dataDevolucao = document.getElementById('data_devolucao');
+            const horaDevolucao = document.getElementById('hora_devolucao');
+            const form = dataRetirada?.closest('form');
             const diasDisponiveisUrl = @json(route('site.reserva.diasDisponiveisPorEstacao'));
             const agendaUrl = @json(route('site.reserva.agendaDisponivelPorEstacao'));
             const dataRetiradaFeedback = document.getElementById('data_retirada_feedback');
@@ -1839,7 +2511,9 @@
             const horaDevolucaoFeedback = document.getElementById('hora_devolucao_feedback');
             const devolucaoFeedback = document.getElementById('devolucao_feedback');
             const bookingFormFeedback = document.getElementById('booking_form_feedback');
-            const eventoChange = new Event('change', { bubbles: true });
+            const eventoChange = new Event('change', {
+                bubbles: true
+            });
             let pickerRetirada = null;
             let pickerDevolucao = null;
 
@@ -1877,7 +2551,8 @@
                 return lista.filter(function(slot) {
                     const raw = String(slot?.value || slot?.hora || slot?.time || '').trim();
                     if (!raw) return false;
-                    const hora = String(raw).includes('T') ? String(raw).split('T')[1].slice(0, 5) : String(raw).slice(0, 5);
+                    const hora = String(raw).includes('T') ? String(raw).split('T')[1].slice(0, 5) : String(raw)
+                        .slice(0, 5);
                     const dt = new Date(`${dataBase}T${hora}:00`);
                     return !Number.isNaN(dt.getTime()) && dt >= agora;
                 });
@@ -1887,9 +2562,9 @@
                 if (!dataRetirada || !dataDevolucao) return;
                 const now = new Date();
                 dataRetirada.min = toLocalDateInput(now);
-                const retiradaDate  = dataRetirada.value ? new Date(`${dataRetirada.value}T00:00:00`) : now;
-                const minDevolucao  = addDays(retiradaDate, 1);
-                dataDevolucao.min   = toLocalDateInput(minDevolucao);
+                const retiradaDate = dataRetirada.value ? new Date(`${dataRetirada.value}T00:00:00`) : now;
+                const minDevolucao = addDays(retiradaDate, 1);
+                dataDevolucao.min = toLocalDateInput(minDevolucao);
                 if (dataDevolucao.value && new Date(`${dataDevolucao.value}T00:00:00`) < minDevolucao) {
                     dataDevolucao.value = toLocalDateInput(minDevolucao);
                 }
@@ -1897,7 +2572,7 @@
 
             function normalizeMinTime() {
                 if (!dataRetirada || !horaRetirada) return;
-                const now   = new Date();
+                const now = new Date();
                 const today = toLocalDateInput(now);
                 if (dataRetirada.value === today) {
                     horaRetirada.min = toLocalTimeInput(now);
@@ -1908,10 +2583,10 @@
 
             function validateDates() {
                 if (!dataRetirada || !horaRetirada || !dataDevolucao) return true;
-                const now          = new Date();
-                const today        = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
                 const retiradaDate = dataRetirada.value ? new Date(`${dataRetirada.value}T00:00:00`) : null;
-                const devolDate    = dataDevolucao.value ? new Date(`${dataDevolucao.value}T00:00:00`) : null;
+                const devolDate = dataDevolucao.value ? new Date(`${dataDevolucao.value}T00:00:00`) : null;
 
                 if (retiradaDate && retiradaDate < today) {
                     dataRetirada.setCustomValidity('A retirada não pode ser antes de hoje.');
@@ -1942,19 +2617,19 @@
                 return true;
             }
 
-            function estacaoPermiteCheckout(estacaoId) {
-                if (!devolucaoSelect || !estacaoId) {
+            function estaçãoPermiteCheckout(estaçãoId) {
+                if (!devolucaoSelect || !estaçãoId) {
                     return false;
                 }
 
-                return !!devolucaoSelect.querySelector(`option[value="${estacaoId}"]`);
+                return !!devolucaoSelect.querySelector(`option[value="${estaçãoId}"]`);
             }
 
             function syncDevolucao(triggeredFromRetirada = false) {
                 if (!devolucaoField || !devolucaoSelect) return;
 
                 const retiradaId = retiradaSelect?.value || '';
-                const podeMesmoLocal = estacaoPermiteCheckout(retiradaId);
+                const podeMesmoLocal = estaçãoPermiteCheckout(retiradaId);
                 const retiradaTexto = retiradaSelect?.selectedOptions?.[0]?.textContent?.trim() || '';
 
                 devolucaoField.style.display = 'block';
@@ -1967,9 +2642,9 @@
                         devolucaoSelect.dispatchEvent(eventoChange);
                     }
                     if (devolucaoFeedback) {
-                        devolucaoFeedback.textContent = retiradaTexto
-                            ? `Estação de devolução definida automaticamente: ${retiradaTexto}.`
-                            : 'Estação de devolução definida automaticamente.';
+                        devolucaoFeedback.textContent = retiradaTexto ?
+                            `Estação de devolução definida automaticamente: ${retiradaTexto}.` :
+                            'Estação de devolução definida automaticamente.';
                     }
                 } else if (!podeMesmoLocal && devolucaoSelect.value === retiradaId) {
                     devolucaoSelect.value = '';
@@ -1977,9 +2652,9 @@
                         devolucaoFeedback.textContent = 'Selecione uma estação de devolução.';
                     }
                 } else if (devolucaoFeedback) {
-                    devolucaoFeedback.textContent = devolucaoSelect.value
-                        ? `Estação de devolução selecionada: ${devolucaoSelect.selectedOptions?.[0]?.textContent?.trim() || ''}.`
-                        : 'Selecione uma estação de devolução.';
+                    devolucaoFeedback.textContent = devolucaoSelect.value ?
+                        `Estação de devolução selecionada: ${devolucaoSelect.selectedOptions?.[0]?.textContent?.trim() || ''}.` :
+                        'Selecione uma estação de devolução.';
                 }
             }
 
@@ -2055,9 +2730,9 @@
 
                 selectEl.appendChild(new Option('Selecione a hora', ''));
                 lista.forEach(function(slot) {
-                    const valor = String(slot.value).includes('T')
-                        ? String(slot.value).split('T')[1].slice(0, 5)
-                        : String(slot.value).slice(0, 5);
+                    const valor = String(slot.value).includes('T') ?
+                        String(slot.value).split('T')[1].slice(0, 5) :
+                        String(slot.value).slice(0, 5);
                     const texto = slot.taxa_extra ? `${slot.label} • Taxa extra` : slot.label;
                     const option = new Option(texto, valor);
                     option.dataset.taxaExtra = slot.taxa_extra ? '1' : '0';
@@ -2066,7 +2741,8 @@
 
                 selectEl.disabled = false;
 
-                const preferida = horaPreferida ? String(horaPreferida).slice(0, 5) : (lista.length === 1 ? String(lista[0].value).slice(0, 5) : '');
+                const preferida = horaPreferida ? String(horaPreferida).slice(0, 5) : (lista.length === 1 ? String(
+                    lista[0].value).slice(0, 5) : '');
                 if (preferida && Array.from(selectEl.options).some((option) => option.value === preferida)) {
                     selectEl.value = preferida;
                 } else {
@@ -2081,8 +2757,8 @@
             }
 
             function carregarHorariosAgenda(tipo, dataBase, horaPreferida = null) {
-                const estacaoId = tipo === 'devolucao' ? devolucaoSelect?.value : retiradaSelect?.value;
-                if (!estacaoId || !dataBase) {
+                const estaçãoId = tipo === 'devolucao' ? devolucaoSelect?.value : retiradaSelect?.value;
+                if (!estaçãoId || !dataBase) {
                     return Promise.resolve([]);
                 }
 
@@ -2093,60 +2769,67 @@
                 }
 
                 const params = new URLSearchParams({
-                    estacao_id: estacaoId,
+                    estacao_id: estaçãoId,
                     tipo: tipo || 'retirada',
                     data_base: dataBase,
                     limite: 1,
                 });
 
                 return fetch(`${agendaUrl}?${params.toString()}`, {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(r => r.json())
-                .then(function(response) {
-                    const agenda = Array.isArray(response.agenda) ? response.agenda : [];
-                    const dia = agenda.find(item => String(item.date) === String(dataBase)) || agenda[0] || null;
-                    const slots = tipo === 'retirada'
-                        ? filtrarHorariosPassadosRetirada(dataBase, Array.isArray(dia?.slots) ? dia.slots : [])
-                        : (Array.isArray(dia?.slots) ? dia.slots : []);
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(function(response) {
+                        const agenda = Array.isArray(response.agenda) ? response.agenda : [];
+                        const dia = agenda.find(item => String(item.date) === String(dataBase)) || agenda[0] ||
+                        null;
+                        const slots = tipo === 'retirada' ?
+                            filtrarHorariosPassadosRetirada(dataBase, Array.isArray(dia?.slots) ? dia.slots : []) :
+                            (Array.isArray(dia?.slots) ? dia.slots : []);
 
-                    if (tipo === 'devolucao') {
-                        return preencherHorarios(horaDevolucao, horaDevolucaoFeedback, slots, horaPreferida);
-                    }
+                        if (tipo === 'devolucao') {
+                            return preencherHorarios(horaDevolucao, horaDevolucaoFeedback, slots, horaPreferida);
+                        }
 
-                    return preencherHorarios(horaRetirada, horaRetiradaFeedback, slots, horaPreferida);
-                })
-                .catch(function() {
-                    if (tipo === 'devolucao') {
-                        preencherHorarios(horaDevolucao, horaDevolucaoFeedback, [], null);
-                    } else {
-                        preencherHorarios(horaRetirada, horaRetiradaFeedback, [], null);
-                    }
-                    return [];
-                });
+                        return preencherHorarios(horaRetirada, horaRetiradaFeedback, slots, horaPreferida);
+                    })
+                    .catch(function() {
+                        if (tipo === 'devolucao') {
+                            preencherHorarios(horaDevolucao, horaDevolucaoFeedback, [], null);
+                        } else {
+                            preencherHorarios(horaRetirada, horaRetiradaFeedback, [], null);
+                        }
+                        return [];
+                    });
             }
 
-            function buscarDiasDisponiveis(estacaoId, tipo) {
-                if (!estacaoId) {
+            function buscarDiasDisponiveis(estaçãoId, tipo) {
+                if (!estaçãoId) {
                     return Promise.resolve([]);
                 }
 
                 const params = new URLSearchParams({
-                    estacao_id: estacaoId,
+                    estacao_id: estaçãoId,
                     dias: 90,
                     tipo: tipo || 'retirada',
                 });
 
                 return fetch(`${diasDisponiveisUrl}?${params.toString()}`, {
-                    headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
-                })
-                .then(r => r.json())
-                .then(function(response) {
-                    return Array.isArray(response.dias_disponiveis) ? response.dias_disponiveis : [];
-                })
-                .catch(function() {
-                    return [];
-                });
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(r => r.json())
+                    .then(function(response) {
+                        return Array.isArray(response.dias_disponiveis) ? response.dias_disponiveis : [];
+                    })
+                    .catch(function() {
+                        return [];
+                    });
             }
 
             function criarPickerDate(inputEl, diasDisponiveis) {
@@ -2170,7 +2853,9 @@
                     }],
                     onChange: function(selectedDates) {
                         const date = selectedDates[0] || null;
-                        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+                        inputEl.dispatchEvent(new Event('change', {
+                            bubbles: true
+                        }));
                         return date;
                     }
                 });
@@ -2201,7 +2886,8 @@
                         horaDevolucao.value = '';
                         horaDevolucao.disabled = true;
                         if (dataDevolucaoFeedback) {
-                            dataDevolucaoFeedback.textContent = 'Escolha uma data de devolução igual ou posterior ao dia seguinte.';
+                            dataDevolucaoFeedback.textContent =
+                                'Escolha uma data de devolução igual ou posterior ao dia seguinte.';
                         }
                     }
                 } else if (window.flatpickr) {
@@ -2213,7 +2899,9 @@
                         disableMobile: true,
                         minDate: minDevolucao,
                         onChange: function() {
-                            dataDevolucao.dispatchEvent(new Event('change', { bubbles: true }));
+                            dataDevolucao.dispatchEvent(new Event('change', {
+                                bubbles: true
+                            }));
                         }
                     });
                 }
@@ -2225,7 +2913,8 @@
                 if (!data) {
                     horaRetirada.value = '';
                     horaRetirada.disabled = true;
-                    dataRetiradaFeedback && (dataRetiradaFeedback.textContent = 'Selecione uma estação de retirada para ver os dias disponíveis.');
+                    dataRetiradaFeedback && (dataRetiradaFeedback.textContent =
+                        'Selecione uma estação de retirada para ver os dias disponíveis.');
                     return;
                 }
 
@@ -2240,7 +2929,8 @@
                 if (!data) {
                     horaDevolucao.value = '';
                     horaDevolucao.disabled = true;
-                    dataDevolucaoFeedback && (dataDevolucaoFeedback.textContent = 'Selecione uma estação de devolução para ver os dias disponíveis.');
+                    dataDevolucaoFeedback && (dataDevolucaoFeedback.textContent =
+                        'Selecione uma estação de devolução para ver os dias disponíveis.');
                     return;
                 }
 
@@ -2279,9 +2969,9 @@
                 mostrarCarregandoDatas(dataRetiradaFeedback, 'Carregando datas de retirada...');
                 buscarDiasDisponiveis(estRet, 'retirada').then(function(dias) {
                     if (dataRetiradaFeedback) {
-                        dataRetiradaFeedback.textContent = dias.length
-                            ? 'Selecione a data de retirada.'
-                            : 'Não há dias disponíveis para retirada nesta estação.';
+                        dataRetiradaFeedback.textContent = dias.length ?
+                            'Selecione a data de retirada.' :
+                            'Não há dias disponíveis para retirada nesta estação.';
                     }
                     pickerRetirada = criarPickerDate(dataRetirada, dias);
                     atualizarMinDateDevolucao();
@@ -2307,9 +2997,9 @@
                 mostrarCarregandoDatas(dataDevolucaoFeedback, 'Carregando datas de devolução...');
                 buscarDiasDisponiveis(estDev, 'devolucao').then(function(dias) {
                     if (dataDevolucaoFeedback) {
-                        dataDevolucaoFeedback.textContent = dias.length
-                            ? 'Selecione a data de devolução.'
-                            : 'Não há dias disponíveis para devolução nesta estação.';
+                        dataDevolucaoFeedback.textContent = dias.length ?
+                            'Selecione a data de devolução.' :
+                            'Não há dias disponíveis para devolução nesta estação.';
                     }
                     pickerDevolucao = criarPickerDate(dataDevolucao, dias);
                     atualizarMinDateDevolucao();
@@ -2344,24 +3034,32 @@
                 });
             }
 
-            dataRetirada?.addEventListener('change', () => { normalizeMinTime(); normalizeMinDates(); validateDates(); });
+            dataRetirada?.addEventListener('change', () => {
+                normalizeMinTime();
+                normalizeMinDates();
+                validateDates();
+            });
             horaRetirada?.addEventListener('change', normalizeMinTime);
-            dataDevolucao?.addEventListener('change', () => { normalizeMinDates(); validateDates(); });
+            dataDevolucao?.addEventListener('change', () => {
+                normalizeMinDates();
+                validateDates();
+            });
 
             form?.addEventListener('submit', e => {
                 normalizeMinTime();
                 normalizeMinDates();
                 syncDevolucao();
-                const camposOk = !!retiradaSelect?.value
-                    && !!devolucaoSelect?.value
-                    && !!dataRetirada?.value
-                    && !!horaRetirada?.value
-                    && !!dataDevolucao?.value
-                    && !!horaDevolucao?.value;
+                const camposOk = !!retiradaSelect?.value &&
+                    !!devolucaoSelect?.value &&
+                    !!dataRetirada?.value &&
+                    !!horaRetirada?.value &&
+                    !!dataDevolucao?.value &&
+                    !!horaDevolucao?.value;
 
                 if (!camposOk) {
                     e.preventDefault();
-                    marcarFeedbackReserva('Selecione retirada, devolução, datas e horários antes de continuar.');
+                    marcarFeedbackReserva(
+                    'Selecione retirada, devolução, datas e horários antes de continuar.');
                     return;
                 }
 
@@ -2374,6 +3072,223 @@
                 limparFeedbackReserva();
             });
 
+            const appWizard = document.querySelector('[data-app-wizard]');
+            if (appWizard) {
+                const appStepButtons = [...appWizard.querySelectorAll('[data-app-step]')];
+                const appPanels = [...appWizard.querySelectorAll('[data-app-panel]')];
+                const appPrevButtons = [...appWizard.querySelectorAll('[data-app-prev]')];
+                const appNextButtons = [...appWizard.querySelectorAll('[data-app-next]')];
+                const appSubmitButton = appWizard.querySelector('[data-app-submit]');
+                const appViewPlansButton = appWizard.querySelector('[data-app-view-plans]');
+                const bookingModeButtons = [
+                    ...document.querySelectorAll('[data-booking-mode]'),
+                    ...document.querySelectorAll('[data-booking-flow-tab]')
+                ];
+                const appRegularAnchor = document.getElementById('bookingRegularForm');
+                const appBookingPanel = document.querySelector('.booking-form.booking-form--app');
+                const regularBookingPanel = document.getElementById('bookingRegularForm');
+                const appKey = 'xpandcars_app_rental_draft';
+                let currentAppStep = 1;
+                const defaultBookingMode = 'regular';
+                let currentBookingMode = defaultBookingMode;
+
+                function appValue(id) {
+                    return document.getElementById(id)?.value?.trim() || '';
+                }
+
+                function appFiles(id) {
+                    const input = document.getElementById(id);
+                    return input && input.files && input.files[0] ? input.files[0].name : '';
+                }
+
+                function renderAppStep() {
+                    appStepButtons.forEach((btn) => {
+                        btn.classList.toggle('active', Number(btn.dataset.appStep) === currentAppStep);
+                    });
+                    appPanels.forEach((panel) => {
+                        panel.classList.toggle('active', Number(panel.dataset.appPanel) === currentAppStep);
+                    });
+                }
+
+                function setBookingMode(mode) {
+                    currentBookingMode = mode === 'app' ? 'app' : 'regular';
+
+                    bookingModeButtons.forEach((btn) => {
+                        const buttonMode =
+                            btn.dataset.bookingMode ||
+                            btn.dataset.bookingFlowTab;
+
+                        const isActive = buttonMode === currentBookingMode;
+
+                        btn.classList.toggle('is-active', isActive);
+                        btn.classList.toggle('active', isActive);
+                        btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+                    });
+
+                    regularBookingPanel?.classList.toggle(
+                        'is-hidden',
+                        currentBookingMode !== 'regular'
+                    );
+
+                    appBookingPanel?.classList.toggle(
+                        'is-visible',
+                        currentBookingMode === 'app'
+                    );
+                }
+
+                function validateAppStep(step) {
+                    if (step === 1) {
+                        const ids = ['app_nome', 'app_telefone', 'app_email', 'app_cidade'];
+                        for (const id of ids) {
+                            const el = document.getElementById(id);
+                            if (el && !el.checkValidity()) {
+                                el.reportValidity();
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+
+                    if (step === 2) {
+                        const ids = ['app_tipo_veiculo', 'app_plano'];
+                        for (const id of ids) {
+                            const el = document.getElementById(id);
+                            if (el && !el.checkValidity()) {
+                                el.reportValidity();
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+
+                    if (step === 3) {
+                        const ids = ['app_cnh', 'app_comprovante', 'app_selfie'];
+                        for (const id of ids) {
+                            const el = document.getElementById(id);
+                            if (el && !el.checkValidity()) {
+                                el.reportValidity();
+                                return false;
+                            }
+                        }
+                        return true;
+                    }
+
+                    return true;
+                }
+
+                function saveAppDraft() {
+                    try {
+                        localStorage.setItem(appKey, JSON.stringify({
+                            nome: appValue('app_nome'),
+                            telefone: appValue('app_telefone'),
+                            email: appValue('app_email'),
+                            cidade: appValue('app_cidade'),
+                            tipo_veiculo: appValue('app_tipo_veiculo'),
+                            plano: appValue('app_plano'),
+                            cupom: appValue('app_cupom'),
+                            observacao: appValue('app_observacao'),
+                            cnh: appFiles('app_cnh'),
+                            comprovante: appFiles('app_comprovante'),
+                            selfie: appFiles('app_selfie')
+                        }));
+                    } catch (error) {
+                        // ignore draft errors
+                    }
+                }
+
+                function buildAppUrl() {
+                    const raw = @json(route('site.apresentacao.motorista-app'));
+                    try {
+                        const url = new URL(raw, window.location.origin);
+                        url.searchParams.set('estação_retirada', document.getElementById('app_estação_retirada')?.value || '');
+                        url.searchParams.set('data_retirada', document.getElementById('app_data_retirada')?.value || '');
+                        url.searchParams.set('hora_retirada', document.getElementById('app_hora_retirada')?.value || '');
+                        return url.toString();
+                    } catch (error) {
+                        const query = new URLSearchParams({
+                            estação_retirada: document.getElementById('app_estação_retirada')?.value || '',
+                            data_retirada: document.getElementById('app_data_retirada')?.value || '',
+                            hora_retirada: document.getElementById('app_hora_retirada')?.value || '',
+                        }).toString();
+                        return `${raw}${raw.includes('?') ? '&' : '?'}${query}`;
+                    }
+                }
+
+                appStepButtons.forEach((btn) => {
+                    btn.addEventListener('click', function() {
+                        const target = Number(btn.dataset.appStep || 1);
+                        if (target < currentAppStep) {
+                            currentAppStep = target;
+                            renderAppStep();
+                            return;
+                        }
+                        if (validateAppStep(currentAppStep)) {
+                            currentAppStep = target;
+                            renderAppStep();
+                        }
+                    });
+                });
+
+                appPrevButtons.forEach((btn) => {
+                    btn.addEventListener('click', function() {
+                        currentAppStep = Math.max(1, currentAppStep - 1);
+                        renderAppStep();
+                    });
+                });
+
+                appNextButtons.forEach((btn) => {
+                    btn.addEventListener('click', function() {
+                        if (!validateAppStep(currentAppStep)) {
+                            return;
+                        }
+                        currentAppStep = Math.min(3, currentAppStep + 1);
+                        renderAppStep();
+                    });
+                });
+
+                if (appSubmitButton) {
+                    appSubmitButton.addEventListener('click', function() {
+                        if (!validateAppStep(1) || !validateAppStep(2) || !validateAppStep(3)) {
+                            return;
+                        }
+                        saveAppDraft();
+                        window.location.href = buildAppUrl();
+                    });
+                }
+
+                if (appViewPlansButton) {
+                    appViewPlansButton.addEventListener('click', function() {
+                        saveAppDraft();
+                        window.location.href = buildAppUrl();
+                    });
+                }
+
+                bookingModeButtons.forEach((tab) => {
+                    tab.addEventListener('click', function() {
+                        const mode = tab.dataset.bookingMode || tab.dataset.bookingFlowTab || 'regular';
+
+                        if (mode === 'app') {
+                            currentAppStep = 1;
+                            renderAppStep();
+                            setBookingMode('app');
+                            appWizard.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        } else if (appRegularAnchor) {
+                            setBookingMode('regular');
+                            appRegularAnchor.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'start'
+                            });
+                        }
+                    });
+                });
+
+                setBookingMode(defaultBookingMode);
+                renderAppStep();
+            }
+
             syncDevolucao();
             recarregarPickerRetirada();
             recarregarPickerDevolucao();
@@ -2381,30 +3296,290 @@
             normalizeMinTime();
         })();
 
-        /* ── Editor preview listener ── */
+        (function () {
+            const appRetiradaSelect = document.getElementById('app_estacao_retirada');
+            const appDataRetirada = document.getElementById('app_data_retirada');
+            const appHoraRetirada = document.getElementById('app_hora_retirada');
+            const appDataFeedback = document.getElementById('app_data_retirada_feedback');
+            const appHoraFeedback = document.getElementById('app_hora_retirada_feedback');
+            const appViewPlansButton = document.querySelector('[data-app-view-plans]');
+            const appBookingPanel = document.getElementById('bookingAppForm');
+            const regularBookingPanel = document.getElementById('bookingRegularForm');
+            const modeButtons = [...document.querySelectorAll('[data-booking-mode]')];
+            const agendaUrlApp = @json(route('site.reserva.agendaDisponivelPorEstacao'));
+            const diasUrlApp = @json(route('site.reserva.diasDisponiveisPorEstacao'));
+            let appPickerRetirada = null;
+
+            function setAppMode(mode) {
+                const isApp = mode === 'app';
+
+                modeButtons.forEach((btn) => {
+                    const current = btn.dataset.bookingMode || 'regular';
+                    const active = current === (isApp ? 'app' : 'regular');
+                    btn.classList.toggle('is-active', active);
+                    btn.classList.toggle('active', active);
+                    btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+                });
+
+                if (regularBookingPanel) {
+                    regularBookingPanel.style.display = isApp ? 'none' : '';
+                    regularBookingPanel.classList.toggle('is-hidden', isApp);
+                }
+
+                if (appBookingPanel) {
+                    appBookingPanel.style.display = isApp ? 'flex' : 'none';
+                    appBookingPanel.classList.toggle('is-visible', isApp);
+                }
+            }
+
+            function appDateValue(date) {
+                const y = date.getFullYear();
+                const m = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${m}-${d}`;
+            }
+
+            function carregarHorariosApp(dataBase, horaPreferida = null) {
+                if (!appRetiradaSelect?.value || !dataBase) {
+                    return Promise.resolve([]);
+                }
+
+                if (appHoraRetirada) {
+                    appHoraRetirada.innerHTML = '';
+                    appHoraRetirada.appendChild(new Option('Carregando horários...', ''));
+                    appHoraRetirada.disabled = true;
+                    if (appHoraFeedback) {
+                        appHoraFeedback.textContent = 'Carregando horários disponiveis...';
+                    }
+                }
+
+                const params = new URLSearchParams({
+                    estacao_id: appRetiradaSelect.value,
+                    tipo: 'retirada',
+                    data_base: dataBase,
+                    limite: 1,
+                });
+
+                return fetch(`${agendaUrlApp}?${params.toString()}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then((r) => r.json())
+                    .then(function (response) {
+                        const agenda = Array.isArray(response.agenda) ? response.agenda : [];
+                        const dia = agenda.find((item) => String(item.date) === String(dataBase)) || agenda[0] || null;
+                        const slots = Array.isArray(dia?.slots) ? dia.slots : [];
+                        const hoje = appDateValue(new Date());
+                        const lista = slots.filter((slot) => {
+                            const raw = String(slot?.value || slot?.hora || slot?.time || '').trim();
+                            if (!raw) return false;
+                            if (String(dataBase).slice(0, 10) !== hoje) return true;
+                            const hora = String(raw).includes('T') ? String(raw).split('T')[1].slice(0, 5) : String(raw).slice(0, 5);
+                            return new Date(`${dataBase}T${hora}:00`) >= new Date();
+                        });
+
+                        if (!lista.length) {
+                            if (appHoraRetirada) {
+                                appHoraRetirada.innerHTML = '';
+                                appHoraRetirada.appendChild(new Option('Sem horários disponiveis', ''));
+                                appHoraRetirada.disabled = true;
+                            }
+                            if (appHoraFeedback) {
+                                appHoraFeedback.textContent = 'Sem horários disponiveis para a data selecionada.';
+                            }
+                            return [];
+                        }
+
+                        if (appHoraRetirada) {
+                            appHoraRetirada.innerHTML = '';
+                            appHoraRetirada.appendChild(new Option('Selecione a hora', ''));
+                            lista.forEach((slot) => {
+                                const raw = String(slot.value || slot.hora || slot.time || '');
+                                const valor = raw.includes('T') ? raw.split('T')[1].slice(0, 5) : raw.slice(0, 5);
+                                appHoraRetirada.appendChild(new Option(slot.label || valor, valor));
+                            });
+                            appHoraRetirada.disabled = false;
+                            const preferida = horaPreferida ? String(horaPreferida).slice(0, 5) : '';
+                            if (preferida && [...appHoraRetirada.options].some((option) => option.value === preferida)) {
+                                appHoraRetirada.value = preferida;
+                            } else {
+                                appHoraRetirada.value = '';
+                            }
+                        }
+
+                        if (appHoraFeedback) {
+                            appHoraFeedback.textContent = 'Escolha a hora disponivel.';
+                        }
+
+                        return lista;
+                    })
+                    .catch(function () {
+                        if (appHoraRetirada) {
+                            appHoraRetirada.innerHTML = '';
+                            appHoraRetirada.appendChild(new Option('Sem horários disponiveis', ''));
+                            appHoraRetirada.disabled = true;
+                        }
+                        if (appHoraFeedback) {
+                            appHoraFeedback.textContent = 'Não foi possível carregar os horários.';
+                        }
+                        return [];
+                    });
+            }
+
+            function recarregarPickerApp() {
+                const estaçãoId = appRetiradaSelect?.value || '';
+
+                if (appPickerRetirada) {
+                    appPickerRetirada.destroy();
+                    appPickerRetirada = null;
+                }
+
+                if (appDataRetirada) {
+                    appDataRetirada.value = '';
+                }
+                if (appHoraRetirada) {
+                    appHoraRetirada.value = '';
+                    appHoraRetirada.disabled = true;
+                }
+
+                if (!estaçãoId || !appDataRetirada) {
+                    return;
+                }
+
+                if (appDataFeedback) {
+                    appDataFeedback.textContent = 'Carregando datas de retirada...';
+                }
+
+                fetch(`${diasUrlApp}?${new URLSearchParams({ estacao_id: estaçãoId, dias: 90, tipo: 'retirada' }).toString()}`, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                    .then((r) => r.json())
+                    .then(function (response) {
+                        const dias = Array.isArray(response.dias_disponiveis) ? response.dias_disponiveis : [];
+                        const allowed = new Set(dias.map((item) => String(item.data || item).slice(0, 10)));
+
+                        if (appDataFeedback) {
+                            appDataFeedback.textContent = dias.length ? 'Selecione a data de retirada.' : 'Não há dias disponíveis para retirada nesta estação.';
+                        }
+
+                        if (window.flatpickr) {
+                            appPickerRetirada = window.flatpickr(appDataRetirada, {
+                                locale: window.flatpickr?.l10ns?.pt || {},
+                                altInput: true,
+                                altFormat: 'd/m/Y',
+                                dateFormat: 'Y-m-d',
+                                disableMobile: true,
+                                minDate: 'today',
+                                disable: [function (date) {
+                                    return !allowed.has(appDateValue(date));
+                                }],
+                                onChange: function () {
+                                    appDataRetirada.dispatchEvent(new Event('change', { bubbles: true }));
+                                }
+                            });
+                        }
+                    })
+                    .catch(function () {
+                        if (appDataFeedback) {
+                            appDataFeedback.textContent = 'Não foi possível carregar as datas disponiveis.';
+                        }
+                    });
+            }
+
+            appRetiradaSelect?.addEventListener('change', recarregarPickerApp);
+            appDataRetirada?.addEventListener('change', function () {
+                const data = appDataRetirada.value || '';
+                if (!data) {
+                    if (appHoraRetirada) {
+                        appHoraRetirada.value = '';
+                        appHoraRetirada.disabled = true;
+                    }
+                    if (appDataFeedback) {
+                        appDataFeedback.textContent = 'Selecione uma estação de retirada para ver os dias disponiveis.';
+                    }
+                    return;
+                }
+
+                if (appDataFeedback) {
+                    appDataFeedback.textContent = 'Selecione a hora de retirada.';
+                }
+                carregarHorariosApp(data, appHoraRetirada?.value || null);
+            });
+
+            appViewPlansButton?.addEventListener('click', function () {
+                if (!appRetiradaSelect?.value || !appDataRetirada?.value || !appHoraRetirada?.value) {
+                    if (appDataFeedback) {
+                        appDataFeedback.textContent = 'Selecione estação, data e hora para continuar.';
+                    }
+                    return;
+                }
+
+                const url = new URL(@json(route('site.apresentacao.motorista-app')), window.location.origin);
+                url.searchParams.set('estação_retirada', appRetiradaSelect.value || '');
+                url.searchParams.set('data_retirada', appDataRetirada.value || '');
+                url.searchParams.set('hora_retirada', appHoraRetirada.value || '');
+                window.location.href = url.toString();
+            });
+
+            modeButtons.forEach((btn) => {
+                btn.addEventListener('click', function () {
+                    setAppMode(btn.dataset.bookingMode || 'regular');
+                    if ((btn.dataset.bookingMode || 'regular') === 'app') {
+                        appBookingPanel?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+
+            setAppMode('regular');
+            recarregarPickerApp();
+        })();
+        /* -- Editor preview listener -- */
         (function() {
             var cssMap = {
-                cor_primaria: '--brand-primary', cor_secundaria: '--brand-secondary', cor_terciaria: '--brand-accent',
-                cor_topbar_fundo: '--topbar-bg', cor_topbar_texto: '--topbar-text', cor_topbar_link_hover: '--topbar-hover',
-                cor_hero_fundo: '--hero-bg', cor_hero_texto: '--hero-text',
-                cor_form_fundo: '--form-bg', cor_form_texto: '--form-text',
+                cor_primaria: '--brand-primary',
+                cor_secundaria: '--brand-secondary',
+                cor_terciaria: '--brand-accent',
+                cor_topbar_fundo: '--topbar-bg',
+                cor_topbar_texto: '--topbar-text',
+                cor_topbar_link_hover: '--topbar-hover',
+                cor_hero_fundo: '--hero-bg',
+                cor_hero_texto: '--hero-text',
+                cor_form_fundo: '--form-bg',
+                cor_form_texto: '--form-text',
                 cor_frota_fundo: '--frota-bg',
-                cor_frota_etiqueta_texto: '--frota-etiqueta-texto', cor_frota_titulo_texto: '--frota-titulo-texto',
-                cor_frota_descricao_texto: '--frota-descricao-texto', cor_frota_card_titulo_texto: '--frota-card-titulo-texto',
-                cor_frota_card_descricao_texto: '--frota-card-desc-texto', cor_frota_card_fundo: '--frota-card-bg',
+                cor_frota_etiqueta_texto: '--frota-etiqueta-texto',
+                cor_frota_titulo_texto: '--frota-titulo-texto',
+                cor_frota_descricao_texto: '--frota-descricao-texto',
+                cor_frota_card_titulo_texto: '--frota-card-titulo-texto',
+                cor_frota_card_descricao_texto: '--frota-card-desc-texto',
+                cor_frota_card_fundo: '--frota-card-bg',
                 cor_vantagens_fundo: '--vantagens-bg',
-                cor_vantagens_etiqueta_texto: '--vantagens-etiqueta-texto', cor_vantagens_titulo_texto: '--vantagens-titulo-texto',
-                cor_vantagens_descricao_texto: '--vantagens-desc-texto', cor_vantagens_item_texto: '--vantagens-item-texto',
+                cor_vantagens_etiqueta_texto: '--vantagens-etiqueta-texto',
+                cor_vantagens_titulo_texto: '--vantagens-titulo-texto',
+                cor_vantagens_descricao_texto: '--vantagens-desc-texto',
+                cor_vantagens_item_texto: '--vantagens-item-texto',
                 cor_etapas_fundo: '--etapas-bg',
-                cor_etapas_etiqueta_texto: '--etapas-etiqueta-texto', cor_etapas_titulo_texto: '--etapas-titulo-texto',
-                cor_etapas_descricao_texto: '--etapas-desc-texto', cor_etapas_passo_texto: '--etapas-passo-texto',
-                cor_etapas_passo_descricao_texto: '--etapas-passo-desc-texto', cor_etapas_passo_fundo: '--etapas-passo-bg',
+                cor_etapas_etiqueta_texto: '--etapas-etiqueta-texto',
+                cor_etapas_titulo_texto: '--etapas-titulo-texto',
+                cor_etapas_descricao_texto: '--etapas-desc-texto',
+                cor_etapas_passo_texto: '--etapas-passo-texto',
+                cor_etapas_passo_descricao_texto: '--etapas-passo-desc-texto',
+                cor_etapas_passo_fundo: '--etapas-passo-bg',
                 cor_contato_fundo: '--contato-bg',
-                cor_contato_etiqueta_texto: '--contato-etiqueta-texto', cor_contato_titulo_texto: '--contato-titulo-texto',
+                cor_contato_etiqueta_texto: '--contato-etiqueta-texto',
+                cor_contato_titulo_texto: '--contato-titulo-texto',
                 cor_contato_info_texto: '--contato-info-texto',
-                cor_footer_fundo: '--footer-bg', cor_footer_texto: '--footer-text',
-                cor_botao_primario_fundo: '--btn-p-bg', cor_botao_primario_texto: '--btn-p-text',
-                cor_botao_secundario_fundo: '--btn-s-bg', cor_botao_secundario_texto: '--btn-s-text',
+                cor_footer_fundo: '--footer-bg',
+                cor_footer_texto: '--footer-text',
+                cor_botao_primario_fundo: '--btn-p-bg',
+                cor_botao_primario_texto: '--btn-p-text',
+                cor_botao_secundario_fundo: '--btn-s-bg',
+                cor_botao_secundario_texto: '--btn-s-text',
             };
             var textSelectors = {
                 hero_tag: '.section.hero .eyebrow, .section--hero .eyebrow',
@@ -2420,9 +3595,9 @@
                 frota_card_2_descricao: '#frota .fleet-card:nth-child(2) .fleet-card-desc',
                 frota_card_3_titulo: '#frota .fleet-card:nth-child(3) .fleet-card-title',
                 frota_card_3_descricao: '#frota .fleet-card:nth-child(3) .fleet-card-desc',
-                @for($fi = 4; $fi <= 10; $fi++)
-                frota_card_{{$fi}}_titulo: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-title',
-                frota_card_{{$fi}}_descricao: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-desc',
+                @for ($fi = 4; $fi <= 10; $fi++)
+                    frota_card_{{ $fi }}_titulo: '#frota .fleet-card:nth-child({{ $fi }}) .fleet-card-title',
+                    frota_card_{{ $fi }}_descricao: '#frota .fleet-card:nth-child({{ $fi }}) .fleet-card-desc',
                 @endfor
                 vantagens_label_superior: '#vantagens .eyebrow',
                 vantagens_titulo: '#vantagens .section-title',
@@ -2448,8 +3623,9 @@
                 }
                 if (dados.cor_primaria) {
                     var b = (function(h) {
-                        h = h.replace('#','');
-                        return (parseInt(h.substr(0,2),16)*299 + parseInt(h.substr(2,2),16)*587 + parseInt(h.substr(4,2),16)*114)/1000;
+                        h = h.replace('#', '');
+                        return (parseInt(h.substr(0, 2), 16) * 299 + parseInt(h.substr(2, 2), 16) *
+                            587 + parseInt(h.substr(4, 2), 16) * 114) / 1000;
                     })(dados.cor_primaria);
                     root.style.setProperty('--brand-primary-text', b >= 155 ? '#0F172A' : '#FFFFFF');
                 }
@@ -2473,18 +3649,66 @@
                 }
 
                 /* Image visibility */
-                var imgVisM1={hero:['.hero-image-strip','.hero-main-img','.hero-image-placeholder'],contato:['.contato-image-wrap']};
-                for(var vk in imgVisM1){var uk='usar_imagem_'+vk;if(d[uk]===undefined)continue;var c=document.querySelector(imgVisM1[vk][0]);if(!c)continue;var on=d[uk]==='1';c.style.display=on?'':'none';if(imgVisM1[vk][1]){var ig=document.querySelector(imgVisM1[vk][1]);if(ig)ig.style.display=on?'':'none'}if(imgVisM1[vk][2]){var ph=document.querySelector(imgVisM1[vk][2]);if(ph)ph.style.display=on?'none':''}}
-                var respMap1={hero:'.hero-image-strip',vantagens:'.vant-image-wrap',contato:'.contato-image-wrap'};
-                for(var rk in respMap1){['pc','tablet','celular'].forEach(function(disp){var uk='mostrar_'+rk+'_'+disp;if(d[uk]===undefined)return;var el=document.querySelector(respMap1[rk]);if(!el)return;if(d[uk]==='1')el.classList.remove('hide-'+disp);else el.classList.add('hide-'+disp)})}
-                for(var fi=1;fi<=10;fi++){var uk='usar_imagem_frota_'+fi;if(d[uk]===undefined)continue;var cel=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!cel)continue;var ig=cel.querySelector('.fleet-card-img'),pl=cel.querySelector('.fleet-card-img-placeholder');if(ig)ig.style.display=d[uk]==='1'?'':'none';if(pl)pl.style.display=d[uk]==='1'?'none':'';['pc','tablet','celular'].forEach(function(disp){var fk='mostrar_frota_'+fi+'_'+disp;if(d[fk]===undefined)return;var fc=document.querySelector('.fleet-card[data-frota="'+fi+'"]');if(!fc)return;if(d[fk]==='1')fc.classList.remove('hide-'+disp);else fc.classList.add('hide-'+disp)})}
+                var imgVisM1 = {
+                    hero: ['.hero-image-strip', '.hero-main-img', '.hero-image-placeholder'],
+                    contato: ['.contato-image-wrap']
+                };
+                for (var vk in imgVisM1) {
+                    var uk = 'usar_imagem_' + vk;
+                    if (d[uk] === undefined) continue;
+                    var c = document.querySelector(imgVisM1[vk][0]);
+                    if (!c) continue;
+                    var on = d[uk] === '1';
+                    c.style.display = on ? '' : 'none';
+                    if (imgVisM1[vk][1]) {
+                        var ig = document.querySelector(imgVisM1[vk][1]);
+                        if (ig) ig.style.display = on ? '' : 'none'
+                    }
+                    if (imgVisM1[vk][2]) {
+                        var ph = document.querySelector(imgVisM1[vk][2]);
+                        if (ph) ph.style.display = on ? 'none' : ''
+                    }
+                }
+                var respMap1 = {
+                    hero: '.hero-image-strip',
+                    vantagens: '.vant-image-wrap',
+                    contato: '.contato-image-wrap'
+                };
+                for (var rk in respMap1) {
+                    ['pc', 'tablet', 'celular'].forEach(function(disp) {
+                        var uk = 'mostrar_' + rk + '_' + disp;
+                        if (d[uk] === undefined) return;
+                        var el = document.querySelector(respMap1[rk]);
+                        if (!el) return;
+                        if (d[uk] === '1') el.classList.remove('hide-' + disp);
+                        else el.classList.add('hide-' + disp)
+                    })
+                }
+                for (var fi = 1; fi <= 10; fi++) {
+                    var uk = 'usar_imagem_frota_' + fi;
+                    if (d[uk] === undefined) continue;
+                    var cel = document.querySelector('.fleet-card[data-frota="' + fi + '"]');
+                    if (!cel) continue;
+                    var ig = cel.querySelector('.fleet-card-img'),
+                        pl = cel.querySelector('.fleet-card-img-placeholder');
+                    if (ig) ig.style.display = d[uk] === '1' ? '' : 'none';
+                    if (pl) pl.style.display = d[uk] === '1' ? 'none' : '';
+                    ['pc', 'tablet', 'celular'].forEach(function(disp) {
+                        var fk = 'mostrar_frota_' + fi + '_' + disp;
+                        if (d[fk] === undefined) return;
+                        var fc = document.querySelector('.fleet-card[data-frota="' + fi + '"]');
+                        if (!fc) return;
+                        if (d[fk] === '1') fc.classList.remove('hide-' + disp);
+                        else fc.classList.add('hide-' + disp)
+                    })
+                }
                 /* Image preview */
                 var imgMap = {
                     imagem_frota_1: '#frota .fleet-card:nth-child(1) img',
                     imagem_frota_2: '#frota .fleet-card:nth-child(2) img',
                     imagem_frota_3: '#frota .fleet-card:nth-child(3) img',
-                    @for($fi = 4; $fi <= 10; $fi++)
-                    imagem_frota_{{$fi}}: '#frota .fleet-card:nth-child({{$fi}}) img',
+                    @for ($fi = 4; $fi <= 10; $fi++)
+                        imagem_frota_{{ $fi }}: '#frota .fleet-card:nth-child({{ $fi }}) img',
                     @endfor
                     imagem_vantagens: '#vantagens img',
                     imagem_contato: '#contato img',
@@ -2495,10 +3719,12 @@
                     if (imgEl) imgEl.src = dataUrls[imgKey];
                 }
             });
-            window.parent.postMessage({ type: 'se-pronto' }, '*');
+            window.parent.postMessage({
+                type: 'se-pronto'
+            }, '*');
         })();
 
-        /* ── Editor click-to-edit ── */
+        /* -- Editor click-to-edit -- */
         (function() {
             if (!window.parent || window.parent === window) return;
 
@@ -2510,51 +3736,211 @@
                 }
             }, true);
             document.querySelectorAll('form').forEach(function(f) {
-                f.addEventListener('submit', function(e) { e.preventDefault(); });
+                f.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                });
             });
 
             var style = document.createElement('style');
-            style.textContent = '.se-hover-hint { outline: 2px dashed rgba(14,165,233,0.4) !important; outline-offset: 2px; cursor: pointer !important; } .se-bg-hint { position: relative; } .se-bg-hint::after { content: "✎ editar fundo"; position: absolute; top: 8px; right: 12px; font: 11px/1 sans-serif; background: rgba(14,165,233,0.9); color: #fff; padding: 3px 10px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 99; } .se-bg-hint:hover::after { opacity: 1; } .se-img-hint { position: relative; } .se-img-hint::after { content: "✎ trocar imagem"; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font: 11px/1 sans-serif; background: rgba(0,0,0,0.65); color: #fff; padding: 4px 12px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 99; } .se-img-hint:hover::after { opacity: 1; }';
+            style.textContent =
+                '.se-hover-hint { outline: 2px dashed rgba(14,165,233,0.4) !important; outline-offset: 2px; cursor: pointer !important; } .se-bg-hint { position: relative; } .se-bg-hint::after { content: "? editar fundo"; position: absolute; top: 8px; right: 12px; font: 11px/1 sans-serif; background: rgba(14,165,233,0.9); color: #fff; padding: 3px 10px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 99; } .se-bg-hint:hover::after { opacity: 1; } .se-img-hint { position: relative; } .se-img-hint::after { content: "? trocar imagem"; position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); font: 11px/1 sans-serif; background: rgba(0,0,0,0.65); color: #fff; padding: 4px 12px; border-radius: 6px; opacity: 0; transition: opacity .2s; pointer-events: none; white-space: nowrap; z-index: 99; } .se-img-hint:hover::after { opacity: 1; }';
             document.head.appendChild(style);
 
             var seAlvo = function(alvo, secao, campo) {
-                window.parent.postMessage({ type: 'se-clicar', alvo: alvo, secao: secao, campo: campo }, '*');
+                window.parent.postMessage({
+                    type: 'se-clicar',
+                    alvo: alvo,
+                    secao: secao,
+                    campo: campo
+                }, '*');
             };
 
-            var clickMap = [
-                { sel: '.hero .eyebrow', a: 'texto', s: 'hero', c: 'hero_tag' },
-                { sel: '.hero .section-title', a: 'texto', s: 'hero', c: 'hero_titulo' },
-                { sel: '.booking-form-title', a: 'texto', s: 'hero', c: 'hero_form_titulo' },
-                { sel: '.booking-form-desc', a: 'texto', s: 'hero', c: 'hero_form_descricao' },
-                { sel: '.hero-subtitle', a: 'texto', s: 'hero', c: 'hero_subtitulo' },
-                { sel: '.hero-desc', a: 'texto', s: 'hero', c: 'hero_descricao' },
-                { sel: '#frota .eyebrow', a: 'texto', s: 'frota', c: 'frota_label_superior' },
-                { sel: '#frota .section-title', a: 'texto', s: 'frota', c: 'frota_titulo' },
-                { sel: '#frota .section-desc', a: 'texto', s: 'frota', c: 'frota_descricao' },
-                { sel: '#frota .fleet-card:nth-child(1) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_1_titulo' },
-                { sel: '#frota .fleet-card:nth-child(1) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_1_descricao' },
-                { sel: '#frota .fleet-card:nth-child(2) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_2_titulo' },
-                { sel: '#frota .fleet-card:nth-child(2) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_2_descricao' },
-                { sel: '#frota .fleet-card:nth-child(3) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_3_titulo' },
-                { sel: '#frota .fleet-card:nth-child(3) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_3_descricao' },
-                @for($fi = 4; $fi <= 10; $fi++)
-                { sel: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-title', a: 'texto', s: 'frota', c: 'frota_card_{{$fi}}_titulo' },
-                { sel: '#frota .fleet-card:nth-child({{$fi}}) .fleet-card-desc', a: 'texto', s: 'frota', c: 'frota_card_{{$fi}}_descricao' },
-                @endfor
-                { sel: '#vantagens .eyebrow', a: 'texto', s: 'vantagens', c: 'vantagens_label_superior' },
-                { sel: '#vantagens .section-title', a: 'texto', s: 'vantagens', c: 'vantagens_titulo' },
-                { sel: '#vantagens .section-desc', a: 'texto', s: 'vantagens', c: 'vantagens_descricao' },
-                { sel: '.vant-item-text', a: 'texto', s: 'vantagens', c: 'beneficio_1' },
-                { sel: '#como-funciona .eyebrow', a: 'texto', s: 'etapas', c: 'etapas_label_superior' },
-                { sel: '#como-funciona .section-title', a: 'texto', s: 'etapas', c: 'etapas_titulo' },
-                { sel: '.step-card:nth-child(1) .step-card-title', a: 'texto', s: 'etapas', c: 'etapa_1_titulo' },
-                { sel: '.step-card:nth-child(1) .step-card-desc', a: 'texto', s: 'etapas', c: 'etapa_1_descricao' },
-                { sel: '.step-card:nth-child(2) .step-card-title', a: 'texto', s: 'etapas', c: 'etapa_2_titulo' },
-                { sel: '.step-card:nth-child(2) .step-card-desc', a: 'texto', s: 'etapas', c: 'etapa_2_descricao' },
-                { sel: '.step-card:nth-child(3) .step-card-title', a: 'texto', s: 'etapas', c: 'etapa_3_titulo' },
-                { sel: '.step-card:nth-child(3) .step-card-desc', a: 'texto', s: 'etapas', c: 'etapa_3_descricao' },
-                { sel: '#contato .contato-eyebrow', a: 'texto', s: 'contato', c: 'contato_label_superior' },
-                { sel: '#contato .contato-title', a: 'texto', s: 'contato', c: 'contato_titulo' },
+            var clickMap = [{
+                    sel: '.hero .eyebrow',
+                    a: 'texto',
+                    s: 'hero',
+                    c: 'hero_tag'
+                },
+                {
+                    sel: '.hero .section-title',
+                    a: 'texto',
+                    s: 'hero',
+                    c: 'hero_titulo'
+                },
+                {
+                    sel: '.booking-form-title',
+                    a: 'texto',
+                    s: 'hero',
+                    c: 'hero_form_titulo'
+                },
+                {
+                    sel: '.booking-form-desc',
+                    a: 'texto',
+                    s: 'hero',
+                    c: 'hero_form_descricao'
+                },
+                {
+                    sel: '.hero-subtitle',
+                    a: 'texto',
+                    s: 'hero',
+                    c: 'hero_subtitulo'
+                },
+                {
+                    sel: '.hero-desc',
+                    a: 'texto',
+                    s: 'hero',
+                    c: 'hero_descricao'
+                },
+                {
+                    sel: '#frota .eyebrow',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_label_superior'
+                },
+                {
+                    sel: '#frota .section-title',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_titulo'
+                },
+                {
+                    sel: '#frota .section-desc',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_descricao'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(1) .fleet-card-title',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_card_1_titulo'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(1) .fleet-card-desc',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_card_1_descricao'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(2) .fleet-card-title',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_card_2_titulo'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(2) .fleet-card-desc',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_card_2_descricao'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(3) .fleet-card-title',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_card_3_titulo'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(3) .fleet-card-desc',
+                    a: 'texto',
+                    s: 'frota',
+                    c: 'frota_card_3_descricao'
+                },
+                @for ($fi = 4; $fi <= 10; $fi++)
+                    {
+                        sel: '#frota .fleet-card:nth-child({{ $fi }}) .fleet-card-title',
+                        a: 'texto',
+                        s: 'frota',
+                        c: 'frota_card_{{ $fi }}_titulo'
+                    }, {
+                        sel: '#frota .fleet-card:nth-child({{ $fi }}) .fleet-card-desc',
+                        a: 'texto',
+                        s: 'frota',
+                        c: 'frota_card_{{ $fi }}_descricao'
+                    },
+                @endfor {
+                    sel: '#vantagens .eyebrow',
+                    a: 'texto',
+                    s: 'vantagens',
+                    c: 'vantagens_label_superior'
+                },
+                {
+                    sel: '#vantagens .section-title',
+                    a: 'texto',
+                    s: 'vantagens',
+                    c: 'vantagens_titulo'
+                },
+                {
+                    sel: '#vantagens .section-desc',
+                    a: 'texto',
+                    s: 'vantagens',
+                    c: 'vantagens_descricao'
+                },
+                {
+                    sel: '.vant-item-text',
+                    a: 'texto',
+                    s: 'vantagens',
+                    c: 'beneficio_1'
+                },
+                {
+                    sel: '#como-funciona .eyebrow',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapas_label_superior'
+                },
+                {
+                    sel: '#como-funciona .section-title',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapas_titulo'
+                },
+                {
+                    sel: '.step-card:nth-child(1) .step-card-title',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapa_1_titulo'
+                },
+                {
+                    sel: '.step-card:nth-child(1) .step-card-desc',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapa_1_descricao'
+                },
+                {
+                    sel: '.step-card:nth-child(2) .step-card-title',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapa_2_titulo'
+                },
+                {
+                    sel: '.step-card:nth-child(2) .step-card-desc',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapa_2_descricao'
+                },
+                {
+                    sel: '.step-card:nth-child(3) .step-card-title',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapa_3_titulo'
+                },
+                {
+                    sel: '.step-card:nth-child(3) .step-card-desc',
+                    a: 'texto',
+                    s: 'etapas',
+                    c: 'etapa_3_descricao'
+                },
+                {
+                    sel: '#contato .contato-eyebrow',
+                    a: 'texto',
+                    s: 'contato',
+                    c: 'contato_label_superior'
+                },
+                {
+                    sel: '#contato .contato-title',
+                    a: 'texto',
+                    s: 'contato',
+                    c: 'contato_titulo'
+                },
             ];
 
             clickMap.forEach(function(item) {
@@ -2562,18 +3948,33 @@
                 if (!el) return;
                 el.classList.add('se-hover-hint');
                 el.addEventListener('click', function(e) {
-                    e.stopPropagation(); e.preventDefault();
+                    e.stopPropagation();
+                    e.preventDefault();
                     seAlvo(item.a, item.s, item.c);
                 });
             });
 
             /* Background clicks on section wrappers */
-            var bgSections = [
-                { sel: '.section.hero', s: 'hero' },
-                { sel: '#frota', s: 'frota' },
-                { sel: '#vantagens', s: 'vantagens' },
-                { sel: '#como-funciona', s: 'etapas' },
-                { sel: '#contato', s: 'contato' },
+            var bgSections = [{
+                    sel: '.section.hero',
+                    s: 'hero'
+                },
+                {
+                    sel: '#frota',
+                    s: 'frota'
+                },
+                {
+                    sel: '#vantagens',
+                    s: 'vantagens'
+                },
+                {
+                    sel: '#como-funciona',
+                    s: 'etapas'
+                },
+                {
+                    sel: '#contato',
+                    s: 'contato'
+                },
             ];
             bgSections.forEach(function(item) {
                 var el = document.querySelector(item.sel);
@@ -2587,16 +3988,42 @@
             });
 
             /* Image clicks */
-            var imgSections = [
-                { sel: '.hero img', s: 'hero', c: 'imagem_hero' },
-                { sel: '#frota .fleet-card:nth-child(1) img', s: 'frota', c: 'imagem_frota_1' },
-                { sel: '#frota .fleet-card:nth-child(2) img', s: 'frota', c: 'imagem_frota_2' },
-                { sel: '#frota .fleet-card:nth-child(3) img', s: 'frota', c: 'imagem_frota_3' },
-                @for($fi = 4; $fi <= 10; $fi++)
-                { sel: '#frota .fleet-card:nth-child({{$fi}}) img', s: 'frota', c: 'imagem_frota_{{$fi}}' },
-                @endfor
-                { sel: '#vantagens img', s: 'vantagens', c: 'imagem_vantagens' },
-                { sel: '#contato img', s: 'contato', c: 'imagem_contato' },
+            var imgSections = [{
+                    sel: '.hero img',
+                    s: 'hero',
+                    c: 'imagem_hero'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(1) img',
+                    s: 'frota',
+                    c: 'imagem_frota_1'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(2) img',
+                    s: 'frota',
+                    c: 'imagem_frota_2'
+                },
+                {
+                    sel: '#frota .fleet-card:nth-child(3) img',
+                    s: 'frota',
+                    c: 'imagem_frota_3'
+                },
+                @for ($fi = 4; $fi <= 10; $fi++)
+                    {
+                        sel: '#frota .fleet-card:nth-child({{ $fi }}) img',
+                        s: 'frota',
+                        c: 'imagem_frota_{{ $fi }}'
+                    },
+                @endfor {
+                    sel: '#vantagens img',
+                    s: 'vantagens',
+                    c: 'imagem_vantagens'
+                },
+                {
+                    sel: '#contato img',
+                    s: 'contato',
+                    c: 'imagem_contato'
+                },
             ];
             imgSections.forEach(function(item) {
                 var el = document.querySelector(item.sel);
@@ -2604,11 +4031,15 @@
                 el.classList.add('se-img-hint');
                 el.style.cursor = 'pointer';
                 el.addEventListener('click', function(e) {
-                    e.stopPropagation(); e.preventDefault();
+                    e.stopPropagation();
+                    e.preventDefault();
                     seAlvo('imagem', item.s, item.c);
                 });
             });
         })();
     </script>
 </body>
+
 </html>
+
+
