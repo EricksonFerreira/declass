@@ -26,7 +26,7 @@ class UpdateTermoConsentimentoRequest extends FormRequest
             'ordem' => 'required|integer|min:0',
             'titulo' => 'required|string|max:255',
             'texto' => 'required|string',
-            'tipo' => 'required|string|in:checkin,checkout',
+            'tipo' => 'required|string|in:aceito-motorista-app,aceito-reserva,checkin-motorista-app,checkout-motorista-app,checkin-reserva,checkout-reserva',
             'ativo' => 'required|string|max:1',
         ];
     }
@@ -41,7 +41,7 @@ class UpdateTermoConsentimentoRequest extends FormRequest
             'texto.required' => 'O campo texto é obrigatório.',
             'texto.string' => 'O campo texto deve ser uma string.',
             'tipo.required' => 'O tipo é obrigatório.',
-            'tipo.in' => 'O tipo deve ser checkin ou checkout.',
+            'tipo.in' => 'O tipo deve ser um dos valores válidos.',
             'ativo.required' => 'O campo ativo é obrigatório.',
             'ativo.string' => 'O campo ativo deve ser uma string.',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',

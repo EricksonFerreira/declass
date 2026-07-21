@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', 'Detalhes da Reserva')
 
@@ -407,7 +407,7 @@
                                 </div>
                                 <div class="rs-info-row">
                                     <span><i class="fas fa-birthday-cake"></i>Nascimento</span>
-                                    <strong>{{ $reserva->usuario->data_nascimento ? \Carbon\Carbon::parse($reserva->usuario->data_nascimento)->format('d/m/Y') : '-' }}</strong>
+                                    <strong>{{ isset($reserva->usuario->data_nascimento) ? \Carbon\Carbon::parse($reserva->usuario->data_nascimento)->format('d/m/Y') : '-' }}</strong>
                                 </div>
                             </div>
                         </div>
@@ -652,12 +652,12 @@
                         </div>
 
                         <div class="rs-ci-card__actions">
-                            <a href="{{ route('reserva.verContratoCheckin', $reserva->id) }}" target="_blank" class="rs-ci-btn rs-ci-btn--view">
+                            <a href="{{ route('reserva.verContratoCheckin', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" target="_blank" class="rs-ci-btn rs-ci-btn--view">
                                 <i class="fas fa-eye"></i> Ver contrato
                             </a>
                             @if(!$ciAssinado && !$checkoutJaRegistrado)
                                 @if($pagamentoEmDiaAssinatura)
-                                    <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
+                                    <a href="{{ route('reserva.assinarContratoCheckin', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
                                         <i class="fas fa-signature"></i> Assinar
                                     </a>
                                 @else
@@ -666,11 +666,11 @@
                                           title="Pagamento insuficiente. Restam R$ {{ number_format($saldoPendenteAssinatura, 2, ',', '.') }} para liberar a assinatura.">
                                         <i class="fas fa-lock"></i> Assinar
                                     </span>
-                                    <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--sign">
+                                    <a href="{{ route('reserva.pagamento.efetuar', ['id' => $reserva->codigoReserva?->codigo ?? ('RES-' . $reserva->id)]) }}" class="rs-ci-btn rs-ci-btn--sign">
                                         <i class="fas fa-credit-card"></i> Pagar restante
                                     </a>
                                 @endif
-                                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-ci-btn rs-ci-btn--edit">
+                                <a href="{{ route('reserva.checkin', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" class="rs-ci-btn rs-ci-btn--edit">
                                     <i class="fas fa-edit"></i> Editar contrato
                                 </a>
                             @endif
@@ -813,7 +813,7 @@
                     <div class="rs-card">
                         <div class="rs-card__header">
                             <i class="fas fa-shield-alt rs-card__icon" style="color:#6f42c1"></i>
-                            <h2>Calcao no Cartao</h2>
+                            <h2>Calção no Cartão</h2>
                         </div>
                         @if($calcao)
                             @php
@@ -873,7 +873,7 @@
                         @else
                             @can('calcao.autorizar')
                             <div class="text-center py-2">
-                                <a href="{{ route('reserva.calcao', $reserva->id) }}" class="btn btn-sm btn-outline-primary w-100">
+                                <a href="{{ route('reserva.calcao', $reserva->codigoReserva->codigo) }}" class="btn btn-sm btn-outline-primary w-100">
                                     <i class="fas fa-lock mr-1"></i> Registrar Calcao
                                 </a>
                             </div>
@@ -893,7 +893,7 @@
                         <i class="fas fa-file-signature" style="font-size:2.5rem;color:#cbd5e1"></i>
                         <span>Nenhum contrato de check-in cadastrado para esta reserva.</span>
                         @if($pagamentoEfetuado)
-                            <a href="{{ route('reserva.checkin', $reserva->id) }}" class="rs-btn rs-btn--outline mt-2">
+                            <a href="{{ route('reserva.checkin', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" class="rs-btn rs-btn--outline mt-2">
                                 <i class="fas fa-plus"></i> Criar check-in
                             </a>
                         @else
@@ -917,9 +917,9 @@
                         </div>
                         <div class="d-flex align-items-center gap-3 flex-wrap" style="gap:12px">
                             @if($pagamentoEfetuado)
-                                <a href="{{ route('reserva.checkout.vistoria', $reserva->id) }}" class="rs-btn rs-btn--outline">
+                                {{-- <a href="{{ route('reserva.checkout.vistoria', $reserva->codigoReserva->codigo) }}" class="rs-btn rs-btn--outline">
                                     <i class="fas fa-search"></i> Abrir vistoria / danos
-                                </a>
+                                </a> --}}
                             @else
                                 <span class="rs-btn rs-btn--outline" style="opacity:.5;cursor:not-allowed;pointer-events:none" title="Pagamento necessário para acessar o checkout">
                                     <i class="fas fa-lock mr-1"></i> Abrir vistoria / danos
@@ -929,7 +929,7 @@
                                 </small>
                             @endif
                             @can('avaria.cobrar')
-                                <a href="{{ route('reserva.avarias.cobranca', $reserva->id) }}" class="rs-btn rs-btn--outline">
+                                <a href="{{ route('reserva.avarias.cobranca', $reserva->codigoReserva->codigo) }}" class="rs-btn rs-btn--outline">
                                     <i class="fas fa-hand-holding-usd"></i> Debitar avarias
                                 </a>
                             @endcan
@@ -1627,7 +1627,7 @@ const reservaId = @json($reserva->id);
 // ── Liberar calção ──
 function liberarCalcao(calcaoId) {
     if (!confirm('Confirma a liberação do calção? O valor será devolvido ao cartão do cliente.')) return;
-    fetch(@json(route('reserva.calcao.liberar', $reserva->id)), {
+    fetch(@json(route('reserva.calcao.liberar', $reserva->codigoReserva->codigo)), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
         body: JSON.stringify({ observacao: 'Liberado no check-out' })
@@ -1654,7 +1654,7 @@ document.getElementById('btn-salvar-calcao-presencial')?.addEventListener('click
 
     if (statusEl) statusEl.textContent = 'Registrando...';
 
-    fetch(@json(route('reserva.calcao.presencial', $reserva->id)), {
+    fetch(@json(route('reserva.calcao.presencial', $reserva->codigoReserva->codigo)), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
         body: JSON.stringify({ metodo, valor: valor || null, observacao: obs || null })
@@ -1672,7 +1672,7 @@ document.getElementById('btn-devolver-calcao-presencial')?.addEventListener('cli
     const statusEl = document.getElementById('calcao-devolver-status');
     if (statusEl) statusEl.textContent = 'Processando...';
 
-    fetch(@json(route('reserva.calcao.presencial.devolver', $reserva->id)), {
+    fetch(@json(route('reserva.calcao.presencial.devolver', $reserva->codigoReserva->codigo)), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
         body: JSON.stringify({ observacao: obs || null })
@@ -1696,7 +1696,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     }
 
     this.disabled = true;
-    fetch(@json(route('reserva.calcao.capturar', $reserva->id)), {
+    fetch(@json(route('reserva.calcao.capturar', $reserva->codigoReserva->codigo)), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
         body: JSON.stringify({ valor_captura: valor, justificativa: just })
@@ -1977,63 +1977,73 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     }
 
     /* ═══════════════════════════
-       TABS
+       TABS WRAPPER (Modern & Robust Reset)
     ═══════════════════════════ */
     .rs-tabs-wrapper {
         background: #fff;
         border: 1px solid #e2e8f0;
         border-radius: 20px;
         overflow: hidden;
-        box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
     }
 
-    .rs-nav-tabs {
-        background: #f8fafc;
-        border-bottom: 2px solid #e2e8f0;
-        padding: 0 16px;
-        flex-wrap: nowrap;
-        overflow-x: auto;
+    ul.rs-nav-tabs,
+    .rs-nav-tabs.nav-tabs {
+        background: #f8fafc !important;
+        border: none !important;
+        border-bottom: 2px solid #e2e8f0 !important;
+        padding: 0 16px !important;
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
+        margin-bottom: 0 !important;
     }
 
-    .rs-nav-tabs::-webkit-scrollbar { display: none; }
+    ul.rs-nav-tabs::-webkit-scrollbar { display: none; }
 
-    .rs-nav-tabs .nav-item {
-        flex-shrink: 0;
+    ul.rs-nav-tabs .nav-item {
+        flex-shrink: 0 !important;
+        margin-bottom: 0 !important;
     }
 
-    .rs-nav-tabs .nav-link {
-        display: flex;
-        align-items: center;
-        gap: 7px;
-        padding: 14px 18px;
-        font-size: 0.83rem;
-        font-weight: 600;
-        color: #64748b;
-        border: none;
-        border-bottom: 3px solid transparent;
-        border-radius: 0;
-        white-space: nowrap;
-        transition: color 0.15s, border-color 0.15s;
-        margin-bottom: -2px;
+    ul.rs-nav-tabs .nav-link {
+        display: flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 14px 20px !important;
+        font-size: 0.85rem !important;
+        font-weight: 600 !important;
+        color: #64748b !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 3px solid transparent !important;
+        border-radius: 0 !important;
+        white-space: nowrap !important;
+        transition: all 0.2s ease !important;
+        margin-bottom: -2px !important;
     }
 
-    .rs-nav-tabs .nav-link:hover {
-        color: #2563eb;
-        border-bottom-color: #bfdbfe;
-        background: transparent;
+    ul.rs-nav-tabs .nav-link:hover,
+    ul.rs-nav-tabs .nav-link:focus {
+        color: #2563eb !important;
+        background: transparent !important;
+        border-color: transparent !important;
+        border-bottom-color: #bfdbfe !important;
     }
 
-    .rs-nav-tabs .nav-link.active {
-        color: #2563eb;
-        border-bottom-color: #2563eb;
-        background: transparent;
-        font-weight: 700;
+    ul.rs-nav-tabs .nav-link.active,
+    ul.rs-nav-tabs .nav-item.show .nav-link {
+        color: #2563eb !important;
+        background: transparent !important;
+        border: none !important;
+        border-bottom: 3px solid #2563eb !important;
+        font-weight: 700 !important;
     }
 
-    .rs-nav-tabs .nav-link i {
-        font-size: 0.85rem;
+    ul.rs-nav-tabs .nav-link i {
+        font-size: 0.9rem !important;
     }
 
     .rs-tab-badge {
@@ -2042,11 +2052,12 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
         justify-content: center;
         min-width: 20px;
         height: 20px;
-        padding: 0 6px;
+        padding: 0 7px;
         border-radius: 999px;
-        font-size: 0.65rem;
+        font-size: 0.68rem;
         font-weight: 800;
         line-height: 1;
+        margin-left: 4px;
     }
 
     .rs-tab-badge--green  { background: #dcfce7; color: #15803d; }
@@ -2056,6 +2067,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 
     .rs-tab-content {
         padding: 24px;
+        background: #fff;
     }
 
     /* ═══════════════════════════
@@ -4290,210 +4302,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
 })();
 </script>
 
-{{-- ═══════════════════════════════════════════════
-     MODAL — Pesquisa de Satisfação pós-checkout
-═══════════════════════════════════════════════ --}}
-@php $jaSatisfacao = $reserva->satisfacao()->exists(); @endphp
 
-<div class="modal fade" id="modalSatisfacao" tabindex="-1" role="dialog" data-backdrop="static" data-keyboard="false">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:520px" role="document">
-        <div class="modal-content" style="border:0;border-radius:20px;overflow:hidden;box-shadow:0 32px 80px rgba(12,20,40,.28)">
-
-            {{-- Header --}}
-            <div style="position:relative;background:linear-gradient(135deg,#0c1428 0%,#1a2848 55%,#1e3461 100%);padding:1.4rem 1.6rem;overflow:hidden">
-                <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(255,255,255,.05) 1px,transparent 1px);background-size:20px 20px;pointer-events:none"></div>
-                <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#059669,#10b981,#0ea5e9)"></div>
-                <div style="position:relative;z-index:1;display:flex;align-items:center;gap:14px">
-                    <div style="width:46px;height:46px;border-radius:13px;background:rgba(16,185,129,.18);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;font-size:1.3rem;color:#10b981;flex-shrink:0">
-                        <i class="fas fa-star"></i>
-                    </div>
-                    <div>
-                        <div style="font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:rgba(148,163,184,.8);margin-bottom:2px">Check-out concluído</div>
-                        <h6 style="margin:0;font-size:.95rem;font-weight:800;color:#fff">Pesquisa de Satisfação</h6>
-                        <p style="margin:0;font-size:.73rem;color:rgba(148,163,184,.8)">Reserva #{{ $reserva->id }} · {{ $reserva->usuario->nome ?? '' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Body --}}
-            <div style="padding:1.4rem 1.6rem;background:#f2f5fb">
-                @if($jaSatisfacao)
-                    <div class="text-center py-3">
-                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                        <p class="mb-0 font-weight-bold">Avaliação já registrada para esta reserva.</p>
-                    </div>
-                @else
-                <form id="formSatisfacao">
-                    @csrf
-
-                    {{-- Satisfação geral --}}
-                    <div class="sat-block">
-                        <label class="sat-label">Como foi a experiência geral do cliente? <span style="color:#ef4444">*</span></label>
-                        <div class="sat-stars" data-field="satisfacao_geral">
-                            @for($s = 1; $s <= 5; $s++)
-                                <button type="button" class="sat-star" data-val="{{ $s }}">
-                                    <i class="fas fa-star"></i>
-                                </button>
-                            @endfor
-                        </div>
-                        <input type="hidden" name="satisfacao_geral" id="satisfacao_geral">
-                    </div>
-
-                    {{-- Facilidade --}}
-                    <div class="sat-block">
-                        <label class="sat-label">O processo de reserva e devolução foi fácil? <span style="color:#ef4444">*</span></label>
-                        <div class="sat-stars" data-field="facilidade_reserva">
-                            @for($s = 1; $s <= 5; $s++)
-                                <button type="button" class="sat-star" data-val="{{ $s }}">
-                                    <i class="fas fa-star"></i>
-                                </button>
-                            @endfor
-                        </div>
-                        <input type="hidden" name="facilidade_reserva" id="facilidade_reserva">
-                    </div>
-
-                    {{-- NPS --}}
-                    <div class="sat-block">
-                        <label class="sat-label">De 0 a 10, o cliente recomendaria a empresa? <span style="color:#ef4444">*</span></label>
-                        <div class="sat-nps">
-                            @for($n = 0; $n <= 10; $n++)
-                                <button type="button" class="sat-nps-btn
-                                    {{ $n <= 6 ? 'sat-nps-btn--red' : ($n <= 8 ? 'sat-nps-btn--amber' : 'sat-nps-btn--green') }}"
-                                    data-val="{{ $n }}">{{ $n }}</button>
-                            @endfor
-                        </div>
-                        <div class="sat-nps-legend">
-                            <span>Detrator</span><span>Neutro</span><span>Promotor</span>
-                        </div>
-                        <input type="hidden" name="nps_nota" id="nps_nota">
-                    </div>
-
-                    {{-- Comentário --}}
-                    <div class="sat-block">
-                        <label class="sat-label">Observações adicionais</label>
-                        <textarea name="comentario" class="form-control form-control-sm" rows="3"
-                                  placeholder="Ex: Cliente muito satisfeito com o veículo…" maxlength="1000"
-                                  style="border-radius:10px;border-color:#dce6f4;font-size:.83rem"></textarea>
-                    </div>
-                </form>
-                @endif
-            </div>
-
-            {{-- Footer --}}
-            <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;padding:12px 1.6rem;background:#eef2ff;border-top:1px solid #dde4ff">
-                <button type="button" class="btn btn-sm btn-light" style="border-radius:10px;font-weight:600;font-size:.82rem" data-dismiss="modal">
-                    @if($jaSatisfacao) Fechar @else Pular @endif
-                </button>
-                @if(!$jaSatisfacao)
-                <button type="button" id="btnSalvarSatisfacao"
-                        style="background:linear-gradient(135deg,#059669,#10b981);color:#fff;border:0;border-radius:10px;padding:9px 22px;font-size:.82rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px;box-shadow:0 4px 12px rgba(5,150,105,.3)">
-                    <i class="fas fa-paper-plane"></i> Enviar avaliação
-                </button>
-                @endif
-            </div>
-        </div>
-    </div>
-</div>
-
-<style>
-.sat-block { margin-bottom: 1.1rem; }
-.sat-label { font-size: .78rem; font-weight: 700; color: #3d4f63; margin-bottom: 8px; display: block; }
-.sat-stars { display: flex; gap: 6px; }
-.sat-star {
-    background: none; border: none; padding: 0; cursor: pointer;
-    font-size: 1.5rem; color: #d1d5db; transition: color .15s, transform .15s;
-}
-.sat-star:hover, .sat-star.active { color: #f59e0b; transform: scale(1.15); }
-.sat-nps { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 4px; }
-.sat-nps-btn {
-    width: 36px; height: 36px; border-radius: 9px; border: 1.5px solid #e2e9f4;
-    background: #fff; font-size: .82rem; font-weight: 700; cursor: pointer;
-    transition: all .15s; color: #475569;
-}
-.sat-nps-btn--red.active    { background: #fee2e2; border-color: #ef4444; color: #b91c1c; }
-.sat-nps-btn--amber.active  { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
-.sat-nps-btn--green.active  { background: #d1fae5; border-color: #10b981; color: #065f46; }
-.sat-nps-btn:hover { opacity: .8; transform: translateY(-2px); }
-.sat-nps-legend { display: flex; justify-content: space-between; font-size: .65rem; color: #94a3b8; font-weight: 600; margin-top: 2px; }
-</style>
-
-<script>
-(function () {
-    // Abre automaticamente se vier de checkout
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('satisfacao') === '1') {
-        setTimeout(() => $('#modalSatisfacao').modal('show'), 600);
-        // Limpa o param da URL sem recarregar
-        const url = new URL(window.location);
-        url.searchParams.delete('satisfacao');
-        history.replaceState({}, '', url);
-    }
-
-    // Estrelas
-    document.querySelectorAll('.sat-stars').forEach(group => {
-        const stars = group.querySelectorAll('.sat-star');
-        const field = group.dataset.field;
-        const hidden = document.getElementById(field);
-        stars.forEach((star, idx) => {
-            star.addEventListener('mouseenter', () => {
-                stars.forEach((s, i) => s.classList.toggle('active', i <= idx));
-            });
-            star.addEventListener('mouseleave', () => {
-                const val = hidden?.value;
-                stars.forEach((s, i) => s.classList.toggle('active', val && i < parseInt(val)));
-            });
-            star.addEventListener('click', () => {
-                if (hidden) hidden.value = star.dataset.val;
-                stars.forEach((s, i) => s.classList.toggle('active', i <= idx));
-            });
-        });
-    });
-
-    // NPS
-    document.querySelectorAll('.sat-nps-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.sat-nps-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('nps_nota').value = btn.dataset.val;
-        });
-    });
-
-    // Enviar
-    document.getElementById('btnSalvarSatisfacao')?.addEventListener('click', function () {
-        const form = document.getElementById('formSatisfacao');
-        const satGeral = document.getElementById('satisfacao_geral')?.value;
-        const facil    = document.getElementById('facilidade_reserva')?.value;
-        const nps      = document.getElementById('nps_nota')?.value;
-
-        if (!satGeral || !facil || !nps) {
-            Swal.fire({ icon: 'warning', title: 'Atenção', text: 'Preencha todas as avaliações antes de enviar.', confirmButtonColor: '#059669' });
-            return;
-        }
-
-        const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando…';
-
-        const fd = new FormData(form);
-        fetch("{{ route('reserva.satisfacao.store', $reserva->id) }}", {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content, 'Accept': 'application/json' },
-            body: fd,
-        })
-        .then(r => r.json())
-        .then(data => {
-            $('#modalSatisfacao').modal('hide');
-            Swal.fire({ icon: 'success', title: 'Obrigado!', text: data.message || 'Avaliação registrada.', timer: 2000, showConfirmButton: false, toast: true, position: 'top-right' });
-            setTimeout(() => window.location.reload(), 2000);
-        })
-        .catch(() => {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-paper-plane"></i> Enviar avaliação';
-            Swal.fire({ icon: 'error', title: 'Erro', text: 'Não foi possível salvar a avaliação.', confirmButtonColor: '#059669' });
-        });
-    });
-}());
-</script>
 
 @php
     $grupoMarcasModelos = [];

@@ -41,6 +41,8 @@ Route::get('/', [SiteApresentacaoController::class, 'index'])->name('site.aprese
 Route::get('/sobre', [SiteApresentacaoController::class, 'sobre'])->name('site.sobre');
 Route::get('/site/estacoes', [SiteApresentacaoController::class, 'estacoesOptions'])->name('site.apresentacao.estacoes');
 Route::get('/motorista-app', [SiteApresentacaoController::class, 'motoristaApp'])->name('site.apresentacao.motorista-app');
+Route::post('/motorista-app/solicitacoes', [SiteApresentacaoController::class, 'storeMotoristaApp'])->name('site.apresentacao.motorista-app.store');
+Route::get('/motorista-app/reservas/{reserva}', [SiteApresentacaoController::class, 'motoristaAppReservaShow'])->name('site.apresentacao.motorista-app.show');
 Route::get('/sitemap.xml', function (Request $request) {
     $baseUrl = rtrim($request->getSchemeAndHttpHost(), '/');
     $lastMod = now()->toAtomString();

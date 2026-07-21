@@ -573,6 +573,13 @@ class MovimentacaoService extends AbstractBaseService
         $tipoMovimentacao = $movimentacao['tipo'];
         $statusMovimentacao = $movimentacao['status'];
 
+        $validReservaId = null;
+        if ($reserva_id !== null && $reserva_id > 0) {
+            if (\App\Models\Reserva::where('id', (int) $reserva_id)->exists()) {
+                $validReservaId = (int) $reserva_id;
+            }
+        }
+
         $valor = [
             'veiculo_id' => $veiculo_id,
             'tipo_movimentacao_id' => $tipoMovimentacao,
@@ -581,7 +588,7 @@ class MovimentacaoService extends AbstractBaseService
             'local_destino_id' => $local_destino_id,
             'data_registro' => Carbon::now(),
             'data_saida' => Carbon::now(),
-            'reserva_id' => $reserva_id,
+            'reserva_id' => $validReservaId,
             'observacoes' => $observacao,
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
         ];

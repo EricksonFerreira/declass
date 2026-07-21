@@ -3,6 +3,8 @@
 namespace App\Http\Requests\Reserva;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\DB;
+use App\Services\Reserva\ReservaResolver;
 
 class CriarContratoCheckInRequest extends FormRequest
 {
@@ -21,11 +23,31 @@ class CriarContratoCheckInRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Verifica se já existe contrato para esta reserva (modo edição)
-        $reservaId = $this->route('id');
-        $contratoJaExiste = \DB::table('contrato_checkin')
-            ->where('reserva_id', $reservaId)
-            ->exists();
+        // Verifica se já existe contrato para esta reserva (modo edição / motorista app)
+        $contratoJaExiste = false;
+        try {
+            $codigo = (string) ($this->route('codigo') ?? $this->route('id') ?? $this->input('reserva_id'));
+            if ($codigo !== '') {
+                /** @var ReservaResolver $resolver */
+                $resolver = app(ReservaResolver::class);
+                $reservaResolvida = $resolver->resolver($codigo);
+
+                if ($reservaResolvida->ehMotoristaApp()) {
+                    $registro = $reservaResolvida->registro;
+                    $contratoId = (int) data_get($registro->documentos_json, 'checkin.contrato_checkin_id', 0);
+                    $reservaOpId = (int) data_get($registro->documentos_json, 'checkin.reserva_operacional_id', 0);
+
+                    $contratoJaExiste = ($contratoId > 0 && DB::table('contrato_checkin')->where('id', $contratoId)->exists())
+                        || ($reservaOpId > 0 && DB::table('contrato_checkin')->where('reserva_id', $reservaOpId)->exists())
+                        || DB::table('contrato_checkin')->where('reserva_id', (int) $registro->id)->exists();
+                } else {
+                    $reservaId = (int) $reservaResolvida->registro->id;
+                    $contratoJaExiste = DB::table('contrato_checkin')->where('reserva_id', $reservaId)->exists();
+                }
+            }
+        } catch (\Throwable $e) {
+            $contratoJaExiste = false;
+        }
 
         $fotoRule = $contratoJaExiste ? 'nullable|image|max:8192' : 'required|image|max:8192';
 
@@ -49,7 +71,6 @@ class CriarContratoCheckInRequest extends FormRequest
         ];
     }
 
-
     public function messages()
     {
         return [
@@ -57,12 +78,10 @@ class CriarContratoCheckInRequest extends FormRequest
             'data_saida.date' => 'A data de saída deve ser uma data válida.',
             'hora_saida.required' => 'A hora de saída é obrigatória.',
             'hora_saida.date_format' => 'A hora de saída deve ser uma hora válida.',
-            'marca.required' => 'A marca é obrigatória.',
-            'marca.integer' => 'A marca deve ser um número inteiro.',
-            'marca.exists' => 'A marca selecionada é inválida.',
-            'modelo.required' => 'O modelo é obrigatório.',
-            'modelo.integer' => 'O modelo deve ser um número inteiro.',
-            'modelo.exists' => 'O modelo selecionado é inválido.',
+            'marca_id.integer' => 'A marca deve ser um número inteiro.',
+            'marca_id.exists' => 'A marca selecionada é inválida.',
+            'modelo_id.integer' => 'O modelo deve ser um número inteiro.',
+            'modelo_id.exists' => 'O modelo selecionado é inválido.',
             'nivel_combustivel.required' => 'O nível de combustível é obrigatório.',
             'nivel_combustivel.string' => 'O nível de combustível deve ser uma string.',
             'nivel_combustivel.in' => 'O nível de combustível selecionado é inválido.',
@@ -72,9 +91,9 @@ class CriarContratoCheckInRequest extends FormRequest
             'observacoes_saida.max' => 'As observações de saída não podem ter mais de 255 caracteres.',
             'quilometragem_atual.required' => 'A quilometragem atual é obrigatória.',
             'quilometragem_atual.numeric' => 'A quilometragem atual deve ser um número.',
-            'veiculo.required' => 'Você não selecionou um veículo.',
-            'veiculo.integer' => 'O veículo deve ser um número inteiro.',
-            'veiculo.exists' => 'O veículo não existe.',
+            'veiculo_id.required' => 'Você não selecionou um veículo.',
+            'veiculo_id.integer' => 'O veículo deve ser um número inteiro.',
+            'veiculo_id.exists' => 'O veículo não existe.',
         ];
     }
 }

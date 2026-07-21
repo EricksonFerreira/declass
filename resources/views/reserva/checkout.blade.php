@@ -46,6 +46,7 @@
 
             <div class="ci-body">
 
+                <input type="hidden" id="codigo" name="codigo" value="{{ $reserva->codigoReserva->codigo }}">
                 <input type="hidden" id="reserva_id" name="reserva_id" value="{{ $reserva->id }}">
                 <input type="hidden" id="veiculo" name="veiculo" value="{{ $reserva->veiculo_id }}">
 
@@ -187,7 +188,7 @@
                                 $niveis    = ['Reserva','1/8','1/4','3/8','1/2','5/8','3/4','7/8','Cheio'];
                                 $coContrato = $reserva->contratoCheckout ?? null;
                                 $coKm        = old('quilometragem_devolucao',  $coContrato?->quilometragem_devolucao ?? ($kmCheckin ?: ''));
-                                $coCombust   = old('combustivel_devolucao',    $coContrato?->nivel_combustivel_devolucao ?? '');
+                                $coCombust   = old('nivel_combustivel_devolucao',    $coContrato?->nivel_combustivel_devolucao ?? '');
                                 $coData      = old('data_devolucao',           $coContrato?->data_devolucao ?? date('Y-m-d'));
                                 $coHora      = old('hora_devolucao',           $coContrato?->hora_devolucao  ? substr($coContrato->hora_devolucao, 0, 5) : date('H:i'));
                             @endphp
@@ -206,8 +207,8 @@
                                            value="{{ $coKm }}">
                                 </div>
                                 <div class="col-md-3">
-                                    <label for="combustivel_devolucao">Nível de Combustível <span class="req">*</span></label>
-                                    <select class="form-control form-control-sm" id="combustivel_devolucao" required name="combustivel_devolucao">
+                                    <label for="nivel_combustivel_devolucao">Nível de Combustível <span class="req">*</span></label>
+                                    <select class="form-control form-control-sm" id="nivel_combustivel_devolucao" required name="nivel_combustivel_devolucao">
                                         <option value="" disabled {{ !$coCombust ? 'selected' : '' }}>Selecione</option>
                                         @foreach($niveis as $nivel)
                                             <option {{ $coCombust === $nivel ? 'selected' : '' }}>{{ $nivel }}</option>
@@ -261,9 +262,9 @@
                                 @endphp
                                 <div class="col-md-4">
                                     <div class="ci-photo-card">
-                                        <label for="{{ $f['id'] }}">{{ $f['label'] }}</label>
+                                        <label for="{{ $f['id'] }}">{{ $f['label'] }}<span class="req">*</span></label>
                                         <input type="file" class="form-control form-control-sm"
-                                               id="{{ $f['id'] }}" name="{{ $f['id'] }}" accept="image/*">
+                                               id="{{ $f['id'] }}" name="{{ $f['id'] }}" accept="image/*" required>
                                         <div class="ci-photo-preview" data-preview-for="{{ $f['id'] }}">
                                             @if($fotoUrl)
                                                 <img src="{{ $fotoUrl }}" alt="{{ $f['label'] }}" style="max-width:100%;max-height:160px;border-radius:6px;">
@@ -738,20 +739,51 @@
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
+    function validateStep(step) {
+        if (step === 1) {
+            var combustivel = document.getElementById('nivel_combustivel_devolucao');
+            var km = document.getElementById('quilometragem_devolucao');
+            var data = document.getElementById('data_devolucao');
+            var hora = document.getElementById('hora_devolucao');
+            var valido = true;
+            var campos = [];
+            if (!combustivel || !combustivel.value) { valido = false; if (combustivel) combustivel.classList.add('is-invalid'); campos.push('nível de combustível'); }
+            if (!km || !km.value) { valido = false; if (km) km.classList.add('is-invalid'); campos.push('quilometragem'); }
+            if (!data || !data.value) { valido = false; if (data) data.classList.add('is-invalid'); campos.push('data de devolução'); }
+            if (!hora || !hora.value) { valido = false; if (hora) hora.classList.add('is-invalid'); campos.push('hora de devolução'); }
+            if (!valido) { Swal.fire({ icon: 'warning', title: 'Campos obrigatórios', text: 'Preencha todos os campos: ' + campos.join(', ') + '.', confirmButtonColor: '#4338ca' }); return false; }
+        }
+        if (step === 2) {
+            var valido = true;
+            var pendentes = [];
+            PHOTO_INPUT_IDS.forEach(function (id) {
+                var input = document.getElementById(id);
+                if (!input || !input.files || !input.files.length) {
+                    valido = false;
+                    pendentes.push(id.replace(/foto_|_co/g, '').replace(/_/g, ' ').trim());
+                    if (input) input.classList.add('is-invalid');
+                }
+            });
+            if (!valido) { Swal.fire({ icon: 'warning', title: 'Fotos obrigatórias', text: 'Tire todas as fotos da devolução antes de continuar: ' + pendentes.join(', ') + '.', confirmButtonColor: '#4338ca' }); return false; }
+        }
+        return true;
+    }
+
     stepBtns.forEach(btn => {
-        btn.addEventListener('click', () => showStep(Number(btn.dataset.stepTarget)));
+        btn.addEventListener('click', function () {
+            var target = Number(btn.dataset.stepTarget);
+            if (target > current) {
+                for (var s = current; s < target; s++) {
+                    if (!validateStep(s)) return;
+                }
+            }
+            showStep(target);
+        });
     });
 
     prevBtn.addEventListener('click', () => showStep(current - 1));
     nextBtn.addEventListener('click', function () {
-        if (current === 1) {
-            var combustivel = document.getElementById('combustivel_devolucao');
-            var km = document.getElementById('quilometragem_devolucao');
-            var valido = true;
-            if (!combustivel || !combustivel.value) { valido = false; if (combustivel) combustivel.classList.add('is-invalid'); }
-            if (!km || !km.value) { valido = false; if (km) km.classList.add('is-invalid'); }
-            if (!valido) { Swal.fire({ icon: 'warning', title: 'Campos obrigatórios', text: 'Preencha o nível de combustível e a quilometragem antes de continuar.', confirmButtonColor: '#4338ca' }); return; }
-        }
+        if (!validateStep(current)) return;
         showStep(current + 1);
     });
 
@@ -804,8 +836,8 @@
     });
 
     function finalizarCheckout() {
-        const reserva_id = document.getElementById('reserva_id').value;
-        const url = "{{ route('reserva.checkout.finalizar', ':id') }}".replace(':id', reserva_id);
+        const codigo = document.getElementById('codigo').value;
+        const url = "{{ route('reserva.checkout.finalizar', ':codigo') }}".replace(':codigo', codigo);
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
         const formEl = document.getElementById('form_dados_devolucao');
@@ -838,7 +870,7 @@
                     position: 'top-right',
                 });
                 setTimeout(() => {
-                    const base = data.redirect || "{{ route('reserva.show', ':id') }}".replace(':id', reserva_id);
+                    const base = data.redirect || "{{ route('reserva.show', ':codigo') }}".replace(':codigo', codigo);
                     window.location.href = base + (base.includes('?') ? '&' : '?') + 'satisfacao=1';
                 }, 800);
             },
@@ -860,12 +892,26 @@
                 || (i.path  ? `{{ asset('storage') }}/${i.path}`  : null)
                 || (i.imagem ? `{{ asset('storage') }}/${i.imagem}` : null);
             if (!url) return '';
-            return `<a href="${url}" target="_blank" rel="noopener" title="Ver imagem">
+            return `<a href="javascript:void(0)" onclick="abrirFotoDano('${url}')" title="Ver imagem">
                         <img src="${url}" alt="foto do dano"
-                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px;"
+                             style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1.5px solid #e2e8f0;margin-right:4px;cursor:pointer"
                              onerror="this.outerHTML='<span class=text-danger small>Erro</span>'">
                     </a>`;
         }).filter(Boolean).join('');
+    }
+
+    window.abrirFotoDano = function abrirFotoDano(src) {
+        let modal = document.getElementById('lightboxFotoDano');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'lightboxFotoDano';
+            modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out';
+            modal.onclick = () => modal.remove();
+            modal.innerHTML = '<img id="lightboxFotoDanoImg" style="max-width:92vw;max-height:90vh;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,.6)">';
+            document.body.appendChild(modal);
+        }
+        document.getElementById('lightboxFotoDanoImg').src = src;
+        document.getElementById('lightboxFotoDano').style.display = 'flex';
     }
 
     const TIPO_LABEL = {
@@ -887,12 +933,12 @@
 
     function obterDanosDetectados() {
         const veiculo_id = document.getElementById('veiculo')?.value;
-        const reserva_id = document.getElementById('reserva_id')?.value;
+        const codigo = document.getElementById('codigo')?.value;
 
         $.ajax({
             url: "{{ route('dano.obterDanosDetectados') }}",
             type: 'GET',
-            data: { veiculo_id, reserva_id },
+            data: { veiculo_id, codigo },
             success: function (data) {
                 const tbody = document.getElementById('danos_detectados');
                 tbody.innerHTML = '';
@@ -927,12 +973,12 @@
 
     function obterDanosExistentes() {
         const veiculo_id = document.getElementById('veiculo')?.value;
-        const reserva_id = document.getElementById('reserva_id')?.value;
+        const codigo = document.getElementById('codigo')?.value;
 
         $.ajax({
             url: "{{ route('dano.obterDanosExistentes') }}",
             type: 'GET',
-            data: { veiculo_id, reserva_id },
+            data: { veiculo_id, codigo },
             success: function (data) {
                 const tbody = document.getElementById('danos_existentes');
                 tbody.innerHTML = '';

@@ -16,6 +16,7 @@ class Multa extends Model
     protected $fillable = [
         'empresa_id',
         'reserva_id',
+        'reserva_motorista_app_id',
         'veiculo_id',
         'cliente_id',
         'condutor_id',
@@ -88,6 +89,11 @@ class Multa extends Model
     public function reserva()
     {
         return $this->belongsTo(Reserva::class, 'reserva_id');
+    }
+
+    public function reservaMotoristaApp()
+    {
+        return $this->belongsTo(ReservaMotoristaApp::class, 'reserva_motorista_app_id');
     }
 
     public function veiculo()

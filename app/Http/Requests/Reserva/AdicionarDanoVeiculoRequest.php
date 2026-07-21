@@ -37,6 +37,35 @@ class AdicionarDanoVeiculoRequest extends FormRequest
         ];
     }
 
+    public function prepareForValidation(): void
+    {
+        $dados = $this->all();
+
+        if (!array_key_exists('dano_id', $dados)) {
+            return;
+        }
+
+        $valorBruto = trim((string) $dados['dano_id']);
+        $valorNormalizado = mb_strtolower($valorBruto);
+
+        if ($valorBruto === '' || $this->isPlaceholderDano($valorNormalizado)) {
+            $dados['dano_id'] = null;
+        } elseif (ctype_digit($valorBruto)) {
+            $dados['dano_id'] = (int) $valorBruto;
+        } else {
+            $dados['dano_id'] = null;
+        }
+
+        $this->replace($dados);
+    }
+
+    private function isPlaceholderDano(string $valor): bool
+    {
+        return str_contains($valor, 'selecione um dano')
+            || str_contains($valor, 'primeiro selecione')
+            || str_contains($valor, 'nenhum dano encontrado');
+    }
+
     public function messages()
     {
         return [

@@ -21,10 +21,24 @@ class AssinarContratoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $codigo = $this->route('codigo') ?: $this->route('id');
+        if ($codigo) {
+            try {
+                $reservaResolvida = app(\App\Services\Reserva\ReservaResolver::class)->resolver((string) $codigo);
+                if ($reservaResolvida->ehMotoristaApp()) {
+                    return [
+                        'assinatura' => 'required'
+                    ];
+                }
+            } catch (\Throwable $e) {
+                // Fallback to default validation if resolver fails
+            }
+        }
+
         return [
             'veiculo_id' => 'required|integer|exists:veiculos,id',
             'contrato_id' => 'required|integer|exists:contrato_checkin,id',
-            'assinatura' =>'required'
+            'assinatura' => 'required'
         ];
     }
 

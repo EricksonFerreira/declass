@@ -50,7 +50,7 @@ class ModeloService extends AbstractBaseService
 
     public function getModelosPorGrupoFrota($grupoFrotaId)
     {
-        return $this->model->where('grupo_frota_id', $grupoFrotaId)->get();
+        return $this->obtemModelosPorGrupoFrota($grupoFrotaId);
     }
 
     public function obtemModelosPorGrupoFrota($grupoFrotaId)

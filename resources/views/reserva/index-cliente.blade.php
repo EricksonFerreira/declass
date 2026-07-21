@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -27,7 +27,11 @@
                 <h3 class="card-title text-sm text-bold">
                     REGISTROS <span class="badge badge-success">{{ $reservas->total() }}</span>
                 </h3>
-                <div class="align-bottom d-flex flex-row justify-between">
+                <div class="align-bottom d-flex flex-row justify-between align-items-end flex-wrap">
+                    <form action="{{ route('reserva.setPerPage') }}" method="POST" class="mr-2 mb-1">
+                        @csrf
+                        <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                    </form>
                     <div class="reserva-view-toggle">
                         <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
                             <i class="fas fa-th-large mr-1"></i> Cards
@@ -49,7 +53,7 @@
                 <div class="alert alert-warning m-2">{{ session('warning') }}</div>
             @endif
 
-            {{-- ── Cards view ── --}}
+            {{-- â”€â”€ Cards view â”€â”€ --}}
             <div class="reserva-cards">
                 @forelse ($reservas as $reserva)
                     @php
@@ -60,13 +64,23 @@
                             $totalCalculado = $reserva->tarifa_base * $reserva->quantidade_dias;
                         }
                         $totalCalculado    = (float) ($totalCalculado ?? 0);
-                        $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
+                        $pagamentoEfetuado = method_exists($reserva, 'isPagamentoEfetuado')
+                            ? $reserva->isPagamentoEfetuado()
+                            : in_array($reserva->pagamento_efetuado ?? false, [true, 1, '1', 'S', 's', 'sim', 'SIM'], true);
+                        $isMotoristaApp    = ($reserva->origem_tipo ?? 'reserva') === 'motorista_app';
+                        $pagamentoPendente = $isMotoristaApp
+                            ? (bool) ($reserva->pagamento_pendente ?? false)
+                            : ! $pagamentoEfetuado;
                         $diasReserva       = (int) ($reserva->quantidade_dias ?? 0);
-                        $statusNome        = strtolower((string) ($reserva->statusReserva?->nome ?? ''));
-                        $statusClass       = match ($statusNome) {
-                            'confirmada'         => 'rc-status--green',
-                            'cancelada'          => 'rc-status--red',
-                            'criada', 'pendente' => 'rc-status--amber',
+                        $statusRaw         = strtolower((string) ($reserva->status_nome ?? $reserva->statusReserva?->nome ?? ''));
+                        $statusClass       = $reserva->status_card_class ?? match ($statusRaw) {
+                            'confirmada', 'ativa'         => 'rc-status--green',
+                            'cancelada'                   => 'rc-status--red',
+                            'criada', 'pendente',
+                            'pendente de pagamento',
+                            'pendente pagamento'          => 'rc-status--amber',
+                            'pendente de anÃ¡lise',
+                            'pendente analise'            => 'rc-status--slate',
                             default              => 'rc-status--slate',
                         };
                         $statusCor = strtolower(trim((string) ($reserva->statusReserva?->cor ?? 'secondary')));
@@ -83,9 +97,15 @@
                         $dataFim      = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y') : '-';
                         $horaFim      = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('H:i') : '';
                         $nfse         = $reserva->nfseAtual;
+                        $urlDetalhes  = $reserva->url_detalhes ?? ($isMotoristaApp
+                            ? route('reserva.minhas.motorista-app.show', $reserva->id)
+                            : route('reserva.minhas.show', $reserva->id));
+                        $origemLabel  = $reserva->tipo_label ?? ($isMotoristaApp ? 'Motorista APP' : 'Reservas');
+                        $codigoReserva = $reserva->codigo_exibicao ?? $reserva->codigo_reserva ?? ('#' . $reserva->id);
+                        $statusExibicao = $reserva->status_exibicao ?? ($reserva->statusReserva?->nome ?? 'Status');
                     @endphp
 
-                    <article class="rc {{ $statusClass }}" onclick="window.location='{{ route('reserva.minhas.show', $reserva->id) }}';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.minhas.show', $reserva->id) }}';}">
+                    <article class="rc {{ $statusClass }} {{ $isMotoristaApp ? 'rc--app' : '' }}" onclick="window.location='{{ $urlDetalhes }}';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ $urlDetalhes }}';}">
 
                         {{-- Accent top bar --}}
                         <div class="rc__accent"></div>
@@ -93,57 +113,107 @@
                         {{-- Header: avatar + nome + badges --}}
                         <div class="rc__head">
                             <div class="rc__head-info">
-                                <div class="rc__id" style="font-size:1.1rem;font-weight:800;">#{{ $reserva->id }}</div>
+                                <div class="rc__id" style="font-size:1.1rem;font-weight:800;">{{ $codigoReserva }}</div>
                                 <div class="rc__cliente">{{ $nomeCliente }}</div>
                                 @if(!empty(auth()->user()->email))
                                     <div class="rc__email">{{ auth()->user()->email }}</div>
                                 @endif
                             </div>
                             <div class="rc__badges">
-                                <span class="rc__badge {{ $pagamentoEfetuado ? 'rc__badge--green' : 'rc__badge--amber' }}">
-                                    {{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}
+                                @if($isMotoristaApp)
+                                    <span class="rc__badge rc__badge--app">
+                                        <i class="fas fa-redo-alt mr-1"></i> Motorista APP
+                                    </span>
+                                    @if($pagamentoPendente)
+                                    <span class="rc__badge rc__badge--alert" title="Há uma cobrança recorrente pendente">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i> Falta pagamento
+                                        </span>
+                                    @endif
+                                @else
+                                <span class="rc__badge {{ $pagamentoEfetuado ? 'rc__badge--green' : 'rc__badge--amber' }}" title="{{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}">
+                                    <i class="fas fa-redo-alt mr-1"></i>
+                                    Reservas
                                 </span>
+                                @endif
                                 <span class="badge badge-xs bg-{{ $statusCor }} rc__badge--status"
-                                      title="{{ $reserva->statusReserva?->descricao }}">
-                                    {{ $reserva->statusReserva?->nome ?? 'Status' }}
+                                title="{{ $reserva->statusReserva?->descricao }}">
+                                    {{ $statusExibicao }}
                                 </span>
                             </div>
                         </div>
 
-                        {{-- Rota compacta --}}
-                        <div class="rc__route">
-                            <div class="rc__stop">
-                                <div class="rc__stop-dot rc__stop-dot--a"></div>
-                                <div>
-                                    <div class="rc__stop-label">Retirada</div>
-                                    <div class="rc__stop-place">{{ $reserva->estacaoRetirada?->nome ?? '-' }}</div>
-                                    <div class="rc__stop-date">{{ $dataInicio }}@if($horaInicio) <span>{{ $horaInicio }}</span>@endif</div>
+                        @if($isMotoristaApp)
+                            <div class="rc__route rc__route--app">
+                                <div class="rc__stop">
+                                    <div class="rc__stop-dot rc__stop-dot--a"></div>
+                                    <div>
+                                        <div class="rc__stop-label">Retirada</div>
+                                        <div class="rc__stop-place">{{ $reserva->estacaoRetirada?->nome ?? 'Estação não informada' }}</div>
+                                        <div class="rc__stop-date">{{ $dataInicio }}@if($horaInicio) <span>{{ $horaInicio }}</span>@endif</div>
+                                    </div>
+                                </div>
+                                <div class="rc__route-mid">
+                                    <div class="rc__route-line"></div>
+                                    <div class="rc__route-pill {{ $pagamentoPendente ? 'bg-danger' : 'bg-success' }}">{{ $pagamentoPendente ? 'Pgto' : 'OK' }}</div>
+                                    <div class="rc__route-line"></div>
+                                </div>
+                                {{-- <div class="rc__stop rc__stop--right">
+                                    <div class="rc__stop-dot rc__stop-dot--b"></div>
+                                    <div>
+                                        <div class="rc__stop-label">Vigência</div>
+                                        <div class="rc__stop-place">{{ $reserva->modelos?->nome ?? 'Plano recorrente' }}</div>
+                                        <div class="rc__stop-date">{{ $dataFim }}@if($horaFim) <span>{{ $horaFim }}</span>@endif</div>
+                                    </div>
+                                </div> --}}
+                            </div>
+                        @else
+                            {{-- Rota compacta --}}
+                            <div class="rc__route">
+                                <div class="rc__stop">
+                                    <div class="rc__stop-dot rc__stop-dot--a"></div>
+                                    <div>
+                                        <div class="rc__stop-label">Retirada</div>
+                                        <div class="rc__stop-place">{{ $reserva->estacaoRetirada?->nome ?? '-' }}</div>
+                                        <div class="rc__stop-date">{{ $dataInicio }}@if($horaInicio) <span>{{ $horaInicio }}</span>@endif</div>
+                                    </div>
+                                </div>
+                                <div class="rc__route-mid">
+                                    <div class="rc__route-line"></div>
+                                    <div class="rc__route-pill">{{ $diasReserva }}d</div>
+                                    <div class="rc__route-line"></div>
+                                </div>
+                                <div class="rc__stop rc__stop--right">
+                                    <div class="rc__stop-dot rc__stop-dot--b"></div>
+                                    <div>
+                                        <div class="rc__stop-label">Devolução</div>
+                                        <div class="rc__stop-place">{{ $reserva->estacaoDevolucao?->nome ?? '-' }}</div>
+                                        <div class="rc__stop-date">{{ $dataFim }}@if($horaFim) <span>{{ $horaFim }}</span>@endif</div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="rc__route-mid">
-                                <div class="rc__route-line"></div>
-                                <div class="rc__route-pill">{{ $diasReserva }}d</div>
-                                <div class="rc__route-line"></div>
-                            </div>
-                            <div class="rc__stop rc__stop--right">
-                                <div class="rc__stop-dot rc__stop-dot--b"></div>
-                                <div>
-                                    <div class="rc__stop-label">Devolução</div>
-                                    <div class="rc__stop-place">{{ $reserva->estacaoDevolucao?->nome ?? '-' }}</div>
-                                    <div class="rc__stop-date">{{ $dataFim }}@if($horaFim) <span>{{ $horaFim }}</span>@endif</div>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
 
                         {{-- Footer: veiculo + valor + NFS-e --}}
                         <div class="rc__foot">
-                            <div class="rc__vehicle">
-                                <i class="fas fa-car"></i>
-                                <span>{{ $reserva->modelos?->nome ?? 'Modelo não definido' }}</span>
-                                @if(!empty($reserva->grupoFrota?->nome))
-                                    <span class="rc__group">{{ $reserva->grupoFrota->nome }}</span>
-                                @endif
-                            </div>
+                            @if($isMotoristaApp)
+                                <div class="rc__vehicle">
+                                      <div class="rc__stop-label">Vigência</div>
+                                        <span class="rc__group">{{ $reserva->modelos?->nome ?? 'Plano recorrente' }}</span>
+                                    {{-- <i class="fas fa-redo-alt"></i>
+                                    <span>{{ $origemLabel }}</span> --}}
+                                    {{-- @if(!empty($reserva->grupoFrota?->nome))
+                                        <span class="rc__group">{{ $reserva->grupoFrota->nome }}</span>
+                                    @endif --}}
+                                </div>
+                            @else
+                                <div class="rc__vehicle">
+                                    <i class="fas fa-car"></i>
+                                    <span>{{ $reserva->modelos?->nome ?? 'Modelo não definido' }}</span>
+                                    @if(!empty($reserva->grupoFrota?->nome))
+                                        <span class="rc__group">{{ $reserva->grupoFrota->nome }}</span>
+                                    @endif
+                                </div>
+                            @endif
                             <div class="rc__foot-right">
                                 @if($nfse && !empty($nfse->nfse_id))
                                     <a class="btn btn-xs btn-outline-primary" href="{{ route('nfse.download', ['id' => $nfse->id, 'tipo' => 'xml']) }}"
@@ -155,7 +225,7 @@
                                     <span>R$</span>
                                     <strong>{{ number_format($totalCalculado, 2, ',', '.') }}</strong>
                                 </div>
-                                <a href="{{ route('reserva.minhas.show', $reserva->id) }}" class="btn btn-xs btn-outline-primary" onclick="event.stopPropagation();">
+                                <a href="{{ $urlDetalhes }}" class="btn btn-xs btn-outline-primary" onclick="event.stopPropagation();">
                                     Ver detalhes
                                 </a>
                             </div>
@@ -163,19 +233,19 @@
 
                     </article>
                 @empty
-                    <div class="alert alert-info m-3">Você ainda não possui reservas.</div>
+                    <div class="alert alert-info m-3">VocÃª ainda nÃ£o possui reservas.</div>
                 @endforelse
             </div>
 
-            {{-- ── Table view ── --}}
+            {{-- â”€â”€ Table view â”€â”€ --}}
             <div class="reserva-table table-responsive">
                 <table class="table table-hover table-bordered table-sm">
                     <thead class="thead-light">
                         <tr>
                             <th class="text-center">#</th>
-                            <th>Veículo</th>
+                            <th>VeÃ­culo / Plano</th>
                             <th>Retirada</th>
-                            <th>Devolução</th>
+                            <th>DevoluÃ§Ã£o</th>
                             <th class="text-right">Total</th>
                             <th>Pagamento</th>
                             <th>Status</th>
@@ -186,13 +256,32 @@
                             @php
                                 $totalCalculado = $reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? $reserva->valor_total_tarifa_base ?? 0;
                                 $totalCalculado = (float) $totalCalculado;
-                                $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
+                                $pagamentoEfetuado = method_exists($reserva, 'isPagamentoEfetuado')
+                                    ? $reserva->isPagamentoEfetuado()
+                                    : in_array($reserva->pagamento_efetuado ?? false, [true, 1, '1', 'S', 's', 'sim', 'SIM'], true);
+                                $isMotoristaApp = ($reserva->origem_tipo ?? 'reserva') === 'motorista_app';
+                                $pagamentoPendente = $isMotoristaApp
+                                    ? (bool) ($reserva->pagamento_pendente ?? false)
+                                    : ! $pagamentoEfetuado;
+                                $urlDetalhes = $reserva->url_detalhes ?? ($isMotoristaApp
+                                    ? route('reserva.minhas.motorista-app.show', $reserva->id)
+                                    : route('reserva.minhas.show', $reserva->id));
+                                $statusCor = strtolower(trim((string) ($reserva->statusReserva?->cor ?? 'secondary')));
+                                if (!preg_match('/^[a-z0-9_-]+$/', $statusCor)) {
+                                    $statusCor = 'secondary';
+                                }
+                                $statusExibicao = $reserva->status_exibicao ?? ($reserva->statusReserva?->nome ?? '-');
                             @endphp
-                            <tr onclick="window.location='{{ route('reserva.minhas.show', $reserva->id) }}';" style="cursor:pointer" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.minhas.show', $reserva->id) }}';}">
-                                <td class="text-center">{{ $reserva->id }}</td>
+                            <tr onclick="window.location='{{ $urlDetalhes }}';" style="cursor:pointer" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ $urlDetalhes }}';}">
+                                <td class="text-center">{{ $reserva->codigo_exibicao ?? $reserva->codigo_reserva ?? ('#' . $reserva->id) }}</td>
                                 <td>
-                                    <strong>{{ $reserva->grupoFrota?->nome ?? '-' }}</strong><br>
-                                    <small>{{ $reserva->modelos?->nome ?? 'Modelo não definido' }}</small>
+                                    @if($isMotoristaApp)
+                                        <strong>{{ $reserva->modelos?->nome ?? 'Plano recorrente' }}</strong><br>
+                                        <small>{{ $reserva->estacaoRetirada?->nome ?? 'Estação não informada' }}</small>
+                                    @else
+                                        <strong>{{ $reserva->grupoFrota?->nome ?? '-' }}</strong><br>
+                                        <small>{{ $reserva->modelos?->nome ?? 'Modelo não definido' }}</small>
+                                    @endif
                                 </td>
                                 <td>
                                     <strong>{{ $reserva->estacaoRetirada?->nome ?? '-' }}</strong><br>
@@ -207,14 +296,22 @@
                                     <small>{{ (int) ($reserva->quantidade_dias ?? 0) }} dias</small>
                                 </td>
                                 <td>
-                                    <span class="badge badge-xs {{ $pagamentoEfetuado ? 'badge-success' : 'badge-warning' }}">
-                                        {{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}
-                                    </span>
+                                    @if($isMotoristaApp)
+                                        <span class="badge badge-xs badge-info" title="{{ $pagamentoPendente ? 'Pagamento pendente' : 'Em dia' }}">Motorista APP</span><br>
+                                        <small class="d-inline-flex align-items-center {{ $pagamentoPendente ? 'text-warning' : 'text-success' }}">
+                                            <i class="fas {{ $pagamentoPendente ? 'fa-exclamation-triangle' : 'fa-check-circle' }} mr-1"></i>
+                                            {{ $pagamentoPendente ? 'Pagamento pendente' : 'Em dia' }}
+                                        </small>
+                                    @else
+                                        <span class="badge badge-xs {{ $pagamentoEfetuado ? 'badge-success' : 'badge-warning' }}" title="{{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}">
+                                            Reservas
+                                        </span>
+                                    @endif
                                 </td>
                                 <td>
                                     <span class="badge badge-xs bg-{{ $statusCor }}"
                                           data-toggle="tooltip" title="{{ $reserva->statusReserva?->descricao }}">
-                                        {{ $reserva->statusReserva?->nome ?? '-' }}
+                                        {{ $statusExibicao }}
                                     </span>
                                 </td>
                             </tr>
@@ -258,14 +355,14 @@
                                     $badgeLabel = 'Vencida';
                                 } elseif ($vencimento && $diasParaVencer !== null && $diasParaVencer <= 3) {
                                     $badgeClass = 'badge-warning';
-                                    $badgeLabel = 'Vencimento próximo';
+                                    $badgeLabel = 'Vencimento prÃ³ximo';
                                 }
                             @endphp
                             <article class="multa-card" onclick="window.location='{{ route('reserva.minhas.multa.show', $multa->id) }}';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('reserva.minhas.multa.show', $multa->id) }}';}">
                                 <div class="multa-card__head">
                                     <div>
                                         <div class="multa-card__eyebrow">Multa #{{ $multa->id }}</div>
-                                        <div class="multa-card__title">{{ $multa->descricao ?? 'Multa de trânsito' }}</div>
+                                        <div class="multa-card__title">{{ $multa->descricao ?? 'Multa de trÃ¢nsito' }}</div>
                                     </div>
                                     <span class="badge {{ $badgeClass }}">{{ $badgeLabel }}</span>
                                 </div>
@@ -275,7 +372,7 @@
                                         <strong>#{{ $multa->reserva?->id ?? '-' }}</strong>
                                     </div>
                                     <div class="multa-card__row">
-                                        <span>Veículo</span>
+                                        <span>VeÃ­culo</span>
                                         <strong>{{ $multa->veiculo?->placa ?? $multa->placa_momento ?? '-' }}</strong>
                                     </div>
                                     <div class="multa-card__row">
@@ -290,9 +387,9 @@
                                 <div class="multa-card__foot">
                                     <div class="multa-card__meta">
                                         @if($estaPaga)
-                                            Pagamento concluído
+                                            Pagamento concluÃ­do
                                         @elseif($diasParaVencer !== null && $diasParaVencer < 0)
-                                            Vencida há {{ abs($diasParaVencer) }} dia(s)
+                                            Vencida hÃ¡ {{ abs($diasParaVencer) }} dia(s)
                                         @elseif($diasParaVencer !== null && $diasParaVencer <= 3)
                                             Vence em breve
                                         @else
@@ -311,15 +408,12 @@
         </div>
     </div>
 
-    <div class="d-flex justify-content-end mt-2">
-        {{ $reservas->links() }}
-    </div>
 @stop
 
 @section('js')
     <script>
         (function () {
-            // ── View toggle ──
+            // â”€â”€ View toggle â”€â”€
             const portalTabs = document.querySelectorAll('[data-portal-tab]');
             const portalPanels = document.querySelectorAll('[data-portal-panel]');
             const savedPortalTab = localStorage.getItem('minhasReservasPortalTab') || 'reservas';
@@ -352,7 +446,7 @@
                 buttons.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view)));
             }
 
-            // ── Toasts ──
+            // â”€â”€ Toasts â”€â”€
             const toastWrap      = document.getElementById('toastWrap');
             const successMessage = @json(session('success'));
             const errorMessages  = @json($errors->all());
@@ -382,14 +476,14 @@
     .portal-tabs .btn.active { color: #fff; }
     .portal-panel.d-none { display: none !important; }
 
-    /* ── toggle view ── */
+    /* â”€â”€ toggle view â”€â”€ */
     .reserva-view-toggle { display: flex; gap: 5px; margin-left: 12px; }
     .reserva-view-toggle .btn.active { background: #0f172a; color: #fff; border-color: #0f172a; }
 
     .reserva-index-body[data-view="table"] .reserva-cards { display: none; }
     .reserva-index-body[data-view="cards"] .reserva-table { display: none; }
 
-    /* ── grid ── */
+    /* â”€â”€ grid â”€â”€ */
     .reserva-cards {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
@@ -397,7 +491,7 @@
         padding: 10px 8px 16px;
     }
 
-    /* ══ CARD BASE ══ */
+    /* â•â• CARD BASE â•â• */
     .rc {
         position: relative;
         background: #fff;
@@ -439,6 +533,8 @@
     .rc__badge--cancelada  { background: rgba(239,68,68,.12);   color: #b91c1c; border: 1px solid rgba(239,68,68,.22); }
     .rc__badge--criada,
     .rc__badge--pendente   { background: rgba(245,158,11,.14);  color: #b45309; border: 1px solid rgba(245,158,11,.28); }
+    .rc__badge--app        { background: rgba(59,130,246,.12);   color: #1d4ed8; border: 1px solid rgba(59,130,246,.24); }
+    .rc__badge--alert      { background: rgba(245,158,11,.18);   color: #b45309; border: 1px solid rgba(245,158,11,.3); }
     .rc__badge--status     { border: 1px solid rgba(100,116,139,.2); }
 
     /* route */
@@ -471,6 +567,34 @@
     .rc__total { display: flex; align-items: baseline; gap: 3px; }
     .rc__total span   { font-size: .72rem; font-weight: 700; color: #64748b; }
     .rc__total strong { font-size: 1rem; font-weight: 800; color: #0f172a; letter-spacing: -.01em; }
+
+    .rc--app .rc__accent { background: linear-gradient(90deg, #3b82f6, #8b5cf6); }
+    .rc--app .rc__route,
+    .rc--app .rc__app {
+        background: linear-gradient(135deg, #f8fbff, #eef4ff);
+        border-bottom: 1px solid #e6edf9;
+    }
+    .rc__app { padding: 14px 16px; display: grid; gap: 10px; }
+    .rc__app-top { display: grid; gap: 4px; }
+    .rc__app-kicker { font-size: .64rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #64748b; }
+    .rc__app-plan { font-size: .92rem; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .rc__app-sub { display: flex; flex-wrap: wrap; gap: 10px; font-size: .76rem; font-weight: 700; color: #475569; }
+    .rc__app-sub i { color: #94a3b8; margin-right: 4px; }
+    .rc__app-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+    .rc__app-field {
+        display: grid;
+        gap: 3px;
+        padding: 9px 10px;
+        border: 1px solid #dbe7f7;
+        border-radius: 12px;
+        background: rgba(255,255,255,.75);
+    }
+    .rc__app-field span { font-size: .63rem; text-transform: uppercase; letter-spacing: .08em; font-weight: 800; color: #64748b; }
+    .rc__app-field strong { font-size: .84rem; font-weight: 800; color: #0f172a; }
+    .rc__app-field small { font-size: .72rem; font-weight: 600; color: #64748b; margin-left: 4px; }
+    .rc__app-field--wide { grid-column: 1 / -1; }
+    .rc__app-field .text-warning { color: #b45309 !important; }
+    .rc__app-field .text-success { color: #047857 !important; }
 
     .multa-cards {
         display: grid;

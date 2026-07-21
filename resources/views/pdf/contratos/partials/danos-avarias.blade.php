@@ -1,4 +1,21 @@
 <div class="section-title">Danos e Avarias</div>
+@php
+    $formatarTipoDano = $formatarTipoDano ?? function ($tipo) {
+        $map = [
+            'amolgadela_grave' => 'Amassado grave',
+            'amolgadela_leve' => 'Amassado leve',
+            'risco_leve' => 'Risco leve',
+            'risco_profundo' => 'Risco profundo',
+            'pneu_danificado' => 'Pneu danificado',
+            'vidro_trincado' => 'Vidro trincado',
+            'para_choque_danificado' => 'Para-choque danificado',
+        ];
+        if (blank($tipo)) {
+            return '-';
+        }
+        return $map[$tipo] ?? ucfirst(str_replace('_', ' ', (string) $tipo));
+    };
+@endphp
 @if(!empty($danos))
     <table class="detail-table">
         <thead>

@@ -723,6 +723,11 @@ class VeiculoService extends AbstractBaseService
         }
         if (!empty($filtros['modelo_id_exato'])) {
             $query->where('modelo_id', (int) $filtros['modelo_id_exato']);
+        } elseif (!empty($filtros['modelo_ids']) && is_array($filtros['modelo_ids'])) {
+            $modeloIds = array_values(array_filter(array_map('intval', $filtros['modelo_ids'])));
+            if (!empty($modeloIds)) {
+                $query->whereIn('modelo_id', $modeloIds);
+            }
         } elseif (!empty($filtros['modelo'])) {
             $query->whereHas('modelo', fn($q) => $q->where('nome', 'like', '%' . $filtros['modelo'] . '%'));
         }

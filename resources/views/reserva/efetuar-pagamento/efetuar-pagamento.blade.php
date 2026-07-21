@@ -1,6 +1,6 @@
 @extends('adminlte::page')
 
-@section('title', 'Pagamento da Reserva #' . $reserva->id)
+@section('title', $titulo ?? ('Pagamento da Reserva #' . $reserva->id))
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
@@ -10,7 +10,10 @@
 @php
     $moeda   = strtoupper((string) ($moedaPadrao ?? 'BRL'));
     $simbolo = $moeda === 'USD' ? '$' : ($moeda === 'EUR' ? 'EUR' : 'R$');
+
     $dias    = (int) ($reserva->quantidade_dias ?? 0);
+    $codigoExibicao = '#' . $reserva->id;
+    $clientePagamento = $reserva->usuario;
 
     $tarifaBase      = (float) ($reserva->tarifa_base ?? 0);
     $valorTarifaBase = $tarifaBase * $dias;
@@ -30,11 +33,23 @@
     $valorTotal    = max(0, $subtotal - $valorDesconto);
     $statusPagamentoAprovado = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
     $totalPagoAprovado = (float) ($totalPagoAprovado ?? ($reserva->transacoes ?? collect())
-        ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
+        ->filter(fn ($item) => (float) ($item->valor ?? 0)
             && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
         ->sum('valor'));
     $saldoPendente = (float) ($saldoPendente ?? max(0, $valorTotal - $totalPagoAprovado));
     $valorCobranca = (float) ($valorCobranca ?? $saldoPendente);
+    $manualPaymentAction = route('reserva.confirmarPagamentoDinheiro', $reserva->id);
+    $cardPaymentAction = route('reserva.processarPagamento', $reserva->id);
+    $backRoute = route('reserva.show', $reserva->id);
+    $adicionarMetodoPagamentoUrl = route('usuario.adicionarMetodoPagamento', $reserva->user_id);
+    $estacaoInicioNome = $reserva->estacaoRetirada?->nome ?? 'Local não informado';
+    $estacaoFimNome = $reserva->estacaoDevolucao?->nome ?? 'Local não informado';
+    $dataInicioPagamento = $reserva->data_inicio;
+    $dataFimPagamento = $reserva->data_fim;
+    $resumoPeriodoTexto = $reserva->grupoFrota?->nome ?? 'Grupo não informado';
+    if ($reserva->modelos?->nome) {
+        $resumoPeriodoTexto .= ' · ' . $reserva->modelos->nome;
+    }
 
     $gateway = $gatewayPadrao ?? 'stripe';
     $temMetodosPagamento = !empty($metodosPagamento) && count($metodosPagamento) > 0;
@@ -48,7 +63,7 @@
         <div class="ep-hero__left">
             <div class="ep-hero__icon"><i class="fas fa-credit-card"></i></div>
             <div>
-                <div class="ep-hero__eyebrow">RESERVA #{{ $reserva->id }}</div>
+                <div class="ep-hero__eyebrow">RESERVA {{ $codigoExibicao }}</div>
                 <h1 class="ep-hero__title">Faturamento e Pagamento</h1>
                 <p class="ep-hero__sub">Confirme os valores e processe o pagamento da reserva.</p>
             </div>
@@ -70,7 +85,7 @@
                 </div>
                 @endif
             </div>
-            <a href="{{ route('reserva.show', $reserva->id) }}" class="ep-hero__back">
+            <a href="{{ $backRoute }}" class="ep-hero__back">
                 <i class="fas fa-arrow-left mr-1"></i> Voltar à Reserva
             </a>
         </div>
@@ -108,13 +123,13 @@
                 <div class="ep-card__body">
                     <div class="ep-client">
                         <div class="ep-client__avatar">
-                            {{ strtoupper(substr($reserva->usuario?->nome ?? 'C', 0, 1)) }}
+                            {{ strtoupper(substr($clientePagamento?->nome ?? $clientePagamento?->name ?? 'C', 0, 1)) }}
                         </div>
                         <div>
-                            <div class="ep-client__name">{{ $reserva->usuario?->nome ?? '—' }}</div>
-                            <div class="ep-client__info">{{ $reserva->usuario?->email ?? '—' }}</div>
-                            @if(!empty($reserva->usuario?->telefone))
-                                <div class="ep-client__info">{{ $reserva->usuario->telefone }}</div>
+                            <div class="ep-client__name">{{ $clientePagamento?->nome ?? $clientePagamento?->name ?? '—' }}</div>
+                            <div class="ep-client__info">{{ $clientePagamento?->email ?? '—' }}</div>
+                            @if(!empty($clientePagamento?->telefone))
+                                <div class="ep-client__info">{{ $clientePagamento->telefone }}</div>
                             @endif
                         </div>
                     </div>
@@ -136,27 +151,65 @@
                             <div class="ep-period__label">RETIRADA</div>
                             <div class="ep-period__station">
                                 <i class="fas fa-map-marker-alt text-success mr-1"></i>
-                                {{ $reserva->estacaoRetirada?->nome ?? 'Local não informado' }}
+                                {{ $estacaoInicioNome }}
                             </div>
-                            <div class="ep-period__date">{{ \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') }}</div>
+                            <div class="ep-period__date">{{ \Carbon\Carbon::parse($dataInicioPagamento)->format('d/m/Y H:i') }}</div>
                         </div>
                         <div class="col-sm-6 mb-2">
                             <div class="ep-period__label">DEVOLUÇÃO</div>
                             <div class="ep-period__station">
                                 <i class="fas fa-map-marker-alt text-danger mr-1"></i>
-                                {{ $reserva->estacaoDevolucao?->nome ?? 'Local não informado' }}
+                                {{ $estacaoFimNome }}
                             </div>
-                            <div class="ep-period__date">{{ \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') }}</div>
+                            <div class="ep-period__date">{{ \Carbon\Carbon::parse($dataFimPagamento)->format('d/m/Y H:i') }}</div>
                         </div>
                     </div>
                     <div class="ep-period__dias">
                         <i class="fas fa-moon mr-1 text-primary"></i>
                         <strong>{{ $dias }}</strong> {{ $dias === 1 ? 'diária' : 'diárias' }}
-                        &nbsp;·&nbsp; {{ $reserva->grupoFrota?->nome ?? 'Grupo não informado' }}
-                        @if($reserva->modelos?->nome)
-                            &nbsp;·&nbsp; {{ $reserva->modelos->nome }}
-                        @endif
+                        &nbsp;·&nbsp; {{ $resumoPeriodoTexto }}
                     </div>
+                </div>
+            </div>
+
+            <div class="ep-card mb-3">
+                <div class="ep-card__header ep-card__header--orange">
+                    <div class="ep-card__icon ep-card__icon--orange"><i class="fas fa-cash-register"></i></div>
+                    <div>
+                        <div class="ep-card__title">Registrar pagamento manual</div>
+                        <div class="ep-card__sub">Uso administrativo para pagamento presencial ou externo</div>
+                    </div>
+                </div>
+                <div class="ep-card__body">
+                    <div class="ep-tip mb-3">
+                        <i class="fas fa-info-circle text-primary mr-2"></i>
+                        Use esta opcao quando o cliente pagar na empresa ou por um meio externo. O valor informado sera inserido no historico da reserva.
+                    </div>
+                    <form id="manual-payment-form" action="{{ $manualPaymentAction }}" method="POST">
+                        @csrf
+                        <div class="form-group">
+                            <label class="ep-form-label"><i class="fas fa-wallet mr-1"></i> Metodo de pagamento</label>
+                            <select name="metodo_pagamento" class="form-control form-control-sm" required>
+                                <option value="dinheiro">Dinheiro</option>
+                                <option value="pix">PIX</option>
+                                <option value="cartao_credito">Cartao de credito presencial</option>
+                                <option value="cartao_debito">Cartao de debito presencial</option>
+                                <option value="boleto">Boleto</option>
+                                <option value="transferencia">Transferencia</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="ep-form-label"><i class="fas fa-dollar-sign mr-1"></i> Valor recebido</label>
+                            <div class="input-group">
+                                <div class="input-group-prepend"><span class="input-group-text">{{ $simbolo }}</span></div>
+                                <input type="number" name="valor" class="form-control form-control-sm" step="0.01" min="0.01" max="{{ $valorCobranca }}" value="{{ $valorCobranca }}" required>
+                                <div class="input-group-append"><span class="input-group-text text-muted" style="font-size:11px;">max. {{ $simbolo }} {{ number_format($valorCobranca, 2, ',', '.') }}</span></div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-outline-success btn-block">
+                            <i class="fas fa-check mr-2"></i> Registrar pagamento manual
+                        </button>
+                    </form>
                 </div>
             </div>
 
@@ -178,7 +231,7 @@
                         O saldo abaixo será cobrado no método selecionado. Após confirmar, o sistema registrará a transação e atualizará o status da reserva.
                     </div>
 
-                    <form id="payment-form" action="{{ route('reserva.processarPagamento', $reserva->id) }}" method="POST">
+                    <form id="payment-form" action="{{ $cardPaymentAction }}" method="POST">
                         @csrf
 
                         @if($gateway === 'stripe')
@@ -437,6 +490,7 @@
 }
 .ep-card__header--blue  { background: linear-gradient(120deg,#f0f4ff,#e8f0fe); }
 .ep-card__header--green { background: linear-gradient(120deg,#edfff4,#e8f9f0); }
+.ep-card__header--orange { background: linear-gradient(120deg,#fff7ed,#ffedd5); }
 .ep-card__header--gray  { background: #f8f9fa; }
 .ep-card__header--dark  { background: linear-gradient(120deg,#f4f6f9,#eef0f4); }
 .ep-card__icon {
@@ -445,6 +499,7 @@
     font-size: 1.1rem; color: #4b80ff; flex-shrink: 0;
 }
 .ep-card__icon--green { background: rgba(40,167,69,.12); color: #28a745; }
+.ep-card__icon--orange { background: rgba(249,115,22,.12); color: #ea580c; }
 .ep-card__icon--gray  { background: rgba(108,117,125,.1); color: #6c757d; }
 .ep-card__icon--dark  { background: rgba(33,54,79,.1); color: #21364f; }
 .ep-card__title { font-size: .9rem; font-weight: 700; color: #21364f; }
@@ -574,8 +629,15 @@
     const openModal  = document.getElementById('openMetodoModal');
     const saveBtn    = document.getElementById('btnSalvarMetodo');
     const cardErrors = document.getElementById('card-errors');
+    const metodoModal = document.getElementById('modalMetodoPagamento');
     const csrf       = @json(csrf_token());
     const temMetodosIniciais = @json($temMetodosPagamento);
+
+    function liberarFocoMetodoModal() {
+        if (metodoModal && document.activeElement && metodoModal.contains(document.activeElement)) {
+            document.activeElement.blur();
+        }
+    }
 
     function atualizarBotaoPagamento() {
         if (!submitBtn) return;
@@ -610,6 +672,15 @@
         openModal.addEventListener('click', function () { $('#modalMetodoPagamento').modal('show'); });
     }
 
+    if (metodoModal) {
+        $('#modalMetodoPagamento').on('hide.bs.modal', liberarFocoMetodoModal);
+        $('#modalMetodoPagamento').on('hidden.bs.modal', function () {
+            if (openModal && document.body.contains(openModal)) {
+                openModal.focus({ preventScroll: true });
+            }
+        });
+    }
+
     if (!stripeKey) return;
 
     const stripe   = Stripe(stripeKey);
@@ -632,7 +703,7 @@
             }
 
             try {
-                const resp = await fetch(@json(route('usuario.adicionarMetodoPagamento', $reserva->user_id)), {
+                const resp = await fetch(@json($adicionarMetodoPagamentoUrl), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrf },
                     body: JSON.stringify({ stripeToken: result.token.id })
@@ -651,6 +722,7 @@
                     if (paySelect.options.length) paySelect.value = paySelect.options[paySelect.options.length - 1].value;
                     atualizarBotaoPagamento();
                 }
+                liberarFocoMetodoModal();
                 $('#modalMetodoPagamento').modal('hide');
             } catch (err) {
                 if (cardErrors) cardErrors.textContent = err.message;
@@ -674,6 +746,46 @@
         saveBtn.disabled = true;
         saveBtn.title = 'Configure a chave pública do Stripe para habilitar este recurso.';
     }
+})();
+</script>
+
+<script>
+(function () {
+    const form = document.getElementById('manual-payment-form');
+    if (!form) return;
+
+    form.addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const btn = form.querySelector('button[type="submit"]');
+        const original = btn ? btn.innerHTML : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm mr-2"></span> Registrando...';
+        }
+
+        try {
+            const resp = await fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': form.querySelector('[name="_token"]').value
+                },
+                body: new FormData(form)
+            });
+            const data = await resp.json();
+            if (!resp.ok || data.error) {
+                throw new Error(data.error || 'Nao foi possivel registrar o pagamento.');
+            }
+            window.location.reload();
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
+        }
+    });
 })();
 </script>
 

@@ -45,6 +45,7 @@ class Empresa extends Model
         'aluguel_app_exigir_aprovacao_documentos',
         'aluguel_app_documentos_obrigatorios',
         'aluguel_app_documento_adicional_label',
+        'aluguel_app_campos_personalizados',
         'gateway_pagamento',
         'gateway_customer_id',
         'moeda_pagamento',
@@ -85,6 +86,7 @@ class Empresa extends Model
         'site_apresentacao_cores' => 'array',
         'site_apresentacao_imagens_config' => 'array',
         'aluguel_app_documentos_obrigatorios' => 'array',
+        'aluguel_app_campos_personalizados' => 'array',
         'nfse_ultima_importacao_em' => 'datetime',
     ];
 

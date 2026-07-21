@@ -42,10 +42,17 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $camposPersonalizados = $this->input('aluguel_app_campos_personalizados');
+        if (is_string($camposPersonalizados)) {
+            $decoded = json_decode($camposPersonalizados, true);
+            $camposPersonalizados = is_array($decoded) ? $decoded : [];
+        }
+
         $payload = [
             'dominio' => DomainNormalizer::normalize($this->input('dominio')),
             'site_apresentacao_modelo' => $this->normalizeModelo($this->input('site_apresentacao_modelo')),
             'site_apresentacao_botao_url' => $this->normalizeButtonUrl($this->input('site_apresentacao_botao_url')),
+            'aluguel_app_campos_personalizados' => $camposPersonalizados,
         ];
 
         $imageFields = [
@@ -101,6 +108,21 @@ class UpdateEmpresaSiteApresentacaoRequest extends FormRequest
                 'nenhum',
             ])],
             'aluguel_app_documento_adicional_label' => ['nullable', 'string', 'max:120'],
+            'aluguel_app_campos_personalizados' => ['nullable', 'array'],
+            'aluguel_app_campos_personalizados.*.key' => ['required_with:aluguel_app_campos_personalizados', 'string', 'max:80'],
+            'aluguel_app_campos_personalizados.*.label' => ['required_with:aluguel_app_campos_personalizados', 'string', 'max:120'],
+            'aluguel_app_campos_personalizados.*.type' => ['required_with:aluguel_app_campos_personalizados', Rule::in(['arquivo', 'texto', 'texto_longo', 'lista', 'data'])],
+            'aluguel_app_campos_personalizados.*.selected' => ['nullable', 'boolean'],
+            'aluguel_app_campos_personalizados.*.obrigatorio' => ['nullable', 'boolean'],
+            'aluguel_app_campos_personalizados.*.ordem' => ['nullable', 'integer', 'min:1'],
+            'aluguel_app_campos_personalizados.*.options' => ['nullable', 'array'],
+            'aluguel_app_campos_personalizados.*.options.*' => ['nullable', 'string', 'max:120'],
+            'aluguel_app_campos_personalizados.*.multiple' => ['nullable', 'boolean'],
+            'aluguel_app_campos_personalizados.*.condicao' => ['nullable', 'array'],
+            'aluguel_app_campos_personalizados.*.condicao.campo_key' => ['nullable', 'string', 'max:80'],
+            'aluguel_app_campos_personalizados.*.condicao.operador' => ['nullable', Rule::in(['igual', 'diferente', 'preenchido', 'vazio'])],
+            'aluguel_app_campos_personalizados.*.condicao.valor' => ['nullable'],
+            'aluguel_app_campos_personalizados.*.condicao.valor.*' => ['nullable', 'string', 'max:120'],
             'site_apresentacao_modelo' => ['nullable', Rule::in(['modelo_1', 'modelo_2', 'modelo_3'])],
             'site_apresentacao_titulo' => ['nullable', 'string', 'max:120'],
             'site_apresentacao_subtitulo' => ['nullable', 'string', 'max:180'],

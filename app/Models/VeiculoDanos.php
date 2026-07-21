@@ -4,11 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VeiculoDanos extends Model
 {
     use HasFactory;
+
     protected $table = 'veiculo_danos';
+
     protected $fillable = [
         'categoria_id',
         'localizacao_problema',
@@ -19,45 +23,59 @@ class VeiculoDanos extends Model
         'quilometragem_veiculo',
         'observacoes',
         'veiculo_id',
-        'reserva_id',
+        'reserva_codigo_id',
         'contrato_id',
         'correcao_descricao',
         'correcao_data',
         'correcao_user_id',
     ];
-    public $timestamps = true;
 
     protected $casts = [
         'correcao_data' => 'datetime',
+        'custo_estimado' => 'decimal:2',
+        'quilometragem_veiculo' => 'integer',
     ];
 
-    public function dano()
+    public function dano(): BelongsTo
     {
         return $this->belongsTo(Dano::class, 'dano_id');
     }
-    public function veiculo()
+
+    public function veiculo(): BelongsTo
     {
         return $this->belongsTo(Veiculo::class, 'veiculo_id');
     }
 
-    public function reserva()
+    public function reservaCodigo(): BelongsTo
     {
-        return $this->belongsTo(Reserva::class, 'reserva_id');
+        return $this->belongsTo(
+            ReservaCodigo::class,
+            'reserva_codigo_id'
+        );
     }
 
-    public function categoria()
+    public function categoria(): BelongsTo
     {
-        return $this->belongsTo(CategoriaDano::class, 'categoria');
+        return $this->belongsTo(
+            CategoriaDano::class,
+            'categoria_id'
+        );
     }
 
-    public function imagem()
+    public function imagens(): HasMany
     {
-        return $this->hasMany(VeiculoDanosImagem::class, 'dano_veiculo_id');
+        return $this->hasMany(
+            VeiculoDanosImagem::class,
+            'dano_veiculo_id'
+        );
     }
 
-    public function usuarioCorrecao()
+    public function usuarioCorrecao(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'correcao_user_id');
+        return $this->belongsTo(
+            User::class,
+            'correcao_user_id'
+        );
     }
 
     public function scopeSemCorrecao($query)

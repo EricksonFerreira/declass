@@ -265,7 +265,7 @@
             @endif
         </div>
         <div class="doc-header__info">
-            <div class="doc-header__title">Contrato de Aluguel</div>
+            <div class="doc-header__title">Contrato de Aluguel3</div>
             <div class="doc-header__subtitle">{{ $data['documento']['empresa']['nome'] ?? 'Locadora' }} &bull; Condições Particulares</div>
             <div class="doc-header__num">{{ $data['contrato']['numero'] }}</div>
         </div>

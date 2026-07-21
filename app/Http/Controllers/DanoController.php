@@ -185,15 +185,19 @@ class DanoController extends BaseController implements FiltroInterface, Resource
         ];
     }
 
-    public function obterDanosExistentes(DanosExistentesRequest $request){
-        $dados = $request->validated();
-        $danos = $this->veiculoDanoService->obterDanosPorVeiculoExcetoReserva($dados['veiculo_id'], $dados['reserva_id']);
-        return response()->json($danos);
+    public function obterDanosExistentes(DanosExistentesRequest $request, \App\Actions\Reserva\Checkout\Dano\ObterExistentes\ObterDanosExistentesAction $action)
+    {
+        $veiculoId = (int) $request->input('veiculo_id');
+        $codigo = $request->getCodigo();
+
+        return $action->handle($veiculoId, $codigo);
     }
 
-    public function obterDanosDetectados(DanosDetectadosRequest $request){
-        $dados = $request->validated();
-        $danos = $this->veiculoDanoService->obterDanosPorVeiculoEReserva($dados['veiculo_id'], $dados['reserva_id']);
-        return response()->json($danos);
+    public function obterDanosDetectados(DanosDetectadosRequest $request, \App\Actions\Reserva\Checkout\Dano\ObterDetectados\ObterDanosDetectadosAction $action)
+    {
+        $veiculoId = (int) $request->input('veiculo_id');
+        $codigo = $request->getCodigo();
+
+        return $action->handle($veiculoId, $codigo);
     }
 }

@@ -53,7 +53,7 @@
                         </div>
                     </div>
 
-                    <form method="POST" action="{{ route('reserva.avarias.cobrar', $reserva->id) }}" id="formCobrancaAvaria">
+                    <form method="POST" action="{{ route('reserva.avarias.cobrar', $reserva->codigoReserva->codigo) }}" id="formCobrancaAvaria">
                         @csrf
 
                         <div class="mb-3">
@@ -144,7 +144,7 @@
 
                         <div class="alert alert-warning">
                             <strong>Atenção:</strong> cobranças off-session podem falhar se o cartão exigir autenticação (3DS).
-                            Nesse caso, registre como manual e cobre o cliente por um link/checkout.
+                            Nesse caso, registre como manual e cobre diretamente com o cliente.
                         </div>
 
                         <button type="submit" class="btn btn-warning" id="btnCobrar">

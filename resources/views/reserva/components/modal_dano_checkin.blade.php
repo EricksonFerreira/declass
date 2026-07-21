@@ -603,6 +603,12 @@
 
 <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
 <script>
+    function extrairDanoIdSelecionado() {
+        const rawValue = document.getElementById('danos')?.value ?? '';
+        const parsedValue = Number.parseInt(rawValue, 10);
+        return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
+    }
+
     document.getElementById('form_dano').addEventListener('submit', function (event) {
         event.preventDefault();
         const campos = document.querySelectorAll('#form_dano input[required], #form_dano select[required], #form_dano textarea[required]');
@@ -628,7 +634,7 @@
             categoria:           document.getElementById('categoria_problema')?.value || null,
             local_dano:          document.getElementById('informacao_dano')?.innerHTML.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || null,
             localizacao_problema: document.getElementById('localizacao_problema')?.value || null,
-            dano:                document.getElementById('danos')?.value || null,
+            dano:                extrairDanoIdSelecionado(),
             tipo:                document.querySelector('input[name="tipo"]:checked')?.value || null,
             custo_estimado:      custoNumerico,
             quilometragem:       document.getElementById('quilometragem_dano')?.value || null,
@@ -637,8 +643,8 @@
             veiculo:             document.getElementById('veiculo')?.value || null,
         };
 
-        const reservaId = document.getElementById('reserva_id').value;
-        const url = "{{ route('reserva.adicionarDanoVeiculo', ':id') }}".replace(':id', reservaId);
+        const codigo = document.getElementById('codigo').value;
+        const url = "{{ route('reserva.adicionarDanoVeiculo', ':codigo') }}".replace(':codigo', codigo);
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
         const formData = new FormData();
@@ -736,7 +742,7 @@
                 _local: true,
                 categoria_id: document.getElementById('categoria_problema')?.value || null,
                 localizacao_problema: document.getElementById('localizacao_problema')?.value || null,
-                dano_id: document.getElementById('danos')?.value || null,
+                dano_id: extrairDanoIdSelecionado(),
                 tipo_dano: document.querySelector('input[name="tipo"]:checked')?.value || 'ausente',
                 local_dano: document.getElementById('informacao_dano')?.innerHTML.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase() || null,
                 custo_estimado: parseFloat(custoRaw.replace(',', '.')) || 0,
@@ -813,7 +819,7 @@
                 if (!response.length) {
                     select.innerHTML = '<option disabled selected>Nenhum dano encontrado</option>';
                 } else {
-                    select.innerHTML = '<option disabled selected>Selecione um dano</option>';
+                    select.innerHTML = '<option value="" disabled selected>Selecione um dano</option>';
                     response.forEach(d => {
                         const opt = document.createElement('option');
                         opt.value = d.id;

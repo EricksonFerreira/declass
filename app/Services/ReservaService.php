@@ -7,6 +7,7 @@ use App\Exceptions\ReservaJobException;
 use App\Models\Reserva;
 use App\Models\Empresa;
 use App\Traits\LogTrait;
+use App\Services\ReservaCodigoService;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -101,11 +102,21 @@ class ReservaService extends AbstractBaseService
                 $dadosReserva['origem_cadastro'] = $this->resolverOrigemCadastroReserva($data);
             }
 
+            $empresaId = $this->currentEmpresaId();
+
             // Faltou hora inicio e hora fim
             $reserva = $this->model->create($dadosReserva);
             if($reserva == null) {
                 return redirect()->back()->with('error', 'Erro ao criar reserva');
             }
+
+            app(ReservaCodigoService::class)->sincronizar($reserva, 'reserva', [
+                'empresa_id' => $empresaId,
+                'status_label' => 'Pendente',
+                'data_inicio' => $dadosReserva['data_inicio'] ?? null,
+                'data_fim' => $dadosReserva['data_fim'] ?? null,
+                'valor_total' => $dadosReserva['valor_total_final'] ?? null,
+            ]);
 
             // Criar a reserva
             // $reserva = $this->model->create($data);
@@ -1074,16 +1085,19 @@ class ReservaService extends AbstractBaseService
     public function checkInRealizado($reserva_id,$veiculo_id)
     {
         $reserva = $this->model->find($reserva_id);
-        $reserva->status_reserva_id = 4; // Em uso
-        $reserva->veiculo_id = $veiculo_id;
-        $reserva->save();
+        if ($reserva) {
+            $reserva->status_reserva_id = 4; // Em uso
+            $reserva->veiculo_id = $veiculo_id;
+            $reserva->save();
+        }
     }
 
     public function checkOutRealizado($reserva_id)
     {
         $reserva = $this->model->find($reserva_id);
-
-        $reserva->status_reserva_id = \App\Enums\StatusReservaEnum::Checkout->value; // 5 = Concluída
-        $reserva->save();
+        if ($reserva) {
+            $reserva->status_reserva_id = \App\Enums\StatusReservaEnum::Checkout->value; // 5 = Concluída
+            $reserva->save();
+        }
     }
 }

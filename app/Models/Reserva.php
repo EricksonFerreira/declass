@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\StatusReservaEnum;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Reserva extends Model
 {
@@ -85,7 +86,11 @@ class Reserva extends Model
 
     public function podeFazerCancelamento(): bool
     {
-        return in_array($this->status_reserva_id, [
+        if ($this->contratoCheckin()->exists()) {
+            return false;
+        }
+
+        return in_array((int) $this->status_reserva_id, [
             StatusReservaEnum::Pendente->value,
             StatusReservaEnum::Confirmada->value,
         ], true);
@@ -93,12 +98,12 @@ class Reserva extends Model
 
     public function podeCancelarComoCliente(): bool
     {
-        if (!$this->podeFazerCancelamento()) {
+        if (! $this->podeFazerCancelamento()) {
             return false;
         }
 
         $baseCriacao = $this->created_at ?? $this->data_criacao ?? null;
-        if (!$baseCriacao) {
+        if (! $baseCriacao) {
             return false;
         }
 
@@ -107,7 +112,7 @@ class Reserva extends Model
 
     public function podeResponderSatisfacao(): bool
     {
-        return $this->contratoCheckout()->exists() && !$this->satisfacao()->exists();
+        return $this->contratoCheckout()->exists() && ! $this->satisfacao()->exists();
     }
 
     public function podeFazerCheckout(): bool
@@ -180,14 +185,32 @@ class Reserva extends Model
         return $this->hasOne(Calcao::class, 'reserva_id');
     }
 
-    public function veiculoDano()
+    public function veiculoDanos(): HasManyThrough
     {
-        return $this->hasMany(VeiculoDanos::class, 'reserva_id')->orderByDesc('id');
+        return $this->hasManyThrough(
+            VeiculoDanos::class,
+            ReservaCodigo::class,
+
+            'reserva_id',        // reserva_codigos.reserva_id
+            'reserva_codigo_id', // veiculo_danos.reserva_codigo_id
+
+            'id',                // reservas.id
+            'id',                // reserva_codigos.id
+        )->orderByDesc('veiculo_danos.id');
     }
 
-    public function avariaCobrancas()
+    public function avariaCobrancas(): HasManyThrough
     {
-        return $this->hasMany(AvariaCobranca::class, 'reserva_id')->orderByDesc('id');
+        return $this->hasManyThrough(
+            AvariaCobranca::class,
+            ReservaCodigo::class,
+
+            'reserva_id',        // reserva_codigos.reserva_id
+            'reserva_codigo_id', // avaria_cobrancas.reserva_codigo_id
+
+            'id',                // reservas.id
+            'id',                // reserva_codigos.id
+        )->orderByDesc('avaria_cobrancas.id');
     }
 
     public function multas()
@@ -215,5 +238,10 @@ class Reserva extends Model
     public function contratoCheckout()
     {
         return $this->hasOne(ContratoCheckout::class, 'reserva_id');
+    }
+
+    public function codigoReserva()
+    {
+        return $this->hasOne(ReservaCodigo::class, 'reserva_id');
     }
 }

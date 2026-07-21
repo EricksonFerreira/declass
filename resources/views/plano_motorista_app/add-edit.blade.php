@@ -15,8 +15,8 @@
     @endphp
 
     <div class="col-xl-11 col-12 px-0">
-        <div class="card card-plano-motorista-app shadow-sm border-0">
-            <div class="card-header card-header-plano-motorista-app border-0">
+        <div class="card card-veiculo shadow-sm border-0">
+            <div class="card-header card-header-veiculo border-0">
                 <div>
                     <h4 class="mb-1">{{ $titulo }}</h4>
                     <p class="mb-0 text-muted">Configure o plano especial para motorista de app com o mesmo padrão visual do veículo.</p>
@@ -24,7 +24,7 @@
             </div>
 
             <div class="card-body p-4">
-                <div class="pm-wizard-steps mb-4" id="wizardSteps">
+                <div class="vc-wizard-steps mb-4" id="wizardSteps">
                     @php
                         $steps = [
                             1 => ['icon' => 'fa-info-circle', 'label' => 'Geral'],
@@ -33,34 +33,34 @@
                         ];
                     @endphp
                     @foreach($steps as $n => $s)
-                        <button type="button" class="pm-step-btn {{ $startStep === $n ? 'active' : '' }}" data-step="{{ $n }}">
-                            <span class="pm-step-circle"><i class="fas {{ $s['icon'] }}"></i></span>
-                            <span class="pm-step-label">{{ $s['label'] }}</span>
+                        <button type="button" class="vc-step-btn {{ $startStep === $n ? 'active' : '' }}" data-step="{{ $n }}">
+                            <span class="vc-step-circle"><i class="fas {{ $s['icon'] }}"></i></span>
+                            <span class="vc-step-label">{{ $s['label'] }}</span>
                         </button>
                         @if(!$loop->last)
-                            <div class="pm-step-line"></div>
+                            <div class="vc-step-line"></div>
                         @endif
                     @endforeach
                 </div>
 
                 <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" enctype="multipart/form-data">
-                    <div class="pm-step-pane {{ $startStep === 1 ? '' : 'd-none' }}" data-pane="1">
-                        <div class="plano-section-title"><i class="fas fa-info-circle mr-1"></i>Informações Básicas</div>
+                    <div class="vc-step-pane {{ $startStep === 1 ? '' : 'd-none' }}" data-pane="1">
+                        <div class="veiculo-section-title"><i class="fas fa-info-circle mr-1"></i>Informações Básicas</div>
                         <div class="form-row">
                             <div class="col-lg-6 col-md-12">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="nome">Nome</label>
                                     <input type="text" class="form-control form-control-sm" id="nome" name="nome" value="{{ old('nome', $plano->nome ?? '') }}" required>
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="valor_periodo">Valor por período</label>
                                     <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="valor_periodo" name="valor_periodo" value="{{ old('valor_periodo', $plano->valor_periodo ?? '') }}" required>
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="periodo">Período</label>
                                     <select class="form-control form-control-sm" id="periodo" name="periodo" required>
                                         <option value="">Selecione...</option>
@@ -71,7 +71,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="ativo">Status</label>
                                     <select class="form-control form-control-sm" id="ativo" name="ativo" required>
                                         <option value="S" {{ old('ativo', $plano->ativo ?? 'S') === 'S' ? 'selected' : '' }}>Ativo</option>
@@ -80,7 +80,7 @@
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="ordem">Ordem</label>
                                     <input type="number" min="0" class="form-control form-control-sm" id="ordem" name="ordem" value="{{ old('ordem', $plano->ordem ?? 0) }}">
                                 </div>
@@ -88,11 +88,11 @@
                         </div>
                     </div>
 
-                    <div class="pm-step-pane d-none" data-pane="2">
-                        <div class="plano-section-title"><i class="fas fa-road mr-1"></i>Km e Caução</div>
+                    <div class="vc-step-pane d-none" data-pane="2">
+                        <div class="veiculo-section-title"><i class="fas fa-road mr-1"></i>Km e Caução</div>
                         <div class="form-row">
                             <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="km_tipo">Km</label>
                                     <select class="form-control form-control-sm" id="km_tipo" name="km_tipo" required>
                                         <option value="livre" {{ old('km_tipo', $plano->km_tipo ?? 'livre') === 'livre' ? 'selected' : '' }}>Livre</option>
@@ -101,13 +101,13 @@
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="km_por_periodo">Km por período</label>
                                     <input type="number" min="1" class="form-control form-control-sm" id="km_por_periodo" name="km_por_periodo" value="{{ old('km_por_periodo', $plano->km_por_periodo ?? '') }}" placeholder="Ex: 300">
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-plano-motorista-app">
+                                <div class="form-group form-group-veiculo">
                                     <label for="calcao">Calção</label>
                                     <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="calcao" name="calcao" value="{{ old('calcao', $plano->calcao ?? '') }}" placeholder="0,00">
                                 </div>
@@ -115,10 +115,10 @@
                         </div>
                     </div>
 
-                    <div class="pm-step-pane d-none" data-pane="3">
-                        <div class="plano-section-title"><i class="fas fa-puzzle-piece mr-1"></i>Opcionais ativos</div>
+                    <div class="vc-step-pane d-none" data-pane="3">
+                        <div class="veiculo-section-title"><i class="fas fa-puzzle-piece mr-1"></i>Opcionais ativos</div>
                         <p class="text-muted small mb-3">Selecione os opcionais ativos que devem aparecer no plano de motorista de app. Os opcionais já vinculados, mesmo inativos, continuam visíveis em cinza.</p>
-                        <div class="form-group form-group-plano-motorista-app mb-3">
+                        <div class="form-group form-group-veiculo mb-3">
                             <label for="filter_opcionais">Filtrar opcionais</label>
                             <input type="text" class="form-control form-control-sm" id="filter_opcionais" placeholder="Digite o nome ou tipo do opcional">
                         </div>
@@ -155,15 +155,15 @@
                         </div>
                     </div>
 
-                    <div class="pm-wizard-nav mt-4 d-flex justify-content-between align-items-center">
-                        <button type="button" class="btn btn-sm pm-nav-btn pm-nav-btn--back d-none" id="btnPrev">
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <button type="button" class="btn btn-secondary btn-sm vc-nav-btn vc-nav-btn--back d-none" id="btnPrev">
                             <i class="fas fa-chevron-left mr-1"></i> Anterior
                         </button>
                         <div class="d-flex align-items-center" style="gap:8px;">
-                            <button type="button" class="btn btn-sm pm-nav-btn pm-nav-btn--next" id="btnNext">
+                            <button type="button" class="btn btn-primary btn-sm vc-nav-btn vc-nav-btn--next" id="btnNext">
                                 Próximo <i class="fas fa-chevron-right ml-1"></i>
                             </button>
-                            <button type="submit" class="btn btn-sm pm-nav-btn pm-nav-btn--save d-none" id="btnSalvar">
+                            <button type="submit" class="btn btn-success btn-sm vc-nav-btn vc-nav-btn--save d-none" id="btnSalvar">
                                 <i class="fas fa-save mr-1"></i> Salvar alterações
                             </button>
                         </div>
@@ -176,22 +176,22 @@
 
 @section('css')
     <style>
-        .card-plano-motorista-app {
+        .card-veiculo {
             border-radius: 14px;
             overflow: hidden;
         }
 
-        .card-header-plano-motorista-app {
+        .card-header-veiculo {
             background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%);
             padding: 1.1rem 1.5rem;
         }
 
-        .card-header-plano-motorista-app h4 {
+        .card-header-veiculo h4 {
             color: #0f2740;
             font-weight: 700;
         }
 
-        .pm-wizard-steps {
+        .vc-wizard-steps {
             display: flex;
             align-items: center;
             gap: 0;
@@ -199,58 +199,59 @@
             padding-bottom: 4px;
         }
 
-        .pm-step-btn {
-            border: 1px solid #dbe6f3;
-            border-radius: 999px;
-            background: #fff;
-            color: #475569;
-            font-weight: 700;
-            display: inline-flex;
+        .vc-step-btn {
+            display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
+            gap: 4px;
+            background: none;
+            border: none;
+            padding: 0 8px;
             cursor: pointer;
-            white-space: nowrap;
-            transition: all .15s ease;
-        }
-
-        .pm-step-btn.active {
-            border-color: #3b82f6;
-            background: #eff6ff;
-            color: #1d4ed8;
-            box-shadow: 0 6px 18px rgba(59, 130, 246, .12);
-        }
-
-        .pm-step-circle {
-            width: 30px;
-            height: 30px;
-            border-radius: 999px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: #e2e8f0;
-            color: #334155;
             flex-shrink: 0;
         }
 
-        .pm-step-btn.active .pm-step-circle {
-            background: #1d4ed8;
+        .vc-step-circle {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            border: 2px solid #d0daea;
+            background: #f8fafc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: .85rem;
+            color: #94a3b8;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+
+        .vc-step-btn.active .vc-step-circle {
+            background: #2563eb;
+            border-color: #2563eb;
             color: #fff;
         }
 
-        .pm-step-label {
-            font-size: .86rem;
+        .vc-step-label {
+            font-size: .72rem;
+            font-weight: 600;
+            color: #94a3b8;
+            white-space: nowrap;
         }
 
-        .pm-step-line {
-            width: 48px;
+        .vc-step-btn.active .vc-step-label {
+            color: #2563eb;
+        }
+
+        .vc-step-line {
+            flex: 1;
             height: 2px;
-            background: #cfe0f7;
-            margin: 0 10px;
-            flex-shrink: 0;
+            background: #e5eaf2;
+            min-width: 16px;
+            margin-bottom: 18px;
         }
 
-        .plano-section-title {
+        .veiculo-section-title {
             font-size: .96rem;
             font-weight: 700;
             color: #21364f;
@@ -260,7 +261,7 @@
             margin-bottom: 14px;
         }
 
-        .form-group-plano-motorista-app {
+        .form-group-veiculo {
             margin-bottom: 1rem;
         }
 
@@ -373,49 +374,46 @@
             box-shadow: 0 10px 24px rgba(100, 116, 139, .12);
         }
 
-        .card-plano-motorista-app .form-control,
-        .card-plano-motorista-app .form-select {
+        .card-veiculo .form-control,
+        .card-veiculo .form-select {
             border-radius: 10px;
             border-color: #d8e1ec;
-        }
-
-        .card-plano-motorista-app .form-control:focus,
-        .card-plano-motorista-app .form-select:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 0.15rem rgba(59, 130, 246, .12);
-        }
-
-        .pm-wizard-nav {
-            border-top: 1px dashed #dbe6f3;
-            padding-top: 14px;
-        }
-
-        .pm-nav-btn {
             min-height: 38px;
-            padding: .58rem 1.05rem;
-            border-radius: 999px;
+        }
+
+        .card-veiculo .form-control:focus,
+        .card-veiculo .form-select:focus {
+            border-color: #4b80ff;
+            box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
+        }
+
+        .vc-nav-btn {
+            min-width: 138px;
+            border-radius: 12px;
             font-weight: 700;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
+            box-shadow: 0 8px 18px rgba(15, 23, 42, .08);
+            transition: transform .15s ease, box-shadow .15s ease, opacity .15s ease;
         }
 
-        .pm-nav-btn--back {
-            border: 1px solid #64748b;
-            color: #64748b;
-            background: #fff;
+        .vc-nav-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 10px 22px rgba(15, 23, 42, .12);
         }
 
-        .pm-nav-btn--next {
-            background: linear-gradient(135deg, #2563eb, #1d4ed8);
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(37, 99, 235, .18);
+        .vc-nav-btn--back {
+            min-width: 132px;
         }
 
-        .pm-nav-btn--save {
-            background: linear-gradient(135deg, #16a34a, #1e9f45);
-            color: #fff;
-            box-shadow: 0 8px 20px rgba(22, 163, 74, .18);
+        .vc-nav-btn--next {
+            min-width: 120px;
+        }
+
+        .vc-nav-btn--save {
+            min-width: 160px;
         }
     </style>
 @stop
@@ -423,8 +421,8 @@
 @section('js')
     <script>
         (function () {
-            const $stepBtns = $('.pm-step-btn');
-            const $stepPanes = $('.pm-step-pane');
+            const $stepBtns = $('.vc-step-btn');
+            const $stepPanes = $('.vc-step-pane');
             const $btnPrev = $('#btnPrev');
             const $btnNext = $('#btnNext');
             const $btnSalvar = $('#btnSalvar');
@@ -444,7 +442,7 @@
                 $btnPrev.toggleClass('d-none', currentStep === 1);
                 $btnNext.toggleClass('d-none', currentStep === 3);
                 $btnSalvar.toggleClass('d-none', currentStep !== 3);
-                $('html, body').animate({ scrollTop: $('.card-plano-motorista-app').offset().top - 20 }, 150);
+                $('html, body').animate({ scrollTop: $('.card-veiculo').offset().top - 20 }, 150);
             }
 
             function syncKmField() {

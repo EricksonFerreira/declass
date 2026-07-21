@@ -363,6 +363,13 @@
                             </div>
                         @endif
                     </div>
+                    @if(!$pagamentoEfetuado)
+                        <div class="rs-actions" style="margin-top:14px;">
+                            <a href="{{ route('reserva.pagamento.efetuar', ['id' => $reserva->codigoReserva?->codigo ?? ('RES-' . $reserva->id)]) }}" class="rs-btn rs-btn--primary">
+                                <i class="fas fa-credit-card"></i> Pagar
+                            </a>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -442,6 +449,141 @@
                             @else
                                 A avaliação ficará disponível após a conclusão da reserva.
                             @endif
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="rs-card mt-3">
+                <div class="rs-card__head">
+                    <div class="rs-card__icon"><i class="fas fa-receipt"></i></div>
+                    <div>
+                        <div class="rs-card__title">Histórico de pagamentos</div>
+                        <div class="rs-card__sub">Transações financeiras da reserva</div>
+                    </div>
+                </div>
+                <div class="rs-card__body p-0">
+                    @php $transacoes = $reserva->transacoes ?? collect(); @endphp
+                    @if($transacoes->isEmpty())
+                        <div class="rs-card__body">
+                            <div class="rs-note">Nenhuma transação registrada para esta reserva.</div>
+                        </div>
+                    @else
+                        <div class="table-responsive">
+                            <table class="table table-sm mb-0">
+                                <thead>
+                                    <tr>
+                                        <th class="pl-3">Data</th>
+                                        <th>Valor</th>
+                                        <th>Método</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($transacoes as $t)
+                                        @php
+                                            $statusTransacao = strtolower((string) ($t->status ?? ''));
+                                            $badgeClass = match ($statusTransacao) {
+                                                'confirmado', 'pago', 'aprovado' => 'badge-success',
+                                                'pendente', 'aguardando' => 'badge-warning',
+                                                'cancelado', 'recusado' => 'badge-danger',
+                                                default => 'badge-secondary',
+                                            };
+                                        @endphp
+                                        <tr>
+                                            <td class="pl-3">{{ $t->created_at ? \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') : '-' }}</td>
+                                            <td class="font-weight-bold">R$ {{ number_format((float) ($t->valor ?? 0), 2, ',', '.') }}</td>
+                                            <td>{{ $t->metodo_pagamento ?: ($t->metodo_pagamento_label ?? '-') }}</td>
+                                            <td><span class="badge {{ $badgeClass }}">{{ ucfirst($statusTransacao ?: 'N/I') }}</span></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="rs-card mt-3">
+                <div class="rs-card__head">
+                    <div class="rs-card__icon"><i class="fas fa-car-crash"></i></div>
+                    <div>
+                        <div class="rs-card__title">Sinistros</div>
+                        <div class="rs-card__sub">Ocorrências ligadas a esta reserva</div>
+                    </div>
+                </div>
+                <div class="rs-card__body">
+                    @php $sinistrosCliente = $reserva->avariaCobrancas ?? collect(); @endphp
+                    @if($sinistrosCliente->isEmpty())
+                        <div class="rs-note">Nenhum sinistro vinculado a esta reserva.</div>
+                    @else
+                        <div class="rs-list">
+                            @foreach($sinistrosCliente as $sinistro)
+                                @php
+                                    $statusSinistro = strtolower((string) ($sinistro->status ?? 'aberto'));
+                                    $labelStatus = match ($statusSinistro) {
+                                        'aberto', 'em_analise' => 'Em análise',
+                                        'pago', 'cobrado' => 'Cobrado',
+                                        'cancelado' => 'Cancelado',
+                                        default => ucfirst($statusSinistro),
+                                    };
+                                @endphp
+                                <div class="rs-list__item" style="border-bottom:1px solid var(--ma-line);padding:10px 0;">
+                                    <div class="d-flex justify-content-between align-items-start gap-2">
+                                        <div>
+                                            <div class="rs-list__label">{{ $sinistro->descricao ?: 'Sinistro' }}</div>
+                                            <div class="text-muted" style="font-size:.74rem;">
+                                                {{ $sinistro->created_at ? \Carbon\Carbon::parse($sinistro->created_at)->format('d/m/Y') : '-' }}
+                                            </div>
+                                        </div>
+                                        <span class="badge badge-{{ $statusSinistro === 'pago' || $statusSinistro === 'cobrado' ? 'success' : ($statusSinistro === 'cancelado' ? 'danger' : 'warning') }}">{{ $labelStatus }}</span>
+                                    </div>
+                                    <div class="mt-2 text-dark font-weight-bold">R$ {{ number_format((float) ($sinistro->valor ?? 0), 2, ',', '.') }}</div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            <div class="rs-card mt-3">
+                <div class="rs-card__head">
+                    <div class="rs-card__icon"><i class="fas fa-circle-exclamation"></i></div>
+                    <div>
+                        <div class="rs-card__title">Multas</div>
+                        <div class="rs-card__sub">Infrações vinculadas a esta reserva</div>
+                    </div>
+                </div>
+                <div class="rs-card__body">
+                    @php $multasCliente = $reserva->multas ?? collect(); @endphp
+                    @if($multasCliente->isEmpty())
+                        <div class="rs-note">Nenhuma multa vinculada a esta reserva.</div>
+                    @else
+                        <div class="rs-list">
+                            @foreach($multasCliente as $multa)
+                                @php
+                                    $statusMulta = strtolower((string) ($multa->status_multa ?? 'pendente'));
+                                    $labelMulta = match ($statusMulta) {
+                                        'paga' => 'Paga',
+                                        'pendente', 'em_analise' => 'Pendente',
+                                        'cancelada' => 'Cancelada',
+                                        default => ucfirst($statusMulta),
+                                    };
+                                @endphp
+                                <div class="rs-list__item" style="border-bottom:1px solid var(--ma-line);padding:10px 0;">
+                                    <div class="d-flex justify-content-between align-items-start gap-2">
+                                        <div>
+                                            <div class="rs-list__label">Multa #{{ $multa->id }}</div>
+                                            <div class="rs-list__value">{{ $multa->local_infracao ?: 'Local não informado' }}</div>
+                                            <div class="text-muted" style="font-size:.74rem;">
+                                                {{ $multa->data_hora_infracao ? \Carbon\Carbon::parse($multa->data_hora_infracao)->format('d/m/Y H:i') : '-' }}
+                                            </div>
+                                        </div>
+                                        <span class="badge badge-{{ $statusMulta === 'paga' ? 'success' : ($statusMulta === 'cancelada' ? 'danger' : 'warning') }}">{{ $labelMulta }}</span>
+                                    </div>
+                                    <div class="mt-2 text-dark font-weight-bold">R$ {{ number_format((float) ($multa->valor_final ?? $multa->valor_original ?? 0), 2, ',', '.') }}</div>
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>

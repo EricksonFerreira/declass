@@ -18,6 +18,8 @@
         ->sum('valor'));
     $saldoPendenteReserva = max(0, $valorTotalReserva - $totalPagoReserva);
     $pagamentoEmDia = $saldoPendenteReserva <= 0.009;
+    $codigoPagamentoReserva = $reserva->codigoReserva?->codigo ?? ('RES-' . $reserva->id);
+    $codigoCheckinReserva = $reserva->codigoReserva?->codigo ?? $reserva->id;
 @endphp
 
 <section class="reservation-actions-card">
@@ -53,7 +55,7 @@
             @endcan
 
             @if($reserva->podeEfetuarPagamento() || (!$pagamentoEmDia && $saldoPendenteReserva > 0))
-                <a href="{{ route('reserva.efetuarPagamento', $reserva->id) }}" class="action-pill action-pill--accent">
+                <a href="{{ route('reserva.pagamento.efetuar', ['id' => $codigoPagamentoReserva]) }}" class="action-pill action-pill--accent">
                     <i class="fas fa-credit-card"></i>
                     <span>{{ $saldoPendenteReserva > 0 ? 'Pagar saldo pendente' : 'Efetuar pagamento' }}</span>
                     @if($saldoPendenteReserva > 0)
@@ -89,7 +91,7 @@
                 @can('calcao.autorizar')
                 @php $calcaoAtual = $reserva->calcao ?? null; @endphp
                 @if(!$calcaoAtual || $calcaoAtual->status === 'falhou')
-                <a href="{{ route('reserva.calcao', $reserva->id) }}" class="action-pill" style="background:linear-gradient(135deg,#6f42c1,#9061f9)">
+                <a href="{{ route('reserva.calcao', $reserva->codigoReserva->codigo) }}" class="action-pill" style="background:linear-gradient(135deg,#6f42c1,#9061f9)">
                     <i class="fas fa-shield-alt"></i>
                     <span>Calção no cartão</span>
                 </a>
@@ -99,13 +101,13 @@
 
             {{-- Check-in --}}
             @if(!$reserva->contratoCheckin && ($pagamentoEfetuado ?? false) && $pagamentoEmDia)
-                <a href="{{ route('reserva.checkin', $reserva->id) }}" class="action-pill action-pill--success">
+                <a href="{{ route('reserva.checkin', ['codigo' => $codigoCheckinReserva]) }}" class="action-pill action-pill--success">
                     <i class="fas fa-file-signature"></i>
                     <span>Iniciar check-in</span>
                 </a>
             @elseif($reserva->contratoCheckin && $reserva->contratoCheckin->assinado !== 'S')
                 @if($pagamentoEmDia)
-                    <a href="{{ route('reserva.assinarContratoCheckin', $reserva->id) }}" class="action-pill action-pill--success">
+                    <a href="{{ route('reserva.assinarContratoCheckin', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="action-pill action-pill--success">
                         <i class="fas fa-pen"></i>
                         <span>Assinar contrato</span>
                     </a>
@@ -123,7 +125,7 @@
             @php
                 $checkoutJaFeito   = $reserva->contratoCheckout()->exists();
                 $checkinAssinadoCo = $reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S';
-                $checkoutUrl       = route('reserva.checkout.vistoria', $reserva->id);
+                $checkoutUrl       = route('reserva.checkout.vistoria', $reserva->codigoReserva->codigo);
                 $dataFim           = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
                 $isAntesDaDataFim  = $dataFim && now()->lt($dataFim);
 
@@ -147,11 +149,11 @@
 
             @if($checkoutJaFeito)
                 @php $jaSatisfacaoBtn = $reserva->satisfacao()->exists(); @endphp
-                <button type="button" class="action-pill action-pill--success"
+                {{-- <button type="button" class="action-pill action-pill--success"
                         onclick="$('#modalSatisfacao').modal('show')">
                     <i class="fas fa-{{ $jaSatisfacaoBtn ? 'check-circle' : 'star' }}"></i>
                     <span>{{ $jaSatisfacaoBtn ? 'Ver avaliação' : 'Avaliar atendimento' }}</span>
-                </button>
+                </button> --}}
             @elseif($checkinAssinadoCo)
                 {{-- Check-in feito: mostra botão ativo ou bloqueado --}}
                 @if($podeCheckout)

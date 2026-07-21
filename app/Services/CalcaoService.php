@@ -180,24 +180,26 @@ class CalcaoService
             default            => Calcao::STATUS_FALHOU,
         };
 
-        $calcao = Calcao::create([
-            'empresa_id'             => $empresa->id,
-            'reserva_id'             => $reserva->id,
-            'contrato_checkin_id'    => $checkin->id,
-            'cliente_id'             => $reserva->user_id,
-            'payment_intent_id'      => $intent->id,
-            'payment_method_id'      => $paymentMethodId,
-            'stripe_customer_id'     => $stripeCustomerId,
-            'valor_calculado'        => $calculo['valor_calculado'],
-            'valor_autorizado'       => $calculo['valor_calculado'],
-            'tipo_regra_aplicada'    => $calculo['tipo_regra_aplicada'],
-            'origem_regra_aplicada'  => $calculo['origem_regra_aplicada'],
-            'configuracao_calcao_id' => $calculo['configuracao_calcao_id'],
-            'status'                 => $status,
-            'data_hora_autorizacao'  => $status === Calcao::STATUS_AUTORIZADO ? now() : null,
-            'usuario_responsavel_id' => Auth::id(),
-            'stripe_response'        => $intent->toArray(),
-        ]);
+        $calcao = Calcao::updateOrCreate(
+            ['reserva_id' => $reserva->id],
+            [
+                'empresa_id'             => $empresa->id,
+                'contrato_checkin_id'    => $checkin->id,
+                'cliente_id'             => $reserva->user_id,
+                'payment_intent_id'      => $intent->id,
+                'payment_method_id'      => $paymentMethodId,
+                'stripe_customer_id'     => $stripeCustomerId,
+                'valor_calculado'        => $calculo['valor_calculado'],
+                'valor_autorizado'       => $calculo['valor_calculado'],
+                'tipo_regra_aplicada'    => $calculo['tipo_regra_aplicada'],
+                'origem_regra_aplicada'  => $calculo['origem_regra_aplicada'],
+                'configuracao_calcao_id' => $calculo['configuracao_calcao_id'],
+                'status'                 => $status,
+                'data_hora_autorizacao'  => $status === Calcao::STATUS_AUTORIZADO ? now() : null,
+                'usuario_responsavel_id' => Auth::id(),
+                'stripe_response'        => $intent->toArray(),
+            ]
+        );
 
         if ($status === Calcao::STATUS_FALHOU) {
             throw new \RuntimeException('Pre-autorizacao criada mas nao confirmada pelo Stripe. Status: ' . $intent->status);

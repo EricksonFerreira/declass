@@ -62,8 +62,12 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
             'N' => 'Inativo'
         ];
         $tipos = [
-            'checkin' => 'Check-in',
-            'checkout' => 'Check-out',
+            'aceito-motorista-app' => 'Aceite Motorista App',
+            'aceito-reserva' => 'Aceite Reservas',
+            'checkin-motorista-app' => 'Check-in Motorista App',
+            'checkout-motorista-app' => 'Check-out Motorista App',
+            'checkin-reserva' => 'Check-in Reservas',
+            'checkout-reserva' => 'Check-out Reservas',
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Termos de Consentimento','termo_consentimento.index','Criar');
 
@@ -73,8 +77,9 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
 
     public function store(StoreTermoConsentimentoRequest $request)
     {
-        $data = $request->all();
+        $data = $request->validated();
         $data['empresa_id'] = auth()->user()->empresa_id;
+        $data['nome'] = $data['titulo'];
         $this->termo_consentimentoService->create($data);
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
@@ -91,10 +96,14 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
             'N' => 'Inativo'
         ];
         $tipos = [
-            'checkin' => 'Check-in',
-            'checkout' => 'Check-out',
+            'aceito-motorista-app' => 'Aceite Motorista App',
+            'aceito-reserva' => 'Aceite Reservas',
+            'checkin-motorista-app' => 'Check-in Motorista App',
+            'checkout-motorista-app' => 'Check-out Motorista App',
+            'checkin-reserva' => 'Check-in Reservas',
+            'checkout-reserva' => 'Check-out Reservas',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Termos de Consentimento','termo_consentimento.index',"Editar: $termo_consentimento->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Termos de Consentimento','termo_consentimento.index',"Editar: " . ($termo_consentimento->titulo ?: $termo_consentimento->nome));
         [$metodo,$rota] = $this->getFormMethodAndRoute($termo_consentimento);
 
         return view('termo_consentimento.add-edit', compact('termo_consentimento','breadcrumb','status','tipos','metodo','rota'))->with('titulo', $this->titulo);
@@ -102,7 +111,10 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
 
     public function update(UpdateTermoConsentimentoRequest $request, $id)
     {
-        $success = $this->termo_consentimentoService->update($id,$request->all());
+        $data = $request->validated();
+        $data['nome'] = $data['titulo'];
+
+        $success = $this->termo_consentimentoService->update($id,$data);
         if (!$success) {
             abort(403, 'Sem acesso para editar este termo de consentimento.');
         }

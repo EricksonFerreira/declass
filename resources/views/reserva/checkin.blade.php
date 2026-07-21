@@ -21,7 +21,7 @@
                     </div>
                     <div>
                         <div class="ci-header-eyebrow">Check-in</div>
-                        <h4 class="ci-header-title">Reserva #{{ $reserva->id ?? '' }}</h4>
+                        <h4 class="ci-header-title">Reserva #{{ $codigoBreadcrumb ?? $reserva->codigoReserva->codigo ?? '' }}</h4>
                         <p class="ci-header-sub">
                             <i class="fas fa-user mr-1"></i>{{ $reserva->usuario->nome ?? 'Cliente' }}
                             &nbsp;&middot;&nbsp;
@@ -40,7 +40,7 @@
                             <span>{{ $dataInicio }}@if($dataFim) &rarr; {{ $dataFim }}@endif</span>
                         </div>
                     @endif
-                    <a href="{{ route('reserva.show', $reserva->id) }}" class="ci-btn-back">
+                    <a href="{{ route('reserva.show', $codigoBreadcrumb ?? $reserva->id) }}" class="ci-btn-back">
                         <i class="fas fa-arrow-left"></i>
                         <span>Voltar</span>
                     </a>
@@ -53,6 +53,10 @@
             <div class="ci-body">
 
                 <input type="hidden" id="reserva_id" name="reserva_id" value="{{ $reserva->id }}">
+                <input type="hidden" id="codigo" name="codigo" value="{{ $codigoBreadcrumb ?? $reserva->codigoReserva?->codigo ?? $reserva->id }}">
+                @php
+                    $hasPendingPayment = collect($reserva->pagamentos ?? [])->contains(fn($p) => strtolower($p->status ?? '') === 'pendente');
+                @endphp
 
                 {{-- Indicador de passos --}}
                 <div class="step-indicator" role="tablist">
@@ -148,7 +152,7 @@
                                         : ''
                                 );
                                 $reqEstacao = $reserva->estacaoRetirada?->nome ?? 'Estação #' . $reserva->estacao_retirada_id;
-                                $reqGrupo = $reserva->grupoFrota?->nome ?? ($reserva->grupo_frota_id ? 'Grupo #' . $reserva->grupo_frota_id : '—');
+                                $reqGrupo = $grupoCheckinLabel ?? $reserva->grupoFrota?->nome ?? ($reserva->grupo_frota_id ? 'Grupo #' . $reserva->grupo_frota_id : '—');
                                 $reqModelo = $reserva->modelos?->nome ?? '—';
                             @endphp
                             <div class="row">
@@ -169,10 +173,15 @@
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="d-flex flex-wrap gap-2 p-2 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:.78rem;">
+                                    <div class="d-flex flex-wrap gap-2 p-2 rounded" style="background:#f8fafc;border:1px solid #e2e8f0;font-size:.78rem;align-items:center;">
                                         <span><strong>Estação:</strong> {{ $reqEstacao }}</span>
                                         <span class="text-muted">|</span>
-                                        <span><strong>Grupo:</strong> {{ $reqGrupo }}</span>
+                                        <span>
+                                            <strong>{{ !empty($isMotoristaAppCheckin) ? 'Plano:' : 'Grupo:' }}</strong> {{ $reqGrupo }}
+                                            <button type="button" class="btn btn-sm btn-link p-0 ml-1 text-primary" data-toggle="modal" data-target="#modalModelosPlano" title="Ver todos os modelos para este {{ !empty($isMotoristaAppCheckin) ? 'plano' : 'grupo' }}">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </span>
 
                                         <span class="text-muted">|</span>
                                         <span><strong>Período:</strong> {{ $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') : '—' }} → {{ $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i') : '—' }}</span>
@@ -181,11 +190,104 @@
                             </div>
                         </div>
 
+                        {{-- Modal de visualização dos modelos do Plano / Grupo --}}
+                        {{-- Modal de visualização dos modelos do Plano / Grupo --}}
+                        <div class="modal fade" id="modalModelosPlano" tabindex="-1" role="dialog" aria-labelledby="modalModelosPlanoLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered modal-xl" role="document" style="max-width: 1140px;">
+                                <div class="modal-content" style="border-radius:18px;border:1px solid #dbe4ee;box-shadow:0 10px 30px rgba(0,0,0,0.15);">
+                                    <div class="modal-header" style="background:linear-gradient(135deg,#0f172a,#1e3a8a);color:#fff;border-top-left-radius:17px;border-top-right-radius:17px;padding:14px 20px;">
+                                        <h5 class="modal-title" id="modalModelosPlanoLabel" style="font-weight:800;font-size:1.05rem;">
+                                            <i class="fas fa-car mr-2"></i> Modelos do {{ !empty($isMotoristaAppCheckin) ? 'Plano' : 'Grupo' }} ({{ $reqGrupo }})
+                                        </h5>
+                                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity:0.9;">
+                                            <span aria-hidden="true">&times;</span>
+                                        </button>
+                                    </div>
+                                    <div class="modal-body" style="padding:16px 20px;max-height:70vh;overflow-y:auto;">
+                                        <div class="mb-3">
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text bg-white border-right-0" style="border-color:#cbd5e1;"><i class="fas fa-search text-muted"></i></span>
+                                                </div>
+                                                <input type="text" id="filtroModeloPlanoInput" class="form-control border-left-0" style="border-color:#cbd5e1;" placeholder="Filtrar modelo por nome ou marca..." oninput="filtrarModelosPlano(this.value)">
+                                            </div>
+                                        </div>
+
+                                        @php
+                                            $listaModelos = !empty($modelos) && count($modelos) > 0 ? $modelos : (!empty($veiculosDisponiveis) ? $veiculosDisponiveis->pluck('modelo')->filter()->unique('id') : collect());
+                                            $modelosPorMarca = $listaModelos->groupBy(function($m) {
+                                                return $m->marcas?->nome ?? $m->marca?->nome ?? $m['marca']['nome'] ?? 'Outras Marcas';
+                                            });
+                                        @endphp
+
+                                        <div id="containerModelosPlano">
+                                            @forelse($modelosPorMarca as $nomeMarca => $itensMarca)
+                                                <div class="marca-group-block mb-3" data-marca="{{ strtolower($nomeMarca) }}">
+                                                    <div class="d-flex align-items-center mb-2 pb-1" style="border-bottom: 2px solid #e2e8f0;">
+                                                        <i class="fas fa-industry text-primary mr-2" style="font-size:0.85rem;"></i>
+                                                        <h6 class="mb-0 font-weight-bold text-dark" style="font-size:0.95rem;">{{ $nomeMarca }}</h6>
+                                                        <span class="badge badge-secondary ml-2 px-2 py-1" style="font-size:.7rem;border-radius:10px;">{{ count($itensMarca) }}</span>
+                                                    </div>
+                                                    <div class="row no-gutters" style="margin: -4px;">
+                                                        @foreach($itensMarca as $m)
+                                                            @php
+                                                                $nomeModelo = $m->nome ?? $m['nome'] ?? 'Modelo';
+                                                            @endphp
+                                                            <div class="col-6 col-sm-4 col-md-3 p-1 modelo-item-card" data-nome="{{ strtolower($nomeModelo) }}" data-marca="{{ strtolower($nomeMarca) }}">
+                                                                <div class="p-2 rounded border text-center h-100" style="background:#fff;border-color:#e2e8f0!important;box-shadow:0 1px 2px rgba(0,0,0,0.03);">
+                                                                    <div class="font-weight-bold text-truncate" style="color:#0f172a;font-size:0.88rem;" title="{{ $nomeModelo }}">
+                                                                        {{ $nomeModelo }}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                </div>
+                                            @empty
+                                                <div class="text-center text-muted py-4">
+                                                    <i class="fas fa-info-circle fa-2x mb-2 d-block text-secondary"></i>
+                                                    Nenhum modelo elegível cadastrado para este {{ !empty($isMotoristaAppCheckin) ? 'plano' : 'grupo' }}.
+                                                </div>
+                                            @endforelse
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer" style="border-top:1px solid #e2e8f0;padding:10px 20px;">
+                                        <button type="button" class="btn btn-secondary btn-sm rounded-pill px-4" data-dismiss="modal">Fechar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <script>
+                        function filtrarModelosPlano(termo) {
+                            termo = (termo || '').toLowerCase().trim();
+                            const container = document.getElementById('containerModelosPlano');
+                            if (!container) return;
+
+                            const blocos = container.querySelectorAll('.marca-group-block');
+                            blocos.forEach(bloco => {
+                                let modelosVisiveis = 0;
+                                const cards = bloco.querySelectorAll('.modelo-item-card');
+                                cards.forEach(card => {
+                                    const nome = card.getAttribute('data-nome') || '';
+                                    const marca = card.getAttribute('data-marca') || '';
+                                    if (!termo || nome.includes(termo) || marca.includes(termo)) {
+                                        card.style.display = '';
+                                        modelosVisiveis++;
+                                    } else {
+                                        card.style.display = 'none';
+                                    }
+                                });
+                                bloco.style.display = modelosVisiveis > 0 ? '' : 'none';
+                            });
+                        }
+                        </script>
+
                         {{-- Modal de busca de veículos disponíveis no período da reserva --}}
                         <x-veiculo.busca-avancada-modal
                             prefix="checkin"
                             title="Veículos Disponíveis no Período"
-                            buscar-url="{{ route('reserva.checkin.veiculosModal', $reserva->id) }}"
+                            buscar-url="{{ route('reserva.checkin.veiculosModal', ['codigo' => $codigoBreadcrumb ?? $reserva->id]) }}"
                             trigger-id="btnBuscarVeiculoCheckin"
                             hidden-input-id="veiculo"
                             display-input-id="veiculo_display"
@@ -217,7 +319,7 @@
                                         <div class="diag-modal__intro">
                                             <div class="diag-modal__intro-chip">
                                                 <i class="fas fa-info-circle"></i>
-                                                Reserva #{{ $reserva->id }}
+                                                Reserva #{{ $codigoBreadcrumb ?? $reserva->id }}
                                             </div>
                                             <div class="diag-modal__intro-text">
                                                 Use os filtros para comparar os veículos disponíveis e identifique rapidamente o motivo de cada bloqueio.
@@ -312,7 +414,7 @@
                                              var modal = $('#modalDiagnostico');
                                              modal.modal('show');
                                              document.getElementById('diagnosticoResultado').innerHTML = '<div class="text-center py-5"><i class="fas fa-spinner fa-spin fa-3x text-primary"></i><p class="mt-3 text-muted">Analisando veiculos...</p></div>';
-                                             fetch('{{ route('reserva.checkin.diagnostico', $reserva->id) }}', { headers: { 'Accept': 'application/json' } })
+                                             fetch('{{ route('reserva.checkin.diagnostico', ['codigo' => $codigoBreadcrumb ?? $reserva->id]) }}', { headers: { 'Accept': 'application/json' } })
                                                  .then(function (r) { return r.json(); })
                                                  .then(function (data) {
                                                      document.getElementById('diagnosticoResultado').innerHTML = data.html || '<div class="alert alert-danger">Erro ao carregar.</div>';
@@ -641,7 +743,7 @@
                             <strong>Contrato Assinado — Edição Bloqueada</strong>
                             <p>Este contrato já foi assinado em <em>{{ \Carbon\Carbon::parse($contratoExistente->data_assinatura)->format('d/m/Y H:i') }}</em> e não pode ser alterado. Para criar um novo contrato, acesse a página da reserva, exclua o contrato atual e recrie.</p>
                         </div>
-                        <a href="{{ route('reserva.show', $reserva->id) }}" class="ci-btn-create" style="background:linear-gradient(135deg,#ef4444,#b91c1c);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+                        <a href="{{ route('reserva.show', $codigoBreadcrumb ?? $reserva->id) }}" class="ci-btn-create" style="background:linear-gradient(135deg,#ef4444,#b91c1c);text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
                             <i class="fas fa-arrow-left"></i>
                             Voltar para a Reserva
                         </a>
@@ -660,10 +762,18 @@
                                 <p>Verifique se todos os dados dos Passos 1 e 2 estao preenchidos. Ao clicar em <em>Criar Contrato</em> o contrato sera gerado e voce sera redirecionado para a reserva.</p>
                             @endif
                         </div>
-                        <button type="button" class="ci-btn-create" id="btn_criar_contrato">
-                            <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }}"></i>
-                            {{ $contratoExistente ? 'Salvar Contrato' : 'Criar Contrato' }}
-                        </button>
+                        @if(!$hasPendingPayment)
+                            <button type="button" class="ci-btn-create" id="wizardCreateBtn">
+                                <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }} mr-1"></i>
+                                {{ $contratoExistente ? 'Salvar Contrato' : 'Criar Contrato' }}
+                            </button>
+                        @else
+                            <button type="button" class="ci-btn-create" id="wizardCreateBtn" disabled title="Existem pagamentos pendentes.">
+                                <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }} mr-1"></i>
+                                {{ $contratoExistente ? 'Salvar Contrato' : 'Criar Contrato' }}
+                            </button>
+                            <p class="text-warning mt-2"><i class="fas fa-exclamation-triangle"></i> Existem pagamentos pendentes. Resolva antes de criar o contrato.</p>
+                        @endif
                     </div>
                     @endif
                 </section>
@@ -674,9 +784,16 @@
                         <i class="fas fa-arrow-left mr-1"></i>Voltar
                     </button>
                     <div class="wizard-actions-right">
-                        <button type="button" class="btn-action btn-primary" id="wizardNext">
-                            Continuar<i class="fas fa-arrow-right ml-1"></i>
-                        </button>
+                        @if(!$hasPendingPayment)
+    <button type="button" class="btn-action btn-primary" id="wizardNext">
+        Continuar<i class="fas fa-arrow-right ml-1"></i>
+    </button>
+@else
+    <button type="button" class="btn-action btn-primary" id="wizardNext" disabled title="Existem pagamentos pendentes.">
+        Continuar<i class="fas fa-arrow-right ml-1"></i>
+    </button>
+    <p class="text-warning mt-2"><i class="fas fa-exclamation-triangle"></i> Existem pagamentos pendentes. Resolva antes de continuar.</p>
+@endif
                         {{-- @if(!($contratoExistente && $contratoExistente->assinado == 'S'))
                         <button type="button" class="btn-action btn-action-success d-none" id="wizardCreateBtn">
                             <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }} mr-1"></i>
@@ -1021,7 +1138,7 @@
             return;
         }
 
-        const url = "{{ route('reserva.checkin.veiculosDisponiveis', ':id') }}".replace(':id', reserva_id);
+        const url = @json(route('reserva.checkin.veiculosDisponiveis', ['codigo' => $codigoBreadcrumb ?? $reserva->id]));
         $v.prop('disabled', true);
 
         $.getJSON(url, { marca_id: marcaId, modelo_id: modeloId })
@@ -1373,7 +1490,7 @@
 
     function criarContrato() {
         const reserva_id = document.getElementById('reserva_id').value;
-        const url = "{{ route('reserva.criarContratoCheckin', ':id') }}".replace(':id', reserva_id);
+        const url = @json(route('reserva.criarContratoCheckin', ['codigo' => $codigoBreadcrumb ?? $reserva->id]));
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
         const contrato = {
@@ -1442,7 +1559,7 @@
                     position: 'top-right',
                 });
                 setTimeout(() => {
-                    window.location.href = "{{ route('reserva.show', ':id') }}".replace(':id', reserva_id);
+                    window.location.href = @json(route('reserva.show', $codigoBreadcrumb ?? $reserva->id));
                 }, 2600);
             },
             error: function (xhr) {
@@ -1521,7 +1638,7 @@
             $.ajax({
                 url: "{{ route('dano.obterDanosDetectados') }}",
                 type: 'GET',
-                data: { veiculo_id, reserva_id: document.getElementById('reserva_id')?.value },
+                data: { veiculo_id, codigo: '{{ $codigoBreadcrumb ?? $codigo ?? $reserva->id }}', reserva_id: document.getElementById('reserva_id')?.value },
                 async: false,
                 success: function (data) { allDanos = allDanos.concat(data); }
             });
@@ -1551,7 +1668,7 @@
         $.ajax({
             url: "{{ route('dano.obterDanosExistentes') }}",
             type: 'GET',
-            data: { veiculo_id, reserva_id },
+            data: { veiculo_id, codigo: '{{ $codigoBreadcrumb ?? $codigo ?? $reserva->id }}', reserva_id },
             success: function (data) {
                 const tbody = document.getElementById('danos_existentes');
                 tbody.innerHTML = '';
@@ -1643,7 +1760,7 @@
        UPGRADE DE CATEGORIA
     ======================== */
     (function initUpgradeCheck() {
-        const statusUpgradeUrl = @json(route('reserva.checkin.statusUpgrade', $reserva->id));
+        const statusUpgradeUrl = @json(route('reserva.checkin.statusUpgrade', $codigoBreadcrumb ?? $codigo ?? $reserva->id));
 
         fetch(statusUpgradeUrl, { headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
@@ -1765,22 +1882,6 @@
                 buildOptions(!!mostrarBloqueadosEl?.checked);
                 mostrarBloqueadosEl?.addEventListener('change', function () {
                     buildOptions(!!this.checked);
-                });
-
-                return;
-
-                veiculoSelect.innerHTML = '<option value="" disabled selected>Selecione veiculo de upgrade</option>';
-                (data.grupos_upgrade ?? []).forEach(item => {
-                    const optGroup = document.createElement('optgroup');
-                    optGroup.label = '\u2B06 ' + item.grupo.nome + ' (upgrade)';
-                    (item.veiculos ?? []).forEach(v => {
-                        const opt = document.createElement('option');
-                        opt.value = v.id;
-                        opt.textContent = v.nome + (v.placa ? ' — ' + v.placa : '');
-                        opt.dataset.upgrade = '1';
-                        optGroup.appendChild(opt);
-                    });
-                    veiculoSelect.appendChild(optGroup);
                 });
             })
             .catch(() => { /* silencioso — funciona sem upgrade */ });

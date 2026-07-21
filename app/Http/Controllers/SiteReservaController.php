@@ -640,6 +640,17 @@ class SiteReservaController extends Controller
 
     public function loginRedirect(Request $request): RedirectResponse
     {
+        $context = trim((string) $request->query('context', ''));
+        if ($context === 'motorista-app') {
+            session()->put('url.intended', $this->buildMotoristaAppReturnUrl((string) $request->query('return_to', '')));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
         $step = (int) $request->query('step', 4);
         if ($step < 1 || $step > 4) {
             $step = 4;
@@ -1427,6 +1438,47 @@ class SiteReservaController extends Controller
         ]);
     }
 
+    private function buildMotoristaAppReturnUrl(string $returnTo): string
+    {
+        $fallback = route('site.apresentacao.motorista-app', ['login_success' => 1]);
+        $returnTo = trim($returnTo);
+        if ($returnTo === '' || !filter_var($returnTo, FILTER_VALIDATE_URL)) {
+            return $fallback;
+        }
+
+        $baseUrl = url('/');
+        $baseParts = parse_url($baseUrl) ?: [];
+        $returnParts = parse_url($returnTo) ?: [];
+
+        $baseHost = (string) ($baseParts['host'] ?? '');
+        $returnHost = (string) ($returnParts['host'] ?? '');
+        $baseScheme = (string) ($baseParts['scheme'] ?? '');
+        $returnScheme = (string) ($returnParts['scheme'] ?? '');
+        $returnPath = (string) ($returnParts['path'] ?? '');
+
+        if ($baseHost === '' || $returnHost === '' || strcasecmp($baseHost, $returnHost) !== 0) {
+            return $fallback;
+        }
+
+        if ($baseScheme !== '' && $returnScheme !== '' && strcasecmp($baseScheme, $returnScheme) !== 0) {
+            return $fallback;
+        }
+
+        if ($returnPath !== '/motorista-app') {
+            return $fallback;
+        }
+
+        parse_str((string) ($returnParts['query'] ?? ''), $query);
+        $query['login_success'] = 1;
+
+        $url = rtrim($baseUrl, '/') . $returnPath;
+        if (!empty($query)) {
+            $url .= '?' . http_build_query($query, '', '&', PHP_QUERY_RFC3986);
+        }
+
+        return $url;
+    }
+
     private function resolveEmpresaAtivaByHost(Request $request): ?Empresa
     {
         $host = DomainNormalizer::normalize($request->getHost());
@@ -2006,4 +2058,3 @@ class SiteReservaController extends Controller
         return url($path);
     }
 }
-

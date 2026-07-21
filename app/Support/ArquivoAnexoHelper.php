@@ -26,7 +26,20 @@ class ArquivoAnexoHelper
         }
 
         $caminho = $diretorio . '/' . $nomeArquivo;
-        $armazenado = Storage::disk($disk)->putFileAs($diretorio, $arquivo, $nomeArquivo);
+        $tempPath = is_string($arquivo->getRealPath()) ? trim($arquivo->getRealPath()) : '';
+        if ($tempPath === '') {
+            $tempPath = is_string($arquivo->getPathname()) ? trim($arquivo->getPathname()) : '';
+        }
+
+        if ($tempPath === '' || !is_file($tempPath)) {
+            return null;
+        }
+
+        try {
+            $armazenado = Storage::disk($disk)->putFileAs($diretorio, $arquivo, $nomeArquivo);
+        } catch (\ValueError $error) {
+            $armazenado = Storage::disk($disk)->put($caminho, file_get_contents($tempPath));
+        }
 
         if (!is_string($armazenado) || trim($armazenado) === '') {
             return null;

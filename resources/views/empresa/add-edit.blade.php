@@ -624,7 +624,7 @@
                     <div class="empresa-section-title" id="sec-app">Motorista de App</div>
                 </div>
 
-                <div class="col-lg-3" data-empresa-step="8">
+                <div class="col-lg-4" data-empresa-step="8">
                     <div class="form-group form-group-empresa">
                         <label for="aluguel_app_ativo">Habilitar aluguel para app?</label>
                         @php
@@ -638,7 +638,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-3" data-empresa-step="8">
+                <div class="col-lg-4" data-empresa-step="8">
                     <div class="form-group form-group-empresa">
                         <label for="aluguel_app_exigir_aprovacao_documentos">Exigir aprovação dos documentos?</label>
                         @php
@@ -652,15 +652,7 @@
                     </div>
                 </div>
 
-                <div class="col-lg-6" data-empresa-step="8">
-                    <div class="form-group form-group-empresa">
-                        <label for="aluguel_app_documento_adicional_label">Nome do documento adicional</label>
-                        <input type="text" class="form-control form-control-sm" id="aluguel_app_documento_adicional_label" name="aluguel_app_documento_adicional_label"
-                               value="{{ old('aluguel_app_documento_adicional_label', $empresa->aluguel_app_documento_adicional_label ?? '') }}"
-                               placeholder="Ex: autorização, declaração, comprovante extra">
-                        <small class="text-muted d-block mt-1">Preencha se a empresa quiser pedir um documento extra. Se não, deixe em branco.</small>
-                    </div>
-                </div>
+             
 
                 <div class="col-12" data-empresa-step="8">
                     @php
@@ -669,41 +661,126 @@
                             $docsApp = [];
                         }
                         $docsApp = array_values(array_filter($docsApp, fn ($item) => is_string($item) && trim($item) !== ''));
+                        $camposPersonalizados = old('aluguel_app_campos_personalizados', $empresa->aluguel_app_campos_personalizados ?? []);
+                        if (!is_array($camposPersonalizados)) {
+                            $camposPersonalizados = [];
+                        }
+                        $camposPersonalizados = array_values(array_filter($camposPersonalizados, fn ($item) => is_array($item)));
                         $opcoesDocs = [
-                            'cnh_definitiva' => 'CNH definitiva',
-                            'cnh_ear' => 'CNH com EAR',
-                            'comprovante_residencia' => 'Comprovante de residência',
-                            'comprovante_cadastro_app' => 'Comprovante de cadastro ativo no aplicativo',
-                            'documento_adicional' => 'Documento adicional',
-                            'nenhum' => 'Nenhum documento',
                         ];
                     @endphp
                     <div class="empresa-subsection empresa-subsection--calcao">
-                        <div class="empresa-subsection__head">
-                            <div>
-                                <h5>Documentos do motorista de app</h5>
-                                <p>Escolha quais documentos serão solicitados no cadastro público. Se preferir, marque apenas "Nenhum documento".</p>
+                        <div class="motorista-app-custom-fields">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between mb-2" style="gap:10px;">
+                                <div>
+                                    <h6 class="mb-1" style="font-weight:700;color:#1f334d;">Documentos do motorista de app</h6>
+                                    <small class="text-muted">Estes campos ficam disponíveis apenas para esta empresa.</small>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" id="btnAddMotoristaCampo">
+                                    <i class="fas fa-plus mr-1"></i>Adicionar campo
+                                </button>
                             </div>
-                            <div class="empresa-subsection__badge">
-                                <i class="fas fa-file-signature"></i> Configuração aberta
+
+                            <input type="hidden" name="aluguel_app_campos_personalizados" id="aluguel_app_campos_personalizados" value='@json($camposPersonalizados, JSON_UNESCAPED_UNICODE)'>
+
+                            <div id="motoristaCustomFieldsList" class="motorista-app-custom-fields__list"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="motorista-app-modal d-none" id="motoristaCampoModal" aria-hidden="true">
+                    <div class="motorista-app-modal__backdrop" data-close-motorista-modal></div>
+                    <div class="motorista-app-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="motoristaCampoModalTitle">
+                        <div class="d-flex align-items-start justify-content-between mb-3" style="gap:12px;">
+                            <div>
+                                <h5 class="mb-1" id="motoristaCampoModalTitle" style="font-weight:700;">Adicionar campo</h5>
+                                <p class="text-muted mb-0">Defina o nome, tipo e se o campo deve entrar na seleção da empresa.</p>
+                            </div>
+                            <button type="button" class="btn btn-light btn-sm" data-close-motorista-modal>
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="motoristaCampoLabel">Nome do campo</label>
+                            <input type="text" class="form-control form-control-sm" id="motoristaCampoLabel" maxlength="120" placeholder="Ex: foto do veículo">
+                        </div>
+
+                        <div class="form-group">
+                                <label for="motoristaCampoType">Tipo</label>
+                                <select class="form-control form-control-sm" id="motoristaCampoType" data-enhance-select>
+                                    <option value="arquivo">Arquivo</option>
+                                    <option value="texto">Texto</option>
+                                    <option value="texto_longo">Texto longo</option>
+                                    <option value="data">Data</option>
+                                    <option value="lista">Lista</option>
+                                </select>
+                            </div>
+
+                        <div class="form-group d-none" id="motoristaCampoOptionsWrap">
+                            <label for="motoristaCampoOptions">Valores da lista</label>
+                            <textarea class="form-control form-control-sm" id="motoristaCampoOptions" rows="5" placeholder="Uma opção por linha"></textarea>
+                            <small class="text-muted d-block mt-1">Use uma linha para cada valor que o motorista poderá selecionar.</small>
+                        </div>
+
+                        <div class="form-group d-none" id="motoristaCampoMultipleWrap">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="motoristaCampoMultiple">
+                                <label class="form-check-label" for="motoristaCampoMultiple">Permitir múltiplas opções</label>
+                            </div>
+                            <small class="text-muted d-block mt-1">Quando ativado, o motorista poderá marcar mais de uma opção.</small>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="motoristaCampoTemCondicao">
+                                <label class="form-check-label" for="motoristaCampoTemCondicao">Mostrar somente quando outra condição for atendida</label>
                             </div>
                         </div>
 
-                        <div class="row">
-                            @foreach($opcoesDocs as $valor => $rotulo)
-                                <div class="col-lg-4 col-md-6 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox"
-                                               id="aluguel_app_documentos_obrigatorios_{{ $valor }}"
-                                               name="aluguel_app_documentos_obrigatorios[]"
-                                               value="{{ $valor }}"
-                                               {{ in_array($valor, $docsApp, true) ? 'checked' : '' }}>
-                                        <label class="form-check-label" for="aluguel_app_documentos_obrigatorios_{{ $valor }}">
-                                            {{ $rotulo }}
-                                        </label>
-                                    </div>
-                                </div>
-                            @endforeach
+                        <div class="empresa-condition-box d-none" id="motoristaCampoCondicaoWrap">
+                            <div class="form-group">
+                                <label for="motoristaCampoCondicaoCampo">Campo de referência</label>
+                                <select class="form-control form-control-sm" id="motoristaCampoCondicaoCampo"></select>
+                            </div>
+                            <div class="form-group">
+                                <label for="motoristaCampoCondicaoOperador">Condição</label>
+                                <select class="form-control form-control-sm" id="motoristaCampoCondicaoOperador">
+                                    <option value="igual">É igual a</option>
+                                    <option value="diferente">É diferente de</option>
+                                    <option value="preenchido">Está preenchido</option>
+                                    <option value="vazio">Está vazio</option>
+                                </select>
+                            </div>
+                            <div class="form-group" id="motoristaCampoCondicaoValorTextWrap">
+                                <label for="motoristaCampoCondicaoValor">Valor esperado</label>
+                                <input type="text" class="form-control form-control-sm" id="motoristaCampoCondicaoValor" maxlength="120" placeholder="Ex: Sim">
+                                <small class="text-muted d-block mt-1">Para arquivos, use a condição “Está preenchido” ou “Está vazio”.</small>
+                            </div>
+                            <div class="form-group d-none" id="motoristaCampoCondicaoValorListWrap">
+                                <label for="motoristaCampoCondicaoValorList">Itens esperados</label>
+                                <select class="form-control form-control-sm" id="motoristaCampoCondicaoValorList" multiple data-enhance-select data-placeholder="Selecione um ou mais itens"></select>
+                                <small class="text-muted d-block mt-1">Selecione um ou mais itens da lista de referência.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="motoristaCampoSelected" checked>
+                                <label class="form-check-label" for="motoristaCampoSelected">Selecionado para esta empresa</label>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="motoristaCampoObrigatorio">
+                                <label class="form-check-label" for="motoristaCampoObrigatorio">Obrigatório</label>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end" style="gap:8px;">
+                            <button type="button" class="btn btn-light btn-sm" data-close-motorista-modal>Cancelar</button>
+                            <button type="button" class="btn btn-primary btn-sm" id="motoristaCampoSave">Salvar campo</button>
                         </div>
                     </div>
                 </div>
@@ -1012,6 +1089,133 @@
         font-weight: 700;
     }
 
+    .motorista-app-custom-fields__list {
+        display: grid;
+        gap: 10px;
+    }
+
+    .motorista-app-custom-field {
+        border: 1px solid #dbe5f0;
+        border-radius: 12px;
+        background: #ffffff;
+        padding: 12px;
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .04);
+    }
+
+    .motorista-app-custom-field__main {
+        min-width: 0;
+    }
+
+    .motorista-app-custom-field__title {
+        font-weight: 700;
+        color: #0f2740;
+        margin-bottom: 2px;
+    }
+
+    .motorista-app-custom-field__meta {
+        color: #64748b;
+        font-size: .86rem;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .motorista-app-custom-field__actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        max-width: 300px;
+    }
+
+    .motorista-app-custom-field__order {
+        display: flex;
+        gap: 4px;
+    }
+
+    .motorista-app-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: #eff6ff;
+        border: 1px solid #dbeafe;
+        color: #1d4ed8;
+        font-size: .74rem;
+        font-weight: 700;
+    }
+
+    .motorista-app-options-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+    }
+
+    .motorista-app-option-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        border-radius: 999px;
+        padding: 4px 9px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        font-size: .75rem;
+        font-weight: 600;
+    }
+
+    .motorista-app-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1055;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .motorista-app-modal.d-none {
+        display: none;
+    }
+
+    .motorista-app-modal__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(15, 23, 42, .48);
+        backdrop-filter: blur(2px);
+    }
+
+    .motorista-app-modal__dialog {
+        position: relative;
+        width: min(100%, 560px);
+        border-radius: 16px;
+        background: #fff;
+        padding: 18px;
+        box-shadow: 0 24px 60px rgba(15, 23, 42, .22);
+        border: 1px solid rgba(255, 255, 255, .65);
+    }
+
+    .empresa-condition-box {
+        border: 1px solid #dbe5f0;
+        border-radius: 12px;
+        padding: 12px;
+        background: #f8fbff;
+        margin-bottom: 1rem;
+    }
+
+    .empresa-condition-box .form-group:last-child {
+        margin-bottom: 0;
+    }
+
     .empresa-calcao-help {
         padding: 10px 12px;
         border-radius: 10px;
@@ -1044,6 +1248,7 @@
 @stop
 
 @section('js')
+@vite(['resources/css/app.css', 'resources/js/app.js'])
 <script>
     (function () {
         const isEdit = @json($isEdit);
@@ -1057,6 +1262,595 @@
         const blocks = document.querySelectorAll('.gateway-fields');
         const calcaoAtivo = document.getElementById('calcao_ativo');
         const calcaoWrap = document.getElementById('calcao-config-wrap');
+        const customFieldsInput = document.getElementById('aluguel_app_campos_personalizados');
+        const customFieldsList = document.getElementById('motoristaCustomFieldsList');
+        const customFieldsModal = document.getElementById('motoristaCampoModal');
+        const customFieldLabel = document.getElementById('motoristaCampoLabel');
+        const customFieldType = document.getElementById('motoristaCampoType');
+        const customFieldOptionsWrap = document.getElementById('motoristaCampoOptionsWrap');
+        const customFieldOptions = document.getElementById('motoristaCampoOptions');
+        const customFieldMultipleWrap = document.getElementById('motoristaCampoMultipleWrap');
+        const customFieldMultiple = document.getElementById('motoristaCampoMultiple');
+        const customFieldTemCondicao = document.getElementById('motoristaCampoTemCondicao');
+        const customFieldCondicaoWrap = document.getElementById('motoristaCampoCondicaoWrap');
+        const customFieldCondicaoCampo = document.getElementById('motoristaCampoCondicaoCampo');
+        const customFieldCondicaoOperador = document.getElementById('motoristaCampoCondicaoOperador');
+        const customFieldCondicaoValorTextWrap = document.getElementById('motoristaCampoCondicaoValorTextWrap');
+        const customFieldCondicaoValor = document.getElementById('motoristaCampoCondicaoValor');
+        const customFieldCondicaoValorListWrap = document.getElementById('motoristaCampoCondicaoValorListWrap');
+        const customFieldCondicaoValorList = document.getElementById('motoristaCampoCondicaoValorList');
+        const customFieldModalTitle = document.getElementById('motoristaCampoModalTitle');
+        const customFieldSelected = document.getElementById('motoristaCampoSelected');
+        const customFieldObrigatorio = document.getElementById('motoristaCampoObrigatorio');
+        const customFieldSave = document.getElementById('motoristaCampoSave');
+        const customFieldAdd = document.getElementById('btnAddMotoristaCampo');
+        const DEFAULT_CONDITION_FIELDS = [
+            { key: 'cnh_definitiva', label: 'CNH definitiva' },
+            { key: 'cnh_ear', label: 'CNH com EAR' },
+            { key: 'comprovante_residencia', label: 'Comprovante de residência' },
+            { key: 'comprovante_cadastro_app', label: 'Comprovante de cadastro no app' },
+            { key: 'documento_adicional', label: 'Documento adicional' },
+        ];
+        let motoristaCampos = [];
+        let editingCustomFieldIndex = null;
+
+        function parseCustomFields() {
+            if (!customFieldsInput) {
+                motoristaCampos = [];
+                return;
+            }
+
+            try {
+                const parsed = JSON.parse(customFieldsInput.value || '[]');
+                motoristaCampos = Array.isArray(parsed) ? parsed.filter((item) => item && typeof item === 'object') : [];
+            } catch (error) {
+                motoristaCampos = [];
+            }
+
+            motoristaCampos = motoristaCampos
+                .map((item, index) => normalizeField(item, index + 1))
+                .sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+
+            syncCustomFieldsInput();
+        }
+
+        function normalizeField(item, fallbackOrder) {
+            const rawOptions = Array.isArray(item?.options)
+                ? item.options
+                : (Array.isArray(item?.opcoes) ? item.opcoes : []);
+            const options = rawOptions
+                .map((option) => String(option || '').trim())
+                .filter(Boolean);
+            const type = ['arquivo', 'texto', 'texto_longo', 'lista', 'data'].includes(item?.type)
+                ? item.type
+                : 'arquivo';
+            const condicao = normalizeCondition(item?.condicao ?? item?.condition);
+
+            return {
+                key: String(item?.key || ''),
+                label: String(item?.label || ''),
+                type,
+                selected: item?.selected !== false,
+                obrigatorio: item?.obrigatorio === true,
+                ordem: Number.isFinite(Number(item?.ordem)) ? Number(item.ordem) : fallbackOrder,
+                options,
+                multiple: item?.multiple === true,
+                condicao,
+            };
+        }
+
+        function normalizeCondition(value) {
+            if (!value || typeof value !== 'object' || Array.isArray(value)) {
+                return null;
+            }
+
+            const campoKey = String(value?.campo_key || value?.campo || '').trim();
+            const operador = String(value?.operador || '').trim();
+            const rawValor = value?.valor ?? [];
+            const condicaoValor = Array.isArray(rawValor)
+                ? rawValor.map((item) => String(item || '').trim()).filter(Boolean)
+                : String(rawValor || '').trim();
+
+            if (!campoKey || !['igual', 'diferente', 'preenchido', 'vazio'].includes(operador)) {
+                return null;
+            }
+
+            if (['igual', 'diferente'].includes(operador) && (Array.isArray(condicaoValor) ? condicaoValor.length === 0 : !condicaoValor)) {
+                return null;
+            }
+
+            return {
+                campo_key: campoKey,
+                operador,
+                valor: ['igual', 'diferente'].includes(operador) ? condicaoValor : '',
+            };
+        }
+
+        function syncCustomFieldsInput() {
+            if (!customFieldsInput) {
+                return;
+            }
+
+            motoristaCampos = motoristaCampos.map((item, index) => ({
+                ...normalizeField(item, index + 1),
+                ordem: index + 1,
+            }));
+
+            customFieldsInput.value = JSON.stringify(motoristaCampos);
+        }
+
+        function escapeHtml(value) {
+            return String(value || '')
+                .replaceAll('&', '&amp;')
+                .replaceAll('<', '&lt;')
+                .replaceAll('>', '&gt;')
+                .replaceAll('"', '&quot;')
+                .replaceAll("'", '&#039;');
+        }
+
+        function typeLabel(type) {
+            if (type === 'texto') return 'Texto';
+            if (type === 'texto_longo') return 'Texto longo';
+            if (type === 'lista') return 'Lista';
+            if (type === 'data') return 'Data';
+            return 'Arquivo';
+        }
+
+        function toggleListOptions() {
+            if (!customFieldOptionsWrap || !customFieldType) {
+                return;
+            }
+
+            const isList = customFieldType.value === 'lista';
+            customFieldOptionsWrap.classList.toggle('d-none', !isList);
+            if (customFieldMultipleWrap) {
+                customFieldMultipleWrap.classList.toggle('d-none', !isList);
+            }
+        }
+
+        function getConditionFieldOptions() {
+            const options = [...DEFAULT_CONDITION_FIELDS];
+
+            motoristaCampos.forEach((campo) => {
+                if (!campo || !campo.key || !campo.label) {
+                    return;
+                }
+
+                if (options.some((option) => option.key === campo.key)) {
+                    return;
+                }
+
+                options.push({
+                    key: campo.key,
+                    label: campo.label,
+                });
+            });
+
+            return options;
+        }
+
+        function getConditionFieldDefinition(campoKey) {
+            const fixed = DEFAULT_CONDITION_FIELDS.find((field) => field.key === campoKey);
+            if (fixed) {
+                return {
+                    key: fixed.key,
+                    label: fixed.label,
+                    type: 'arquivo',
+                    options: [],
+                    multiple: false,
+                };
+            }
+
+            const dynamic = motoristaCampos.find((campo) => campo.key === campoKey);
+            if (!dynamic) {
+                return null;
+            }
+
+            return {
+                key: dynamic.key,
+                label: dynamic.label,
+                type: dynamic.type || 'arquivo',
+                options: Array.isArray(dynamic.options) ? dynamic.options : [],
+                multiple: dynamic.multiple === true,
+            };
+        }
+
+        function renderConditionFieldOptions(selectedKey = '') {
+            if (!customFieldCondicaoCampo) {
+                return;
+            }
+
+            const options = getConditionFieldOptions();
+            customFieldCondicaoCampo.innerHTML = [
+                '<option value="">Selecione um campo</option>',
+                ...options.map((option) => `<option value="${escapeHtml(option.key)}"${option.key === selectedKey ? ' selected' : ''}>${escapeHtml(option.label)}</option>`),
+            ].join('');
+        }
+
+        function renderConditionValueChoices(options, selectedValues = []) {
+            if (!customFieldCondicaoValorList) {
+                return;
+            }
+
+            const values = Array.isArray(selectedValues)
+                ? selectedValues.map((item) => String(item || '').trim()).filter(Boolean)
+                : [];
+            const normalizedOptions = Array.isArray(options)
+                ? options.map((item) => String(item || '').trim()).filter(Boolean)
+                : [];
+
+            const instance = customFieldCondicaoValorList._choicesInstance;
+            if (instance) {
+                try {
+                    instance.clearChoices();
+                    instance.setChoices(normalizedOptions.map((option) => ({
+                        value: option,
+                        label: option,
+                        selected: values.includes(option),
+                        disabled: false,
+                    })), 'value', 'label', true);
+                } catch (error) {
+                    customFieldCondicaoValorList.innerHTML = normalizedOptions
+                        .map((option) => `<option value="${escapeHtml(option)}"${values.includes(option) ? ' selected' : ''}>${escapeHtml(option)}</option>`)
+                        .join('');
+                }
+            } else {
+                customFieldCondicaoValorList.innerHTML = normalizedOptions
+                    .map((option) => `<option value="${escapeHtml(option)}"${values.includes(option) ? ' selected' : ''}>${escapeHtml(option)}</option>`)
+                    .join('');
+            }
+        }
+
+        function conditionOperatorLabel(operador) {
+            if (operador === 'igual') return 'é igual a';
+            if (operador === 'diferente') return 'é diferente de';
+            if (operador === 'preenchido') return 'está preenchido';
+            if (operador === 'vazio') return 'está vazio';
+            return operador || '';
+        }
+
+        function conditionFieldLabel(campoKey) {
+            return getConditionFieldDefinition(campoKey)?.label || campoKey;
+        }
+
+        function conditionSummary(condicao) {
+            const normalized = normalizeCondition(condicao);
+            if (!normalized) {
+                return '';
+            }
+
+            const label = escapeHtml(conditionFieldLabel(normalized.campo_key));
+            const operador = escapeHtml(conditionOperatorLabel(normalized.operador));
+            const valorLista = Array.isArray(normalized.valor)
+                ? normalized.valor.map((item) => escapeHtml(item)).join(', ')
+                : '';
+            const valor = Array.isArray(normalized.valor)
+                ? (valorLista ? ` <strong>${valorLista}</strong>` : '')
+                : (normalized.valor ? ` <strong>${escapeHtml(normalized.valor)}</strong>` : '');
+            return `Se <strong>${label}</strong> ${operador}${valor}`;
+        }
+
+        function toggleConditionBox() {
+            if (!customFieldCondicaoWrap || !customFieldTemCondicao) {
+                return;
+            }
+
+            customFieldCondicaoWrap.classList.toggle('d-none', !customFieldTemCondicao.checked);
+        }
+
+        function toggleConditionValueField() {
+            if (!customFieldCondicaoValorTextWrap || !customFieldCondicaoValorListWrap || !customFieldCondicaoOperador || !customFieldCondicaoCampo) {
+                return;
+            }
+
+            const operador = customFieldCondicaoOperador.value;
+            const campo = getConditionFieldDefinition(customFieldCondicaoCampo.value || '');
+            const isListField = campo?.type === 'lista';
+            const shouldHide = ['preenchido', 'vazio'].includes(operador);
+
+            customFieldCondicaoValorTextWrap.classList.toggle('d-none', shouldHide || isListField);
+            customFieldCondicaoValorListWrap.classList.toggle('d-none', shouldHide || !isListField);
+
+            if (isListField) {
+                renderConditionValueChoices(campo.options || [], normalizeConditionValueArray(customFieldCondicaoValorList?.selectedOptions || []));
+            } else if (customFieldCondicaoValor && customFieldCondicaoValorList) {
+                customFieldCondicaoValorList.innerHTML = '';
+                const instance = customFieldCondicaoValorList._choicesInstance;
+                if (instance) {
+                    try {
+                        instance.clearChoices();
+                    } catch (error) {
+                        // noop
+                    }
+                }
+            }
+        }
+
+        function normalizeConditionValueArray(value) {
+            if (Array.isArray(value)) {
+                return value.map((item) => String(item || '').trim()).filter(Boolean);
+            }
+
+            if (!value) {
+                return [];
+            }
+
+            if (typeof value.length === 'number' && value.length >= 0 && typeof value.item === 'function') {
+                return [...value].map((item) => String(item?.value || '').trim()).filter(Boolean);
+            }
+
+            return [String(value || '').trim()].filter(Boolean);
+        }
+
+        function renderCustomFields() {
+            if (!customFieldsList) {
+                return;
+            }
+
+            if (!motoristaCampos.length) {
+                customFieldsList.innerHTML = '<div class="text-muted">Nenhum campo personalizado cadastrado para esta empresa.</div>';
+                syncCustomFieldsInput();
+                return;
+            }
+
+            customFieldsList.innerHTML = motoristaCampos.map((campo, index) => {
+                const checked = campo.selected ? 'checked' : '';
+                const label = escapeHtml(campo.label || 'Campo sem nome');
+                const type = escapeHtml(typeLabel(campo.type));
+                const key = escapeHtml(campo.key || `campo_${index}`);
+                const options = Array.isArray(campo.options) ? campo.options : [];
+                const multipleBadge = campo.type === 'lista' && campo.multiple
+                    ? '<span class="motorista-app-badge" style="background:#eef2ff;border-color:#c7d2fe;color:#4338ca;">Múltipla</span>'
+                    : '';
+                const optionsHtml = options.length
+                    ? `<div class="motorista-app-options-list">${options.map((option) => `<span class="motorista-app-option-pill">${escapeHtml(option)}</span>`).join('')}</div>`
+                    : '';
+                const obrigatorioBadge = campo.obrigatorio
+                    ? '<span class="motorista-app-badge" style="background:#fef3c7;border-color:#fcd34d;color:#92400e;">Obrigatório</span>'
+                    : '';
+                const condicaoBadge = campo.condicao
+                    ? '<span class="motorista-app-badge" style="background:#ecfeff;border-color:#a5f3fc;color:#155e75;">Condicional</span>'
+                    : '';
+                const condicaoTexto = campo.condicao
+                    ? `<div class="text-muted" style="font-size:.78rem;margin-top:6px;">${conditionSummary(campo.condicao)}</div>`
+                    : '';
+
+                return `
+                    <div class="motorista-app-custom-field" data-motorista-custom-field="${key}">
+                        <div class="motorista-app-custom-field__main">
+                            <div class="motorista-app-custom-field__title">${label}</div>
+                            <div class="motorista-app-custom-field__meta">
+                                <span class="motorista-app-badge">${type}</span>
+                                ${multipleBadge}
+                                ${obrigatorioBadge}
+                                ${condicaoBadge}
+                                <span>Chave: ${key}</span>
+                                <span>Ordem: ${index + 1}</span>
+                            </div>
+                            ${condicaoTexto}
+                            ${optionsHtml}
+                        </div>
+                        <div class="motorista-app-custom-field__actions">
+                            <div class="form-check m-0">
+                                <input class="form-check-input" type="checkbox" ${checked} data-custom-field-selected="${index}" id="customFieldSelected_${index}">
+                                <label class="form-check-label" for="customFieldSelected_${index}">Selecionado</label>
+                            </div>
+                            <div class="motorista-app-custom-field__order">
+                                <button type="button" class="btn btn-outline-primary btn-sm" data-custom-field-edit="${index}">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-custom-field-up="${index}" ${index === 0 ? 'disabled' : ''}>
+                                    <i class="fas fa-arrow-up"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" data-custom-field-down="${index}" ${index === motoristaCampos.length - 1 ? 'disabled' : ''}>
+                                    <i class="fas fa-arrow-down"></i>
+                                </button>
+                                <button type="button" class="btn btn-outline-danger btn-sm" data-custom-field-remove="${index}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            customFieldsList.querySelectorAll('[data-custom-field-selected]').forEach((checkbox) => {
+                checkbox.addEventListener('change', () => {
+                    const index = Number(checkbox.getAttribute('data-custom-field-selected'));
+                    if (!Number.isFinite(index) || !motoristaCampos[index]) {
+                        return;
+                    }
+                    motoristaCampos[index].selected = checkbox.checked;
+                    syncCustomFieldsInput();
+                });
+            });
+
+            customFieldsList.querySelectorAll('[data-custom-field-remove]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const index = Number(button.getAttribute('data-custom-field-remove'));
+                    if (!Number.isFinite(index)) {
+                        return;
+                    }
+                    motoristaCampos.splice(index, 1);
+                    renderCustomFields();
+                });
+            });
+
+            customFieldsList.querySelectorAll('[data-custom-field-edit]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const index = Number(button.getAttribute('data-custom-field-edit'));
+                    if (!Number.isFinite(index) || !motoristaCampos[index]) {
+                        return;
+                    }
+
+                    openCustomFieldsModal(index);
+                });
+            });
+
+            customFieldsList.querySelectorAll('[data-custom-field-up]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const index = Number(button.getAttribute('data-custom-field-up'));
+                    if (!Number.isFinite(index) || index <= 0) {
+                        return;
+                    }
+
+                    const current = motoristaCampos[index];
+                    motoristaCampos[index] = motoristaCampos[index - 1];
+                    motoristaCampos[index - 1] = current;
+                    renderCustomFields();
+                });
+            });
+
+            customFieldsList.querySelectorAll('[data-custom-field-down]').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const index = Number(button.getAttribute('data-custom-field-down'));
+                    if (!Number.isFinite(index) || index >= motoristaCampos.length - 1) {
+                        return;
+                    }
+
+                    const current = motoristaCampos[index];
+                    motoristaCampos[index] = motoristaCampos[index + 1];
+                    motoristaCampos[index + 1] = current;
+                    renderCustomFields();
+                });
+            });
+
+            syncCustomFieldsInput();
+        }
+
+        function fillCustomFieldModal(campo) {
+            const tipoAtual = campo?.type || 'arquivo';
+            customFieldLabel.value = campo?.label || '';
+            customFieldType.value = tipoAtual;
+            if (customFieldType._choicesInstance) {
+                try {
+                    customFieldType._choicesInstance.setChoiceByValue(tipoAtual);
+                } catch (error) {
+                    // noop
+                }
+            }
+            if (customFieldOptions) {
+                customFieldOptions.value = Array.isArray(campo?.options) ? campo.options.join('\n') : '';
+            }
+            if (customFieldMultiple) {
+                customFieldMultiple.checked = !!campo?.multiple;
+            }
+            if (customFieldTemCondicao) {
+                customFieldTemCondicao.checked = !!campo?.condicao;
+            }
+
+            renderConditionFieldOptions(campo?.condicao?.campo_key || '');
+            toggleConditionBox();
+
+            if (customFieldCondicaoOperador) {
+                customFieldCondicaoOperador.value = campo?.condicao?.operador || 'igual';
+            }
+
+            if (customFieldCondicaoCampo) {
+                customFieldCondicaoCampo.value = campo?.condicao?.campo_key || '';
+            }
+
+            const campoRef = getConditionFieldDefinition(campo?.condicao?.campo_key || '');
+            const condicaoValor = campo?.condicao?.valor;
+
+            if (campoRef?.type === 'lista') {
+                renderConditionValueChoices(campoRef.options || [], normalizeConditionValueArray(condicaoValor));
+            } else if (customFieldCondicaoValor) {
+                customFieldCondicaoValor.value = Array.isArray(condicaoValor) ? condicaoValor.join(', ') : (condicaoValor || '');
+            }
+
+            if (customFieldSelected) {
+                customFieldSelected.checked = campo?.selected !== false;
+            }
+
+            if (customFieldObrigatorio) {
+                customFieldObrigatorio.checked = !!campo?.obrigatorio;
+            }
+
+            toggleListOptions();
+            toggleConditionValueField();
+        }
+
+        function openCustomFieldsModal(index = null) {
+            if (!customFieldsModal) {
+                return;
+            }
+
+            editingCustomFieldIndex = Number.isInteger(index) && motoristaCampos[index] ? index : null;
+
+            if (customFieldModalTitle) {
+                customFieldModalTitle.textContent = editingCustomFieldIndex === null ? 'Adicionar campo' : 'Editar campo';
+            }
+
+            if (customFieldSave) {
+                customFieldSave.textContent = editingCustomFieldIndex === null ? 'Salvar campo' : 'Atualizar campo';
+            }
+
+            if (editingCustomFieldIndex === null) {
+                customFieldLabel.value = '';
+                customFieldType.value = 'arquivo';
+                if (customFieldType._choicesInstance) {
+                    try {
+                        customFieldType._choicesInstance.setChoiceByValue('arquivo');
+                    } catch (error) {
+                        // noop
+                    }
+                }
+                if (customFieldOptions) {
+                    customFieldOptions.value = '';
+                }
+                if (customFieldMultiple) {
+                    customFieldMultiple.checked = false;
+                }
+                if (customFieldTemCondicao) {
+                    customFieldTemCondicao.checked = false;
+                }
+                renderConditionFieldOptions('');
+                toggleConditionBox();
+                if (customFieldCondicaoOperador) {
+                    customFieldCondicaoOperador.value = 'igual';
+                }
+                if (customFieldCondicaoValor) {
+                    customFieldCondicaoValor.value = '';
+                }
+                if (customFieldCondicaoValorList) {
+                    customFieldCondicaoValorList.innerHTML = '';
+                }
+                toggleConditionValueField();
+                if (customFieldSelected) {
+                    customFieldSelected.checked = true;
+                }
+                if (customFieldObrigatorio) {
+                    customFieldObrigatorio.checked = false;
+                }
+                toggleListOptions();
+            } else {
+                fillCustomFieldModal(motoristaCampos[editingCustomFieldIndex]);
+            }
+
+            customFieldsModal.classList.remove('d-none');
+            customFieldLabel.focus();
+        }
+
+        function closeCustomFieldsModal() {
+            if (!customFieldsModal) {
+                return;
+            }
+            editingCustomFieldIndex = null;
+            customFieldsModal.classList.add('d-none');
+        }
+
+        function makeCustomFieldKey(label) {
+            const base = String(label || 'campo')
+                .trim()
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '_')
+                .replace(/^_+|_+$/g, '');
+
+            const fallback = base || 'campo';
+            const unique = `${fallback}_${Date.now().toString(36)}`;
+            return unique.slice(0, 80);
+        }
 
         function onlyDigits(value) {
             return (value || '').replace(/\D/g, '');
@@ -1127,6 +1921,131 @@
 
             calcaoWrap.classList.toggle('d-none', calcaoAtivo.value !== 'S');
         }
+
+        parseCustomFields();
+        renderCustomFields();
+
+        if (customFieldAdd) {
+            customFieldAdd.addEventListener('click', openCustomFieldsModal);
+        }
+
+        document.querySelectorAll('[data-close-motorista-modal]').forEach((button) => {
+            button.addEventListener('click', closeCustomFieldsModal);
+        });
+
+        if (customFieldSave) {
+            customFieldSave.addEventListener('click', () => {
+                const label = customFieldLabel?.value?.trim() || '';
+                if (!label) {
+                    customFieldLabel?.focus();
+                    return;
+                }
+
+                let type = customFieldType?.value || 'arquivo';
+                if (!['arquivo', 'texto', 'texto_longo', 'lista', 'data'].includes(type)) {
+                    type = 'arquivo';
+                    if (customFieldType) {
+                        customFieldType.value = 'arquivo';
+                    }
+                }
+
+                const options = type === 'lista'
+                    ? (customFieldOptions?.value || '')
+                        .split(/\r?\n/)
+                        .map((item) => item.trim())
+                        .filter(Boolean)
+                    : [];
+
+                if (type === 'lista' && options.length === 0) {
+                    customFieldOptions?.focus();
+                    return;
+                }
+
+                let condicao = null;
+                if (customFieldTemCondicao?.checked) {
+                    const campoKey = customFieldCondicaoCampo?.value || '';
+                    const operador = customFieldCondicaoOperador?.value || 'igual';
+                    const campoRef = getConditionFieldDefinition(campoKey);
+                    const valor = campoRef?.type === 'lista'
+                        ? normalizeConditionValueArray(customFieldCondicaoValorList?.selectedOptions || [])
+                        : (customFieldCondicaoValor?.value?.trim() || '');
+
+                    if (!campoKey) {
+                        customFieldCondicaoCampo?.focus();
+                        return;
+                    }
+
+                    if (['igual', 'diferente'].includes(operador)) {
+                        const temValor = Array.isArray(valor) ? valor.length > 0 : String(valor || '').trim() !== '';
+                        if (!temValor) {
+                            if (campoRef?.type === 'lista') {
+                                customFieldCondicaoValorList?.focus();
+                            } else {
+                                customFieldCondicaoValor?.focus();
+                            }
+                            return;
+                        }
+                    }
+
+                    condicao = {
+                        campo_key: campoKey,
+                        operador,
+                        valor: ['igual', 'diferente'].includes(operador) ? valor : '',
+                    };
+                }
+
+                const payload = {
+                    key: editingCustomFieldIndex !== null && motoristaCampos[editingCustomFieldIndex]
+                        ? motoristaCampos[editingCustomFieldIndex].key
+                        : makeCustomFieldKey(label),
+                    label,
+                    type,
+                    selected: !!customFieldSelected?.checked,
+                    obrigatorio: !!customFieldObrigatorio?.checked,
+                    options,
+                    multiple: type === 'lista' ? !!customFieldMultiple?.checked : false,
+                    condicao,
+                    ordem: editingCustomFieldIndex !== null && motoristaCampos[editingCustomFieldIndex]
+                        ? motoristaCampos[editingCustomFieldIndex].ordem || (editingCustomFieldIndex + 1)
+                        : motoristaCampos.length + 1,
+                };
+
+                if (editingCustomFieldIndex !== null && motoristaCampos[editingCustomFieldIndex]) {
+                    motoristaCampos[editingCustomFieldIndex] = payload;
+                } else {
+                    motoristaCampos.push(payload);
+                }
+
+                renderCustomFields();
+                closeCustomFieldsModal();
+            });
+        }
+
+        [customFieldLabel, customFieldType].forEach((input) => {
+            if (!input) {
+                return;
+            }
+
+            input.addEventListener('keydown', (event) => {
+                if (event.key !== 'Enter') {
+                    return;
+                }
+
+                event.preventDefault();
+                customFieldSave?.click();
+            });
+        });
+
+        customFieldType?.addEventListener('change', toggleListOptions);
+        customFieldTemCondicao?.addEventListener('change', () => {
+            toggleConditionBox();
+            renderConditionFieldOptions(customFieldCondicaoCampo?.value || '');
+            toggleConditionValueField();
+        });
+        customFieldCondicaoCampo?.addEventListener('change', () => {
+            toggleConditionValueField();
+        });
+        customFieldCondicaoOperador?.addEventListener('change', toggleConditionValueField);
 
         // Wizard/Steps do cadastro de empresa (igual ao admin reserva)
         (function initEmpresaWizard() {
@@ -1237,11 +2156,16 @@
                     nfse_tomador_numero_padrao: 7, nfse_tomador_bairro_padrao: 7,
                     aluguel_app_ativo: 8, aluguel_app_exigir_aprovacao_documentos: 8,
                     aluguel_app_documento_adicional_label: 8, aluguel_app_documentos_obrigatorios: 8,
+                    aluguel_app_campos_personalizados: 8,
                 };
 
                 for (const campo of errosCampos) {
                     if (String(campo).startsWith('calcao_grupos.')) {
                         setStep(5, true);
+                        return;
+                    }
+                    if (String(campo).startsWith('aluguel_app_campos_personalizados.')) {
+                        setStep(8, true);
                         return;
                     }
                     const step = mapa[campo];

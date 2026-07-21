@@ -17,6 +17,12 @@ class StoreEmpresaRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        $camposPersonalizados = $this->input('aluguel_app_campos_personalizados');
+        if (is_string($camposPersonalizados)) {
+            $decoded = json_decode($camposPersonalizados, true);
+            $camposPersonalizados = is_array($decoded) ? $decoded : [];
+        }
+
         $this->merge([
             'cnpj' => $this->onlyDigits($this->input('cnpj')),
             'telefone' => $this->onlyDigits($this->input('telefone')),
@@ -26,6 +32,7 @@ class StoreEmpresaRequest extends FormRequest
             'cor_secundaria' => $this->normalizeColor($this->input('cor_secundaria')),
             'cor_terciaria' => $this->normalizeColor($this->input('cor_terciaria')),
             'nfse_municipio_codigo' => $this->onlyDigits($this->input('nfse_municipio_codigo')),
+            'aluguel_app_campos_personalizados' => $camposPersonalizados,
         ]);
     }
 
@@ -89,6 +96,21 @@ class StoreEmpresaRequest extends FormRequest
                 'nenhum',
             ])],
             'aluguel_app_documento_adicional_label' => ['nullable', 'string', 'max:120'],
+            'aluguel_app_campos_personalizados' => ['nullable', 'array'],
+            'aluguel_app_campos_personalizados.*.key' => ['required_with:aluguel_app_campos_personalizados', 'string', 'max:80'],
+            'aluguel_app_campos_personalizados.*.label' => ['required_with:aluguel_app_campos_personalizados', 'string', 'max:120'],
+            'aluguel_app_campos_personalizados.*.type' => ['required_with:aluguel_app_campos_personalizados', Rule::in(['arquivo', 'texto', 'texto_longo', 'lista', 'data'])],
+            'aluguel_app_campos_personalizados.*.selected' => ['nullable', 'boolean'],
+            'aluguel_app_campos_personalizados.*.obrigatorio' => ['nullable', 'boolean'],
+            'aluguel_app_campos_personalizados.*.ordem' => ['nullable', 'integer', 'min:1'],
+            'aluguel_app_campos_personalizados.*.options' => ['nullable', 'array'],
+            'aluguel_app_campos_personalizados.*.options.*' => ['nullable', 'string', 'max:120'],
+            'aluguel_app_campos_personalizados.*.multiple' => ['nullable', 'boolean'],
+            'aluguel_app_campos_personalizados.*.condicao' => ['nullable', 'array'],
+            'aluguel_app_campos_personalizados.*.condicao.campo_key' => ['nullable', 'string', 'max:80'],
+            'aluguel_app_campos_personalizados.*.condicao.operador' => ['nullable', Rule::in(['igual', 'diferente', 'preenchido', 'vazio'])],
+            'aluguel_app_campos_personalizados.*.condicao.valor' => ['nullable'],
+            'aluguel_app_campos_personalizados.*.condicao.valor.*' => ['nullable', 'string', 'max:120'],
             'nfse_ativo' => ['nullable', Rule::in(['S', 'N'])],
             'nfse_ambiente' => ['nullable', Rule::in(['homologacao', 'producao'])],
             'nfse_provedor' => ['nullable', 'string', 'max:50'],

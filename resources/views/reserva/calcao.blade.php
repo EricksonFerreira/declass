@@ -685,9 +685,9 @@
 <script>
 (function () {
     const STRIPE_KEY      = @json($stripePublicKey);
-    const AUTORIZAR_URL   = @json(route('reserva.calcao.autorizar', $reserva->id));
-    const SALVAR_CARTAO_URL = @json(route('reserva.calcao.salvar-cartao', $reserva->id));
-    const SHOW_URL        = @json(route('reserva.show', $reserva->id));
+    const AUTORIZAR_URL   = @json(route('reserva.calcao.autorizar', $reserva->codigoReserva->codigo));
+    const SALVAR_CARTAO_URL = @json(route('reserva.calcao.salvar-cartao', $reserva->codigoReserva->codigo));
+    const SHOW_URL        = @json(route('reserva.show', $reserva->codigoReserva->codigo));
     const CSRF            = @json(csrf_token());
     const VALOR           = @json((float)($calculo['valor_calculado'] ?? 0));
 
