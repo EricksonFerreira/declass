@@ -205,6 +205,32 @@ class CalcaoService
             throw new \RuntimeException('Pre-autorizacao criada mas nao confirmada pelo Stripe. Status: ' . $intent->status);
         }
 
+        if ($status === Calcao::STATUS_AUTORIZADO) {
+            try {
+                $categoria = \App\Models\CategoriaFinanceira::firstOrCreate(
+                    ['empresa_id' => $empresa->id, 'nome' => 'Recebimento de Calção'],
+                    ['tipo' => 'receita', 'ativo' => true]
+                );
+
+                app(\App\Actions\Financeiro\CreateLancamentoAction::class)->handle([
+                    'empresa_id' => $empresa->id,
+                    'descricao' => 'Recebimento de Calção RES-' . str_pad($reserva->id, 4, '0', STR_PAD_LEFT),
+                    'valor' => $calculo['valor_calculado'],
+                    'tipo' => 'receita',
+                    'categoria_financeira_id' => $categoria->id,
+                    'data_vencimento' => now()->toDateString(),
+                    'data_pagamento' => now()->toDateString(),
+                    'status' => 'pago',
+                    'reserva_id' => $reserva->id,
+                    'veiculo_id' => $reserva->veiculo_id,
+                    'user_id' => Auth::id() ?? $reserva->user_id,
+                    'observacoes' => 'Gerado automaticamente na autorização do calção.',
+                ]);
+            } catch (\Throwable $e) {
+                Log::error('Erro ao integrar calção autorizado com fluxo de caixa: ' . $e->getMessage());
+            }
+        }
+
         return $calcao;
     }
 
@@ -295,6 +321,30 @@ class CalcaoService
             'usuario_responsavel_id'   => Auth::id(),
             'stripe_response'          => $intent->toArray(),
         ]);
+
+        try {
+            $categoria = \App\Models\CategoriaFinanceira::firstOrCreate(
+                ['empresa_id' => $calcao->empresa_id, 'nome' => 'Devolução de Calção'],
+                ['tipo' => 'despesa', 'ativo' => true]
+            );
+
+            app(\App\Actions\Financeiro\CreateLancamentoAction::class)->handle([
+                'empresa_id' => $calcao->empresa_id,
+                'descricao' => 'Devolução de Calção RES-' . str_pad($calcao->reserva_id, 4, '0', STR_PAD_LEFT),
+                'valor' => $calcao->valor_autorizado,
+                'tipo' => 'despesa',
+                'categoria_financeira_id' => $categoria->id,
+                'data_vencimento' => now()->toDateString(),
+                'data_pagamento' => now()->toDateString(),
+                'status' => 'pago',
+                'reserva_id' => $calcao->reserva_id,
+                'veiculo_id' => $calcao->contratoCheckin?->veiculo_id,
+                'user_id' => Auth::id() ?? $calcao->cliente_id,
+                'observacoes' => 'Gerado automaticamente na devolução/liberação do calção.',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('Erro ao integrar calção liberado com fluxo de caixa: ' . $e->getMessage());
+        }
 
         return $calcao->fresh();
     }

@@ -131,6 +131,48 @@
                     </div>
                 </div>
 
+                @if(!$isEdit)
+                    <div class="card p-3 mb-4 bg-light border-0" style="border-radius: 8px;">
+                        <div class="custom-control custom-checkbox mb-2">
+                            <input type="checkbox" class="custom-control-input" id="recorrente" name="recorrente" value="1" {{ old('recorrente') ? 'checked' : '' }}>
+                            <label class="custom-control-label font-weight-bold text-secondary" for="recorrente">Este é um lançamento recorrente / parcelado</label>
+                        </div>
+                        
+                        <div class="row d-none" id="recorrencia_campos">
+                            <div class="col-md-6 form-group">
+                                <label for="recorrencia" class="fc-label">Frequência</label>
+                                <select name="recorrencia" id="recorrencia" class="form-control form-control-sm">
+                                    <option value="mensal" {{ old('recorrencia') === 'mensal' ? 'selected' : '' }}>Mensal</option>
+                                    <option value="semanal" {{ old('recorrencia') === 'semanal' ? 'selected' : '' }}>Semanal</option>
+                                    <option value="anual" {{ old('recorrencia') === 'anual' ? 'selected' : '' }}>Anual</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 form-group">
+                                <label for="parcelas_totais" class="fc-label">Número de Parcelas / Ocorrências</label>
+                                <input type="number" name="parcelas_totais" id="parcelas_totais" class="form-control form-control-sm" min="2" max="120" value="{{ old('parcelas_totais', 12) }}">
+                            </div>
+                        </div>
+                    </div>
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const chk = document.getElementById('recorrente');
+                            const div = document.getElementById('recorrencia_campos');
+                            if (chk && div) {
+                                const toggle = () => {
+                                    if (chk.checked) {
+                                        div.classList.remove('d-none');
+                                    } else {
+                                        div.classList.add('d-none');
+                                    }
+                                };
+                                chk.addEventListener('change', toggle);
+                                toggle(); // init
+                            }
+                        });
+                    </script>
+                @endif
+
                 <div class="form-group mb-4">
                     <label for="observacoes" class="fc-label">Observações</label>
                     <textarea name="observacoes" id="observacoes" rows="3" class="form-control @error('observacoes') is-invalid @enderror" placeholder="Informações adicionais">{{ old('observacoes', $lancamento->observacoes ?? '') }}</textarea>

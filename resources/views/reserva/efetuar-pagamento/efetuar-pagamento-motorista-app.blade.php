@@ -93,7 +93,7 @@
         <div class="col-lg-7 mb-4">
             <x-pagamento.cartao-stripe
                 id="motoristaAppPagamento"
-                :action="route('reserva.pagamento.confirmar', $pagamento->id)"
+                :action="route('reserva.pagamento.confirmar',$codigoReserva)"
                 :adicionar-url="route('usuario.adicionarMetodoPagamento', $reservaMotoristaApp->user_id)"
                 :stripe-public-key="$stripePublicKey"
                 :metodos-pagamento="$metodosPagamento"
@@ -122,7 +122,7 @@
                         <i class="fas fa-info-circle text-primary mr-2"></i>
                         Use esta opção quando o cliente pagar na empresa ou por um meio externo.
                     </div>
-                    <form id="manual-payment-form" action="{{ route('reserva.pagamento.confirmar', $pagamento->id) }}" method="POST">
+                    <form id="manual-payment-form" action="{{ route('reserva.pagamento.confirmar',$codigoReserva) }}" method="POST">
                         @csrf
                         <div class="form-group">
                             <label class="ep-form-label"><i class="fas fa-wallet mr-1"></i> Método de pagamento</label>

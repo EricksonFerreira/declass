@@ -40,9 +40,6 @@ class VeiculoDanoMonitoramentoController extends Controller
         $osItensPorDano = OrdemServicoItem::query()
             ->with(['ordemServico:id,numero,status'])
             ->whereIn('veiculo_dano_id', $danos->getCollection()->pluck('id')->all())
-            ->whereHas('ordemServico', function ($subQuery) {
-                $subQuery->abertasOuEmAndamento();
-            })
             ->orderByDesc('id')
             ->get()
             ->keyBy('veiculo_dano_id');
@@ -50,7 +47,7 @@ class VeiculoDanoMonitoramentoController extends Controller
         $danos->setCollection(
             $danos->getCollection()->map(function (VeiculoDanos $dano) use ($osItensPorDano) {
                 $itemOs = $osItensPorDano->get($dano->id);
-                $dano->os_aberta = $itemOs?->ordemServico;
+                $dano->os_associada = $itemOs?->ordemServico;
 
                 return $dano;
             })
@@ -74,6 +71,7 @@ class VeiculoDanoMonitoramentoController extends Controller
         }
 
         $veiculoDano->update([
+            'status' => 'corrigida',
             'correcao_descricao' => $request->validated()['correcao_descricao'],
             'correcao_data' => now(),
             'correcao_user_id' => Auth::id(),

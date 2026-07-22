@@ -162,7 +162,7 @@ class SiteApresentacaoController extends Controller
             'planos' => \App\Models\Plano::ativos()->get(),
             'vantagensTitulo' => $this->textValue($textos, 'vantagens_titulo', 'Por que escolher '.$empresa->nome),
             'vantagensLabelSuperior' => $this->textValue($textos, 'vantagens_label_superior', 'Diferenciais'),
-            'vantagensDescricao' => $this->textValue($textos, 'vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado, com foco em conversÃ£o, credibilidade e rapidez no atendimento.'),
+            'vantagensDescricao' => $this->textValue($textos, 'vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado, com foco em conversão, credibilidade e rapidez no atendimento.'),
             'beneficios' => $this->beneficios($textos),
             'etapasTitulo' => $this->textValue($textos, 'etapas_titulo', 'Como funciona a locação'),
             'etapasLabelSuperior' => $this->textValue($textos, 'etapas_label_superior', 'Jornada do cliente'),

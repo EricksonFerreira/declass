@@ -107,7 +107,7 @@ class ConfirmarPagamentoClienteMotoristaAppAction
                 'currency' => $currency,
                 'payment_method' => (string) ($validated['payment_method'] ?? ''),
                 'customer_id' => (string) ($reservaMotoristaApp->user?->stripe_id ?? ''),
-                'descricao' => 'Pagamento da reserva motorista APP #' . $reservaMotoristaApp->id,
+                'descricao' => 'Pagamento da reserva motorista APP #'.$reservaMotoristaApp->id,
                 'payer_email' => (string) ($reservaMotoristaApp->user?->email ?? ''),
                 'installments' => (int) ($validated['installments'] ?? 1),
             ], $credenciais);
@@ -142,7 +142,7 @@ class ConfirmarPagamentoClienteMotoristaAppAction
                     'metodo_pagamento' => $metodoPagamento,
                     'pago_em' => now(),
                     'referencia_pagamento' => $validated['referencia_pagamento'] ?? $gatewayTransactionId,
-                    'observacoes' => trim(($pagamento->observacoes ?? '') . ' (Pagamento parcial de R$ ' . number_format($valorCobrado, 2, ',', '.') . ')'),
+                    'observacoes' => trim(($pagamento->observacoes ?? '').' (Pagamento parcial de R$ '.number_format($valorCobrado, 2, ',', '.').')'),
                     'metadados' => array_merge((array) ($pagamento->metadados ?? []), [
                         'gateway_transaction_id' => $gatewayTransactionId,
                         'gateway_resultado' => $gatewayResultado,
@@ -162,7 +162,7 @@ class ConfirmarPagamentoClienteMotoristaAppAction
                     'data_inicio_prevista' => $pagamento->data_inicio_prevista,
                     'data_fim_prevista' => $pagamento->data_fim_prevista,
                     'status' => 'pendente',
-                    'observacoes' => 'Saldo remanescente de ciclo (R$ ' . number_format($saldoRestante, 2, ',', '.') . ' pendente de R$ ' . number_format($valorTotal, 2, ',', '.') . ').',
+                    'observacoes' => 'Saldo remanescente de ciclo (R$ '.number_format($saldoRestante, 2, ',', '.').' pendente de R$ '.number_format($valorTotal, 2, ',', '.').').',
                     'metadados' => [
                         'tipo' => 'saldo_remanescente',
                         'pagamento_pai_id' => $pagamento->id,
@@ -237,7 +237,7 @@ class ConfirmarPagamentoClienteMotoristaAppAction
                 return response()->json([
                     'success' => true,
                     'message' => $saldoRestante > 0
-                        ? 'Pagamento parcial registrado com sucesso. Saldo restante: R$ ' . number_format($saldoRestante, 2, ',', '.')
+                        ? 'Pagamento parcial registrado com sucesso. Saldo restante: R$ '.number_format($saldoRestante, 2, ',', '.')
                         : 'Pagamento confirmado com sucesso.',
                 ]);
             }
@@ -245,7 +245,7 @@ class ConfirmarPagamentoClienteMotoristaAppAction
             if ($saldoRestante > 0) {
                 return redirect()
                     ->back()
-                    ->with('success', 'Pagamento parcial registrado com sucesso. Saldo pendente: R$ ' . number_format($saldoRestante, 2, ',', '.'));
+                    ->with('success', 'Pagamento parcial registrado com sucesso.');
             }
 
             return redirect()

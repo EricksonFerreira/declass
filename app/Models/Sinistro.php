@@ -158,6 +158,11 @@ class Sinistro extends Model
         return $this->hasMany(SinistroHistorico::class, 'sinistro_id')->latest();
     }
 
+    public function ordensServico()
+    {
+        return $this->hasMany(OrdemServico::class, 'sinistro_id');
+    }
+
     // ---- Accessors ----
 
     public function getLabelTipoAttribute(): string

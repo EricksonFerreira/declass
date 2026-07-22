@@ -12,4 +12,5 @@ Route::prefix('ordem-servico')->name('ordem-servico.')->group(function () {
     Route::get('{ordem_servico}', [OrdemServicoController::class, 'show'])->name('show');
     Route::post('{ordem_servico}/status', [OrdemServicoController::class, 'atualizarStatus'])->name('status');
     Route::post('{ordem_servico}/concluir', [OrdemServicoController::class, 'concluir'])->name('concluir');
+    Route::post('remover-dano/{dano}', [OrdemServicoController::class, 'removerDano'])->name('remover-dano');
 });

@@ -11,6 +11,12 @@ class VeiculoDanos extends Model
 {
     use HasFactory;
 
+    const STATUS_PENDENTE = 'pendente';
+    const STATUS_EM_CORRECAO = 'em_correcao';
+    const STATUS_CORRIGIDA = 'corrigida';
+    const STATUS_PARCIALMENTE_CORRIGIDA = 'parcialmente_corrigida';
+    const STATUS_DESCARTADA = 'descartada';
+
     protected $table = 'veiculo_danos';
 
     protected $fillable = [
@@ -29,6 +35,7 @@ class VeiculoDanos extends Model
         'correcao_descricao',
         'correcao_data',
         'correcao_user_id',
+        'status',
     ];
 
     protected $casts = [
@@ -79,6 +86,14 @@ class VeiculoDanos extends Model
         );
     }
 
+    public function ordemServicoItens(): HasMany
+    {
+        return $this->hasMany(
+            OrdemServicoItem::class,
+            'veiculo_dano_id'
+        );
+    }
+
     public function imagens(): HasMany
     {
         return $this->hasMany(
@@ -102,11 +117,11 @@ class VeiculoDanos extends Model
 
     public function scopeSemCorrecao($query)
     {
-        return $query->whereNull('correcao_data');
+        return $query->whereIn('status', ['pendente', 'em_correcao']);
     }
 
     public function scopeComCorrecao($query)
     {
-        return $query->whereNotNull('correcao_data');
+        return $query->whereIn('status', ['corrigida', 'parcialmente_corrigida', 'descartada']);
     }
 }

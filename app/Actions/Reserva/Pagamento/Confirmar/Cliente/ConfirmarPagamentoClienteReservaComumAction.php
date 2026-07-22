@@ -184,7 +184,7 @@ class ConfirmarPagamentoClienteReservaComumAction
             if ($saldoRestanteAposPagamento > 0.009) {
                 return redirect()
                     ->back()
-                    ->with('success', 'Pagamento parcial registrado com sucesso. Saldo pendente: R$ ' . number_format($saldoRestanteAposPagamento, 2, ',', '.'))
+                    ->with('success', 'Pagamento parcial registrado com sucesso.')
                     ->with('warning', $nfseWarning);
             }
 

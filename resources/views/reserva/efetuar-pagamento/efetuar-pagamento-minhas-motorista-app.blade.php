@@ -91,7 +91,7 @@
         <div class="col-lg-7 mb-4">
             <x-pagamento.cartao-stripe
                 id="minhasMotoristaAppPagamento"
-                :action="route('reserva.minhas.pagamento.confirmar', ['pagamento' => $pagamento->id])"
+                :action="route('reserva.minhas.pagamento.confirmar',$codigoReserva)"
                 :adicionar-url="route('usuario.adicionarMetodoPagamento', $reservaMotoristaApp->user_id)"
                 :stripe-public-key="$stripePublicKey"
                 :metodos-pagamento="$metodosPagamento"

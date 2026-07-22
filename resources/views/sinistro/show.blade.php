@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -189,6 +189,23 @@
                         <div class="veiculo-field">
                             <span class="veiculo-field__label">Registrado em</span>
                             <span class="veiculo-field__value">{{ $sinistro->created_at?->format('d/m/Y H:i') ?? '—' }}</span>
+                        </div>
+                        <div class="veiculo-field" style="grid-column:1/-1">
+                            <span class="veiculo-field__label">Ordem de Serviço (OS)</span>
+                            <span class="veiculo-field__value">
+                                @if($sinistro->ordensServico->count() > 0)
+                                    @foreach($sinistro->ordensServico as $os)
+                                        <a href="{{ route('ordem-servico.show', $os) }}" class="badge badge-info p-2 mr-2" style="font-size: .82rem; font-weight: 600; border-radius: 8px;">
+                                            <i class="fas fa-file-alt mr-1"></i> OS {{ $os->numero ?? '#'.$os->id }} ({{ ucfirst($os->status) }})
+                                        </a>
+                                    @endforeach
+                                @else
+                                    <span class="text-muted">Nenhuma OS vinculada</span>
+                                    <a href="{{ route('ordem-servico.create', ['veiculo_id' => $sinistro->veiculo_id, 'sinistro_id' => $sinistro->id]) }}" class="btn btn-xs btn-outline-primary ml-2" style="border-radius: 6px;">
+                                        <i class="fas fa-plus mr-1"></i>Criar OS
+                                    </a>
+                                @endif
+                            </span>
                         </div>
                     </div>
                 </div>

@@ -32,7 +32,7 @@ class ConfirmarPagamentoAdminReservaComumAction
         $codigo = $reserva->codigoReserva?->codigo ?? ('RES-'.str_pad((string) $reserva->id, 6, '0', STR_PAD_LEFT));
 
         try {
-            $taxaColeta  = (float) ($reserva->taxa_coleta  ?? 0);
+            $taxaColeta = (float) ($reserva->taxa_coleta ?? 0);
             $taxaEntrega = (float) ($reserva->taxa_entrega ?? 0);
             if ($taxaColeta == 0 && $reserva->estacaoRetirada && $reserva->data_inicio) {
                 $av = $this->reservaService->avaliarFuncionamentoEstacaoPublico((int) $reserva->estacao_retirada_id, $reserva->data_inicio, 'retirada');
@@ -69,7 +69,7 @@ class ConfirmarPagamentoAdminReservaComumAction
 
             $valorInformado = (float) ($request->input('valor_pagamento', $valorCobranca));
             if ($valorInformado > $valorCobranca) {
-                throw new \RuntimeException('Valor informado (R$ ' . number_format($valorInformado, 2, ',', '.') . ') ultrapassa o saldo pendente de R$ ' . number_format($valorCobranca, 2, ',', '.') . '.');
+                throw new \RuntimeException('Valor informado (R$ '.number_format($valorInformado, 2, ',', '.').') ultrapassa o saldo pendente de R$ '.number_format($valorCobranca, 2, ',', '.').'.');
             }
             if ($valorInformado <= 0) {
                 throw new \RuntimeException('Informe um valor válido para o pagamento.');
@@ -100,7 +100,7 @@ class ConfirmarPagamentoAdminReservaComumAction
                 'currency' => $currency,
                 'payment_method' => (string) $request->input('payment_method', ''),
                 'customer_id' => (string) ($userReserva->stripe_id ?? ''),
-                'descricao' => 'Pagamento da reserva #' . $reserva->id,
+                'descricao' => 'Pagamento da reserva #'.$reserva->id,
                 'payer_email' => (string) ($userReserva->email ?? ''),
                 'installments' => (int) $request->input('installments', 1),
             ], $credenciais);
@@ -171,7 +171,7 @@ class ConfirmarPagamentoAdminReservaComumAction
             if ($saldoRestanteAposPagamento > 0.009) {
                 return redirect()
                     ->back()
-                    ->with('success', 'Pagamento parcial registrado com sucesso. Saldo pendente: R$ ' . number_format($saldoRestanteAposPagamento, 2, ',', '.'))
+                    ->with('success', 'Pagamento parcial registrado com sucesso.')
                     ->with('warning', $nfseWarning);
             }
 

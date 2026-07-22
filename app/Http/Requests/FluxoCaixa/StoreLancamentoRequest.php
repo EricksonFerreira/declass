@@ -25,6 +25,9 @@ class StoreLancamentoRequest extends FormRequest
             'veiculo_id' => ['nullable', 'exists:veiculos,id'],
             'reserva_id' => ['nullable', 'exists:reservas,id'],
             'observacoes' => ['nullable', 'string'],
+            'recorrente' => ['nullable', 'boolean'],
+            'recorrencia' => ['nullable', 'string', 'in:semanal,mensal,anual'],
+            'parcelas_totais' => ['nullable', 'integer', 'min:2', 'max:120'],
         ];
     }
 

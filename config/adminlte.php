@@ -407,6 +407,11 @@ return [
             'icon'    => 'fas fa-layer-group',
             'can'     => 'gerenciar-empresa',
         ],
+        [
+            'text'  => 'Alertas e Pendências',
+            'route' => 'alerta.index',
+            'icon'  => 'fas fa-exclamation-triangle',
+        ],
 
         // OPERAÇÃO
         [
@@ -472,6 +477,27 @@ return [
                 [
                     'text' => 'Novo',
                     'route' => 'sinistro.create',
+                    'icon' => 'fas fa-plus-circle',
+                ],
+            ],
+        ],
+        [
+            'text' => 'Monitoramento de Danos',
+            'url'  => 'veiculo-dano/monitoramento',
+            'icon' => 'fas fa-clipboard-list',
+        ],
+        [
+            'text' => 'Ordens de Serviço',
+            'icon' => 'fas fa-file-alt',
+            'submenu' => [
+                [
+                    'text' => 'Listagem',
+                    'route' => 'ordem-servico.index',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Nova',
+                    'route' => 'ordem-servico.create',
                     'icon' => 'fas fa-plus-circle',
                 ],
             ],
@@ -769,27 +795,6 @@ return [
                         [
                             'text' => 'Nova',
                             'route' => 'categoria_dano.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Monitoramento de Danos',
-                    'url'  => 'veiculo-dano/monitoramento',
-                    'icon' => 'fas fa-clipboard-list',
-                ],
-                                [
-                    'text' => 'Ordens de Serviço',
-                    'icon' => 'fas fa-file-alt',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'ordem-servico.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Nova',
-                            'route' => 'ordem-servico.create',
                             'icon' => 'fas fa-plus-circle',
                         ],
                     ],

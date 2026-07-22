@@ -249,21 +249,21 @@
                         <td>{{ $item['descricao'] ?: '-' }}</td>
                         <td>{{ $item['resultado'] ?: '-' }}</td>
                         <td>
-                            @if(!empty($item['dano']))
+                            @if(is_array($item['dano']))
                                 #{{ $item['dano']['id'] }}
                             @else
                                 -
                             @endif
                         </td>
                         <td>
-                            @if(!empty($item['dano']))
+                            @if(is_array($item['dano']))
                                 <div><strong>{{ strtoupper((string) ($item['dano']['local'] ?? '')) }}</strong> {{ $item['dano']['tipo'] ?? '' }}</div>
-                                @if(!empty($item['dano']['observacoes']))
+                                @if(!empty($item['dano']['observacoes']) && $item['dano']['observacoes'] !== '-')
                                     <div>{{ $item['dano']['observacoes'] }}</div>
                                 @endif
-                                @if(!empty($item['dano']['correcao']) || !empty($item['dano']['correcao_data']))
+                                @if((!empty($item['dano']['correcao']) && $item['dano']['correcao'] !== '-') || (!empty($item['dano']['correcao_data']) && $item['dano']['correcao_data'] !== '-'))
                                     <div class="muted">
-                                        Correcao: {{ $item['dano']['correcao'] ?? '' }}{{ !empty($item['dano']['correcao_data']) ? (' - ' . $item['dano']['correcao_data']) : '' }}
+                                        Correcao: {{ $item['dano']['correcao'] !== '-' ? $item['dano']['correcao'] : '' }}{{ (!empty($item['dano']['correcao_data']) && $item['dano']['correcao_data'] !== '-') ? (' - ' . $item['dano']['correcao_data']) : '' }}
                                     </div>
                                 @endif
                             @else

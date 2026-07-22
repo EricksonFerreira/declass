@@ -15,6 +15,10 @@ class OrdemServicoItem extends Model
         'descricao_servico',
         'resultado',
         'sort_order',
+        'tipo_item',
+        'quantidade',
+        'valor_unitario',
+        'valor_total',
     ];
 
     public function ordemServico(): BelongsTo

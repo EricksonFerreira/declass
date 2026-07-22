@@ -29,14 +29,16 @@ class OrdemServicoService
         ?int $empresaId,
         ?string $observacoes,
         array $veiculoDanoIds,
-        array $servicosLivres
+        array $servicosPrevistos = [],
+        ?int $sinistroId = null
     ): OrdemServico {
-        return DB::transaction(function () use ($veiculoId, $reservaId, $empresaId, $observacoes, $veiculoDanoIds, $servicosLivres) {
+        return DB::transaction(function () use ($veiculoId, $reservaId, $empresaId, $observacoes, $veiculoDanoIds, $servicosPrevistos, $sinistroId) {
             $os = OrdemServico::create([
                 'numero' => null,
                 'empresa_id' => $empresaId,
                 'veiculo_id' => $veiculoId,
                 'reserva_id' => $reservaId,
+                'sinistro_id' => $sinistroId,
                 'user_id_abertura' => Auth::id(),
                 'status' => OrdemServico::STATUS_ABERTA,
                 'observacoes' => $observacoes,
@@ -58,6 +60,8 @@ class OrdemServicoService
                     throw new \InvalidArgumentException('Avaria #' . $dano->id . ' já está em uma OS em aberto.');
                 }
 
+                $dano->update(['status' => VeiculoDanos::STATUS_EM_CORRECAO]);
+
                 $desc = trim((string) $dano->observacoes);
                 if ($desc === '') {
                     $desc = 'Avaria: ' . strtoupper((string) $dano->local_dano) . ' — ' . ($dano->tipo_dano ?? '');
@@ -71,22 +75,22 @@ class OrdemServicoService
                 ]);
             }
 
-            foreach ($servicosLivres as $linha) {
-                $linha = trim((string) $linha);
-                if ($linha === '') {
+            foreach ($servicosPrevistos as $servico) {
+                $desc = trim((string) ($servico['descricao'] ?? ''));
+                $obs = trim((string) ($servico['observacao'] ?? ''));
+                if ($desc === '') {
                     continue;
                 }
                 OrdemServicoItem::create([
                     'ordem_servico_id' => $os->id,
                     'veiculo_dano_id' => null,
-                    'descricao_servico' => $linha,
+                    'descricao_servico' => $desc,
+                    'resultado' => $obs !== '' ? $obs : null,
                     'sort_order' => $order++,
                 ]);
             }
 
             if ($order === 0) {
-                // OS nao precisa obrigatoriamente estar vinculada a avarias.
-                // Se nenhum item foi informado, cria um item "livre" padrao.
                 OrdemServicoItem::create([
                     'ordem_servico_id' => $os->id,
                     'veiculo_dano_id' => null,
@@ -121,11 +125,26 @@ class OrdemServicoService
         ];
 
         if ($novoStatus === OrdemServico::STATUS_CANCELADA) {
-            $os->update([
-                'status' => OrdemServico::STATUS_CANCELADA,
-                'user_id_encerramento' => Auth::id(),
-                'data_conclusao' => now(),
-            ]);
+            DB::transaction(function () use ($os) {
+                $os->update([
+                    'status' => OrdemServico::STATUS_CANCELADA,
+                    'user_id_encerramento' => Auth::id(),
+                    'data_conclusao' => now(),
+                ]);
+
+                // Reverter avarias vinculadas para pendente
+                $os->load('itens.veiculoDano');
+                foreach ($os->itens as $item) {
+                    if ($item->veiculo_dano_id && $item->veiculoDano) {
+                        $item->veiculoDano->update([
+                            'status' => VeiculoDanos::STATUS_PENDENTE,
+                            'correcao_descricao' => null,
+                            'correcao_data' => null,
+                            'correcao_user_id' => null,
+                        ]);
+                    }
+                }
+            });
 
             return;
         }
@@ -140,54 +159,123 @@ class OrdemServicoService
     }
 
     /**
-     * @param  array<int, string>  $resultadoPorItemId  [ item_id => texto ]
-     * @param  array<int, array{path:string, original_name?:string|null, mime?:string|null, size_bytes?:int|null, user_id?:int|null}>  $anexosMeta
+     * Conclui a ordem de serviço, atualiza as avarias vinculadas, cria itens executados (peças/serviços) e integra com o fluxo de caixa.
      */
     public function concluir(
         OrdemServico $os,
         string $relatorioGeral,
-        array $resultadoPorItemId,
         array $anexosMeta = [],
-        float $valorPecas = 0,
-        float $valorMaoObra = 0
-    ): void
-    {
+        array $avariasResolutions = [], // [ dano_id => [ 'status' => '...', 'obs' => '...' ] ]
+        array $pecasExecutadas = [],   // [ [ 'nome' => '...', 'qtd' => X, 'valor' => Y ] ]
+        array $servicosExecutados = [], // [ [ 'nome' => '...', 'qtd' => X, 'valor' => Y ] ]
+        array $itensCompletados = []    // [ item_id_1, item_id_2 ]
+    ): void {
         if (! $os->podeConcluir()) {
             throw new \InvalidArgumentException('Esta OS não pode ser concluída.');
         }
 
-        DB::transaction(function () use ($os, $relatorioGeral, $resultadoPorItemId, $anexosMeta, $valorPecas, $valorMaoObra) {
+        DB::transaction(function () use ($os, $relatorioGeral, $anexosMeta, $avariasResolutions, $pecasExecutadas, $servicosExecutados, $itensCompletados) {
             $os->load('itens.veiculoDano');
-            $valorPecas = round(max(0, $valorPecas), 2);
-            $valorMaoObra = round(max(0, $valorMaoObra), 2);
-            $valorTotal = round($valorPecas + $valorMaoObra, 2);
 
+            // 1. Atualizar itens planejados/existentes
             foreach ($os->itens as $item) {
-                $texto = $resultadoPorItemId[$item->id] ?? $relatorioGeral;
-                $texto = trim((string) $texto);
-                if ($texto === '') {
-                    $texto = trim($relatorioGeral);
-                }
-                if ($texto === '') {
-                    $texto = 'Serviço concluído conforme OS ' . ($os->numero ?? '#' . $os->id);
-                }
+                // Se for um item de avaria vinculada, vamos atualizar seu resultado com a observação específica ou geral
+                if ($item->veiculo_dano_id) {
+                    $resInfo = $avariasResolutions[$item->veiculo_dano_id] ?? null;
+                    $obs = trim((string) ($resInfo['obs'] ?? ''));
+                    $statusDano = $resInfo['status'] ?? 'corrigida';
 
-                $item->update(['resultado' => $texto]);
+                    $textoResultado = $obs !== '' ? $obs : 'Resultado: ' . strtoupper($statusDano) . '. ' . $relatorioGeral;
+                    $item->update(['resultado' => $textoResultado]);
 
-                if ($item->veiculo_dano_id && $item->veiculoDano && ! $item->veiculoDano->correcao_data) {
-                    $item->veiculoDano->update([
-                        'correcao_descricao' => $texto,
-                        'correcao_data' => now(),
-                        'correcao_user_id' => Auth::id(),
+                    // Atualiza o VeiculoDanos correspondente
+                    if ($item->veiculoDano) {
+                        $dano = $item->veiculoDano;
+                        if (in_array($statusDano, ['corrigida', 'parcialmente_corrigida', 'descartada'])) {
+                            $dano->update([
+                                'status' => $statusDano,
+                                'correcao_descricao' => $obs !== '' ? $obs : $relatorioGeral,
+                                'correcao_data' => now(),
+                                'correcao_user_id' => Auth::id(),
+                            ]);
+                        } else {
+                            // Se voltou para pendente ou outra coisa, limpa campos de correção e volta status para pendente
+                            $dano->update([
+                                'status' => 'pendente',
+                                'correcao_descricao' => null,
+                                'correcao_data' => null,
+                                'correcao_user_id' => null,
+                            ]);
+                        }
+                    }
+                } else {
+                    // Item planejado (serviço previsto)
+                    $completado = in_array($item->id, $itensCompletados);
+                    $item->update([
+                        'resultado' => $completado ? 'Executado' : 'Não executado/Pendente'
                     ]);
                 }
             }
 
+            $somatoriaPecas = 0.0;
+            $somatoriaMaoObra = 0.0;
+            $order = $os->itens->max('sort_order') + 1;
+
+            // 2. Criar lançamentos de execução - Peças
+            foreach ($pecasExecutadas as $peca) {
+                $nome = trim((string) ($peca['nome'] ?? ''));
+                if ($nome === '') continue;
+
+                $qtd = max(1, (int) ($peca['qtd'] ?? 1));
+                $valorUnit = max(0.0, (float) $this->normalizarMoeda($peca['valor'] ?? 0));
+                $totalItem = round($qtd * $valorUnit, 2);
+
+                OrdemServicoItem::create([
+                    'ordem_servico_id' => $os->id,
+                    'veiculo_dano_id' => null,
+                    'descricao_servico' => $nome,
+                    'tipo_item' => 'peca',
+                    'quantidade' => $qtd,
+                    'valor_unitario' => $valorUnit,
+                    'valor_total' => $totalItem,
+                    'resultado' => 'Aplicado',
+                    'sort_order' => $order++,
+                ]);
+
+                $somatoriaPecas += $totalItem;
+            }
+
+            // 3. Criar lançamentos de execução - Mão de obra
+            foreach ($servicosExecutados as $srv) {
+                $nome = trim((string) ($srv['nome'] ?? ''));
+                if ($nome === '') continue;
+
+                $qtd = max(1, (int) ($srv['qtd'] ?? 1));
+                $valorUnit = max(0.0, (float) $this->normalizarMoeda($srv['valor'] ?? 0));
+                $totalItem = round($qtd * $valorUnit, 2);
+
+                OrdemServicoItem::create([
+                    'ordem_servico_id' => $os->id,
+                    'veiculo_dano_id' => null,
+                    'descricao_servico' => $nome,
+                    'tipo_item' => 'servico',
+                    'quantidade' => $qtd,
+                    'valor_unitario' => $valorUnit,
+                    'valor_total' => $totalItem,
+                    'resultado' => 'Realizado',
+                    'sort_order' => $order++,
+                ]);
+
+                $somatoriaMaoObra += $totalItem;
+            }
+
+            $valorTotal = round($somatoriaPecas + $somatoriaMaoObra, 2);
+
             $os->update([
                 'status' => OrdemServico::STATUS_CONCLUIDA,
                 'relatorio_conclusao' => trim($relatorioGeral) !== '' ? trim($relatorioGeral) : null,
-                'valor_pecas' => $valorPecas,
-                'valor_mao_obra' => $valorMaoObra,
+                'valor_pecas' => $somatoriaPecas,
+                'valor_mao_obra' => $somatoriaMaoObra,
                 'valor_total' => $valorTotal,
                 'user_id_encerramento' => Auth::id(),
                 'data_conclusao' => now(),
@@ -195,11 +283,10 @@ class OrdemServicoService
 
             $this->registrarDespesaFinanceira($os->fresh(), $valorTotal);
 
+            // Anexos
             foreach ($anexosMeta as $meta) {
                 $path = trim((string) ($meta['path'] ?? ''));
-                if ($path === '') {
-                    continue;
-                }
+                if ($path === '') continue;
 
                 OrdemServicoAnexo::create([
                     'ordem_servico_id' => $os->id,
@@ -255,5 +342,15 @@ class OrdemServicoService
             'user_id' => Auth::id(),
             'observacoes' => 'Gerado automaticamente ao encerrar a Ordem de Serviço. Chave: '.$chave,
         ]);
+    }
+
+    private function normalizarMoeda($valor): float
+    {
+        if (is_numeric($valor)) {
+            return (float) $valor;
+        }
+        $valor = str_replace('.', '', (string) $valor);
+        $valor = str_replace(',', '.', $valor);
+        return (float) $valor;
     }
 }

@@ -195,6 +195,8 @@ class ReservaService extends AbstractBaseService
                 $reserva->data_cancelamento = now();
             }
 
+            $veiculoIdOriginal = $reserva->veiculo_id;
+
             // Cancela reserva e libera vínculo do veículo (quando aplicável)
             if (SchemaCache::hasColumn($this->model->getTable(), 'veiculo_id')) {
                 $reserva->veiculo_id = null;
@@ -205,6 +207,33 @@ class ReservaService extends AbstractBaseService
             // Cancela movimentações vinculadas para não bloquear disponibilidade
             if (isset($this->movimentacaoService)) {
                 $this->movimentacaoService->cancelarMovimentacoesReserva((int) $id, null, 'Cancelada por cancelamento de reserva');
+            }
+
+            // Integração Financeira: Registrar reembolso/despesa
+            $valorPago = (float) $reserva->transacoes()
+                ->whereIn('status', ['succeeded', 'approved', 'pago', 'paid', 'concluido', 'authorized'])
+                ->sum('valor');
+
+            if ($valorPago > 0) {
+                $categoria = \App\Models\CategoriaFinanceira::firstOrCreate(
+                    ['empresa_id' => $reserva->empresa_id, 'nome' => 'Cancelamento de Reserva'],
+                    ['tipo' => 'despesa', 'ativo' => true]
+                );
+
+                app(\App\Actions\Financeiro\CreateLancamentoAction::class)->handle([
+                    'empresa_id' => $reserva->empresa_id,
+                    'descricao' => 'Estorno por Cancelamento de Reserva RES-' . str_pad($reserva->id, 4, '0', STR_PAD_LEFT),
+                    'valor' => $valorPago,
+                    'tipo' => 'despesa',
+                    'categoria_financeira_id' => $categoria->id,
+                    'data_vencimento' => now()->toDateString(),
+                    'data_pagamento' => now()->toDateString(),
+                    'status' => 'pago',
+                    'reserva_id' => $reserva->id,
+                    'veiculo_id' => $veiculoIdOriginal,
+                    'user_id' => Auth::id() ?? $reserva->user_id,
+                    'observacoes' => 'Gerado automaticamente no cancelamento da reserva.',
+                ]);
             }
 
             DB::commit();

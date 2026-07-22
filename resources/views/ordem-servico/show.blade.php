@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -44,18 +44,25 @@
         </div>
     @endif
 
-    <div class="rs-hero rs-hero--{{ $statusSlug }}">
+    <div class="rs-hero rs-hero--{{ $statusSlug }} mb-4">
         <div class="rs-hero__accent"></div>
         <div class="rs-hero__body">
             <div class="rs-hero__left">
                 <div class="rs-hero__eyebrow">
                     <i class="fas fa-tools"></i>
-                    Ordem de servico #{{ $ordem_servico->numero ?? $ordem_servico->id }}
+                    Ordem de serviço #{{ $ordem_servico->numero ?? $ordem_servico->id }}
                 </div>
                 <h1 class="rs-hero__title">{{ $titulo }}</h1>
                 <div class="rs-hero__meta">
-                    <span><i class="fas fa-car"></i>{{ optional($ordem_servico->veiculo)->nome ?? ('Veiculo #' . $ordem_servico->veiculo_id) }}</span>
-                    <span><i class="fas fa-user"></i>{{ optional($ordem_servico->usuarioAbertura)->name ?? 'Usuario nao informado' }}</span>
+                    <span><i class="fas fa-car"></i>{{ optional($ordem_servico->veiculo)->nome ?? ('Veículo #' . $ordem_servico->veiculo_id) }}</span>
+                    <span><i class="fas fa-user"></i>{{ optional($ordem_servico->usuarioAbertura)->name ?? 'Usuário não informado' }}</span>
+                    @if($ordem_servico->sinistro_id)
+                        <span><i class="fas fa-exclamation-triangle text-warning"></i>
+                            <a href="{{ route('sinistro.show', $ordem_servico->sinistro_id) }}" class="text-white font-weight-bold text-decoration-underline" style="color: #fbbf24 !important;">
+                                Sinistro #{{ $ordem_servico->sinistro_id }}
+                            </a>
+                        </span>
+                    @endif
                 </div>
             </div>
             <div class="rs-hero__right">
@@ -76,723 +83,652 @@
                 </div>
                 <div class="rs-hero__actions">
                     <a class="rs-btn rs-btn--outline" href="{{ route('ordem-servico.pdf', $ordem_servico) }}" target="_blank" rel="noopener noreferrer">
-                        <i class="fas fa-file-pdf"></i>Exportar PDF
+                        <i class="fas fa-file-pdf text-danger"></i> Exportar PDF
                     </a>
                     <a class="rs-btn rs-btn--outline" href="{{ route('ordem-servico.index') }}">
-                        <i class="fas fa-arrow-left"></i>Voltar
+                        <i class="fas fa-arrow-left"></i> Voltar
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="rs-grid">
-        <div class="rs-main">
-            <div class="rs-card">
-                <div class="rs-card__header">
-                    <i class="fas fa-info-circle rs-card__icon"></i>
-                    <h2>Dados da OS</h2>
+    <!-- Se a OS estiver aberta, permite atualizar status / cancelar -->
+    @if($ordem_servico->podeAlterarStatus())
+        <div class="card mb-4 border-0 p-3 bg-light" style="border-radius: 12px;">
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                <div>
+                    <h5 class="font-weight-bold mb-0">Controles operacionais da OS</h5>
+                    <p class="text-xs text-muted mb-0">Altere o status ou cancele a ordem de serviço enquanto ela está aberta.</p>
                 </div>
-                <div class="os-detail-grid">
-                    <div class="os-detail">
-                        <span>Numero</span>
-                        <strong>{{ $ordem_servico->numero ?? '#' . $ordem_servico->id }}</strong>
-                    </div>
-                    <div class="os-detail">
-                        <span>Status</span>
-                        <strong>{{ ucfirst(str_replace('_', ' ', $statusSlug)) }}</strong>
-                    </div>
-                    <div class="os-detail">
-                        <span>Veiculo</span>
-                        <strong>{{ optional($ordem_servico->veiculo)->nome ?? '-' }}</strong>
-                        <small>{{ optional($ordem_servico->veiculo)->placa ?? '-' }}</small>
-                    </div>
-                    <div class="os-detail">
-                        <span>Reserva</span>
-                        <strong>{{ $ordem_servico->reserva_id ? '#' . $ordem_servico->reserva_id : '-' }}</strong>
-                    </div>
-                    <div class="os-detail">
-                        <span>Aberta por</span>
-                        <strong>{{ optional($ordem_servico->usuarioAbertura)->name ?? '-' }}</strong>
-                    </div>
-                    @if($ordem_servico->data_conclusao)
-                        <div class="os-detail">
-                            <span>Concluida em</span>
-                            <strong>{{ $ordem_servico->data_conclusao->format('d/m/Y H:i') }}</strong>
-                            <small>{{ optional($ordem_servico->usuarioEncerramento)->name ?? '-' }}</small>
-                        </div>
-                    @endif
-                    @if((float) ($ordem_servico->valor_total ?? 0) > 0)
-                        <div class="os-detail">
-                            <span>Custo de pecas</span>
-                            <strong>R$ {{ number_format((float) $ordem_servico->valor_pecas, 2, ',', '.') }}</strong>
-                        </div>
-                        <div class="os-detail">
-                            <span>Mão de obra</span>
-                            <strong>R$ {{ number_format((float) $ordem_servico->valor_mao_obra, 2, ',', '.') }}</strong>
-                        </div>
-                        <div class="os-detail os-detail--total">
-                            <span>Total da OS</span>
-                            <strong>R$ {{ number_format((float) $ordem_servico->valor_total, 2, ',', '.') }}</strong>
-                            <small>Despesa lançada no fluxo de caixa</small>
-                        </div>
-                    @endif
-                </div>
-
-                @if($ordem_servico->observacoes)
-                    <div class="os-note-box">
-                        <h3>Observacoes</h3>
-                        <p>{{ $ordem_servico->observacoes }}</p>
-                    </div>
-                @endif
-
-                @if($ordem_servico->relatorio_conclusao)
-                    <div class="os-note-box">
-                        <h3>Relatorio geral</h3>
-                        <p>{{ $ordem_servico->relatorio_conclusao }}</p>
-                    </div>
-                @endif
-
-                @if($ordem_servico->anexos->isNotEmpty())
-                    <div class="os-note-box">
-                        <h3>Anexos</h3>
-                        <ul class="os-attachments mb-0">
-                            @foreach($ordem_servico->anexos as $anexo)
-                                @php
-                                    $nome = $anexo->original_name ?: basename((string) $anexo->path);
-                                @endphp
-                                <li class="os-attachment">
-                                    <a href="{{ asset('storage/' . $anexo->path) }}" target="_blank" rel="noopener noreferrer">
-                                        <i class="fas fa-paperclip mr-1"></i>{{ $nome }}
-                                    </a>
-                                    <small class="text-muted d-block">
-                                        {{ $anexo->created_at?->format('d/m/Y H:i') ?? '' }}
-                                        @if($anexo->usuario)
-                                            &middot; {{ $anexo->usuario->name }}
-                                        @endif
-                                    </small>
-                                </li>
-                            @endforeach
-                        </ul>
-                    </div>
-                @endif
-            </div>
-
-            <div class="rs-card">
-                <div class="rs-card__header rs-card__header--between">
-                    <div class="rs-card__header-left">
-                        <i class="fas fa-list-ul rs-card__icon"></i>
-                        <h2>Itens do servico</h2>
-                    </div>
-                    <span class="rs-card__badge">{{ $ordem_servico->itens->count() }} item(s)</span>
-                </div>
-
-                <div class="table-responsive">
-                    <table class="table table-hover table-bordered table-sm mb-0">
-                        <thead class="thead-light">
-                            <tr>
-                                <th class="text-center">#</th>
-                                <th>Descrição</th>
-                                <th>Vinculo com avaria</th>
-                                <th>Resultado</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($ordem_servico->itens as $item)
-                                <tr>
-                                    <td class="text-center">{{ $loop->iteration }}</td>
-                                    <td>{{ $item->descricao_servico }}</td>
-                                    <td>
-                                        @if($item->veiculo_dano_id)
-                                            <span class="badge badge-warning">Avaria #{{ $item->veiculo_dano_id }}</span>
-                                        @else
-                                            <span class="text-muted">-</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $item->resultado ?: '-' }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center text-muted py-4">Nenhum item registrado nesta OS.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <aside class="rs-sidebar">
-            @if($ordem_servico->podeAlterarStatus())
-                <div class="rs-card">
-                    <div class="rs-card__header">
-                        <i class="fas fa-exchange-alt rs-card__icon"></i>
-                        <h2>Alterar status</h2>
-                    </div>
-
+                <div class="d-flex gap-2">
                     @if($ordem_servico->status === \App\Models\OrdemServico::STATUS_ABERTA)
-                        <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}" class="mb-2">
+                        <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}">
                             @csrf
                             <input type="hidden" name="status" value="{{ \App\Models\OrdemServico::STATUS_EM_ANDAMENTO }}">
-                            <button type="submit" class="rs-btn rs-btn--primary rs-btn--full">
-                                <i class="fas fa-play"></i>Marcar em andamento
+                            <button type="submit" class="btn btn-sm btn-primary font-weight-bold px-3" style="border-radius: 8px;">
+                                <i class="fas fa-play mr-1"></i> Marcar em andamento
                             </button>
                         </form>
                     @endif
-
-                    <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}"
-                        onsubmit="return confirm('Confirma o cancelamento desta OS?');">
+                    <form method="post" action="{{ route('ordem-servico.status', $ordem_servico) }}" onsubmit="return confirm('Confirma o cancelamento desta OS? As avarias vinculadas voltarão para o status Pendente.');">
                         @csrf
                         <input type="hidden" name="status" value="{{ \App\Models\OrdemServico::STATUS_CANCELADA }}">
-                        <button type="submit" class="rs-btn rs-btn--outline rs-btn--full">
-                            <i class="fas fa-ban"></i>Cancelar OS
+                        <button type="submit" class="btn btn-sm btn-outline-danger font-weight-bold px-3" style="border-radius: 8px;">
+                            <i class="fas fa-ban mr-1"></i> Cancelar OS
                         </button>
                     </form>
                 </div>
-            @endif
+            </div>
+        </div>
+    @endif
 
-            @if($ordem_servico->podeConcluir())
-                <div class="rs-card">
-                    <div class="rs-card__header">
-                        <i class="fas fa-check-double rs-card__icon"></i>
-                        <h2>Concluir OS</h2>
-                    </div>
+    <!-- Form principal de conclusão (engloba as 4 seções) -->
+    @if($ordem_servico->podeConcluir())
+        <form method="post" action="{{ route('ordem-servico.concluir', $ordem_servico) }}" enctype="multipart/form-data">
+            @csrf
+    @endif
 
-                    <form method="post" action="{{ route('ordem-servico.concluir', $ordem_servico) }}" enctype="multipart/form-data">
-                        @csrf
-                        <div class="form-group">
-                            <label for="relatorio_geral">Relatorio geral</label>
-                            <textarea name="relatorio_geral" id="relatorio_geral"
-                                class="form-control form-control-sm @error('relatorio_geral') is-invalid @enderror"
-                                rows="4" required minlength="3"
-                                placeholder="Resumo do que foi executado">{{ old('relatorio_geral') }}</textarea>
-                            @error('relatorio_geral')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-
-                        @if($ordem_servico->itens->isNotEmpty())
-                            <div class="os-item-results">
-                                <label class="font-weight-bold d-block mb-2">Resultado por item</label>
+    <div class="row">
+        <div class="col-12">
+            
+            <!-- SEÇÃO A: MOTIVOS DA ORDEM (AVARIAS) -->
+            <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title font-weight-bold text-dark mb-0">
+                        <i class="fas fa-exclamation-circle text-warning mr-2"></i> A. Motivos da Ordem (Avarias Vinculadas)
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th class="px-4">Avaria</th>
+                                    <th>Local</th>
+                                    <th>Origem</th>
+                                    <th>Situação</th>
+                                    @if($ordem_servico->podeConcluir())
+                                        <th>Resolução / Laudo na Conclusão</th>
+                                    @else
+                                        <th>Resultado</th>
+                                    @endif
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php($hasAvarias = false)
                                 @foreach($ordem_servico->itens as $item)
-                                    <div class="form-group">
-                                        <label for="res_{{ $item->id }}" class="small text-muted mb-1">
-                                            Item {{ $loop->iteration }}
-                                            @if($item->veiculo_dano_id)
-                                                - avaria #{{ $item->veiculo_dano_id }}
+                                    @if($item->veiculo_dano_id && $item->veiculoDano)
+                                        @php($hasAvarias = true)
+                                        @php($dano = $item->veiculoDano)
+                                        <tr>
+                                            <td class="px-4 py-3 align-middle">
+                                                <span class="font-weight-bold text-dark">#{{ $dano->id }} - {{ $dano->tipo_dano ?? 'Avaria geral' }}</span>
+                                            </td>
+                                            <td class="align-middle">{{ $dano->local_dano ? strtoupper($dano->local_dano) : '-' }}</td>
+                                            <td class="align-middle">
+                                                @if($dano->reservaCodigo)
+                                                    <span class="text-muted">Reserva #{{ $dano->reservaCodigo->codigo }}</span>
+                                                @elseif($dano->contratoCheckin)
+                                                    <span class="text-muted">Check-in</span>
+                                                @else
+                                                    <span class="text-muted">Manual</span>
+                                                @endif
+                                            </td>
+                                            <td class="align-middle">
+                                                <span class="badge badge-light text-warning border px-2 py-1" style="border-radius: 6px;">
+                                                    <i class="fas fa-wrench mr-1"></i> {{ ucfirst(str_replace('_', ' ', $dano->status)) }}
+                                                </span>
+                                            </td>
+                                            <td class="py-3">
+                                                @if($ordem_servico->podeConcluir())
+                                                    <div class="d-flex flex-column gap-2" style="max-width: 320px;">
+                                                        <select name="avarias_status[{{ $dano->id }}]" class="form-control form-control-sm font-weight-bold">
+                                                            <option value="corrigida">Corrigida completamente</option>
+                                                            <option value="parcialmente_corrigida">Corrigida parcialmente</option>
+                                                            <option value="pendente">Permanece pendente</option>
+                                                            <option value="descartada">Correção não necessária / Descartada</option>
+                                                        </select>
+                                                        <input type="text" name="avarias_obs[{{ $dano->id }}]" class="form-control form-control-sm mt-1" placeholder="Observação específica (opcional)">
+                                                    </div>
+                                                @else
+                                                    <span class="text-dark">{{ $item->resultado ?: 'Sem resultado' }}</span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @endif
+                                @endforeach
+
+                                @if(!$hasAvarias)
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">Nenhuma avaria vinculada como motivo desta OS.</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO B: SERVIÇOS PREVISTOS -->
+            <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title font-weight-bold text-dark mb-0">
+                        <i class="fas fa-clipboard-list text-primary mr-2"></i> B. Serviços Adicionais Previstos
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="os-box-list p-3 bg-white" style="border-radius: 8px; border: 1px solid #e2e8f0;">
+                        @php($hasPrevistos = false)
+                        @foreach($ordem_servico->itens as $item)
+                            @if(!$item->veiculo_dano_id)
+                                @php($hasPrevistos = true)
+                                <div class="custom-control custom-checkbox mb-2 d-flex align-items-center py-2" style="border-bottom: 1px solid #f1f5f9;">
+                                    @if($ordem_servico->podeConcluir())
+                                        <input type="checkbox" class="custom-control-input" id="item_check_{{ $item->id }}" name="itens_completados[]" value="{{ $item->id }}" checked>
+                                        <label class="custom-control-label font-weight-bold text-dark ml-2" for="item_check_{{ $item->id }}">
+                                            {{ $item->descricao_servico }}
+                                            @if($item->resultado)
+                                                <small class="text-muted d-block font-weight-normal">{{ $item->resultado }}</small>
                                             @endif
                                         </label>
-                                        <textarea name="resultados[{{ $item->id }}]" id="res_{{ $item->id }}"
-                                            class="form-control form-control-sm" rows="2"
-                                            placeholder="Deixe em branco para usar o relatorio geral">{{ old('resultados.' . $item->id) }}</textarea>
-                                    </div>
-                                @endforeach
-                            </div>
+                                    @else
+                                        <i class="fas {{ str_contains($item->resultado, 'Executado') ? 'fa-check-square text-success' : 'fa-minus-square text-muted' }} mr-2 fa-lg"></i>
+                                        <span class="font-weight-semibold text-dark">{{ $item->descricao_servico }}</span>
+                                        <span class="badge badge-light border ml-3">{{ $item->resultado ?: 'Planejado' }}</span>
+                                    @endif
+                                </div>
+                            @endif
+                        @endforeach
+
+                        @if(!$hasPrevistos)
+                            <p class="text-muted small mb-0">Nenhum serviço previsto cadastrado na abertura desta OS.</p>
                         @endif
-
-                        <div class="os-cost-grid">
-                            <div class="form-group">
-                                <label for="valor_pecas">Custo de pecas</label>
-                                <input type="text"
-                                    name="valor_pecas"
-                                    id="valor_pecas"
-                                    class="form-control form-control-sm @error('valor_pecas') is-invalid @enderror"
-                                    value="{{ old('valor_pecas') }}"
-                                    inputmode="decimal"
-                                    placeholder="0,00">
-                                @error('valor_pecas')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-
-                            <div class="form-group">
-                                <label for="valor_mao_obra">Custo de mao de obra</label>
-                                <input type="text"
-                                    name="valor_mao_obra"
-                                    id="valor_mao_obra"
-                                    class="form-control form-control-sm @error('valor_mao_obra') is-invalid @enderror"
-                                    value="{{ old('valor_mao_obra') }}"
-                                    inputmode="decimal"
-                                    placeholder="0,00">
-                                @error('valor_mao_obra')
-                                    <div class="invalid-feedback">{{ $message }}</div>
-                                @enderror
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="anexos">Anexos (opcional)</label>
-                            <input type="file"
-                                name="anexos[]"
-                                id="anexos"
-                                class="form-control form-control-sm @error('anexos.*') is-invalid @enderror"
-                                multiple
-                                accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx,.txt">
-                            @error('anexos.*')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                            <small class="text-muted d-block mt-1">Voce pode anexar varios arquivos (max 10MB cada).</small>
-                        </div>
-
-                        <button type="submit" class="rs-btn rs-btn--success rs-btn--full">
-                            <i class="fas fa-check"></i>Concluir e registrar correcoes
-                        </button>
-                    </form>
+                    </div>
                 </div>
-            @endif
-        </aside>
+            </div>
+
+            <!-- SEÇÃO C: LANÇAMENTOS DA EXECUÇÃO -->
+            <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title font-weight-bold text-dark mb-0">
+                        <i class="fas fa-file-invoice-dollar text-success mr-2"></i> C. Lançamentos da Execução (Peças, Materiais e Mão de Obra)
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        <!-- Peças e materiais -->
+                        <div class="col-lg-6 mb-4">
+                            <h6 class="font-weight-bold text-secondary mb-3"><i class="fas fa-box-open mr-1"></i> Peças e Materiais Utilizados</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm" id="table_pecas_executadas">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Item / Peça</th>
+                                            <th class="text-center" style="width: 80px;">Qtd</th>
+                                            <th class="text-right" style="width: 120px;">Vlr. Unitário</th>
+                                            <th class="text-right" style="width: 120px;">Total</th>
+                                            @if($ordem_servico->podeConcluir())
+                                                <th style="width: 40px;"></th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($ordem_servico->itens->where('tipo_item', 'peca') as $execPeca)
+                                            <tr>
+                                                <td>{{ $execPeca->descricao_servico }}</td>
+                                                <td class="text-center">{{ $execPeca->quantidade }}</td>
+                                                <td class="text-right">R$ {{ number_format($execPeca->valor_unitario, 2, ',', '.') }}</td>
+                                                <td class="text-right font-weight-bold">R$ {{ number_format($execPeca->valor_total, 2, ',', '.') }}</td>
+                                                @if($ordem_servico->podeConcluir())
+                                                    <td></td>
+                                                @endif
+                                            </tr>
+                                        @endforeach
+                                        @if($ordem_servico->podeConcluir())
+                                            <tr id="no_pecas_row">
+                                                <td colspan="5" class="text-center text-muted small py-3">Nenhuma peça adicionada.</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                            @if($ordem_servico->podeConcluir())
+                                <button type="button" class="btn btn-xs btn-outline-success font-weight-bold mt-2" id="btn_add_peca_exec" style="border-radius: 6px;">
+                                    <i class="fas fa-plus mr-1"></i> Adicionar Peça / Material
+                                </button>
+                            @endif
+                        </div>
+
+                        <!-- Mão de obra e serviços executados -->
+                        <div class="col-lg-6 mb-4">
+                            <h6 class="font-weight-bold text-secondary mb-3"><i class="fas fa-user-cog mr-1"></i> Serviços Realizados e Mão de Obra</h6>
+                            <div class="table-responsive">
+                                <table class="table table-bordered table-sm" id="table_servicos_executados">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Serviço / Mão de Obra</th>
+                                            <th class="text-center" style="width: 80px;">Qtd</th>
+                                            <th class="text-right" style="width: 120px;">Vlr. Unitário</th>
+                                            <th class="text-right" style="width: 120px;">Total</th>
+                                            @if($ordem_servico->podeConcluir())
+                                                <th style="width: 40px;"></th>
+                                            @endif
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($ordem_servico->itens->where('tipo_item', 'servico')->whereNull('veiculo_dano_id') as $execSrv)
+                                            <!-- Somente os que têm valores associados -->
+                                            @if($execSrv->valor_unitario > 0)
+                                                <tr>
+                                                    <td>{{ $execSrv->descricao_servico }}</td>
+                                                    <td class="text-center">{{ $execSrv->quantidade }}</td>
+                                                    <td class="text-right">R$ {{ number_format($execSrv->valor_unitario, 2, ',', '.') }}</td>
+                                                    <td class="text-right font-weight-bold">R$ {{ number_format($execSrv->valor_total, 2, ',', '.') }}</td>
+                                                    @if($ordem_servico->podeConcluir())
+                                                        <td></td>
+                                                    @endif
+                                                </tr>
+                                            @endif
+                                        @endforeach
+                                        @if($ordem_servico->podeConcluir())
+                                            <tr id="no_servicos_row">
+                                                <td colspan="5" class="text-center text-muted small py-3">Nenhum serviço de mão de obra adicionado.</td>
+                                            </tr>
+                                        @endif
+                                    </tbody>
+                                </table>
+                            </div>
+                            @if($ordem_servico->podeConcluir())
+                                <button type="button" class="btn btn-xs btn-outline-success font-weight-bold mt-2" id="btn_add_servico_exec" style="border-radius: 6px;">
+                                    <i class="fas fa-plus mr-1"></i> Adicionar Serviço / Mão de Obra
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO D: CONCLUSÃO DA OS -->
+            <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title font-weight-bold text-dark mb-0">
+                        <i class="fas fa-check-double text-success mr-2"></i> D. Conclusão da Ordem de Serviço
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    @if($ordem_servico->podeConcluir())
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="form-group">
+                                    <label for="relatorio_geral" class="font-weight-bold text-secondary">Resumo do serviço realizado *</label>
+                                    <textarea name="relatorio_geral" id="relatorio_geral" class="form-control" rows="4" required minlength="3" placeholder="Descreva de forma geral o que foi executado na OS...">{{ old('relatorio_geral') }}</textarea>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 form-group">
+                                        <label for="data_conclusao_val" class="font-weight-bold text-secondary">Data da conclusão</label>
+                                        <input type="date" name="data_conclusao_val" id="data_conclusao_val" class="form-control" value="{{ date('Y-m-d') }}">
+                                    </div>
+                                    <div class="col-md-6 form-group">
+                                        <label for="anexos" class="font-weight-bold text-secondary">Fotos e documentos</label>
+                                        <input type="file" name="anexos[]" id="anexos" class="form-control-file" multiple>
+                                        <small class="text-muted">Selecione uma ou mais imagens/laudos da conclusão.</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 bg-light p-4 rounded d-flex flex-column justify-content-between" style="border-radius: 12px;">
+                                <div>
+                                    <h6 class="font-weight-bold text-secondary mb-3"><i class="fas fa-calculator mr-1"></i> Resumo de Fechamento</h6>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Total de Peças:</span>
+                                        <strong id="fechamento_pecas">R$ 0,00</strong>
+                                    </div>
+                                    <div class="d-flex justify-content-between mb-2">
+                                        <span class="text-muted">Total de Mão de Obra:</span>
+                                        <strong id="fechamento_mao_obra">R$ 0,00</strong>
+                                    </div>
+                                    <hr>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="font-weight-bold text-dark h5 mb-0">Total Geral:</span>
+                                        <span class="font-weight-bold text-success h4 mb-0" id="fechamento_total">R$ 0,00</span>
+                                    </div>
+                                </div>
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-success btn-lg btn-block font-weight-bold py-3" style="border-radius: 10px;">
+                                        <i class="fas fa-check mr-2"></i> Concluir Ordem de Serviço
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <!-- OS já Concluída -->
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-4">
+                                    <h6 class="font-weight-bold text-secondary"><i class="fas fa-file-alt mr-1"></i> Relatório Geral de Fechamento</h6>
+                                    <p class="text-dark bg-light p-3 rounded" style="border-radius: 8px; font-size: 0.95rem; border-left: 4px solid #28a745;">
+                                        {{ $ordem_servico->relatorio_conclusao ?: 'Nenhum relatório preenchido.' }}
+                                    </p>
+                                </div>
+
+                                @if($ordem_servico->anexos->isNotEmpty())
+                                    <div>
+                                        <h6 class="font-weight-bold text-secondary"><i class="fas fa-paperclip mr-1"></i> Documentos Anexados</h6>
+                                        <div class="d-flex gap-2 flex-wrap">
+                                            @foreach($ordem_servico->anexos as $anexo)
+                                                @php($nome = $anexo->original_name ?: basename((string) $anexo->path))
+                                                <a href="{{ asset('storage/' . $anexo->path) }}" target="_blank" class="btn btn-sm btn-outline-secondary px-3 py-2" style="border-radius: 6px;">
+                                                    <i class="fas fa-image mr-1"></i> {{ \Illuminate\Support\Str::limit($nome, 30) }}
+                                                </a>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+                            </div>
+
+                            <div class="col-md-4 bg-light p-4 rounded" style="border-radius: 12px; border: 1px solid #e2e8f0;">
+                                <h6 class="font-weight-bold text-secondary mb-3"><i class="fas fa-calculator mr-1"></i> Demonstrativo Final</h6>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Total de Peças:</span>
+                                    <strong class="text-dark">R$ {{ number_format($ordem_servico->valor_pecas, 2, ',', '.') }}</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span class="text-muted">Total de Mão de Obra:</span>
+                                    <strong class="text-dark">R$ {{ number_format($ordem_servico->valor_mao_obra, 2, ',', '.') }}</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="font-weight-bold text-dark h5 mb-0">Total Consolidado:</span>
+                                    <span class="font-weight-bold text-success h4 mb-0">R$ {{ number_format($ordem_servico->valor_total, 2, ',', '.') }}</span>
+                                </div>
+                                <div class="text-xs text-muted mt-3 text-center">
+                                    Lançamento de despesa registrado no Fluxo de Caixa.
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+        </div>
     </div>
+
+    @if($ordem_servico->podeConcluir())
+        </form>
+    @endif
 </div>
-@stop
 
 @section('css')
 <style>
     .os-show-page {
-        max-width: 1400px;
-        margin: 0 auto;
+        font-family: inherit;
     }
-
-    .rs-page {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
+    .rs-grid {
+        display: block !important;
+        width: 100% !important;
     }
-
     .rs-hero {
         position: relative;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
         overflow: hidden;
-        border-radius: 20px;
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 60%, #334155 100%);
-        color: #fff;
-        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.16);
+        box-shadow: 0 4px 18px rgba(0, 0, 0, 0.02);
     }
-
     .rs-hero__accent {
-        position: absolute;
-        top: 0;
-        left: 0;
+        height: 6px;
         width: 100%;
-        height: 4px;
-        background: linear-gradient(90deg, var(--empresa-cor-primaria, #2563eb), var(--empresa-cor-terciaria, #38bdf8));
     }
-
+    .rs-hero--aberta .rs-hero__accent { background: #f59e0b; }
+    .rs-hero--em_andamento .rs-hero__accent { background: #3b82f6; }
+    .rs-hero--concluida .rs-hero__accent { background: #10b981; }
+    .rs-hero--cancelada .rs-hero__accent { background: #ef4444; }
+    
     .rs-hero__body {
-        padding: 24px 28px;
         display: flex;
         justify-content: space-between;
-        gap: 20px;
-        flex-wrap: wrap;
-    }
-
-    .rs-hero__eyebrow {
-        display: inline-flex;
         align-items: center;
-        gap: 8px;
-        font-size: 12px;
+        flex-wrap: wrap;
+        padding: 24px;
+        gap: 20px;
+    }
+    .rs-hero__eyebrow {
+        font-size: 0.85rem;
+        font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: .08em;
-        color: rgba(255, 255, 255, 0.72);
+        letter-spacing: 0.05em;
+        color: #64748b;
         margin-bottom: 8px;
     }
-
+    .rs-hero__eyebrow i { margin-right: 6px; }
     .rs-hero__title {
-        margin: 0 0 8px;
-        font-size: 30px;
-        font-weight: 700;
+        font-size: 1.6rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 10px 0;
     }
-
     .rs-hero__meta {
         display: flex;
-        flex-wrap: wrap;
-        gap: 14px;
-        color: rgba(255, 255, 255, 0.8);
-        font-size: 14px;
+        gap: 16px;
+        color: #475569;
+        font-size: 0.9rem;
     }
-
-    .rs-hero__meta span {
-        display: inline-flex;
-        align-items: center;
-        gap: 6px;
-    }
-
-    .rs-hero__right {
-        display: flex;
-        flex-direction: column;
-        align-items: flex-end;
-        gap: 14px;
-    }
-
-    .rs-hero__actions {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        gap: 10px;
-    }
-
+    .rs-hero__meta span i { margin-right: 6px; color: #94a3b8; }
+    
     .rs-status-badge {
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        padding: 10px 14px;
-        border-radius: 999px;
-        font-size: 12px;
-        font-weight: 700;
+        font-weight: 800;
+        font-size: 0.8rem;
+        letter-spacing: 0.05em;
+        padding: 6px 14px;
+        border-radius: 9999px;
     }
-
-    .rs-status-badge.is-success { background: rgba(16, 185, 129, .18); color: #bbf7d0; }
-    .rs-status-badge.is-danger { background: rgba(239, 68, 68, .18); color: #fecaca; }
-    .rs-status-badge.is-warning { background: rgba(245, 158, 11, .18); color: #fde68a; }
-    .rs-status-badge.is-primary { background: rgba(59, 130, 246, .18); color: #bfdbfe; }
-
+    .rs-status-badge.is-warning { background: #fef3c7; color: #d97706; }
+    .rs-status-badge.is-primary { background: #dbeafe; color: #2563eb; }
+    .rs-status-badge.is-success { background: #d1fae5; color: #059669; }
+    .rs-status-badge.is-danger { background: #fee2e2; color: #dc2626; }
+    
     .rs-hero__kpis {
         display: flex;
-        align-items: stretch;
-        gap: 14px;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        padding: 12px 16px;
+        align-items: center;
+        gap: 16px;
     }
-
     .rs-kpi {
+        text-align: right;
+    }
+    .rs-kpi span { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 600; }
+    .rs-kpi strong { display: block; font-size: 1.3rem; font-weight: 800; color: #0f172a; }
+    .rs-kpi-divider { width: 1px; height: 32px; background: #e2e8f0; }
+
+    .rs-hero__actions {
         display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 92px;
+        gap: 8px;
     }
-
-    .rs-kpi span {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
-    }
-
-    .rs-kpi strong {
-        font-size: 17px;
-        color: #fff;
-    }
-
-    .rs-kpi-divider {
-        width: 1px;
-        background: rgba(255, 255, 255, 0.14);
-    }
-
-    .rs-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 340px;
-        gap: 18px;
-    }
-
-    .rs-main,
-    .rs-sidebar {
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    .rs-card {
-        background: #fff;
-        border: 1px solid #e5e7eb;
-        border-radius: 18px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
-        overflow: hidden;
-    }
-
-    .rs-card__header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 18px 20px;
-        border-bottom: 1px solid #eef2f7;
-    }
-
-    .rs-card__header--between {
-        justify-content: space-between;
-    }
-
-    .rs-card__header-left {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-    }
-
-    .rs-card__icon {
-        color: var(--empresa-cor-primaria, #2563eb);
-    }
-
-    .rs-card__header h2 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 700;
-        color: #0f172a;
-    }
-
-    .rs-card__badge {
-        background: #eff6ff;
-        color: #1d4ed8;
-        border-radius: 999px;
-        padding: 6px 10px;
-        font-size: 12px;
-        font-weight: 700;
-    }
-
-    .os-detail-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 14px;
-        padding: 20px;
-    }
-
-    .os-detail {
-        padding: 14px;
-        border-radius: 14px;
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-    }
-
-    .os-detail span {
-        font-size: 12px;
-        text-transform: uppercase;
-        letter-spacing: .04em;
-        color: #64748b;
-    }
-
-    .os-detail strong {
-        color: #0f172a;
-        font-size: 15px;
-    }
-
-    .os-detail small {
-        color: #64748b;
-    }
-
-    .os-detail--total {
-        border-color: #bbf7d0;
-        background: #f0fdf4;
-    }
-
-    .os-detail--total strong {
-        color: #047857;
-    }
-
-    .os-note-box {
-        margin: 0 20px 20px;
-        padding: 16px;
-        border-radius: 14px;
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
-    }
-
-    .os-note-box h3 {
-        font-size: 15px;
-        font-weight: 700;
-        margin: 0 0 8px;
-        color: #0f172a;
-    }
-
-    .os-note-box p {
-        margin: 0;
-        color: #475569;
-        white-space: pre-wrap;
-    }
-
-    .os-attachments {
-        list-style: none;
-        padding-left: 0;
-    }
-
-    .os-attachment + .os-attachment {
-        margin-top: 10px;
-        padding-top: 10px;
-        border-top: 1px dashed #e5e7eb;
-    }
-
     .rs-btn {
         display: inline-flex;
         align-items: center;
-        justify-content: center;
-        gap: 8px;
-        padding: 10px 14px;
-        border-radius: 12px;
-        font-weight: 600;
-        border: 1px solid transparent;
+        gap: 6px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        padding: 8px 16px;
+        border-radius: 8px;
         text-decoration: none;
-        transition: .2s ease;
+        transition: all 0.2s;
     }
-
-    .rs-btn:hover {
-        text-decoration: none;
-        transform: translateY(-1px);
-    }
-
-    .rs-btn--primary {
-        background: linear-gradient(135deg, var(--empresa-cor-primaria, #2563eb), var(--empresa-cor-terciaria, #38bdf8));
-        color: #fff;
-    }
-
-    .rs-btn--success {
-        background: linear-gradient(135deg, #10b981, #34d399);
-        color: #fff;
-    }
-
     .rs-btn--outline {
-        background: #fff;
+        border: 1px solid #cbd5e1;
         color: #334155;
-        border-color: #cbd5e1;
+        background: #fff;
+    }
+    .rs-btn--outline:hover {
+        background: #f8fafc;
+        color: #0f172a;
     }
 
-    .rs-btn--full {
-        width: 100%;
+    .os-box-list {
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
     }
 
-    .os-item-results {
-        margin-bottom: 14px;
-        padding-top: 4px;
-    }
-
-    .os-cost-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
-        margin: 0 20px 14px;
-    }
-
-    .rs-sidebar .os-cost-grid .form-group {
-        margin-left: 0;
-        margin-right: 0;
-    }
-
-    .rs-sidebar .rs-card {
-        padding: 0 0 18px;
-    }
-
-    .rs-sidebar .form-group,
-    .rs-sidebar .rs-btn {
-        margin-left: 20px;
-        margin-right: 20px;
-    }
-
-    @media (max-width: 991.98px) {
-        .rs-grid {
-            grid-template-columns: 1fr;
-        }
-
-        .rs-hero__right {
-            align-items: flex-start;
-        }
-
-        .rs-hero__actions {
-            justify-content: flex-start;
-        }
-
-        .os-cost-grid {
-            grid-template-columns: 1fr;
-        }
-    }
+    .gap-2 { gap: 8px; }
+    .w-100 { width: 100% !important; }
 </style>
 @stop
 
-@push('js')
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
-<link rel="stylesheet" href="/css/driver-tour.css"/>
-<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
+@section('js')
 <script>
-(function () {
-    const TOUR_ID     = 'ordem-servico-show';
-    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
-    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
-    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
-    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
-    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
+document.addEventListener('DOMContentLoaded', function() {
+    const tablePecas = document.getElementById('table_pecas_executadas').querySelector('tbody');
+    const tableServicos = document.getElementById('table_servicos_executados').querySelector('tbody');
 
-    const steps = [
-        { element: '.rs-hero', popover: { title: 'Cabeçalho da OS', description: 'Exibe o número da OS, status atual, veículo vinculado, usuário que abriu e data de criação. Use os botões à direita para exportar em PDF ou voltar à lista.', side: 'bottom' } },
-        { element: '.rs-status-badge', popover: { title: 'Status da OS', description: '<b>Aberta</b> (amarelo) — aguardando início. <b>Em andamento</b> (azul) — manutenção em curso. <b>Concluída</b> (verde) — finalizada com relatório. <b>Cancelada</b> (vermelho) — encerrada sem execução.', side: 'left' } },
-        { element: '.rs-hero__kpis', popover: { title: 'Indicadores da OS', description: 'Mostra a quantidade de itens (danos + serviços) vinculados à OS e o número da reserva associada ao veículo, quando houver.', side: 'bottom' } },
-        { element: '.rs-main .rs-card:nth-child(1)', popover: { title: 'Dados da OS', description: 'Detalhes completos: veículo, placa, data de abertura, data de encerramento (quando concluída), usuário responsável e observações gerais informadas na criação.', side: 'right' } },
-        { element: '.rs-main .rs-card:nth-child(2)', popover: { title: 'Itens da OS', description: 'Lista todos os danos e serviços vinculados. Cada item mostra a descrição, o resultado registrado após a conclusão e os anexos de evidência.', side: 'right' } },
-        { element: '.rs-sidebar', popover: { title: 'Painel de ações', description: 'Aqui você avança o fluxo da OS: <b>Marcar em andamento</b> → <b>Concluir</b> (com relatório geral e resultados por item) → ou <b>Cancelar</b>. O formulário de conclusão exige relatório e permite anexar arquivos.', side: 'left' } },
-        { element: '#relatorio_geral', popover: { title: 'Relatório de conclusão', description: 'Descreva tudo o que foi feito: peças substituídas, procedimentos realizados e condições do veículo após o serviço. Campo obrigatório para concluir a OS.', side: 'top' } },
-        { element: '#anexos', popover: { title: 'Anexos da conclusão', description: 'Envie fotos, laudos e documentos que comprovem a execução do serviço. Formatos aceitos: PDF, imagens, Word e Excel. Máximo 10 MB por arquivo.', side: 'top' } },
-    ];
+    const btnAddPeca = document.getElementById('btn_add_peca_exec');
+    const btnAddServico = document.getElementById('btn_add_servico_exec');
 
-    function marcarFeito() {
-        localStorage.setItem(CACHE_KEY, '1');
-        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } }).catch(() => {});
+    const fechamentoPecas = document.getElementById('fechamento_pecas');
+    const fechamentoMaoObra = document.getElementById('fechamento_mao_obra');
+    const fechamentoTotal = document.getElementById('fechamento_total');
+
+    function parseMoeda(str) {
+        if (!str) return 0;
+        str = str.replace('R$', '').replace(' ', '').trim();
+        if (str.indexOf(',') !== -1) {
+            str = str.replace(/\./g, '').replace(',', '.');
+        }
+        const val = parseFloat(str);
+        return isNaN(val) ? 0 : val;
     }
 
-    function getAvailableSteps() {
-        return steps.filter(function (step) {
-            if (!step || !step.element) return false;
+    function formatMoeda(val) {
+        return 'R$ ' + val.toFixed(2).replace('.', ',').replace(/\d(?=(\d{3})+,)/g, '$&.');
+    }
 
-            return String(step.element)
-                .split(',')
-                .map(function (selector) { return selector.trim(); })
-                .filter(Boolean)
-                .some(function (selector) {
-                    try {
-                        return !!document.querySelector(selector);
-                    } catch (error) {
-                        return false;
-                    }
-                });
+    function recalcularTotais() {
+        let totalPecas = 0;
+        let totalMaoObra = 0;
+
+        // Soma peças dinâmicas
+        tablePecas.querySelectorAll('.peca-row').forEach(row => {
+            const qty = parseInt(row.querySelector('.peca-qtd').value) || 0;
+            const unit = parseMoeda(row.querySelector('.peca-val').value);
+            const total = qty * unit;
+            row.querySelector('.peca-total-cell').textContent = formatMoeda(total);
+            totalPecas += total;
+        });
+
+        // Soma serviços dinâmicos
+        tableServicos.querySelectorAll('.srv-row').forEach(row => {
+            const qty = parseInt(row.querySelector('.srv-qtd').value) || 0;
+            const unit = parseMoeda(row.querySelector('.srv-val').value);
+            const total = qty * unit;
+            row.querySelector('.srv-total-cell').textContent = formatMoeda(total);
+            totalMaoObra += total;
+        });
+
+        if (fechamentoPecas) fechamentoPecas.textContent = formatMoeda(totalPecas);
+        if (fechamentoMaoObra) fechamentoMaoObra.textContent = formatMoeda(totalMaoObra);
+        if (fechamentoTotal) fechamentoTotal.textContent = formatMoeda(totalPecas + totalMaoObra);
+    }
+
+    function checkEmptyRows() {
+        const noPecas = document.getElementById('no_pecas_row');
+        const noServicos = document.getElementById('no_servicos_row');
+
+        if (noPecas) {
+            const rows = tablePecas.querySelectorAll('.peca-row').length;
+            noPecas.style.display = rows > 0 ? 'none' : '';
+        }
+        if (noServicos) {
+            const rows = tableServicos.querySelectorAll('.srv-row').length;
+            noServicos.style.display = rows > 0 ? 'none' : '';
+        }
+    }
+
+    if (btnAddPeca) {
+        btnAddPeca.addEventListener('click', function() {
+            const row = document.createElement('tr');
+            row.className = 'peca-row';
+            row.innerHTML = `
+                <td>
+                    <input type="text" name="pecas_exec_nome[]" class="form-control form-control-sm" placeholder="Nome da peça / material" required>
+                </td>
+                <td>
+                    <input type="number" name="pecas_exec_qtd[]" class="form-control form-control-sm text-center peca-qtd" value="1" min="1" required>
+                </td>
+                <td>
+                    <input type="text" name="pecas_exec_valor[]" class="form-control form-control-sm text-right peca-val" placeholder="0,00" value="0,00" required>
+                </td>
+                <td class="text-right align-middle font-weight-bold peca-total-cell">
+                    R$ 0,00
+                </td>
+                <td class="text-center align-middle">
+                    <button type="button" class="btn btn-xs btn-outline-danger border-0 btn-remove-row"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            `;
+
+            row.querySelector('.btn-remove-row').addEventListener('click', () => {
+                row.remove();
+                checkEmptyRows();
+                recalcularTotais();
+            });
+
+            row.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', recalcularTotais);
+            });
+
+            const noPecas = document.getElementById('no_pecas_row');
+            if (noPecas) tablePecas.insertBefore(row, noPecas);
+            else tablePecas.appendChild(row);
+
+            checkEmptyRows();
+            recalcularTotais();
         });
     }
 
-    function buildTour() {
-        if (typeof window.driver === 'undefined' || !window.driver.js) return null;
+    if (btnAddServico) {
+        btnAddServico.addEventListener('click', function() {
+            const row = document.createElement('tr');
+            row.className = 'srv-row';
+            row.innerHTML = `
+                <td>
+                    <input type="text" name="servicos_exec_nome[]" class="form-control form-control-sm" placeholder="Descrição do serviço / mão de obra" required>
+                </td>
+                <td>
+                    <input type="number" name="servicos_exec_qtd[]" class="form-control form-control-sm text-center srv-qtd" value="1" min="1" required>
+                </td>
+                <td>
+                    <input type="text" name="servicos_exec_valor[]" class="form-control form-control-sm text-right srv-val" placeholder="0,00" value="0,00" required>
+                </td>
+                <td class="text-right align-middle font-weight-bold srv-total-cell">
+                    R$ 0,00
+                </td>
+                <td class="text-center align-middle">
+                    <button type="button" class="btn btn-xs btn-outline-danger border-0 btn-remove-row"><i class="fas fa-trash-alt"></i></button>
+                </td>
+            `;
 
-        var availableSteps = getAvailableSteps();
-        if (!availableSteps.length) return null;
+            row.querySelector('.btn-remove-row').addEventListener('click', () => {
+                row.remove();
+                checkEmptyRows();
+                recalcularTotais();
+            });
 
-        var _pulou = false;
-        return window.driver.js.driver({
-            animate: true, smoothScroll: true, showProgress: true,
-            progressText: 'Passo @{{current}} de @{{total}}',
-            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
-            onPopoverRender: (popover, { driver }) => {
-                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
-                var btnTour = document.createElement('button');
-                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
-                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
-                var btnStep = document.createElement('button');
-                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
-                btnStep.addEventListener('click', function () { driver.moveNext(); });
-                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
-                if (nav) { nav.prepend(btnStep); }
-                popover.footer.prepend(btnTour);
-            },
-            steps: availableSteps,
+            row.querySelectorAll('input').forEach(input => {
+                input.addEventListener('input', recalcularTotais);
+            });
+
+            const noServicos = document.getElementById('no_servicos_row');
+            if (noServicos) tableServicos.insertBefore(row, noServicos);
+            else tableServicos.appendChild(row);
+
+            checkEmptyRows();
+            recalcularTotais();
         });
     }
-
-    function startTour() {
-        var tour = buildTour();
-        if (!tour) return;
-        setTimeout(function () { tour.drive(); }, 350);
-    }
-
-    window.restartPageTour = function () {
-        localStorage.removeItem(CACHE_KEY);
-        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
-            .catch(() => {})
-            .then(() => startTour());
-    };
-
-    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
-    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
-            startTour();
-        })
-        .catch(() => {
-            if (!localStorage.getItem(CACHE_KEY) || forceTour) startTour();
-        });
-})();
+});
 </script>
-@endpush
+@stop

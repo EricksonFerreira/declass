@@ -25,6 +25,11 @@ class LancamentoFinanceiro extends Model
         'reserva_id',
         'user_id',
         'observacoes',
+        'recorrente',
+        'recorrencia',
+        'parcelas_totais',
+        'parcela_atual',
+        'grupo_recorrencia_id',
     ];
 
     protected $casts = [

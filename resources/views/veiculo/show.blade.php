@@ -840,16 +840,16 @@
                         </div>
                         <div class="vs-kpis">
                             <div class="vs-kpi">
-                                <span>Pendentes</span>
-                                <strong>{{ $veiculo->veiculoDanos->whereNull('correcao_data')->count() }}</strong>
+                                <span>Pendente</span>
+                                <strong>{{ $veiculo->veiculoDanos->where('status', 'pendente')->count() }}</strong>
+                            </div>
+                            <div class="vs-kpi">
+                                <span>Em correção</span>
+                                <strong>{{ $veiculo->veiculoDanos->where('status', 'em_correcao')->count() }}</strong>
                             </div>
                             <div class="vs-kpi">
                                 <span>Corrigidas</span>
-                                <strong>{{ $veiculo->veiculoDanos->whereNotNull('correcao_data')->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Total</span>
-                                <strong>{{ $veiculo->veiculoDanos->count() }}</strong>
+                                <strong>{{ $veiculo->veiculoDanos->whereIn('status', ['corrigida', 'parcialmente_corrigida', 'descartada'])->count() }}</strong>
                             </div>
                         </div>
                     </div>
@@ -933,46 +933,78 @@
                         <table class="table table-hover xp-table" id="tabelaAvarias">
                             <thead>
                                 <tr>
-                                    <th>#</th>
+                                    <th>Avaria</th>
                                     <th>Local</th>
-                                    <th>Tipo</th>
-                                    <th>Custo Est.</th>
-                                    <th>Observações</th>
-                                    <th>Status</th>
-                                    <th>Corrigido em</th>
-                                    <th>Reserva</th>
+                                    <th>Situação</th>
+                                    <th>Tratamento</th>
+                                    <th>Origem</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach($veiculo->veiculoDanos->sortByDesc('id') as $dano)
+                                @php
+                                    $codigoReservaDano = $dano->reservaCodigo?->codigo
+                                        ?? $dano->reserva?->codigoReserva?->codigo
+                                        ?? $dano->contratoCheckin?->reserva?->codigoReserva?->codigo;
+
+                                    // Localizar OS associada
+                                    $itemOS = $dano->ordemServicoItens()->whereHas('ordemServico', function($q) {
+                                        $q->whereIn('status', ['aberta', 'em_andamento', 'concluida']);
+                                    })->with('ordemServico')->first();
+
+                                    $osAssociada = $itemOS?->ordemServico;
+
+                                    $statusClass = match($dano->status) {
+                                        'em_correcao' => 'status-badge--blue',
+                                        'corrigida' => 'status-badge--green',
+                                        'parcialmente_corrigida' => 'status-badge--green',
+                                        'descartada' => 'status-badge--gray',
+                                        default => 'status-badge--amber'
+                                    };
+                                    $statusText = match($dano->status) {
+                                        'em_correcao' => 'Em Correção',
+                                        'corrigida' => 'Corrigido',
+                                        'parcialmente_corrigida' => 'Parcialmente Corrigido',
+                                        'descartada' => 'Descartado',
+                                        default => 'Pendente'
+                                    };
+                                @endphp
                                 <tr
-                                    data-av-status="{{ $dano->correcao_data ? 'corrigido' : 'pendente' }}"
+                                    data-av-status="{{ $dano->status }}"
                                     data-av-tipo="{{ strtolower($dano->tipo_dano ?? '') }}"
                                     data-av-local="{{ strtolower($dano->local_dano ?? '') }}"
-                                    data-av-reserva="{{ $dano->reservaCodigo?->codigo ?? $dano->reserva?->codigoReserva?->codigo ?? $dano->contratoCheckin?->reserva?->codigoReserva?->codigo ?? $dano->reserva_id ?? '' }}"
+                                    data-av-reserva="{{ $codigoReservaDano ?? '' }}"
                                 >
-                                    <td><span class="xp-id">#{{ $dano->id }}</span></td>
-                                    <td>{{ strtoupper($dano->local_dano ?? '—') }}</td>
-                                    <td>{{ $dano->tipo_dano ?? '—' }}</td>
-                                    <td>{{ $dano->custo_estimado ? 'R$ ' . number_format((float)$dano->custo_estimado, 2, ',', '.') : '—' }}</td>
-                                    <td class="obs-cell">{{ \Illuminate\Support\Str::limit($dano->observacoes ?? '—', 70) }}</td>
                                     <td>
-                                        @if($dano->correcao_data)
-                                            <span class="status-badge status-badge--green"><i class="fas fa-check mr-1"></i>Corrigido</span>
-                                        @else
-                                            <span class="status-badge status-badge--amber"><i class="fas fa-clock mr-1"></i>Pendente</span>
+                                        <span class="xp-id">#{{ $dano->id }}</span>
+                                        <div class="font-weight-bold text-dark">{{ $dano->tipo_dano ?? 'Avaria geral' }}</div>
+                                        <small class="text-muted d-block"><strong>Inicial:</strong> {{ \Illuminate\Support\Str::limit($dano->observacoes, 50) }}</small>
+                                        @if($dano->correcao_descricao)
+                                            <small class="text-success d-block"><i class="fas fa-check-circle mr-1"></i><strong>Laudo/Correção:</strong> {{ \Illuminate\Support\Str::limit($dano->correcao_descricao, 50) }}</small>
                                         @endif
                                     </td>
-                                    <td>{{ $dano->correcao_data ? \Carbon\Carbon::parse($dano->correcao_data)->format('d/m/Y') : '—' }}</td>
+                                    <td>{{ strtoupper($dano->local_dano ?? '—') }}</td>
                                     <td>
-                                        @php
-                                            $codigoReservaDano = $dano->reservaCodigo?->codigo
-                                                ?? $dano->reserva?->codigoReserva?->codigo
-                                                ?? $dano->contratoCheckin?->reserva?->codigoReserva?->codigo;
-                                        @endphp
+                                        <span class="status-badge {{ $statusClass }}">
+                                            <i class="fas fa-circle mr-1" style="font-size: 8px;"></i>{{ $statusText }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if($osAssociada)
+                                            <a href="{{ route('ordem-servico.show', $osAssociada) }}" class="xp-link font-weight-bold">
+                                                <i class="fas fa-tools mr-1"></i>{{ $osAssociada->numero ?? 'OS #' . $osAssociada->id }}
+                                            </a>
+                                        @elseif($dano->correcao_data)
+                                            <span class="text-success font-weight-semibold"><i class="fas fa-check mr-1"></i>Correção rápida</span>
+                                        @else
+                                            <span class="text-muted small">Ainda não definido</span>
+                                        @endif
+                                    </td>
+                                    <td>
                                         @if($codigoReservaDano)
                                             <a href="{{ route('reserva.show', $codigoReservaDano) }}" class="xp-link">#{{ $codigoReservaDano }}</a>
-                                        @else <span class="text-muted">—</span>
+                                        @else
+                                            <span class="text-muted">—</span>
                                         @endif
                                     </td>
                                 </tr>
@@ -1087,6 +1119,7 @@
                                     <th>Abertura</th>
                                     <th>Conclusão</th>
                                     <th>Itens</th>
+                                    <th>Valor</th>
                                     <th>Ação</th>
                                 </tr>
                             </thead>
@@ -1117,6 +1150,13 @@
                                     <td>{{ $os->created_at ? $os->created_at->format('d/m/Y') : '—' }}</td>
                                     <td>{{ $os->data_conclusao ? $os->data_conclusao->format('d/m/Y') : '—' }}</td>
                                     <td>{{ $os->itens ? $os->itens->count() : '—' }}</td>
+                                    <td>
+                                        @if($os->valor_total > 0)
+                                            <strong>{{ number_format($os->valor_total, 2, ',', '.') }}</strong>
+                                        @else
+                                            <span class="text-muted">—</span>
+                                        @endif
+                                    </td>
                                     <td>
                                         <a href="{{ route('ordem-servico.show', $os) }}" class="btn-xp btn-xp--sm">
                                             <i class="fas fa-eye mr-1"></i>Ver

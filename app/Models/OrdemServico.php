@@ -20,6 +20,7 @@ class OrdemServico extends Model
         'empresa_id',
         'veiculo_id',
         'reserva_id',
+        'sinistro_id',
         'user_id_abertura',
         'user_id_encerramento',
         'status',
@@ -46,6 +47,11 @@ class OrdemServico extends Model
     public function reserva(): BelongsTo
     {
         return $this->belongsTo(Reserva::class, 'reserva_id');
+    }
+
+    public function sinistro(): BelongsTo
+    {
+        return $this->belongsTo(Sinistro::class, 'sinistro_id');
     }
 
     public function usuarioAbertura(): BelongsTo

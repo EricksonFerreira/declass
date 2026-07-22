@@ -37,6 +37,11 @@ class PdfService
         );
     }
 
+    public function gerarOrdemServicoPdf(array $data, string $filename = 'documento.pdf')
+    {
+        return $this->exibir('pdf.ordem-servico', $data, $filename);
+    }
+
     public function exibir(
         string $view,
         array $data,

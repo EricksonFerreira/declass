@@ -17,7 +17,7 @@ class AssinarTermoDevolucaoReservaComumAction
     public function handle(Reserva $reserva, string $assinaturaBase64): void
     {
         $checkout = $reserva->contratoCheckout;
-        if (!$checkout) {
+        if (! $checkout) {
             throw new \RuntimeException('Check-out não encontrado para esta reserva.');
         }
 
@@ -36,7 +36,7 @@ class AssinarTermoDevolucaoReservaComumAction
             'avariaCobrancas', 'calcao', 'contratoCheckout',
         ]));
 
-        $arquivo = 'contratos/checkout_' . $reserva->id . '_' . time() . '.pdf';
+        $arquivo = 'contratos/checkout_'.$reserva->id.'_'.time().'.pdf';
         Storage::disk('public')->put($arquivo, $pdfContent);
         $checkout->pdf_path = $arquivo;
         $checkout->save();

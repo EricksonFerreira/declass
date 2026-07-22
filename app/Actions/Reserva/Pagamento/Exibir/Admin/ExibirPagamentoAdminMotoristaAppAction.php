@@ -20,75 +20,191 @@ class ExibirPagamentoAdminMotoristaAppAction
 
     public function handle(ReservaMotoristaApp $reservaMotoristaApp): mixed
     {
-        $reservaMotoristaApp->loadMissing(['codigoReserva', 'empresa', 'user', 'planoMotoristaApp', 'estacaoRetirada', 'pagamentos']);
+        $reservaMotoristaApp->loadMissing([
+            'codigoReserva',
+            'empresa',
+            'user',
+            'planoMotoristaApp',
+            'estacaoRetirada',
+            'pagamentos',
+        ]);
 
-        $this->garantirPrimeiroPagamentoMotoristaApp($reservaMotoristaApp);
-        $reservaMotoristaApp->load('pagamentos');
+        $plano = $reservaMotoristaApp->planoMotoristaApp;
 
-        $pagamento = $reservaMotoristaApp->pagamentos
-            ->filter(fn ($item) => strtolower((string) ($item->status ?? '')) === 'pendente')
+        /*
+         * Um pagamento anterior pode ser usado apenas como referência
+         * para dados históricos. Ele não é obrigatório para abrir a tela.
+         */
+        $ultimoPagamento = $reservaMotoristaApp->pagamentos
             ->sortByDesc('id')
             ->first();
 
-        if (! $pagamento) {
-            $codigoReserva = $reservaMotoristaApp->codigoReserva?->codigo ?? ('MAP-'.str_pad((string) $reservaMotoristaApp->id, 6, '0', STR_PAD_LEFT));
+        $periodos = max(
+            1,
+            (int) (
+                $ultimoPagamento?->periodos
+                ?? $reservaMotoristaApp->periodos
+                ?? 1
+            )
+        );
 
-            return redirect()
-                ->route('reserva.show', $codigoReserva)
-                ->with('success', 'Não há pagamento pendente para esta reserva.');
-        }
+        $valorUnitarioContrato = (float) (
+            $reservaMotoristaApp->valor_periodo_contrato ?? 0
+        );
 
-        $plano = $reservaMotoristaApp->planoMotoristaApp;
-        $periodos = max(1, (int) ($pagamento->periodos ?? 1));
-        $valorUnitarioContrato = (float) ($reservaMotoristaApp->valor_periodo_contrato ?? 0);
-        $valorUnitarioReserva = (float) ($reservaMotoristaApp->valor_plano ?? 0);
-        $valorUnitarioPlano = (float) ($plano?->valor_periodo ?? 0);
-        $valorUnitarioPagamento = (float) ($pagamento->valor_unitario ?? 0);
+        $valorUnitarioReserva = (float) (
+            $reservaMotoristaApp->valor_plano ?? 0
+        );
+
+        $valorUnitarioPlano = (float) (
+            $plano?->valor_periodo ?? 0
+        );
+
+        $valorUnitarioPagamento = (float) (
+            $ultimoPagamento?->valor_unitario ?? 0
+        );
+
         $valorUnitario = $valorUnitarioContrato > 0
             ? $valorUnitarioContrato
-            : ($valorUnitarioReserva > 0
-                ? $valorUnitarioReserva
-                : ($valorUnitarioPlano > 0 ? $valorUnitarioPlano : $valorUnitarioPagamento));
-        $valorOpcionaisReserva = (float) ($reservaMotoristaApp->valor_opcionais ?? 0);
-        $valorBaseCalculado = round($valorUnitario * $periodos, 2);
-        $valorTotalCicloOriginal = round($valorBaseCalculado + $valorOpcionaisReserva, 2);
+            : (
+                $valorUnitarioReserva > 0
+                    ? $valorUnitarioReserva
+                    : (
+                        $valorUnitarioPlano > 0
+                            ? $valorUnitarioPlano
+                            : $valorUnitarioPagamento
+                    )
+            );
 
-        $totalPagoAcumulado = (float) $reservaMotoristaApp->pagamentos()
-            ->where('status', 'pago')
-            ->sum('valor_total');
+        $valorOpcionaisReserva = (float) (
+            $reservaMotoristaApp->valor_opcionais ?? 0
+        );
 
-        $valorCobranca = max(0, round($valorTotalCicloOriginal - $totalPagoAcumulado, 2));
+        $valorBaseCalculado = round(
+            $valorUnitario * $periodos,
+            2
+        );
 
+        $valorTotalCicloOriginal = round(
+            $valorBaseCalculado + $valorOpcionaisReserva,
+            2
+        );
+
+        /*
+         * Somente pagamentos efetivamente confirmados diminuem o saldo.
+         */
+        $totalPagoAcumulado = round(
+            (float) $reservaMotoristaApp->pagamentos()
+                ->where('status', 'pago')
+                ->sum('valor_total'),
+            2
+        );
+
+        $valorCobranca = max(
+            0,
+            round($valorTotalCicloOriginal - $totalPagoAcumulado, 2)
+        );
+
+        $codigoReserva = $reservaMotoristaApp->codigoReserva?->codigo
+            ?? (
+                'MAP-'.str_pad(
+                    (string) $reservaMotoristaApp->id,
+                    6,
+                    '0',
+                    STR_PAD_LEFT
+                )
+            );
+
+        /*
+         * Somente bloqueia a tela quando não existe mais saldo.
+         */
         if ($valorCobranca <= 0.009) {
-            $codigoReserva = $reservaMotoristaApp->codigoReserva?->codigo ?? ('MAP-'.str_pad((string) $reservaMotoristaApp->id, 6, '0', STR_PAD_LEFT));
-
             return redirect()
                 ->route('reserva.show', $codigoReserva)
-                ->with('success', 'Esta reserva já se encontra com o pagamento totalmente quitado.');
+                ->with(
+                    'success',
+                    'Esta reserva já se encontra totalmente quitada.'
+                );
         }
 
-        $inicio = $pagamento->data_inicio_prevista ? \Carbon\Carbon::parse($pagamento->data_inicio_prevista)->format('d/m/Y H:i') : '-';
-        $fim = $pagamento->data_fim_prevista ? \Carbon\Carbon::parse($pagamento->data_fim_prevista)->format('d/m/Y H:i') : '-';
-        $dias = ($pagamento->data_inicio_prevista && $pagamento->data_fim_prevista)
-            ? max(1, \Carbon\Carbon::parse($pagamento->data_inicio_prevista)->diffInDays(\Carbon\Carbon::parse($pagamento->data_fim_prevista)))
+        /*
+         * As datas pertencem à reserva/ciclo, e não necessariamente
+         * ao último pagamento realizado.
+         */
+        $dataInicio = $reservaMotoristaApp->data_inicio
+            ?? $ultimoPagamento?->data_inicio_prevista;
+
+        $dataFim = $reservaMotoristaApp->data_fim
+            ?? $ultimoPagamento?->data_fim_prevista;
+
+        $inicio = $dataInicio
+            ? \Carbon\Carbon::parse($dataInicio)->format('d/m/Y H:i')
+            : '-';
+
+        $fim = $dataFim
+            ? \Carbon\Carbon::parse($dataFim)->format('d/m/Y H:i')
+            : '-';
+
+        $dias = ($dataInicio && $dataFim)
+            ? max(
+                1,
+                \Carbon\Carbon::parse($dataInicio)
+                    ->diffInDays(\Carbon\Carbon::parse($dataFim))
+            )
             : (int) ($reservaMotoristaApp->quantidade_dias ?? 0);
-        $statusAtual = strtolower((string) ($pagamento->status ?? 'pendente'));
 
-        $empresa = $pagamento->empresa ?? $reservaMotoristaApp->empresa ?? Auth::user()?->empresa;
-        $gatewayPadrao = $empresa ? $this->gatewayEmpresaConfigService->gateway($empresa) : 'manual';
+        /*
+         * O status exibido passa a representar o estado da cobrança.
+         */
+        $statusAtual = $valorCobranca > 0
+            ? ($totalPagoAcumulado > 0 ? 'parcialmente_pago' : 'pendente')
+            : 'pago';
+
+        $empresa = $reservaMotoristaApp->empresa
+            ?? $ultimoPagamento?->empresa
+            ?? Auth::user()?->empresa;
+
+        $gatewayPadrao = $empresa
+            ? $this->gatewayEmpresaConfigService->gateway($empresa)
+            : 'manual';
+
         $gatewayNome = strtoupper($gatewayPadrao);
-        $moedaPadrao = $empresa ? $this->gatewayEmpresaConfigService->moeda($empresa) : 'BRL';
 
-        $clientePagamento = $reservaMotoristaApp->user ?? $pagamento->user ?? Auth::user();
+        $moedaPadrao = $empresa
+            ? $this->gatewayEmpresaConfigService->moeda($empresa)
+            : 'BRL';
+
+        $clientePagamento = $reservaMotoristaApp->user
+            ?? $ultimoPagamento?->user
+            ?? Auth::user();
+
         $metodosPagamento = [];
         $stripePublicKey = null;
+
         if ($gatewayPadrao === 'stripe' && $empresa) {
-            $stripePublicKey = (string) ($empresa->stripe_public_key ?? config('services.stripe.key'));
-            $stripeSecret = (string) ($empresa->stripe_secret ?? config('services.stripe.secret'));
-            if ($stripeSecret !== '' && ! empty($clientePagamento?->stripe_id)) {
+            $stripePublicKey = (string) (
+                $empresa->stripe_public_key
+                ?? config('services.stripe.key')
+            );
+
+            $stripeSecret = (string) (
+                $empresa->stripe_secret
+                ?? config('services.stripe.secret')
+            );
+
+            if (
+                $stripeSecret !== ''
+                && ! empty($clientePagamento?->stripe_id)
+            ) {
                 try {
-                    $metodosPagamento = $this->clienteStripeService->getPaymentMethods($clientePagamento->stripe_id, $stripeSecret);
+                    $metodosPagamento =
+                        $this->clienteStripeService->getPaymentMethods(
+                            $clientePagamento->stripe_id,
+                            $stripeSecret
+                        );
                 } catch (\Throwable $e) {
+                    report($e);
+
                     $metodosPagamento = [];
                 }
             }
@@ -99,26 +215,55 @@ class ExibirPagamentoAdminMotoristaAppAction
             ->orderByDesc('id')
             ->get();
 
-        $codigoReserva = $reservaMotoristaApp->codigoReserva?->codigo ?? ('MAP-'.str_pad((string) $reservaMotoristaApp->id, 6, '0', STR_PAD_LEFT));
-
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
-            new BreadCrumbItem('Reserva Nº '.$codigoReserva, route('reserva.show', $codigoReserva)),
+            new BreadCrumbItem(
+                'Reserva Nº '.$codigoReserva,
+                route('reserva.show', $codigoReserva)
+            ),
             new BreadCrumbItem('Efetuar Pagamento'),
         ]);
 
         $titulo = 'Efetuar Pagamento da Reserva Motorista APP';
 
-        return view('reserva.efetuar-pagamento.efetuar-pagamento-motorista-app', compact(
-            'pagamento', 'reservaMotoristaApp', 'breadcrumb', 'titulo',
-            'gatewayPadrao', 'gatewayNome', 'moedaPadrao',
-            'metodosPagamento', 'stripePublicKey', 'pagamentosAnteriores',
-            'codigoReserva', 'plano', 'clientePagamento',
-            'periodos', 'valorUnitario', 'valorOpcionaisReserva',
-            'valorCobranca', 'valorTotalCicloOriginal', 'totalPagoAcumulado',
-            'inicio', 'fim', 'dias', 'statusAtual',
-        ));
+        /*
+         * Para manter compatibilidade temporária com a view,
+         * podemos enviar o último pagamento como $pagamento.
+         *
+         * O ideal é alterar a view para usar $ultimoPagamento.
+         */
+        $pagamento = $ultimoPagamento;
+
+        return view(
+            'reserva.efetuar-pagamento.efetuar-pagamento-motorista-app',
+            compact(
+                'pagamento',
+                'ultimoPagamento',
+                'reservaMotoristaApp',
+                'breadcrumb',
+                'titulo',
+                'gatewayPadrao',
+                'gatewayNome',
+                'moedaPadrao',
+                'metodosPagamento',
+                'stripePublicKey',
+                'pagamentosAnteriores',
+                'codigoReserva',
+                'plano',
+                'clientePagamento',
+                'periodos',
+                'valorUnitario',
+                'valorOpcionaisReserva',
+                'valorCobranca',
+                'valorTotalCicloOriginal',
+                'totalPagoAcumulado',
+                'inicio',
+                'fim',
+                'dias',
+                'statusAtual',
+            )
+        );
     }
 
     private function garantirPrimeiroPagamentoMotoristaApp(ReservaMotoristaApp $reserva): void

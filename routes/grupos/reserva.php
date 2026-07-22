@@ -13,7 +13,7 @@ Route::get('minhas-reservas', [ReservaController::class, 'minhas'])->name('reser
 // ── Motorista App (controller separado) ──
 Route::get('minhas-reservas/motorista-app/{id}', [ReservaController::class, 'showMinhasMotoristaApp'])->name('reserva.minhas.motorista-app.show');
 Route::get('minhas-reservas/{id}/efetuar-pagamento', [ReservaPagamentoController::class, 'efetuarPagamentoMinhas'])->name('reserva.minhas.pagamento.efetuar');
-Route::post('minhas-reservas/{pagamento}/confirmar-pagamento', [ReservaPagamentoController::class, 'confirmarPagamentoMinhas'])->name('reserva.minhas.pagamento.confirmar');
+Route::post('minhas-reservas/{codigo}/confirmar-pagamento', [ReservaPagamentoController::class, 'confirmarPagamentoMinhas'])->name('reserva.minhas.pagamento.confirmar');
 Route::get('minhas-reservas/{id}', [ReservaController::class, 'showMinhas'])->name('reserva.minhas.show');
 Route::post('reserva/minhas/motorista-app/{id}/efetivar', [ReservaMotoristaAppController::class, 'efetivarMotoristaApp'])->name('reserva.minhas.motorista-app.efetivar');
 Route::post('reserva/minhas/motorista-app/{id}/aceitar-termo', [ReservaMotoristaAppController::class, 'aceitarTermoConfirmacaoMotoristaApp'])->name('reserva.minhas.motorista-app.aceitar-termo');
