@@ -2,39 +2,35 @@
 
 namespace App\Http\Controllers;
 
-use App\Enums\StatusReservaEnum;
 use App\Models\Empresa;
 use App\Models\Estacao;
 use App\Models\MotoristaAppSolicitacao;
+use App\Models\PlanoMotoristaApp;
 use App\Models\ReservaMotoristaApp;
 use App\Models\ReservaMotoristaAppPagamento;
-use App\Models\Opcional;
-use App\Models\Reserva;
-use App\Models\PlanoMotoristaApp;
-use App\Services\ReservaCodigoService;
 use App\Services\EstacaoService;
+use App\Services\ReservaCodigoService;
 use App\Support\ArquivoAnexoHelper;
-use App\Support\EmpresaContext;
 use App\Support\DomainNormalizer;
+use App\Support\EmpresaContext;
 use App\Support\SchemaCache;
 use Carbon\Carbon;
-use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
-
 class SiteApresentacaoController extends Controller
 {
     private const MODELO_1 = 'modelo_1';
+
     private const MODELO_2 = 'modelo_2';
+
     private const MODELO_3 = 'modelo_3';
+
     protected $estacaoService;
 
     public function __construct(EstacaoService $estacaoService)
@@ -54,7 +50,7 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->aluguel_app_ativo ?? 'N') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->aluguel_app_ativo ?? 'N') !== 'S') {
             return $this->defaultResponse();
         }
 
@@ -79,15 +75,15 @@ class SiteApresentacaoController extends Controller
             : (Route::has('login') ? route('login') : $this->adminLoginFallbackUrl());
         $heroTrustChips = [];
 
-        if (!empty($empresa->telefone)) {
+        if (! empty($empresa->telefone)) {
             $heroTrustChips[] = $this->formatTelefone($empresa->telefone);
         }
 
-        if (!empty($empresa->email)) {
+        if (! empty($empresa->email)) {
             $heroTrustChips[] = $empresa->email;
         }
 
-        if (!empty($empresa->cnpj)) {
+        if (! empty($empresa->cnpj)) {
             $heroTrustChips[] = $this->formatCnpj($empresa->cnpj);
         }
 
@@ -151,7 +147,7 @@ class SiteApresentacaoController extends Controller
             'corBotaoSecundarioFundo' => $this->colorValue($cores, 'botao_secundario_fundo', 'transparent'),
             'corBotaoSecundarioTexto' => $this->colorValue($cores, 'botao_secundario_texto', '#FFFFFF'),
             'contatoTelefone' => $this->formatTelefone($empresa->telefone),
-            'contatoEmail' => $empresa->email ?: 'contato@' . ($empresa->dominio ?: 'empresa.com.br'),
+            'contatoEmail' => $empresa->email ?: 'contato@'.($empresa->dominio ?: 'empresa.com.br'),
             'contatoCnpj' => $this->formatCnpj($empresa->cnpj),
             'anoAtual' => (int) now()->format('Y'),
             'menuItemFrota' => $this->textValue($textos, 'menu_item_frota', 'Frota'),
@@ -161,29 +157,29 @@ class SiteApresentacaoController extends Controller
             'menuItemContato' => $this->textValue($textos, 'menu_item_contato', 'Contato'),
             'frotaTitulo' => $this->textValue($textos, 'frota_titulo', 'Categorias para cada tipo de viagem'),
             'frotaLabelSuperior' => $this->textValue($textos, 'frota_label_superior', 'Frota em destaque'),
-            'frotaDescricao' => $this->textValue($textos, 'frota_descricao', 'Selecione o grupo ideal e reserve com condiÃ§Ãµes ajustadas ao seu perfil, seja turismo, trabalho ou locaÃ§Ã£o corporativa.'),
+            'frotaDescricao' => $this->textValue($textos, 'frota_descricao', 'Selecione o grupo ideal e reserve com condições ajustadas ao seu perfil, seja turismo, trabalho ou locação corporativa.'),
             'frotaDestaques' => $frotaDestaques,
             'planos' => \App\Models\Plano::ativos()->get(),
-            'vantagensTitulo' => $this->textValue($textos, 'vantagens_titulo', 'Por que escolher ' . $empresa->nome),
+            'vantagensTitulo' => $this->textValue($textos, 'vantagens_titulo', 'Por que escolher '.$empresa->nome),
             'vantagensLabelSuperior' => $this->textValue($textos, 'vantagens_label_superior', 'Diferenciais'),
             'vantagensDescricao' => $this->textValue($textos, 'vantagens_descricao', 'Fluxo inspirado nas melhores locadoras do mercado, com foco em conversÃ£o, credibilidade e rapidez no atendimento.'),
             'beneficios' => $this->beneficios($textos),
-            'etapasTitulo' => $this->textValue($textos, 'etapas_titulo', 'Como funciona a locaÃ§Ã£o'),
+            'etapasTitulo' => $this->textValue($textos, 'etapas_titulo', 'Como funciona a locação'),
             'etapasLabelSuperior' => $this->textValue($textos, 'etapas_label_superior', 'Jornada do cliente'),
             'etapasReserva' => $this->etapasReserva($textos),
-            'contatoTitulo' => $this->textValue($textos, 'contato_titulo', 'InformaÃ§Ãµes da locadora'),
+            'contatoTitulo' => $this->textValue($textos, 'contato_titulo', 'Informações da locadora'),
             'contatoLabelSuperior' => $this->textValue($textos, 'contato_label_superior', 'Contato direto'),
             'heroFormTitulo' => $this->textValue($textos, 'hero_form_titulo', 'Simule sua reserva'),
             'heroFormDescricao' => $this->textValue($textos, 'hero_form_descricao', 'Preencha os dados da viagem e siga para a reserva completa em passos.'),
             'heroFormLabelRetirada' => $this->textValue($textos, 'hero_form_label_retirada', 'Local de retirada'),
-            'heroFormLabelDevolucao' => $this->textValue($textos, 'hero_form_label_devolucao', 'Local de devoluÃ§Ã£o'),
+            'heroFormLabelDevolucao' => $this->textValue($textos, 'hero_form_label_devolucao', 'Local de devolução'),
             'heroFormLabelDataRetirada' => $this->textValue($textos, 'hero_form_label_data_retirada', 'Data de retirada'),
             'heroFormLabelHoraRetirada' => $this->textValue($textos, 'hero_form_label_hora_retirada', 'Hora de retirada'),
-            'heroFormLabelDataDevolucao' => $this->textValue($textos, 'hero_form_label_data_devolucao', 'Data de devoluÃ§Ã£o'),
-            'heroFormLabelHoraDevolucao' => $this->textValue($textos, 'hero_form_label_hora_devolucao', 'Hora de devoluÃ§Ã£o'),
+            'heroFormLabelDataDevolucao' => $this->textValue($textos, 'hero_form_label_data_devolucao', 'Data de devolução'),
+            'heroFormLabelHoraDevolucao' => $this->textValue($textos, 'hero_form_label_hora_devolucao', 'Hora de devolução'),
             'heroFormTextoBotao' => $this->textValue($textos, 'hero_form_texto_botao', 'Iniciar reserva'),
-            'heroFormNota' => $this->textValue($textos, 'hero_form_nota', 'Ao avanÃ§ar, vocÃª segue para o fluxo completo de reserva da locadora.'),
-            'botaoAdminTexto' => $this->textValue($textos, 'botao_admin_texto', 'Ãrea administrativa'),
+            'heroFormNota' => $this->textValue($textos, 'hero_form_nota', 'Ao avançar, você segue para o fluxo completo de reserva da locadora.'),
+            'botaoAdminTexto' => $this->textValue($textos, 'botao_admin_texto', 'Área administrativa'),
             'footerTexto' => $this->textValue($textos, 'footer_texto', 'Todos os direitos reservados.'),
             'imagemHero' => $this->imageUrl($imagens, 'hero', $this->imageEnabled($imagensConfig, 'hero')),
             'imagemVantagens' => $this->imageUrl($imagens, 'vantagens', $this->imageEnabled($imagensConfig, 'vantagens')),
@@ -197,7 +193,7 @@ class SiteApresentacaoController extends Controller
     {
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
-        if (!$empresa) {
+        if (! $empresa) {
             return response()->json(['estacoes' => []]);
         }
 
@@ -211,7 +207,7 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
             return $this->defaultResponse();
         }
 
@@ -250,7 +246,7 @@ class SiteApresentacaoController extends Controller
         $analiseConcluida = $request->boolean('analise');
         $solicitacaoFinalizada = $request->boolean('finalizado')
             || (($solicitacaoExistente?->status === 'aprovado') && (($empresa->aluguel_app_exigir_aprovacao_documentos ?? 'N') !== 'S'));
-        $iniciarEmDocumentos = $loginSuccess || $analiseConcluida || $usuarioTemDocumentos || ($request->boolean('step_4') && !$planos->isEmpty());
+        $iniciarEmDocumentos = $loginSuccess || $analiseConcluida || $usuarioTemDocumentos || ($request->boolean('step_4') && ! $planos->isEmpty());
 
         return view('site-apresentacao.motorista-app', [
             'empresa' => $empresa,
@@ -295,11 +291,11 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->aluguel_app_ativo ?? 'N') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->aluguel_app_ativo ?? 'N') !== 'S') {
             return $this->defaultResponse();
         }
 
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return Route::has('site.reserva.login')
                 ? redirect()->route('site.reserva.login', [
                     'context' => 'motorista-app',
@@ -342,37 +338,40 @@ class SiteApresentacaoController extends Controller
                 continue;
             }
 
-            if (!$this->motoristaAppDocumentoEstaVisivel($documento, $request)) {
+            if (! $this->motoristaAppDocumentoEstaVisivel($documento, $request)) {
                 continue;
             }
 
             $tipo = (string) ($documento['type'] ?? 'arquivo');
             $obrigatorio = (bool) ($documento['obrigatorio'] ?? false);
-            $isRequired = $obrigatorio && !$solicitacaoExistente;
+            $isRequired = $obrigatorio && ! $solicitacaoExistente;
             $multiple = (bool) ($documento['multiple'] ?? false);
 
             if ($tipo === 'arquivo') {
-                $regras['documentos.' . $chave] = $isRequired
+                $regras['documentos.'.$chave] = $isRequired
                     ? ['required', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120']
                     : ['nullable', 'file', 'mimes:pdf,jpg,jpeg,png,webp', 'max:5120'];
+
                 continue;
             }
 
             if ($tipo === 'data') {
-                $regras['documentos.' . $chave] = $isRequired
+                $regras['documentos.'.$chave] = $isRequired
                     ? ['required', 'date_format:Y-m-d']
                     : ['nullable', 'date_format:Y-m-d'];
+
                 continue;
             }
 
             if ($tipo === 'lista' && $multiple) {
-                $regras['documentos.' . $chave] = $isRequired
+                $regras['documentos.'.$chave] = $isRequired
                     ? ['required', 'array', 'min:1']
                     : ['nullable', 'array'];
-                $regras['documentos.' . $chave . '.*'] = ['nullable', 'string', Rule::in(array_values(array_filter(array_map(
+                $regras['documentos.'.$chave.'.*'] = ['nullable', 'string', Rule::in(array_values(array_filter(array_map(
                     fn ($option) => is_string($option) ? trim($option) : '',
                     (array) ($documento['options'] ?? [])
                 ))))];
+
                 continue;
             }
 
@@ -385,11 +384,11 @@ class SiteApresentacaoController extends Controller
                 (array) ($documento['options'] ?? [])
             )));
 
-            if ($tipo === 'lista' && !empty($opcoes)) {
+            if ($tipo === 'lista' && ! empty($opcoes)) {
                 $rule[] = Rule::in($opcoes);
             }
 
-            $regras['documentos.' . $chave] = $rule;
+            $regras['documentos.'.$chave] = $rule;
         }
 
         $validated = $request->validate($regras, [
@@ -422,7 +421,7 @@ class SiteApresentacaoController extends Controller
         $dataInicio = null;
         if ($dataInicioTexto !== '') {
             $dataInicio = $horaRetirada !== ''
-                ? Carbon::parse($dataInicioTexto . ' ' . $horaRetirada)
+                ? Carbon::parse($dataInicioTexto.' '.$horaRetirada)
                 : Carbon::parse($dataInicioTexto);
         }
 
@@ -445,7 +444,7 @@ class SiteApresentacaoController extends Controller
                 continue;
             }
 
-            if (!$this->motoristaAppDocumentoEstaVisivel($documento, $request)) {
+            if (! $this->motoristaAppDocumentoEstaVisivel($documento, $request)) {
                 continue;
             }
 
@@ -453,7 +452,7 @@ class SiteApresentacaoController extends Controller
             $multiple = (bool) ($documento['multiple'] ?? false);
 
             if ($tipo === 'arquivo') {
-                $arquivo = $request->file('documentos.' . $chave);
+                $arquivo = $request->file('documentos.'.$chave);
                 if ($arquivo instanceof \Illuminate\Http\UploadedFile && $arquivo->isValid()) {
                     $antigo = is_array($documentosJson[$chave] ?? null) ? ($documentosJson[$chave]['path'] ?? null) : null;
                     $documentosJson[$chave] = [
@@ -461,7 +460,7 @@ class SiteApresentacaoController extends Controller
                         'label' => (string) ($documento['label'] ?? $chave),
                         'path' => ArquivoAnexoHelper::armazenar($arquivo, 'motorista-app/documentos', is_string($antigo) ? $antigo : null),
                     ];
-                } elseif (!isset($documentosJson[$chave]) && !$solicitacaoExistente) {
+                } elseif (! isset($documentosJson[$chave]) && ! $solicitacaoExistente) {
                     $documentosJson[$chave] = [
                         'type' => 'arquivo',
                         'label' => (string) ($documento['label'] ?? $chave),
@@ -473,14 +472,14 @@ class SiteApresentacaoController extends Controller
             }
 
             if ($tipo === 'data') {
-                $entrada = $request->input('documentos.' . $chave);
+                $entrada = $request->input('documentos.'.$chave);
                 if (is_string($entrada) && trim($entrada) !== '') {
                     $documentosJson[$chave] = [
                         'type' => $tipo,
                         'label' => (string) ($documento['label'] ?? $chave),
                         'value' => trim($entrada),
                     ];
-                } elseif (!isset($documentosJson[$chave]) && !$solicitacaoExistente) {
+                } elseif (! isset($documentosJson[$chave]) && ! $solicitacaoExistente) {
                     $documentosJson[$chave] = [
                         'type' => $tipo,
                         'label' => (string) ($documento['label'] ?? $chave),
@@ -492,20 +491,20 @@ class SiteApresentacaoController extends Controller
             }
 
             if ($tipo === 'lista' && $multiple) {
-                $entrada = $request->input('documentos.' . $chave);
+                $entrada = $request->input('documentos.'.$chave);
                 $valores = array_values(array_filter(array_map(
                     fn ($item) => is_string($item) ? trim($item) : '',
                     is_array($entrada) ? $entrada : []
                 )));
 
-                if (!empty($valores)) {
+                if (! empty($valores)) {
                     $documentosJson[$chave] = [
                         'type' => $tipo,
                         'multiple' => true,
                         'label' => (string) ($documento['label'] ?? $chave),
                         'value' => $valores,
                     ];
-                } elseif (!isset($documentosJson[$chave]) && !$solicitacaoExistente) {
+                } elseif (! isset($documentosJson[$chave]) && ! $solicitacaoExistente) {
                     $documentosJson[$chave] = [
                         'type' => $tipo,
                         'multiple' => true,
@@ -517,14 +516,14 @@ class SiteApresentacaoController extends Controller
                 continue;
             }
 
-            $entrada = $request->input('documentos.' . $chave);
+            $entrada = $request->input('documentos.'.$chave);
             if (is_string($entrada) && trim($entrada) !== '') {
                 $documentosJson[$chave] = [
                     'type' => $tipo,
                     'label' => (string) ($documento['label'] ?? $chave),
                     'value' => trim($entrada),
                 ];
-            } elseif (!isset($documentosJson[$chave]) && !$solicitacaoExistente) {
+            } elseif (! isset($documentosJson[$chave]) && ! $solicitacaoExistente) {
                 $documentosJson[$chave] = [
                     'type' => $tipo,
                     'label' => (string) ($documento['label'] ?? $chave),
@@ -623,8 +622,8 @@ class SiteApresentacaoController extends Controller
                 'finalizado' => ($empresa->aluguel_app_exigir_aprovacao_documentos ?? 'N') === 'S' ? null : 1,
             ], fn ($value) => $value !== null && $value !== ''))
             ->with('success', ($empresa->aluguel_app_exigir_aprovacao_documentos ?? 'N') === 'S'
-                ? 'Sua solicitaÃ§Ã£o foi salva com sucesso e seguirÃ¡ para anÃ¡lise.'
-                : 'Sua solicitaÃ§Ã£o foi concluÃ­da com sucesso.');
+                ? 'Sua solicitação foi salva com sucesso e seguirÃ¡ para anÃ¡lise.'
+                : 'Sua solicitação foi concluÃ­da com sucesso.');
     }
 
     public function motoristaAppReservaShow(Request $request, int $reserva): View|RedirectResponse
@@ -632,11 +631,11 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (!$empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
             return $this->defaultResponse();
         }
 
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return Route::has('site.reserva.login')
                 ? redirect()->route('site.reserva.login', [
                     'context' => 'motorista-app',
@@ -651,7 +650,7 @@ class SiteApresentacaoController extends Controller
             ->where('user_id', auth()->id())
             ->find($reserva);
 
-        if (!$registro) {
+        if (! $registro) {
             return redirect()
                 ->route('reserva.minhas')
                 ->with('error', 'Reserva de motorista de app não encontrada.');
@@ -717,7 +716,7 @@ class SiteApresentacaoController extends Controller
         $documentos = [];
 
         foreach ($campos as $campo) {
-            if (!is_array($campo) || empty($campo['selected'])) {
+            if (! is_array($campo) || empty($campo['selected'])) {
                 continue;
             }
 
@@ -737,7 +736,7 @@ class SiteApresentacaoController extends Controller
                 continue;
             }
 
-            if (!in_array($type, ['arquivo', 'texto', 'texto_longo', 'lista', 'data'], true)) {
+            if (! in_array($type, ['arquivo', 'texto', 'texto_longo', 'lista', 'data'], true)) {
                 $type = 'arquivo';
             }
 
@@ -818,7 +817,7 @@ class SiteApresentacaoController extends Controller
             }
 
             $opcional = $opcionais->firstWhere('id', $opcionalId);
-            if (!$opcional) {
+            if (! $opcional) {
                 continue;
             }
 
@@ -843,12 +842,13 @@ class SiteApresentacaoController extends Controller
             return '';
         }
 
-        if ($request->hasFile('documentos.' . $campoKey)) {
-            $file = $request->file('documentos.' . $campoKey);
+        if ($request->hasFile('documentos.'.$campoKey)) {
+            $file = $request->file('documentos.'.$campoKey);
+
             return $file instanceof \Illuminate\Http\UploadedFile && $file->isValid() ? '__file__' : '';
         }
 
-        $valor = $request->input('documentos.' . $campoKey);
+        $valor = $request->input('documentos.'.$campoKey);
         if (is_array($valor)) {
             return array_values(array_filter(array_map(
                 fn ($item) => is_string($item) ? trim($item) : '',
@@ -905,7 +905,7 @@ class SiteApresentacaoController extends Controller
 
     private function motoristaAppCondicaoPreenchida(mixed $valorReferencia): bool
     {
-        return is_array($valorReferencia) ? !empty($valorReferencia) : trim((string) $valorReferencia) !== '';
+        return is_array($valorReferencia) ? ! empty($valorReferencia) : trim((string) $valorReferencia) !== '';
     }
 
     private function motoristaAppCondicaoVazia(mixed $valorReferencia): bool
@@ -915,7 +915,7 @@ class SiteApresentacaoController extends Controller
 
     private function motoristaAppNormalizarCondicao(mixed $condicao): ?array
     {
-        if (!is_array($condicao)) {
+        if (! is_array($condicao)) {
             return null;
         }
 
@@ -929,7 +929,7 @@ class SiteApresentacaoController extends Controller
             )))
             : trim((string) $rawValor);
 
-        if ($campoKey === '' || !in_array($operador, ['igual', 'diferente', 'preenchido', 'vazio'], true)) {
+        if ($campoKey === '' || ! in_array($operador, ['igual', 'diferente', 'preenchido', 'vazio'], true)) {
             return null;
         }
 
@@ -946,7 +946,7 @@ class SiteApresentacaoController extends Controller
 
     private function motoristaAppJaEnviouDocumentos(Empresa $empresa, ?\App\Models\User $user): bool
     {
-        if (!$user) {
+        if (! $user) {
             return false;
         }
 
@@ -1021,28 +1021,29 @@ class SiteApresentacaoController extends Controller
             return url($url);
         }
 
-        return 'https://' . ltrim($url, '/');
+        return 'https://'.ltrim($url, '/');
     }
 
     private function textValue(array $textos, string $key, string $default = ''): string
     {
         $value = $textos[$key] ?? null;
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $default;
         }
 
         $trimmed = trim($value);
+
         return $trimmed === '' ? $default : $trimmed;
     }
 
     private function imageUrl(array $imagens, string $key, bool $enabled = true): ?string
     {
-        if (!$enabled) {
+        if (! $enabled) {
             return null;
         }
 
         $path = $imagens[$key] ?? null;
-        if (!is_string($path) || trim($path) === '') {
+        if (! is_string($path) || trim($path) === '') {
             return null;
         }
 
@@ -1059,8 +1060,8 @@ class SiteApresentacaoController extends Controller
             ->unique()
             ->toArray();
 
-        return array_filter($estacoesRetirada, function($key) use ($estacoesComVeiculosIds) {
-            return in_array((int)$key, $estacoesComVeiculosIds);
+        return array_filter($estacoesRetirada, function ($key) use ($estacoesComVeiculosIds) {
+            return in_array((int) $key, $estacoesComVeiculosIds);
         }, ARRAY_FILTER_USE_KEY);
     }
 
@@ -1074,19 +1075,22 @@ class SiteApresentacaoController extends Controller
         $cards = [];
         for ($i = 1; $i <= 10; $i++) {
             $titulo = $this->textValue($textos, "frota_card_{$i}_titulo", $defaults[$i]['titulo'] ?? '');
-            if (empty($titulo)) continue;
+            if (empty($titulo)) {
+                continue;
+            }
             $cards[] = [
                 'titulo' => $titulo,
                 'descricao' => $this->textValue($textos, "frota_card_{$i}_descricao", $defaults[$i]['descricao'] ?? ''),
                 'imagem' => $this->imageUrl($imagens, "frota_{$i}", $this->imageEnabled($imagensConfig, "frota_{$i}")),
             ];
         }
+
         return $cards;
     }
 
     private function imageEnabled(array $imagensConfig, string $key): bool
     {
-        if (!array_key_exists($key, $imagensConfig)) {
+        if (! array_key_exists($key, $imagensConfig)) {
             return true;
         }
 
@@ -1096,7 +1100,7 @@ class SiteApresentacaoController extends Controller
     private function colorValue(array $cores, string $key, string $default): string
     {
         $value = $cores[$key] ?? null;
-        if (!is_string($value)) {
+        if (! is_string($value)) {
             return $default;
         }
 
@@ -1123,8 +1127,11 @@ class SiteApresentacaoController extends Controller
         $items = [];
         for ($i = 1; $i <= 10; $i++) {
             $val = $this->textValue($textos, "beneficio_{$i}", $defaults[$i - 1] ?? '');
-            if ($val !== '') $items[] = $val;
+            if ($val !== '') {
+                $items[] = $val;
+            }
         }
+
         return $items;
     }
 
@@ -1148,7 +1155,7 @@ class SiteApresentacaoController extends Controller
 
     private function estacoesForEmpresa(Empresa $empresa): array
     {
-        if (!SchemaCache::hasTable('estacoes')) {
+        if (! SchemaCache::hasTable('estacoes')) {
             return [];
         }
 
@@ -1156,11 +1163,11 @@ class SiteApresentacaoController extends Controller
         $table = (new Estacao())->getTable();
 
         if (SchemaCache::hasColumn($table, 'empresa_id')) {
-            $query->where($table . '.empresa_id', (int) $empresa->id);
+            $query->where($table.'.empresa_id', (int) $empresa->id);
         }
 
         if (SchemaCache::hasColumn($table, 'ativo')) {
-            $query->where($table . '.ativo', 'S');
+            $query->where($table.'.ativo', 'S');
         }
 
         return $query
@@ -1205,7 +1212,7 @@ class SiteApresentacaoController extends Controller
     private function contrastTextColor(string $hexColor): string
     {
         $hex = ltrim(trim($hexColor), '#');
-        if (!preg_match('/^[A-Fa-f0-9]{6}$/', $hex)) {
+        if (! preg_match('/^[A-Fa-f0-9]{6}$/', $hex)) {
             return '#FFFFFF';
         }
 
@@ -1262,7 +1269,7 @@ class SiteApresentacaoController extends Controller
     private function adminLoginFallbackUrl(): string
     {
         $prefix = trim((string) config('app.admin_prefix', 'admin'), '/');
-        $path = $prefix === '' ? '/login' : '/' . $prefix . '/login';
+        $path = $prefix === '' ? '/login' : '/'.$prefix.'/login';
 
         return url($path);
     }
@@ -1270,7 +1277,7 @@ class SiteApresentacaoController extends Controller
     private function adminHomeFallbackUrl(): string
     {
         $prefix = trim((string) config('app.admin_prefix', 'admin'), '/');
-        $path = $prefix === '' ? '/home' : '/' . $prefix . '/home';
+        $path = $prefix === '' ? '/home' : '/'.$prefix.'/home';
 
         return url($path);
     }
