@@ -103,7 +103,7 @@
 
     $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
     $totalMultas = $reserva->multas?->count() ?? 0;
-    $danosReserva = $reserva->veiculoDano ?? collect();
+    $danosReserva = $reserva->veiculoDanos ?? collect();
     $danosPendentes = $danosReserva->whereNull('correcao_data');
     $totalCobrancasAvaria = $reserva->avariaCobrancas?->count() ?? 0;
     $calcao = $reserva->calcao ?? null;
@@ -976,6 +976,68 @@
                             @endforeach
                         </div>
                     </div>
+
+                    {{-- Dados de checkout e assinatura digital --}}
+                    <div class="rs-card">
+                        <div class="rs-card__header">
+                            <i class="fas fa-signature rs-card__icon"></i>
+                            <h2>Dados da Devolução & Assinatura</h2>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="rs-info-rows">
+                                    <div class="rs-info-row">
+                                        <span>Quilometragem na Devolução</span>
+                                        <strong>{{ number_format((float)($co->quilometragem_devolucao ?? 0), 0, ',', '.') }} km</strong>
+                                    </div>
+                                    <div class="rs-info-row">
+                                        <span>Nível de Combustível</span>
+                                        <strong>{{ $co->nivel_combustivel_devolucao ?? '—' }}</strong>
+                                    </div>
+                                    <div class="rs-info-row">
+                                        <span>Data/Hora da Devolução</span>
+                                        <strong>
+                                            {{ $co->data_devolucao ? \Carbon\Carbon::parse($co->data_devolucao)->format('d/m/Y') : '—' }}
+                                            {{ $co->hora_devolucao ? substr($co->hora_devolucao, 0, 5) : '' }}
+                                        </strong>
+                                    </div>
+                                    @if(!empty($co->notas_devolucao))
+                                        <div class="rs-info-row" style="width:100%">
+                                            <span>Notas de Devolução</span>
+                                            <strong>{{ $co->notas_devolucao }}</strong>
+                                        </div>
+                                    @endif
+                                    @if(!empty($co->observacoes_devolucao))
+                                        <div class="rs-info-row" style="width:100%">
+                                            <span>Observações</span>
+                                            <strong>{{ $co->observacoes_devolucao }}</strong>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex flex-column align-items-center justify-content-center border-left">
+                                @if($co->assinatura)
+                                    @if($co->data_assinatura)
+                                        <div class="text-success font-weight-bold mb-2">
+                                            <i class="fas fa-check-circle mr-1"></i> Termo Assinado Digitalmente
+                                        </div>
+                                        <small class="text-muted mb-3">Registrado em {{ \Carbon\Carbon::parse($co->data_assinatura)->format('d/m/Y H:i') }}</small>
+                                    @endif
+                                    <a href="{{ route('reserva.verContratoCheckout', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                        <i class="fas fa-file-pdf mr-1"></i> Ver Contrato de Devolução
+                                    </a>
+                                @else
+                                    <div class="text-muted text-center py-4">
+                                        <i class="fas fa-signature fa-2x mb-2" style="color:#cbd5e1"></i>
+                                        <div class="mb-3">Sem assinatura registrada</div>
+                                        <a href="{{ route('reserva.assinarContratoCheckout', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" class="btn btn-sm btn-success text-white font-weight-bold">
+                                            <i class="fas fa-signature mr-1"></i> Assinar Check-out / Devolução
+                                        </a>
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                     @endif
 
                     {{-- Avarias registradas --}}
@@ -1027,7 +1089,7 @@
                                         <tbody>
                                 @foreach($danosReserva as $d)
                                     @php
-                                        $imagensDano = $d->imagem
+                                        $imagensDano = $d->imagens
                                             ->map(function ($img) {
                                                 return [
                                                     'url' => $img->caminho_imagem

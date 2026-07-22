@@ -17,10 +17,12 @@ use App\Actions\Reserva\Pagamento\Exibir\Cliente\ExibirPagamentoClienteAction;
 use App\Actions\Reserva\Pagamento\ExibirFormularioPagamentoAction;
 use App\Actions\Reserva\Pagamento\RealizarPagamentoAction;
 use App\DTO\BreadCrumbItem;
+use App\Enums\StatusReservaEnum;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Calcao\AutorizarCalcaoRequest;
 use App\Http\Requests\Calcao\CapturarCalcaoRequest;
 use App\Models\Reserva;
+use App\Models\ReservaMotoristaApp;
 use App\Services\BreadcrumbService;
 use App\Services\CalcaoService;
 use App\Services\ClienteStripeService;
@@ -28,6 +30,7 @@ use App\Services\NfseService;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use App\Services\Pagamentos\GerenciadorDePagamentos;
 use App\Services\Reserva\ReservaIdentificadorService;
+use App\Services\ReservaCodigoService;
 use App\Services\ReservaService;
 use App\Services\UsuarioService;
 use Illuminate\Http\Request;
@@ -60,6 +63,7 @@ class ReservaPagamentoController extends Controller
         protected ConfirmarPagamentoDinheiroAction $confirmarPagamentoDinheiroAction,
         protected ExibirCalcaoCheckinAction $exibirCalcaoCheckinAction,
         protected SalvarCartaoCalcaoAction $salvarCartaoCalcaoAction,
+        protected ReservaCodigoService $reservaCodigoService,
     ) {}
 
     public function efetuarPagamentoMinhas($codigo)
@@ -110,19 +114,20 @@ class ReservaPagamentoController extends Controller
     {
         $this->authorize('calcao.autorizar');
 
-        $reserva = Reserva::withoutGlobalScopes()
-            ->with(['contratoCheckin', 'grupoFrota', 'modelos', 'usuario', 'calcao', 'codigoReserva'])
-            ->whereHas('codigoReserva', function ($query) use ($codigo) {
-                $query->where('codigo', $codigo);
-            })
-            ->first();
+        $reserva = $this->resolverReservaCalcao($codigo, true);
 
-        if (! $reserva || ! $reserva->contratoCheckin || $reserva->contratoCheckin->assinado !== 'S') {
+        if (! $reserva) {
+            return redirect()->route('reserva.show', $codigo)
+                ->with('error', 'Reserva nao encontrada.');
+        }
+
+        if (! $this->ehReservaOperacionalMotoristaApp($reserva) && (! $reserva->contratoCheckin || $reserva->contratoCheckin->assinado !== 'S')) {
             return redirect()->route('reserva.show', $codigo)
                 ->with('error', 'O contrato de check-in deve ser assinado antes de registrar o calcao.');
         }
 
         $data = $this->exibirCalcaoCheckinAction->handle($reserva);
+        $this->sincronizarStatusCalcaoMotoristaApp($codigo, $reserva);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
@@ -131,8 +136,10 @@ class ReservaPagamentoController extends Controller
             new BreadCrumbItem('Calcao'),
         ]);
 
+        $voltarUrl = $this->urlVoltarCalcao($reserva, $codigo);
+
         return view('reserva.calcao', compact(
-            'reserva', 'breadcrumb'
+            'reserva', 'breadcrumb', 'voltarUrl'
         ) + $data)->with('titulo', 'Calcao — Reserva Nº '.$reserva->id);
     }
 
@@ -140,12 +147,7 @@ class ReservaPagamentoController extends Controller
     {
         $this->authorize('calcao.autorizar');
 
-        $reserva = Reserva::withoutGlobalScopes()
-            ->with(['contratoCheckin', 'usuario', 'calcao', 'codigoReserva'])
-            ->whereHas('codigoReserva', function ($query) use ($codigo) {
-                $query->where('codigo', $codigo);
-            })
-            ->first();
+        $reserva = $this->resolverReservaCalcao($codigo, true);
 
         if (! $reserva) {
             return response()->json(['error' => 'Contrato de check-in nao encontrado.'], 404);
@@ -168,13 +170,13 @@ class ReservaPagamentoController extends Controller
         }
     }
 
-    public function salvarCartaoCalcao(Request $request, $reserva_id)
+    public function salvarCartaoCalcao(Request $request, $codigo)
     {
         $this->authorize('calcao.autorizar');
 
         $request->validate(['payment_method_id' => 'required|string']);
 
-        $reserva = $this->reservaService->getById($reserva_id, ['usuario']);
+        $reserva = $this->resolverReservaCalcao($codigo, true);
         if (! $reserva || ! $reserva->usuario) {
             return response()->json(['error' => 'Reserva ou cliente não encontrado.'], 404);
         }
@@ -191,13 +193,11 @@ class ReservaPagamentoController extends Controller
         }
     }
 
-    public function capturarCalcao(CapturarCalcaoRequest $request, $reserva_id)
+    public function capturarCalcao(CapturarCalcaoRequest $request, $codigo)
     {
         $this->authorize('calcao.capturar');
 
-        $reserva = Reserva::withoutGlobalScopes()
-            ->with('transacoes')
-            ->find($reserva_id);
+        $reserva = $this->resolverReservaCalcao($codigo);
 
         if (! $reserva) {
             return response()->json(['error' => 'Reserva nao encontrada.'], 404);
@@ -220,13 +220,13 @@ class ReservaPagamentoController extends Controller
         }
     }
 
-    public function liberarCalcao(Request $request, $reserva_id)
+    public function liberarCalcao(Request $request, $codigo)
     {
         $this->authorize('calcao.cancelar');
 
         $request->validate(['observacao' => 'nullable|string|max:500']);
 
-        $reserva = $this->reservaService->getById($reserva_id);
+        $reserva = $this->resolverReservaCalcao($codigo);
         if (! $reserva) {
             return response()->json(['error' => 'Reserva nao encontrada.'], 404);
         }
@@ -240,7 +240,7 @@ class ReservaPagamentoController extends Controller
         }
     }
 
-    public function registrarCalcaoPresencial(Request $request, $reserva_id)
+    public function registrarCalcaoPresencial(Request $request, $codigo)
     {
         $this->authorize('calcao.autorizar');
 
@@ -250,7 +250,7 @@ class ReservaPagamentoController extends Controller
             'observacao' => 'nullable|string|max:500',
         ]);
 
-        $reserva = $this->reservaService->getById((int) $reserva_id, ['contratoCheckin', 'usuario', 'calcao']);
+        $reserva = $this->resolverReservaCalcao($codigo, true);
         if (! $reserva) {
             return response()->json(['error' => 'Reserva nao encontrada.'], 404);
         }
@@ -275,7 +275,7 @@ class ReservaPagamentoController extends Controller
         }
     }
 
-    public function devolverCalcaoPresencial(Request $request, $reserva_id)
+    public function devolverCalcaoPresencial(Request $request, $codigo)
     {
         $this->authorize('calcao.cancelar');
 
@@ -283,7 +283,7 @@ class ReservaPagamentoController extends Controller
             'observacao' => 'nullable|string|max:500',
         ]);
 
-        $reserva = $this->reservaService->getById((int) $reserva_id, ['calcao']);
+        $reserva = $this->resolverReservaCalcao($codigo);
         if (! $reserva) {
             return response()->json(['error' => 'Reserva nao encontrada.'], 404);
         }
@@ -323,5 +323,165 @@ class ReservaPagamentoController extends Controller
         } catch (\Throwable $e) {
             return response()->json(['error' => 'Erro ao confirmar pagamento em dinheiro.'], 500);
         }
+    }
+
+    private function resolverReservaCalcao(string|int $codigo, bool $criarMotoristaApp = false): ?Reserva
+    {
+        $codigoReserva = $this->dadosCodigoReservaPorIdentificador($codigo);
+
+        if ($codigoReserva && (string) $codigoReserva->tipo_origem === 'motorista_app') {
+            $registro = ReservaMotoristaApp::withoutGlobalScopes()
+                ->with(['codigoReserva', 'user', 'veiculo', 'planoMotoristaApp'])
+                ->find((int) ($codigoReserva->reserva_motorista_app_id ?? 0));
+
+            return $registro && $criarMotoristaApp
+                ? $this->garantirReservaOperacionalCalcaoMotoristaApp($registro)
+                : $this->reservaOperacionalMotoristaApp($registro);
+        }
+
+        $reservaId = $this->idReservaPorIdentificador($codigo, 'RES', $codigoReserva, 'reserva_id');
+
+        return Reserva::withoutGlobalScopes()
+            ->with(['contratoCheckin', 'grupoFrota', 'modelos', 'usuario', 'calcao', 'codigoReserva', 'transacoes'])
+            ->find($reservaId);
+    }
+
+    private function garantirReservaOperacionalCalcaoMotoristaApp(ReservaMotoristaApp $registro): Reserva
+    {
+        if ($reserva = $this->reservaOperacionalMotoristaApp($registro)) {
+            return $reserva;
+        }
+
+        $valorCalcao = round((float) ($registro->valor_caucao ?? $registro->planoMotoristaApp?->calcao ?? 0), 2);
+
+        $reserva = Reserva::create([
+            'empresa_id' => $registro->empresa_id,
+            'user_id' => $registro->user_id,
+            'origem_cadastro' => 'motorista_app',
+            'veiculo_id' => $registro->veiculo_id,
+            'modelo_id' => $registro->veiculo?->modelo_id,
+            'grupo_frota_id' => $registro->veiculo?->grupo_frota_id,
+            'estacao_retirada_id' => $registro->estacao_retirada_id,
+            'estacao_devolucao_id' => $registro->estacao_retirada_id,
+            'data_inicio' => $registro->data_inicio,
+            'data_fim' => $registro->data_fim,
+            'status_reserva_id' => StatusReservaEnum::Confirmada->value,
+            'data_criacao' => now(),
+            'pagamento_efetuado' => true,
+            'quantidade_dias' => $registro->quantidade_dias,
+            'tarifa_base' => $valorCalcao,
+            'valor_total_tarifa_base' => $valorCalcao,
+            'valor_total_com_desconto' => $valorCalcao,
+            'valor_opcionais' => 0,
+            'valor_total_final' => $valorCalcao,
+            'observacoes' => 'Reserva operacional criada para caução da reserva motorista app '.$registro->codigoReserva?->codigo,
+        ]);
+
+        $codigoOperacional = $this->reservaCodigoService->sincronizar($reserva, 'reserva', [
+            'empresa_id' => $registro->empresa_id,
+            'status_label' => 'Confirmada',
+            'data_inicio' => $registro->data_inicio,
+            'data_fim' => $registro->data_fim,
+            'valor_total' => $valorCalcao,
+        ]);
+
+        $documentos = is_array($registro->documentos_json ?? null) ? $registro->documentos_json : [];
+        data_set($documentos, 'checkin.reserva_operacional_id', (int) $reserva->id);
+        data_set($documentos, 'checkin.reserva_operacional_codigo', (string) $codigoOperacional->codigo);
+        $registro->forceFill(['documentos_json' => $documentos])->save();
+
+        return $reserva->load(['contratoCheckin', 'grupoFrota', 'modelos', 'usuario', 'calcao', 'codigoReserva', 'transacoes']);
+    }
+
+    private function reservaOperacionalMotoristaApp(ReservaMotoristaApp $registro): ?Reserva
+    {
+        $documentos = is_array($registro->documentos_json ?? null) ? $registro->documentos_json : [];
+        $reservaId = (int) data_get($documentos, 'checkin.reserva_operacional_id', 0);
+
+        if ($reservaId <= 0) {
+            $codigo = (string) ($registro->codigoReserva?->codigo ?? '');
+            $reservaId = $codigo !== ''
+                ? (int) Reserva::withoutGlobalScopes()
+                    ->where('user_id', (int) $registro->user_id)
+                    ->where('empresa_id', (int) $registro->empresa_id)
+                    ->where('observacoes', 'like', '%' . $codigo . '%')
+                    ->whereHas('calcao')
+                    ->latest('id')
+                    ->value('id')
+                : 0;
+
+            if ($reservaId <= 0) {
+                return null;
+            }
+
+            $codigoOperacional = $this->codigoReservaOperacionalPorId($reservaId);
+            data_set($documentos, 'checkin.reserva_operacional_id', $reservaId);
+            data_set($documentos, 'checkin.reserva_operacional_codigo', $codigoOperacional);
+            $registro->forceFill(['documentos_json' => $documentos])->save();
+        }
+
+        return Reserva::withoutGlobalScopes()
+            ->with(['contratoCheckin', 'grupoFrota', 'modelos', 'usuario', 'calcao', 'codigoReserva', 'transacoes'])
+            ->find($reservaId);
+    }
+
+    private function ehReservaOperacionalMotoristaApp(Reserva $reserva): bool
+    {
+        return (string) ($reserva->origem_cadastro ?? '') === 'motorista_app';
+    }
+
+    private function sincronizarStatusCalcaoMotoristaApp(string|int $codigo, Reserva $reserva): void
+    {
+        $codigoReserva = $this->dadosCodigoReservaPorIdentificador($codigo);
+        if (! $codigoReserva || (string) $codigoReserva->tipo_origem !== 'motorista_app') {
+            return;
+        }
+
+        $calcao = $reserva->calcao;
+        if (! $calcao || ! in_array((string) $calcao->status, [
+            \App\Models\Calcao::STATUS_AUTORIZADO,
+            \App\Models\Calcao::STATUS_PARCIALMENTE_CAPTURADO,
+            \App\Models\Calcao::STATUS_CAPTURADO,
+            \App\Models\Calcao::STATUS_CANCELADO,
+        ], true)) {
+            return;
+        }
+
+        $registro = ReservaMotoristaApp::withoutGlobalScopes()
+            ->with('codigoReserva')
+            ->find((int) ($codigoReserva->reserva_motorista_app_id ?? 0));
+
+        if (! $registro) {
+            return;
+        }
+
+        if ((string) ($reserva->origem_cadastro ?? '') !== 'motorista_app') {
+            $reserva->forceFill(['origem_cadastro' => 'motorista_app'])->save();
+        }
+
+        $codigoOperacional = $reserva->codigoReserva?->codigo
+            ?? $this->codigoReservaOperacionalPorId((int) $reserva->id);
+
+        $documentos = is_array($registro->documentos_json ?? null) ? $registro->documentos_json : [];
+        data_set($documentos, 'checkin.reserva_operacional_id', (int) $reserva->id);
+        data_set($documentos, 'checkin.reserva_operacional_codigo', $codigoOperacional);
+        data_set($documentos, 'calcao.id', (int) $calcao->id);
+        data_set($documentos, 'calcao.status', (string) $calcao->status);
+        data_set($documentos, 'calcao.valor_autorizado', (float) ($calcao->valor_autorizado ?? 0));
+        data_set($documentos, 'calcao.valor_capturado', (float) ($calcao->valor_capturado ?? 0));
+        data_set($documentos, 'calcao.atualizado_em', now()->toDateTimeString());
+
+        $registro->forceFill(['documentos_json' => $documentos])->save();
+    }
+
+    private function urlVoltarCalcao(Reserva $reserva, string|int $codigoOriginal): string
+    {
+        if (! $this->ehReservaOperacionalMotoristaApp($reserva)) {
+            return route('reserva.show', $reserva->codigoReserva?->codigo ?? $reserva->id);
+        }
+
+        $codigoMotoristaApp = $this->dadosCodigoReservaPorIdentificador($codigoOriginal)?->codigo;
+
+        return route('reserva.show', $codigoMotoristaApp ?: $codigoOriginal);
     }
 }

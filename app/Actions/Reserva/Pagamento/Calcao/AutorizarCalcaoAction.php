@@ -20,11 +20,13 @@ class AutorizarCalcaoAction
 
     public function handle(Reserva $reserva, ?string $paymentMethodId): Calcao
     {
-        if (!$reserva->contratoCheckin) {
+        $motoristaApp = (string) ($reserva->origem_cadastro ?? '') === 'motorista_app';
+
+        if (!$motoristaApp && !$reserva->contratoCheckin) {
             throw new \RuntimeException('Contrato de check-in não encontrado.');
         }
 
-        if ($reserva->contratoCheckin->assinado !== 'S') {
+        if (!$motoristaApp && $reserva->contratoCheckin->assinado !== 'S') {
             throw new \InvalidArgumentException('Contrato deve estar assinado antes do calção.');
         }
 
@@ -67,7 +69,7 @@ class AutorizarCalcaoAction
             ],
             'metadata' => [
                 'reserva_id'  => $reserva->id,
-                'checkin_id'  => $reserva->contratoCheckin->id,
+                'checkin_id'  => $reserva->contratoCheckin?->id,
                 'empresa_id'  => $empresa->id,
                 'tipo'        => 'calcao',
             ],
@@ -97,7 +99,7 @@ class AutorizarCalcaoAction
             ['reserva_id' => $reserva->id],
             [
                 'empresa_id'             => $empresa->id,
-                'contrato_checkin_id'    => $reserva->contratoCheckin->id,
+                'contrato_checkin_id'    => $reserva->contratoCheckin?->id,
                 'cliente_id'             => $reserva->user_id,
                 'payment_intent_id'      => $intent->id,
                 'payment_method_id'      => $paymentMethodId,
@@ -133,6 +135,17 @@ class AutorizarCalcaoAction
         $config = $this->resolverConfiguracao($reserva);
 
         if (!$config) {
+            $valorMotoristaApp = $this->valorCalcaoMotoristaApp($reserva);
+            if ($valorMotoristaApp > 0) {
+                return [
+                    'valor_calculado'        => $valorMotoristaApp,
+                    'tipo_regra_aplicada'    => 'fixo',
+                    'origem_regra_aplicada'  => 'motorista_app',
+                    'configuracao_calcao_id' => null,
+                    'configuracao'           => null,
+                ];
+            }
+
             return [
                 'valor_calculado'        => 0,
                 'tipo_regra_aplicada'    => null,
@@ -194,5 +207,14 @@ class AutorizarCalcaoAction
             ->whereNull('modelo_id')
             ->where('ativo', true)
             ->first();
+    }
+
+    private function valorCalcaoMotoristaApp(Reserva $reserva): float
+    {
+        if ((string) ($reserva->origem_cadastro ?? '') !== 'motorista_app') {
+            return 0;
+        }
+
+        return round((float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? 0), 2);
     }
 }

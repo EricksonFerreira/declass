@@ -19,7 +19,9 @@ class RegistrarCalcaoPresencialAction
 
     public function handle(Reserva $reserva, string $metodo, ?float $valorInput, ?string $observacaoInput): Calcao
     {
-        if (!$reserva->contratoCheckin || $reserva->contratoCheckin->assinado !== 'S') {
+        $motoristaApp = (string) ($reserva->origem_cadastro ?? '') === 'motorista_app';
+
+        if (!$motoristaApp && (!$reserva->contratoCheckin || $reserva->contratoCheckin->assinado !== 'S')) {
             throw new \InvalidArgumentException('O contrato de check-in deve estar assinado antes do calção.');
         }
 
@@ -40,7 +42,7 @@ class RegistrarCalcaoPresencialAction
             $calcao = Calcao::create([
                 'empresa_id' => $reserva->empresa_id ?? null,
                 'reserva_id' => (int) $reserva->id,
-                'contrato_checkin_id' => $reserva->contratoCheckin->id,
+                'contrato_checkin_id' => $reserva->contratoCheckin?->id,
                 'cliente_id' => $reserva->user_id,
                 'valor_calculado' => $valorCalculado,
                 'valor_capturado' => $valorPago,
@@ -99,6 +101,17 @@ class RegistrarCalcaoPresencialAction
         $config = $this->resolverConfiguracao($reserva);
 
         if (!$config) {
+            $valorMotoristaApp = $this->valorCalcaoMotoristaApp($reserva);
+            if ($valorMotoristaApp > 0) {
+                return [
+                    'valor_calculado'        => $valorMotoristaApp,
+                    'tipo_regra_aplicada'    => 'fixo',
+                    'origem_regra_aplicada'  => 'motorista_app',
+                    'configuracao_calcao_id' => null,
+                    'configuracao'           => null,
+                ];
+            }
+
             return [
                 'valor_calculado'        => 0,
                 'tipo_regra_aplicada'    => null,
@@ -160,5 +173,14 @@ class RegistrarCalcaoPresencialAction
             ->whereNull('modelo_id')
             ->where('ativo', true)
             ->first();
+    }
+
+    private function valorCalcaoMotoristaApp(Reserva $reserva): float
+    {
+        if ((string) ($reserva->origem_cadastro ?? '') !== 'motorista_app') {
+            return 0;
+        }
+
+        return round((float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? 0), 2);
     }
 }

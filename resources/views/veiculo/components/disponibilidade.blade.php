@@ -187,6 +187,7 @@
                     'percentual_disponivel' => 0,
                     'intervalos' => [],
                     'reserva_id' => null,
+                    'reserva_codigo' => null,
                 ];
 
                 $tipo = (string) ($cell['tipo'] ?? 'off');
@@ -445,7 +446,7 @@
                                     <td>
                                         @if($mov->reserva_id)
                                             <a href="{{ route('reserva.show', $mov->reserva_id) }}" class="xp-link">
-                                                #{{ $mov->reserva_id }}
+                                                #{{ $mov->reserva?->codigoReserva?->codigo ?? $mov->reserva_id }}
                                             </a>
                                         @else
                                             —
@@ -945,7 +946,7 @@
                                 }
                                 ${
                                     item.detalhes.reserva_id
-                                        ? `<div><strong>Reserva:</strong> #${escapeHtml(item.detalhes.reserva_id)}</div>`
+                                        ? `<div><strong>Reserva:</strong> #${escapeHtml(item.detalhes.reserva_codigo || item.detalhes.reserva_id)}</div>`
                                         : ''
                                 }
                                 ${

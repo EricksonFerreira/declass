@@ -258,31 +258,47 @@
         gap: 14px;
     }
     .ma-card {
-        background: #fff; border: 1px solid var(--ma-line); border-radius: 18px;
-        overflow: hidden; box-shadow: 0 10px 24px rgba(15,23,42,.06);
+        background: #fff; border: 1px solid var(--ma-line); border-radius: 20px;
+        overflow: hidden; box-shadow: 0 8px 30px rgba(15,23,42,.04);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ma-card:hover {
+        box-shadow: 0 16px 40px rgba(15,23,42,.08);
+        transform: translateY(-2px);
     }
     .ma-card__head {
-        padding: 14px 18px;
+        padding: 16px 20px;
         border-bottom: 1px solid #eef2f7;
         background: linear-gradient(120deg, #f8fbff, #f1f6ff);
-        display: flex; align-items: center; gap: 10px;
+        display: flex; align-items: center; gap: 12px;
     }
     .ma-card__icon {
-        width: 40px; height: 40px; border-radius: 12px;
+        width: 42px; height: 42px; border-radius: 14px;
         display: flex; align-items: center; justify-content: center;
-        background: rgba(37,99,235,.12); color: var(--ma-accent);
+        background: rgba(37,99,235,.10); color: var(--ma-accent);
+        font-size: 1.1rem;
+        transition: all 0.2s;
     }
-    .ma-card__title { font-size: 1rem; font-weight: 800; color: var(--ma-ink); }
+    .ma-card:hover .ma-card__icon {
+        background: var(--ma-accent);
+        color: #fff;
+    }
+    .ma-card__title { font-size: 1.05rem; font-weight: 800; color: var(--ma-ink); }
     .ma-card__sub { font-size: .78rem; color: var(--ma-muted); }
-    .ma-card__body { padding: 18px; }
+    .ma-card__body { padding: 20px; }
     .ma-summary {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 12px;
+        gap: 14px;
     }
     .ma-info {
-        border: 1px solid var(--ma-line); border-radius: 14px;
-        background: #f8fbff; padding: 12px 14px;
+        border: 1px solid var(--ma-line); border-radius: 16px;
+        background: #f8fbff; padding: 14px 16px;
+        transition: all 0.2s ease;
+    }
+    .ma-info:hover {
+        background: #f1f6ff;
+        border-color: #c7d7f4;
     }
     .ma-info__label {
         font-size: .68rem; font-weight: 800; color: #7483a0;
@@ -290,14 +306,14 @@
     }
     .ma-info__value { font-size: .95rem; font-weight: 700; color: var(--ma-ink); line-height: 1.35; }
     .ma-legend {
-        display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px;
+        display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px;
         align-items: center; border: 1px solid var(--ma-line);
-        border-radius: 16px; padding: 16px; background: linear-gradient(135deg, #f8fbff, #f1f6ff);
+        border-radius: 18px; padding: 18px; background: linear-gradient(135deg, #f8fbff, #f1f6ff);
     }
-    .ma-stop { display: flex; align-items: flex-start; gap: 10px; }
+    .ma-stop { display: flex; align-items: flex-start; gap: 12px; }
     .ma-stop--right { flex-direction: row-reverse; text-align: right; }
     .ma-dot {
-        width: 11px; height: 11px; border-radius: 50%; margin-top: 4px; flex-shrink: 0;
+        width: 12px; height: 12px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
     }
     .ma-dot--a { background: #10b981; box-shadow: 0 0 0 4px rgba(16,185,129,.15); }
     .ma-dot--b { background: #ef4444; box-shadow: 0 0 0 4px rgba(239,68,68,.14); }
@@ -305,40 +321,61 @@
         font-size: .68rem; font-weight: 800; color: #94a3b8;
         text-transform: uppercase; letter-spacing: .08em;
     }
-    .ma-place { font-size: .98rem; font-weight: 800; color: var(--ma-ink); margin-top: 3px; }
+    .ma-place { font-size: 1.05rem; font-weight: 800; color: var(--ma-ink); margin-top: 3px; }
     .ma-date { font-size: .82rem; color: #1d4ed8; font-weight: 700; margin-top: 2px; }
     .ma-mid { display: flex; flex-direction: column; align-items: center; gap: 4px; }
     .ma-mid__line { width: 1px; height: 16px; background: linear-gradient(180deg, #c7d7f4, #93c5fd); }
     .ma-mid__pill {
         background: #1e40af; color: #fff; border-radius: 999px;
-        font-size: .68rem; font-weight: 800; padding: 4px 9px;
+        font-size: .68rem; font-weight: 800; padding: 4px 10px;
     }
-    .ma-list { display: grid; gap: 10px; }
+    .ma-list { display: grid; gap: 12px; }
     .ma-list__item {
-        border: 1px solid var(--ma-line); border-radius: 14px; background: #fff; padding: 12px 14px;
+        border: 1px solid var(--ma-line); border-radius: 16px; background: #fff; padding: 14px 16px;
+        transition: all 0.2s ease;
+    }
+    .ma-list__item:hover {
+        background: #f8fbff;
+        border-color: #cbd5e1;
     }
     .ma-list__label {
         font-size: .68rem; font-weight: 800; color: #7483a0;
-        text-transform: uppercase; letter-spacing: .08em; margin-bottom: 3px;
+        text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
     }
-    .ma-list__value { font-size: .92rem; color: var(--ma-ink); font-weight: 700; line-height: 1.45; }
+    .ma-list__value { font-size: .95rem; color: var(--ma-ink); font-weight: 700; line-height: 1.45; }
     .ma-price {
         display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px;
         margin-top: 14px;
     }
     .ma-price__box {
-        border: 1px solid var(--ma-line); border-radius: 14px; background: #f8fbff; padding: 12px 14px;
+        border: 1px solid var(--ma-line); border-radius: 16px; background: #f8fbff; padding: 14px 16px;
+        transition: all 0.2s ease;
+    }
+    .ma-price__box:hover {
+        background: #f1f6ff;
+        border-color: #c7d7f4;
+    }
+    .ma-price__box--full {
+        grid-column: span 3;
     }
     .ma-price__label {
         font-size: .68rem; font-weight: 800; color: #7483a0;
         text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px;
     }
-    .ma-price__value { font-size: 1.02rem; font-weight: 900; color: var(--ma-ink); }
-    .ma-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
+    .ma-price__value { font-size: 1.05rem; font-weight: 900; color: var(--ma-ink); }
+    .ma-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
     .ma-btn {
         display: inline-flex; align-items: center; gap: 8px;
-        border-radius: 999px; padding: 10px 16px; font-weight: 800;
+        border-radius: 999px; padding: 10px 18px; font-weight: 800;
         text-decoration: none; border: 1px solid var(--ma-line); cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .ma-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(15,23,42,.08);
+    }
+    .ma-btn:active {
+        transform: translateY(0);
     }
     .ma-btn--primary { background: var(--ma-accent); color: #fff; border-color: var(--ma-accent); }
     .ma-btn--ghost { background: #fff; color: var(--ma-ink); }
@@ -347,7 +384,7 @@
     .ma-sign-pad { width: 100%; min-height: 220px; border: 2px dashed #cbd5e1; border-radius: 16px; background: #fff; touch-action: none; }
     .ma-note {
         border: 1px solid #dbeafe; background: #f8fbff; color: #334155;
-        border-radius: 14px; padding: 14px 16px; font-size: .92rem; line-height: 1.6;
+        border-radius: 16px; padding: 14px 18px; font-size: .92rem; line-height: 1.6;
     }
     .ma-table {
         width: 100%; border-collapse: collapse; font-size: .84rem;
@@ -726,14 +763,19 @@
                             $valorPendenteCliente = max(0, round((float) $valorTotal - $totalPagoPagamentosCliente, 2));
                         @endphp
                         @if($pagamentoPendenteCliente && $valorPendenteCliente > 0)
-                            <div class="ma-price__box" style="border: 1px solid #fde68a; background: #fffbeb;">
-                                <div class="ma-price__label text-warning font-weight-bold"><i class="fas fa-clock mr-1"></i> Pagamento Pendente</div>
-                                <div class="ma-price__value text-warning">R$ {{ number_format($valorPendenteCliente, 2, ',', '.') }}</div>
+                            <div class="ma-price__box ma-price__box--full" style="border: 1px solid #f87171; background: #fef2f2; border-radius: 16px; padding: 14px 16px; margin-top: 15px;">
+                                <div class="ma-price__label text-danger font-weight-bold"><i class="fas fa-exclamation-circle mr-1"></i> Total Pendente</div>
+                                <div class="ma-price__value text-danger" style="font-size: 1.4rem; font-weight: 800;">R$ {{ number_format($valorPendenteCliente, 2, ',', '.') }}</div>
                                 <div class="mt-2">
-                                    <a href="{{ route('reserva.minhas.pagamento.efetuar', ['id' => $codigoReserva]) }}" class="btn btn-xs btn-warning font-weight-bold">
+                                    <a href="{{ route('reserva.minhas.pagamento.efetuar', ['id' => $codigoReserva]) }}" class="btn btn-xs btn-danger font-weight-bold text-white">
                                         <i class="fas fa-credit-card mr-1"></i> Efetuar Pagamento
                                     </a>
                                 </div>
+                            </div>
+                        @else
+                            <div class="ma-price__box ma-price__box--full" style="border: 1px solid #34d399; background: #ecfdf5; border-radius: 16px; padding: 14px 16px; margin-top: 15px;">
+                                <div class="ma-price__label text-success font-weight-bold"><i class="fas fa-check-circle mr-1"></i> Status de Pagamento</div>
+                                <div class="ma-price__value text-success" style="font-size: 1.4rem; font-weight: 800;">Tudo Pago</div>
                             </div>
                         @endif
                     </div>
@@ -913,28 +955,28 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <div class="ma-card ma-section" style="margin-bottom:16px;">
-            <div class="ma-card__head">
-                <div class="ma-card__icon"><i class="fas fa-star"></i></div>
-                <div>
-                    <div class="ma-card__title">Sua avaliação</div>
-                    <div class="ma-card__sub">Compartilhe sua experiência com esta locação</div>
+            <div class="ma-card ma-section" style="margin-bottom:16px;">
+                <div class="ma-card__head">
+                    <div class="ma-card__icon"><i class="fas fa-star"></i></div>
+                    <div>
+                        <div class="ma-card__title">Sua avaliação</div>
+                        <div class="ma-card__sub">Compartilhe sua experiência com esta locação</div>
+                    </div>
                 </div>
-            </div>
-            <div class="ma-card__body">
-                @if($estaCheckout)
-                    <div class="ma-history-empty">
-                        <i class="fas fa-star fa-2x mb-2 d-block"></i>
-                        Obrigado por utilizar nossos serviços! Sua avaliação pode ser enviada através do nosso atendimento.
-                    </div>
-                @else
-                    <div class="ma-history-empty">
-                        <i class="fas fa-star fa-2x mb-2 d-block"></i>
-                        A avaliação ficará disponível após a conclusão da reserva.
-                    </div>
-                @endif
+                <div class="ma-card__body">
+                    @if($estaCheckout)
+                        <div class="ma-history-empty">
+                            <i class="fas fa-star fa-2x mb-2 d-block"></i>
+                            Obrigado por utilizar nossos serviços! Sua avaliação pode ser enviada através do nosso atendimento.
+                        </div>
+                    @else
+                        <div class="ma-history-empty">
+                            <i class="fas fa-star fa-2x mb-2 d-block"></i>
+                            A avaliação ficará disponível após a conclusão da reserva.
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
 

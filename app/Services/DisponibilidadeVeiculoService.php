@@ -233,6 +233,7 @@ class DisponibilidadeVeiculoService
                     'local_destino' => $destino,
                     'usuario' => $usuario,
                     'reserva_id' => $movimentacao->reserva_id ? (int) $movimentacao->reserva_id : null,
+                    'reserva_codigo' => $movimentacao->reserva?->codigoReserva?->codigo,
                     'ordem_servico_id' => $movimentacao->ordem_servico_id ? (int) $movimentacao->ordem_servico_id : null,
                     'ordem_servico_numero' => $movimentacao->ordemServico->numero ?? null,
                     'data_registro' => $dataRegistroFormatada,
@@ -269,12 +270,14 @@ class DisponibilidadeVeiculoService
                 ? $fimReserva->copy()->addHours($reservaBloqueioHoras)
                 : $fimReserva->copy();
 
+            $codigoReserva = $this->codigoReserva($reserva);
+
             $tipo = TipoDisponibilidadeVeiculoEnum::Reservado->value;
-            $titulo = 'Reservado #' . (int) $reserva->id;
+            $titulo = 'Reservado #' . $codigoReserva;
 
             if (!$finalizada && now()->gt($fimReserva)) {
                 $tipo = TipoDisponibilidadeVeiculoEnum::ReservaNaoFinalizada->value;
-                $titulo = 'Reserva não finalizada #' . (int) $reserva->id;
+                $titulo = 'Reserva não finalizada #' . $codigoReserva;
 
                 /*
                  * Regra conservadora:
@@ -295,6 +298,7 @@ class DisponibilidadeVeiculoService
                 'tipo' => $tipo,
                 'titulo' => $titulo,
                 'reserva_id' => (int) $reserva->id,
+                'reserva_codigo' => $codigoReserva,
                 'movimentacao_id' => null,
             ];
         }
@@ -338,6 +342,7 @@ class DisponibilidadeVeiculoService
             'tipo' => $tipoDia,
             'titulo' => $titulo,
             'reserva_id' => collect($bloqueios)->pluck('reserva_id')->filter()->first(),
+            'reserva_codigo' => collect($bloqueios)->pluck('reserva_codigo')->filter()->first(),
             'minutos_total' => $minutosTotal,
             'minutos_disponiveis' => $minutosDisponiveis,
             'minutos_bloqueados' => $minutosBloqueados,
@@ -350,6 +355,7 @@ class DisponibilidadeVeiculoService
     {
         return Reserva::query()
             ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim', 'status_reserva_id'])
+            ->with(['codigoReserva:id,reserva_id,codigo'])
             ->whereIn('veiculo_id', $veiculoIds)
             ->whereIn('status_reserva_id', [
                 StatusReservaEnum::Pendente->value,
@@ -375,6 +381,7 @@ class DisponibilidadeVeiculoService
                 'localDestino:id,nome',
                 'usuario:id,nome',
                 'reserva:id',
+                'reserva.codigoReserva:id,reserva_id,codigo',
                 'ordemServico:id,numero,status',
             ])
             ->select([
@@ -442,6 +449,7 @@ class DisponibilidadeVeiculoService
                 'inicio_iso' => $bloqueio['inicio']->toDateTimeString(),
                 'fim_iso' => $bloqueio['fim']->toDateTimeString(),
                 'reserva_id' => $bloqueio['reserva_id'],
+                'reserva_codigo' => $bloqueio['reserva_codigo'] ?? null,
                 'movimentacao_id' => $bloqueio['movimentacao_id'],
                 'detalhes' => $bloqueio['detalhes'] ?? null,
                 'percentual_inicio' => $this->percentualNoDia($diaInicio, $diaFimExclusivo, $bloqueio['inicio']),
@@ -502,6 +510,7 @@ class DisponibilidadeVeiculoService
                     'tipo' => $tipo,
                     'titulo' => $this->tituloMaisPrioritario($ultimo, $bloqueio, $tipo),
                     'reserva_id' => $bloqueio['reserva_id'] ?? $ultimo['reserva_id'],
+                    'reserva_codigo' => $bloqueio['reserva_codigo'] ?? $ultimo['reserva_codigo'] ?? null,
                     'movimentacao_id' => $bloqueio['movimentacao_id'] ?? $ultimo['movimentacao_id'],
                     'detalhes' => $bloqueio['detalhes'] ?? $ultimo['detalhes'] ?? null,
                 ];
@@ -581,6 +590,11 @@ class DisponibilidadeVeiculoService
         }
 
         return TipoDisponibilidadeVeiculoEnum::from($tipo)->label();
+    }
+
+    private function codigoReserva(Reserva $reserva): string
+    {
+        return (string) ($reserva->codigoReserva->codigo ?? $reserva->id);
     }
 
     private function intervalosCruzam(Carbon $inicioA, Carbon $fimA, Carbon $inicioB, Carbon $fimB): bool

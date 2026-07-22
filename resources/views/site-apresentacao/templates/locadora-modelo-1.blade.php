@@ -2109,17 +2109,26 @@
                 </div>
 
                 <div class="hero-form-row">
-                    <div class="booking-mode-switch"
-                        @if (!$aluguelAppAtivo) style="margin-bottom: 0;" @endif>
-                        <button type="button" class="booking-mode-btn is-active" data-booking-mode="regular"
-                            aria-pressed="true"
-                            onclick="(function(){var regular=document.getElementById('bookingRegularForm');var app=document.getElementById('bookingAppForm');if(regular){regular.style.display='flex';}if(app){app.style.display='none';}})()">
-                            <span class="booking-mode-btn__eyebrow">Modo padrão</span>
-                            <span class="booking-mode-btn__title">Reserva comum</span>
-                            <span class="booking-mode-btn__desc">Fluxo tradicional com retirada, devolução, datas e
-                                horários.</span>
-                        </button>
-                        @if ($aluguelAppAtivo)
+                    @php
+                        $siteTipoReserva = $empresa->site_tipo_reserva ?? 'ambas';
+                        $showCommon = in_array($siteTipoReserva, ['reserva_comum', 'ambas']);
+                        $showApp = in_array($siteTipoReserva, ['motorista_app', 'ambas']) && $aluguelAppAtivo;
+                        if ($siteTipoReserva === 'motorista_app') {
+                            $showApp = true;
+                        }
+                        $showSwitch = $showCommon && $showApp;
+                    @endphp
+
+                    @if ($showSwitch)
+                        <div class="booking-mode-switch">
+                            <button type="button" class="booking-mode-btn is-active" data-booking-mode="regular"
+                                aria-pressed="true"
+                                onclick="(function(){var regular=document.getElementById('bookingRegularForm');var app=document.getElementById('bookingAppForm');if(regular){regular.style.display='flex';}if(app){app.style.display='none';}})()">
+                                <span class="booking-mode-btn__eyebrow">Modo padrão</span>
+                                <span class="booking-mode-btn__title">Reserva comum</span>
+                                <span class="booking-mode-btn__desc">Fluxo tradicional com retirada, devolução, datas e
+                                    horários.</span>
+                            </button>
                             <button type="button" class="booking-mode-btn" data-booking-mode="app"
                                 aria-pressed="false"
                                 onclick="(function(){var regular=document.getElementById('bookingRegularForm');var app=document.getElementById('bookingAppForm');if(regular){regular.style.display='none';}if(app){app.style.display='flex';}})()">
@@ -2128,88 +2137,90 @@
                                 <span class="booking-mode-btn__desc">Jornada em 3 passos com validação de
                                     documentos.</span>
                             </button>
-                        @endif
-                    </div>
+                        </div>
+                    @endif
 
-                    <div class="booking-form reveal d2" id="bookingRegularForm">
-                        <h2 class="booking-form-title">{{ $heroFormTitulo }}</h2>
-                        @if (!empty($heroFormDescricao))
-                            <p class="booking-form-desc">{{ $heroFormDescricao }}</p>
-                        @endif
+                    @if ($showCommon)
+                        <div class="booking-form reveal d2" id="bookingRegularForm">
+                            <h2 class="booking-form-title">{{ $heroFormTitulo }}</h2>
+                            @if (!empty($heroFormDescricao))
+                                <p class="booking-form-desc">{{ $heroFormDescricao }}</p>
+                            @endif
 
-                        <form method="GET" action="{{ $botaoUrl }}">
-                            <div class="field-group">
-                                <div class="field field-full">
-                                    <label for="retirada">{{ $heroFormLabelRetirada }}</label>
-                                    <select id="retirada" name="retirada">
-                                        <option value="">Selecione uma estação</option>
-                                        @foreach ($estacoesRetirada as $estacao_id => $nome)
-                                            <option value="{{ $estacao_id }}">{{ $nome }}</option>
-                                        @endforeach
-                                    </select>
+                            <form method="GET" action="{{ $botaoUrl }}">
+                                <div class="field-group">
+                                    <div class="field field-full">
+                                        <label for="retirada">{{ $heroFormLabelRetirada }}</label>
+                                        <select id="retirada" name="retirada">
+                                            <option value="">Selecione uma estação</option>
+                                            @foreach ($estacoesRetirada as $estacao_id => $nome)
+                                                <option value="{{ $estacao_id }}">{{ $nome }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
+                                        <input id="data_retirada" name="data_retirada" type="text" readonly
+                                            placeholder="Selecione a data">
+                                        <small class="text-muted" id="data_retirada_feedback">Selecione uma estação de
+                                            retirada para ver os dias disponíveis.</small>
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
+                                        <select id="hora_retirada" name="hora_retirada" disabled>
+                                            <option value="">Selecione a data</option>
+                                        </select>
+                                        <small class="text-muted" id="hora_retirada_feedback">Escolha uma data para ver os
+                                            horários disponíveis.</small>
+                                    </div>
+
+                                    <div class="field field-full" id="devolucaoField">
+                                        <label
+                                            for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolução' }}</label>
+                                        <select id="devolucao" name="devolucao">
+                                            <option value="">Selecione uma estação</option>
+                                            @foreach ($estacoesDevolucao as $estação_id => $nome)
+                                                <option value="{{ $estação_id }}">{{ $nome }}</option>
+                                            @endforeach
+                                        </select>
+                                        <small class="text-muted" id="devolucao_feedback">Selecione uma estação de
+                                            devolução.</small>
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
+                                        <input id="data_devolucao" name="data_devolucao" type="text" readonly
+                                            placeholder="Selecione a data">
+                                        <small class="text-muted" id="data_devolucao_feedback">Selecione uma estação de
+                                            devolução para ver os dias disponíveis.</small>
+                                    </div>
+
+                                    <div class="field">
+                                        <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
+                                        <select id="hora_devolucao" name="hora_devolucao" disabled>
+                                            <option value="">Selecione a data</option>
+                                        </select>
+                                        <small class="text-muted" id="hora_devolucao_feedback">Escolha uma data para ver
+                                            os horários disponíveis.</small>
+                                    </div>
                                 </div>
 
-                                <div class="field">
-                                    <label for="data_retirada">{{ $heroFormLabelDataRetirada }}</label>
-                                    <input id="data_retirada" name="data_retirada" type="text" readonly
-                                        placeholder="Selecione a data">
-                                    <small class="text-muted" id="data_retirada_feedback">Selecione uma estação de
-                                        retirada para ver os dias disponíveis.</small>
-                                </div>
+                                <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
+                                <small class="text-muted" id="booking_form_feedback"
+                                    style="display:block;margin-top:8px;"></small>
+                            </form>
 
-                                <div class="field">
-                                    <label for="hora_retirada">{{ $heroFormLabelHoraRetirada }}</label>
-                                    <select id="hora_retirada" name="hora_retirada" disabled>
-                                        <option value="">Selecione a data</option>
-                                    </select>
-                                    <small class="text-muted" id="hora_retirada_feedback">Escolha uma data para ver os
-                                        horários disponíveis.</small>
-                                </div>
+                            @if (!empty($heroFormNota))
+                                <p class="booking-note">{{ $heroFormNota }}</p>
+                            @endif
+                        </div>
+                    @endif
 
-                                <div class="field field-full" id="devolucaoField">
-                                    <label
-                                        for="devolucao">{{ $heroFormLabelDevolucao ?? 'Local de devolução' }}</label>
-                                    <select id="devolucao" name="devolucao">
-                                        <option value="">Selecione uma estação</option>
-                                        @foreach ($estacoesDevolucao as $estação_id => $nome)
-                                            <option value="{{ $estação_id }}">{{ $nome }}</option>
-                                        @endforeach
-                                    </select>
-                                    <small class="text-muted" id="devolucao_feedback">Selecione uma estação de
-                                        devolução.</small>
-                                </div>
-
-                                <div class="field">
-                                    <label for="data_devolucao">{{ $heroFormLabelDataDevolucao }}</label>
-                                    <input id="data_devolucao" name="data_devolucao" type="text" readonly
-                                        placeholder="Selecione a data">
-                                    <small class="text-muted" id="data_devolucao_feedback">Selecione uma estação de
-                                        devolução para ver os dias disponíveis.</small>
-                                </div>
-
-                                <div class="field">
-                                    <label for="hora_devolucao">{{ $heroFormLabelHoraDevolucao }}</label>
-                                    <select id="hora_devolucao" name="hora_devolucao" disabled>
-                                        <option value="">Selecione a data</option>
-                                    </select>
-                                    <small class="text-muted" id="hora_devolucao_feedback">Escolha uma data para ver
-                                        os horários disponíveis.</small>
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn-book">{{ $heroFormTextoBotao }}</button>
-                            <small class="text-muted" id="booking_form_feedback"
-                                style="display:block;margin-top:8px;"></small>
-                        </form>
-
-                        @if (!empty($heroFormNota))
-                            <p class="booking-note">{{ $heroFormNota }}</p>
-                        @endif
-                    </div>
-
-                    @if ($aluguelAppAtivo)
+                    @if ($showApp)
                         <div class="booking-form booking-form--app" id="bookingAppForm"
-                            style="border-top:1px solid rgba(17,24,39,.08);">
+                            style="border-top:1px solid rgba(17,24,39,.08); {{ !$showCommon ? 'display: flex;' : '' }}">
                             <h2 class="booking-form-title">Motorista de app</h2>
                             <p class="booking-form-desc">Escolha a estação, a data e o horário para seguir para a tela de planos.</p>
 
@@ -2882,15 +2893,17 @@
                     const selecionada = pickerDevolucao.selectedDates[0] || null;
                     if (selecionada && selecionada.getTime() < minDevolucao.getTime()) {
                         pickerDevolucao.clear();
-                        dataDevolucao.value = '';
-                        horaDevolucao.value = '';
-                        horaDevolucao.disabled = true;
+                        if (dataDevolucao) dataDevolucao.value = '';
+                        if (horaDevolucao) {
+                            horaDevolucao.value = '';
+                            horaDevolucao.disabled = true;
+                        }
                         if (dataDevolucaoFeedback) {
                             dataDevolucaoFeedback.textContent =
                                 'Escolha uma data de devolução igual ou posterior ao dia seguinte.';
                         }
                     }
-                } else if (window.flatpickr) {
+                } else if (window.flatpickr && dataDevolucao) {
                     pickerDevolucao = window.flatpickr(dataDevolucao, {
                         locale: ptLocale,
                         altInput: true,
@@ -2908,11 +2921,14 @@
             }
 
             function atualizarRetirada() {
+                if (!dataRetirada) return;
                 const data = dataRetirada.value || '';
-                const hora = horaRetirada.value || '';
+                const hora = horaRetirada ? horaRetirada.value : '';
                 if (!data) {
-                    horaRetirada.value = '';
-                    horaRetirada.disabled = true;
+                    if (horaRetirada) {
+                        horaRetirada.value = '';
+                        horaRetirada.disabled = true;
+                    }
                     dataRetiradaFeedback && (dataRetiradaFeedback.textContent =
                         'Selecione uma estação de retirada para ver os dias disponíveis.');
                     return;
@@ -2924,11 +2940,14 @@
             }
 
             function atualizarDevolucao() {
+                if (!dataDevolucao) return;
                 const data = dataDevolucao.value || '';
-                const hora = horaDevolucao.value || '';
+                const hora = horaDevolucao ? horaDevolucao.value : '';
                 if (!data) {
-                    horaDevolucao.value = '';
-                    horaDevolucao.disabled = true;
+                    if (horaDevolucao) {
+                        horaDevolucao.value = '';
+                        horaDevolucao.disabled = true;
+                    }
                     dataDevolucaoFeedback && (dataDevolucaoFeedback.textContent =
                         'Selecione uma estação de devolução para ver os dias disponíveis.');
                     return;
@@ -2958,9 +2977,11 @@
                     pickerRetirada = null;
                 }
 
-                dataRetirada.value = '';
-                horaRetirada.value = '';
-                horaRetirada.disabled = true;
+                if (dataRetirada) dataRetirada.value = '';
+                if (horaRetirada) {
+                    horaRetirada.value = '';
+                    horaRetirada.disabled = true;
+                }
 
                 if (!estRet) {
                     return;
@@ -2973,7 +2994,7 @@
                             'Selecione a data de retirada.' :
                             'Não há dias disponíveis para retirada nesta estação.';
                     }
-                    pickerRetirada = criarPickerDate(dataRetirada, dias);
+                    if (dataRetirada) pickerRetirada = criarPickerDate(dataRetirada, dias);
                     atualizarMinDateDevolucao();
                 });
             }
@@ -2986,9 +3007,11 @@
                     pickerDevolucao = null;
                 }
 
-                dataDevolucao.value = '';
-                horaDevolucao.value = '';
-                horaDevolucao.disabled = true;
+                if (dataDevolucao) dataDevolucao.value = '';
+                if (horaDevolucao) {
+                    horaDevolucao.value = '';
+                    horaDevolucao.disabled = true;
+                }
 
                 if (!estDev) {
                     return;
@@ -3001,15 +3024,15 @@
                             'Selecione a data de devolução.' :
                             'Não há dias disponíveis para devolução nesta estação.';
                     }
-                    pickerDevolucao = criarPickerDate(dataDevolucao, dias);
+                    if (dataDevolucao) pickerDevolucao = criarPickerDate(dataDevolucao, dias);
                     atualizarMinDateDevolucao();
                 });
             }
 
-            dataRetirada.addEventListener('change', atualizarRetirada);
-            horaRetirada.addEventListener('change', atualizarRetirada);
-            dataDevolucao.addEventListener('change', atualizarDevolucao);
-            horaDevolucao.addEventListener('change', atualizarDevolucao);
+            dataRetirada?.addEventListener('change', atualizarRetirada);
+            horaRetirada?.addEventListener('change', atualizarRetirada);
+            dataDevolucao?.addEventListener('change', atualizarDevolucao);
+            horaDevolucao?.addEventListener('change', atualizarDevolucao);
 
             retiradaSelect?.addEventListener('change', function() {
                 syncDevolucao(true);

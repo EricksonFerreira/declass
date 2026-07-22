@@ -351,10 +351,12 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'statusVeiculo',
             'localDisponibilidade',
             'reservas.statusReserva',
+            'reservas.codigoReserva',
             'veiculoDanos.dano.categoria',
+            'veiculoDanos.reservaCodigo',
             'ordensServico',
             'multas' => function ($query) {
-                $query->with(['reserva:id', 'responsavelLancamento:id,nome'])
+                $query->with(['reserva.codigoReserva', 'responsavelLancamento:id,nome'])
                     ->orderByDesc('id');
             },
             'sinistros' => function ($query) {
@@ -367,7 +369,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     'statusMovimentacao:id,nome',
                     'localOrigem:id,nome',
                     'localDestino:id,nome',
-                    'reserva:id',
+                    'reserva.codigoReserva',
                     'ordemServico:id,numero,status',
                 ])->orderByDesc('id');
             },
@@ -480,6 +482,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 'localOrigem:id,nome',
                 'localDestino:id,nome',
                 'reserva:id',
+                'reserva.codigoReserva:id,reserva_id,codigo',
                 'ordemServico:id,numero,status',
             ])
             ->select([

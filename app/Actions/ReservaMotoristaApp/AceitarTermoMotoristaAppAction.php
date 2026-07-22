@@ -15,13 +15,13 @@ class AceitarTermoMotoristaAppAction
 
     public function handle(ReservaMotoristaApp $reserva, Request $request): ReservaMotoristaApp
     {
-        if (!$reserva->pagamento_efetuado) {
-            throw new \RuntimeException('Confirme o pagamento antes de aceitar o termo da reserva.');
-        }
+        // if (!$reserva->pagamento_efetuado) {
+        //     throw new \RuntimeException('Confirme o pagamento antes de aceitar o termo da reserva.');
+        // }
 
-        if (!empty($reserva->checkin_realizado_em)) {
-            return $reserva;
-        }
+        // if (! empty($reserva->checkin_realizado_em)) {
+        //     return $reserva;
+        // }
 
         $empresaId = (int) ($reserva->empresa_id ?? 0);
         $termoConsentimento = null;
@@ -59,4 +59,3 @@ class AceitarTermoMotoristaAppAction
         return $reserva;
     }
 }
-

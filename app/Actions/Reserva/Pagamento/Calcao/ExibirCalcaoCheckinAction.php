@@ -50,6 +50,17 @@ class ExibirCalcaoCheckinAction
         $config = $this->resolverConfiguracao($reserva);
 
         if (!$config) {
+            $valorMotoristaApp = $this->valorCalcaoMotoristaApp($reserva);
+            if ($valorMotoristaApp > 0) {
+                return [
+                    'valor_calculado'        => $valorMotoristaApp,
+                    'tipo_regra_aplicada'    => 'fixo',
+                    'origem_regra_aplicada'  => 'motorista_app',
+                    'configuracao_calcao_id' => null,
+                    'configuracao'           => null,
+                ];
+            }
+
             return [
                 'valor_calculado'        => 0,
                 'tipo_regra_aplicada'    => null,
@@ -111,5 +122,14 @@ class ExibirCalcaoCheckinAction
             ->whereNull('modelo_id')
             ->where('ativo', true)
             ->first();
+    }
+
+    private function valorCalcaoMotoristaApp(Reserva $reserva): float
+    {
+        if ((string) ($reserva->origem_cadastro ?? '') !== 'motorista_app') {
+            return 0;
+        }
+
+        return round((float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? 0), 2);
     }
 }

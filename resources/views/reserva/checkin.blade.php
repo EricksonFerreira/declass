@@ -55,7 +55,15 @@
                 <input type="hidden" id="reserva_id" name="reserva_id" value="{{ $reserva->id }}">
                 <input type="hidden" id="codigo" name="codigo" value="{{ $codigoBreadcrumb ?? $reserva->codigoReserva?->codigo ?? $reserva->id }}">
                 @php
-                    $hasPendingPayment = collect($reserva->pagamentos ?? [])->contains(fn($p) => strtolower($p->status ?? '') === 'pendente');
+                    $pagamentosCheckin = collect($reserva->pagamentos ?? []);
+                    $totalPagoCheckin = (float) $pagamentosCheckin
+                        ->filter(fn($p) => strtolower((string) ($p->status ?? '')) === 'pago')
+                        ->sum(fn($p) => (float) ($p->valor_total ?? $p->valor_unitario ?? $p->valor ?? 0));
+                    $baseContratoCheckin = (float) (($reserva->valor_periodo_contrato ?? null) ?: ($reserva->valor_plano ?? 0));
+                    $totalReservaCheckin = $baseContratoCheckin > 0
+                        ? $baseContratoCheckin + (float) ($reserva->valor_opcionais ?? 0)
+                        : (float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? 0);
+                    $hasPendingPayment = round($totalReservaCheckin - $totalPagoCheckin, 2) > 0;
                 @endphp
 
                 {{-- Indicador de passos --}}
@@ -792,7 +800,7 @@
     <button type="button" class="btn-action btn-primary" id="wizardNext" disabled title="Existem pagamentos pendentes.">
         Continuar<i class="fas fa-arrow-right ml-1"></i>
     </button>
-    <p class="text-warning mt-2"><i class="fas fa-exclamation-triangle"></i> Existem pagamentos pendentes. Resolva antes de continuar.</p>
+    {{-- <p class="text-warning mt-2"><i class="fas fa-exclamation-triangle"></i> Existem pagamentos pendentes. Resolva antes de continuar.</p> --}}
 @endif
                         {{-- @if(!($contratoExistente && $contratoExistente->assinado == 'S'))
                         <button type="button" class="btn-action btn-action-success d-none" id="wizardCreateBtn">

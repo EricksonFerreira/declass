@@ -33,7 +33,7 @@
                         <span>R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}</span>
                     </div>
                 @endif
-                <a href="{{ route('reserva.show', $reserva->id) }}" class="ci-btn-back">
+                <a href="{{ $voltarUrl ?? route('reserva.show', $reserva->id) }}" class="ci-btn-back">
                     <i class="fas fa-arrow-left"></i>
                     <span>Voltar</span>
                 </a>
@@ -277,7 +277,7 @@
                         <strong>Calção autorizado com sucesso</strong>
                         <p>O valor de R$ {{ number_format((float)$calcaoExistente->valor_autorizado, 2, ',', '.') }} está pré-autorizado no cartão do cliente e será capturado ou liberado no check-out.</p>
                     </div>
-                    <a href="{{ route('reserva.show', $reserva->id) }}" class="ci-btn-create" style="text-decoration:none;">
+                    <a href="{{ $voltarUrl ?? route('reserva.show', $reserva->id) }}" class="ci-btn-create" style="text-decoration:none;">
                         <i class="fas fa-arrow-left"></i>
                         Voltar à Reserva
                     </a>
@@ -687,7 +687,7 @@
     const STRIPE_KEY      = @json($stripePublicKey);
     const AUTORIZAR_URL   = @json(route('reserva.calcao.autorizar', $reserva->codigoReserva->codigo));
     const SALVAR_CARTAO_URL = @json(route('reserva.calcao.salvar-cartao', $reserva->codigoReserva->codigo));
-    const SHOW_URL        = @json(route('reserva.show', $reserva->codigoReserva->codigo));
+    const SHOW_URL        = @json($voltarUrl ?? route('reserva.show', $reserva->codigoReserva->codigo));
     const CSRF            = @json(csrf_token());
     const VALOR           = @json((float)($calculo['valor_calculado'] ?? 0));
 

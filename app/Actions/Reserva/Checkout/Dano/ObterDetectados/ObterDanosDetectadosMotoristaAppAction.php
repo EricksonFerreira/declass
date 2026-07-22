@@ -11,7 +11,7 @@ class ObterDanosDetectadosMotoristaAppAction
     {
         $danos = VeiculoDanos::where('veiculo_id', $veiculoId)
             ->where('reserva_codigo_id', $reservaCodigoId)
-            ->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
+            ->with(['imagens', 'dano.categoria', 'usuarioCorrecao'])
             ->orderBy('id')
             ->get()
             ->map(fn(VeiculoDanos $d) => $this->mapear($d))
@@ -25,15 +25,13 @@ class ObterDanosDetectadosMotoristaAppAction
     {
         $loc = $d->local_dano === 'atras' ? 'ATRÁS' : strtoupper((string) $d->local_dano);
 
-        $imagens = $d->imagem->map(function ($img) {
+        $imagens = $d->imagens->map(function ($img) {
             $path = $img->caminho_imagem ?: $img->nome_imagem;
             $url = null;
             if (!empty($path)) {
                 try {
                     $normalizedPath = ltrim(str_replace('\\', '/', (string) $path), '/');
-                    $url = \Illuminate\Support\Facades\Storage::disk('public')->exists($normalizedPath)
-                        ? '/storage/' . $normalizedPath
-                        : null;
+                    $url = asset('storage/' . $normalizedPath);
                 } catch (\Throwable $e) {
                     $url = null;
                 }

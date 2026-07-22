@@ -23,6 +23,18 @@ class ExibirTermoDevolucaoReservaComumAction
             ]);
         }
 
-        return null;
+        // Caso não exista o arquivo físico, gera o PDF dinamicamente
+        $exibirCheckinAction = app(\App\Actions\Reserva\Checkin\Contrato\Exibir\ExibirContratoCheckinReservaComumAction::class);
+        $data = $exibirCheckinAction->montarDados($reserva);
+        
+        $pdf = $this->pdfService->gerarConteudo(
+            view: 'pdf.contratos.checkout.comum',
+            data: $data,
+        );
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="termo-devolucao-' . $reserva->id . '.pdf"',
+        ]);
     }
 }

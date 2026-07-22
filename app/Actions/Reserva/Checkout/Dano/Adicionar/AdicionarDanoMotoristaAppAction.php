@@ -32,7 +32,7 @@ class AdicionarDanoMotoristaAppAction
                     $path = \App\Support\ArquivoAnexoHelper::armazenar($foto, $dir);
                     if (!$path) continue;
 
-                    $dano->imagem()->create([
+                    $dano->imagens()->create([
                         'caminho_imagem' => $path,
                         'nome_imagem'    => basename($path),
                     ]);
@@ -52,7 +52,7 @@ class AdicionarDanoMotoristaAppAction
 
             DB::commit();
 
-            return $dano?->load('imagem');
+            return $dano?->load('imagens');
         } catch (\Throwable $e) {
             DB::rollBack();
             throw $e;

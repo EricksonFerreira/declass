@@ -561,7 +561,7 @@
                 @forelse($veiculo->reservas->sortByDesc('id')->take(5) as $reserva)
                     <div class="veiculo-reserva-item">
                         <div class="veiculo-reserva-item__id">
-                            <a href="{{ route('reserva.show', $reserva->id) }}" class="xp-link">#{{ $reserva->id }}</a>
+                            <a href="{{ route('reserva.show', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="xp-link">#{{ $reserva->codigoReserva?->codigo ?? $reserva->id }}</a>
                         </div>
                         <div class="veiculo-reserva-item__info">
                             <span>{{ optional($reserva->statusReserva)->nome ?? '—' }}</span>
@@ -965,8 +965,8 @@
                                     </td>
                                     <td>{{ $dano->correcao_data ? \Carbon\Carbon::parse($dano->correcao_data)->format('d/m/Y') : '—' }}</td>
                                     <td>
-                                        @if($dano->reserva_id)
-                                            <a href="{{ route('reserva.show', $dano->reserva_id) }}" class="xp-link">#{{ $dano->reserva_id }}</a>
+                                        @if($dano->reservaCodigo?->codigo)
+                                            <a href="{{ route('reserva.show', $dano->reservaCodigo->codigo) }}" class="xp-link">#{{ $dano->reservaCodigo->codigo }}</a>
                                         @else <span class="text-muted">—</span>
                                         @endif
                                     </td>
@@ -1332,8 +1332,8 @@
                                     </td>
                                     <td>{{ $mov->km_chegada !== null ? number_format((float)$mov->km_chegada, 0, ',', '.') : '—' }}</td>
                                     <td>
-                                        @if($mov->reserva_id)
-                                            <a href="{{ route('reserva.show', $mov->reserva_id) }}" class="xp-link">#{{ $mov->reserva_id }}</a>
+                                        @if($mov->reserva?->codigoReserva?->codigo)
+                                            <a href="{{ route('reserva.show', $mov->reserva->codigoReserva->codigo) }}" class="xp-link">#{{ $mov->reserva->codigoReserva->codigo }}</a>
                                         @else <span class="text-muted">—</span>
                                         @endif
                                     </td>
@@ -1709,8 +1709,8 @@
                                     <td><span class="badge badge-{{ $mtBadge }}">{{ $mt->label_status_multa }}</span></td>
                                     <td><span class="badge badge-light text-dark">{{ $mt->label_status_desconto }}</span></td>
                                     <td>
-                                        @if($mt->reserva_id)
-                                            <a href="{{ route('reserva.show', $mt->reserva_id) }}" class="xp-link">#{{ $mt->reserva_id }}</a>
+                                        @if($mt->reserva?->codigoReserva?->codigo)
+                                            <a href="{{ route('reserva.show', $mt->reserva->codigoReserva->codigo) }}" class="xp-link">#{{ $mt->reserva->codigoReserva->codigo }}</a>
                                         @else <span class="text-muted">—</span>
                                         @endif
                                     </td>

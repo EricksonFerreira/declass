@@ -25,6 +25,8 @@ class ContratoCheckout extends Model
         'foto_tras_path',
         'foto_velocimetro_path',
         'foto_combustivel_path',
+        'assinatura',
+        'data_assinatura',
     ];
 
     public function reserva(): BelongsTo

@@ -70,6 +70,7 @@ class StoreEmpresaRequest extends FormRequest
             'reserva_escolher_empresa' => ['nullable', Rule::in(['S', 'N'])],
             'reserva_selecionar_modelo' => ['nullable', Rule::in(['S', 'N'])],
             'aluguel_app_ativo' => ['nullable', Rule::in(['S', 'N'])],
+            'site_tipo_reserva' => ['nullable', Rule::in(['motorista_app', 'reserva_comum', 'ambas'])],
             'reserva_atraso_max_minutos' => ['nullable', 'integer', 'min:0', 'max:10080'],
             'reserva_bloqueio_pos_reserva_horas' => ['nullable', 'integer', 'min:0', 'max:720'],
             'adicionar_novas_marcas_automaticamente' => ['nullable', Rule::in(['S', 'N'])],

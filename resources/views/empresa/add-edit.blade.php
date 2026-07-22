@@ -135,6 +135,18 @@
                         <x-form-input type="text" class="form-control form-control-sm" id="dominio" name="dominio"
                             label="Domínio" value="{{ $empresa->dominio ?? '' }}" />
                     </div>
+                    <div class="form-group form-group-empresa col-4">
+                        <label for="site_tipo_reserva">Tipo de reserva no site</label>
+                        @php
+                            $siteTipoReserva = old('site_tipo_reserva', $empresa->site_tipo_reserva ?? 'ambas');
+                        @endphp
+                        <select class="form-control form-control-sm" id="site_tipo_reserva" name="site_tipo_reserva">
+                            <option value="ambas" {{ $siteTipoReserva === 'ambas' ? 'selected' : '' }}>Ambas (Comum e Motorista App)</option>
+                            <option value="reserva_comum" {{ $siteTipoReserva === 'reserva_comum' ? 'selected' : '' }}>Reserva Comum</option>
+                            <option value="motorista_app" {{ $siteTipoReserva === 'motorista_app' ? 'selected' : '' }}>Motorista de App</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">Define qual tipo de reserva ficará disponível na página de apresentação (Modelo 1).</small>
+                    </div>
                     <div class="form-group form-group-empresa  col-3 ">
                         <label for="reserva_selecionar_modelo">Selecionar modelo na reserva</label>
                         @php

@@ -299,6 +299,7 @@
                                                 'tipo' => 'off',
                                                 'titulo' => 'Indisponível',
                                                 'reserva_id' => null,
+                                                'reserva_codigo' => null,
                                                 'percentual_disponivel' => 0,
                                                 'intervalos' => [],
                                             ];

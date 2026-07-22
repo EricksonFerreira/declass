@@ -422,4 +422,42 @@ class ReservaMotoristaAppController extends Controller
             default => 'Semana',
         };
     }
+
+    public function assinarDevolucaoMotoristaApp(Request $request, $id)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->route('login');
+        }
+        $ehAdmin = (bool) ($user->isAdministrador() ?? false);
+
+        $reserva = ReservaMotoristaApp::query()
+            ->find($id);
+
+        if ($reserva && !$ehAdmin && (int) $reserva->user_id !== (int) $user->id) {
+            $reserva = null;
+        }
+
+        if (!$reserva) {
+            return redirect()->route('reserva.minhas')->with('error', 'Reserva nao encontrada.');
+        }
+
+        $validated = $request->validate(['assinatura' => ['required', 'string']]);
+
+        try {
+            $docs = is_array($reserva->documentos_json) ? $reserva->documentos_json : [];
+            $checkout = isset($docs['checkout']) && is_array($docs['checkout']) ? $docs['checkout'] : [];
+            
+            $checkout['assinatura'] = $validated['assinatura'];
+            $checkout['data_assinatura'] = now()->toDateTimeString();
+            
+            $docs['checkout'] = $checkout;
+            $reserva->documentos_json = $docs;
+            $reserva->save();
+
+            return back()->with('success', 'Termo de devolução assinado com sucesso.');
+        } catch (\Throwable $e) {
+            return back()->with('error', $e->getMessage());
+        }
+    }
 }

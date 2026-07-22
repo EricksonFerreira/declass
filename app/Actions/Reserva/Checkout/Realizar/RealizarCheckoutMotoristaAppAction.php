@@ -33,10 +33,12 @@ class RealizarCheckoutMotoristaAppAction
         data_set($documentos, 'checkout.notas_devolucao', $dados['notas_devolucao'] ?? null);
         data_set($documentos, 'checkout.observacoes_devolucao', $dados['observacoes_devolucao'] ?? null);
         data_set($documentos, 'checkout.registrado_em', now()->format('Y-m-d H:i:s'));
+        $kmFinal = $dados['quilometragem_final'] ?? $dados['quilometragem_devolucao'] ?? null;
+        $combustivelFinal = $dados['nivel_combustivel_final'] ?? $dados['nivel_combustivel_devolucao'] ?? null;
 
         $reserva->update([
-            'quilometragem_final' => (int) $dados['quilometragem_final'],
-            'nivel_combustivel_final' => (string) $dados['nivel_combustivel_final'],
+            'quilometragem_final' => $kmFinal !== null ? (int) $kmFinal : null,
+            'nivel_combustivel_final' => $combustivelFinal !== null ? (string) $combustivelFinal : null,
             'checkout_realizado_em' => now(),
             'status' => 'encerrada',
             'documentos_json' => $documentos,
@@ -44,8 +46,8 @@ class RealizarCheckoutMotoristaAppAction
 
         $this->reservaService->adicionaLog($reserva->id, Auth::id(), json_encode([
             'acao' => 'Checkout registrado',
-            'quilometragem_final' => $dados['quilometragem_final'],
-            'nivel_combustivel_final' => $dados['nivel_combustivel_final'],
+            'quilometragem_final' => $kmFinal,
+            'nivel_combustivel_final' => $combustivelFinal,
             'data' => now()->format('d/m/Y H:i'),
         ]));
 

@@ -59,6 +59,28 @@ class RealizarCheckoutReservaComumAction
                 ...$dadosFotosCheckout,
             ]);
 
+            if (!empty($dados['assinatura'])) {
+                try {
+                    $base64 = $dados['assinatura'];
+                    if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
+                        $base64 = substr($base64, strpos($base64, ',') + 1);
+                        $base64 = base64_decode($base64);
+                        
+                        $filename = 'assinatura_' . Str::random(10) . '.png';
+                        $relPath = $dir . '/' . $filename;
+                        
+                        \Illuminate\Support\Facades\Storage::disk('public')->put($relPath, $base64);
+                        
+                        $contratoCheckout->update([
+                            'assinatura' => $relPath,
+                            'data_assinatura' => now(),
+                        ]);
+                    }
+                } catch (\Throwable $e) {
+                    // Ignore signature file writing error
+                }
+            }
+
             $this->movimentacaoService->realizarCheckOut(
                 (int) $reserva->veiculo_id,
                 (int) $reserva->estacao_devolucao_id,

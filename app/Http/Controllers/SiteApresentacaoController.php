@@ -68,7 +68,7 @@ class SiteApresentacaoController extends Controller
         $corSecundaria = $this->colorValue($cores, 'brand_secundaria', $empresa->cor_secundaria ?: '#193C68');
         $corTerciaria = $this->colorValue($cores, 'brand_terciaria', $empresa->cor_terciaria ?: '#E7B93A');
         $imagensConfig = is_array($empresa->site_apresentacao_imagens_config) ? $empresa->site_apresentacao_imagens_config : [];
-        $estacoesRetirada = $this->estacaoService->getEstacoesParaRetiradaSelect();
+        $estacoesRetirada = $this->getEstacoesRetiradaComVeiculos($empresa);
         $estacoesDevolucao = $this->estacaoService->getEstacoesParaDevolucaoSelect();
         $frotaDestaques = $this->frotaDestaques($textos, $imagens, $imagensConfig);
         $urlReserva = Route::has('site.reserva.index')
@@ -218,7 +218,7 @@ class SiteApresentacaoController extends Controller
         $this->activateEmpresaContext($empresa);
 
         $modelo = $this->resolveModelo((string) ($empresa->site_apresentacao_modelo ?? self::MODELO_1));
-        $estacoesRetirada = $this->estacaoService->getEstacoesParaRetiradaSelect();
+        $estacoesRetirada = $this->getEstacoesRetiradaComVeiculos($empresa);
         $estacoesDevolucao = $this->estacaoService->getEstacoesParaDevolucaoSelect();
         $planos = PlanoMotoristaApp::query()
             ->where('empresa_id', $empresa->id)
@@ -1047,6 +1047,21 @@ class SiteApresentacaoController extends Controller
         }
 
         return Storage::url($path);
+    }
+
+    private function getEstacoesRetiradaComVeiculos($empresa): array
+    {
+        $estacoesRetirada = $this->estacaoService->getEstacoesParaRetiradaSelect();
+        $estacoesComVeiculosIds = \App\Models\Veiculo::where('empresa_id', $empresa->id)
+            ->where('ativo', 'S')
+            ->whereNotNull('local_disponibilidade')
+            ->pluck('local_disponibilidade')
+            ->unique()
+            ->toArray();
+
+        return array_filter($estacoesRetirada, function($key) use ($estacoesComVeiculosIds) {
+            return in_array((int)$key, $estacoesComVeiculosIds);
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     private function frotaDestaques(array $textos, array $imagens, array $imagensConfig): array

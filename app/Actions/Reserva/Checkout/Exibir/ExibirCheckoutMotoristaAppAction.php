@@ -5,6 +5,7 @@ namespace App\Actions\Reserva\Checkout\Exibir;
 use App\DTO\BreadCrumbItem;
 use App\DTO\Reserva\ReservaResolvida;
 use App\Services\BreadcrumbService;
+use DB;
 use Illuminate\Http\Request;
 
 class ExibirCheckoutMotoristaAppAction
@@ -23,7 +24,13 @@ class ExibirCheckoutMotoristaAppAction
                 ->with('error', 'O check-in precisa ser registrado antes do checkout.');
         }
 
-        if (empty(data_get($registro->contrato_snapshot_json, 'assinatura'))) {
+        $contratoId = (int) data_get($registro->documentos_json, 'checkin.contrato_checkin_id', 0);
+        $contratoCheckin = null;
+        if ($contratoId > 0) {
+            $contratoCheckin = DB::table('contrato_checkin')->find($contratoId);
+        }
+
+        if (! $contratoCheckin || empty($contratoCheckin->assinatura)) {
             return redirect()->route('reserva.show', $codigo)
                 ->with('error', 'Assine o contrato de check-in antes de fazer checkout.');
         }
@@ -31,11 +38,17 @@ class ExibirCheckoutMotoristaAppAction
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
-            new BreadCrumbItem('Reserva motorista APP #' . $registro->id, route('reserva.show', $codigo)),
+            new BreadCrumbItem('Reserva motorista APP #'.$registro->id, route('reserva.show', $codigo)),
             new BreadCrumbItem('Check-out'),
         ]);
 
-        return view('reserva.checkout-motorista-app', compact('registro', 'breadcrumb'))
-            ->with('titulo', 'Check-out da reserva motorista APP #' . $registro->id);
+        $categoriaDanos = app(\App\Services\CategoriaDanoService::class)->getAllForSelect();
+
+        return view('reserva.checkout-motorista-app', [
+            'registro' => $registro,
+            'reserva' => $registro,
+            'categoriaDanos' => $categoriaDanos,
+            'breadcrumb' => $breadcrumb,
+        ])->with('titulo', 'Check-out da reserva motorista APP #'.$registro->id);
     }
 }

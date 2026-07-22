@@ -49,6 +49,7 @@ class UpdateEmpresaRequest extends FormRequest
             'ativo' => ['nullable', 'in:S,N'],
             'reserva_selecionar_modelo' => ['nullable', 'in:S,N'],
             'aluguel_app_ativo' => ['nullable', 'in:S,N'],
+            'site_tipo_reserva' => ['nullable', Rule::in(['motorista_app', 'reserva_comum', 'ambas'])],
             'adicionar_novas_marcas_automaticamente' => ['nullable', 'in:S,N'],
             'adicionar_novos_modelos_automaticamente' => ['nullable', 'in:S,N'],
             'aluguel_app_exigir_aprovacao_documentos' => ['nullable', 'in:S,N'],

@@ -33,6 +33,8 @@ class ExibirCheckinMotoristaAppAction
         $registro = $reserva->registro;
         $codigo = $reserva->codigo;
 
+        $this->normalizarPagamentoQuitado($registro);
+
         if (!$registro->pagamento_efetuado) {
             return redirect()->route('reserva.show', $codigo)
                 ->with('error', 'Confirme o pagamento antes de abrir o check-in.');
@@ -79,5 +81,40 @@ class ExibirCheckinMotoristaAppAction
             'codigoBreadcrumb' => $codigo,
             'isMotoristaAppCheckin' => true,
         ])->with('titulo', 'Check-in da reserva motorista APP #' . $registro->id);
+    }
+
+    private function normalizarPagamentoQuitado(\App\Models\ReservaMotoristaApp $registro): void
+    {
+        $registro->loadMissing('pagamentos');
+
+        $valorTotal = round(
+            (float) ($registro->valor_periodo_contrato ?: $registro->valor_plano)
+            + (float) ($registro->valor_opcionais ?? 0),
+            2
+        );
+
+        if ($valorTotal <= 0) {
+            return;
+        }
+
+        $totalPago = (float) collect($registro->pagamentos ?? [])
+            ->filter(fn ($pagamento) => strtolower((string) ($pagamento->status ?? '')) === 'pago')
+            ->sum(fn ($pagamento) => (float) ($pagamento->valor_total ?? $pagamento->valor_unitario ?? $pagamento->valor ?? 0));
+
+        if (round($valorTotal - $totalPago, 2) > 0) {
+            return;
+        }
+
+        if ((bool) $registro->pagamento_efetuado && (string) $registro->status_pagamento === 'pago') {
+            return;
+        }
+
+        $registro->forceFill([
+            'pagamento_efetuado' => true,
+            'status_pagamento' => 'pago',
+            'status' => in_array((string) $registro->status, ['pendente', 'pendente_analise', 'pendente_pagamento'], true)
+                ? 'confirmada'
+                : $registro->status,
+        ])->save();
     }
 }

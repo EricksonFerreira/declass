@@ -1666,7 +1666,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $ehAdmin = (bool) ($user->isAdministrador() ?? false);
 
         $registro = ReservaMotoristaApp::query()
-            ->with(['empresa', 'user', 'planoMotoristaApp', 'estacaoRetirada', 'veiculo.marca', 'veiculo.modelo', 'codigoReserva'])
+            ->with(['empresa', 'user', 'planoMotoristaApp', 'estacaoRetirada', 'veiculo.marca', 'veiculo.modelo', 'codigoReserva', 'pagamentos'])
             ->find($id);
         if ($registro && ! $ehAdmin && (int) $registro->user_id !== (int) $user->id) {
             $registro = null;
@@ -1675,6 +1675,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         if (! $registro) {
             return redirect()->route('reserva.minhas')->with('error', 'Reserva nao encontrada.');
         }
+
+        $this->normalizarPagamentoMotoristaAppQuitado($registro);
 
         if (! $registro->pagamento_efetuado) {
             return redirect()->route('reserva.show', $registro->codigoReserva?->codigo ?? $registro->id)
@@ -1708,6 +1710,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $ehAdmin = (bool) ($user->isAdministrador() ?? false);
 
         $reserva = ReservaMotoristaApp::query()
+            ->with(['pagamentos', 'codigoReserva'])
             ->find($id);
         if ($reserva && ! $ehAdmin && (int) $reserva->user_id !== (int) $user->id) {
             $reserva = null;
@@ -1716,6 +1719,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         if (! $reserva) {
             return redirect()->route('reserva.minhas')->with('error', 'Reserva nao encontrada.');
         }
+
+        $this->normalizarPagamentoMotoristaAppQuitado($reserva);
 
         if (! $reserva->pagamento_efetuado) {
             return back()->with('error', 'Confirme o pagamento antes de registrar o check-in.');
@@ -5153,7 +5158,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                         continue;
                     }
 
-                    $dano->imagem()->create([
+                    $dano->imagens()->create([
                         'caminho_imagem' => $path,
                         'nome_imagem' => basename($path),
                     ]);
@@ -5819,5 +5824,40 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         } catch (\Throwable $e) {
             return response()->json(['error' => 'Erro ao confirmar pagamento em dinheiro.'], 500);
         }
+    }
+
+    private function normalizarPagamentoMotoristaAppQuitado(ReservaMotoristaApp $reserva): void
+    {
+        $reserva->loadMissing('pagamentos');
+
+        $valorTotal = round(
+            (float) ($reserva->valor_periodo_contrato ?: $reserva->valor_plano)
+            + (float) ($reserva->valor_opcionais ?? 0),
+            2
+        );
+
+        if ($valorTotal <= 0) {
+            return;
+        }
+
+        $totalPago = (float) collect($reserva->pagamentos ?? [])
+            ->filter(fn ($pagamento) => strtolower((string) ($pagamento->status ?? '')) === 'pago')
+            ->sum(fn ($pagamento) => (float) ($pagamento->valor_total ?? $pagamento->valor_unitario ?? $pagamento->valor ?? 0));
+
+        if (round($valorTotal - $totalPago, 2) > 0) {
+            return;
+        }
+
+        if ((bool) $reserva->pagamento_efetuado && (string) $reserva->status_pagamento === 'pago') {
+            return;
+        }
+
+        $reserva->forceFill([
+            'pagamento_efetuado' => true,
+            'status_pagamento' => 'pago',
+            'status' => in_array((string) $reserva->status, ['pendente', 'pendente_analise', 'pendente_pagamento'], true)
+                ? 'confirmada'
+                : $reserva->status,
+        ])->save();
     }
 }

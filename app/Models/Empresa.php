@@ -42,6 +42,7 @@ class Empresa extends Model
         'cor_secundaria',
         'cor_terciaria',
         'aluguel_app_ativo',
+        'site_tipo_reserva',
         'aluguel_app_exigir_aprovacao_documentos',
         'aluguel_app_documentos_obrigatorios',
         'aluguel_app_documento_adicional_label',

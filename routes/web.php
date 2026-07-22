@@ -11,7 +11,7 @@ use App\Http\Controllers\PaisController;
 use App\Http\Controllers\PowerBIController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\FipeCatalogController;
-use App\Http\Controllers\ReservaController;
+use App\Http\Controllers\Reserva\ReservaController;
 use App\Http\Controllers\SiteApresentacaoController;
 use App\Http\Controllers\SiteReservaController;
 use App\Http\Controllers\StripeController;
@@ -159,6 +159,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     // Rota segura para executar migrations via web (use apenas em ambientes controlados)
     // Protegida por middleware auth + can:gerenciar-empresa. Opcional: defina APP_MIGRATION_ROUTE_TOKEN para usar ?token=SECRET
     Route::middleware(['auth', 'can:gerenciar-empresa'])->group(function () {
+        Route::get('migrations/prod', [MigrationController::class, 'run'])->name('migrations.prod');
         Route::get('migrations/run', [MigrationController::class, 'run'])->name('migrations.run');
         Route::get('migrations/seed', [MigrationController::class, 'seed'])->name('migrations.seed');
         Route::get('migrations/run-all', [MigrationController::class, 'runAll'])->name('migrations.run-all');
