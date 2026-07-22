@@ -61,10 +61,15 @@
                     <tbody>
                         @forelse($danos as $dano)
                             @php
+                                $codigoReservaDano = $dano->reservaCodigo?->codigo
+                                    ?? $dano->reserva?->codigoReserva?->codigo
+                                    ?? $dano->contratoCheckin?->reserva?->codigoReserva?->codigo;
+
                                 $danoSearch = \Illuminate\Support\Str::lower(trim(implode(' ', array_filter([
                                     (string) ($dano->id ?? ''),
                                     (string) ($dano->veiculo_id ?? ''),
                                     (string) ($dano->reserva_id ?? ''),
+                                    (string) ($codigoReservaDano ?? ''),
                                     (string) ($dano->local_dano ?? ''),
                                     (string) ($dano->tipo_dano ?? ''),
                                     (string) ($dano->localizacao_problema ?? ''),
@@ -87,9 +92,9 @@
                                     </div>
                                 </td>
                                 <td>
-                                    @if($dano->reserva_id)
-                                        <a href="{{ route('reserva.show', $dano->reserva_id) }}" class="badge badge-secondary">
-                                            <i class="fas fa-calendar-alt mr-1"></i>#{{ $dano->reserva_id }}
+                                    @if($codigoReservaDano)
+                                        <a href="{{ route('reserva.show', $codigoReservaDano) }}" class="badge badge-secondary">
+                                            <i class="fas fa-calendar-alt mr-1"></i>#{{ $codigoReservaDano }}
                                         </a>
                                     @else
                                         <span class="badge badge-light">-</span>

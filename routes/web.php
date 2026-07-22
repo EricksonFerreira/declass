@@ -25,6 +25,7 @@ use Illuminate\Support\Facades\Route;
 
 // Webhook Stripe — sem CSRF, sem auth
 Route::middleware('auth')->prefix('admin')->group(function () {
+    Route::get('alertas', [EmpresaAlertaController::class, 'index'])->name('alerta.index');
     Route::patch('alerta/{alerta}/resolver', [EmpresaAlertaController::class, 'resolver'])->name('alerta.resolver');
 
     // Tour guiado — status e conclusão por tela

@@ -2,6 +2,7 @@
 
 namespace App\Actions\ReservaMotoristaApp;
 
+use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
 use App\Models\ReservaMotoristaAppPagamento;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use App\Services\Pagamentos\GerenciadorDePagamentos;
@@ -13,6 +14,7 @@ class ConfirmarPagamentoMotoristaAppAction
     public function __construct(
         private GatewayEmpresaConfigService $gatewayEmpresaConfigService,
         private GerenciadorDePagamentos $gerenciadorDePagamentos,
+        private RegistrarReceitaPagamentoReservaAction $registrarReceitaPagamentoReservaAction,
     ) {}
 
     public function handle(
@@ -143,6 +145,16 @@ class ConfirmarPagamentoMotoristaAppAction
                 'pagamento_efetuado' => false,
             ])->save();
 
+            $this->registrarReceitaPagamentoReservaAction->handle(
+                $reserva,
+                $valorCobrado,
+                $metodoPagamento,
+                now(),
+                (string) ($pagamento->referencia_pagamento ?: $gatewayTransactionId ?: 'pagamento_motorista_app_'.$pagamento->id),
+                (int) ($pagamento->user_id ?? $reserva->user_id),
+                'pagamento_motorista_app_'.$pagamento->id
+            );
+
             return $pagamento;
         }
 
@@ -171,6 +183,16 @@ class ConfirmarPagamentoMotoristaAppAction
             'status_pagamento' => $temOutrosPendentes ? 'pendente' : 'pago',
             'pagamento_efetuado' => !$temOutrosPendentes,
         ])->save();
+
+        $this->registrarReceitaPagamentoReservaAction->handle(
+            $reserva,
+            $valorTotal,
+            $metodoPagamento,
+            now(),
+            (string) ($pagamento->referencia_pagamento ?: $gatewayTransactionId ?: 'pagamento_motorista_app_'.$pagamento->id),
+            (int) ($pagamento->user_id ?? $reserva->user_id),
+            'pagamento_motorista_app_'.$pagamento->id
+        );
 
         return $pagamento;
     }

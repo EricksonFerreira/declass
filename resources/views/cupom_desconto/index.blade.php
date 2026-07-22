@@ -1,142 +1,155 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" :createUrl="route('cupom_desconto.create')" />
+    <x-page-title :title="$titulo" />
 @stop
 
 @section('content')
-    @if (session('success'))
-        <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
-            <i class="fas fa-check-circle mr-1"></i>{{ session('success') }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    @endif
+    @include('financeiro.fluxo_caixa._styles')
 
-    @if (isset($filters) && is_array($filters) && count($filters) > 0)
-        <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
-    @endif
-    <div class="card p-2">
-        <div class="card-header px-0 pt-0 pb-1">
-            <div class="d-flex justify-content-between align-items-center">
-                <h3 class="card-title text-sm text-bold">REGISTROS <span
-                        class="badge badge-success">{{ $cupom_descontos->total() }}</span></h3>
-                <div class="align-bottom d-flex flex-row justify-between">
-                    <form action="{{ route('cupom_desconto.setPerPage') }}" method="POST">
-                        @csrf
-                        <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
-                    </form>
-                    <div class="d-flex align-items-end">
-                        {{ $cupom_descontos->links() }}
+    @php
+        $financeiro = str_starts_with((string) Route::currentRouteName(), 'financeiro.');
+        $routePrefix = $financeiro ? 'financeiro.' : '';
+        $nomeFiltro = data_get($itensFiltered, 'nome.valor', '');
+        $ativoFiltro = data_get($itensFiltered, 'ativo.valor', '');
+        $totalAtivos = $cupom_descontos->getCollection()->where('ativo', 'S')->count();
+        $totalInativos = $cupom_descontos->getCollection()->where('ativo', 'N')->count();
+    @endphp
+
+    <div class="fc-page">
+        @if (session('success'))
+            <div class="alert alert-success alert-dismissible fade show mb-3" role="alert">
+                <i class="fas fa-check-circle mr-1"></i>{{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
+
+        <div class="card fc-card fc-filter mb-4">
+            <div class="card-body py-3">
+                <form method="GET" action="{{ route($routePrefix.'cupom_desconto.filtro') }}" class="row align-items-end">
+                    <div class="col-lg-4 col-md-5 mb-2">
+                        <label for="nome" class="fc-label">Nome</label>
+                        <input type="text" name="nome_like" id="nome" class="form-control" value="{{ $nomeFiltro }}" placeholder="Campanha ou nome do cupom">
                     </div>
+                    <div class="col-lg-3 col-md-4 mb-2">
+                        <label for="ativo" class="fc-label">Status</label>
+                        <select name="ativo" id="ativo" class="form-control">
+                            <option value="">Todos</option>
+                            <option value="S" {{ $ativoFiltro === 'S' ? 'selected' : '' }}>Ativo</option>
+                            <option value="N" {{ $ativoFiltro === 'N' ? 'selected' : '' }}>Inativo</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-5 col-md-3 mb-2 fc-actions justify-content-end">
+                        <button type="submit" class="btn btn-primary fc-btn">
+                            <i class="fas fa-filter"></i> Filtrar
+                        </button>
+                        <a href="{{ route($routePrefix.'cupom_desconto.removerFiltro') }}" class="btn btn-outline-secondary fc-btn">
+                            <i class="fas fa-times"></i>
+                        </a>
+                        <a href="{{ route($routePrefix.'cupom_desconto.create') }}" class="btn btn-success fc-btn">
+                            <i class="fas fa-plus"></i> Novo cupom
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4 col-sm-6 col-12 mb-4">
+                <div class="fc-kpi fc-kpi--projetado h-100">
+                    <div>
+                        <span>Total de cupons</span>
+                        <strong class="text-primary">{{ $cupom_descontos->total() }}</strong>
+                    </div>
+                    <small>Registros cadastrados</small>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 col-12 mb-4">
+                <div class="fc-kpi fc-kpi--receita h-100">
+                    <div>
+                        <span>Ativos nesta pagina</span>
+                        <strong class="text-success">{{ $totalAtivos }}</strong>
+                    </div>
+                    <small>Disponiveis para uso</small>
+                </div>
+            </div>
+            <div class="col-md-4 col-sm-6 col-12 mb-4">
+                <div class="fc-kpi fc-kpi--despesa h-100">
+                    <div>
+                        <span>Inativos nesta pagina</span>
+                        <strong class="text-danger">{{ $totalInativos }}</strong>
+                    </div>
+                    <small>Fora da operação</small>
                 </div>
             </div>
         </div>
-        <div class="card-body px-0 pt-0 pb-1 table-responsive">
 
-            <table class="table table-striped table-bordered table-sm">
-                <thead>
-                    <tr>
-                        <th>Nome</th>
-                        <th>Código</th>
-                        <th>Valor</th>
-                        <th>Status</th>
-                        <th style="width: 180px;">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($cupom_descontos as $cupom_desconto)
+        <div class="card fc-card">
+            <div class="card-header py-3">
+                <div class="fc-head">
+                    <h5 class="fc-title">
+                        <i class="fas fa-percentage"></i>
+                        <span>Cupons de desconto<span class="fc-subtitle">Campanhas promocionais usadas nas reservas</span></span>
+                    </h5>
+                    <form action="{{ route($routePrefix.'cupom_desconto.setPerPage') }}" method="POST" class="mb-0">
+                        @csrf
+                        <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                    </form>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table fc-table">
+                    <thead>
                         <tr>
-                            <td>{{ $cupom_desconto->nome }}</td>
-                            <td>{{ $cupom_desconto?->codigo }}</td>
-                            <td>{{ $cupom_desconto?->valor }} %</td>
-                            <td>
-                                <span class="badge badge-xs bg-{{ $cupom_desconto->ativo == 'S' ? 'success' : 'danger' }}">
-                                    {{ $cupom_desconto->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
-                                </span>
-                            </td>
-                            <td style="width: 180px;">
-                                <a href="{{ route('cupom_desconto.edit', $cupom_desconto->id) }}"
-                                    class="btn btn-xs btn-warning"><i class="fa fa-edit"></i> Editar</a>
-                                <x-delete-button :action="route('cupom_desconto.destroy', $cupom_desconto->id)" />
-                            </td>
+                            <th class="px-3">Nome</th>
+                            <th>Codigo</th>
+                            <th class="text-right">Valor</th>
+                            <th>Status</th>
+                            <th class="text-center">Acoes</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @forelse ($cupom_descontos as $cupom_desconto)
+                            <tr>
+                                <td class="px-3 font-weight-bold">{{ $cupom_desconto->nome }}</td>
+                                <td>
+                                    <span class="fc-badge bg-success-light">
+                                        <i class="fas fa-ticket-alt"></i>{{ $cupom_desconto?->codigo ?: '-' }}
+                                    </span>
+                                </td>
+                                <td class="text-right font-weight-bold text-primary">{{ $cupom_desconto?->valor }}%</td>
+                                <td>
+                                    <span class="fc-badge {{ $cupom_desconto->ativo === 'S' ? 'fc-badge--pago' : 'fc-badge--cancelado' }}">
+                                        {{ $cupom_desconto->ativo === 'S' ? 'Ativo' : 'Inativo' }}
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <a href="{{ route($routePrefix.'cupom_desconto.edit', $cupom_desconto->id) }}" class="btn btn-sm btn-outline-primary fc-btn">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <x-delete-button :action="route($routePrefix.'cupom_desconto.destroy', $cupom_desconto->id)" />
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="text-center text-muted py-5">
+                                    <i class="fas fa-ticket-alt d-block mb-3" style="font-size: 2.4rem; opacity: .18;"></i>
+                                    Nenhum cupom encontrado.
+                                </td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-white d-flex justify-content-end">
+                {{ $cupom_descontos->links() }}
+            </div>
         </div>
     </div>
-@stop
-
-@section('js')
-    <script></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
-<link rel="stylesheet" href="/css/driver-tour.css"/>
-<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
-<script>
-(function () {
-    const TOUR_ID     = 'cupom-desconto-index';
-    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
-    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
-    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
-    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
-    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
-
-    const steps = [
-        { element: '.page-title', popover: { title: 'Lista de cupons de desconto', description: 'Aqui você consulta e administra os cupons promocionais disponíveis para aplicação nas reservas.' } },
-        { element: '.btn-create-resource, a[href*="cupom_desconto/create"]', popover: { title: 'Novo cupom', description: 'Use este botão para cadastrar um novo cupom com código, percentual e status de uso.', side: 'left' } },
-        { element: '.card-header', popover: { title: 'Controle da listagem', description: 'O cabeçalho mostra total de registros, paginação e a quantidade de itens exibidos por página.', side: 'bottom' } },
-        { element: 'table thead tr', popover: { title: 'Tabela de cupons', description: 'A grade mostra nome, código promocional, valor percentual e situação atual de cada cupom.', side: 'bottom' } },
-        { element: 'table tbody tr:first-child td:last-child', popover: { title: 'Ações do cupom', description: 'Em cada linha você pode editar os dados do cupom ou excluir o cadastro quando necessário.', side: 'left' } },
-    ];
-
-    function marcarFeito() {
-        localStorage.setItem(CACHE_KEY, '1');
-        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
-    }
-
-    function buildTour() {
-        var _pulou = false;
-        return window.driver.js.driver({
-            animate: true, smoothScroll: true, showProgress: true,
-            allowClose: true,
-            progressText: 'Passo @{{current}} de @{{total}}',
-            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
-            onPopoverRender: (popover, { driver }) => {
-                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
-                var btnTour = document.createElement('button');
-                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
-                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
-                var btnStep = document.createElement('button');
-                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
-                btnStep.addEventListener('click', function () { driver.moveNext(); });
-                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
-                if (nav) { nav.prepend(btnStep); }
-                popover.footer.prepend(btnTour);
-            },
-            steps: steps,
-        });
-    }
-
-    window.restartPageTour = function () {
-        localStorage.removeItem(CACHE_KEY);
-        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
-            .then(() => buildTour().drive());
-    };
-
-    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
-    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
-            setTimeout(() => buildTour().drive(), 350);
-        });
-})();
-</script>
 @stop

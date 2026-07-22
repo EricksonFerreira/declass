@@ -41,8 +41,17 @@
     @endif
 
     @forelse($options as $key => $option)
-        <option value="{{ $key }}" @if($isSelected($key)) selected="selected" @endif>
-            {{ $option }}
+        @php
+            $optionIsRecord = is_array($option) || is_object($option);
+            $optionValue = $optionIsRecord
+                ? data_get($option, 'id', $key)
+                : $key;
+            $optionLabel = $optionIsRecord
+                ? data_get($option, 'nome', data_get($option, 'name', data_get($option, 'label', $optionValue)))
+                : $option;
+        @endphp
+        <option value="{{ $optionValue }}" @if($isSelected($optionValue)) selected="selected" @endif>
+            {{ $optionLabel }}
         </option>
     @empty
         {!! $slot !!}

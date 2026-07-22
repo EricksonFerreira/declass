@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reserva\Pagamento\Confirmar\Cliente;
 
+use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
 use App\Models\ReservaMotoristaAppPagamento;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use App\Services\Pagamentos\GerenciadorDePagamentos;
@@ -17,6 +18,7 @@ class ConfirmarPagamentoClienteMotoristaAppAction
         private GatewayEmpresaConfigService $gatewayEmpresaConfigService,
         private GerenciadorDePagamentos $gerenciadorDePagamentos,
         private ReservaService $reservaService,
+        private RegistrarReceitaPagamentoReservaAction $registrarReceitaPagamentoReservaAction,
     ) {}
 
     public function handle(ReservaMotoristaAppPagamento $pagamento, Request $request): mixed
@@ -171,6 +173,16 @@ class ConfirmarPagamentoClienteMotoristaAppAction
                     'status_pagamento' => 'pendente',
                     'pagamento_efetuado' => false,
                 ])->save();
+
+                $this->registrarReceitaPagamentoReservaAction->handle(
+                    $reservaMotoristaApp,
+                    $valorCobrado,
+                    $metodoPagamento,
+                    now(),
+                    (string) ($pagamento->referencia_pagamento ?: $gatewayTransactionId ?: 'pagamento_motorista_app_'.$pagamento->id),
+                    Auth::id(),
+                    'pagamento_motorista_app_'.$pagamento->id
+                );
             } else {
                 $pagamento->update([
                     'status' => 'pago',
@@ -197,6 +209,16 @@ class ConfirmarPagamentoClienteMotoristaAppAction
                     'status_pagamento' => $temOutrosPendentes ? 'pendente' : 'pago',
                     'pagamento_efetuado' => ! $temOutrosPendentes,
                 ])->save();
+
+                $this->registrarReceitaPagamentoReservaAction->handle(
+                    $reservaMotoristaApp,
+                    $valorTotal,
+                    $metodoPagamento,
+                    now(),
+                    (string) ($pagamento->referencia_pagamento ?: $gatewayTransactionId ?: 'pagamento_motorista_app_'.$pagamento->id),
+                    Auth::id(),
+                    'pagamento_motorista_app_'.$pagamento->id
+                );
             }
 
             $logSucesso = json_encode([

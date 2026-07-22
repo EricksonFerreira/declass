@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reserva\Pagamento;
 
+use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
 use App\Enums\StatusReservaEnum;
 use App\Models\Reserva;
 use App\Models\Transacao;
@@ -23,6 +24,7 @@ class RealizarPagamentoAction
         private GerenciadorDePagamentos $gerenciadorDePagamentos,
         private UsuarioService $userService,
         private NfseService $nfseService,
+        private RegistrarReceitaPagamentoReservaAction $registrarReceitaPagamentoReservaAction,
     ) {}
 
     public function handle(Reserva $reserva, Request $request): array
@@ -116,7 +118,7 @@ class RealizarPagamentoAction
 
         DB::table('reservas')->where('id', $reserva->id)->update(['status_reserva_id' => StatusReservaEnum::Confirmada->value, 'pagamento_efetuado' => 'S']);
 
-        Transacao::create([
+        $transacao = Transacao::create([
             'user_id' => $reserva->user_id,
             'pago_por_user_id' => Auth::id(),
             'reserva_id' => $reserva->id,
@@ -127,6 +129,16 @@ class RealizarPagamentoAction
             'status' => $resultado['raw_status'] ?? 'success',
             'info_pagamento' => $resultado,
         ]);
+
+        $this->registrarReceitaPagamentoReservaAction->handle(
+            $reserva,
+            (float) $transacao->valor,
+            (string) $transacao->metodo_pagamento,
+            now(),
+            (string) ($transacao->gateway_transaction_id ?: 'transacao_'.$transacao->id),
+            Auth::id(),
+            'transacao_'.$transacao->id
+        );
 
         $json = json_encode([
             'acao' => 'Pagamento efetuado',

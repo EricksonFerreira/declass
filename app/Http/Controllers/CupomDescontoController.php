@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\DTO\BreadCrumbItem;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\CupomDesconto\StoreCupomDescontoRequest;
@@ -9,19 +10,22 @@ use App\Http\Requests\CupomDesconto\UpdateCupomDescontoRequest;
 use App\Services\BreadcrumbService;
 use App\Services\CupomDescontoService;
 use App\Traits\AtualizaFiltrosTrait;
-use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 class CupomDescontoController extends BaseController implements FiltroInterface, ResourceInterface
 {
-    use FiltroTrait;
     use AtualizaFiltrosTrait;
+    use FiltroTrait;
+
     protected $cupom_descontoService;
+
     protected $breadcrumbService;
 
     public function __construct(CupomDescontoService $cupom_descontoService, BreadcrumbService $breadcrumbService)
     {
-        $this->titulo = "Cupom de Descontos";
+        $this->titulo = 'Cupom de Descontos';
         $this->nomeFiltro = 'cupom_desconto';
         $this->cupom_descontoService = $cupom_descontoService;
         $this->breadcrumbService = $breadcrumbService;
@@ -36,7 +40,11 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
 
         $cupom_descontos = $this->cupom_descontoService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Cupom de Descontos');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new BreadCrumbItem('Cupom de Descontos'),
+        ]);
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -56,19 +64,28 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
         ))->with('titulo', $this->titulo);
     }
 
-    public function create(){
+    public function create()
+    {
+        $this->configurarSessao();
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Cupom de Descontos','cupom_desconto.index','Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new BreadCrumbItem('Cupom de Descontos', $this->routeName('index')),
+            new BreadCrumbItem('Criar'),
+        ]);
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('cupom_desconto.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+
+        return view('cupom_desconto.add-edit', compact('breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreCupomDescontoRequest $request)
     {
+        $this->configurarSessao();
         $this->cupom_descontoService->create($request->all());
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro)
@@ -77,45 +94,60 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
 
     public function edit($id)
     {
+        $this->configurarSessao();
         $cupom_desconto = $this->cupom_descontoService->getById($id);
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Cupom de Descontos','cupom_desconto.index',"Editar: $cupom_desconto->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new BreadCrumbItem('Cupom de Descontos', $this->routeName('index')),
+            new BreadCrumbItem('Editar: '.$cupom_desconto->nome),
+        ]);
         [$metodo,$rota] = $this->getFormMethodAndRoute($cupom_desconto);
 
-        return view('cupom_desconto.add-edit', compact('cupom_desconto','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('cupom_desconto.add-edit', compact('cupom_desconto', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateCupomDescontoRequest $request, $id)
     {
-        $success = $this->cupom_descontoService->update($id,$request->all());
+        $this->configurarSessao();
+        $success = $this->cupom_descontoService->update($id, $request->all());
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro)
             ->with('success', 'Cupom de desconto atualizado com sucesso.');
     }
 
     public function destroy($id)
     {
+        $this->configurarSessao();
         $success = $this->cupom_descontoService->delete($id);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function filtro(Request $request)
     {
+        $this->configurarSessao();
         $this->criarFiltros($request, $this->nomeFiltro);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function removerFiltro(Request $request)
     {
+        $this->configurarSessao();
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function setPerPage(Request $request)
     {
+        $this->configurarSessao();
         // Salva o valor de paginação na sessão
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
@@ -125,8 +157,8 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
 
     public function configurarSessao()
     {
-        session()->put("$this->nomeFiltro.urlPadrao", 'cupom_desconto');
-        session()->put("$this->nomeFiltro.rotaRedirect", 'cupom_desconto.index');
+        session()->put("$this->nomeFiltro.urlPadrao", $this->isFinanceiroRoute() ? 'financeiro/cupom_desconto' : 'cupom_desconto');
+        session()->put("$this->nomeFiltro.rotaRedirect", $this->routeName('index'));
     }
 
     public function obterFiltrosPrincipais()
@@ -136,8 +168,8 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
-                ['value' => 'N', 'label' => 'Inativo', 'selected' => false]
-            ]]
+                ['value' => 'N', 'label' => 'Inativo', 'selected' => false],
+            ]],
         ];
     }
 
@@ -151,6 +183,7 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
     public function verificarCupom(Request $request)
     {
         $cupom = $this->cupom_descontoService->verificarCupom($request->input('cupom'));
+
         return response()->json($cupom);
     }
 
@@ -165,13 +198,23 @@ class CupomDescontoController extends BaseController implements FiltroInterface,
         if ($cupom_desconto) {
             return [
                 'PUT',
-                route('cupom_desconto.update', $cupom_desconto->id),
+                route($this->routeName('update'), $cupom_desconto->id),
             ];
         }
 
         return [
             'POST',
-            route('cupom_desconto.store'),
+            route($this->routeName('store')),
         ];
+    }
+
+    private function isFinanceiroRoute(): bool
+    {
+        return str_starts_with((string) Route::currentRouteName(), 'financeiro.');
+    }
+
+    private function routeName(string $name): string
+    {
+        return ($this->isFinanceiroRoute() ? 'financeiro.' : '').'cupom_desconto.'.$name;
     }
 }

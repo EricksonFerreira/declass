@@ -72,10 +72,15 @@ return [
     'sidebar.configuracao_opcionais'       => 'Configuração de Opcionais',
 
     // Financeiro
-    'sidebar.financeiro_transferencias'    => 'Transferências',
+    'sidebar.financeiro_portal'            => 'Painel Financeiro',
     'sidebar.financeiro_reservas'          => 'Faturamento por Reserva',
+    'sidebar.financeiro_analise_veiculos'  => 'Análise por Veículo',
     'sidebar.notas_fiscais'                => 'Notas Fiscais',
     'sidebar.cupom_desconto'               => 'Cupons de Desconto',
+    'sidebar.fluxo_caixa'                  => 'Fluxo de Caixa',
+    'sidebar.fluxo_caixa_dashboard'        => 'Dashboard de Fluxo de Caixa',
+    'sidebar.fluxo_caixa_lancamentos'      => 'Lançamentos',
+    'sidebar.fluxo_caixa_categorias'       => 'Categorias',
 
     // Cadastros / Estrutura operacional
     'sidebar.pais'                         => 'Países',

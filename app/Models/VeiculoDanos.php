@@ -23,6 +23,7 @@ class VeiculoDanos extends Model
         'quilometragem_veiculo',
         'observacoes',
         'veiculo_id',
+        'reserva_id',
         'reserva_codigo_id',
         'contrato_id',
         'correcao_descricao',
@@ -54,6 +55,22 @@ class VeiculoDanos extends Model
         );
     }
 
+    public function reserva(): BelongsTo
+    {
+        return $this->belongsTo(
+            Reserva::class,
+            'reserva_id'
+        );
+    }
+
+    public function contratoCheckin(): BelongsTo
+    {
+        return $this->belongsTo(
+            ContratoCheckin::class,
+            'contrato_id'
+        );
+    }
+
     public function categoria(): BelongsTo
     {
         return $this->belongsTo(
@@ -68,6 +85,11 @@ class VeiculoDanos extends Model
             VeiculoDanosImagem::class,
             'dano_veiculo_id'
         );
+    }
+
+    public function imagem(): HasMany
+    {
+        return $this->imagens();
     }
 
     public function usuarioCorrecao(): BelongsTo

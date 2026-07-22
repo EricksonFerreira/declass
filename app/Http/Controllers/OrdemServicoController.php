@@ -275,7 +275,14 @@ class OrdemServicoController extends Controller
                 ];
             }
 
-            $this->ordemServicoService->concluir($ordem_servico, $dados['relatorio_geral'], $map, $anexosMeta);
+            $this->ordemServicoService->concluir(
+                $ordem_servico,
+                $dados['relatorio_geral'],
+                $map,
+                $anexosMeta,
+                (float) ($dados['valor_pecas'] ?? 0),
+                (float) ($dados['valor_mao_obra'] ?? 0)
+            );
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withErrors(['os' => $e->getMessage()]);
         }

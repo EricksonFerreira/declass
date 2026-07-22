@@ -440,7 +440,7 @@
     <!-- Filters -->
     <div class="financeiro-panel financeiro-filters">
         <div class="financeiro-panel__body">
-            <form method="GET" action="{{ route('financeiro.index') }}" class="mb-0">
+            <form method="GET" action="{{ route('financeiro.transacoes') }}" class="mb-0">
                 <div class="row align-items-end gx-2 gy-2">
                     <div class="col-xl-auto col-lg-2 col-md-3 col-sm-6 mb-2">
                         <label class="text-muted-xs font-weight-bold mb-1">Reserva Ref.</label>
@@ -502,7 +502,7 @@
                         <button class="btn btn-primary btn-sm px-3 shadow-sm mr-2 w-100 font-weight-bold" type="submit">
                             <i class="fas fa-filter mr-1"></i> Filtrar
                         </button>
-                        <a href="{{ route('financeiro.index') }}"
+                        <a href="{{ route('financeiro.transacoes') }}"
                             class="btn btn-light border btn-sm shadow-sm w-100 text-muted text-center" title="Limpar">
                             <i class="fas fa-times"></i>
                         </a>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
 use App\Enums\StatusReservaEnum;
 use App\Http\Requests\Reserva\StoreReservaRequest;
 use App\Models\CupomDesconto;
@@ -57,7 +58,8 @@ class SiteReservaController extends Controller
         private readonly PaisService $paisService,
         private readonly NfseService $nfseService,
         private readonly GatewayEmpresaConfigService $gatewayEmpresaConfigService,
-        private readonly GerenciadorDePagamentos $gerenciadorDePagamentos
+        private readonly GerenciadorDePagamentos $gerenciadorDePagamentos,
+        private readonly RegistrarReceitaPagamentoReservaAction $registrarReceitaPagamentoReservaAction
     ) {
     }
 
@@ -1364,7 +1366,7 @@ class SiteReservaController extends Controller
                 'valor_total_final' => $valorTotal,
             ]);
 
-        Transacao::create([
+        $transacao = Transacao::create([
             'user_id' => $reservaItem->user_id,
             'pago_por_user_id' => Auth::id(),
             'reserva_id' => $reservaItem->id,
@@ -1375,6 +1377,16 @@ class SiteReservaController extends Controller
             'status' => $resultado['raw_status'] ?? 'success',
             'info_pagamento' => $resultado,
         ]);
+
+        $this->registrarReceitaPagamentoReservaAction->handle(
+            $reservaItem,
+            (float) $transacao->valor,
+            (string) $transacao->metodo_pagamento,
+            now(),
+            (string) ($transacao->gateway_transaction_id ?: 'transacao_'.$transacao->id),
+            Auth::id(),
+            'transacao_'.$transacao->id
+        );
 
         $json = json_encode([
             'acao' => 'Pagamento efetuado',

@@ -106,6 +106,7 @@ class AppServiceProvider extends ServiceProvider
         Cashier::useCustomerModel(User::class);
 
         Veiculo::observe(OnboardingObserver::class);
+        Veiculo::observe(\App\Observers\VeiculoManutencaoObserver::class);
         Estacao::observe(OnboardingObserver::class);
         User::observe(OnboardingObserver::class);
 

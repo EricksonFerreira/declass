@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reserva\Pagamento;
 
+use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
 use App\Models\Reserva;
 use App\Models\Transacao;
 use App\Services\ReservaService;
@@ -11,6 +12,7 @@ class ConfirmarPagamentoDinheiroAction
 {
     public function __construct(
         private ReservaService $reservaService,
+        private RegistrarReceitaPagamentoReservaAction $registrarReceitaPagamentoReservaAction,
     ) {}
 
     public function handle(Reserva $reserva, ?int $transacaoId, float $valor, string $metodoManual): Transacao
@@ -65,6 +67,16 @@ class ConfirmarPagamentoDinheiroAction
             'transacao_id' => $transacao->id,
             'valor' => $valorLog,
         ]), 'success');
+
+        $this->registrarReceitaPagamentoReservaAction->handle(
+            $reserva,
+            (float) $valorLog,
+            (string) $transacao->metodo_pagamento,
+            $transacao->confirmado_em ? now() : now(),
+            (string) ($transacao->gateway_transaction_id ?: 'transacao_'.$transacao->id),
+            Auth::id(),
+            'transacao_'.$transacao->id
+        );
 
         return $transacao;
     }

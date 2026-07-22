@@ -22,7 +22,12 @@ class VeiculoDanoMonitoramentoController extends Controller
         $filtro = $request->query('filtro', 'pendentes');
 
         $query = VeiculoDanos::query()
-            ->with(['veiculo', 'reserva'])
+            ->with([
+                'veiculo',
+                'reservaCodigo',
+                'reserva.codigoReserva',
+                'contratoCheckin.reserva.codigoReserva',
+            ])
             ->orderByDesc('id');
 
         if ($filtro === 'pendentes') {

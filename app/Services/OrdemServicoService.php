@@ -2,6 +2,9 @@
 
 namespace App\Services;
 
+use App\Actions\Financeiro\CreateLancamentoAction;
+use App\Models\CategoriaFinanceira;
+use App\Models\LancamentoFinanceiro;
 use App\Models\OrdemServico;
 use App\Models\OrdemServicoAnexo;
 use App\Models\OrdemServicoItem;
@@ -140,14 +143,24 @@ class OrdemServicoService
      * @param  array<int, string>  $resultadoPorItemId  [ item_id => texto ]
      * @param  array<int, array{path:string, original_name?:string|null, mime?:string|null, size_bytes?:int|null, user_id?:int|null}>  $anexosMeta
      */
-    public function concluir(OrdemServico $os, string $relatorioGeral, array $resultadoPorItemId, array $anexosMeta = []): void
+    public function concluir(
+        OrdemServico $os,
+        string $relatorioGeral,
+        array $resultadoPorItemId,
+        array $anexosMeta = [],
+        float $valorPecas = 0,
+        float $valorMaoObra = 0
+    ): void
     {
         if (! $os->podeConcluir()) {
             throw new \InvalidArgumentException('Esta OS não pode ser concluída.');
         }
 
-        DB::transaction(function () use ($os, $relatorioGeral, $resultadoPorItemId, $anexosMeta) {
+        DB::transaction(function () use ($os, $relatorioGeral, $resultadoPorItemId, $anexosMeta, $valorPecas, $valorMaoObra) {
             $os->load('itens.veiculoDano');
+            $valorPecas = round(max(0, $valorPecas), 2);
+            $valorMaoObra = round(max(0, $valorMaoObra), 2);
+            $valorTotal = round($valorPecas + $valorMaoObra, 2);
 
             foreach ($os->itens as $item) {
                 $texto = $resultadoPorItemId[$item->id] ?? $relatorioGeral;
@@ -173,9 +186,14 @@ class OrdemServicoService
             $os->update([
                 'status' => OrdemServico::STATUS_CONCLUIDA,
                 'relatorio_conclusao' => trim($relatorioGeral) !== '' ? trim($relatorioGeral) : null,
+                'valor_pecas' => $valorPecas,
+                'valor_mao_obra' => $valorMaoObra,
+                'valor_total' => $valorTotal,
                 'user_id_encerramento' => Auth::id(),
                 'data_conclusao' => now(),
             ]);
+
+            $this->registrarDespesaFinanceira($os->fresh(), $valorTotal);
 
             foreach ($anexosMeta as $meta) {
                 $path = trim((string) ($meta['path'] ?? ''));
@@ -193,5 +211,49 @@ class OrdemServicoService
                 ]);
             }
         });
+    }
+
+    private function registrarDespesaFinanceira(OrdemServico $os, float $valorTotal): void
+    {
+        if ($valorTotal <= 0 || ! $os->empresa_id) {
+            return;
+        }
+
+        $chave = 'ordem_servico|'.$os->id;
+        $jaExiste = LancamentoFinanceiro::query()
+            ->where('empresa_id', (int) $os->empresa_id)
+            ->where('tipo', 'despesa')
+            ->where('observacoes', 'like', '%'.$chave.'%')
+            ->exists();
+
+        if ($jaExiste) {
+            return;
+        }
+
+        $categoria = CategoriaFinanceira::firstOrCreate(
+            [
+                'empresa_id' => (int) $os->empresa_id,
+                'nome' => 'Manutenção',
+                'tipo' => 'despesa',
+            ],
+            [
+                'descricao' => 'Despesas geradas por ordens de serviço e manutenção da frota.',
+            ]
+        );
+
+        app(CreateLancamentoAction::class)->handle([
+            'empresa_id' => (int) $os->empresa_id,
+            'descricao' => 'Manutenção OS '.($os->numero ?? '#'.$os->id),
+            'valor' => $valorTotal,
+            'tipo' => 'despesa',
+            'categoria_financeira_id' => $categoria->id,
+            'data_vencimento' => now()->toDateString(),
+            'data_pagamento' => now()->toDateString(),
+            'status' => 'pago',
+            'veiculo_id' => $os->veiculo_id,
+            'reserva_id' => $os->reserva_id,
+            'user_id' => Auth::id(),
+            'observacoes' => 'Gerado automaticamente ao encerrar a Ordem de Serviço. Chave: '.$chave,
+        ]);
     }
 }

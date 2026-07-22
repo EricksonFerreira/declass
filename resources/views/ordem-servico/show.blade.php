@@ -122,6 +122,21 @@
                             <small>{{ optional($ordem_servico->usuarioEncerramento)->name ?? '-' }}</small>
                         </div>
                     @endif
+                    @if((float) ($ordem_servico->valor_total ?? 0) > 0)
+                        <div class="os-detail">
+                            <span>Custo de pecas</span>
+                            <strong>R$ {{ number_format((float) $ordem_servico->valor_pecas, 2, ',', '.') }}</strong>
+                        </div>
+                        <div class="os-detail">
+                            <span>Mão de obra</span>
+                            <strong>R$ {{ number_format((float) $ordem_servico->valor_mao_obra, 2, ',', '.') }}</strong>
+                        </div>
+                        <div class="os-detail os-detail--total">
+                            <span>Total da OS</span>
+                            <strong>R$ {{ number_format((float) $ordem_servico->valor_total, 2, ',', '.') }}</strong>
+                            <small>Despesa lançada no fluxo de caixa</small>
+                        </div>
+                    @endif
                 </div>
 
                 @if($ordem_servico->observacoes)
@@ -274,6 +289,36 @@
                                 @endforeach
                             </div>
                         @endif
+
+                        <div class="os-cost-grid">
+                            <div class="form-group">
+                                <label for="valor_pecas">Custo de pecas</label>
+                                <input type="text"
+                                    name="valor_pecas"
+                                    id="valor_pecas"
+                                    class="form-control form-control-sm @error('valor_pecas') is-invalid @enderror"
+                                    value="{{ old('valor_pecas') }}"
+                                    inputmode="decimal"
+                                    placeholder="0,00">
+                                @error('valor_pecas')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+
+                            <div class="form-group">
+                                <label for="valor_mao_obra">Custo de mao de obra</label>
+                                <input type="text"
+                                    name="valor_mao_obra"
+                                    id="valor_mao_obra"
+                                    class="form-control form-control-sm @error('valor_mao_obra') is-invalid @enderror"
+                                    value="{{ old('valor_mao_obra') }}"
+                                    inputmode="decimal"
+                                    placeholder="0,00">
+                                @error('valor_mao_obra')
+                                    <div class="invalid-feedback">{{ $message }}</div>
+                                @enderror
+                            </div>
+                        </div>
 
                         <div class="form-group">
                             <label for="anexos">Anexos (opcional)</label>
@@ -523,6 +568,15 @@
         color: #64748b;
     }
 
+    .os-detail--total {
+        border-color: #bbf7d0;
+        background: #f0fdf4;
+    }
+
+    .os-detail--total strong {
+        color: #047857;
+    }
+
     .os-note-box {
         margin: 0 20px 20px;
         padding: 16px;
@@ -598,6 +652,18 @@
         padding-top: 4px;
     }
 
+    .os-cost-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+        margin: 0 20px 14px;
+    }
+
+    .rs-sidebar .os-cost-grid .form-group {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
     .rs-sidebar .rs-card {
         padding: 0 0 18px;
     }
@@ -619,6 +685,10 @@
 
         .rs-hero__actions {
             justify-content: flex-start;
+        }
+
+        .os-cost-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>

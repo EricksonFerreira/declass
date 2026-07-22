@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\DisponibilidadeInicialVeiculo;
 use App\Models\Movimentacao;
+use App\Models\ReservaCodigo;
 use App\Models\Veiculo;
 use App\Models\VeiculoDanos;
 use Illuminate\Database\Eloquent\Model;
@@ -32,10 +33,37 @@ class VeiculoDanoService extends AbstractBaseService
         return $this->model;
     }
 
+    public function create(array $data)
+    {
+        if (empty($data['reserva_codigo_id']) && !empty($data['reserva_id'])) {
+            $reservaCodigoId = $this->resolverReservaCodigoId($data['reserva_id']);
+
+            if ($reservaCodigoId) {
+                $data['reserva_codigo_id'] = $reservaCodigoId;
+            }
+        }
+
+        return parent::create($data);
+    }
+
     public function obterDanosPorVeiculoEReserva($veiculo_id, $reserva_id)
     {
+        $reservaCodigoId = $this->resolverReservaCodigoId($reserva_id);
+
+        if (!$reservaCodigoId && !is_numeric($reserva_id)) {
+            return [];
+        }
+
         return $this->model->where('veiculo_id', $veiculo_id)
-            ->where('reserva_id', $reserva_id)
+            ->where(function ($query) use ($reserva_id, $reservaCodigoId) {
+                if ($reservaCodigoId) {
+                    $query->where('reserva_codigo_id', $reservaCodigoId);
+                }
+
+                if (is_numeric($reserva_id)) {
+                    $query->orWhere('reserva_id', (int) $reserva_id);
+                }
+            })
             ->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
             ->orderBy('id')
             ->get()
@@ -46,10 +74,23 @@ class VeiculoDanoService extends AbstractBaseService
 
     public function obterDanosPorVeiculoExcetoReserva($veiculo_id, $reserva_id)
     {
+        $reservaCodigoId = $this->resolverReservaCodigoId($reserva_id);
+
         return $this->model->where('veiculo_id', $veiculo_id)
-            ->where(function ($query) use ($reserva_id) {
-                $query->where('reserva_id', '!=', $reserva_id)
-                    ->orWhereNull('reserva_id');
+            ->where(function ($query) use ($reserva_id, $reservaCodigoId) {
+                if ($reservaCodigoId) {
+                    $query->where(function ($sub) use ($reservaCodigoId) {
+                        $sub->where('reserva_codigo_id', '!=', $reservaCodigoId)
+                            ->orWhereNull('reserva_codigo_id');
+                    });
+                }
+
+                if (is_numeric($reserva_id)) {
+                    $query->where(function ($sub) use ($reserva_id) {
+                        $sub->where('reserva_id', '!=', (int) $reserva_id)
+                            ->orWhereNull('reserva_id');
+                    });
+                }
             })
             ->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
             ->orderBy('id')
@@ -104,5 +145,24 @@ class VeiculoDanoService extends AbstractBaseService
             'correcao_usuario' => $d->usuarioCorrecao?->nome,
             'correcao_realizada' => $d->correcao_data !== null,
         ];
+    }
+
+    private function resolverReservaCodigoId(mixed $referencia): ?int
+    {
+        if ($referencia === null || $referencia === '') {
+            return null;
+        }
+
+        $query = ReservaCodigo::query();
+
+        if (is_numeric($referencia)) {
+            $query->where('reserva_id', (int) $referencia);
+        } else {
+            $query->where('codigo', (string) $referencia);
+        }
+
+        $id = $query->value('id');
+
+        return $id ? (int) $id : null;
     }
 }

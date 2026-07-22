@@ -354,6 +354,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'reservas.codigoReserva',
             'veiculoDanos.dano.categoria',
             'veiculoDanos.reservaCodigo',
+            'veiculoDanos.reserva.codigoReserva',
+            'veiculoDanos.contratoCheckin.reserva.codigoReserva',
             'ordensServico',
             'multas' => function ($query) {
                 $query->with(['reserva.codigoReserva', 'responsavelLancamento:id,nome'])

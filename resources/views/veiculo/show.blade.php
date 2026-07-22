@@ -949,7 +949,7 @@
                                     data-av-status="{{ $dano->correcao_data ? 'corrigido' : 'pendente' }}"
                                     data-av-tipo="{{ strtolower($dano->tipo_dano ?? '') }}"
                                     data-av-local="{{ strtolower($dano->local_dano ?? '') }}"
-                                    data-av-reserva="{{ $dano->reserva_id ?? '' }}"
+                                    data-av-reserva="{{ $dano->reservaCodigo?->codigo ?? $dano->reserva?->codigoReserva?->codigo ?? $dano->contratoCheckin?->reserva?->codigoReserva?->codigo ?? $dano->reserva_id ?? '' }}"
                                 >
                                     <td><span class="xp-id">#{{ $dano->id }}</span></td>
                                     <td>{{ strtoupper($dano->local_dano ?? '—') }}</td>
@@ -965,8 +965,13 @@
                                     </td>
                                     <td>{{ $dano->correcao_data ? \Carbon\Carbon::parse($dano->correcao_data)->format('d/m/Y') : '—' }}</td>
                                     <td>
-                                        @if($dano->reservaCodigo?->codigo)
-                                            <a href="{{ route('reserva.show', $dano->reservaCodigo->codigo) }}" class="xp-link">#{{ $dano->reservaCodigo->codigo }}</a>
+                                        @php
+                                            $codigoReservaDano = $dano->reservaCodigo?->codigo
+                                                ?? $dano->reserva?->codigoReserva?->codigo
+                                                ?? $dano->contratoCheckin?->reserva?->codigoReserva?->codigo;
+                                        @endphp
+                                        @if($codigoReservaDano)
+                                            <a href="{{ route('reserva.show', $codigoReservaDano) }}" class="xp-link">#{{ $codigoReservaDano }}</a>
                                         @else <span class="text-muted">—</span>
                                         @endif
                                     </td>

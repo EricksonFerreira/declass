@@ -21,6 +21,13 @@ class FinanceiroController extends Controller
 
     public function __construct(private readonly BreadcrumbService $breadcrumbService) {}
 
+    public function portal()
+    {
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Financeiro - Portal');
+        $titulo = 'Painel Financeiro';
+        return view('financeiro.portal', compact('breadcrumb', 'titulo'));
+    }
+
     public function index(Request $request)
     {
         $filters = $this->extractFilters($request);
@@ -180,8 +187,12 @@ class FinanceiroController extends Controller
             $transferenciasCanceladasCount = (int) $movimentacoesCanceladas->count();
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Financeiro - Transferencias');
-        $titulo = 'Transferências e Transações';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new \App\DTO\BreadCrumbItem('Transações e Recebimentos', null),
+        ]);
+        $titulo = 'Transações e Recebimentos';
         $statusAprovados = self::STATUS_APROVADOS;
         $statusPendentes = self::STATUS_PENDENTES;
         $statusCancelados = self::STATUS_CANCELADOS;
@@ -270,7 +281,11 @@ class FinanceiroController extends Controller
         $qtdReservasFaturadas = (int) (clone $baseFaturamento)->distinct()->count('transacoes.reserva_id');
         $ticketMedioPorReserva = $qtdReservasFaturadas > 0 ? $totalFaturado / $qtdReservasFaturadas : 0.0;
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Financeiro - Faturamento por Reserva');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new \App\DTO\BreadCrumbItem('Faturamento por Reserva', null),
+        ]);
         $titulo = 'Faturamento por Reserva';
 
         return view('financeiro.reservas', compact(

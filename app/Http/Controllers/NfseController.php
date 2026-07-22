@@ -2,23 +2,22 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Nfse;
+use App\DTO\BreadCrumbItem;
 use App\Models\Empresa;
-use App\Support\EmpresaContext;
+use App\Models\Nfse;
 use App\Services\BreadcrumbService;
 use App\Services\NfseService;
+use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 
 class NfseController extends Controller
 {
     public function __construct(
         private readonly NfseService $nfseService,
         private readonly BreadcrumbService $breadcrumbService,
-    ) {
-    }
+    ) {}
 
     public function index(Request $request)
     {
@@ -36,31 +35,31 @@ class NfseController extends Controller
         $empresaId = $this->empresaIdParaConsulta();
         if ($empresaId !== null && SchemaCache::hasColumn('nfse', 'empresa_id')) {
             $query->where('empresa_id', $empresaId);
-        } elseif (!empty($filters['empresa_id']) && Auth::user()?->isAdministrador() && SchemaCache::hasColumn('nfse', 'empresa_id')) {
+        } elseif (! empty($filters['empresa_id']) && Auth::user()?->isAdministrador() && SchemaCache::hasColumn('nfse', 'empresa_id')) {
             $query->where('empresa_id', (int) $filters['empresa_id']);
         }
 
-        if (!empty($filters['reserva_id'])) {
+        if (! empty($filters['reserva_id'])) {
             $query->where('reserva_id', (int) $filters['reserva_id']);
         }
 
-        if (!empty($filters['status'])) {
+        if (! empty($filters['status'])) {
             $query->where('status', $filters['status']);
         }
 
-        if (!empty($filters['numero'])) {
-            $query->where('numero', 'like', '%' . $filters['numero'] . '%');
+        if (! empty($filters['numero'])) {
+            $query->where('numero', 'like', '%'.$filters['numero'].'%');
         }
 
-        if (!empty($filters['ambiente'])) {
+        if (! empty($filters['ambiente'])) {
             $query->where('ambiente', $filters['ambiente']);
         }
 
-        if (!empty($filters['data_inicio'])) {
+        if (! empty($filters['data_inicio'])) {
             $query->whereDate('created_at', '>=', $filters['data_inicio']);
         }
 
-        if (!empty($filters['data_fim'])) {
+        if (! empty($filters['data_fim'])) {
             $query->whereDate('created_at', '<=', $filters['data_fim']);
         }
 
@@ -75,7 +74,11 @@ class NfseController extends Controller
             $empresasDisponiveis = Empresa::query()->orderBy('nome')->get(['id', 'nome']);
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Notas Fiscais');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new BreadCrumbItem('Notas Fiscais'),
+        ]);
 
         return view('nfse.index', [
             'nfseList' => $nfseList,
@@ -94,7 +97,7 @@ class NfseController extends Controller
     public function download(Request $request, int $id)
     {
         $tipo = $request->query('tipo', 'xml');
-        if (!in_array($tipo, ['xml', 'dps'], true)) {
+        if (! in_array($tipo, ['xml', 'dps'], true)) {
             $tipo = 'xml';
         }
 
@@ -115,17 +118,18 @@ class NfseController extends Controller
         $content = (string) ($result['content'] ?? '');
         $contentType = (string) ($result['content_type'] ?? 'application/xml');
 
-        $filename = 'nfse-' . $nfse->id . '-' . $tipo . '.xml';
+        $filename = 'nfse-'.$nfse->id.'-'.$tipo.'.xml';
+
         return response($content, 200, [
             'Content-Type' => $contentType,
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'attachment; filename="'.$filename.'"',
         ]);
     }
 
     public function importarPendentes(Request $request)
     {
         $empresa = $this->resolveEmpresaImportacao();
-        if (!$empresa) {
+        if (! $empresa) {
             return redirect()
                 ->back()
                 ->withErrors(['nfse' => 'Selecione uma empresa para importar notas fiscais.']);
@@ -141,7 +145,7 @@ class NfseController extends Controller
         if ($ultima && $ultima->copy()->addHour()->isFuture()) {
             return redirect()
                 ->back()
-                ->withErrors(['nfse' => 'Aguarde ate ' . $ultima->copy()->addHour()->format('d/m/Y H:i') . ' para importar novamente.']);
+                ->withErrors(['nfse' => 'Aguarde ate '.$ultima->copy()->addHour()->format('d/m/Y H:i').' para importar novamente.']);
         }
 
         $resultado = $this->nfseService->sincronizarPendentes((int) $empresa->id);
@@ -161,7 +165,7 @@ class NfseController extends Controller
     private function resolveEmpresaImportacao(): ?Empresa
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
@@ -173,7 +177,7 @@ class NfseController extends Controller
             $empresaId = $user->empresa_id;
         }
 
-        if (!$empresaId) {
+        if (! $empresaId) {
             return null;
         }
 
@@ -186,12 +190,12 @@ class NfseController extends Controller
     private function statusImportacao(): array
     {
         $empresa = $this->resolveEmpresaImportacao();
-        if (!$empresa) {
+        if (! $empresa) {
             return [false, null, null];
         }
 
         $ultima = $empresa->nfse_ultima_importacao_em;
-        if (!$ultima) {
+        if (! $ultima) {
             return [true, null, null];
         }
 
@@ -204,13 +208,14 @@ class NfseController extends Controller
     private function empresaIdParaConsulta(): ?int
     {
         $user = Auth::user();
-        if (!$user) {
+        if (! $user) {
             return null;
         }
 
         if ($user->isAdministrador()) {
             /** @var EmpresaContext $empresaContext */
             $empresaContext = app(EmpresaContext::class);
+
             return $empresaContext->empresaId() ?? $user->empresa_id;
         }
 

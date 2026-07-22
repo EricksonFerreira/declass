@@ -876,9 +876,9 @@ return [
             'icon'    => 'fas fa-wallet',
             'submenu' => [
                 [
-                    'text'  => 'sidebar.financeiro_transferencias',
+                    'text'  => 'sidebar.financeiro_portal',
                     'route' => 'financeiro.index',
-                    'icon'  => 'fas fa-exchange-alt',
+                    'icon'  => 'fas fa-home',
                 ],
                 [
                     'text'  => 'sidebar.financeiro_reservas',
@@ -887,8 +887,34 @@ return [
                 ],
                 [
                     'text'  => 'sidebar.notas_fiscais',
-                    'route' => 'nfse.index',
+                    'route' => 'financeiro.nfse.index',
                     'icon'  => 'fas fa-file-invoice',
+                ],
+                [
+                    'text'  => 'sidebar.fluxo_caixa',
+                    'icon'  => 'fas fa-chart-line',
+                    'submenu' => [
+                        [
+                            'text'  => 'sidebar.fluxo_caixa_dashboard',
+                            'route' => 'financeiro.fluxo-caixa.dashboard',
+                            'icon'  => 'fas fa-chart-pie',
+                        ],
+                        [
+                            'text'  => 'sidebar.fluxo_caixa_lancamentos',
+                            'route' => 'financeiro.fluxo-caixa.index',
+                            'icon'  => 'fas fa-list',
+                        ],
+                        [
+                            'text'  => 'sidebar.financeiro_analise_veiculos',
+                            'route' => 'financeiro.analise-veiculos',
+                            'icon'  => 'fas fa-car-side',
+                        ],
+                        [
+                            'text'  => 'sidebar.fluxo_caixa_categorias',
+                            'route' => 'financeiro.fluxo-caixa.categorias.index',
+                            'icon'  => 'fas fa-tags',
+                        ],
+                    ],
                 ],
                 [
                     'text' => 'Cupons de Desconto',
@@ -896,12 +922,12 @@ return [
                     'submenu' => [
                         [
                             'text' => 'Listagem',
-                            'route' => 'cupom_desconto.index',
+                            'route' => 'financeiro.cupom_desconto.index',
                             'icon' => 'fas fa-list',
                         ],
                         [
                             'text' => 'Novo',
-                            'route' => 'cupom_desconto.create',
+                            'route' => 'financeiro.cupom_desconto.create',
                             'icon' => 'fas fa-plus-circle',
                         ],
                     ],
@@ -1291,4 +1317,3 @@ return [
 
     'livewire' => false,
 ];
-

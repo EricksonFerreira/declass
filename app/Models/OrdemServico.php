@@ -25,11 +25,17 @@ class OrdemServico extends Model
         'status',
         'observacoes',
         'relatorio_conclusao',
+        'valor_pecas',
+        'valor_mao_obra',
+        'valor_total',
         'data_conclusao',
     ];
 
     protected $casts = [
         'data_conclusao' => 'datetime',
+        'valor_pecas' => 'decimal:2',
+        'valor_mao_obra' => 'decimal:2',
+        'valor_total' => 'decimal:2',
     ];
 
     public function veiculo(): BelongsTo
