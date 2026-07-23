@@ -257,13 +257,13 @@ return [
     */
 
     'use_route_url' => false,
-    'dashboard_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/home',
-    'logout_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/logout',
-    'login_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/login',
-    'register_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/register',
-    'password_reset_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/forgot-password',
-    'password_email_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/forgot-password',
-    'profile_url' => trim((string) config('app.admin_prefix', 'admin'), '/') . '/profile',
+    'dashboard_url' => trim((string) config('app.admin_prefix', 'admin'), '/').'/home',
+    'logout_url' => trim((string) config('app.admin_prefix', 'admin'), '/').'/logout',
+    'login_url' => trim((string) config('app.admin_prefix', 'admin'), '/').'/login',
+    'register_url' => trim((string) config('app.admin_prefix', 'admin'), '/').'/register',
+    'password_reset_url' => trim((string) config('app.admin_prefix', 'admin'), '/').'/forgot-password',
+    'password_email_url' => trim((string) config('app.admin_prefix', 'admin'), '/').'/forgot-password',
+    'profile_url' => trim((string) config('app.admin_prefix', 'admin'), '/').'/profile',
 
     /*
     |--------------------------------------------------------------------------
@@ -311,12 +311,12 @@ return [
             ],
         ],
         [
-            'type'         => 'navbar-search',
-            'text'         => 'search',
+            'type' => 'navbar-search',
+            'text' => 'search',
             'topnav_right' => false,
         ],
         [
-            'type'         => 'fullscreen-widget',
+            'type' => 'fullscreen-widget',
             'topnav_right' => false,
         ],
         [
@@ -327,833 +327,297 @@ return [
         // Dashboard
         [
             'text' => 'sidebar.home',
-            'url'  => 'home',
+            'url' => 'home',
             'icon' => 'fas fa-tachometer-alt',
-            'can'  => 'tem-perfil',
+            'can' => 'tem-perfil',
         ],
-        // [
-        //     'text' => 'sidebar.minhas_reservas',
-        //     'route' => 'reserva.minhas',
-        //     'icon' => 'fas fa-bookmark',
-        //     'can' => 'reserva.minhas',
-        // ],
+
+        // 1. Indicadores
         [
-            'text'  => 'Indicadores',
+            'text' => 'Indicadores',
             'route' => 'indicadores.index',
-            'icon'  => 'fas fa-chart-bar',
+            'icon' => 'fas fa-chart-bar',
         ],
 
         [
-            'header'  => 'Atalhos rápidos',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-        ],
-        [
-            'text'  => 'Nova Reserva',
-            'route' => 'reserva.create',
-            'icon'  => 'fas fa-plus-circle',
-            'can'   => 'reserva.create',
-        ],
-        [
-            'text'  => 'Novo Veículo',
-            'route' => 'veiculo.create',
-            'icon'  => 'fas fa-car-side',
-            'can'   => 'veiculo.create',
-        ],
-        [
-            'text'  => 'Nova Estação',
-            'route' => 'estacao.create',
-            'icon'  => 'fas fa-map-marker-alt',
-            'can'   => 'estacao.create',
-        ],
-        [
-            'text'  => 'Nova Empresa',
-            'route' => 'empresa.create',
-            'icon'  => 'fas fa-building',
-            'can'   => 'acessar-superadmin',
-        ],
-        [
-            'text'  => 'Novo Usuário',
-            'route' => 'usuario.create',
-            'icon'  => 'fas fa-user-plus',
-        ],
-        [
-            'text'  => 'Replicação de Base',
-            'route' => 'replicacao_base.index',
-            'icon'  => 'fas fa-copy',
-            'can'   => 'acessar-superadmin',
-        ],
-        [
-            'text'  => 'Sincronizar catálogo FIPE',
-            'route' => 'fipe.catalogo.run',
-            'icon'  => 'fas fa-car',
-            'can'   => 'acessar-superadmin',
-        ],
-
-        // EMPRESA
-        [
-            'header'  => 'Minha Empresa',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-            'can'     => 'gerenciar-empresa',
-        ],
-        [
-            'text'  => 'Dados da Empresa',
-            'route' => 'empresa.minha',
-            'icon'  => 'fas fa-building',
-            'can'   => 'gerenciar-empresa',
-        ],
-        [
-            'text'    => 'Assinatura',
-            'route'   => 'assinatura.meu-plano',
-            'icon'    => 'fas fa-layer-group',
-            'can'     => 'gerenciar-empresa',
-        ],
-        [
-            'text'  => 'Alertas e Pendências',
-            'route' => 'alerta.index',
-            'icon'  => 'fas fa-exclamation-triangle',
-        ],
-
-        // OPERAÇÃO
-        [
-            'header'  => 'sidebar.operacao',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-        ],
-        [
-            'text'    => 'sidebar.reservas_atendimento',
-            'icon'    => 'fas fa-calendar-check',
-            'submenu' => [
-                [
-                    'text' => 'sidebar.reserva',
-                    'url'  => 'reserva',
-                    'icon' => 'fas fa-list',
-                    'can'  => 'reserva.index',
-                ],
-                [
-                    'text' => 'sidebar.nova_reserva',
-                    'route' => 'reserva.create',
-                    'icon' => 'fas fa-plus-circle',
-                    'can'  => 'reserva.create',
-                ],
-                [
-                    'text' => 'sidebar.minhas_reservas',
-                    'url'  => 'reserva/minhas',
-                    'icon' => 'fas fa-bookmark',
-                    'can'  => 'reserva.minhas',
-                ],
-            ],
-        ],
-        [
-            'text' => 'sidebar.notificacoes',
+            'text' => 'Notificações',
             'route' => 'notificacoes.index',
             'icon' => 'far fa-bell',
         ],
+
+        // 2. Operações
         [
-            'text'    => 'Multas',
-            'icon'    => 'fas fa-exclamation-triangle',
-            'can'     => 'multa.index',
+            'text' => 'Operações',
+            'icon' => 'fas fa-briefcase',
             'submenu' => [
                 [
-                    'text' => 'Listagem',
-                    'route' => 'multa.index',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Novo',
-                    'route' => 'multa.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text'    => 'Sinistros',
-            'icon'    => 'fas fa-car-crash',
-            'can'     => 'sinistro.index',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
-                    'route' => 'sinistro.index',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Novo',
-                    'route' => 'sinistro.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text' => 'Monitoramento de Danos',
-            'url'  => 'veiculo-dano/monitoramento',
-            'icon' => 'fas fa-clipboard-list',
-        ],
-        [
-            'text' => 'Ordens de Serviço',
-            'icon' => 'fas fa-file-alt',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
-                    'route' => 'ordem-servico.index',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Nova',
-                    'route' => 'ordem-servico.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text'    => 'Config. Movimentações',
-            'icon'    => 'fas fa-route',
-            'submenu' => [
-                [
-                    'text' => 'Movimentações',
-                    'icon' => 'fas fa-list',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'movimentacao.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Nova',
-                            'route' => 'movimentacao.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Tipos de Movimentações',
-                    'icon' => 'fas fa-random',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'tipo_movimentacao.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'tipo_movimentacao.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Status de Movimentações',
-                    'icon' => 'fas fa-circle-notch',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'status_movimentacao.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'status_movimentacao.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'sidebar.tempo_estacoes',
-                    'url'  => 'tempo_entre_entacao',
-                    'icon' => 'fas fa-stopwatch',
-                ],
-            ],
-        ],
-        [
-            'header'  => 'sidebar.frota',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-        ],
-        [
-            'text'    => 'sidebar.veiculo',
-            'icon'    => 'fas fa-car',
-            'submenu' => [
-                [
-                    'text' => 'Listagem de Veículos',
+                    'text' => 'Veículos',
                     'route' => 'veiculo.index',
                     'icon' => 'fas fa-car-side',
                 ],
                 [
-                    'text' => 'Novo Veículo',
-                    'route' => 'veiculo.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-                [
                     'text' => 'Disponibilidade',
                     'route' => 'veiculo.disponibilidade',
-                    'icon' => 'fas fa-calendar-alt',
+                    'icon' => 'fas fa-calendar-check',
+                ],
+                [
+                    'text' => 'Ordens de Serviço',
+                    'route' => 'ordem-servico.index',
+                    'icon' => 'fas fa-file-alt',
+                ],
+                [
+                    'text' => 'Monitoramento de Danos/Avarias',
+                    'route' => 'veiculo-dano.monitoramento',
+                    'icon' => 'fas fa-clipboard-list',
+                ],
+                [
+                    'text' => 'Clientes / Usuários',
+                    'route' => 'usuario.index',
+                    'icon' => 'fas fa-users',
+                ],
+                [
+                    'text' => 'Reservas',
+                    'route' => 'reserva.index',
+                    'icon' => 'fas fa-calendar-check',
+                ],
+                [
+                    'text' => 'Minhas Reservas',
+                    'route' => 'reserva.minhas',
+                    'icon' => 'fas fa-bookmark',
+                    'can' => 'reserva.minhas',
+                ],
+                [
+                    'text' => 'Multas',
+                    'route' => 'multa.index',
+                    'icon' => 'fas fa-exclamation-triangle',
+                    'can' => 'multa.index',
+                ],
+                [
+                    'text' => 'Sinistros',
+                    'route' => 'sinistro.index',
+                    'icon' => 'fas fa-car-crash',
+                    'can' => 'sinistro.index',
                 ],
             ],
         ],
+
+        // 3. Parâmetros de Frota
         [
-            'text'    => 'sidebar.parametrizacao_frota',
-            'icon'    => 'fas fa-cogs',
-            'submenu' => [
-                [
-                    'text' => 'Grupos de Frota',
-                    'icon' => 'fas fa-layer-group',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'grupo_frota.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'grupo_frota.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Tipos de Frota',
-                    'icon' => 'fas fa-layer-group',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'tipo_frota.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'tipo_frota.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Características de Frota',
-                    'icon' => 'fas fa-th-large',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'caracteristica_frota.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Nova',
-                            'route' => 'caracteristica_frota.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Valores da Característica',
-                    'icon' => 'fas fa-tags',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'tipo_valor_caracteristica_frota.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'tipo_valor_caracteristica_frota.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Marcas',
-                    'icon' => 'fas fa-tag',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'marca.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Nova',
-                            'route' => 'marca.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Modelos',
-                    'icon' => 'fas fa-car-side',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'modelo.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'modelo.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Segmentos',
-                    'icon' => 'fas fa-stream',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'segmento.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'segmento.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Status de Veículo',
-                    'route' => 'status_veiculo.index',
-                    'icon' => 'fas fa-traffic-light',
-                ],
-            ],
-        ],
-        [
-            'text'    => 'sidebar.opcionais',
-            'icon'    => 'fas fa-puzzle-piece',
+            'text' => 'Parâmetros de Frota',
+            'icon' => 'fas fa-car',
             'submenu' => [
                 [
                     'text' => 'Opcionais',
-                    'icon' => 'fas fa-toolbox',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'opcional.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'opcional.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
+                    'route' => 'opcional.index',
+                    'icon' => 'fas fa-puzzle-piece',
                 ],
                 [
-                    'text' => 'Tipos de Opcionais',
+                    'text' => 'Grupos de Frota',
+                    'route' => 'grupo_frota.index',
                     'icon' => 'fas fa-layer-group',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'tipo_opcional.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'tipo_opcional.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
                 ],
                 [
-                    'text' => 'Vínculos de Opcionais por Grupo',
-                    'icon' => 'fas fa-link',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'opcional_grupo_veiculo.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'opcional_grupo_veiculo.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
+                    'text' => 'Tipos de Frota',
+                    'route' => 'tipo_frota.index',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Características',
+                    'route' => 'caracteristica_frota.index',
+                    'icon' => 'fas fa-tags',
                 ],
             ],
         ],
+
+        // 4. Financeiro
         [
-            'text'    => 'sidebar.dano',
-            'icon'    => 'fas fa-tools',
+            'text' => 'Financeiro',
+            'icon' => 'fas fa-wallet',
             'submenu' => [
                 [
-                    'text' => 'Danos',
-                    'icon' => 'fas fa-exclamation-triangle',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'dano.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'dano.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
+                    'text' => 'Portal Financeiro',
+                    'route' => 'financeiro.index',
+                    'icon' => 'fas fa-home',
                 ],
                 [
-                    'text' => 'Categorias de Dano',
-                    'icon' => 'fas fa-tags',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'categoria_dano.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Nova',
-                            'route' => 'categoria_dano.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],            ],
+                    'text' => 'Faturamento Reservas',
+                    'route' => 'financeiro.reservas',
+                    'icon' => 'fas fa-receipt',
+                ],
+                [
+                    'text' => 'Fluxo de Caixa',
+                    'route' => 'financeiro.fluxo-caixa.dashboard',
+                    'icon' => 'fas fa-chart-pie',
+                ],
+                [
+                    'text' => 'Lançamentos',
+                    'route' => 'financeiro.fluxo-caixa.index',
+                    'icon' => 'fas fa-file-invoice-dollar',
+                ],
+                [
+                    'text' => 'Análise por Veículo',
+                    'route' => 'financeiro.analise-veiculos',
+                    'icon' => 'fas fa-car-side',
+                ],
+                [
+                    'text' => 'Notas Fiscais (NFSe)',
+                    'route' => 'financeiro.nfse.index',
+                    'icon' => 'fas fa-file-invoice',
+                ],
+                [
+                    'text' => 'Cupons de Desconto',
+                    'route' => 'financeiro.cupom_desconto.index',
+                    'icon' => 'fas fa-percentage',
+                ],
+            ],
         ],
+
         [
-            'text'    => 'sidebar.checklist',
-            'icon'    => 'fas fa-clipboard-check',
+            'text' => 'Configurações & Cadastros',
+            'icon' => 'fas fa-cogs',
             'submenu' => [
                 [
-                    'text' => 'Configuração de Checklist',
-                    'icon' => 'fas fa-sliders-h',
+                    'text' => 'Dados da Empresa',
+                    'route' => 'empresa.minha',
+                    'icon' => 'fas fa-building',
+                    'can' => 'gerenciar-empresa',
+                ],
+                [
+                    'text' => 'Assinatura',
+                    'route' => 'assinatura.meu-plano',
+                    'icon' => 'fas fa-layer-group',
+                    'can' => 'gerenciar-empresa',
+                ],
+                [
+                    'text' => 'Alertas e Pendências',
+                    'route' => 'alerta.index',
+                    'icon' => 'fas fa-exclamation-triangle',
+                ],
+                [
+                    'text' => 'Configuração de OS',
+                    'icon' => 'fas fa-wrench',
                     'submenu' => [
                         [
-                            'text' => 'Listagem',
+                            'text' => 'Categorias de OS',
+                            'route' => 'os-categorias.index',
+                            'icon' => 'fas fa-list',
+                        ],
+                        [
+                            'text' => 'Subcategorias de OS',
+                            'route' => 'os-subcategorias.index',
+                            'icon' => 'fas fa-list',
+                        ],
+                        [
+                            'text' => 'Planos de Manut. Preventiva',
+                            'route' => 'manutencao.planos.index',
+                            'icon' => 'fas fa-shield-alt',
+                        ],
+                    ],
+                ],
+                [
+                    'text' => 'Config. Checklist & Avarias',
+                    'icon' => 'fas fa-clipboard-check',
+                    'submenu' => [
+                        [
+                            'text' => 'Tipos de Avaria (Danos)',
+                            'route' => 'dano.index',
+                            'icon' => 'fas fa-exclamation-triangle',
+                        ],
+                        [
+                            'text' => 'Categorias de Avaria',
+                            'route' => 'categoria_dano.index',
+                            'icon' => 'fas fa-tags',
+                        ],
+                        [
+                            'text' => 'Configuração de Checklist',
                             'route' => 'configuracao-checklist.index',
-                            'icon' => 'fas fa-list',
+                            'icon' => 'fas fa-sliders-h',
                         ],
                         [
-                            'text' => 'Nova',
-                            'route' => 'configuracao-checklist.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Itens de Checklist',
-                    'icon' => 'fas fa-tasks',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
+                            'text' => 'Itens de Checklist',
                             'route' => 'item_checklist.index',
-                            'icon' => 'fas fa-list',
+                            'icon' => 'fas fa-tasks',
                         ],
                         [
-                            'text' => 'Novo',
-                            'route' => 'item_checklist.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Tipos de Checklist',
-                    'icon' => 'fas fa-list',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
+                            'text' => 'Tipos de Checklist',
                             'route' => 'tipo_checklist.index',
                             'icon' => 'fas fa-list',
                         ],
                         [
-                            'text' => 'Novo',
-                            'route' => 'tipo_checklist.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Status de Itens',
-                    'icon' => 'fas fa-check-square',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
+                            'text' => 'Status de Itens',
                             'route' => 'status_item_checklist.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'status_item_checklist.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-            ],
-        ],
-
-        // FINANCEIRO
-        [
-            'header'  => 'sidebar.financeiro',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-        ],
-        [
-            'text'    => 'sidebar.financeiro',
-            'icon'    => 'fas fa-wallet',
-            'submenu' => [
-                [
-                    'text'  => 'sidebar.financeiro_portal',
-                    'route' => 'financeiro.index',
-                    'icon'  => 'fas fa-home',
-                ],
-                [
-                    'text'  => 'sidebar.financeiro_reservas',
-                    'route' => 'financeiro.reservas',
-                    'icon'  => 'fas fa-receipt',
-                ],
-                [
-                    'text'  => 'sidebar.notas_fiscais',
-                    'route' => 'financeiro.nfse.index',
-                    'icon'  => 'fas fa-file-invoice',
-                ],
-                [
-                    'text'  => 'sidebar.fluxo_caixa',
-                    'icon'  => 'fas fa-chart-line',
-                    'submenu' => [
-                        [
-                            'text'  => 'sidebar.fluxo_caixa_dashboard',
-                            'route' => 'financeiro.fluxo-caixa.dashboard',
-                            'icon'  => 'fas fa-chart-pie',
-                        ],
-                        [
-                            'text'  => 'sidebar.fluxo_caixa_lancamentos',
-                            'route' => 'financeiro.fluxo-caixa.index',
-                            'icon'  => 'fas fa-list',
-                        ],
-                        [
-                            'text'  => 'sidebar.financeiro_analise_veiculos',
-                            'route' => 'financeiro.analise-veiculos',
-                            'icon'  => 'fas fa-car-side',
-                        ],
-                        [
-                            'text'  => 'sidebar.fluxo_caixa_categorias',
-                            'route' => 'financeiro.fluxo-caixa.categorias.index',
-                            'icon'  => 'fas fa-tags',
+                            'icon' => 'fas fa-check-square',
                         ],
                     ],
                 ],
                 [
-                    'text' => 'Cupons de Desconto',
-                    'icon' => 'fas fa-percentage',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'financeiro.cupom_desconto.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'financeiro.cupom_desconto.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-            ],
-        ],
-
-        // CADASTROS E CONFIGURAÇÕES
-        [
-            'header'  => 'sidebar.configuracoes',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-        ],
-
-        // PLANOS (SUPERADMIN)
-        [
-            'header'  => 'Planos',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-            'can'     => 'acessar-superadmin',
-        ],
-        [
-            'text'    => 'Planos',
-            'icon'    => 'fas fa-layer-group',
-            'can'     => 'acessar-superadmin',
-            'submenu' => [
-                [
-                    'text'  => 'Planos',
-                    'route' => 'planos.hub',
-                    'icon'  => 'fas fa-layer-group',
-                ],
-                [
-                    'text'  => 'Política de Acesso',
-                    'route' => 'plano.index',
-                    'icon'  => 'fas fa-user-shield',
-                ],
-                [
-                    'text'  => 'Regras',
-                    'route' => 'regra.index',
-                    'icon'  => 'fas fa-key',
-                ],
-                [
-                    'text'  => 'Planos Motorista App',
-                    'route' => 'plano_motorista_app.index',
-                    'icon'  => 'fas fa-car-side',
-                ],
-                [
-                    'text'  => 'Empresas',
-                    'route' => 'empresa.index',
-                    'icon'  => 'fas fa-building',
-                ],
-                [
-                    'text'  => 'Permissões',
-                    'route' => 'permissao.index',
-                    'icon'  => 'fas fa-lock',
-                ],
-                [
-                    'text'  => 'Perfis de Usuários',
-                    'route' => 'tipo_usuario.index',
-                    'icon'  => 'fas fa-user-tag',
-                ],
-                [
-                    'text'  => 'Replicação de Base',
-                    'route' => 'replicacao_base.index',
-                    'icon'  => 'fas fa-copy',
-                ],
-            ],
-        ],
-        [
-            'text'    => 'sidebar.parametrizacao_reserva',
-            'icon'    => 'fas fa-calendar-cog',
-            'submenu' => [
-                [
-                    'text' => 'Países',
-                    'icon' => 'fas fa-globe-americas',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'pais.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'pais.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Dias Úteis',
-                    'icon' => 'fas fa-calendar-day',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'dia_util.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'dia_util.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Horários Diários',
-                    'icon' => 'fas fa-clock',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'horario_diario.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'horario_diario.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Feriados',
-                    'icon' => 'fas fa-calendar-alt',
-                    'submenu' => [
-                        [
-                            'text' => 'Listagem',
-                            'route' => 'feriado.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Novo',
-                            'route' => 'feriado.create',
-                            'icon' => 'fas fa-plus-circle',
-                        ],
-                    ],
-                ],
-                [
-                    'text' => 'Status de Reserva',
-                    'icon' => 'fas fa-tags',
-                    'route' => 'status_reserva.index',
-                    'can'   => 'acessar-superadmin',
-                ],
-            ],
-        ],
-
-        [
-            'text' => 'Estações',
-            'icon' => 'fas fa-map-marker-alt',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
+                    'text' => 'Estações',
                     'route' => 'estacao.index',
-                    'icon' => 'fas fa-list',
+                    'icon' => 'fas fa-map-marker-alt',
                 ],
                 [
-                    'text' => 'Nova',
-                    'route' => 'estacao.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        // USUÁRIOS E ACESSOS
-        [
-            'header'  => 'sidebar.usuarios_acessos',
-            'classes' => 'text-bold text-secondary text-uppercase mt-1 border-white border-bottom',
-        ],
-        [
-            'text'  => 'sidebar.meu_perfil',
-            'route' => 'profile.edit',
-            'icon'  => 'fas fa-user-circle',
-            'can'   => 'acessar-perfil',
-        ],
-        [
-            'text'    => 'Usuários',
-            'icon'    => 'fas fa-users',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
+                    'text' => 'Usuários',
                     'route' => 'usuario.index',
-                    'icon' => 'fas fa-list',
+                    'icon' => 'fas fa-users',
                 ],
                 [
-                    'text' => 'Novo',
-                    'route' => 'usuario.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text'    => 'Perfis de Usuários',
-            'icon'    => 'fas fa-user-tag',
-            'can'     => 'gerenciar-empresa',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
+                    'text' => 'Perfis de Usuários',
                     'route' => 'tipo_usuario.index',
-                    'icon' => 'fas fa-list',
+                    'icon' => 'fas fa-user-tag',
+                    'can' => 'gerenciar-empresa',
                 ],
                 [
-                    'text' => 'Novo',
-                    'route' => 'tipo_usuario.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-            ],
-        ],
-        [
-            'text'    => 'sidebar.termo_consentimento',
-            'icon'    => 'fas fa-file-signature',
-            'can'     => 'termo_consentimento.index',
-            'submenu' => [
-                [
-                    'text' => 'Listagem',
+                    'text' => 'Termo de Consentimento',
                     'route' => 'termo_consentimento.index',
-                    'icon' => 'fas fa-list',
+                    'icon' => 'fas fa-file-contract',
+                    'can' => 'termo_consentimento.index',
                 ],
                 [
-                    'text' => 'Novo',
-                    'route' => 'termo_consentimento.create',
-                    'icon' => 'fas fa-plus-circle',
+                    'text' => 'Replicação de Base',
+                    'route' => 'replicacao_base.index',
+                    'icon' => 'fas fa-copy',
+                    'can' => 'acessar-superadmin',
+                ],
+                [
+                    'text' => 'Sincronizar catálogo FIPE',
+                    'route' => 'fipe.catalogo.run',
+                    'icon' => 'fas fa-car',
+                    'can' => 'acessar-superadmin',
+                ],
+                [
+                    'text' => 'Parametrizações de Reservas',
+                    'icon' => 'fas fa-sliders-h',
+                    'submenu' => [
+                        [
+                            'text' => 'Países',
+                            'route' => 'pais.index',
+                            'icon' => 'fas fa-globe',
+                        ],
+                        [
+                            'text' => 'Dias Úteis',
+                            'route' => 'dia_util.index',
+                            'icon' => 'fas fa-calendar-day',
+                        ],
+                        [
+                            'text' => 'Horários Diários',
+                            'route' => 'horario_diario.index',
+                            'icon' => 'fas fa-clock',
+                        ],
+                        [
+                            'text' => 'Feriados',
+                            'route' => 'feriado.index',
+                            'icon' => 'fas fa-calendar-alt',
+                        ],
+                        [
+                            'text' => 'Status de Reserva',
+                            'route' => 'status_reserva.index',
+                            'icon' => 'fas fa-info-circle',
+                            'can' => 'acessar-superadmin',
+                        ],
+                    ],
                 ],
             ],
         ],
-
     ],
     /*
     |--------------------------------------------------------------------------
@@ -1252,8 +716,8 @@ return [
             'active' => true,
             'files' => [
                 [
-                    'type'     => 'css',
-                    'asset'    => true,
+                    'type' => 'css',
+                    'asset' => true,
                     'location' => 'css/app-custom.css',
                 ],
             ],

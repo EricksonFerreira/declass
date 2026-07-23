@@ -58,15 +58,6 @@
     @include('pdf.contratos.partials.resumo-reserva', [
         'get' => $get,
     ])
-
-    @include('pdf.contratos.partials.valores', [
-        'get' => $get,
-    ])
-
-    @include('pdf.contratos.partials.pagamentos', [
-        'pagamentos' => $pagamentos,
-    ])
-
     @include('pdf.contratos.partials.caucao', [
         'caucao' => $caucao,
     ])
@@ -74,6 +65,11 @@
     @include('pdf.contratos.partials.danos-avarias', [
         'danos' => $danos,
         'formatarTipoDano' => $formatarTipoDano,
+        'hideValor' => true,
+    ])
+
+    @include('pdf.contratos.partials.valores', [
+        'get' => $get,
     ])
 
     @include('pdf.contratos.partials.faturacao', [

@@ -50,9 +50,13 @@ class OrdemServicoController extends Controller
     public function index(Request $request)
     {
         $status = $request->query('status');
+        $veiculoId = $request->query('veiculo_id');
+        $sinistroId = $request->query('sinistro_id');
+        $reservaId = $request->query('reserva_id');
+        $avariaId = $request->query('avaria_id');
 
         $query = OrdemServico::query()
-            ->with(['veiculo', 'usuarioAbertura'])
+            ->with(['veiculo', 'usuarioAbertura', 'itens', 'categoria', 'subcategoria'])
             ->orderByDesc('id');
 
         if ($status && in_array($status, [
@@ -64,14 +68,33 @@ class OrdemServicoController extends Controller
             $query->where('status', $status);
         }
 
+        if ($veiculoId) {
+            $query->where('veiculo_id', $veiculoId);
+        }
+
+        if ($sinistroId) {
+            $query->where('sinistro_id', $sinistroId);
+        }
+
+        if ($reservaId) {
+            $query->where('reserva_id', $reservaId);
+        }
+
+        if ($avariaId) {
+            $query->whereHas('itens', function ($q) use ($avariaId) {
+                $q->where('veiculo_dano_id', $avariaId);
+            });
+        }
+
         $ordens = $query->paginate(20)->withQueryString();
+        $veiculos = \App\Models\Veiculo::query()->orderBy('nome')->get();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Ordens de serviço', route('ordem-servico.index')),
         ]);
 
-        return view('ordem-servico.index', compact('ordens', 'breadcrumb', 'status'))
+        return view('ordem-servico.index', compact('ordens', 'breadcrumb', 'status', 'veiculos', 'veiculoId', 'sinistroId', 'reservaId', 'avariaId'))
             ->with('titulo', 'Ordens de serviço (OS)');
     }
 
@@ -88,6 +111,7 @@ class OrdemServicoController extends Controller
 
         $veiculos = $this->veiculoService->listarAtivosParaOrdemServico(800);
         $sinistros = Sinistro::query()->orderByDesc('id')->get();
+        $categorias = \App\Models\OsCategoria::with('subcategorias.campos')->where('is_active', true)->get();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
@@ -95,7 +119,7 @@ class OrdemServicoController extends Controller
             new BreadCrumbItem('Nova OS'),
         ]);
 
-        return view('ordem-servico.create', array_merge($this->dadosFiltroVeiculo(), compact('veiculos', 'breadcrumb', 'veiculoId', 'danoIds', 'sinistros', 'reservaId', 'sinistroId')))
+        return view('ordem-servico.create', array_merge($this->dadosFiltroVeiculo(), compact('veiculos', 'breadcrumb', 'veiculoId', 'danoIds', 'sinistros', 'reservaId', 'sinistroId', 'categorias')))
             ->with('titulo', 'Nova ordem de serviço');
     }
 
@@ -127,7 +151,11 @@ class OrdemServicoController extends Controller
                 $dados['observacoes'] ?? null,
                 array_map('intval', $dados['veiculo_dano_ids'] ?? []),
                 $servicosPrevistos,
-                isset($dados['sinistro_id']) ? (int) $dados['sinistro_id'] : null
+                isset($dados['sinistro_id']) ? (int) $dados['sinistro_id'] : null,
+                isset($dados['os_categoria_id']) ? (int) $dados['os_categoria_id'] : null,
+                isset($dados['os_subcategoria_id']) ? (int) $dados['os_subcategoria_id'] : null,
+                array_map('intval', $dados['pendencia_preventiva_ids'] ?? []),
+                $request->input('campos_dinamicos', [])
             );
         } catch (\InvalidArgumentException $e) {
             return redirect()->back()->withInput()->withErrors(['os' => $e->getMessage()]);
@@ -140,7 +168,7 @@ class OrdemServicoController extends Controller
 
     public function show(OrdemServico $ordem_servico)
     {
-        $ordem_servico->load(['itens.veiculoDano', 'anexos.usuario', 'veiculo', 'reserva', 'usuarioAbertura', 'usuarioEncerramento']);
+        $ordem_servico->load(['itens.veiculoDano', 'anexos.usuario', 'veiculo', 'reserva', 'usuarioAbertura', 'usuarioEncerramento', 'valoresCampos.campo']);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
@@ -235,6 +263,7 @@ class OrdemServicoController extends Controller
                 'danos' => [],
                 'reservas' => [],
                 'sinistros' => [],
+                'preventivas' => [],
             ]);
         }
 
@@ -278,10 +307,24 @@ class OrdemServicoController extends Controller
                 ];
             });
 
+        $preventivas = \App\Models\PendenciaManutencaoPreventiva::query()
+            ->with('item')
+            ->where('veiculo_id', $veiculoId)
+            ->whereIn('status', ['pendente', 'atrasado'])
+            ->orderByDesc('id')
+            ->get()
+            ->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'label' => $p->item->nome . ' (Vence ' . ($p->data_prevista ? \Carbon\Carbon::parse($p->data_prevista)->format('d/m/Y') : '') . ($p->km_previsto ? ' ou ' . $p->km_previsto . ' KM' : '') . ')',
+                ];
+            });
+
         return response()->json([
             'danos' => $danosOut,
             'reservas' => $reservas,
             'sinistros' => $sinistros,
+            'preventivas' => $preventivas,
         ]);
     }
 

@@ -21,6 +21,8 @@ class OrdemServico extends Model
         'veiculo_id',
         'reserva_id',
         'sinistro_id',
+        'os_categoria_id',
+        'os_subcategoria_id',
         'user_id_abertura',
         'user_id_encerramento',
         'status',
@@ -69,9 +71,24 @@ class OrdemServico extends Model
         return $this->hasMany(OrdemServicoItem::class, 'ordem_servico_id')->orderBy('sort_order')->orderBy('id');
     }
 
+    public function categoria(): BelongsTo
+    {
+        return $this->belongsTo(OsCategoria::class, 'os_categoria_id');
+    }
+
+    public function subcategoria(): BelongsTo
+    {
+        return $this->belongsTo(OsSubcategoria::class, 'os_subcategoria_id');
+    }
+
     public function anexos(): HasMany
     {
         return $this->hasMany(OrdemServicoAnexo::class, 'ordem_servico_id')->orderByDesc('id');
+    }
+
+    public function valoresCampos(): HasMany
+    {
+        return $this->hasMany(OrdemServicoCampoValor::class, 'ordem_servico_id');
     }
 
     public function scopeAbertasOuEmAndamento($query)

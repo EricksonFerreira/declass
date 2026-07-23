@@ -13,6 +13,22 @@
     $caucao = $data['caucao'] ?? null;
     $pagamentos = $data['pagamentos'] ?? [];
     $opcionais = $data['opcionais'] ?? [];
+    $danos = $data['danos_detalhados'] ?? [];
+    $formatarTipoDano = function ($tipo) {
+        $map = [
+            'amolgadela_grave' => 'Amassado grave',
+            'amolgadela_leve' => 'Amassado leve',
+            'risco_leve' => 'Risco leve',
+            'risco_profundo' => 'Risco profundo',
+            'pneu_danificado' => 'Pneu danificado',
+            'vidro_trincado' => 'Vidro trincado',
+            'para_choque_danificado' => 'Para-choque danificado',
+        ];
+        if (blank($tipo)) {
+            return '-';
+        }
+        return $map[$tipo] ?? ucfirst(str_replace('_', ' ', (string) $tipo));
+    };
 @endphp
 
 <body>
@@ -22,8 +38,6 @@
     ])
 
     <div class="accent-stripe"></div>
-
-    <h1>Contrato de Locação para Motorista de Aplicativo</h1>
 
     <div class="two-col">
         <div class="col-left">
@@ -43,18 +57,23 @@
         'get' => $get,
     ])
 
-    @include('pdf.contratos.partials.motorista-app.valores', [
+    @include('pdf.contratos.partials.caucao', [
+        'caucao' => $caucao,
+    ])
+
+    @include('pdf.contratos.partials.danos-avarias', [
+        'danos' => $danos,
+        'formatarTipoDano' => $formatarTipoDano,
+        'hideValor' => true,
+    ])
+
+    @include('pdf.contratos.partials.valores', [
+        'get' => $get,
+    ])
+
+    @include('pdf.contratos.partials.faturacao', [
         'get' => $get,
         'opcionais' => $opcionais,
-    ])
-
-    @include('pdf.contratos.partials.motorista-app.pagamentos', [
-        'pagamentos' => $pagamentos,
-    ])
-
-    @include('pdf.contratos.partials.motorista-app.caucao', [
-        'get' => $get,
-        'caucao' => $caucao,
     ])
 
     @include('pdf.contratos.partials.assinaturas', [
@@ -64,6 +83,8 @@
     @include('pdf.contratos.partials.footer', [
         'get' => $get,
     ])
+
+    @include('pdf.contratos.partials.condicoes-gerais')
 </div>
 </body>
 </html>

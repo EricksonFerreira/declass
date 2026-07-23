@@ -164,13 +164,22 @@ trait ReservaHelpersTrait
             return [];
         }
 
+        $filtros = [];
+        $registro->loadMissing('planoMotoristaApp.gruposFrota');
+        if ($registro->planoMotoristaApp) {
+            $grupoFrotaIds = $registro->planoMotoristaApp->gruposFrota->pluck('id')->all();
+            if (!empty($grupoFrotaIds)) {
+                $filtros['grupo_frota_ids'] = $grupoFrotaIds;
+            }
+        }
+
         return $this->veiculoService
             ->buscarDisponiveisCheckin(
                 (int) $registro->estacao_retirada_id,
                 Carbon::parse($registro->data_inicio)->format('Y-m-d H:i:s'),
                 Carbon::parse($registro->data_fim)->format('Y-m-d H:i:s'),
                 0,
-                []
+                $filtros
             )
             ->pluck('modelo_id')
             ->map(static fn($id) => (int) $id)
@@ -302,5 +311,65 @@ trait ReservaHelpersTrait
             'documentos_json' => $documentos,
             'status' => $statusAtual === 'cancelada' ? $registro->status : 'ativa',
         ])->save();
+    }
+
+    /**
+     * Helper centralizado para salvar arquivos (PDFs, imagens enviadas ou imagens base64).
+     */
+    private function salvarArquivo(mixed $arquivo, string $diretorio, ?string $nomePersonalizado = null): ?string
+    {
+        if (empty($arquivo)) {
+            return null;
+        }
+
+        // Garante que o diretório exista
+        if (!\Illuminate\Support\Facades\Storage::disk('public')->exists($diretorio)) {
+            \Illuminate\Support\Facades\Storage::disk('public')->makeDirectory($diretorio);
+        }
+
+        // Caso 1: String base64 (ex: assinatura em canvas)
+        if (is_string($arquivo) && preg_match('/^data:image\/(\w+);base64,/', $arquivo, $type)) {
+            $base64 = substr($arquivo, strpos($arquivo, ',') + 1);
+            $dadosBinarios = base64_decode($base64);
+            $extensao = $type[1] ?? 'png';
+            $nomeFinal = ($nomePersonalizado ?: \Illuminate\Support\Str::random(10)) . '.' . $extensao;
+            $caminhoRelativo = $diretorio . '/' . $nomeFinal;
+            
+            \Illuminate\Support\Facades\Storage::disk('public')->put($caminhoRelativo, $dadosBinarios);
+            return $caminhoRelativo;
+        }
+
+        // Caso 2: Upload de arquivo (UploadedFile)
+        if (is_object($arquivo) && method_exists($arquivo, 'isValid') && $arquivo->isValid()) {
+            $extensao = method_exists($arquivo, 'getClientOriginalExtension') 
+                ? $arquivo->getClientOriginalExtension() 
+                : (method_exists($arquivo, 'extension') ? $arquivo->extension() : 'bin');
+
+            $nomeFinal = $nomePersonalizado 
+                ? $nomePersonalizado . '.' . ($extensao ?: 'bin')
+                : \Illuminate\Support\Str::random(40) . '.' . ($extensao ?: 'bin');
+            
+            $caminhoRelativo = $diretorio . '/' . $nomeFinal;
+
+            // Salvamento direto usando PHP Nativo no diretório correspondente da pasta public
+            $caminhoPublicoDestino = public_path('storage/' . $diretorio);
+            if (!file_exists($caminhoPublicoDestino)) {
+                mkdir($caminhoPublicoDestino, 0755, true);
+            }
+
+            $caminhoFisicoCompleto = $caminhoPublicoDestino . '/' . $nomeFinal;
+            
+            // Tenta mover de forma nativa
+            if (method_exists($arquivo, 'move')) {
+                $arquivo->move($caminhoPublicoDestino, $nomeFinal);
+            } else {
+                $caminhoRealTemp = method_exists($arquivo, 'getRealPath') ? $arquivo->getRealPath() : $arquivo->getPathname();
+                copy($caminhoRealTemp, $caminhoFisicoCompleto);
+            }
+
+            return $caminhoRelativo;
+        }
+
+        return null;
     }
 }

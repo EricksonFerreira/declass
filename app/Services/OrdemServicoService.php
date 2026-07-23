@@ -30,15 +30,21 @@ class OrdemServicoService
         ?string $observacoes,
         array $veiculoDanoIds,
         array $servicosPrevistos = [],
-        ?int $sinistroId = null
+        ?int $sinistroId = null,
+        ?int $osCategoriaId = null,
+        ?int $osSubcategoriaId = null,
+        array $pendenciaPreventivaIds = [],
+        array $camposDinamicos = []
     ): OrdemServico {
-        return DB::transaction(function () use ($veiculoId, $reservaId, $empresaId, $observacoes, $veiculoDanoIds, $servicosPrevistos, $sinistroId) {
+        return DB::transaction(function () use ($veiculoId, $reservaId, $empresaId, $observacoes, $veiculoDanoIds, $servicosPrevistos, $sinistroId, $osCategoriaId, $osSubcategoriaId, $pendenciaPreventivaIds, $camposDinamicos) {
             $os = OrdemServico::create([
                 'numero' => null,
                 'empresa_id' => $empresaId,
                 'veiculo_id' => $veiculoId,
                 'reserva_id' => $reservaId,
                 'sinistro_id' => $sinistroId,
+                'os_categoria_id' => $osCategoriaId,
+                'os_subcategoria_id' => $osSubcategoriaId,
                 'user_id_abertura' => Auth::id(),
                 'status' => OrdemServico::STATUS_ABERTA,
                 'observacoes' => $observacoes,
@@ -90,6 +96,27 @@ class OrdemServicoService
                 ]);
             }
 
+            foreach ($pendenciaPreventivaIds as $pendenciaId) {
+                $pendencia = \App\Models\PendenciaManutencaoPreventiva::with('item')->find($pendenciaId);
+                if ($pendencia && (int) $pendencia->veiculo_id === $veiculoId) {
+                    OrdemServicoItem::create([
+                        'ordem_servico_id' => $os->id,
+                        'pendencia_manutencao_preventiva_id' => $pendencia->id,
+                        'descricao_servico' => 'Preventiva: ' . $pendencia->item->nome,
+                        'sort_order' => $order++,
+                    ]);
+                }
+            }
+
+            if (!empty($camposDinamicos)) {
+                foreach ($camposDinamicos as $campoId => $valor) {
+                    $os->valoresCampos()->create([
+                        'os_subcategoria_campo_id' => $campoId,
+                        'valor' => is_array($valor) ? json_encode($valor) : $valor,
+                    ]);
+                }
+            }
+
             if ($order === 0) {
                 OrdemServicoItem::create([
                     'ordem_servico_id' => $os->id,
@@ -99,7 +126,7 @@ class OrdemServicoService
                 ]);
             }
 
-            return $os->fresh(['itens']);
+            return $os->fresh(['itens', 'valoresCampos.campo']);
         });
     }
 

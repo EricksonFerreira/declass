@@ -26,7 +26,7 @@ class FinalizarCheckoutVistoriaRequest extends FormRequest
             'foto_tras_co' => 'nullable|image|max:8192',
             'foto_velocimetro_co' => 'nullable|image|max:8192',
             'foto_combustivel_co' => 'nullable|image|max:8192',
-            'assinatura' => 'required|string',
+            'assinatura' => 'nullable|string',
         ];
     }
 }

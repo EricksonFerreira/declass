@@ -90,6 +90,7 @@ Route::get('/reserva/login/callback', [SiteReservaController::class, 'loginCallb
 Route::post('/reserva', [SiteReservaController::class, 'store'])->name('site.reserva.store');
 Route::get('/reserva/disponibilidade', [SiteReservaController::class, 'disponibilidade'])->name('site.reserva.disponibilidade');
 Route::get('/reserva/dias-disponiveis', [SiteReservaController::class, 'diasDisponiveisPorEstacao'])->name('site.reserva.diasDisponiveisPorEstacao');
+Route::get('/reserva/motorista-app/dias-disponiveis', [SiteReservaController::class, 'diasDisponiveisMotoristaApp'])->name('site.reserva.diasDisponiveisMotoristaApp');
 Route::get('/reserva/agenda-disponivel', [SiteReservaController::class, 'agendaDisponivelPorEstacao'])->name('site.reserva.agendaDisponivelPorEstacao');
 Route::get('/reserva/estacoes-disponiveis', [SiteReservaController::class, 'estacoesDisponiveis'])->name('site.reserva.estacoesDisponiveis');
 Route::post('/reserva/verificar-cupom', [SiteReservaController::class, 'verificarCupom'])->name('site.reserva.verificarCupom');
@@ -244,6 +245,9 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'ordem_servico',
         'multa',
         'sinistro',
+        'planos_manutencao',
+        'os_categorias',
+        'os_subcategorias',
     ];
 
     foreach ($webGroupFiles as $groupFile) {

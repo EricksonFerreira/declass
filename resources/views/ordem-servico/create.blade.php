@@ -30,6 +30,43 @@
                         <form method="post" action="{{ route('ordem-servico.store') }}">
                             @csrf
 
+                            <div class="os-section-title">Categoria da Ordem de Serviço</div>
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="os_categoria_id">Categoria</label>
+                                        <select name="os_categoria_id" id="os_categoria_id" class="form-control form-control-sm @error('os_categoria_id') is-invalid @enderror" required>
+                                            <option value="">Selecione uma categoria...</option>
+                                            @foreach($categorias as $cat)
+                                                <option value="{{ $cat->id }}" data-subcategorias="{{ json_encode($cat->subcategorias) }}">
+                                                    {{ $cat->nome }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                        @error('os_categoria_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="os_subcategoria_id">Subcategoria</label>
+                                        <select name="os_subcategoria_id" id="os_subcategoria_id" class="form-control form-control-sm @error('os_subcategoria_id') is-invalid @enderror" required disabled>
+                                            <option value="">Selecione uma categoria primeiro...</option>
+                                        </select>
+                                        @error('os_subcategoria_id')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="dynamic_fields_section" style="display: none;">
+                                <div class="os-section-title">Informações Específicas da Subcategoria</div>
+                                <div class="row" id="dynamic_fields_container">
+                                </div>
+                            </div>
+
                             <div class="os-section-title">Dados da ordem de servico</div>
                             <div class="row">
                                 <div class="col-md-6">
@@ -99,6 +136,15 @@
                                 <div id="danos_container" class="os-box-list">
                                     <p class="text-muted small mb-0">
                                         <i class="fas fa-arrow-up mr-1"></i>Selecione um veiculo para listar as avarias.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="os-section-title">Manutenções Preventivas Pendentes (opcional)</div>
+                            <div class="form-group">
+                                <div id="preventivas_container" class="os-box-list">
+                                    <p class="text-muted small mb-0">
+                                        <i class="fas fa-arrow-up mr-1"></i>Selecione um veículo para listar preventivas.
                                     </p>
                                 </div>
                             </div>
@@ -263,6 +309,120 @@
     const preselected = @json(array_values(array_map('intval', $danoIds ?? [])));
     const danosListUrl = @json(route('ordem-servico.danos-pendentes'));
 
+    const catEl = document.getElementById('os_categoria_id');
+    const subCatEl = document.getElementById('os_subcategoria_id');
+    
+    // Containers para show/hide
+    const colReserva = document.getElementById('reserva_id').closest('.col-md-3');
+    const colSinistro = document.getElementById('sinistro_id').closest('.col-md-3');
+    const secAvarias = container.closest('.form-group').previousElementSibling; // title
+    const divAvarias = container.closest('.form-group');
+
+    let currentSubcategorias = [];
+
+    function updateDynamicFields(subCat) {
+        if (!subCat) {
+            colReserva.style.display = '';
+            colSinistro.style.display = '';
+            secAvarias.style.display = '';
+            divAvarias.style.display = '';
+            document.getElementById('dynamic_fields_section').style.display = 'none';
+            document.getElementById('dynamic_fields_container').innerHTML = '';
+            return;
+        }
+
+        colReserva.style.display = subCat.show_reserva ? '' : 'none';
+        colSinistro.style.display = subCat.show_sinistro ? '' : 'none';
+        
+        const showAv = subCat.show_avarias;
+        secAvarias.style.display = showAv ? '' : 'none';
+        divAvarias.style.display = showAv ? '' : 'none';
+
+        const camposContainer = document.getElementById('dynamic_fields_container');
+        camposContainer.innerHTML = '';
+        if (subCat.campos && subCat.campos.length > 0) {
+            document.getElementById('dynamic_fields_section').style.display = 'block';
+            subCat.campos.forEach(campo => {
+                const requiredStr = campo.is_required ? 'required' : '';
+                const reqStar = campo.is_required ? '<span class="text-danger">*</span>' : '';
+                let inputHtml = '';
+                
+                if (campo.tipo === 'text') {
+                    inputHtml = `<input type="text" name="campos_dinamicos[${campo.id}]" class="form-control form-control-sm" ${requiredStr}>`;
+                } else if (campo.tipo === 'number') {
+                    inputHtml = `<input type="number" name="campos_dinamicos[${campo.id}]" class="form-control form-control-sm" ${requiredStr}>`;
+                } else if (campo.tipo === 'date') {
+                    inputHtml = `<input type="date" name="campos_dinamicos[${campo.id}]" class="form-control form-control-sm" ${requiredStr}>`;
+                } else if (campo.tipo === 'select') {
+                    let optionsHtml = '<option value="">Selecione...</option>';
+                    if (campo.opcoes) {
+                        campo.opcoes.forEach(opt => {
+                            optionsHtml += `<option value="${opt}">${opt}</option>`;
+                        });
+                    }
+                    inputHtml = `<select name="campos_dinamicos[${campo.id}]" class="form-control form-control-sm" ${requiredStr}>${optionsHtml}</select>`;
+                } else if (campo.tipo === 'checkbox') {
+                    inputHtml = `
+                        <div class="custom-control custom-checkbox mt-1">
+                            <input type="checkbox" name="campos_dinamicos[${campo.id}]" value="1" class="custom-control-input" id="campo_${campo.id}" ${requiredStr}>
+                            <label class="custom-control-label" for="campo_${campo.id}">Sim</label>
+                        </div>
+                    `;
+                }
+
+                camposContainer.insertAdjacentHTML('beforeend', `
+                    <div class="col-md-6 mb-3">
+                        <label class="small text-muted font-weight-bold mb-1">${campo.nome} ${reqStar}</label>
+                        ${inputHtml}
+                    </div>
+                `);
+            });
+        } else {
+            document.getElementById('dynamic_fields_section').style.display = 'none';
+        }
+        
+        // Se show_checklist_prevencao = true, a gente poderia adicionar algum input hidden ou mudar o comportamento
+        if (subCat.show_checklist_prevencao) {
+            if (!document.getElementById('checklist_prevencao_aviso')) {
+                const aviso = document.createElement('div');
+                aviso.id = 'checklist_prevencao_aviso';
+                aviso.className = 'alert alert-info mt-3 py-2 small';
+                aviso.innerHTML = '<i class="fas fa-info-circle mr-1"></i> Esta subcategoria exige um checklist de prevenção (será preenchido na execução).';
+                subCatEl.closest('.row').insertAdjacentElement('afterend', aviso);
+            }
+        } else {
+            const aviso = document.getElementById('checklist_prevencao_aviso');
+            if (aviso) aviso.remove();
+        }
+    }
+
+    catEl.addEventListener('change', function() {
+        subCatEl.innerHTML = '<option value="">Selecione uma subcategoria...</option>';
+        subCatEl.disabled = true;
+        updateDynamicFields(null);
+
+        if (!this.value) return;
+
+        const selectedOption = this.options[this.selectedIndex];
+        currentSubcategorias = JSON.parse(selectedOption.getAttribute('data-subcategorias') || '[]');
+
+        if (currentSubcategorias.length > 0) {
+            subCatEl.disabled = false;
+            currentSubcategorias.forEach(sc => {
+                const opt = document.createElement('option');
+                opt.value = sc.id;
+                opt.textContent = sc.nome;
+                subCatEl.appendChild(opt);
+            });
+        }
+    });
+
+    subCatEl.addEventListener('change', function() {
+        const val = parseInt(this.value, 10);
+        const subCat = currentSubcategorias.find(sc => sc.id === val);
+        updateDynamicFields(subCat);
+    });
+
     // Cache local de Reservas e Sinistros do veículo selecionado
     let reservasDoVeiculo = [];
     let sinistrosDoVeiculo = [];
@@ -299,6 +459,37 @@
             wrap.appendChild(input);
             wrap.appendChild(label);
             container.appendChild(wrap);
+        });
+    }
+
+    function renderPreventivas(list) {
+        const pContainer = document.getElementById('preventivas_container');
+        pContainer.innerHTML = '';
+        
+        if (!list || !list.length) {
+            pContainer.innerHTML = '<p class="text-muted small mb-0">Nenhuma preventiva pendente para este veículo.</p>';
+            return;
+        }
+
+        list.forEach(function (p) {
+            const id = 'prev_cb_' + p.id;
+            const wrap = document.createElement('div');
+            wrap.className = 'custom-control custom-checkbox mb-2';
+            const input = document.createElement('input');
+            input.type = 'checkbox';
+            input.className = 'custom-control-input';
+            input.name = 'pendencia_preventiva_ids[]';
+            input.value = p.id;
+            input.id = id;
+
+            const label = document.createElement('label');
+            label.className = 'custom-control-label';
+            label.setAttribute('for', id);
+            label.textContent = p.label;
+
+            wrap.appendChild(input);
+            wrap.appendChild(label);
+            pContainer.appendChild(wrap);
         });
     }
 
@@ -423,8 +614,10 @@
                 const danos = Array.isArray(data) ? data : (data.danos || []);
                 reservasDoVeiculo = Array.isArray(data) ? [] : (data.reservas || []);
                 sinistrosDoVeiculo = Array.isArray(data) ? [] : (data.sinistros || []);
+                const preventivas = Array.isArray(data) ? [] : (data.preventivas || []);
 
                 renderDanos(danos);
+                renderPreventivas(preventivas);
                 
                 // Recarrega o dropdown de sinistros da tela com os do veículo atual
                 const selectSinistro = document.getElementById('sinistro_id');

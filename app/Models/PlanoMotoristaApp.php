@@ -48,6 +48,16 @@ class PlanoMotoristaApp extends Model
         )->withTimestamps()->orderBy('nome');
     }
 
+    public function gruposFrota(): BelongsToMany
+    {
+        return $this->belongsToMany(
+            GrupoFrota::class,
+            'plano_motorista_app_grupo_frota',
+            'plano_motorista_app_id',
+            'grupo_frota_id'
+        )->withTimestamps();
+    }
+
     public function scopeAtivos($query)
     {
         return $query->where('ativo', 'S')->orderBy('ordem')->orderBy('nome');

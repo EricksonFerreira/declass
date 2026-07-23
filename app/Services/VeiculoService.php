@@ -383,7 +383,7 @@ class VeiculoService extends AbstractBaseService
      * @param array<int, int|string> $estacoesIds
      * @return array<int, int>
      */
-    public function getQuantidadeVeiculosAtivosPorEstacao(array $estacoesIds = []): array
+    public function getQuantidadeVeiculosAtivosPorEstacao(array $estacoesIds = [], array $grupoFrotaIds = []): array
     {
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->whereNotNull('local_disponibilidade');
@@ -392,6 +392,10 @@ class VeiculoService extends AbstractBaseService
 
         if (!empty($estacoesIds)) {
             $query->whereIn('local_disponibilidade', array_map('intval', $estacoesIds));
+        }
+
+        if (!empty($grupoFrotaIds)) {
+            $query->whereIn('grupo_frota_id', array_map('intval', $grupoFrotaIds));
         }
 
         $agrupados = $query
@@ -709,6 +713,9 @@ class VeiculoService extends AbstractBaseService
         $query = $this->scopeStatusVeiculoDisponivel($query);
 
         // Filtros de texto/seleção
+        if (!empty($filtros['grupo_frota_ids'])) {
+            $query->whereIn('grupo_frota_id', (array) $filtros['grupo_frota_ids']);
+        }
         if (!empty($filtros['placa'])) {
             $query->where('placa_licenca', 'like', '%' . $filtros['placa'] . '%');
         }

@@ -50,6 +50,8 @@ class PlanoMotoristaAppController extends BaseController implements FiltroInterf
         [$metodo, $rota] = $this->getFormMethodAndRoute();
 
         $opcionais = $this->getOpcionaisParaSelecao((array) old('opcionais', []));
+        $gruposFrota = \App\Models\GrupoFrota::where('ativo', 'S')->orderBy('nome')->get();
+        $gruposFrotaSelecionados = (array) old('grupos_frota', []);
         $status = ['S' => 'Ativo', 'N' => 'Inativo'];
         $periodos = [
             'semana' => 'Semana',
@@ -60,7 +62,7 @@ class PlanoMotoristaAppController extends BaseController implements FiltroInterf
             'ano' => 'Ano',
         ];
 
-        return view('plano_motorista_app.add-edit', compact('breadcrumb', 'metodo', 'rota', 'status', 'periodos', 'opcionais'))
+        return view('plano_motorista_app.add-edit', compact('breadcrumb', 'metodo', 'rota', 'status', 'periodos', 'opcionais', 'gruposFrota', 'gruposFrotaSelecionados'))
             ->with('titulo', $this->titulo);
     }
 
@@ -68,10 +70,12 @@ class PlanoMotoristaAppController extends BaseController implements FiltroInterf
     {
         $data = $request->validated();
         $opcionais = $data['opcionais'] ?? [];
-        unset($data['opcionais']);
+        $gruposFrota = $data['grupos_frota'] ?? [];
+        unset($data['opcionais'], $data['grupos_frota']);
 
         $plano = $this->planoMotoristaAppService->create($data);
         $plano->opcionais()->sync($opcionais);
+        $plano->gruposFrota()->sync($gruposFrota);
 
         return redirect()->route('plano_motorista_app.index')
             ->with('success', 'Plano para motorista de app criado com sucesso.');
@@ -79,12 +83,14 @@ class PlanoMotoristaAppController extends BaseController implements FiltroInterf
 
     public function edit($id)
     {
-        $plano = $this->planoMotoristaAppService->getById($id, ['opcionais']);
+        $plano = $this->planoMotoristaAppService->getById($id, ['opcionais', 'gruposFrota']);
         abort_unless($plano, 404);
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Planos Motorista App', 'plano_motorista_app.index', "Editar: {$plano->nome}");
         [$metodo, $rota] = $this->getFormMethodAndRoute($plano);
         $opcionais = $this->getOpcionaisParaSelecao((array) old('opcionais', $plano->opcionais->pluck('id')->toArray()));
+        $gruposFrota = \App\Models\GrupoFrota::where('ativo', 'S')->orderBy('nome')->get();
+        $gruposFrotaSelecionados = (array) old('grupos_frota', $plano->gruposFrota->pluck('id')->toArray());
         $status = ['S' => 'Ativo', 'N' => 'Inativo'];
         $periodos = [
             'semana' => 'Semana',
@@ -95,7 +101,7 @@ class PlanoMotoristaAppController extends BaseController implements FiltroInterf
             'ano' => 'Ano',
         ];
 
-        return view('plano_motorista_app.add-edit', compact('plano', 'breadcrumb', 'metodo', 'rota', 'status', 'periodos', 'opcionais'))
+        return view('plano_motorista_app.add-edit', compact('plano', 'breadcrumb', 'metodo', 'rota', 'status', 'periodos', 'opcionais', 'gruposFrota', 'gruposFrotaSelecionados'))
             ->with('titulo', $this->titulo);
     }
 
@@ -103,11 +109,13 @@ class PlanoMotoristaAppController extends BaseController implements FiltroInterf
     {
         $data = $request->validated();
         $opcionais = $data['opcionais'] ?? [];
-        unset($data['opcionais']);
+        $gruposFrota = $data['grupos_frota'] ?? [];
+        unset($data['opcionais'], $data['grupos_frota']);
 
         $plano = $this->planoMotoristaAppService->update($id, $data);
         if ($plano) {
             $plano->opcionais()->sync($opcionais);
+            $plano->gruposFrota()->sync($gruposFrota);
         }
 
         return redirect()->route('plano_motorista_app.index')

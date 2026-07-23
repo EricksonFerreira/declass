@@ -22,6 +22,28 @@
         margin: 0 auto;
         padding: 0;
     }
+    .clause-list {
+        width: 100%;
+        margin-top: 8px;
+    }
+    .clause-list .clause-item {
+        display: flex;
+        align-items: flex-start;
+        margin-bottom: 6px;
+        border-bottom: 1px solid #e2e8f0;
+        padding-bottom: 4px;
+    }
+    .clause-list .clause-num {
+        width: 30px;
+        font-weight: 700;
+        color: #1e3a8a;
+        text-align: right;
+        margin-right: 8px;
+    }
+    .clause-list .clause-body {
+        flex: 1;
+        font-size: 8px;
+    }
     .section-title,
     .doc-header,
     .two-col,

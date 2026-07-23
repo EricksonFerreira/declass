@@ -25,7 +25,7 @@ class ExibirContratoCheckinReservaComumAction
         );
     }
 
-    public function montarDados(Reserva $reserva): array
+    public function montarDados(Reserva $reserva, ?string $tipoContrato = null): array
     {
         $moedaSimbolo = match (strtoupper($reserva->empresa?->moeda_pagamento ?? 'BRL')) {
             'USD' => '$',
@@ -267,9 +267,36 @@ class ExibirContratoCheckinReservaComumAction
                     'pago_por' => $t->pagoPor?->nome ?? $t->user?->nome ?? '-',
                 ])->values()->toArray(),
             'danos_detalhados' => $danos,
-            'condicoes_gerais' => TermoConsentimento::where('empresa_id', $reserva->empresa_id)
-                ->where('tipo', 'checkin')->orderBy('ordem')
-                ->get(['ordem', 'titulo', 'texto'])->toArray(),
+            'condicoes_gerais' => (static function () use ($reserva, $motoristaApp, $tipoContrato) {
+                $tipoContrato = $tipoContrato ?? ($reserva->contratoCheckout ? 'checkout' : 'checkin');
+                $ehMotoristaApp = (bool) $motoristaApp;
+
+                if ($tipoContrato === 'checkout') {
+                    $tipoTermo = $ehMotoristaApp ? 'checkout-motorista-app' : 'checkout-reserva';
+                    $fallbackTipo = 'checkout-reserva';
+                } else {
+                    $tipoTermo = $ehMotoristaApp ? 'checkin-motorista-app' : 'checkin-reserva';
+                    $fallbackTipo = 'checkin-reserva';
+                }
+
+                $condicoes = TermoConsentimento::where('empresa_id', $reserva->empresa_id)
+                    ->where('tipo', $tipoTermo)
+                    ->where('ativo', 'S')
+                    ->orderBy('ordem')
+                    ->get(['ordem', 'titulo', 'texto'])
+                    ->toArray();
+
+                if (empty($condicoes)) {
+                    $condicoes = TermoConsentimento::where('empresa_id', $reserva->empresa_id)
+                        ->where('tipo', $fallbackTipo)
+                        ->where('ativo', 'S')
+                        ->orderBy('ordem')
+                        ->get(['ordem', 'titulo', 'texto'])
+                        ->toArray();
+                }
+
+                return $condicoes;
+            })(),
         ];
     }
 }

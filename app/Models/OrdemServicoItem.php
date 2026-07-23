@@ -19,6 +19,7 @@ class OrdemServicoItem extends Model
         'quantidade',
         'valor_unitario',
         'valor_total',
+        'pendencia_manutencao_preventiva_id',
     ];
 
     public function ordemServico(): BelongsTo
@@ -29,5 +30,10 @@ class OrdemServicoItem extends Model
     public function veiculoDano(): BelongsTo
     {
         return $this->belongsTo(VeiculoDanos::class, 'veiculo_dano_id');
+    }
+
+    public function pendenciaPreventiva(): BelongsTo
+    {
+        return $this->belongsTo(PendenciaManutencaoPreventiva::class, 'pendencia_manutencao_preventiva_id');
     }
 }

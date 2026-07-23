@@ -9,12 +9,21 @@ class ObterDanosExistentesReservaComumAction
 {
     public function handle(int $veiculoId, int $reservaCodigoId): JsonResponse
     {
-        $danos = VeiculoDanos::where('veiculo_id', $veiculoId)
-            ->where(function ($query) use ($reservaCodigoId) {
-                $query->where('reserva_codigo_id', '!=', $reservaCodigoId)
-                    ->orWhereNull('reserva_codigo_id');
-            })
-            ->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
+        $query = VeiculoDanos::where('veiculo_id', $veiculoId)
+            ->where(function ($q) use ($reservaCodigoId) {
+                $q->where('reserva_codigo_id', '!=', $reservaCodigoId)
+                  ->orWhereNull('reserva_codigo_id');
+            });
+
+        if (!$query->exists()) {
+            $reservaId = \App\Models\ReservaCodigo::where('id', $reservaCodigoId)->value('reserva_id');
+            if ($reservaId) {
+                $query = VeiculoDanos::where('veiculo_id', $veiculoId)
+                    ->where('reserva_id', $reservaId);
+            }
+        }
+
+        $danos = $query->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
             ->orderBy('id')
             ->get()
             ->map(fn(VeiculoDanos $d) => $this->mapear($d))

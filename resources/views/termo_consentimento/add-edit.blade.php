@@ -17,7 +17,7 @@
         </div>
     @endif
 
-    <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
+    <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12 px-0">
         <div class="card card-termo-consentimento shadow-sm border-0">
             <div class="card-header card-header-termo-consentimento border-0">
                 <div>
@@ -27,7 +27,7 @@
             </div>
 
             <div class="card-body p-4">
-                <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row">
+                <x-form method="{{ $metodo }}" action="{{ $rota }}" rowClass="row" id="termo-form">
                     <div class="col-12">
                         <div class="termo-consentimento-section-title">Informações Básicas</div>
                     </div>
@@ -53,7 +53,7 @@
                                     'tipo',
                                     isset($termo_consentimento->tipo) && $termo_consentimento->tipo
                                         ? $termo_consentimento->tipo
-                                        : 'checkin',
+                                        : null,
                                 )"
                                 class="form-control form-control-sm" required />
                         </div>
@@ -79,10 +79,9 @@
                     <div class="col-12">
                         <div class="form-group form-group-termo-consentimento">
                             <label for="texto">Texto</label>
-                            <textarea name="texto" id="texto" class="form-control form-control-sm termo-textarea" rows="8" required>{{ old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : null) }}</textarea>
-                            <small class="text-muted d-block mt-1">
-                                Texto completo da cláusula exibida no contrato.
-                            </small>
+                            <div id="editor" class="quill-editor" style="height:180px;">{!! old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : '') !!}</div>
+                            <textarea name="texto" id="texto" class="d-none" required>{{ old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : '') }}</textarea>
+                            <small class="text-muted d-block mt-1">Texto completo da cláusula exibida no contrato.</small>
                         </div>
                     </div>
 
@@ -98,6 +97,7 @@
 @stop
 
 @section('css')
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
 <style>
     .card-termo-consentimento { border-radius: 14px; overflow: hidden; }
     .card-header-termo-consentimento { background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%); padding: 1.1rem 1.5rem; }
@@ -114,5 +114,27 @@
 @stop
 
 @section('js')
-    <script></script>
-@stop
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    <script>
+      var quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+          toolbar: [
+            [{ header: [1, 2, false] }],
+            ['bold', 'italic', 'underline'],
+            ['link', 'image'],
+            [{ list: 'ordered' }, { list: 'bullet' }],
+            ['clean']
+          ]
+        }
+      });
+      // Populate hidden textarea on form submit
+      var form = document.getElementById('termo-form');
+      if (form) {
+        form.addEventListener('submit', function () {
+          var html = quill.root.innerHTML;
+          document.getElementById('texto').value = html;
+        });
+      }
+    </script>
+@endsection

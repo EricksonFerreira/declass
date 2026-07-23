@@ -54,13 +54,28 @@
                 </div>
                 <h1 class="rs-hero__title">{{ $titulo }}</h1>
                 <div class="rs-hero__meta">
-                    <span><i class="fas fa-car"></i>{{ optional($ordem_servico->veiculo)->nome ?? ('Veículo #' . $ordem_servico->veiculo_id) }}</span>
+                    <span><i class="fas fa-car"></i>
+                        @if($ordem_servico->veiculo_id)
+                            <a href="{{ route('veiculo.show', $ordem_servico->veiculo_id) }}" class="text-white font-weight-bold text-decoration-underline" style="color: #fff !important;">
+                                {{ optional($ordem_servico->veiculo)->nome ?? ('Veículo #' . $ordem_servico->veiculo_id) }}
+                            </a>
+                        @else
+                            {{ optional($ordem_servico->veiculo)->nome ?? 'Veículo não informado' }}
+                        @endif
+                    </span>
                     <span><i class="fas fa-user"></i>{{ optional($ordem_servico->usuarioAbertura)->name ?? 'Usuário não informado' }}</span>
                     @if($ordem_servico->sinistro_id)
                         <span><i class="fas fa-exclamation-triangle text-warning"></i>
                             <a href="{{ route('sinistro.show', $ordem_servico->sinistro_id) }}" class="text-white font-weight-bold text-decoration-underline" style="color: #fbbf24 !important;">
                                 Sinistro #{{ $ordem_servico->sinistro_id }}
                             </a>
+                        </span>
+                    @endif
+                    @if($ordem_servico->categoria)
+                        <span><i class="fas fa-tags"></i> {{ $ordem_servico->categoria->nome }}
+                        @if($ordem_servico->subcategoria)
+                            - {{ $ordem_servico->subcategoria->nome }}
+                        @endif
                         </span>
                     @endif
                 </div>
@@ -247,6 +262,35 @@
                     </div>
                 </div>
             </div>
+
+            @if($ordem_servico->valoresCampos->isNotEmpty())
+            <!-- SEÇÃO DE CAMPOS DINÂMICOS -->
+            <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white border-0 py-3">
+                    <h5 class="card-title font-weight-bold text-dark mb-0">
+                        <i class="fas fa-list-alt text-info mr-2"></i> Informações Específicas da Subcategoria
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        @foreach($ordem_servico->valoresCampos as $valorCampo)
+                            @if($valorCampo->campo)
+                            <div class="col-md-6 mb-3">
+                                <label class="small text-muted font-weight-bold mb-1">{{ $valorCampo->campo->nome }}</label>
+                                <div>
+                                    @if($valorCampo->campo->tipo === 'checkbox')
+                                        <span class="badge {{ $valorCampo->valor ? 'badge-success' : 'badge-secondary' }}">{{ $valorCampo->valor ? 'Sim' : 'Não' }}</span>
+                                    @else
+                                        <strong>{{ $valorCampo->valor ?: '-' }}</strong>
+                                    @endif
+                                </div>
+                            </div>
+                            @endif
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+            @endif
 
             <!-- SEÇÃO C: LANÇAMENTOS DA EXECUÇÃO -->
             <div class="card mb-4 border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
@@ -459,6 +503,7 @@
         </form>
     @endif
 </div>
+@stop
 
 @section('css')
 <style>

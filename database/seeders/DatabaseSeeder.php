@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             PlanoSeeder::class,
             TiposDanosPorCategoriaELocalizacaoSeeder::class,
             CondicoesGeraisSeeder::class,
+            OsCategoriaSeeder::class,
         ]);
     }
 }

@@ -63,7 +63,7 @@
                     $totalReservaCheckin = $baseContratoCheckin > 0
                         ? $baseContratoCheckin + (float) ($reserva->valor_opcionais ?? 0)
                         : (float) ($reserva->valor_total_final ?? $reserva->valor_total_com_desconto ?? 0);
-                    $hasPendingPayment = round($totalReservaCheckin - $totalPagoCheckin, 2) > 0;
+                    $hasPendingPayment = false; // Removido bloqueio do wizard de check-in por pagamentos pendentes
                 @endphp
 
                 {{-- Indicador de passos --}}
@@ -525,13 +525,13 @@
                      PASSO 2 — Estado do Veiculo
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="2">
-                    <div class="rw-step-content-header">
+                    {{-- <div class="rw-step-content-header">
                         <div class="rw-step-content-icon rw-step-content-icon--blue"><i class="fas fa-camera"></i></div>
                         <div>
                             <h5>Fotos do Veiculo</h5>
                             <p>Envie as fotos obrigatorias para registrar o estado do veiculo no check-in. Nao e possivel continuar sem concluir este passo.</p>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <div class="ci-block">
                         <div class="ci-block-label">
@@ -591,13 +591,13 @@
                 </section>
 
                 <section class="wizard-step" data-step="3">
-                    <div class="rw-step-content-header">
+                    {{-- <div class="rw-step-content-header">
                         <div class="rw-step-content-icon rw-step-content-icon--amber"><i class="fas fa-search"></i></div>
                         <div>
                             <h5>Estado do Veiculo</h5>
                             <p>Clique em uma das vistas do veiculo para registrar um novo dano. O veiculo deve estar selecionado no Passo 1.</p>
                         </div>
-                    </div>
+                    </div> --}}
 
                     {{-- Vistas do carro --}}
                     <div class="ci-block">
@@ -710,13 +710,13 @@
                      PASSO 3 — Observacoes
                 ═══════════════════════════════════ --}}
                 <section class="wizard-step" data-step="4">
-                    <div class="rw-step-content-header">
+                    {{-- <div class="rw-step-content-header">
                         <div class="rw-step-content-icon rw-step-content-icon--green"><i class="fas fa-comment-alt"></i></div>
                         <div>
                             <h5>Observacoes e Notas</h5>
                             <p>Registre quaisquer observacoes adicionais sobre a saida do veiculo.</p>
                         </div>
-                    </div>
+                    </div> --}}
 
                     <div class="ci-block">
                         <div class="ci-block-label">
@@ -780,7 +780,7 @@
                                 <i class="fas fa-{{ $contratoExistente ? 'save' : 'file-contract' }} mr-1"></i>
                                 {{ $contratoExistente ? 'Salvar Contrato' : 'Criar Contrato' }}
                             </button>
-                            <p class="text-warning mt-2"><i class="fas fa-exclamation-triangle"></i> Existem pagamentos pendentes. Resolva antes de criar o contrato.</p>
+                            {{-- <p class="text-warning mt-2"><i class="fas fa-exclamation-triangle"></i> Existem pagamentos pendentes. Resolva antes de criar o contrato.</p> --}}
                         @endif
                     </div>
                     @endif

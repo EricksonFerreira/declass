@@ -36,8 +36,8 @@
                                 <span>Classifique onde e em qual area o dano se encontra</span>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-7">
+                        <div class="row align-items-end">
+                            <div class="col-md-4">
                                 <x-form-select
                                     id="categoria_problema"
                                     name="categoria_problema"
@@ -50,22 +50,26 @@
                                     onchange="obterDanos()"
                                 />
                             </div>
-                            <div class="col-md-5">
-                                <label for="localizacao_problema">Localizacao</label>
-                                <select class="form-control form-control-sm" id="localizacao_problema" name="localizacao-problema" onchange="obterDanos()">
-                                    <option value="exterior">Exterior</option>
-                                    <option value="interior">Interior</option>
-                                </select>
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <label for="localizacao_problema">Localizacao</label>
+                                    <select class="form-control form-control-sm" id="localizacao_problema" name="localizacao-problema" onchange="obterDanos()">
+                                        <option value="exterior">Exterior</option>
+                                        <option value="interior">Interior</option>
+                                    </select>
+                                </div>
                             </div>
-                        </div>
-                        <div class="mt-3">
-                            <div class="dano-select-label">
-                                <label for="danos">Tipo de Dano <span class="req">*</span></label>
-                                <img id="loading_dano" style="width:14px;height:14px;display:none" src="{{ asset('assets/gifs/loading.gif') }}" alt="Carregando...">
+                            <div class="col-md-4">
+                                <div class="form-group mb-3">
+                                    <div class="dano-select-label">
+                                        <label for="danos">Tipo de Dano <span class="req">*</span></label>
+                                        <img id="loading_dano" style="width:14px;height:14px;display:none" src="{{ asset('assets/gifs/loading.gif') }}" alt="Carregando...">
+                                    </div>
+                                    <select name="dano" id="danos" class="form-control form-control-sm select2ci-modal" required>
+                                        <option disabled selected>Primeiro selecione uma categoria</option>
+                                    </select>
+                                </div>
                             </div>
-                            <select name="dano" id="danos" class="form-control form-control-sm select2ci-modal" required>
-                                <option disabled selected>Primeiro selecione uma categoria</option>
-                            </select>
                         </div>
                     </div>
 
@@ -102,17 +106,17 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label for="custo_estimado">Custo Estimado <span class="req">*</span></label>
+                                    <label for="custo_estimado">Custo Estimado</label>
                                     <div class="dano-input-prefix">
                                         <span>R$</span>
-                                        <input type="text" required class="form-control form-control-sm" id="custo_estimado" name="custo_estimado" placeholder="0.00">
+                                        <input type="text" class="form-control form-control-sm" id="custo_estimado" name="custo_estimado" placeholder="0.00">
                                     </div>
                                 </div>
                                 <div>
-                                    <label for="quilometragem_dano">Quilometragem <span class="req">*</span></label>
+                                    <label for="quilometragem_dano">Quilometragem</label>
                                     <div class="dano-input-prefix">
                                         <span>km</span>
-                                        <input type="number" required class="form-control form-control-sm" id="quilometragem_dano" name="quilometragem_dano" placeholder="0">
+                                        <input type="number" class="form-control form-control-sm" id="quilometragem_dano" name="quilometragem_dano" placeholder="0">
                                     </div>
                                 </div>
                             </div>
@@ -368,19 +372,20 @@
     /* Radio cards */
     .dano-radio-group {
         display: flex;
-        flex-direction: column;
-        gap: 6px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 5px;
     }
 
     .dano-radio-card {
         display: flex;
         align-items: center;
-        gap: 9px;
-        padding: 8px 12px;
+        gap: 6px;
+        padding: 5px 9px;
         border: 1.5px solid #e2e9f4;
-        border-radius: 10px;
+        border-radius: 8px;
         cursor: pointer;
-        font-size: 0.8rem;
+        font-size: 0.72rem;
         font-weight: 600;
         color: #3d4f63;
         background: #fafbff;

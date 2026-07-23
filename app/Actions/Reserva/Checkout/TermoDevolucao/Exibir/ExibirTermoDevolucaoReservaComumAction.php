@@ -25,7 +25,7 @@ class ExibirTermoDevolucaoReservaComumAction
 
         // Caso não exista o arquivo físico, gera o PDF dinamicamente
         $exibirCheckinAction = app(\App\Actions\Reserva\Checkin\Contrato\Exibir\ExibirContratoCheckinReservaComumAction::class);
-        $data = $exibirCheckinAction->montarDados($reserva);
+        $data = $exibirCheckinAction->montarDados($reserva, 'checkout');
         
         $pdf = $this->pdfService->gerarConteudo(
             view: 'pdf.contratos.checkout.comum',

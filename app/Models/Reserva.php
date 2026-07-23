@@ -185,18 +185,9 @@ class Reserva extends Model
         return $this->hasOne(Calcao::class, 'reserva_id');
     }
 
-    public function veiculoDanos(): HasManyThrough
+    public function veiculoDanos()
     {
-        return $this->hasManyThrough(
-            VeiculoDanos::class,
-            ReservaCodigo::class,
-
-            'reserva_id',        // reserva_codigos.reserva_id
-            'reserva_codigo_id', // veiculo_danos.reserva_codigo_id
-
-            'id',                // reservas.id
-            'id',                // reserva_codigos.id
-        )->orderByDesc('veiculo_danos.id');
+        return $this->hasMany(VeiculoDanos::class, 'reserva_id')->orderByDesc('id');
     }
 
     public function avariaCobrancas(): HasManyThrough

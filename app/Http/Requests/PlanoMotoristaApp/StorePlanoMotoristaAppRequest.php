@@ -26,6 +26,8 @@ class StorePlanoMotoristaAppRequest extends FormRequest
             'ordem' => ['nullable', 'integer', 'min:0'],
             'opcionais' => ['nullable', 'array'],
             'opcionais.*' => ['integer', 'exists:opcionais,id'],
+            'grupos_frota' => ['nullable', 'array'],
+            'grupos_frota.*' => ['integer', 'exists:grupos_frota,id'],
         ];
     }
 }

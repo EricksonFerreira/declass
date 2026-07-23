@@ -99,9 +99,6 @@
     @include('pdf.contratos.partials.valores', [
         'get' => $get,
     ])
-    @include('pdf.contratos.partials.pagamentos-checkout', [
-        'pagamentos' => $pagamentos,
-    ])
     @include('pdf.contratos.partials.caucao', [
         'caucao' => $caucao,
     ])

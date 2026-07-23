@@ -37,30 +37,7 @@
     </div>
 </div>
 
-@php
-    $statusFin = $get('faturacao.status_financeiro', '');
-    $statusClass = match($statusFin) {
-        'Pago' => 'status-pago',
-        'Parcialmente pago' => 'status-parcial',
-        default => 'status-aberto',
-    };
-@endphp
 
-<div class="finance-box" style="background:#fefce8;border-color:#fde68a;">
-    <div class="finance-row">
-        <span class="lbl">Valor pago</span>
-        <span class="val" style="color:#16a34a;">{{ $get('faturacao.total_pago', 'R$ 0,00') }}</span>
-    </div>
-    <div class="finance-row">
-        <span class="lbl">Saldo pendente</span>
-        <span class="val" style="color:#dc2626;">{{ $get('faturacao.saldo_pendente', 'R$ 0,00') }}</span>
-    </div>
-    <hr style="border:none;border-top:1px solid #fde68a;margin:4px 0">
-    <div class="finance-row">
-        <span class="lbl">Status financeiro</span>
-        <span class="val {{ $statusClass }}">{{ $statusFin ?: '-' }}</span>
-    </div>
-</div>
 
 <div style="margin-top:8px">
     <table class="info-table">

@@ -324,6 +324,70 @@ class SiteReservaController extends Controller
         ]);
     }
 
+    public function diasDisponiveisMotoristaApp(Request $request): JsonResponse
+    {
+        $empresa = $this->resolveEmpresaAtivaByHost($request);
+        if (!$empresa) {
+            return response()->json(['message' => 'Empresa nao encontrada para este dominio.'], 404);
+        }
+
+        $this->activateEmpresaContext($empresa);
+
+        $request->validate([
+            'estacao_id' => ['required', 'integer', 'exists:estacoes,id'],
+            'dias' => ['nullable', 'integer', 'min:1', 'max:180'],
+            'tipo' => ['nullable', 'string', 'max:20'],
+        ]);
+
+        $estacaoId = (int) $request->input('estacao_id');
+        $dias = (int) ($request->input('dias') ?: 90);
+        $tipo = strtolower(trim((string) ($request->input('tipo') ?: 'retirada')));
+        $isDevolucao = $tipo === 'devolucao';
+        $hoje = Carbon::today();
+
+        $estacao = Estacao::with(['diasUteis'])->findOrFail($estacaoId);
+
+        // Fetch groups associated with active plans
+        $grupoFrotaIds = \App\Models\PlanoMotoristaApp::ativos()
+            ->whereHas('gruposFrota')
+            ->get()
+            ->flatMap(fn($plano) => $plano->gruposFrota->pluck('id'))
+            ->unique()
+            ->all();
+
+        $quantidadeVeiculosAtivos = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao([$estacaoId], $grupoFrotaIds);
+        if (!$isDevolucao && (int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) <= 0) {
+            return response()->json([
+                'estacao_id' => $estacao->id,
+                'dias_disponiveis' => [],
+                'mensagem' => 'A estação selecionada nao possui veiculos ativos para retirada.',
+            ]);
+        }
+
+        $proximosDias = $estacao->proximosDiasFuncionamento($dias, $hoje);
+        $proximosDias = $this->removerFeriados(
+            $proximosDias,
+            $estacao->id,
+            (bool) ($estacao->opera_feriado ?? false)
+        );
+
+        if (empty($proximosDias)) {
+            return response()->json([
+                'estacao_id' => $estacao->id,
+                'dias_disponiveis' => [],
+                'mensagem' => $isDevolucao
+                    ? 'A estação selecionada nao possui agenda de devolucao configurada para o periodo.'
+                    : 'A estação selecionada nao possui agenda de retirada configurada para o periodo.',
+            ]);
+        }
+
+        return response()->json([
+            'estacao_id' => $estacao->id,
+            'dias_disponiveis' => $proximosDias,
+            'mensagem' => null,
+        ]);
+    }
+
     private function removerFeriados(array $dados, int $estacaoId, ?bool $operaFeriado): array
     {
         if ((bool) $operaFeriado || empty($dados)) {

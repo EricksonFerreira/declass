@@ -3,11 +3,7 @@
     <table class="detail-table">
         <tbody>
             <tr>
-                <td><strong>Status</strong><br>{{ $caucao['status'] ?? '-' }}</td>
-                <td><strong>Método</strong><br>{{ $caucao['metodo'] ?? '-' }}</td>
-                <td><strong>Valor calculado</strong><br>{{ $caucao['valor_calculado'] ?? '-' }}</td>
-                <td><strong>Valor autorizado</strong><br>{{ $caucao['valor_autorizado'] ?? '-' }}</td>
-                <td><strong>Valor capturado</strong><br>{{ $caucao['valor_capturado'] ?? '-' }}</td>
+                <td><strong>Valor</strong><br>{{ $caucao['valor_capturado'] ?? $caucao['valor_autorizado'] ?? $caucao['valor_calculado'] ?? '-' }}</td>
             </tr>
         </tbody>
     </table>

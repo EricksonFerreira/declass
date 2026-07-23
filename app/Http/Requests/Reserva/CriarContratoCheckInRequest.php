@@ -68,6 +68,8 @@ class CriarContratoCheckInRequest extends FormRequest
             'foto_tras' => $fotoRule,
             'foto_velocimetro' => $fotoRule,
             'foto_combustivel' => $fotoRule,
+            'danos' => 'nullable',
+            'dano' => 'nullable',
         ];
     }
 

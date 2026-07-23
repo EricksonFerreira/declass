@@ -30,6 +30,7 @@
                             1 => ['icon' => 'fa-info-circle', 'label' => 'Geral'],
                             2 => ['icon' => 'fa-road', 'label' => 'Km e Caução'],
                             3 => ['icon' => 'fa-puzzle-piece', 'label' => 'Opcionais'],
+                            4 => ['icon' => 'fa-layer-group', 'label' => 'Grupos de Frota'],
                         ];
                     @endphp
                     @foreach($steps as $n => $s)
@@ -151,6 +152,36 @@
                                 </div>
                             @empty
                                 <div class="col-12 text-muted">Nenhum vínculo de opcional encontrado.</div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="vc-step-pane d-none" data-pane="4">
+                        <div class="veiculo-section-title"><i class="fas fa-layer-group mr-1"></i>Grupos de Frota vinculados</div>
+                        <p class="text-muted small mb-3">Selecione os grupos de frota/veículos permitidos para este plano.</p>
+                        <div class="row">
+                            @forelse($gruposFrota as $grupo)
+                                @php
+                                    $ativo = ($grupo->ativo ?? 'N') === 'S';
+                                    $isSelected = in_array((int) $grupo->id, $gruposFrotaSelecionados, true);
+                                    $cardClass = ($ativo ? 'pm-option-card--active' : 'pm-option-card--inactive') . ($isSelected ? ' pm-option-card--selected' : '');
+                                @endphp
+                                <div class="col-lg-4 col-md-6 mb-2">
+                                    <label class="pm-option-card {{ $cardClass }}">
+                                        <input class="pm-option-card__check" type="checkbox" name="grupos_frota[]" id="grupo_{{ $grupo->id }}" value="{{ $grupo->id }}" {{ $isSelected ? 'checked' : '' }}>
+                                        <div class="pm-option-card__head">
+                                            <div class="pm-option-card__title">{{ $grupo->nome }} ({{ $grupo->codigo }})</div>
+                                            <span class="pm-option-card__status {{ $ativo ? 'is-active' : 'is-inactive' }}">
+                                                {{ $ativo ? 'Ativo' : 'Inativo' }}
+                                            </span>
+                                        </div>
+                                        <div class="pm-option-card__meta">
+                                            <span><i class="fas fa-dollar-sign mr-1"></i>Valor diário base: R$ {{ number_format((float) ($grupo->valor_diario ?? 0), 2, ',', '.') }}</span>
+                                        </div>
+                                    </label>
+                                </div>
+                            @empty
+                                <div class="col-12 text-muted">Nenhum grupo de frota cadastrado.</div>
                             @endforelse
                         </div>
                     </div>
@@ -440,8 +471,8 @@
                 $stepPanes.filter('[data-pane="' + currentStep + '"]').removeClass('d-none');
 
                 $btnPrev.toggleClass('d-none', currentStep === 1);
-                $btnNext.toggleClass('d-none', currentStep === 3);
-                $btnSalvar.toggleClass('d-none', currentStep !== 3);
+                $btnNext.toggleClass('d-none', currentStep === 4);
+                $btnSalvar.toggleClass('d-none', currentStep !== 4);
                 $('html, body').animate({ scrollTop: $('.card-veiculo').offset().top - 20 }, 150);
             }
 
@@ -486,7 +517,7 @@
             });
 
             $btnNext.on('click', function () {
-                currentStep = Math.min(3, currentStep + 1);
+                currentStep = Math.min(4, currentStep + 1);
                 renderStep();
             });
 

@@ -16,43 +16,23 @@
 
     @php
         $todasClausulas = $data['condicoes_gerais'] ?? [];
-        $metade = ceil(count($todasClausulas) / 2);
-        $colEsquerda = array_slice($todasClausulas, 0, $metade);
-        $colDireita = array_slice($todasClausulas, $metade);
     @endphp
 
     @if(!empty($todasClausulas))
-        <div class="clause-grid">
-            <div class="clause-grid-col">
-                @foreach($colEsquerda as $clausula)
-                    <div class="clause-item">
-                        <div class="clause-num">{{ str_pad($clausula['ordem'] ?? $loop->iteration, 2, '0', STR_PAD_LEFT) }}</div>
-                        <div class="clause-body">
-                            <strong>{{ $clausula['titulo'] ?? '' }}</strong>
-                            {{ $clausula['texto'] ?? '' }}
-                        </div>
+        <div class="clause-list">
+            @foreach($todasClausulas as $clausula)
+                <div class="clause-item">
+                    <div class="clause-num">{{ str_pad($clausula['ordem'] ?? $loop->iteration, 2, '0', STR_PAD_LEFT) }}</div>
+                    <div class="clause-body">
+                        <strong>{{ $clausula['titulo'] ?? '' }}</strong>
+                        {!! $clausula['texto'] ?? '' !!}
                     </div>
-                @endforeach
-            </div>
-            <div class="clause-grid-col">
-                @foreach($colDireita as $clausula)
-                    <div class="clause-item">
-                        <div class="clause-num">{{ str_pad($clausula['ordem'] ?? $loop->iteration, 2, '0', STR_PAD_LEFT) }}</div>
-                        <div class="clause-body">
-                            <strong>{{ $clausula['titulo'] ?? '' }}</strong>
-                            {{ $clausula['texto'] ?? '' }}
-                        </div>
-                    </div>
-                @endforeach
-            </div>
+                </div>
+            @endforeach
         </div>
     @else
-        <div class="clause-grid">
-            <div class="clause-grid-col">
-                <div class="clause-item">
-                    <div class="clause-body">Nenhuma condição geral cadastrada para esta empresa.</div>
-                </div>
-            </div>
+        <div class="clause-item">
+            <div class="clause-body">Nenhuma condição geral cadastrada para esta empresa.</div>
         </div>
     @endif
 

@@ -416,21 +416,32 @@
         padding: 14px 18px 18px;
     }
     .ma-flow {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-        gap: 10px;
-        padding: 0 18px 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 0 18px 12px;
     }
     .ma-flow__step {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
         border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        background: #fff;
-        padding: 12px;
+        border-radius: 999px;
+        background: #f8fafc;
+        padding: 4px 10px;
+        font-size: .72rem;
+        white-space: nowrap;
     }
     .ma-flow__step.is-done { border-color: #bbf7d0; background: #f0fdf4; }
     .ma-flow__step.is-current { border-color: #fde68a; background: #fffbeb; }
-    .ma-flow__label { font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; color: #64748b; font-weight: 900; }
-    .ma-flow__value { margin-top: 3px; color: var(--ma-ink); font-weight: 900; }
+    .ma-flow__icon {
+        font-size: .65rem;
+    }
+    .ma-flow__step.is-done .ma-flow__icon { color: #16a34a; }
+    .ma-flow__step.is-current .ma-flow__icon { color: #d97706; }
+    .ma-flow__step:not(.is-done):not(.is-current) .ma-flow__icon { color: #94a3b8; }
+    .ma-flow__label { font-weight: 800; color: #64748b; }
+    .ma-flow__value { font-weight: 700; color: var(--ma-ink); }
     .ma-sign-pad {
         border: 2px dashed #cbd5e1;
         border-radius: 16px;
@@ -591,18 +602,18 @@
     .rs-tabs-wrapper {
         background: #fff;
         border: 1px solid #e2e8f0;
-        border-radius: 20px;
+        border-radius: 14px;
         overflow: hidden;
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06);
-        margin-top: 16px;
+        box-shadow: 0 2px 10px rgba(15, 23, 42, 0.05);
+        margin-top: 10px;
     }
 
     ul.rs-nav-tabs,
     .rs-nav-tabs.nav-tabs {
         background: #f8fafc !important;
         border: none !important;
-        border-bottom: 2px solid #e2e8f0 !important;
-        padding: 0 16px !important;
+        border-bottom: 1px solid #e2e8f0 !important;
+        padding: 0 8px !important;
         display: flex !important;
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
@@ -621,18 +632,18 @@
     ul.rs-nav-tabs .nav-link {
         display: flex !important;
         align-items: center !important;
-        gap: 8px !important;
-        padding: 14px 20px !important;
-        font-size: 0.85rem !important;
+        gap: 5px !important;
+        padding: 8px 10px !important;
+        font-size: 0.75rem !important;
         font-weight: 600 !important;
         color: #64748b !important;
         background: transparent !important;
         border: none !important;
-        border-bottom: 3px solid transparent !important;
+        border-bottom: 2px solid transparent !important;
         border-radius: 0 !important;
         white-space: nowrap !important;
         transition: all 0.2s ease !important;
-        margin-bottom: -2px !important;
+        margin-bottom: -1px !important;
     }
 
     ul.rs-nav-tabs .nav-link:hover,
@@ -648,26 +659,26 @@
         color: #2563eb !important;
         background: transparent !important;
         border: none !important;
-        border-bottom: 3px solid #2563eb !important;
+        border-bottom: 2px solid #2563eb !important;
         font-weight: 700 !important;
     }
 
     ul.rs-nav-tabs .nav-link i {
-        font-size: 0.9rem !important;
+        font-size: 0.75rem !important;
     }
 
     .rs-tab-badge {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 20px;
-        height: 20px;
-        padding: 0 7px;
+        min-width: 16px;
+        height: 16px;
+        padding: 0 5px;
         border-radius: 999px;
-        font-size: 0.68rem;
+        font-size: 0.6rem;
         font-weight: 800;
         line-height: 1;
-        margin-left: 4px;
+        margin-left: 3px;
     }
 
     .rs-tab-badge--green  { background: #dcfce7; color: #15803d; }
@@ -676,7 +687,7 @@
     .rs-tab-badge--slate  { background: #f1f5f9; color: #475569; }
 
     .rs-tab-content {
-        padding: 24px;
+        padding: 14px;
         background: #fff;
     }
 </style>
@@ -730,7 +741,7 @@
                     Efetive a locacao, assine o contrato e registre check-in/check-out seguindo a ordem operacional.
                 </p>
             </div>
-            <span class="ma-status is-{{ $statusClass }}">
+            <span class="ma-status is-{{ $statusClass }}" style="color:black">
                 <i class="{{ $statusIcon }}"></i> {{ $statusLabel }}
             </span>
         </div>
@@ -888,32 +899,39 @@
         </div>
         <div class="ma-flow">
             <div class="ma-flow__step {{ $pagamentoEfetuado ? 'is-done' : 'is-current' }}">
-                <div class="ma-flow__label">Etapa 1</div>
-                <div class="ma-flow__value">{{ $pagamentoEfetuado ? 'Pagamento confirmado' : 'Pagamento pendente' }}</div>
+                <i class="ma-flow__icon fas {{ $pagamentoEfetuado ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                <span class="ma-flow__label">1.</span>
+                <span class="ma-flow__value">{{ $pagamentoEfetuado ? 'Pagamento' : 'Pgto pendente' }}</span>
             </div>
             <div class="ma-flow__step {{ $termoConfirmacaoAceito ? 'is-done' : ($pagamentoEfetuado ? 'is-current' : '') }}">
-                <div class="ma-flow__label">Etapa 2</div>
-                <div class="ma-flow__value">{{ $termoConfirmacaoAceito ? 'Termo aceito' : 'Termo pendente' }}</div>
+                <i class="ma-flow__icon fas {{ $termoConfirmacaoAceito ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                <span class="ma-flow__label">2.</span>
+                <span class="ma-flow__value">{{ $termoConfirmacaoAceito ? 'Termo' : 'Termo pendente' }}</span>
             </div>
             <div class="ma-flow__step {{ $calcaoConcluido ? 'is-done' : ($termoConfirmacaoAceito ? 'is-current' : '') }}">
-                <div class="ma-flow__label">Etapa 3</div>
-                <div class="ma-flow__value">{{ $calcaoEtapaLabel }}</div>
+                <i class="ma-flow__icon fas {{ $calcaoConcluido ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                <span class="ma-flow__label">3.</span>
+                <span class="ma-flow__value">Caução</span>
             </div>
             <div class="ma-flow__step {{ $estaCheckin ? 'is-done' : ($calcaoConcluido && $termoConfirmacaoAceito ? 'is-current' : '') }}">
-                <div class="ma-flow__label">Etapa 4</div>
-                <div class="ma-flow__value">{{ $estaCheckin ? 'Check-in realizado' : 'Check-in pendente' }}</div>
+                <i class="ma-flow__icon fas {{ $estaCheckin ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                <span class="ma-flow__label">4.</span>
+                <span class="ma-flow__value">Check-in</span>
             </div>
             <div class="ma-flow__step {{ $checkinContratoAssinado ? 'is-done' : ($estaCheckin ? 'is-current' : '') }}">
-                <div class="ma-flow__label">Etapa 5</div>
-                <div class="ma-flow__value">{{ $checkinContratoAssinado ? 'Contrato de check-in assinado' : 'Assinatura de check-in pendente' }}</div>
+                <i class="ma-flow__icon fas {{ $checkinContratoAssinado ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                <span class="ma-flow__label">5.</span>
+                <span class="ma-flow__value">Contrato</span>
             </div>
             <div class="ma-flow__step {{ $estaCheckout ? 'is-done' : ($checkinContratoAssinado ? 'is-current' : '') }}">
-                <div class="ma-flow__label">Etapa 6</div>
-                <div class="ma-flow__value">{{ $estaCheckout ? 'Check-out realizado' : 'Check-out pendente' }}</div>
+                <i class="ma-flow__icon fas {{ $estaCheckout ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                <span class="ma-flow__label">6.</span>
+                <span class="ma-flow__value">Check-out</span>
             </div>
             <div class="ma-flow__step {{ $checkoutAssinado ? 'is-done' : ($estaCheckout ? 'is-current' : '') }}">
-                <div class="ma-flow__label">Etapa 7</div>
-                <div class="ma-flow__value">{{ $checkoutAssinado ? 'Assinatura de check-out concluída' : 'Assinatura de check-out pendente' }}</div>
+                <i class="ma-flow__icon fas {{ $checkoutAssinado ? 'fa-check-circle' : 'fa-clock' }}"></i>
+                <span class="ma-flow__label">7.</span>
+                <span class="ma-flow__value">Assinatura</span>
             </div>
         </div>
     </div>
@@ -947,9 +965,9 @@
     @endif
 
     {{-- ══════════════════════════════════════════
-         ABAS PRINCIPAIS (rs-tabs-wrapper)
+         ABAS PRINCIPAIS
     ══════════════════════════════════════════ --}}
-    <div class="rs-tabs-wrapper mb-4">
+    <div class="rs-tabs-wrapper">
         <ul class="nav nav-tabs rs-nav-tabs" id="reservaMotoristaAppTabs" role="tablist">
             <li class="nav-item">
                 <a class="nav-link active" id="tab-visao-geral" data-toggle="tab" href="#pane-visao-geral" role="tab">
@@ -957,854 +975,122 @@
                     <span>Visão Geral</span>
                 </a>
             </li>
+
             <li class="nav-item">
                 <a class="nav-link" id="tab-checkin" data-toggle="tab" href="#pane-checkin" role="tab">
                     <i class="fas fa-file-signature"></i>
-                    <span>Check-in & Termos</span>
-                    @if($estaCheckin)
-                        <span class="rs-tab-badge rs-tab-badge--green">Concluído</span>
+                    <span>Check-in</span>
+
+                    @if($temContratoCheckin)
+                        <span class="rs-tab-badge {{ $checkinContratoAssinado ? 'rs-tab-badge--green' : 'rs-tab-badge--amber' }}">
+                            {{ $checkinContratoAssinado ? 'Assinado' : 'Pendente' }}
+                        </span>
                     @elseif($podeRegistrarCheckin)
                         <span class="rs-tab-badge rs-tab-badge--amber">Pendente</span>
                     @endif
                 </a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" id="tab-checkout" data-toggle="tab" href="#pane-checkout" role="tab">
-                    <i class="fas fa-flag-checkered"></i>
-                    <span>Check-out</span>
-                    @if($estaCheckout && !data_get(is_array($registro->documentos_json ?? null) ? data_get($registro->documentos_json, 'checkout', []) : [], 'assinatura'))
-                        <span class="rs-tab-badge rs-tab-badge--amber">Pendente</span>
-                    @endif
-                </a>
-            </li>
+
+            @if($temContratoCheckin || $estaCheckin)
+                <li class="nav-item">
+                    <a class="nav-link" id="tab-checkout" data-toggle="tab" href="#pane-checkout" role="tab">
+                        <i class="fas fa-car-crash"></i>
+                        <span>Check-out</span>
+
+                        @if($estaCheckout)
+                            <span class="rs-tab-badge {{ $checkoutAssinado ? 'rs-tab-badge--green' : 'rs-tab-badge--amber' }}">
+                                {{ $checkoutAssinado ? 'Assinado' : 'Pendente' }}
+                            </span>
+                        @elseif($podeRegistrarCheckout)
+                            <span class="rs-tab-badge rs-tab-badge--amber">Pendente</span>
+                        @endif
+                    </a>
+                </li>
+            @endif
+
             <li class="nav-item">
                 <a class="nav-link" id="tab-financeiro" data-toggle="tab" href="#pane-financeiro" role="tab">
                     <i class="fas fa-file-invoice-dollar"></i>
                     <span>Financeiro</span>
+
                     @if($temPagamentoPendente)
                         <span class="rs-tab-badge rs-tab-badge--amber">{{ $qtdPagamentosPendentes }}</span>
                     @endif
                 </a>
             </li>
+
             <li class="nav-item">
-                <a class="nav-link" id="tab-multas-sinistros" data-toggle="tab" href="#pane-multas-sinistros" role="tab">
+                <a class="nav-link" id="tab-multas" data-toggle="tab" href="#pane-multas" role="tab">
                     <i class="fas fa-exclamation-triangle"></i>
-                    <span>Multas & Sinistros</span>
-                    @php $totalMultasSinistros = $multas->count() + $sinistros->count(); @endphp
-                    @if($totalMultasSinistros > 0)
-                        <span class="rs-tab-badge rs-tab-badge--red">{{ $totalMultasSinistros }}</span>
+                    <span>Multas</span>
+
+                    @if($multas->isNotEmpty())
+                        <span class="rs-tab-badge rs-tab-badge--red">{{ $multas->count() }}</span>
                     @endif
                 </a>
             </li>
+
+            <li class="nav-item">
+                <a class="nav-link" id="tab-sinistros" data-toggle="tab" href="#pane-sinistros" role="tab">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <span>Sinistros</span>
+
+                    @if($sinistros->isNotEmpty())
+                        <span class="rs-tab-badge rs-tab-badge--red">{{ $sinistros->count() }}</span>
+                    @endif
+                </a>
+            </li>
+
             <li class="nav-item">
                 <a class="nav-link" id="tab-historico" data-toggle="tab" href="#pane-historico" role="tab">
                     <i class="fas fa-history"></i>
-                    <span>Histórico & Cadastro</span>
+                    <span>Histórico</span>
                 </a>
             </li>
         </ul>
 
         <div class="tab-content rs-tab-content" id="reservaMotoristaAppTabContent">
-            {{-- TAB 1: VISÃO GERAL --}}
+            {{-- TAB 1 — VISÃO GERAL --}}
             <div class="tab-pane fade show active" id="pane-visao-geral" role="tabpanel">
-                <div class="ma-grid">
-                    <div class="ma-main">
-                        <div class="ma-card">
-                            <div class="ma-card__head">
-                                <div class="ma-card__icon"><i class="fas fa-route"></i></div>
-                                <div>
-                                    <div class="ma-card__title">Vigencia atual</div>
-                                    <div class="ma-card__sub">Janela ativa da reserva recorrente</div>
-                                </div>
-                            </div>
-                            <div class="ma-card__body">
-                                <div class="ma-legend">
-                                    <div class="ma-stop">
-                                        <div class="ma-dot ma-dot--a"></div>
-                                        <div>
-                                            <div class="ma-label">Inicio</div>
-                                            <div class="ma-place">{{ $dataInicio }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="ma-mid">
-                                        <div class="ma-mid__line"></div>
-                                        <div class="ma-mid__pill">
-                                            {{ $registro->quantidade_dias ?? 0 }} {{ ((int) ($registro->quantidade_dias ?? 0) === 1) ? 'dia' : 'dias' }}
-                                        </div>
-                                        <div class="ma-mid__line"></div>
-                                    </div>
-                                    <div class="ma-stop ma-stop--right">
-                                        <div class="ma-dot ma-dot--b"></div>
-                                        <div>
-                                            <div class="ma-label">Fim</div>
-                                            <div class="ma-place">{{ $dataFim }}</div>
-                                            @if(!is_null($diasRestantes))
-                                                <div class="ma-date">
-                                                    @if($diasRestantes > 0)
-                                                        {{ $diasRestantes }} dia(s) restantes
-                                                    @elseif($diasRestantes === 0)
-                                                        vence hoje
-                                                    @else
-                                                        vencida ha {{ abs($diasRestantes) }} dia(s)
-                                                    @endif
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="ma-mini">
-                                    <div class="ma-mini__item">
-                                        <div class="ma-mini__label">Vigência contratada</div>
-                                        <div class="ma-mini__value">{{ $inicioVigenciaFormatado }} até {{ $fimVigenciaFormatado }}</div>
-                                    </div>
-                                    <div class="ma-mini__item">
-                                        <div class="ma-mini__label">Veículo</div>
-                                        <div class="ma-mini__value">{{ $veiculoAtual?->nome ?? 'Sem vínculo' }}</div>
-                                    </div>
-                                    <div class="ma-mini__item">
-                                        <div class="ma-mini__label">Km inicial</div>
-                                        <div class="ma-mini__value">{{ $registro->quilometragem_inicial ? number_format((int) $registro->quilometragem_inicial, 0, ',', '.') . ' km' : '—' }}</div>
-                                    </div>
-                                    <div class="ma-mini__item">
-                                        <div class="ma-mini__label">Combustível</div>
-                                        <div class="ma-mini__value">{{ $registro->nivel_combustivel_inicial ?? '—' }}</div>
-                                    </div>
-                                </div>
-
-                                <div class="ma-actions">
-                                    @if($podeRenovar)
-                                        <button type="button" class="ma-btn ma-btn--primary" data-toggle="modal" data-target="#modalRenovarMotoristaApp">
-                                            <i class="fas fa-arrows-rotate"></i>
-                                            <span>Renovar plano</span>
-                                        </button>
-                                    @endif
-                                    @if($podeCancelar)
-                                        <button type="button" class="ma-btn ma-btn--ghost text-danger" data-toggle="modal" data-target="#modalCancelarMotoristaApp">
-                                            <i class="fas fa-ban"></i>
-                                            <span>Cancelar reserva</span>
-                                        </button>
-                                    @endif
-                                    <a href="{{ route('reserva.minhas') }}" class="ma-btn ma-btn--ghost">
-                                        <i class="fas fa-arrow-left"></i>
-                                        <span>Voltar</span>
-                                    </a>
-                                </div>
-
-                                <div class="ma-note mt-3">
-                                    Aqui você pode acompanhar o pagamento e renovar o contrato. O cancelamento segue a mesma janela de 24 horas da regra comum do sistema.
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ma-side">
-                        <div class="ma-card">
-                            <div class="ma-card__head">
-                                <div class="ma-card__icon"><i class="fas fa-user"></i></div>
-                                <div>
-                                    <div class="ma-card__title">Dados do cliente</div>
-                                    <div class="ma-card__sub">Informacoes principais do titular</div>
-                                </div>
-                            </div>
-                            <div class="ma-card__body">
-                                <div class="ma-list">
-                                    <div class="ma-list__item">
-                                        <div class="ma-list__label">Nome</div>
-                                        <div class="ma-list__value">{{ $usuario?->nome ?? $usuario?->name ?? 'Nao informado' }}</div>
-                                    </div>
-                                    <div class="ma-list__item">
-                                        <div class="ma-list__label">Email</div>
-                                        <div class="ma-list__value">{{ $usuario?->email ?? '-' }}</div>
-                                    </div>
-                                    <div class="ma-list__item">
-                                        <div class="ma-list__label">Telefone</div>
-                                        <div class="ma-list__value">{{ $usuario?->telefone ?? '-' }}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @include('reserva.partials.motorista_app_visao_geral')
             </div>
 
-            {{-- TAB 2: CHECK-IN & TERMOS --}}
+            {{-- TAB 2 — CHECK-IN --}}
             <div class="tab-pane fade" id="pane-checkin" role="tabpanel">
-                {{-- CARD DO TERMO DE CONFIRMAÇÃO DA RESERVA --}}
-                <div class="ma-card mb-4">
-                    <div class="ma-card__head">
-                        <div class="ma-card__icon"><i class="fas fa-file-signature"></i></div>
-                        <div>
-                            <div class="ma-card__title">Termo de Confirmação da Reserva</div>
-                            <div class="ma-card__sub">Termo de aceite prévio assinado digitalmente</div>
-                        </div>
-                        <div class="ml-auto">
-                            @if($termoConfirmacaoAceito)
-                                <span class="ma-pill ma-pill--success"><i class="fas fa-check-circle"></i> Aceito / Concluído</span>
-                            @else
-                                <span class="ma-pill ma-pill--warning"><i class="fas fa-clock"></i> Pendente</span>
-                            @endif
-                        </div>
-                    </div>
-                    <div class="ma-card__body">
-                        @if($termoConfirmacaoAceito)
-                            <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                                <div class="ma-grid flex-grow-1 mr-3" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-                                    <div class="ma-info">
-                                        <div class="ma-info__label">Status do Termo</div>
-                                        <div class="ma-info__value text-success font-weight-bold">
-                                            <i class="fas fa-check-circle mr-1"></i> Aceito / Assinado
-                                        </div>
-                                    </div>
-                                    <div class="ma-info">
-                                        <div class="ma-info__label">Data e Hora do Aceite</div>
-                                        <div class="ma-info__value font-weight-bold">
-                                            {{ \Carbon\Carbon::parse($termoConfirmacaoAceitoEm)->format('d/m/Y H:i:s') }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <button type="button" class="btn btn-outline-primary font-weight-bold" data-toggle="modal" data-target="#modalVerTermoAssinado">
-                                        <i class="fas fa-file-alt mr-1"></i> Ver Termo Assinado
-                                    </button>
-                                </div>
-                            </div>
-                        @else
-                            <div class="alert alert-warning mb-0 d-flex align-items-center justify-content-between">
-                                <div>
-                                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                                    <strong>Termo de confirmação pendente.</strong> O cliente ainda não realizou o aceite do termo de confirmação da reserva.
-                                </div>
-                                @if($podeAceitarTermo)
-                                    <button type="button" class="btn btn-sm btn-success ml-3" data-toggle="modal" data-target="#modalTermoConfirmacaoMotoristaApp">
-                                        <i class="fas fa-file-signature mr-1"></i> Aceitar termo agora
-                                    </button>
-                                @endif
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                {{-- CARD DO CHECK-IN OPERACIONAL --}}
-                @if($temContratoCheckin)
-                    @php
-                        $fotosCheckin = [
-                            'Frente'       => $contratoCheckinOperacional->foto_frente_path ?? null,
-                            'Trás'         => $contratoCheckinOperacional->foto_tras_path ?? null,
-                            'Direita'      => $contratoCheckinOperacional->foto_direita_path ?? null,
-                            'Esquerda'     => $contratoCheckinOperacional->foto_esquerda_path ?? null,
-                            'Velocímetro'  => $contratoCheckinOperacional->foto_velocimetro_path ?? null,
-                            'Combustível'  => $contratoCheckinOperacional->foto_combustivel_path ?? null,
-                        ];
-                        $temFotosCheckin = collect($fotosCheckin)->filter()->isNotEmpty();
-                    @endphp
-
-                    <div class="ma-card mb-4">
-                        <div class="ma-card__head">
-                            <div class="ma-card__icon"><i class="fas fa-clipboard-check"></i></div>
-                            <div>
-                                <div class="ma-card__title">Check-in operacional</div>
-                                <div class="ma-card__sub">Dados registrados na retirada do veículo</div>
-                            </div>
-                            <div class="ml-auto">
-                                @if($checkinContratoAssinado)
-                                    <span class="ma-pill ma-pill--success"><i class="fas fa-check-circle"></i> Contrato Assinado</span>
-                                @else
-                                    <span class="ma-pill ma-pill--warning"><i class="fas fa-clock"></i> Aguardando Assinatura</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="ma-card__body">
-                            <div class="ma-grid">
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Veículo</div>
-                                    <div class="ma-info__value font-weight-bold">
-                                        {{ $contratoCheckinOperacional->veiculo?->nome ?? ('#' . $contratoCheckinOperacional->veiculo_id) }}
-                                        @if($contratoCheckinOperacional->veiculo?->placa_licenca)
-                                            <span class="text-muted">({{ $contratoCheckinOperacional->veiculo->placa_licenca }})</span>
-                                        @endif
-                                    </div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Modelo</div>
-                                    <div class="ma-info__value">{{ $contratoCheckinOperacional->modelo?->nome ?? $contratoCheckinOperacional->veiculo?->modelo?->nome ?? '-' }}</div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Marca</div>
-                                    <div class="ma-info__value">{{ $contratoCheckinOperacional->marca?->nome ?? $contratoCheckinOperacional->veiculo?->marca?->nome ?? '-' }}</div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">KM inicial</div>
-                                    <div class="ma-info__value font-weight-bold">{{ number_format((float) $contratoCheckinOperacional->quilometragem_atual, 0, ',', '.') }} km</div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Combustível</div>
-                                    <div class="ma-info__value font-weight-bold">{{ $contratoCheckinOperacional->nivel_combustivel ?? '-' }}</div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Data/Hora da Saída</div>
-                                    <div class="ma-info__value font-weight-bold">
-                                        {{ $contratoCheckinOperacional->data_saida ? \Carbon\Carbon::parse($contratoCheckinOperacional->data_saida)->format('d/m/Y') : '-' }}
-                                        {{ $contratoCheckinOperacional->hora_saida ? \Carbon\Carbon::parse($contratoCheckinOperacional->hora_saida)->format('H:i') : '' }}
-                                    </div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Status Assinatura</div>
-                                    <div class="ma-info__value font-weight-bold {{ $checkinContratoAssinado ? 'text-success' : 'text-warning' }}">
-                                        {{ $checkinContratoAssinado ? 'Assinado' : 'Pendente' }}
-                                        @if($checkinContratoAssinado && $contratoCheckinOperacional->data_assinatura)
-                                            <small class="d-block text-muted">{{ \Carbon\Carbon::parse($contratoCheckinOperacional->data_assinatura)->format('d/m/Y H:i') }}</small>
-                                        @endif
-                                    </div>
-                                </div>
-                                @if($codigoOperacionalCheckin)
-                                    <div class="ma-info">
-                                        <div class="ma-info__label">Código Operacional</div>
-                                        <div class="ma-info__value"><code>{{ $codigoOperacionalCheckin }}</code></div>
-                                    </div>
-                                @endif
-                            </div>
-
-                            @if($contratoCheckinOperacional->notas_saida || $contratoCheckinOperacional->observacoes_saida)
-                                <div class="mt-3 pt-3 border-top">
-                                    @if($contratoCheckinOperacional->notas_saida)
-                                        <div class="ma-info mb-2">
-                                            <div class="ma-info__label"><i class="fas fa-sticky-note mr-1"></i> Notas de saída</div>
-                                            <div class="ma-info__value">{{ $contratoCheckinOperacional->notas_saida }}</div>
-                                        </div>
-                                    @endif
-                                    @if($contratoCheckinOperacional->observacoes_saida)
-                                        <div class="ma-info">
-                                            <div class="ma-info__label"><i class="fas fa-comment-alt mr-1"></i> Observações</div>
-                                            <div class="ma-info__value">{{ $contratoCheckinOperacional->observacoes_saida }}</div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-
-                            {{-- FOTOS REGISTRADAS NO CHECK-IN --}}
-                            <div class="mt-4 pt-3 border-top">
-                                <div class="d-flex align-items-center mb-3">
-                                    <i class="fas fa-camera text-primary mr-2" style="font-size: 1.1rem;"></i>
-                                    <h6 class="font-weight-bold mb-0" style="color: var(--ma-ink);">Fotos do Veículo no Check-in</h6>
-                                </div>
-
-                                <div class="row">
-                                    @foreach($fotosCheckin as $label => $path)
-                                        @php $fotoUrl = $path ? asset('storage/' . $path) : null; @endphp
-                                        <div class="col-6 col-md-4 col-lg-2 mb-3">
-                                            <div class="card h-100 shadow-sm border-light">
-                                                <div class="card-body p-2 text-center d-flex flex-column justify-content-between">
-                                                    @if($fotoUrl)
-                                                        <div class="position-relative overflow-hidden rounded mb-2" style="height: 110px; background: #f8fafc; cursor: pointer;"
-                                                             onclick="openPhotoModal('{{ $fotoUrl }}', 'Foto do Check-in - {{ $label }}')">
-                                                            <img src="{{ $fotoUrl }}" alt="Foto {{ $label }}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.2s ease;">
-                                                            <div class="position-absolute inset-0 d-flex align-items-center justify-content-center text-white" style="background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
-                                                                <i class="fas fa-search-plus fa-lg"></i>
-                                                            </div>
-                                                        </div>
-                                                    @else
-                                                        <div class="d-flex flex-column align-items-center justify-content-center rounded mb-2" style="height: 110px; background: #f1f5f9; color: #94a3b8;">
-                                                            <i class="fas fa-image fa-2x mb-1"></i>
-                                                            <small style="font-size: 0.72rem;">Sem foto</small>
-                                                        </div>
-                                                    @endif
-                                                    <span class="font-weight-bold text-secondary" style="font-size: 0.78rem;">{{ $label }}</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            </div>
-
-                            @include('reserva.components.avarias_cliente_motorista_app', ['avariasCliente' => $avariasCliente])
-                        </div>
-                    </div>
-                @else
-                    <div class="ma-card">
-                        <div class="ma-card__body">
-                            <div class="alert alert-info mb-0 text-center py-4">
-                                <i class="fas fa-info-circle fa-2x mb-2 d-block text-info"></i>
-                                <h5>Check-in ainda não realizado</h5>
-                                <p class="mb-0 text-muted">O check-in operacional do veículo será liberado após a confirmação do pagamento e o aceite do termo de confirmação.</p>
-                            </div>
-                        </div>
-                    </div>
-                @endif
+                @include('reserva.partials.motorista_app_checkin')
             </div>
 
-            {{-- TAB 3: CHECK-OUT --}}
+            {{-- TAB 3 — CHECK-OUT --}}
             <div class="tab-pane fade" id="pane-checkout" role="tabpanel">
-                @if($estaCheckout)
-                    @php
-                        $checkoutDocs = is_array($registro->documentos_json ?? null)
-                            ? data_get($registro->documentos_json, 'checkout', [])
-                            : [];
-                        $assinaturaCo = data_get($checkoutDocs, 'assinatura');
-                        $dataAssinaturaCo = data_get($checkoutDocs, 'data_assinatura');
-                        $fotosCheckoutMap = [
-                            'Direita'      => data_get($checkoutDocs, 'fotos.foto_direita_co') ?? data_get($checkoutDocs, 'fotos.foto_direita_path') ?? data_get($checkoutDocs, 'foto_direita_co') ?? data_get($checkoutDocs, 'foto_direita_path') ?? ($contratoCheckoutOperacional->foto_direita_path ?? null),
-                            'Esquerda'     => data_get($checkoutDocs, 'fotos.foto_esquerda_co') ?? data_get($checkoutDocs, 'fotos.foto_esquerda_path') ?? data_get($checkoutDocs, 'foto_esquerda_co') ?? data_get($checkoutDocs, 'foto_esquerda_path') ?? ($contratoCheckoutOperacional->foto_esquerda_path ?? null),
-                            'Frente'       => data_get($checkoutDocs, 'fotos.foto_frente_co') ?? data_get($checkoutDocs, 'fotos.foto_frente_path') ?? data_get($checkoutDocs, 'foto_frente_co') ?? data_get($checkoutDocs, 'foto_frente_path') ?? ($contratoCheckoutOperacional->foto_frente_path ?? null),
-                            'Trás'         => data_get($checkoutDocs, 'fotos.foto_tras_co') ?? data_get($checkoutDocs, 'fotos.foto_tras_path') ?? ($contratoCheckoutOperacional->foto_tras_path ?? null),
-                            'Velocímetro'  => data_get($checkoutDocs, 'fotos.foto_velocimetro_co') ?? data_get($checkoutDocs, 'fotos.foto_velocimetro_path') ?? ($contratoCheckoutOperacional->foto_velocimetro_path ?? null),
-                            'Combustível'  => data_get($checkoutDocs, 'fotos.foto_combustivel_co') ?? data_get($checkoutDocs, 'fotos.foto_combustivel_path') ?? ($contratoCheckoutOperacional->foto_combustivel_path ?? null),
-                        ];
-                        $temFotosCheckout = collect($fotosCheckoutMap)->filter()->isNotEmpty();
-                    @endphp
-
-                    <div class="ma-card mb-4">
-                        <div class="ma-card__head" style="border-left-color: #e11d48;">
-                            <div class="ma-card__icon"><i class="fas fa-flag-checkered text-danger"></i></div>
-                            <div>
-                                <div class="ma-card__title">Check-out operacional</div>
-                                <div class="ma-card__sub">Dados registrados no encerramento do contrato</div>
-                            </div>
-                            <div class="ml-auto">
-                                @if($assinaturaCo)
-                                    <span class="ma-pill ma-pill--success"><i class="fas fa-check-circle"></i> Termo Assinado</span>
-                                @else
-                                    <span class="ma-pill ma-pill--warning"><i class="fas fa-signature"></i> Assinatura Pendente</span>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="ma-card__body">
-                            <div class="ma-grid">
-                                <div class="ma-info">
-                                    <div class="ma-info__label">KM final</div>
-                                    <div class="ma-info__value font-weight-bold">
-                                        {{ $registro->quilometragem_final ? number_format((float) $registro->quilometragem_final, 0, ',', '.') : '-' }} km
-                                    </div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Combustível final</div>
-                                    <div class="ma-info__value font-weight-bold">{{ $registro->nivel_combustivel_final ?? '-' }}</div>
-                                </div>
-                                <div class="ma-info">
-                                    <div class="ma-info__label">Data/Hora de Devolução</div>
-                                    <div class="ma-info__value font-weight-bold">
-                                        {{ $registro->checkout_realizado_em ? \Carbon\Carbon::parse($registro->checkout_realizado_em)->format('d/m/Y H:i') : '-' }}
-                                    </div>
-                                </div>
-                            </div>
-
-                            @if(data_get($checkoutDocs, 'notas_devolucao') || data_get($checkoutDocs, 'observacoes_devolucao'))
-                                <div class="mt-3 pt-3 border-top">
-                                    @if(data_get($checkoutDocs, 'notas_devolucao'))
-                                        <div class="ma-info mb-2">
-                                            <div class="ma-info__label"><i class="fas fa-sticky-note mr-1"></i> Notas de devolução</div>
-                                            <div class="ma-info__value">{{ data_get($checkoutDocs, 'notas_devolucao') }}</div>
-                                        </div>
-                                    @endif
-                                    @if(data_get($checkoutDocs, 'observacoes_devolucao'))
-                                        <div class="ma-info">
-                                            <div class="ma-info__label"><i class="fas fa-comment-alt mr-1"></i> Observações</div>
-                                            <div class="ma-info__value">{{ data_get($checkoutDocs, 'observacoes_devolucao') }}</div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endif
-
-                            {{-- FOTOS REGISTRADAS NO CHECK-IN --}}
-                            @if(false && $temContratoCheckin)
-                                @php
-                                    $fotosCheckin = [
-                                        'Frente'       => $contratoCheckinOperacional->foto_frente_path ?? null,
-                                        'Trás'         => $contratoCheckinOperacional->foto_tras_path ?? null,
-                                        'Direita'      => $contratoCheckinOperacional->foto_direita_path ?? null,
-                                        'Esquerda'     => $contratoCheckinOperacional->foto_esquerda_path ?? null,
-                                        'Velocímetro'  => $contratoCheckinOperacional->foto_velocimetro_path ?? null,
-                                        'Combustível'  => $contratoCheckinOperacional->foto_combustivel_path ?? null,
-                                    ];
-                                    $temFotosCheckin = collect($fotosCheckin)->filter()->isNotEmpty();
-                                @endphp
-                                @if($temFotosCheckin)
-                                    <div class="mt-4 pt-3 border-top">
-                                        <div class="d-flex align-items-center mb-3">
-                                            <i class="fas fa-camera text-primary mr-2" style="font-size: 1.1rem;"></i>
-                                            <h6 class="font-weight-bold mb-0" style="color: var(--ma-ink);">Fotos do Veículo no Check-in</h6>
-                                        </div>
-
-                                        <div class="row">
-                                            @foreach($fotosCheckin as $label => $path)
-                                                @php $fotoUrl = $path ? asset('storage/' . $path) : null; @endphp
-                                                <div class="col-6 col-md-4 col-lg-2 mb-3">
-                                                    <div class="card h-100 shadow-sm border-light">
-                                                        <div class="card-body p-2 text-center d-flex flex-column justify-content-between">
-                                                            @if($fotoUrl)
-                                                                <div class="position-relative overflow-hidden rounded mb-2" style="height: 110px; background: #f8fafc; cursor: pointer;"
-                                                                     onclick="openPhotoModal('{{ $fotoUrl }}', 'Foto do Check-in - {{ $label }}')">
-                                                                    <img src="{{ $fotoUrl }}" alt="Foto {{ $label }}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.2s ease;">
-                                                                    <div class="position-absolute inset-0 d-flex align-items-center justify-content-center text-white" style="background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
-                                                                        <i class="fas fa-search-plus fa-lg"></i>
-                                                                    </div>
-                                                                </div>
-                                                            @else
-                                                                <div class="d-flex flex-column align-items-center justify-content-center rounded mb-2" style="height: 110px; background: #f1f5f9; color: #94a3b8;">
-                                                                    <i class="fas fa-image fa-2x mb-1"></i>
-                                                                    <small style="font-size: 0.72rem;">Sem foto</small>
-                                                                </div>
-                                                            @endif
-                                                            <span class="font-weight-bold text-secondary" style="font-size: 0.78rem;">{{ $label }}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-                            @endif
-
-                            {{-- FOTOS REGISTRADAS NO CHECK-OUT --}}
-                            @if(true)
-                                <div class="mt-4 pt-3 border-top">
-                                    <div class="d-flex align-items-center mb-3">
-                                        <i class="fas fa-camera text-danger mr-2" style="font-size: 1.1rem;"></i>
-                                        <h6 class="font-weight-bold mb-0" style="color: var(--ma-ink);">Fotos do Veículo no Check-out</h6>
-                                    </div>
-
-                                    <div class="row">
-                                        @foreach($fotosCheckoutMap as $label => $path)
-                                            @php
-                                                $fotoUrl = null;
-                                                if ($path) {
-                                                    $pathLimpo = ltrim((string) $path, '/');
-                                                    $fotoUrl = str_starts_with($pathLimpo, 'http://') || str_starts_with($pathLimpo, 'https://')
-                                                        ? $pathLimpo
-                                                        : asset(str_starts_with($pathLimpo, 'storage/') ? $pathLimpo : ('storage/' . $pathLimpo));
-                                                }
-                                            @endphp
-                                            <div class="col-6 col-md-4 col-lg-2 mb-3">
-                                                <div class="card h-100 shadow-sm border-light">
-                                                    <div class="card-body p-2 text-center d-flex flex-column justify-content-between">
-                                                        @if($fotoUrl)
-                                                            <div class="position-relative overflow-hidden rounded mb-2" style="height: 110px; background: #f8fafc; cursor: pointer;"
-                                                                 onclick="openPhotoModal('{{ $fotoUrl }}', 'Foto do Check-out - {{ $label }}')">
-                                                                <img src="{{ $fotoUrl }}" alt="Foto {{ $label }}" class="w-100 h-100" style="object-fit: cover; transition: transform 0.2s ease;">
-                                                                <div class="position-absolute inset-0 d-flex align-items-center justify-content-center text-white" style="background: rgba(0,0,0,0.35); opacity: 0; transition: opacity 0.2s;" onmouseenter="this.style.opacity=1" onmouseleave="this.style.opacity=0">
-                                                                    <i class="fas fa-search-plus fa-lg"></i>
-                                                                </div>
-                                                            </div>
-                                                        @else
-                                                            <div class="d-flex flex-column align-items-center justify-content-center rounded mb-2" style="height: 110px; background: #f1f5f9; color: #94a3b8;">
-                                                                <i class="fas fa-image fa-2x mb-1"></i>
-                                                                <small style="font-size: 0.72rem;">Sem foto</small>
-                                                            </div>
-                                                        @endif
-                                                        <span class="font-weight-bold text-secondary" style="font-size: 0.78rem;">{{ $label }}</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        @endforeach
-                                    </div>
-                                </div>
-                            @endif
-
-                            {{-- ASSINATURA DO TERMO DE DEVOLUÇÃO --}}
-                            @include('reserva.components.avarias_cliente_motorista_app', ['avariasCliente' => $avariasCliente])
-
-                            <div class="mt-4 pt-3 border-top">
-                                @if($assinaturaCo)
-                                    <div class="d-flex flex-column align-items-center justify-content-center py-3">
-                                        <div class="text-success font-weight-bold mb-2">
-                                            <i class="fas fa-check-circle mr-1"></i> Termo Assinado Digitalmente
-                                        </div>
-                                        @if($dataAssinaturaCo)
-                                            <small class="text-muted mb-3">Registrado em {{ \Carbon\Carbon::parse($dataAssinaturaCo)->format('d/m/Y H:i') }}</small>
-                                        @endif
-                                        <a href="{{ route('reserva.verContratoCheckout', ['codigo' => $codigoReserva]) }}" target="_blank" class="btn btn-sm btn-outline-primary px-4 py-2 font-weight-bold">
-                                            <i class="fas fa-file-pdf mr-2"></i> Ver Contrato de Devolução
-                                        </a>
-                                    </div>
-                                @else
-                                    <div class="row justify-content-center">
-                                        <div class="col-md-8 col-12 text-center py-4">
-                                            <i class="fas fa-signature fa-3x mb-3" style="color: #cbd5e1;"></i>
-                                            <h5 class="font-weight-bold" style="color: var(--ma-ink);">Assinatura Digital Pendente</h5>
-                                            <p class="text-muted mb-3">O motorista deve assinar o termo de devolução para registrar a devolução oficial do veículo.</p>
-                                            <a href="{{ route('reserva.assinarContratoCheckout', ['codigo' => $codigoReserva]) }}" class="btn btn-success font-weight-bold px-4 py-2 text-white">
-                                                <i class="fas fa-signature mr-2"></i> Assinar Termo de Devolução
-                                            </a>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                            </div>
-
-                        </div>
-                    </div>
-                @else
-                    <div class="ma-card p-5 text-center text-muted">
-                        <i class="fas fa-flag-checkered fa-3x mb-3" style="color:#cbd5e1"></i>
-                        <h5>Check-out não realizado</h5>
-                        <p class="mb-0">Os dados e fotos da devolução do veículo ficarão disponíveis aqui após a conclusão do check-out operacional pelo operador.</p>
-                    </div>
-                @endif
+                @include('reserva.partials.motorista_app_checkout')
             </div>
 
-            {{-- TAB 3: FINANCEIRO --}}
+            {{-- TAB INTERNA — DANOS/AVARIAS --}}
+            <div class="tab-pane fade" id="pane-danos" role="tabpanel">
+                @include('reserva.partials.motorista_app_danos')
+            </div>
+
+            {{-- TAB 4 — FINANCEIRO --}}
             <div class="tab-pane fade" id="pane-financeiro" role="tabpanel">
-                <div class="ma-card mb-4">
-                    <div class="ma-card__head">
-                        <div class="ma-card__icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                        <div>
-                            <div class="ma-card__title">Resumo financeiro</div>
-                            <div class="ma-card__sub">Valor base atual e total esperado do ciclo</div>
-                        </div>
-                        @if($existeDetalheOpcionais)
-                            <div class="ml-auto">
-                                <button type="button" class="btn btn-sm btn-outline-primary" data-toggle="modal" data-target="#modalDetalhesOpcionaisMotoristaApp">
-                                    <i class="fas fa-ellipsis-h mr-1"></i> Detalhes
-                                </button>
-                            </div>
-                        @endif
-                    </div>
-                    <div class="ma-card__body">
-                        <div class="ma-price">
-                            <div class="ma-price__box">
-                                <div class="ma-price__label">Valor por ciclo contratado</div>
-                                <div class="ma-price__value">R$ {{ number_format($valorPeriodoContratado, 2, ',', '.') }}</div>
-                                <div class="ma-price__hint">Plano: {{ $plano?->nome ?? '—' }} ({{ $periodoLabelContrato }})</div>
-                            </div>
-                            <div class="ma-price__box">
-                                <div class="ma-price__label">Caução (Bloqueio)</div>
-                                <div class="ma-price__value">R$ {{ number_format($calcao, 2, ',', '.') }}</div>
-                                <div class="ma-price__hint">Depositado / retido no inicio</div>
-                            </div>
-                            <div class="ma-price__box">
-                                <div class="ma-price__label">Opcionais selecionados</div>
-                                <div class="ma-price__value">R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</div>
-                                <div class="ma-price__hint">Soma do pacote adicional</div>
-                            </div>
-                            <div class="ma-price__box ma-price__box--total">
-                                <div class="ma-price__label">Total por ciclo</div>
-                                <div class="ma-price__value">R$ {{ number_format($valorTotal, 2, ',', '.') }}</div>
-                                <div class="ma-price__hint">Plano + opcionais por ciclo</div>
-                            </div>
-                            @php
-                                $pagamentoPendenteAtual = $pagamentos->first(fn($p) => strtolower((string)($p->status ?? '')) === 'pendente');
-                                $valorPendenteAtual = $saldoPagamentoReserva;
-                            @endphp
-                            <div class="ma-price__box" style="border: 1px solid {{ $valorPendenteAtual > 0 ? '#fde68a' : '#bbf7d0' }}; background: {{ $valorPendenteAtual > 0 ? '#fffbeb' : '#f0fdf4' }};">
-                                <div class="ma-price__label {{ $valorPendenteAtual > 0 ? 'text-warning' : 'text-success' }} font-weight-bold">
-                                    <i class="fas {{ $valorPendenteAtual > 0 ? 'fa-clock' : 'fa-check-circle' }} mr-1"></i> Falta pagar
-                                </div>
-                                <div class="ma-price__value {{ $valorPendenteAtual > 0 ? 'text-warning' : 'text-success' }}">R$ {{ number_format($valorPendenteAtual, 2, ',', '.') }}</div>
-                                <div class="ma-price__hint">
-                                    Pago: R$ {{ number_format($totalPagoPagamentos, 2, ',', '.') }}
-                                </div>
-                                @if($valorPendenteAtual > 0)
-                                    <div class="mt-2">
-                                        <a href="{{ route('reserva.pagamento.efetuar', ['codigo' => $codigoReserva]) }}" class="btn btn-xs btn-warning font-weight-bold">
-                                            <i class="fas fa-credit-card mr-1"></i> Efetuar Pagamento
-                                        </a>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                @php
-                    $pagamentosQuitados = $pagamentos->filter(fn($p) => strtolower((string)($p->status ?? '')) === 'pago');
-                @endphp
-
-                <div class="ma-card" id="historico-pagamentos">
-                    <div class="ma-card__head">
-                        <div class="ma-card__icon"><i class="fas fa-receipt"></i></div>
-                        <div>
-                            <div class="ma-card__title">Historico de pagamentos</div>
-                            <div class="ma-card__sub">Cada renovacao quitada fica registrada aqui</div>
-                        </div>
-                    </div>
-                    <div class="ma-card__body p-0">
-                        @if($pagamentosQuitados->isEmpty())
-                            <div class="ma-card__body">
-                                <div class="ma-history-empty">Nenhum pagamento quitado ate o momento.</div>
-                            </div>
-                        @else
-                            <div class="table-responsive">
-                                <table class="ma-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Data</th>
-                                            <th>Valor</th>
-                                            <th>Metodo</th>
-                                            <th>Referencia</th>
-                                            <th>Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($pagamentosQuitados as $pagamentoItem)
-                                            @php
-                                                $metodoItem = (string) ($pagamentoItem->metodo_pagamento ?? 'cartao_credito');
-                                                $metodoItemLabel = match ($metodoItem) {
-                                                    'cartao_credito', 'cartao' => 'Cartão de crédito',
-                                                    'pix' => 'PIX',
-                                                    'boleto' => 'Boleto',
-                                                    default => ucfirst(str_replace('_', ' ', $metodoItem)),
-                                                };
-                                                $referenciaItem = (string) ($pagamentoItem->referencia_pagamento ?? data_get($pagamentoItem->metadados, 'gateway_transaction_id') ?? '-');
-                                                $valorItem = (float) ($pagamentoItem->valor_total > 0 ? $pagamentoItem->valor_total : ($pagamentoItem->valor_unitario ?? 0));
-                                                $dataItem = $pagamentoItem->pago_em
-                                                    ? \Carbon\Carbon::parse($pagamentoItem->pago_em)->format('d/m/Y H:i')
-                                                    : ($pagamentoItem->created_at ? \Carbon\Carbon::parse($pagamentoItem->created_at)->format('d/m/Y H:i') : '-');
-                                            @endphp
-                                            <tr>
-                                                <td>
-                                                    <div class="font-weight-bold">{{ $dataItem }}</div>
-                                                </td>
-                                                <td>
-                                                    <div class="font-weight-bold text-dark">
-                                                        R$ {{ number_format($valorItem, 2, ',', '.') }}
-                                                    </div>
-                                                </td>
-                                                <td>{{ $metodoItemLabel }}</td>
-                                                <td>
-                                                    <code class="text-muted">{{ $referenciaItem !== '' ? $referenciaItem : '-' }}</code>
-                                                </td>
-                                                <td>
-                                                    <span class="ma-pill ma-pill--success"><i class="fas fa-check-circle"></i> Pago</span>
-                                                </td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        @endif
-                    </div>
-                </div>
+                @include('reserva.partials.motorista_app_financeiro')
             </div>
 
-            {{-- TAB 4: MULTAS & SINISTROS --}}
-            <div class="tab-pane fade" id="pane-multas-sinistros" role="tabpanel">
-                <div class="ma-card mb-4">
-                    <div class="ma-card__head">
-                        <div class="ma-card__icon"><i class="fas fa-car-crash"></i></div>
-                        <div>
-                            <div class="ma-card__title">Sinistros</div>
-                            <div class="ma-card__sub">Ocorrencias ligadas a esta reserva</div>
-                        </div>
-                    </div>
-                    <div class="ma-card__body">
-                        @if($sinistros->isEmpty())
-                            <div class="ma-history-empty">Nenhum sinistro vinculado a esta reserva.</div>
-                        @else
-                            <div class="ma-list">
-                                @foreach($sinistros as $sinistro)
-                                    <div class="ma-list__item">
-                                        <div class="ma-list__label">Sinistro #{{ $sinistro->id }}</div>
-                                        <div class="ma-list__value">{{ $sinistro->descricao ?? 'Sem descricao' }}</div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                <div class="ma-card">
-                    <div class="ma-card__head">
-                        <div class="ma-card__icon"><i class="fas fa-circle-exclamation"></i></div>
-                        <div>
-                            <div class="ma-card__title">Multas</div>
-                            <div class="ma-card__sub">Infrações vinculadas a esta reserva</div>
-                        </div>
-                    </div>
-                    <div class="ma-card__body">
-                        @if($multas->isEmpty())
-                            <div class="ma-history-empty">Nenhuma multa registrada para esta reserva.</div>
-                        @else
-                            <div class="ma-list">
-                                @foreach($multas as $multa)
-                                    @php
-                                        $multaData = $multa->data_infracao ? \Carbon\Carbon::parse($multa->data_infracao)->format('d/m/Y') : '-';
-                                        $multaValor = (float) ($multa->valor_total ?? $multa->valor ?? 0);
-                                    @endphp
-                                    <div class="ma-list__item">
-                                        <div class="ma-list__label">Auto {{ $multa->auto_infracao ?? ('#' . $multa->id) }} &middot; {{ $multaData }}</div>
-                                        <div class="ma-list__value">{{ $multa->descricao ?? 'Infração de trânsito' }}</div>
-                                        <div class="mt-2 text-dark font-weight-bold">R$ {{ number_format($multaValor, 2, ',', '.') }}</div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
+            {{-- TAB 5 — MULTAS --}}
+            <div class="tab-pane fade" id="pane-multas" role="tabpanel">
+                @include('reserva.partials.motorista_app_multas')
             </div>
 
-            {{-- TAB 5: HISTÓRICO & CADASTRO --}}
+            {{-- TAB 6 — SINISTROS --}}
+            <div class="tab-pane fade" id="pane-sinistros" role="tabpanel">
+                @include('reserva.partials.motorista_app_sinistros')
+            </div>
+
+            {{-- TAB 7 — HISTÓRICO --}}
             <div class="tab-pane fade" id="pane-historico" role="tabpanel">
-                <div class="ma-card mb-4">
-                    <div class="ma-card__head">
-                        <div class="ma-card__icon"><i class="fas fa-file-alt"></i></div>
-                        <div>
-                            <div class="ma-card__title">Dados enviados</div>
-                            <div class="ma-card__sub">Resumo do que foi informado na solicitacao</div>
-                        </div>
-                    </div>
-                    <div class="ma-card__body">
-                        @if(empty($dadosJson))
-                            <div class="ma-history-empty">Nenhum dado adicional informado.</div>
-                        @else
-                            <div class="ma-list">
-                                @foreach($dadosJson as $key => $value)
-                                    @php
-                                        $campoKey = (string) $key;
-                                        $campoCfg = $camposPersonalizados->get($campoKey);
-                                        $campoLabel = (string) ($rotulosPadraoDados[$campoKey] ?? $campoCfg['label'] ?? str_replace(['_', '-'], ' ', ucfirst($campoKey)));
-                                        $campoTipo = (string) ($campoCfg['type'] ?? '');
-                                        if ($campoKey === 'opcionais_payload') {
-                                            $valorExibicao = collect($opcionaisSelecionados)
-                                                ->map(function ($item) use ($opcionaisMap) {
-                                                    $opcional = $opcionaisMap->get((int) ($item['id'] ?? 0));
-                                                    $nome = $opcional?->nome ?? ('Opcional #' . (int) ($item['id'] ?? 0));
-                                                    $quantidade = (int) ($item['quantidade'] ?? 0);
-                                                    return $quantidade > 1 ? $nome . ' x' . $quantidade : $nome;
-                                                })
-                                                ->filter()
-                                                ->values()
-                                                ->implode(', ');
-                                            $valorExibicao = $valorExibicao !== '' ? $valorExibicao : 'Nenhum opcional selecionado';
-                                        } elseif ($campoKey === 'plano_id') {
-                                            $valorExibicao = $plano?->nome ?? ('Plano #' . (int) $value);
-                                        } elseif ($campoKey === 'estacao_id') {
-                                            $valorExibicao = $registro->estacaoRetirada?->nome ?? ('Estação #' . (int) $value);
-                                        } elseif ($campoKey === 'data_inicio') {
-                                            $valorExibicao = $formatarDataValor($value);
-                                        } elseif ($campoTipo === 'data') {
-                                            $valorExibicao = $formatarDataValor($value);
-                                        } else {
-                                            $valorExibicao = $formatarValor($value);
-                                        }
-                                    @endphp
-                                    <div class="ma-list__item">
-                                        <div class="ma-list__label">{{ $campoLabel }}</div>
-                                        <div class="ma-list__value">{{ $valorExibicao }}</div>
-                                    </div>
-                                @endforeach
-                            </div>
-                        @endif
-                    </div>
-                </div>
-
-                @if(!empty($registro->observacoes))
-                    <div class="ma-card">
-                        <div class="ma-card__head">
-                            <div class="ma-card__icon"><i class="fas fa-sticky-note"></i></div>
-                            <div>
-                                <div class="ma-card__title">Observacoes</div>
-                                <div class="ma-card__sub">Notas internas ou do cliente</div>
-                            </div>
-                        </div>
-                        <div class="ma-card__body">
-                            <div class="ma-note">{{ $registro->observacoes }}</div>
-                        </div>
-                    </div>
-                @endif
+                @include('reserva.partials.motorista_app_historico')
             </div>
-        </div>
-    </div>
-</div>
+        </div>{{-- /tab-content --}}
+    </div>{{-- /rs-tabs-wrapper --}}
 
 <div class="modal fade" id="modalDetalhesOpcionaisMotoristaApp" tabindex="-1" role="dialog" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -2558,6 +1844,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     var formAceitarTermoAdmin = document.getElementById('formAceitarTermoMotoristaAppAdmin');
+    @include('reserva.partials.motorista_app_historico')
     if (formAceitarTermoAdmin) {
         formAceitarTermoAdmin.addEventListener('submit', function () {
             var btn = document.getElementById('btnAceitarTermoMotoristaAppAdmin') || this.querySelector('button[type="submit"]');

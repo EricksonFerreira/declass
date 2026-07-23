@@ -17,7 +17,12 @@ class AdicionarDanoVeiculoAction
     public function handle(array $dados, $codigo, Request $request): mixed
     {
         $reservaResolvida = $this->resolver->resolver((string) $codigo);
-        $reservaCodigoId = ReservaCodigo::where('codigo', $codigo)->value('id');
+        
+        $reservaId = $reservaResolvida->registro->id;
+        $reservaCodigoId = ReservaCodigo::where('reserva_id', $reservaId)->value('id');
+        
+        $dados['reserva_id'] = $reservaId;
+        $dados['reserva_codigo_id'] = $reservaCodigoId;
 
         return match (true) {
             $reservaResolvida->ehComum() => $this->comum->handle($dados, $reservaCodigoId, $request),

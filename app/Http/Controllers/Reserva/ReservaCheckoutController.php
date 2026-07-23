@@ -11,6 +11,9 @@ use App\Http\Requests\Reserva\FinalizarCheckoutVistoriaRequest;
 use App\Services\BreadcrumbService;
 use App\Services\CategoriaDanoService;
 use App\Services\ReservaService;
+use App\Actions\Reserva\Checkout\Contrato\AssinarContratoCheckoutAction;
+use App\Actions\Reserva\Checkout\Contrato\SalvarAssinarContratoCheckoutAction;
+use App\Services\Reserva\ReservaResolver;
 use Illuminate\Http\Request;
 
 class ReservaCheckoutController extends Controller
@@ -66,152 +69,14 @@ class ReservaCheckoutController extends Controller
         }
     }
 
-    public function assinarContratoCheckout(Request $request, $codigo, \App\Services\Reserva\ReservaResolver $reservaResolver)
+    public function assinarContratoCheckout(Request $request, $codigo, ReservaResolver $reservaResolver, AssinarContratoCheckoutAction $action)
     {
-        try {
-            $reservaResolvida = $reservaResolver->resolver($codigo);
-        } catch (\Throwable $e) {
-            return redirect()
-                ->route('reserva.index')
-                ->with('error', $e->getMessage());
-        }
-
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new \App\DTO\BreadCrumbItem('Home', route('home')),
-            new \App\DTO\BreadCrumbItem('Reservas', route('reserva.index')),
-            new \App\DTO\BreadCrumbItem('Detalhes da Reserva Nº ' . $codigo, route('reserva.show', $codigo)),
-            new \App\DTO\BreadCrumbItem('Assinar Contrato de Check-out'),
-        ]);
-
-        if ($reservaResolvida->ehMotoristaApp()) {
-            /** @var \App\Models\ReservaMotoristaApp $reg */
-            $reg = $reservaResolvida->registro;
-            $reg->loadMissing(['user', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'planoMotoristaApp', 'solicitacao.planoMotoristaApp', 'estacaoRetirada', 'pagamentos']);
-
-            $plano = $reg->planoMotoristaApp ?? $reg->solicitacao?->planoMotoristaApp;
-            $valorPeriodoAtual = (float) (
-                $plano?->valor_periodo
-                ?? $reg->solicitacao?->valor_periodo
-                ?? $reg->pagamentos?->first()?->valor_unitario
-                ?? $reg->pagamentos?->first()?->valor_total
-                ?? 0
-            );
-            $tarifaValor = (float) (
-                $reg->valor_periodo_contrato
-                ?: ($reg->valor_plano
-                ?: $valorPeriodoAtual)
-            );
-            $valorOpcionais = (float) ($reg->valor_opcionais ?? 0);
-            $valorTotal = round($tarifaValor + $valorOpcionais, 2);
-
-            return view('reserva.assinar-contrato-checkout', [
-                'reserva' => $reg,
-                'breadcrumb' => $breadcrumb,
-                'contextoAssinatura' => [
-                    'empresa' => $reg->empresa,
-                    'usuario' => $reg->user,
-                    'codigo' => $codigo,
-                    'veiculo' => $reg->veiculo,
-                    'data_inicio' => $reg->data_inicio,
-                    'data_fim' => $reg->data_fim,
-                    'quantidade_dias' => $reg->quantidade_dias,
-                    'tarifa_label' => 'Valor do Ciclo (' . ($plano?->nome ?? 'Plano') . ')',
-                    'tarifa_valor' => $tarifaValor,
-                    'valor_opcionais' => $valorOpcionais,
-                    'valor_total' => $valorTotal,
-                    'tipo' => 'MAP',
-                    'plano_nome' => $plano?->nome ?? 'Plano Motorista App',
-                ],
-                'titulo' => 'Assinar Contrato de Check-out — Reserva Nº ' . $codigo,
-            ]);
-        }
-
-        /** @var \App\Models\Reserva $reserva */
-        $reserva = $reservaResolvida->registro;
-        $reserva->loadMissing(['usuario', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'contratoCheckout', 'estacaoRetirada', 'estacaoDevolucao']);
-
-        if (!$reserva->contratoCheckout) {
-            return redirect()
-                ->route('reserva.show', $codigo)
-                ->with('error', 'Check-out não encontrado para esta reserva.');
-        }
-
-        return view('reserva.assinar-contrato-checkout', [
-            'reserva' => $reserva,
-            'breadcrumb' => $breadcrumb,
-            'contextoAssinatura' => [
-                'empresa' => $reserva->empresa,
-                'usuario' => $reserva->usuario,
-                'codigo' => $codigo,
-                'veiculo' => $reserva->contratoCheckout?->veiculo ?? $reserva->veiculo,
-                'data_inicio' => $reserva->data_inicio,
-                'data_fim' => $reserva->data_fim,
-                'quantidade_dias' => $reserva->quantidade_dias,
-                'tarifa_label' => 'Tarifa diária',
-                'tarifa_valor' => (float) ($reserva->tarifa_base ?? 0),
-                'taxa_entrega' => (float) ($reserva->taxa_entrega ?? 0),
-                'taxa_coleta' => (float) ($reserva->taxa_coleta ?? 0),
-                'valor_total' => (float) ($reserva->valor_total_final ?? 0),
-                'tipo' => 'RES',
-                'estacao_retirada' => $reserva->estacaoRetirada?->nome ?? '-',
-                'estacao_devolucao' => $reserva->estacaoDevolucao?->nome ?? '-',
-            ],
-            'titulo' => 'Assinar Contrato de Check-out — Reserva Nº ' . $codigo,
-        ]);
+        return $action->handle($request, $codigo, $reservaResolver);
     }
 
-    public function salvarAssinarContratoCheckout(Request $request, $codigo, \App\Services\Reserva\ReservaResolver $reservaResolver)
+    public function salvarAssinarContratoCheckout(Request $request, $codigo, ReservaResolver $reservaResolver, SalvarAssinarContratoCheckoutAction $action)
     {
-        $validated = $request->validate([
-            'assinatura' => ['required', 'string']
-        ]);
-
-        try {
-            $reservaResolvida = $reservaResolver->resolver($codigo);
-            if ($reservaResolvida->ehMotoristaApp()) {
-                /** @var \App\Models\ReservaMotoristaApp $reg */
-                $reg = $reservaResolvida->registro;
-                $docs = is_array($reg->documentos_json) ? $reg->documentos_json : [];
-                $checkout = isset($docs['checkout']) && is_array($docs['checkout']) ? $docs['checkout'] : [];
-                
-                $checkout['assinatura'] = $validated['assinatura'];
-                $checkout['data_assinatura'] = now()->toDateTimeString();
-                
-                $docs['checkout'] = $checkout;
-                $reg->documentos_json = $docs;
-                $reg->save();
-
-                return response()->json(['success' => true]);
-            }
-
-            /** @var \App\Models\Reserva $reserva */
-            $reserva = $reservaResolvida->registro;
-            $co = $reserva->contratoCheckout;
-            if (!$co) {
-                return response()->json(['error' => 'Check-out não registrado.'], 404);
-            }
-
-            $base64 = $validated['assinatura'];
-            if (preg_match('/^data:image\/(\w+);base64,/', $base64, $type)) {
-                $base64 = substr($base64, strpos($base64, ',') + 1);
-                $base64 = base64_decode($base64);
-                
-                $dir = 'checkout/reserva_' . (int) $reserva->id;
-                $filename = 'assinatura_' . \Illuminate\Support\Str::random(10) . '.png';
-                $relPath = $dir . '/' . $filename;
-                
-                \Illuminate\Support\Facades\Storage::disk('public')->put($relPath, $base64);
-                
-                $co->update([
-                    'assinatura' => $relPath,
-                    'data_assinatura' => now(),
-                ]);
-            }
-
-            return response()->json(['success' => true]);
-        } catch (\Throwable $e) {
-            return response()->json(['error' => 'Falha ao salvar assinatura: ' . $e->getMessage()], 500);
-        }
+        return $action->handle($request, $codigo, $reservaResolver);
     }
 
     public function verContratoCheckout(Request $request, $codigo, \App\Services\Reserva\ReservaResolver $reservaResolver)

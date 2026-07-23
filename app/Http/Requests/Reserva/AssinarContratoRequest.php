@@ -21,25 +21,37 @@ class AssinarContratoRequest extends FormRequest
      */
     public function rules(): array
     {
+        $rules = [
+            'modo' => 'nullable|string|in:digital,upload',
+        ];
+
         $codigo = $this->route('codigo') ?: $this->route('id');
+        $ehMotorista = false;
+
         if ($codigo) {
             try {
                 $reservaResolvida = app(\App\Services\Reserva\ReservaResolver::class)->resolver((string) $codigo);
                 if ($reservaResolvida->ehMotoristaApp()) {
-                    return [
-                        'assinatura' => 'required'
-                    ];
+                    $ehMotorista = true;
                 }
             } catch (\Throwable $e) {
-                // Fallback to default validation if resolver fails
+                // Fallback
             }
         }
 
-        return [
-            'veiculo_id' => 'required|integer|exists:veiculos,id',
-            'contrato_id' => 'required|integer|exists:contrato_checkin,id',
-            'assinatura' => 'required'
-        ];
+        if (!$ehMotorista) {
+            $rules['veiculo_id'] = 'required|integer|exists:veiculos,id';
+            $rules['contrato_id'] = 'required|integer|exists:contrato_checkin,id';
+        }
+
+        if ($this->input('modo') === 'upload') {
+            $rules['contrato_pdf'] = 'required|file|mimes:pdf|max:10240';
+            $rules['assinatura'] = 'nullable';
+        } else {
+            $rules['assinatura'] = 'required';
+        }
+
+        return $rules;
     }
 
 

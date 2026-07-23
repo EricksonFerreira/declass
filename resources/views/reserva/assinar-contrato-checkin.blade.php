@@ -175,29 +175,78 @@
         {{-- Linha divisória --}}
         <hr style="margin:20px 0;border:none;border-top:2px solid #e2e8f0;">
 
-        {{-- Instrução --}}
-        <div class="assinatura-instruction">
-            <i class="fas fa-pencil-alt"></i>
-            <span>Use o mouse ou toque na área abaixo para assinar o contrato</span>
-        </div>
+        {{-- Tabs de modo --}}
+        <form id="form-assinatura-checkin" enctype="multipart/form-data">
+            <div class="assinatura-tabs">
+                <button type="button" class="assinatura-tab active" data-tab="digital">
+                    <i class="fas fa-signature"></i> Assinar Digitalmente
+                </button>
+                <button type="button" class="assinatura-tab" data-tab="upload">
+                    <i class="fas fa-file-upload"></i> Anexar Contrato em PDF
+                </button>
+            </div>
 
-        {{-- Pad --}}
-        <div class="assinatura-pad-wrapper">
-            <canvas id="signature-pad"></canvas>
-            <div class="assinatura-pad-hint">Área de assinatura</div>
-        </div>
+            {{-- Tab: Assinatura Digital --}}
+            <div id="tab-digital" class="assinatura-tab-content active">
+                {{-- Instrução --}}
+                <div class="assinatura-instruction">
+                    <i class="fas fa-pencil-alt"></i>
+                    <span>Use o mouse ou toque na área abaixo para assinar o contrato</span>
+                </div>
 
-        {{-- Ações --}}
-        <div class="assinatura-actions">
-            <button type="button" id="btn_limpar" class="assinatura-btn assinatura-btn--ghost">
-                <i class="fas fa-eraser"></i>
-                Limpar
-            </button>
-            <button type="button" id="btn_salvar" class="assinatura-btn assinatura-btn--primary">
-                <i class="fas fa-check"></i>
-                Confirmar Assinatura
-            </button>
-        </div>
+                {{-- Pad --}}
+                <div class="assinatura-pad-wrapper">
+                    <canvas id="signature-pad"></canvas>
+                    <div class="assinatura-pad-hint">Área de assinatura</div>
+                </div>
+
+                {{-- Ações --}}
+                <div class="assinatura-actions">
+                    <button type="button" id="btn_limpar" class="assinatura-btn assinatura-btn--ghost">
+                        <i class="fas fa-eraser"></i>
+                        Limpar
+                    </button>
+                    <button type="button" id="btn_salvar" class="assinatura-btn assinatura-btn--primary">
+                        <i class="fas fa-check"></i>
+                        Confirmar Assinatura
+                    </button>
+                </div>
+            </div>
+
+            {{-- Tab: Upload PDF --}}
+            <div id="tab-upload" class="assinatura-tab-content" style="display:none;">
+                <div class="assinatura-instruction">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Anexe o contrato assinado em formato PDF</span>
+                </div>
+
+                <div class="assinatura-upload-area" id="upload-drop-zone">
+                    <input type="file" id="contrato_pdf" accept=".pdf,application/pdf" style="display:none;">
+                    <div class="assinatura-upload-placeholder" id="upload-placeholder">
+                        <i class="fas fa-file-pdf"></i>
+                        <p>Arraste o arquivo PDF aqui ou <a href="#" id="upload-browse-link">clique para selecionar</a></p>
+                        <span class="muted">Tamanho máximo: 10MB</span>
+                    </div>
+                    <div class="assinatura-upload-preview" id="upload-preview" style="display:none;">
+                        <i class="fas fa-file-pdf"></i>
+                        <div class="assinatura-upload-file-info">
+                            <strong id="upload-file-name"></strong>
+                            <span id="upload-file-size"></span>
+                        </div>
+                        <button type="button" id="upload-remove" class="assinatura-btn assinatura-btn--ghost" style="padding:6px 12px;font-size:.78rem;">
+                            <i class="fas fa-times"></i> Remover
+                        </button>
+                    </div>
+                </div>
+
+                <div class="assinatura-actions">
+                    <button type="button" id="btn_upload_salvar" class="assinatura-btn assinatura-btn--primary" disabled>
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        Enviar Contrato Assinado
+                    </button>
+                </div>
+            </div>
+        </form>
 
         {{-- Status --}}
         <div id="assinatura_status" class="assinatura-status" style="display:none"></div>
@@ -406,6 +455,112 @@
         .assinatura-actions { flex-direction: column; }
         .assinatura-btn { justify-content: center; }
         #signature-pad { height: 180px; }
+        .assinatura-tabs { flex-direction: column; }
+    }
+
+    /* Tabs */
+    .assinatura-tabs {
+        display: flex;
+        gap: 0;
+        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        overflow: hidden;
+        margin-bottom: 20px;
+        background: #f8fafc;
+    }
+    .assinatura-tab {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 14px 18px;
+        border: none;
+        background: transparent;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+    }
+    .assinatura-tab:not(:last-child) {
+        border-right: 1px solid #e2e8f0;
+    }
+    .assinatura-tab:hover {
+        background: #eef2ff;
+        color: #4338ca;
+    }
+    .assinatura-tab.active {
+        background: #fff;
+        color: #4338ca;
+        font-weight: 700;
+        box-shadow: inset 0 -3px 0 #4338ca;
+    }
+    .assinatura-tab i { font-size: 1rem; }
+
+    .assinatura-tab-content { display: none; }
+    .assinatura-tab-content.active { display: block; }
+
+    /* Upload area */
+    .assinatura-upload-area {
+        border: 2px dashed #c7d2fe;
+        border-radius: 16px;
+        background: #fafbff;
+        padding: 40px 20px;
+        text-align: center;
+        transition: all 0.2s;
+        margin-bottom: 16px;
+        cursor: pointer;
+    }
+    .assinatura-upload-area:hover,
+    .assinatura-upload-area.dragover {
+        border-color: #4338ca;
+        border-style: solid;
+        background: #eef2ff;
+    }
+    .assinatura-upload-placeholder i {
+        font-size: 2.5rem;
+        color: #c7d2fe;
+        margin-bottom: 10px;
+    }
+    .assinatura-upload-placeholder p {
+        font-size: 0.88rem;
+        color: #475569;
+        margin: 0 0 4px;
+    }
+    .assinatura-upload-placeholder p a {
+        color: #4338ca;
+        font-weight: 600;
+        text-decoration: underline;
+    }
+    .assinatura-upload-placeholder .muted {
+        font-size: 0.75rem;
+        color: #94a3b8;
+    }
+    .assinatura-upload-preview {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 12px 16px;
+    }
+    .assinatura-upload-preview > i {
+        font-size: 2rem;
+        color: #dc2626;
+    }
+    .assinatura-upload-file-info {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+    }
+    .assinatura-upload-file-info strong {
+        font-size: 0.88rem;
+        color: #0c1428;
+    }
+    .assinatura-upload-file-info span {
+        font-size: 0.75rem;
+        color: #64748b;
     }
 </style>
 
@@ -416,6 +571,21 @@
 <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
 <script>
 (function () {
+    // ─── Tabs ───
+    const tabs = document.querySelectorAll('.assinatura-tab');
+    const tabContents = document.querySelectorAll('.assinatura-tab-content');
+
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => { c.classList.remove('active'); c.style.display = 'none'; });
+            tab.classList.add('active');
+            const target = document.getElementById('tab-' + tab.dataset.tab);
+            if (target) { target.classList.add('active'); target.style.display = 'block'; }
+        });
+    });
+
+    // ─── Signature Pad ───
     const canvas = document.getElementById('signature-pad');
     const hint   = document.querySelector('.assinatura-pad-hint');
 
@@ -482,6 +652,111 @@
         });
     });
 
+    // ─── File Upload ───
+    const fileInput = document.getElementById('contrato_pdf');
+    const dropZone = document.getElementById('upload-drop-zone');
+    const placeholder = document.getElementById('upload-placeholder');
+    const preview = document.getElementById('upload-preview');
+    const fileName = document.getElementById('upload-file-name');
+    const fileSize = document.getElementById('upload-file-size');
+    const removeBtn = document.getElementById('upload-remove');
+    const btnUpload = document.getElementById('btn_upload_salvar');
+    const browseLink = document.getElementById('upload-browse-link');
+    let selectedFile = null;
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    function setFile(file) {
+        if (!file || file.type !== 'application/pdf') {
+            showStatus('<i class="fas fa-exclamation-triangle"></i> Apenas arquivos PDF são aceitos.', 'error');
+            return;
+        }
+        if (file.size > 10 * 1024 * 1024) {
+            showStatus('<i class="fas fa-exclamation-triangle"></i> O arquivo excede o tamanho máximo de 10MB.', 'error');
+            return;
+        }
+        selectedFile = file;
+        fileName.textContent = file.name;
+        fileSize.textContent = formatFileSize(file.size);
+        placeholder.style.display = 'none';
+        preview.style.display = 'flex';
+        btnUpload.disabled = false;
+    }
+
+    function clearFile() {
+        selectedFile = null;
+        fileInput.value = '';
+        placeholder.style.display = '';
+        preview.style.display = 'none';
+        btnUpload.disabled = true;
+    }
+
+    browseLink.addEventListener('click', (e) => { e.preventDefault(); fileInput.click(); });
+    dropZone.addEventListener('click', (e) => {
+        if (e.target === removeBtn || removeBtn.contains(e.target)) return;
+        if (!selectedFile) fileInput.click();
+    });
+
+    fileInput.addEventListener('change', (e) => {
+        if (e.target.files.length > 0) setFile(e.target.files[0]);
+    });
+
+    removeBtn.addEventListener('click', (e) => { e.stopPropagation(); clearFile(); });
+
+    // Drag and drop
+    ['dragenter', 'dragover'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(evt => {
+        dropZone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropZone.classList.remove('dragover'); });
+    });
+    dropZone.addEventListener('drop', (e) => {
+        if (e.dataTransfer.files.length > 0) setFile(e.dataTransfer.files[0]);
+    });
+
+    btnUpload.addEventListener('click', () => {
+        if (!selectedFile) {
+            showStatus('<i class="fas fa-exclamation-triangle"></i> Selecione um arquivo PDF.', 'error');
+            return;
+        }
+
+        const originalHtml = btnUpload.innerHTML;
+        btnUpload.disabled = true;
+        btnUpload.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+        const formData = new FormData();
+        formData.append('contrato_pdf', selectedFile);
+        formData.append('veiculo_id', "{{ $ci?->veiculo_id ?? $reserva->veiculo_id ?? 0 }}");
+        formData.append('contrato_id', "{{ $ci?->id ?? 0 }}");
+        formData.append('modo', 'upload');
+        formData.append('_token', '{{ csrf_token() }}');
+
+        $.ajax({
+            url: "{{ route('reserva.salvarAssinarContratoCheckIn', ['codigo' => $codigoAssinatura]) }}",
+            method: 'POST',
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                showStatus('<i class="fas fa-check-circle"></i> Contrato assinado enviado com sucesso! Redirecionando...', 'success');
+                setTimeout(() => {
+                    window.location.href = @json($redirectAfterSignUrl ?? route('reserva.show', ['reserva' => $codigoAssinatura]));
+                }, 1600);
+            },
+            error: function (xhr) {
+                btnUpload.disabled = false;
+                btnUpload.innerHTML = originalHtml;
+                const msg = xhr.responseJSON?.message || 'Erro ao enviar o contrato. Tente novamente.';
+                showStatus('<i class="fas fa-exclamation-triangle"></i> ' + msg, 'error');
+            },
+        });
+    });
+
+    // ─── Status ───
     function showStatus(html, type) {
         const el = document.getElementById('assinatura_status');
         el.innerHTML = html;
@@ -492,3 +767,4 @@
 })();
 </script>
 @endsection
+

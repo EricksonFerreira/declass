@@ -13,12 +13,22 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
+use App\Http\Controllers\Reserva\ReservaHelpersTrait;
+use App\Services\VeiculoService;
+use App\Services\ModeloService;
+use App\Services\UpgradeVeiculoService;
+
 class FinalizarCheckinReservaComumAction
 {
+    use ReservaHelpersTrait;
+
     public function __construct(
         private ReservaService $reservaService,
         private MovimentacaoService $movimentacaoService,
         private ExibirContratoCheckinReservaComumAction $exibirContratoAction,
+        protected VeiculoService $veiculoService,
+        protected ModeloService $modeloService,
+        protected UpgradeVeiculoService $upgradeVeiculoService
     ) {}
 
     public function handle(ReservaResolvida $reserva, Request $request): mixed
@@ -28,6 +38,7 @@ class FinalizarCheckinReservaComumAction
         $contratoId = (int) $request->input('contrato_id', $registro->contratoCheckin->id ?? 0);
         $veiculoId = (int) $request->input('veiculo_id', $registro->contratoCheckin->veiculo_id ?? 0);
         $assinatura = (string) $request->input('assinatura');
+        $modo = $request->input('modo', 'digital');
 
         $contrato = ContratoCheckin::find($contratoId);
         if (!$contrato) {
@@ -37,10 +48,33 @@ class FinalizarCheckinReservaComumAction
         try {
             DB::beginTransaction();
 
-            $contrato->assinatura = $assinatura;
-            $contrato->data_assinatura = now();
-            $contrato->assinado = 'S';
-            $contrato->save();
+            if ($modo === 'upload' && $request->hasFile('contrato_pdf')) {
+                // Modo upload: salvar o PDF anexado diretamente
+                $file = $request->file('contrato_pdf');
+                if (!$file->isValid() || $file->getMimeType() !== 'application/pdf') {
+                    return response()->json(['success' => false, 'message' => 'Arquivo inválido. Envie um PDF.'], 422);
+                }
+
+                $caminhoArquivo = $this->salvarArquivo($file, 'contratos', 'checkin_' . $registro->id . '_' . time());
+                if (!$caminhoArquivo) {
+                    throw new \Exception('Erro ao salvar PDF do contrato.');
+                }
+
+                $contrato->pdf_path = $caminhoArquivo;
+                $contrato->assinado = 'S';
+                $contrato->data_assinatura = now();
+                $contrato->assinatura = 'PDF anexado';
+                $contrato->save();
+            } else {
+                // Modo digital: assinatura no canvas
+                // Optional: salvar a base64 usando $this->salvarArquivo($assinatura, 'checkout/reserva_...');
+                $contrato->assinatura = $assinatura;
+                $contrato->data_assinatura = now();
+                $contrato->assinado = 'S';
+                $contrato->save();
+
+                $this->gerarESalvarPdfContrato($registro);
+            }
 
             $this->reservaService->checkInRealizado((int) $registro->id, $contrato->veiculo_id);
 
@@ -55,11 +89,9 @@ class FinalizarCheckinReservaComumAction
                 (int) $registro->id,
                 Auth::id(),
                 ['veiculo' => $contrato->veiculo?->nome ?? "ID {$contrato->veiculo_id}"],
-                'Contrato de check-in assinado',
+                'Contrato de check-in assinado' . ($modo === 'upload' ? ' (PDF anexado)' : ''),
                 'success'
             );
-
-            $this->gerarESalvarPdfContrato($registro);
 
             $this->sincronizarAssinaturaCheckinMotoristaApp($registro, $contratoId);
 

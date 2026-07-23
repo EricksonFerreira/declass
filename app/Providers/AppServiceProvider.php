@@ -109,6 +109,7 @@ class AppServiceProvider extends ServiceProvider
         Veiculo::observe(\App\Observers\VeiculoManutencaoObserver::class);
         Estacao::observe(OnboardingObserver::class);
         User::observe(OnboardingObserver::class);
+        \App\Models\OrdemServico::observe(\App\Observers\OrdemServicoObserver::class);
 
         // Replace the AdminLTE singleton with our custom version that hides
         // orphan section headers (OPERAÇÃO, FROTA, etc.) when the user has

@@ -23,6 +23,21 @@ class ExibirTermoDevolucaoMotoristaAppAction
             'planoMotoristaApp', 'solicitacao.planoMotoristaApp', 'pagamentos',
         ]);
 
+        $checkoutDocs = is_array($reserva->documentos_json ?? null)
+            ? data_get($reserva->documentos_json, 'checkout', [])
+            : [];
+
+        $contratoCheckout = $this->obterContratoCheckout($reserva);
+
+        // Se houver um PDF de checkout anexado, exibe diretamente
+        $pdfPath = data_get($checkoutDocs, 'pdf_path') ?? ($contratoCheckout?->pdf_path ?? null);
+        if ($pdfPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($pdfPath)) {
+            return response()->file(storage_path('app/public/' . $pdfPath), [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="termo-devolucao-' . $reserva->id . '.pdf"',
+            ]);
+        }
+
         $contratoCheckin = $this->obterContratoCheckin($reserva);
         if (!$contratoCheckin) {
             throw new \RuntimeException('Contrato de check-in de motorista de aplicativo ainda nao foi gerado.');
@@ -30,7 +45,7 @@ class ExibirTermoDevolucaoMotoristaAppAction
 
         $contratoCheckout = $this->obterContratoCheckout($reserva);
         $reservaAdaptada = $this->montarReservaAdaptada($reserva, $contratoCheckin, $contratoCheckout);
-        $data = $this->comumAction->montarDados($reservaAdaptada);
+        $data = $this->comumAction->montarDados($reservaAdaptada, 'checkout');
         $checkoutDocs = is_array($reserva->documentos_json ?? null)
             ? data_get($reserva->documentos_json, 'checkout', [])
             : [];

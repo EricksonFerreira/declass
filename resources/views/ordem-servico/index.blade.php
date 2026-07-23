@@ -9,6 +9,47 @@
 
 @section('content')
     <div class="os-index-page">
+        {{-- Filtros de Busca --}}
+        <div class="card card-outline card-secondary mb-3 p-3 border-0 shadow-sm" style="border-radius: 14px;">
+            <form method="get" action="{{ route('ordem-servico.index') }}">
+                @if($status)
+                    <input type="hidden" name="status" value="{{ $status }}">
+                @endif
+                <div class="row">
+                    <div class="col-md-3 form-group mb-2 mb-md-0">
+                        <label class="small font-weight-bold mb-1">Veículo</label>
+                        <select name="veiculo_id" class="form-control form-control-sm" style="border-radius: 8px;">
+                            <option value="">Todos</option>
+                            @foreach($veiculos as $v)
+                                <option value="{{ $v->id }}" @selected((int) $veiculoId === (int) $v->id)>
+                                    #{{ $v->id }} - {{ $v->nome }} ({{ $v->placa_licenca ?? $v->placa ?? '' }})
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-2 form-group mb-2 mb-md-0">
+                        <label class="small font-weight-bold mb-1">Sinistro (ID)</label>
+                        <input type="number" name="sinistro_id" value="{{ $sinistroId }}" class="form-control form-control-sm" placeholder="Ex: 5" style="border-radius: 8px;">
+                    </div>
+                    <div class="col-md-2 form-group mb-2 mb-md-0">
+                        <label class="small font-weight-bold mb-1">Avaria (ID)</label>
+                        <input type="number" name="avaria_id" value="{{ $avariaId }}" class="form-control form-control-sm" placeholder="Ex: 12" style="border-radius: 8px;">
+                    </div>
+                    <div class="col-md-2 form-group mb-2 mb-md-0">
+                        <label class="small font-weight-bold mb-1">Reserva (ID)</label>
+                        <input type="number" name="reserva_id" value="{{ $reservaId }}" class="form-control form-control-sm" placeholder="Ex: 154" style="border-radius: 8px;">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end form-group mb-0">
+                        <button type="submit" class="btn btn-primary btn-sm mr-2 px-3" style="border-radius: 8px;">
+                            <i class="fas fa-filter mr-1"></i>Filtrar
+                        </button>
+                        <a href="{{ route('ordem-servico.index', $status ? ['status' => $status] : []) }}" class="btn btn-outline-secondary btn-sm px-3" style="border-radius: 8px;">
+                            <i class="fas fa-eraser mr-1"></i>Limpar
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
         @if(session('success'))
             <div class="alert alert-success alert-dismissible fade show" role="alert">
                 <i class="fas fa-check-circle mr-1"></i>{{ session('success') }}
@@ -85,6 +126,8 @@
                                 (string) (optional($os->veiculo)->nome ?? ''),
                                 (string) (optional($os->veiculo)->placa ?? ''),
                                 (string) (optional($os->usuarioAbertura)->name ?? ''),
+                                (string) (optional($os->categoria)->nome ?? ''),
+                                (string) (optional($os->subcategoria)->nome ?? ''),
                             ]))));
 
                             $accentClass = match ($os->status) {
@@ -110,8 +153,8 @@
                                 <div class="osc__avatar"><i class="fas fa-file-alt"></i></div>
                                 <div class="osc__head-info">
                                     <div class="osc__id">OS #{{ $os->numero ?? $os->id }}</div>
-                                    <div class="osc__title">{{ optional($os->veiculo)->nome ?? 'Veículo não informado' }}</div>
-                                    <div class="osc__sub">{{ optional($os->veiculo)->placa ?? 'Sem Placa' }}</div>
+                                    <div class="osc__title">{{ optional($os->veiculo)->nome ?? 'Veículo não informado' }} (#{{ $os->veiculo_id }})</div>
+                                    <div class="osc__sub">{{ optional($os->veiculo)->placa ?? 'Sem Placa' }} @if($os->categoria) | {{ $os->categoria->nome }} @endif</div>
                                 </div>
                                 <div class="osc__badges">
                                     <span class="badge {{ $statusBadgeClass }}">
@@ -168,6 +211,7 @@
                             <tr>
                                 <th class="text-center">#</th>
                                 <th>Veiculo</th>
+                                <th>Categoria</th>
                                 <th>Reserva</th>
                                 <th>Sinistro</th>
                                 <th>Status</th>
@@ -188,13 +232,25 @@
                                         (string) (optional($os->veiculo)->nome ?? ''),
                                         (string) (optional($os->veiculo)->placa ?? ''),
                                         (string) (optional($os->usuarioAbertura)->name ?? ''),
+                                        (string) (optional($os->categoria)->nome ?? ''),
+                                        (string) (optional($os->subcategoria)->nome ?? ''),
                                     ]))));
                                 @endphp
                                 <tr data-search="{{ $osSearch }}" onclick="window.location='{{ route('ordem-servico.show', $os) }}';" style="cursor:pointer;">
                                     <td class="text-center">{{ $os->numero ?? $os->id }}</td>
                                     <td>
-                                        <strong>{{ optional($os->veiculo)->nome ?? ('Veiculo #' . $os->veiculo_id) }}</strong><br>
+                                        <strong>{{ optional($os->veiculo)->nome ?? 'Veículo' }} (#{{ $os->veiculo_id }})</strong><br>
                                         <small>{{ optional($os->veiculo)->placa ?? '-' }}</small>
+                                    </td>
+                                    <td>
+                                        @if($os->categoria)
+                                            {{ $os->categoria->nome }}
+                                            @if($os->subcategoria)
+                                                <br><small class="text-muted">{{ $os->subcategoria->nome }}</small>
+                                            @endif
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
                                     </td>
                                     <td>
                                         @if($os->reserva_id)
@@ -234,13 +290,13 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-4 text-muted">
+                                    <td colspan="9" class="text-center py-4 text-muted">
                                         Nenhuma ordem de servico encontrada.
                                     </td>
                                 </tr>
                             @endforelse
                             <tr id="osNoResultsRow" class="d-none">
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     Sem resultados para o filtro.
                                 </td>
                             </tr>

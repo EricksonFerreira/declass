@@ -58,7 +58,6 @@
                             ['label' => 'Fotos da Devolução', 'icon' => 'fas fa-camera'],
                             ['label' => 'Vistoria do Veículo', 'icon' => 'fas fa-search'],
                             ['label' => 'Observações', 'icon' => 'fas fa-comment-alt'],
-                            ['label' => 'Assinatura do Termo', 'icon' => 'fas fa-signature'],
                         ];
                     @endphp
                     @foreach($steps as $i => $step)
@@ -424,54 +423,11 @@
 
                     <div class="ci-summary-card co-summary-checkout mt-4">
                         <div class="ci-summary-card__icon">
-                            <i class="fas fa-arrow-right"></i>
-                        </div>
-                        <div class="ci-summary-card__content">
-                            <strong>Próxima etapa: Assinatura</strong>
-                            <p>Prossiga para a etapa final para coletar a assinatura do motorista e encerrar a devolução.</p>
-                        </div>
-                    </div>
-                </section>
-
-                {{-- ═══════════════════════════════════
-                     PASSO 5 — Assinatura do Termo de Devolução
-                ═══════════════════════════════════ --}}
-                <section class="wizard-step" data-step="5">
-                    <div class="ci-block">
-                        <div class="ci-block-label">
-                            <i class="fas fa-signature"></i>
-                            <div>
-                                <strong>Assinatura do Termo de Devolução</strong>
-                                <span>Registre a assinatura digital do motorista no quadro abaixo para fechar o check-out</span>
-                            </div>
-                        </div>
-
-                        <div class="row justify-content-center">
-                            <div class="col-md-8 col-12">
-                                <div class="alert alert-info">
-                                    <i class="fas fa-info-circle mr-1"></i>
-                                    Assine no quadro abaixo usando o mouse ou tocando na tela. A assinatura será salva no termo de devolução.
-                                </div>
-
-                                <canvas id="coSignatureCanvas" class="ma-sign-pad" style="border: 2px dashed #cbd5e1; border-radius: 16px; background: #fff; width: 100%; min-height: 220px; touch-action: none; cursor: crosshair;"></canvas>
-                                
-                                <div class="d-flex justify-content-between align-items-center mt-2">
-                                    <small class="text-muted">Use o mouse ou toque na tela para assinar.</small>
-                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="coLimparAssinatura">
-                                        <i class="fas fa-eraser mr-1"></i> Limpar Assinatura
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="ci-summary-card co-summary-checkout mt-4">
-                        <div class="ci-summary-card__icon">
                             <i class="fas fa-flag-checkered"></i>
                         </div>
                         <div class="ci-summary-card__content">
                             <strong>Concluir check-out</strong>
-                            <p>Após coletar a assinatura, finalize o check-out. A reserva será encerrada e a devolução registrada.</p>
+                            <p>Após coletar as informações, finalize o check-out. A reserva será encerrada e a devolução registrada.</p>
                         </div>
                         <button type="button" class="ci-btn-create co-btn-finalizar" id="btn_finalizar_checkout">
                             <i class="fas fa-flag-checkered"></i>
@@ -844,10 +800,7 @@
     });
 
     function triggerFinalizar() {
-        if (!validateStep(5)) return;
-        if (coCanvas && coInput) {
-            coInput.value = coCanvas.toDataURL('image/png');
-        }
+        if (!validateStep(4)) return;
         document.getElementById('form_dados_devolucao').dispatchEvent(new Event('submit'));
     }
 
@@ -1074,95 +1027,6 @@
         if (el) el.innerText = nome;
     }
     window.setNomeDano = setNomeDano;
-
-    /* ── Canvas de Assinatura do Check-out (Passo 5) ── */
-    const coCanvas = document.getElementById('coSignatureCanvas');
-    const coInput  = document.getElementById('coAssinaturaInput');
-    const coBtnClean = document.getElementById('coLimparAssinatura');
-    const coCtx = coCanvas ? coCanvas.getContext('2d') : null;
-    let coDrawing = false;
-    let coSigned = false;
-
-    function resizeCoCanvas() {
-        if (!coCanvas || !coCtx) return;
-        const rect = coCanvas.getBoundingClientRect();
-        const ratio = window.devicePixelRatio || 1;
-        coCanvas.width = Math.max(1, Math.floor(rect.width * ratio));
-        coCanvas.height = Math.max(220, Math.floor(rect.height * ratio));
-        coCtx.setTransform(ratio, 0, 0, ratio, 0, 0);
-        coCtx.lineWidth = 2.4;
-        coCtx.lineCap = 'round';
-        coCtx.lineJoin = 'round';
-        coCtx.strokeStyle = '#0f172a';
-    }
-
-    function getCoPoint(event) {
-        if (!coCanvas) return { x: 0, y: 0 };
-        const rect = coCanvas.getBoundingClientRect();
-        const touch = event.touches && event.touches.length ? event.touches[0] : event;
-        return {
-            x: touch.clientX - rect.left,
-            y: touch.clientY - rect.top
-        };
-    }
-
-    function startCoDrawing(event) {
-        if (!coCtx) return;
-        event.preventDefault();
-        coDrawing = true;
-        coSigned = true;
-        const point = getCoPoint(event);
-        coCtx.beginPath();
-        coCtx.moveTo(point.x, point.y);
-    }
-
-    function moveCoDrawing(event) {
-        if (!coDrawing || !coCtx) return;
-        event.preventDefault();
-        const point = getCoPoint(event);
-        coCtx.lineTo(point.x, point.y);
-        coCtx.stroke();
-    }
-
-    function stopCoDrawing() {
-        coDrawing = false;
-    }
-
-    if (coCanvas) {
-        // Redimensionar no carregamento e em eventos de tab/resize
-        setTimeout(resizeCoCanvas, 300);
-        window.addEventListener('resize', resizeCoCanvas);
-        
-        // Ativar resize ao entrar no passo 5
-        document.querySelectorAll('.step-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                if (Number(this.dataset.stepTarget) === 5) {
-                    setTimeout(resizeCoCanvas, 150);
-                }
-            });
-        });
-        document.getElementById('wizardNext')?.addEventListener('click', function() {
-            if (current === 5) {
-                setTimeout(resizeCoCanvas, 150);
-            }
-        });
-
-        coCanvas.addEventListener('mousedown', startCoDrawing);
-        coCanvas.addEventListener('mousemove', moveCoDrawing);
-        coCanvas.addEventListener('mouseup', stopCoDrawing);
-        coCanvas.addEventListener('mouseleave', stopCoDrawing);
-        coCanvas.addEventListener('touchstart', startCoDrawing, { passive: false });
-        coCanvas.addEventListener('touchmove', moveCoDrawing, { passive: false });
-        coCanvas.addEventListener('touchend', stopCoDrawing);
-    }
-
-    if (coBtnClean && coCanvas && coCtx) {
-        coBtnClean.addEventListener('click', function () {
-            coCtx.clearRect(0, 0, coCanvas.width, coCanvas.height);
-            coSigned = false;
-            if (coInput) coInput.value = '';
-        });
-    }
 
     showStep(1);
 

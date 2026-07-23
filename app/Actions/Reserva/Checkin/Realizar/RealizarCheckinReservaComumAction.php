@@ -91,6 +91,45 @@ class RealizarCheckinReservaComumAction
                     'veiculo_id'     => $dados['veiculo_id'] ?? null,
                 ], 'Contrato de check-in editado', 'info');
 
+                // Salva danos coletados ao editar check-in
+                if (!empty($dados['danos'])) {
+                    $danosData = is_string($dados['danos']) ? json_decode($dados['danos'], true) : $dados['danos'];
+                    if (is_array($danosData)) {
+                        $fotoIdx = 0;
+                        $reservaCodigoId = \App\Models\ReservaCodigo::where('reserva_id', $reserva_id)->value('id');
+                        foreach ($danosData as $item) {
+                            $mappedData = [
+                                'reserva_id'        => $reserva_id,
+                                'reserva_codigo_id' => $reservaCodigoId,
+                                'categoria_id'      => $item['categoria_id'] ?? null,
+                                'dano_id'           => $item['dano_id'] ?? null,
+                                'local_dano'        => $item['local_dano'] ?? null,
+                                'localizacao_problema' => $item['localizacao_problema'] ?? null,
+                                'tipo_dano'         => $item['tipo_dano'] ?? null,
+                                'custo_estimado'    => $item['custo_estimado'] ?? 0,
+                                'quilometragem_veiculo' => $item['quilometragem_veiculo'] ?: ($dados['quilometragem_atual'] ?? 0),
+                                'observacoes'       => $item['observacoes'] ?? null,
+                                'veiculo_id'        => $dados['veiculo_id'] ?? null,
+                                'contrato_id'       => $contratoExistente->id,
+                            ];
+
+                            $dano = \App\Models\VeiculoDanos::create($mappedData);
+                            $fotoInput = 'danos_fotos_' . $fotoIdx;
+                            if ($dano && $request->hasFile($fotoInput)) {
+                                $dirDano = 'danos/reserva_codigo_' . (int) $reservaCodigoId . '/dano_' . (int) $dano->id;
+                                $path = \App\Support\ArquivoAnexoHelper::armazenar($request->file($fotoInput), $dirDano);
+                                if ($path) {
+                                    $dano->imagens()->create([
+                                        'caminho_imagem' => $path,
+                                        'nome_imagem'    => basename($path),
+                                    ]);
+                                }
+                            }
+                            $fotoIdx++;
+                        }
+                    }
+                }
+
                 return response()->json($contratoExistente->fresh());
             } else {
                 $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
@@ -101,6 +140,45 @@ class RealizarCheckinReservaComumAction
 
                 $contrato = $this->contratoCheckinService->create($dados);
                 $this->sincronizarCheckinMotoristaApp($reserva, $contrato, $dados);
+
+                // Salva danos coletados (enviados como JSON no campo "danos")
+                if (!empty($dados['danos'])) {
+                    $danosData = is_string($dados['danos']) ? json_decode($dados['danos'], true) : $dados['danos'];
+                    if (is_array($danosData)) {
+                        $fotoIdx = 0;
+                        $reservaCodigoId = \App\Models\ReservaCodigo::where('reserva_id', $reserva_id)->value('id');
+                        foreach ($danosData as $item) {
+                            $mappedData = [
+                                'reserva_id'        => $reserva_id,
+                                'reserva_codigo_id' => $reservaCodigoId,
+                                'categoria_id'      => $item['categoria_id'] ?? null,
+                                'dano_id'           => $item['dano_id'] ?? null,
+                                'local_dano'        => $item['local_dano'] ?? null,
+                                'localizacao_problema' => $item['localizacao_problema'] ?? null,
+                                'tipo_dano'         => $item['tipo_dano'] ?? null,
+                                'custo_estimado'    => $item['custo_estimado'] ?? 0,
+                                'quilometragem_veiculo' => $item['quilometragem_veiculo'] ?: ($dados['quilometragem_atual'] ?? 0),
+                                'observacoes'       => $item['observacoes'] ?? null,
+                                'veiculo_id'        => $dados['veiculo_id'] ?? null,
+                                'contrato_id'       => $contrato->id,
+                            ];
+
+                            $dano = \App\Models\VeiculoDanos::create($mappedData);
+                            $fotoInput = 'danos_fotos_' . $fotoIdx;
+                            if ($dano && $request->hasFile($fotoInput)) {
+                                $dirDano = 'danos/reserva_codigo_' . (int) $reservaCodigoId . '/dano_' . (int) $dano->id;
+                                $path = \App\Support\ArquivoAnexoHelper::armazenar($request->file($fotoInput), $dirDano);
+                                if ($path) {
+                                    $dano->imagens()->create([
+                                        'caminho_imagem' => $path,
+                                        'nome_imagem'    => basename($path),
+                                    ]);
+                                }
+                            }
+                            $fotoIdx++;
+                        }
+                    }
+                }
 
                 return response()->json($contrato);
             }

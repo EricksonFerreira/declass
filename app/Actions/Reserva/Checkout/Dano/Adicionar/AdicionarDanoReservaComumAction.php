@@ -39,7 +39,7 @@ class AdicionarDanoReservaComumAction
                 }
             }
 
-            $this->reservaService->adicionaLog($dados['veiculo_id'] ?? 0, Auth::id(), json_encode([
+            $this->reservaService->adicionaLog($dados['reserva_id'] ?? 0, Auth::id(), json_encode([
                 'acao'        => 'Dano de veiculo adicionado',
                 'dano_id'     => $dano?->id,
                 'reserva_codigo_id' => $reservaCodigoId,

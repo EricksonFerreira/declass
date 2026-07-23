@@ -18,6 +18,9 @@ class ObterDanosDetectadosAction
     {
         $reservaResolvida = $this->resolver->resolver($codigo);
         $reservaCodigoId = ReservaCodigo::where('codigo', $codigo)->value('id');
+        if (!$reservaCodigoId) {
+            $reservaCodigoId = ReservaCodigo::where('reserva_id', $reservaResolvida->registro->id)->value('id');
+        }
 
         return match (true) {
             $reservaResolvida->ehComum() => $this->comum->handle($veiculoId, $reservaCodigoId),

@@ -27,6 +27,7 @@ class ExibirCheckinReservaComumAction
     public function handle(ReservaResolvida $reserva, Request $request): mixed
     {
         $registro = $reserva->registro;
+        $registro->loadMissing(['transacoes']);
         $reservaId = (int) $registro->id;
         $codigo = $reserva->codigo;
 
