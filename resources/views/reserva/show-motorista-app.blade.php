@@ -874,7 +874,7 @@
             @endif
 
             @if($podeRenovar)
-                <a href="{{ route('reserva.renovacao', ['codigo' => $codigoReserva]) }}" class="ma-btn ma-btn--primary">
+                <a href="{{ route('reserva.renovacao.exibir', ['codigo' => $codigoReserva]) }}" class="ma-btn ma-btn--primary">
                     <i class="fas fa-arrows-rotate"></i>
                     <span>Renovar plano</span>
                 </a>
