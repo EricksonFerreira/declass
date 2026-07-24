@@ -1573,7 +1573,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $periodoContrato = (string) ($reserva->periodo_contrato ?: $plano->periodo ?: 'semana');
         $inicioBase = $reserva->data_fim ? Carbon::parse($reserva->data_fim) : Carbon::now();
         if (empty($reserva->data_fim)) {
-            return back()->with('error', 'NÃƒÂ£o foi possÃƒÂ­vel identificar o fim do ciclo atual.');
+            return back()->with('error', 'NÃƒÂ£o foi possível identificar o fim do ciclo atual.');
         }
 
         $periodoUnidade = $this->rotuloPeriodoMotoristaApp($periodoContrato);
@@ -3138,7 +3138,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Tela de vistoria de devolução (check-out). A reserva sÃƒÂ³ ÃƒÂ© concluÃƒÂ­da apÃƒÂ³s finalizar aqui.
+     * Tela de vistoria de devolução (check-out). A reserva sÃƒÂ³ ÃƒÂ© concluída apÃƒÂ³s finalizar aqui.
      */
     public function checkoutVistoria(Request $request, $reserva_id)
     {
@@ -3183,7 +3183,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         if (! $reserva->veiculo_id) {
             return redirect()
                 ->route('reserva.show', $reserva_id)
-                ->with('error', 'Associe um veÃƒÂ­culo ÃƒÂ  reserva antes do check-out.');
+                ->with('error', 'Associe um veículo ÃƒÂ  reserva antes do check-out.');
         }
 
         $categoriaDanos = $this->categoriaDanoService->getAllForSelect();
@@ -3222,7 +3222,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         if (! $reserva->veiculo_id) {
-            return response()->json(['success' => false, 'message' => 'VeÃƒÂ­culo nÃƒÂ£o vinculado ÃƒÂ  reserva.'], 422);
+            return response()->json(['success' => false, 'message' => 'Veículo nÃƒÂ£o vinculado ÃƒÂ  reserva.'], 422);
         }
 
         $dados = $request->validated();
@@ -3293,14 +3293,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $this->reservaService->adicionaLog(
                 $reserva_id,
                 Auth::id(),
-                json_encode(['acao' => 'Check-out com vistoria concluÃƒÂ­do'])
+                json_encode(['acao' => 'Check-out com vistoria concluído'])
             );
 
             DB::commit();
 
             return response()->json([
                 'success' => true,
-                'message' => 'Check-out concluÃƒÂ­do e reserva finalizada.',
+                'message' => 'Check-out concluído e reserva finalizada.',
                 'redirect' => route('reserva.show', $reserva_id),
             ]);
         } catch (\Throwable $e) {
@@ -4070,12 +4070,12 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Retorna datas (YYYY-MM-DD) nos prÃƒÂ³ximos N dias onde a estação estÃƒÂ¡ fechada OU sem veÃƒÂ­culos.
+     * Retorna datas (YYYY-MM-DD) nos prÃƒÂ³ximos N dias onde a estação estÃƒÂ¡ fechada OU sem veículos.
      * LÃƒÂ³gica:
      *  1. Carregar tipos de dia (Dias da Semana, SÃƒÂ¡bado, Domingo, Feriados) da empresa via horarios_diarios.
      *  2. Verificar quais tipos o horario da estação tem funciona=S.
-     *  3. Se a estação nÃƒÂ£o trabalha em feriados, prÃƒÂ©-carregar feriados do perÃƒÂ­odo e bloqueÃƒÂ¡-los.
-     *  4. Para dias em que a estação opera, bloquear os que tiverem 0 veÃƒÂ­culos disponÃƒÂ­veis.
+     *  3. Se a estação nÃƒÂ£o trabalha em feriados, prÃƒÂ©-carregar feriados do período e bloqueÃƒÂ¡-los.
+     *  4. Para dias em que a estação opera, bloquear os que tiverem 0 veículos disponíveis.
      */
     public function pesquisarGruposVeiculos(Request $request)
     {
@@ -4173,13 +4173,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $estacao = Estacao::with(['diasUteis'])->findOrFail($estacaoId);
         $quantidadeVeiculosAtivos = $this->veiculoService->getQuantidadeVeiculosAtivosPorEstacao([$estacaoId]);
 
-        // Para retirada: sÃƒÂ³ mostra dias se hÃƒÂ¡ veÃƒÂ­culos ativos na estação
+        // Para retirada: sÃƒÂ³ mostra dias se hÃƒÂ¡ veículos ativos na estação
         if (! $isDevolucao) {
             if ((int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) <= 0) {
                 return response()->json([
                     'estacao_id' => $estacao->id,
                     'dias_disponiveis' => [],
-                    'mensagem' => 'A estação selecionada nÃƒÂ£o possui veÃƒÂ­culos ativos para retirada.',
+                    'mensagem' => 'A estação selecionada nÃƒÂ£o possui veículos ativos para retirada.',
                 ]);
             }
         }
@@ -4196,22 +4196,22 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         if (empty($proximosDias)) {
             $mensagem = $isDevolucao
-                ? 'A estação selecionada nÃƒÂ£o possui agenda de devolução configurada para o perÃƒÂ­odo.'
-                : 'A estação selecionada nÃƒÂ£o possui agenda de retirada configurada para o perÃƒÂ­odo.';
+                ? 'A estação selecionada nÃƒÂ£o possui agenda de devolução configurada para o período.'
+                : 'A estação selecionada nÃƒÂ£o possui agenda de retirada configurada para o período.';
         }
 
-        // 3. para retirada: filtrar apenas dias com veÃƒÂ­culo disponÃƒÂ­vel
+        // 3. para retirada: filtrar apenas dias com veículo disponível
         //    para devolução: todos os dias de funcionamento sÃƒÂ£o vÃƒÂ¡lidos
         $diasDisponiveis = $isDevolucao
             ? $proximosDias
             : $estacao->filtrarDiasComVeiculoDisponivel($proximosDias);
 
         if (! $isDevolucao && empty($diasDisponiveis) && (int) ($quantidadeVeiculosAtivos[$estacaoId] ?? 0) > 0) {
-            $mensagem = 'A estação possui veÃƒÂ­culos, mas nenhum dia ficou disponÃƒÂ­vel no perÃƒÂ­odo selecionado.';
+            $mensagem = 'A estação possui veículos, mas nenhum dia ficou disponível no período selecionado.';
         }
 
         if ($isDevolucao && empty($diasDisponiveis) && empty($mensagem)) {
-            $mensagem = 'A estação selecionada nÃƒÂ£o possui dias de devolução disponÃƒÂ­veis no perÃƒÂ­odo.';
+            $mensagem = 'A estação selecionada nÃƒÂ£o possui dias de devolução disponíveis no período.';
         }
 
         return response()->json([
@@ -4671,7 +4671,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * VeÃƒÂ­culos disponÃƒÂ­veis na estação de retirada, no perÃƒÂ­odo da reserva, para marca + modelo escolhidos.
+     * Veículos disponíveis na estação de retirada, no período da reserva, para marca + modelo escolhidos.
      */
     public function veiculosDisponiveisCheckin(Request $request, $codigo)
     {
@@ -4691,7 +4691,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $permitidos = $contextoCheckin['modelo_ids'];
         $modeloId = (int) $request->modelo_id;
         if (! in_array($modeloId, $permitidos, true)) {
-            return response()->json(['message' => 'Este modelo nÃƒÂ£o possui veÃƒÂ­culos cadastrados neste grupo de frota.'], 422);
+            return response()->json(['message' => 'Este modelo nÃƒÂ£o possui veículos cadastrados neste grupo de frota.'], 422);
         }
 
         $modelo = $this->modeloService->getById($modeloId);
@@ -4719,11 +4719,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Retorna veÃƒÂ­culos disponÃƒÂ­veis para o checkin via modal de busca avançada.
+     * Retorna veículos disponíveis para o checkin via modal de busca avançada.
      *
      * Comportamento sem filtros ativos:
-     *  1. Tenta retornar apenas veÃƒÂ­culos da marca/modelo da reserva.
-     *  2. Se nÃƒÂ£o houver, retorna todos os disponÃƒÂ­veis no perÃƒÂ­odo/estação.
+     *  1. Tenta retornar apenas veículos da marca/modelo da reserva.
+     *  2. Se nÃƒÂ£o houver, retorna todos os disponíveis no período/estação.
      *
      * Com filtros aplicados pelo usuÃƒÂ¡rio: usa apenas os filtros informados.
      */
@@ -4843,10 +4843,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                     'nome' => 'Estação',
                     'ok' => $veicEstacao === $estacaoId || ($veicEstacao === 0 && $estacaoId === 0),
                     'info' => $estacaoId > 0
-                        ? "VeÃƒÂ­culo na <strong>{$veicEstacaoNome}</strong>, reserva requer <strong>{$reservaEstacaoNome}</strong>"
+                        ? "Veículo na <strong>{$veicEstacaoNome}</strong>, reserva requer <strong>{$reservaEstacaoNome}</strong>"
                         : 'Reserva sem estação definida',
                     'solucao' => $veicEstacao !== $estacaoId && $estacaoId > 0
-                        ? "Mova o veÃƒÂ­culo para a estação <strong>{$reservaEstacaoNome}</strong> ou altere a estação de retirada da reserva."
+                        ? "Mova o veículo para a estação <strong>{$reservaEstacaoNome}</strong> ou altere a estação de retirada da reserva."
                         : null,
                 ];
 
@@ -4856,14 +4856,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                     'nome' => 'Disponibilidade',
                     'ok' => is_null($dispDt) || $dispDt->lte(Carbon::parse($limite)),
                     'info' => is_null($dispDt)
-                        ? 'Sem restrição Ã¢â‚¬â€ veÃƒÂ­culo disponÃƒÂ­vel agora'
-                        : 'DisponÃƒÂ­vel a partir de '.$dispDt->format('d/m/Y H:i').'. Limite atual: '.Carbon::parse($limite)->format('d/m/Y H:i'),
+                        ? 'Sem restrição Ã¢â‚¬â€ veículo disponível agora'
+                        : 'Disponível a partir de '.$dispDt->format('d/m/Y H:i').'. Limite atual: '.Carbon::parse($limite)->format('d/m/Y H:i'),
                     'solucao' => $dispDt && $dispDt->gt(Carbon::parse($limite))
-                        ? 'Aguarde atÃƒÂ© '.$dispDt->format('d/m/Y H:i').' ou antecipe a data de disponibilidade no cadastro do veÃƒÂ­culo.'
+                        ? 'Aguarde atÃƒÂ© '.$dispDt->format('d/m/Y H:i').' ou antecipe a data de disponibilidade no cadastro do veículo.'
                         : null,
                 ];
 
-                // 3. Status do veÃƒÂ­culo
+                // 3. Status do veículo
                 $statusDisponiveis = $this->veiculoService->getStatusVeiculoDisponivelIds();
                 $statusOk = in_array((int) $v->status_veiculo_id, $statusDisponiveis);
                 $regras[] = [
@@ -4871,7 +4871,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                     'ok' => $statusOk,
                     'info' => "Status atual: <strong>{$v->statusVeiculo?->nome}</strong>",
                     'solucao' => ! $statusOk
-                        ? 'Altere o status do veÃƒÂ­culo para um dos disponÃƒÂ­veis.'
+                        ? 'Altere o status do veículo para um dos disponíveis.'
                         : null,
                 ];
 
@@ -5183,7 +5183,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $dados['reserva_id'] = $reserva_id;
         $dados['danos'] = $request->input('danos');
 
-        // Deriva marca_id e modelo_id do veÃƒÂ­culo selecionado quando nÃƒÂ£o enviados pelo formulÃƒÂ¡rio
+        // Deriva marca_id e modelo_id do veículo selecionado quando nÃƒÂ£o enviados pelo formulÃƒÂ¡rio
         if (empty($dados['marca_id']) || empty($dados['modelo_id'])) {
             $veiculo = $this->veiculoService->getById((int) $dados['veiculo_id']);
             $dados['marca_id'] = $dados['marca_id'] ?: (int) $veiculo->marca_id;
@@ -5373,7 +5373,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     /**
      * API: verifica disponibilidade na categoria original e retorna
-     * veÃƒÂ­culos elegÃƒÂ­veis para upgrade, se necessÃƒÂ¡rio.
+     * veículos elegíveis para upgrade, se necessÃƒÂ¡rio.
      */
     public function checkinStatusUpgrade(Request $request, $reserva_id)
     {
@@ -5476,7 +5476,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $categoriaDisponivel = $this->upgradeVeiculoService->categoriaOriginalTemDisponibilidade($reserva);
 
         if ($categoriaDisponivel) {
-            // HÃƒÂ¡ veÃƒÂ­culos na categoria original: sÃƒÂ³ permite upgrade (nunca downgrade)
+            // HÃƒÂ¡ veículos na categoria original: sÃƒÂ³ permite upgrade (nunca downgrade)
             $ehUpgrade = $this->upgradeVeiculoService->veiculoElegivelParaUpgrade($veiculo, $reserva);
             if (! $ehUpgrade) {
                 throw ValidationException::withMessages([
@@ -5500,7 +5500,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     /**
      * Exclui o contrato de check-in e redireciona para recriação.
-     * Se assinado, o fato ÃƒÂ© registrado no log com nÃƒÂ­vel danger.
+     * Se assinado, o fato ÃƒÂ© registrado no log com nível danger.
      */
     public function excluirContratoCheckin(Request $request, $reserva_id)
     {
@@ -5514,7 +5514,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         if ($reserva->contratoCheckout) {
             return redirect()->route('reserva.show', $reserva_id)
-                ->with('warning', 'ApÃƒÂ³s o checkout, o contrato de check-in nÃƒÂ£o pode mais ser excluÃƒÂ­do. Apenas a visualização fica disponÃƒÂ­vel.');
+                ->with('warning', 'ApÃƒÂ³s o checkout, o contrato de check-in nÃƒÂ£o pode mais ser excluído. Apenas a visualização fica disponível.');
         }
 
         $foiAssinado = $contrato->assinado === 'S';
@@ -5570,14 +5570,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $reserva_id,
             Auth::id(),
             json_encode([
-                'acao' => 'Contrato de check-in excluÃƒÂ­do',
+                'acao' => 'Contrato de check-in excluído',
                 'foi_assinado' => $foiAssinado,
                 'veiculo' => $veiculoNome,
                 'movimentacoes_canceladas' => $movimentacoesCanceladas ?? 0,
                 'excluido_por' => Auth::user()?->name ?? Auth::user()?->nome ?? 'UsuÃƒÂ¡rio',
                 'status_alterado_para' => $statusConfirmada?->nome ?? 'nÃƒÂ£o alterado',
             ]),
-            'Contrato de check-in excluÃƒÂ­do'.($foiAssinado ? ' (estava assinado)' : '').' Ã¢â‚¬â€ status voltou para Confirmada',
+            'Contrato de check-in excluído'.($foiAssinado ? ' (estava assinado)' : '').' Ã¢â‚¬â€ status voltou para Confirmada',
             $foiAssinado ? 'danger' : 'warning'
         );
 
@@ -5585,8 +5585,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ->with(
                 'warning',
                 $foiAssinado
-                    ? 'Contrato assinado excluÃƒÂ­do. Status da reserva voltou para Confirmada. Crie um novo contrato.'
-                    : 'Contrato excluÃƒÂ­do. Status da reserva voltou para Confirmada. Crie um novo contrato.'
+                    ? 'Contrato assinado excluído. Status da reserva voltou para Confirmada. Crie um novo contrato.'
+                    : 'Contrato excluído. Status da reserva voltou para Confirmada. Crie um novo contrato.'
             );
     }
 
@@ -5681,7 +5681,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         // Campos editÃƒÂ¡veis bloqueados apÃƒÂ³s certos status
-        $statusBloqueados = [3, 4, 5]; // cancelada, em andamento, concluÃƒÂ­da
+        $statusBloqueados = [3, 4, 5]; // cancelada, em andamento, concluída
         if (in_array((int) $reserva->status_reserva_id, $statusBloqueados, true)) {
             return response()->json([
                 'error' => 'Reserva no status atual nao pode ser editada.',
@@ -5931,7 +5931,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Devolve calção presencial (estorno/saÃƒÂ­da de caixa) e registra transação negativa.
+     * Devolve calção presencial (estorno/saída de caixa) e registra transação negativa.
      */
     public function devolverCalcaoPresencial(Request $request, $reserva_id)
     {
