@@ -14,6 +14,7 @@ use App\Actions\Reserva\Pagamento\Calcao\SalvarCartaoCalcaoAction;
 use App\Actions\Reserva\Pagamento\ConfirmarPagamentoDinheiroAction;
 use App\Actions\Reserva\Pagamento\ExibirFormularioPagamentoAction;
 use App\Actions\Reserva\Pagamento\RealizarPagamentoAction;
+use App\Actions\Reserva\Renovacao\RenovarReservaComumAction;
 use App\DTO\BreadCrumbItem;
 use App\Enums\StatusReservaEnum;
 use App\Exceptions\ReservaNaoEncontradaException;
@@ -31,9 +32,11 @@ use App\Http\Requests\Reserva\UpdateReservaRequest;
 use App\Models\Calcao;
 use App\Models\ContratoCheckin;
 use App\Models\ContratoCheckout;
+use App\Models\Cupom;
 use App\Models\Estacao;
 use App\Models\Feriado;
 use App\Models\Multa;
+use App\Models\Plano;
 use App\Models\Reserva;
 use App\Models\ReservaCodigo;
 use App\Models\ReservaMotoristaApp;
@@ -58,6 +61,7 @@ use App\Services\Pagamentos\GerenciadorDePagamentos;
 use App\Services\PaisService;
 use App\Services\PdfService;
 use App\Services\RegraService;
+use App\Services\RenovacaoService;
 use App\Services\Reserva\ReservaResolver;
 use App\Services\ReservaCodigoService;
 use App\Services\ReservaService;
@@ -135,6 +139,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
     protected $statusReservaService;
 
+    protected $renovacaoService;
+
     protected $realizarPagamentoAction;
 
     protected $exibirFormularioPagamentoAction;
@@ -154,6 +160,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
     protected $exibirCalcaoCheckinAction;
 
     protected $salvarCartaoCalcaoAction;
+
+    protected $renovarReservaComumAction;
 
     public function __construct(
         ReservaService $reservaService,
@@ -189,7 +197,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         DevolverCalcaoPresencialAction $devolverCalcaoPresencialAction,
         ConfirmarPagamentoDinheiroAction $confirmarPagamentoDinheiroAction,
         ExibirCalcaoCheckinAction $exibirCalcaoCheckinAction,
-        SalvarCartaoCalcaoAction $salvarCartaoCalcaoAction
+        SalvarCartaoCalcaoAction $salvarCartaoCalcaoAction,
+        RenovacaoService $renovacaoService,
+        RenovarReservaComumAction $renovarReservaComumAction
     ) {
         $this->titulo = 'Reservas';
         $this->nomeFiltro = 'reserva';
@@ -211,10 +221,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $this->pdfService = $pdfService;
         $this->gerenciadorDePagamentos = $gerenciadorDePagamentos;
         $this->gatewayEmpresaConfigService = $gatewayEmpresaConfigService;
+        $this->renovacaoService = $renovacaoService;
         $this->regraService = $regraService;
         $this->paisService = $paisService;
+        $this->renovacaoService = $renovacaoService;
         $this->nfseService = $nfseService;
         $this->statusReservaService = $statusReservaService;
+        $this->renovacaoService = $renovacaoService;
         $this->upgradeVeiculoService = $upgradeVeiculoService;
         $this->calcaoService = $calcaoService;
         $this->realizarPagamentoAction = $realizarPagamentoAction;
@@ -227,6 +240,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $this->confirmarPagamentoDinheiroAction = $confirmarPagamentoDinheiroAction;
         $this->exibirCalcaoCheckinAction = $exibirCalcaoCheckinAction;
         $this->salvarCartaoCalcaoAction = $salvarCartaoCalcaoAction;
+        $this->renovarReservaComumAction = $renovarReservaComumAction;
     }
 
     public function index()
@@ -716,6 +730,134 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ->with('success', 'Reserva criada com sucesso.');
     }
 
+    public function renovacao($codigo)
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        $codigoReserva = $this->dadosCodigoReservaPorIdentificador($codigo);
+
+        if (($codigoReserva && $codigoReserva->tipo_origem === 'motorista_app')
+            || (! $codigoReserva && $this->identificadorComecaComPrefixo($codigo, 'MAP'))
+        ) {
+            $idMotoristaApp = $this->idReservaPorIdentificador(
+                $codigo,
+                'MAP',
+                $codigoReserva,
+                'reserva_motorista_app_id'
+            );
+
+            $reservaMotoristaApp = ReservaMotoristaApp::withoutGlobalScopes()
+                ->with(['user', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'planoMotoristaApp', 'solicitacao.planoMotoristaApp', 'pagamentos'])
+                ->find($idMotoristaApp);
+
+            if (! $reservaMotoristaApp) {
+                return redirect()->route('reserva.index')->with('error', 'Reserva não encontrada.');
+            }
+
+            $plano = $reservaMotoristaApp->planoMotoristaApp ?? $reservaMotoristaApp->solicitacao?->planoMotoristaApp;
+            $valorPeriodoAtual = (float) (
+                $plano?->valor_periodo
+                ?? $reservaMotoristaApp->solicitacao?->valor_periodo
+                ?? $reservaMotoristaApp->pagamentos?->first()?->valor_unitario
+                ?? $reservaMotoristaApp->pagamentos?->first()?->valor_total
+                ?? 0
+            );
+            $valorPeriodoContratado = (float) (
+                $reservaMotoristaApp->valor_periodo_contrato
+                ?: ($reservaMotoristaApp->valor_plano
+                ?: $valorPeriodoAtual)
+            );
+
+            // Vigências
+            $inicioVigencia = $reservaMotoristaApp->data_inicio;
+            $fimVigencia = $reservaMotoristaApp->data_fim;
+
+            // Se existirem pagamentos, pegar a vigência do mais recente
+            $ultimoPgto = collect($reservaMotoristaApp->pagamentos ?? [])
+                ->filter(fn ($p) => strtolower((string) ($p->status ?? '')) !== 'cancelado')
+                ->sortByDesc('id')
+                ->first();
+
+            if ($ultimoPgto && ! empty($ultimoPgto->vigencia_fim)) {
+                $inicioVigencia = $ultimoPgto->vigencia_inicio;
+                $fimVigencia = $ultimoPgto->vigencia_fim;
+            }
+
+            $inicioVigenciaFormatado = $inicioVigencia ? \Carbon\Carbon::parse($inicioVigencia)->format('d/m/Y') : '-';
+            $fimVigenciaFormatado = $fimVigencia ? \Carbon\Carbon::parse($fimVigencia)->format('d/m/Y') : '-';
+
+            // Buscar todos os planos disponíveis para possível troca
+            $planos = \App\Models\PlanoMotoristaApp::where('empresa_id', $reservaMotoristaApp->empresa_id)
+                ->where('ativo', 'S')
+                ->orderBy('ordem')
+                ->orderBy('nome')
+                ->get();
+
+            return view('reserva.renovacao', [
+                'tipo'                   => 'MAP',
+                'reserva'                => $reservaMotoristaApp,
+                'codigo'                 => $codigo,
+                'plano'                  => $plano,
+                'planos'                 => $planos,
+                'valorPeriodoContratado' => $valorPeriodoContratado,
+                'inicioVigenciaFormatado' => $inicioVigenciaFormatado,
+                'fimVigenciaFormatado'   => $fimVigenciaFormatado,
+                'titulo'                 => 'Renovação de Plano de Motorista — ' . $codigo,
+            ]);
+        }
+
+        // Reserva Comum
+        $reservaId = $this->idReservaPorIdentificador($codigo, 'RES', $codigoReserva, 'reserva_id');
+        $reserva = Reserva::withoutGlobalScopes()
+            ->with(['usuario', 'veiculo.marca', 'veiculo.modelo', 'estacaoDevolucao'])
+            ->find($reservaId);
+
+        if (! $reserva) {
+            return redirect()->route('reserva.index')->with('error', 'Reserva não encontrada.');
+        }
+
+        $estacoes = \App\Models\Estacao::where('ativo', true)->get();
+
+        return view('reserva.renovacao', [
+            'tipo' => 'RES',
+            'reserva' => $reserva,
+            'codigo' => $codigo,
+            'estacoes' => $estacoes,
+            'titulo' => 'Renovação de Reserva — #' . $reserva->id,
+        ]);
+    }
+
+    public function renovarComum(Request $request, $id)
+    {
+        $reserva = Reserva::withoutGlobalScopes()
+            ->with(['empresa', 'codigoReserva'])
+            ->find((int) $id);
+
+        if (! $reserva) {
+            return back()->with('error', 'Reserva não encontrada.');
+        }
+
+        try {
+            $reserva = $this->renovarReservaComumAction->handle($request, $reserva);
+
+            $novaDataHora   = \Carbon\Carbon::parse($reserva->data_fim);
+            $valorAdicional = round(
+                max(1, (int) ceil($novaDataHora->diffInDays(\Carbon\Carbon::parse($request->input('data_fim_nova')))))
+                * (float) $reserva->tarifa_base,
+                2
+            );
+
+            return redirect()
+                ->route('reserva.show', $reserva->codigoReserva?->codigo ?? $reserva->id)
+                ->with('success', 'Reserva renovada com sucesso! Um pagamento adicional de R$ ' . number_format($valorAdicional, 2, ',', '.') . ' foi gerado.');
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Falha ao renovar reserva: ' . $e->getMessage());
+        }
+    }
+
     public function show($reserva)
     {
         $user = Auth::user();
@@ -774,6 +916,15 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                     ? data_get($reservaMotoristaApp->documentos_json, 'checkin', [])
                     : [];
                 $reservaOperacionalCheckinId = (int) data_get($checkinDocs, 'reserva_operacional_id', 0);
+                if ($reservaOperacionalCheckinId <= 0) {
+                    $codigoMap = $reservaMotoristaApp->codigoReserva?->codigo ?? '';
+                    if ($codigoMap) {
+                        $reservaOperacionalCheckinId = (int) \App\Models\Reserva::withoutGlobalScopes()
+                            ->where('observacoes', 'like', '%'.$codigoMap.'%')
+                            ->latest('id')
+                            ->value('id');
+                    }
+                }
                 $contratoCheckinMotoristaApp = null;
 
                 if ((int) data_get($checkinDocs, 'contrato_checkin_id', 0) > 0) {

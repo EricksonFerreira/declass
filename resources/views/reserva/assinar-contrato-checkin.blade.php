@@ -28,7 +28,7 @@
         : $tarifaBaseAssinatura * (int) $diasAssinatura;
     $valorTotalAssinatura = (float) ($ctx['valor_total'] ?? ($subtotalAssinatura + $taxaEntregaAssinatura + $taxaColetaAssinatura));
 
-    $ci = $reserva->contratoCheckin ?? null;
+    $ci = $contratoCheckin ?? $reserva->contratoCheckin ?? null;
     $veic = $ci?->veiculo ?? $reserva->veiculo ?? ($ctx['veiculo'] ?? null);
     $marcaNome = $ci?->marca?->nome ?? $veic?->marca?->nome ?? '-';
     $modeloNome = $ci?->modelo?->nome ?? $veic?->modelo?->nome ?? '-';
@@ -59,205 +59,212 @@
     </div>
 
     {{-- Card principal --}}
-    <div class="assinatura-card">
-
-        {{-- Logo + dados da empresa --}}
-        @php $moedaSimbolo = ($empresa?->moeda_pagamento ?? 'BRL') === 'USD' ? '$' : (($empresa?->moeda_pagamento ?? 'BRL') === 'EUR' ? '€' : 'R$'); @endphp
-        <div class="assinatura-empresa">
-            @if(!empty($empresa?->logo_url))
-                <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->nome }}" class="assinatura-logo">
-            @endif
-            <div class="assinatura-empresa-info">
-                <strong>{{ $empresa?->nome ?? '—' }}</strong>
-                <span>{{ $empresa?->cnpj ?? '' }}</span>
-                <span>{{ $empresa?->email ?? '' }} · {{ $empresa?->telefone ?? '' }}</span>
-            </div>
-        </div>
-
-        {{-- Cliente --}}
-        <div class="assinatura-secao">
-            <div class="assinatura-secao-titulo"><i class="fas fa-user mr-1"></i>Cliente</div>
-            <table class="assinatura-tabela">
-                <tr><td>Nome</td><td><strong>{{ $usuarioAssinatura?->nome ?? $usuarioAssinatura?->name ?? '—' }}</strong></td></tr>
-                <tr><td>CPF/CNPJ</td><td>{{ $usuarioAssinatura?->cpf ?? $usuarioAssinatura?->documento ?? '—' }}</td></tr>
-                <tr><td>E-mail</td><td>{{ $usuarioAssinatura?->email ?? '—' }}</td></tr>
-                <tr><td>Telefone</td><td>{{ $usuarioAssinatura?->telefone ?? '—' }}</td></tr>
-            </table>
-        </div>
-
-        {{-- Veículo --}}
-        <div class="assinatura-secao">
-            <div class="assinatura-secao-titulo"><i class="fas fa-car mr-1"></i>Veículo</div>
-            <table class="assinatura-tabela">
-                <tr><td>Marca / Modelo</td><td><strong>{{ $marcaNome }} {{ $modeloNome }}</strong></td></tr>
-                <tr><td>Placa</td><td>{{ $placa }}</td></tr>
-                <tr><td>Grupo / Plano</td><td>{{ $grupoNome }}</td></tr>
-                <tr><td>Cor</td><td>{{ $cor }}</td></tr>
-                <tr><td>Ano</td><td>{{ $ano }}</td></tr>
-                <tr><td>Quilometragem</td><td>{{ number_format((float)$km, 0, ',', '.') }} km</td></tr>
-                <tr><td>Combustível</td><td>{{ $comb }}</td></tr>
-            </table>
-        </div>
-
-        {{-- Período --}}
-        <div class="assinatura-secao">
-            <div class="assinatura-secao-titulo"><i class="fas fa-calendar mr-1"></i>Período da Locação</div>
-            <table class="assinatura-tabela">
-                <tr><td>Retirada</td><td><strong>{{ $dataInicioAssinatura ? \Carbon\Carbon::parse($dataInicioAssinatura)->format('d/m/Y H:i') : '—' }}</strong></td></tr>
-                <tr><td>Local de retirada</td><td>{{ $ctx['estacao_retirada'] ?? '—' }}</td></tr>
-                <tr><td>Devolução prevista</td><td><strong>{{ $dataFimAssinatura ? \Carbon\Carbon::parse($dataFimAssinatura)->format('d/m/Y H:i') : '—' }}</strong></td></tr>
-                <tr><td>Local de devolução</td><td>{{ $ctx['estacao_devolucao'] ?? '—' }}</td></tr>
-                <tr><td>Duração</td><td>{{ $diasAssinatura }} dia(s)</td></tr>
-                @if(!empty($ctx['plano_nome']))
-                <tr><td>Plano</td><td>{{ $ctx['plano_nome'] }}</td></tr>
-                @endif
-            </table>
-        </div>
-
-        {{-- Financeiro --}}
-        <div class="assinatura-secao">
-            <div class="assinatura-secao-titulo"><i class="fas fa-money-bill mr-1"></i>Financeiro</div>
-            <table class="assinatura-tabela">
-                <tr><td>{{ $tarifaLabelAssinatura }}</td><td>{{ $moedaSimbolo }} {{ number_format($tarifaBaseAssinatura, 2, ',', '.') }}</td></tr>
-                @if(!$isMap)
-                <tr><td>Diárias</td><td>{{ $diasAssinatura }} dia(s)</td></tr>
-                <tr><td>Subtotal</td><td><strong>{{ $moedaSimbolo }} {{ number_format($subtotalAssinatura, 2, ',', '.') }}</strong></td></tr>
-                @else
-                    @if(!empty($ctx['opcionais_lista']) && is_array($ctx['opcionais_lista']))
-                        @foreach($ctx['opcionais_lista'] as $opcItem)
-                            <tr>
-                                <td style="padding-left: 18px; color: #475569;">
-                                    <i class="fas fa-angle-right mr-1" style="font-size:0.75rem;"></i> {{ $opcItem['nome'] }}
-                                    @if(($opcItem['quantidade'] ?? 1) > 1) (x{{ $opcItem['quantidade'] }}) @endif
-                                </td>
-                                <td>{{ $moedaSimbolo }} {{ number_format((float)($opcItem['subtotal'] ?? 0), 2, ',', '.') }}</td>
-                            </tr>
-                        @endforeach
+    <div class="row">
+        {{-- Coluna da Esquerda: Informações --}}
+        <div class="col-md-6 mb-4">
+            <div class="assinatura-card h-100" style="border-radius:24px; box-shadow: 0 10px 30px rgba(12,20,40,0.06); border-top:1px solid #e2e8f0;">
+                {{-- Logo + dados da empresa --}}
+                @php $moedaSimbolo = ($empresa?->moeda_pagamento ?? 'BRL') === 'USD' ? '$' : (($empresa?->moeda_pagamento ?? 'BRL') === 'EUR' ? '€' : 'R$'); @endphp
+                <div class="assinatura-empresa">
+                    @if(!empty($empresa?->logo_url))
+                        <img src="{{ $empresa->logo_url }}" alt="{{ $empresa->nome }}" class="assinatura-logo">
                     @endif
-                    @if(!empty($ctx['valor_opcionais']) && (float)$ctx['valor_opcionais'] > 0)
-                    <tr><td><strong>Soma dos opcionais</strong></td><td><strong>{{ $moedaSimbolo }} {{ number_format((float)$ctx['valor_opcionais'], 2, ',', '.') }}</strong></td></tr>
-                    @endif
-                @endif
-                @if($taxaEntregaAssinatura > 0)
-                <tr><td>Taxa de entrega</td><td>{{ $moedaSimbolo }} {{ number_format($taxaEntregaAssinatura, 2, ',', '.') }}</td></tr>
-                @endif
-                @if($taxaColetaAssinatura > 0)
-                <tr><td>Taxa de coleta</td><td>{{ $moedaSimbolo }} {{ number_format($taxaColetaAssinatura, 2, ',', '.') }}</td></tr>
-                @endif
-                @if(!empty($ctx['caucao']))
-                <tr><td>Caução do Plano</td><td>{{ $moedaSimbolo }} {{ number_format((float)$ctx['caucao'], 2, ',', '.') }}</td></tr>
-                @endif
-                <tr><td style="font-weight:700;font-size:.9rem;">Valor total por ciclo</td><td style="font-weight:800;font-size:.9rem;color:#059669;">{{ $moedaSimbolo }} {{ number_format($valorTotalAssinatura, 2, ',', '.') }}</td></tr>
-            </table>
-        </div>
-
-        {{-- Observações --}}
-        @if(!empty($ci?->notas_saida) || !empty($ci?->observacoes_saida))
-        <div class="assinatura-secao">
-            <div class="assinatura-secao-titulo"><i class="fas fa-sticky-note mr-1"></i>Observações</div>
-            @if(!empty($ci?->notas_saida))<p style="font-size:.82rem;color:#475569;margin:2px 0;">{{ $ci->notas_saida }}</p>@endif
-            @if(!empty($ci?->observacoes_saida))<p style="font-size:.82rem;color:#475569;margin:2px 0;">{{ $ci->observacoes_saida }}</p>@endif
-        </div>
-        @endif
-
-        {{-- Contrato --}}
-        <div class="assinatura-secao" style="border:none;margin-bottom:0;">
-            <div class="assinatura-secao-titulo"><i class="fas fa-file-contract mr-1"></i>Contrato</div>
-            <table class="assinatura-tabela">
-                <tr><td>Nº do contrato</td><td><strong>#{{ $ci?->id ?? $reserva->id ?? '—' }}</strong></td></tr>
-                @if(!empty($ci?->data_saida))
-                <tr><td>Data de saída</td><td>{{ \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') }} {{ $ci->hora_saida ? substr($ci->hora_saida, 0, 5) : '' }}</td></tr>
-                @endif
-                <tr><td>Reserva</td><td>{{ $codigoAssinatura }}</td></tr>
-            </table>
-        </div>
-
-        {{-- Linha divisória --}}
-        <hr style="margin:20px 0;border:none;border-top:2px solid #e2e8f0;">
-
-        {{-- Tabs de modo --}}
-        <form id="form-assinatura-checkin" enctype="multipart/form-data">
-            <div class="assinatura-tabs">
-                <button type="button" class="assinatura-tab active" data-tab="digital">
-                    <i class="fas fa-signature"></i> Assinar Digitalmente
-                </button>
-                <button type="button" class="assinatura-tab" data-tab="upload">
-                    <i class="fas fa-file-upload"></i> Anexar Contrato em PDF
-                </button>
-            </div>
-
-            {{-- Tab: Assinatura Digital --}}
-            <div id="tab-digital" class="assinatura-tab-content active">
-                {{-- Instrução --}}
-                <div class="assinatura-instruction">
-                    <i class="fas fa-pencil-alt"></i>
-                    <span>Use o mouse ou toque na área abaixo para assinar o contrato</span>
-                </div>
-
-                {{-- Pad --}}
-                <div class="assinatura-pad-wrapper">
-                    <canvas id="signature-pad"></canvas>
-                    <div class="assinatura-pad-hint">Área de assinatura</div>
-                </div>
-
-                {{-- Ações --}}
-                <div class="assinatura-actions">
-                    <button type="button" id="btn_limpar" class="assinatura-btn assinatura-btn--ghost">
-                        <i class="fas fa-eraser"></i>
-                        Limpar
-                    </button>
-                    <button type="button" id="btn_salvar" class="assinatura-btn assinatura-btn--primary">
-                        <i class="fas fa-check"></i>
-                        Confirmar Assinatura
-                    </button>
-                </div>
-            </div>
-
-            {{-- Tab: Upload PDF --}}
-            <div id="tab-upload" class="assinatura-tab-content" style="display:none;">
-                <div class="assinatura-instruction">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <span>Anexe o contrato assinado em formato PDF</span>
-                </div>
-
-                <div class="assinatura-upload-area" id="upload-drop-zone">
-                    <input type="file" id="contrato_pdf" accept=".pdf,application/pdf" style="display:none;">
-                    <div class="assinatura-upload-placeholder" id="upload-placeholder">
-                        <i class="fas fa-file-pdf"></i>
-                        <p>Arraste o arquivo PDF aqui ou <a href="#" id="upload-browse-link">clique para selecionar</a></p>
-                        <span class="muted">Tamanho máximo: 10MB</span>
+                    <div class="assinatura-empresa-info">
+                        <strong>{{ $empresa?->nome ?? '—' }}</strong>
+                        <span>{{ $empresa?->cnpj ?? '' }}</span>
+                        <span>{{ $empresa?->email ?? '' }} · {{ $empresa?->telefone ?? '' }}</span>
                     </div>
-                    <div class="assinatura-upload-preview" id="upload-preview" style="display:none;">
-                        <i class="fas fa-file-pdf"></i>
-                        <div class="assinatura-upload-file-info">
-                            <strong id="upload-file-name"></strong>
-                            <span id="upload-file-size"></span>
+                </div>
+
+                {{-- Cliente --}}
+                <div class="assinatura-secao">
+                    <div class="assinatura-secao-titulo"><i class="fas fa-user mr-1"></i>Cliente</div>
+                    <table class="assinatura-tabela">
+                        <tr><td>Nome</td><td><strong>{{ $usuarioAssinatura?->nome ?? $usuarioAssinatura?->name ?? '—' }}</strong></td></tr>
+                        <tr><td>CPF/CNPJ</td><td>{{ $usuarioAssinatura?->cpf ?? $usuarioAssinatura?->documento ?? '—' }}</td></tr>
+                        <tr><td>E-mail</td><td>{{ $usuarioAssinatura?->email ?? '—' }}</td></tr>
+                        <tr><td>Telefone</td><td>{{ $usuarioAssinatura?->telefone ?? '—' }}</td></tr>
+                    </table>
+                </div>
+
+                {{-- Veículo --}}
+                <div class="assinatura-secao">
+                    <div class="assinatura-secao-titulo"><i class="fas fa-car mr-1"></i>Veículo</div>
+                    <table class="assinatura-tabela">
+                        <tr><td>Marca / Modelo</td><td><strong>{{ $marcaNome }} {{ $modeloNome }}</strong></td></tr>
+                        <tr><td>Placa</td><td>{{ $placa }}</td></tr>
+                        <tr><td>Grupo / Plano</td><td>{{ $grupoNome }}</td></tr>
+                        <tr><td>Cor</td><td>{{ $cor }}</td></tr>
+                        <tr><td>Ano</td><td>{{ $ano }}</td></tr>
+                        <tr><td>Quilometragem</td><td>{{ number_format((float)$km, 0, ',', '.') }} km</td></tr>
+                        <tr><td>Combustível</td><td>{{ $comb }}</td></tr>
+                    </table>
+                </div>
+
+                {{-- Período --}}
+                <div class="assinatura-secao">
+                    <div class="assinatura-secao-titulo"><i class="fas fa-calendar mr-1"></i>Período da Locação</div>
+                    <table class="assinatura-tabela">
+                        <tr><td>Retirada</td><td><strong>{{ $dataInicioAssinatura ? \Carbon\Carbon::parse($dataInicioAssinatura)->format('d/m/Y H:i') : '—' }}</strong></td></tr>
+                        <tr><td>Local de retirada</td><td>{{ $ctx['estacao_retirada'] ?? '—' }}</td></tr>
+                        <tr><td>Devolução prevista</td><td><strong>{{ $dataFimAssinatura ? \Carbon\Carbon::parse($dataFimAssinatura)->format('d/m/Y H:i') : '—' }}</strong></td></tr>
+                        <tr><td>Local de devolução</td><td>{{ $ctx['estacao_devolucao'] ?? '—' }}</td></tr>
+                        <tr><td>Duração</td><td>{{ $diasAssinatura }} dia(s)</td></tr>
+                        @if(!empty($ctx['plano_nome']))
+                        <tr><td>Plano</td><td>{{ $ctx['plano_nome'] }}</td></tr>
+                        @endif
+                    </table>
+                </div>
+
+                {{-- Financeiro --}}
+                <div class="assinatura-secao">
+                    <div class="assinatura-secao-titulo"><i class="fas fa-money-bill mr-1"></i>Financeiro</div>
+                    <table class="assinatura-tabela">
+                        <tr><td>{{ $tarifaLabelAssinatura }}</td><td>{{ $moedaSimbolo }} {{ number_format($tarifaBaseAssinatura, 2, ',', '.') }}</td></tr>
+                        @if(!$isMap)
+                        <tr><td>Diárias</td><td>{{ $diasAssinatura }} dia(s)</td></tr>
+                        <tr><td>Subtotal</td><td><strong>{{ $moedaSimbolo }} {{ number_format($subtotalAssinatura, 2, ',', '.') }}</strong></td></tr>
+                        @else
+                            @if(!empty($ctx['opcionais_lista']) && is_array($ctx['opcionais_lista']))
+                                @foreach($ctx['opcionais_lista'] as $opcItem)
+                                    <tr>
+                                        <td style="padding-left: 18px; color: #475569;">
+                                            <i class="fas fa-angle-right mr-1" style="font-size:0.75rem;"></i> {{ $opcItem['nome'] }}
+                                            @if(($opcItem['quantidade'] ?? 1) > 1) (x{{ $opcItem['quantidade'] }}) @endif
+                                        </td>
+                                        <td>{{ $moedaSimbolo }} {{ number_format((float)($opcItem['subtotal'] ?? 0), 2, ',', '.') }}</td>
+                                    </tr>
+                                @endforeach
+                            @endif
+                            @if(!empty($ctx['valor_opcionais']) && (float)$ctx['valor_opcionais'] > 0)
+                            <tr><td><strong>Soma dos opcionais</strong></td><td><strong>{{ $moedaSimbolo }} {{ number_format((float)$ctx['valor_opcionais'], 2, ',', '.') }}</strong></td></tr>
+                            @endif
+                        @endif
+                        @if($taxaEntregaAssinatura > 0)
+                        <tr><td>Taxa de entrega</td><td>{{ $moedaSimbolo }} {{ number_format($taxaEntregaAssinatura, 2, ',', '.') }}</td></tr>
+                        @endif
+                        @if($taxaColetaAssinatura > 0)
+                        <tr><td>Taxa de coleta</td><td>{{ $moedaSimbolo }} {{ number_format($taxaColetaAssinatura, 2, ',', '.') }}</td></tr>
+                        @endif
+                        @if(!empty($ctx['caucao']))
+                        <tr><td>Caução do Plano</td><td>{{ $moedaSimbolo }} {{ number_format((float)$ctx['caucao'], 2, ',', '.') }}</td></tr>
+                        @endif
+                        <tr><td style="font-weight:700;font-size:.9rem;">Valor total por ciclo</td><td style="font-weight:800;font-size:.9rem;color:#059669;">{{ $moedaSimbolo }} {{ number_format($valorTotalAssinatura, 2, ',', '.') }}</td></tr>
+                    </table>
+                </div>
+
+                {{-- Observações --}}
+                @if(!empty($ci?->notas_saida) || !empty($ci?->observacoes_saida))
+                <div class="assinatura-secao">
+                    <div class="assinatura-secao-titulo"><i class="fas fa-sticky-note mr-1"></i>Observações</div>
+                    @if(!empty($ci?->notas_saida))<p style="font-size:.82rem;color:#475569;margin:2px 0;">{{ $ci->notas_saida }}</p>@endif
+                    @if(!empty($ci?->observacoes_saida))<p style="font-size:.82rem;color:#475569;margin:2px 0;">{{ $ci->observacoes_saida }}</p>@endif
+                </div>
+                @endif
+
+                {{-- Contrato --}}
+                <div class="assinatura-secao" style="border:none;margin-bottom:0;padding-bottom:0;">
+                    <div class="assinatura-secao-titulo"><i class="fas fa-file-contract mr-1"></i>Contrato</div>
+                    <table class="assinatura-tabela">
+                        <tr><td>Nº do contrato</td><td><strong>#{{ $ci?->id ?? $reserva->id ?? '—' }}</strong></td></tr>
+                        @if(!empty($ci?->data_saida))
+                        <tr><td>Data de saída</td><td>{{ \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') }} {{ $ci->hora_saida ? substr($ci->hora_saida, 0, 5) : '' }}</td></tr>
+                        @endif
+                        <tr><td>Reserva</td><td>{{ $codigoAssinatura }}</td></tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {{-- Coluna da Direita: Assinatura --}}
+        <div class="col-md-6 mb-4">
+            <div class="assinatura-card h-100 d-flex flex-column" style="border-radius:24px; box-shadow: 0 10px 30px rgba(12,20,40,0.06); border-top:1px solid #e2e8f0; justify-content: space-between;">
+                <form id="form-assinatura-checkin" enctype="multipart/form-data" class="d-flex flex-column h-100" style="flex:1; justify-content: space-between;">
+                    <div>
+                        {{-- Tabs de modo --}}
+                        <div class="assinatura-tabs">
+                            <button type="button" class="assinatura-tab active" data-tab="digital">
+                                <i class="fas fa-signature"></i> Assinar Digitalmente
+                            </button>
+                            <button type="button" class="assinatura-tab" data-tab="upload">
+                                <i class="fas fa-file-upload"></i> Anexar Contrato PDF
+                            </button>
                         </div>
-                        <button type="button" id="upload-remove" class="assinatura-btn assinatura-btn--ghost" style="padding:6px 12px;font-size:.78rem;">
-                            <i class="fas fa-times"></i> Remover
-                        </button>
+
+                        {{-- Tab: Assinatura Digital --}}
+                        <div id="tab-digital" class="assinatura-tab-content active">
+                            {{-- Instrução --}}
+                            <div class="assinatura-instruction">
+                                <i class="fas fa-pencil-alt"></i>
+                                <span>Use o mouse ou toque na área abaixo para assinar:</span>
+                            </div>
+
+                            {{-- Pad --}}
+                            <div class="assinatura-pad-wrapper">
+                                <canvas id="signature-pad" style="height: 250px;"></canvas>
+                                <div class="assinatura-pad-hint">Área de assinatura</div>
+                            </div>
+
+                            {{-- Ações --}}
+                            <div class="assinatura-actions mb-4">
+                                <button type="button" id="btn_limpar" class="assinatura-btn assinatura-btn--ghost">
+                                    <i class="fas fa-eraser"></i>
+                                    Limpar
+                                </button>
+                                <button type="button" id="btn_salvar" class="assinatura-btn assinatura-btn--primary">
+                                    <i class="fas fa-check"></i>
+                                    Confirmar Assinatura
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Tab: Upload PDF --}}
+                        <div id="tab-upload" class="assinatura-tab-content" style="display:none;">
+                            <div class="assinatura-instruction">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                <span>Anexe o contrato assinado em formato PDF:</span>
+                            </div>
+
+                            <div class="assinatura-upload-area" id="upload-drop-zone" style="padding: 60px 20px;">
+                                <input type="file" id="contrato_pdf" accept=".pdf,application/pdf" style="display:none;">
+                                <div class="assinatura-upload-placeholder" id="upload-placeholder">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <p>Arraste o arquivo PDF aqui ou <a href="#" id="upload-browse-link">clique para selecionar</a></p>
+                                    <span class="muted">Tamanho máximo: 10MB</span>
+                                </div>
+                                <div class="assinatura-upload-preview" id="upload-preview" style="display:none;">
+                                    <i class="fas fa-file-pdf"></i>
+                                    <div class="assinatura-upload-file-info">
+                                        <strong id="upload-file-name"></strong>
+                                        <span id="upload-file-size"></span>
+                                    </div>
+                                    <button type="button" id="upload-remove" class="assinatura-btn assinatura-btn--ghost" style="padding:6px 12px;font-size:.78rem;">
+                                        <i class="fas fa-times"></i> Remover
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="assinatura-actions mb-4">
+                                <button type="button" id="btn_upload_salvar" class="assinatura-btn assinatura-btn--primary" disabled>
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    Enviar Contrato Assinado
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="assinatura-actions">
-                    <button type="button" id="btn_upload_salvar" class="assinatura-btn assinatura-btn--primary" disabled>
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        Enviar Contrato Assinado
-                    </button>
-                </div>
+                    {{-- Status --}}
+                    <div id="assinatura_status" class="assinatura-status" style="display:none; margin-top: auto;"></div>
+                </form>
             </div>
-        </form>
-
-        {{-- Status --}}
-        <div id="assinatura_status" class="assinatura-status" style="display:none"></div>
-
+        </div>
     </div>
 
 </div>
 
 <style>
     .assinatura-page {
-        max-width: 820px;
+        max-width: 1200px;
         margin: 0 0 40px;
     }
 

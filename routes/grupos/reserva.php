@@ -12,6 +12,14 @@ Route::get('minhas-reservas', [ReservaController::class, 'minhas'])->name('reser
 
 // ── Motorista App (controller separado) ──
 Route::get('minhas-reservas/motorista-app/{id}', [ReservaController::class, 'showMinhasMotoristaApp'])->name('reserva.minhas.motorista-app.show');
+Route::get('reserva-motorista-app/create', [ReservaMotoristaAppController::class, 'create'])->name('reserva-motorista-app.create');
+Route::post('reserva-motorista-app', [ReservaMotoristaAppController::class, 'store'])->name('reserva-motorista-app.store');
+Route::get('reserva-motorista-app/{id}/edit', [ReservaMotoristaAppController::class, 'edit'])->name('reserva-motorista-app.edit');
+Route::put('reserva-motorista-app/{id}', [ReservaMotoristaAppController::class, 'update'])->name('reserva-motorista-app.update');
+Route::post('reserva-motorista-app/criar-motorista', [ReservaMotoristaAppController::class, 'criarMotoristaAjax'])->name('reserva-motorista-app.criar-motorista');
+Route::get('reserva-motorista-app/solicitacao-status/{userId}', [ReservaMotoristaAppController::class, 'solicitacaoStatusAjax'])->name('reserva-motorista-app.solicitacao-status');
+Route::post('reserva-motorista-app/salvar-documentos', [ReservaMotoristaAppController::class, 'salvarDocumentosAjax'])->name('reserva-motorista-app.salvar-documentos');
+Route::get('reserva-motorista-app/veiculos-disponiveis', [ReservaMotoristaAppController::class, 'veiculosDisponiveisAjax'])->name('reserva-motorista-app.veiculos-disponiveis');
 Route::get('minhas-reservas/{id}/efetuar-pagamento', [ReservaPagamentoController::class, 'efetuarPagamentoMinhas'])->name('reserva.minhas.pagamento.efetuar');
 Route::post('minhas-reservas/{codigo}/confirmar-pagamento', [ReservaPagamentoController::class, 'confirmarPagamentoMinhas'])->name('reserva.minhas.pagamento.confirmar');
 Route::get('minhas-reservas/{id}', [ReservaController::class, 'showMinhas'])->name('reserva.minhas.show');
@@ -92,5 +100,9 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('{codigo}/assinarContratoCheckout', [ReservaCheckoutController::class, 'assinarContratoCheckout'])->name('assinarContratoCheckout');
     Route::post('{codigo}/salvar-assinatura-checkout', [ReservaCheckoutController::class, 'salvarAssinarContratoCheckout'])->name('salvarAssinaturaContratoCheckout');
     Route::get('{codigo}/verContratoCheckout', [ReservaCheckoutController::class, 'verContratoCheckout'])->name('verContratoCheckout');
+    // ── Renovacao ──
+    Route::get('planos/{id}/opcionais', [\App\Http\Controllers\Reserva\PlanoController::class, 'opcionais'])->name('planos.opcionais');
+    Route::get('{codigo}/renovacao', [ReservaController::class, 'renovacao'])->name('renovacao');
+    Route::post('{id}/renovar-comum', [ReservaController::class, 'renovarComum'])->name('renovarComum');
 });
 Route::resource('reserva', ReservaController::class);

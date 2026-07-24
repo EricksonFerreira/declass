@@ -33,6 +33,22 @@ class AssinarContratoCheckinAction
             $reg = $reservaResolvida->registro;
             $reg->loadMissing(['user', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'planoMotoristaApp', 'solicitacao.planoMotoristaApp', 'estacaoRetirada', 'pagamentos']);
 
+            $checkinDocs = is_array($reg->documentos_json ?? null)
+                ? data_get($reg->documentos_json, 'checkin', [])
+                : [];
+            $reservaOperacionalCheckinId = (int) data_get($checkinDocs, 'reserva_operacional_id', 0);
+            $contratoCheckin = null;
+
+            if ((int) data_get($checkinDocs, 'contrato_checkin_id', 0) > 0) {
+                $contratoCheckin = \App\Models\ContratoCheckin::find((int) data_get($checkinDocs, 'contrato_checkin_id'));
+            }
+
+            if (! $contratoCheckin && $reservaOperacionalCheckinId > 0) {
+                $contratoCheckin = \App\Models\ContratoCheckin::where('reserva_id', $reservaOperacionalCheckinId)
+                    ->latest('id')
+                    ->first();
+            }
+
             $plano = $reg->planoMotoristaApp ?? $reg->solicitacao?->planoMotoristaApp;
             $valorPeriodoAtual = (float) (
                 $plano?->valor_periodo
@@ -73,6 +89,7 @@ class AssinarContratoCheckinAction
 
             return view('reserva.assinar-contrato-checkin', [
                 'reserva' => $reg,
+                'contratoCheckin' => $contratoCheckin,
                 'breadcrumb' => $breadcrumb,
                 'contextoAssinatura' => [
                     'empresa' => $reg->empresa,

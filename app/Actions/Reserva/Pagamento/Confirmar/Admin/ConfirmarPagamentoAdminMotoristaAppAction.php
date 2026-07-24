@@ -3,6 +3,7 @@
 namespace App\Actions\Reserva\Pagamento\Confirmar\Admin;
 
 use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
+use App\Models\ReservaMotoristaApp;
 use App\Models\ReservaMotoristaAppPagamento;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use App\Services\Pagamentos\GerenciadorDePagamentos;
@@ -37,9 +38,7 @@ class ConfirmarPagamentoAdminMotoristaAppAction
             'valor_pagamento' => ['required', 'numeric', 'min:0.01'],
         ]);
 
-        $valorTotalReserva = $this->calcularValorTotalReserva(
-            $reservaMotoristaApp
-        );
+        $valorTotalReserva = (float) ($reservaMotoristaApp->valor_total_final ?? 0);
 
         $totalPago = (float) $reservaMotoristaApp->pagamentos()
             ->where('status', 'pago')

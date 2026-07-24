@@ -65,7 +65,7 @@ class ConfirmarPagamentoAdminAction
             }
 
             return $this->motoristaAppAdminAction->handle(
-                $pagamento,
+                $reservaMotoristaApp,
                 $request
             );
         }
@@ -78,9 +78,9 @@ class ConfirmarPagamentoAdminAction
             $pagamento = ReservaMotoristaAppPagamento::query()
                 ->find((int) $identificador);
 
-            if ($pagamento) {
+            if ($pagamento && $pagamento->reservaMotoristaApp) {
                 return $this->motoristaAppAdminAction->handle(
-                    $pagamento,
+                    $pagamento->reservaMotoristaApp,
                     $request
                 );
             }

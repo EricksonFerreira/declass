@@ -32,7 +32,9 @@ Route::prefix('financeiro')->name('financeiro.')->group(function () {
     Route::get('/fluxo-caixa', [FluxoCaixaController::class, 'dashboard'])->name('fluxo-caixa.dashboard');
     Route::get('/analise-veiculos', [FluxoCaixaController::class, 'analiseVeiculos'])->name('analise-veiculos');
     Route::get('/fluxo-caixa/categorias', [FluxoCaixaController::class, 'categoriasIndex'])->name('fluxo-caixa.categorias.index');
+    Route::get('/fluxo-caixa/categorias/sugerir-codigo', [FluxoCaixaController::class, 'sugerirCodigo'])->name('fluxo-caixa.categorias.sugerir-codigo');
     Route::post('/fluxo-caixa/categorias', [FluxoCaixaController::class, 'categoriasStore'])->name('fluxo-caixa.categorias.store');
+    Route::put('/fluxo-caixa/categorias/{categoria}', [FluxoCaixaController::class, 'categoriasUpdate'])->name('fluxo-caixa.categorias.update');
     Route::delete('/fluxo-caixa/categorias/{categoria}', [FluxoCaixaController::class, 'categoriasDestroy'])->name('fluxo-caixa.categorias.destroy');
 
     Route::resource('/fluxo-caixa/lancamentos', FluxoCaixaController::class)->names([

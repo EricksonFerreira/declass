@@ -35,7 +35,10 @@ class FinalizarCheckinReservaComumAction
     {
         $registro = $reserva->registro;
 
-        $contratoId = (int) $request->input('contrato_id', $registro->contratoCheckin->id ?? 0);
+        $contratoId = (int) $request->input('contrato_id');
+        if ($contratoId <= 0) {
+            $contratoId = (int) ($registro->contratoCheckin->id ?? 0);
+        }
         $veiculoId = (int) $request->input('veiculo_id', $registro->contratoCheckin->veiculo_id ?? 0);
         $assinatura = (string) $request->input('assinatura');
         $modo = $request->input('modo', 'digital');
@@ -142,11 +145,18 @@ class FinalizarCheckinReservaComumAction
 
     private function sincronizarAssinaturaCheckinMotoristaApp($registro, int $contratoId): void
     {
-        $motoristaApp = \App\Models\ReservaMotoristaApp::whereHas('codigoReserva', function ($q) use ($registro) {
-            $q->where('reserva_id', (int) $registro->id);
-        })
-        ->orWhere('id', (int) $registro->id)
-        ->first();
+        // 1. Tenta buscar pelo reserva_operacional_id no documentos_json
+        $motoristaApp = \App\Models\ReservaMotoristaApp::whereJsonContains('documentos_json->checkin->reserva_operacional_id', (int) $registro->id)->first();
+
+        // 2. Se não encontrar, tenta buscar pelo código MAP contido nas observações da reserva operacional
+        if (!$motoristaApp && !empty($registro->observacoes)) {
+            if (preg_match('/(MAP-\d+-\d+)/', (string) $registro->observacoes, $matches)) {
+                $codigoMap = $matches[1];
+                $motoristaApp = \App\Models\ReservaMotoristaApp::whereHas('codigoReserva', function ($q) use ($codigoMap) {
+                    $q->where('codigo', $codigoMap);
+                })->first();
+            }
+        }
 
         if (!$motoristaApp) return;
 
@@ -160,6 +170,20 @@ class FinalizarCheckinReservaComumAction
         data_set($documentos, 'checkin.assinado_em', $contrato->data_assinatura ? \Carbon\Carbon::parse($contrato->data_assinatura)->toDateTimeString() : now()->toDateTimeString());
         data_set($documentos, 'checkin.pdf_path', $contrato->pdf_path);
 
-        $motoristaApp->forceFill(['documentos_json' => $documentos])->save();
+        $snapshot = is_array($motoristaApp->contrato_snapshot_json ?? null) ? $motoristaApp->contrato_snapshot_json : [];
+        $dataAssinatura = \Carbon\Carbon::parse($contrato->data_assinatura ?? now())->format('d/m/Y H:i');
+        data_set($snapshot, 'assinatura', $contrato->assinatura);
+        data_set($snapshot, 'documento.data_assinatura', $dataAssinatura);
+        data_set($snapshot, 'contrato.assinado_em', $dataAssinatura);
+        if ($contrato->pdf_path) {
+            data_set($snapshot, 'contrato.assinatura_path', $contrato->pdf_path);
+        }
+
+        $motoristaApp->forceFill([
+            'documentos_json' => $documentos,
+            'contrato_snapshot_json' => $snapshot,
+            'contrato_pdf_path' => $contrato->pdf_path ?: $motoristaApp->contrato_pdf_path,
+            'status' => 'ativa',
+        ])->save();
     }
 }

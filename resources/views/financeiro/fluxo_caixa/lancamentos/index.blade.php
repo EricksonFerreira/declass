@@ -38,7 +38,9 @@
                         <select name="categoria_id" id="categoria_id" class="form-control">
                             <option value="">Todas</option>
                             @foreach($categorias as $cat)
-                                <option value="{{ $cat->id }}" {{ request('categoria_id') == $cat->id ? 'selected' : '' }}>{{ $cat->nome }}</option>
+                                <option value="{{ $cat->id }}" {{ request('categoria_id') == $cat->id ? 'selected' : '' }}>
+                                    {{ $cat->codigo }} — {{ $cat->categoriaPai ? $cat->categoriaPai->nome . ' > ' : '' }}{{ $cat->nome }}
+                                </option>
                             @endforeach
                         </select>
                     </div>
@@ -92,7 +94,14 @@
                                             <div class="text-xs text-muted">Pago em: {{ $lancamento->data_pagamento->format('d/m/Y') }}</div>
                                         @endif
                                     </td>
-                                    <td class="py-3 text-secondary">{{ $lancamento->categoria->nome ?? '-' }}</td>
+                                    <td class="py-3 text-secondary">
+                                        @if($lancamento->categoria)
+                                            <span class="text-xs font-weight-bold text-muted">{{ $lancamento->categoria->codigo }}</span><br>
+                                            <span class="text-dark">{{ $lancamento->categoria->categoriaPai ? $lancamento->categoria->categoriaPai->nome . ' > ' : '' }}{{ $lancamento->categoria->nome }}</span>
+                                        @else
+                                            -
+                                        @endif
+                                    </td>
                                     <td class="py-3">
                                         <span class="fc-badge {{ $lancamento->tipo === 'receita' ? 'fc-badge--receita' : 'fc-badge--despesa' }}">
                                             {{ $lancamento->tipo === 'receita' ? 'Receita' : 'Despesa' }}

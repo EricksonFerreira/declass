@@ -171,97 +171,150 @@
 
                 @else
 
-                <div class="ci-block">
-                    <div class="ci-block-label">
-                        <i  style="background:linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%)" class="fas fa-credit-card"></i>
-                        <div>
-                            <strong>Pré-autorizar Calção no Cartão</strong>
-                            <span>
-                                O valor de <strong>R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}</strong>
-                                será bloqueado (hold) no cartão — não é uma cobrança. Será liberado ou capturado no check-out.
-                            </span>
-                        </div>
-                    </div>
-
-                    {{-- Cabeçalho da seção de cartões --}}
-                    <div class="calcao-pm-header">
-                        <div class="calcao-pm-header__title">
-                            <i class="fas fa-credit-card"></i>
-                            @if(!empty($metodosPagamento))
-                                Selecione o cartão para pré-autorização
-                            @else
-                                Nenhum cartão salvo — adicione um cartão
-                            @endif
-                        </div>
-                        <button type="button" class="btn-action btn-primary calcao-btn-add" id="btnAbrirModalCartao">
-                            <i class="fas fa-plus"></i>
-                            Adicionar cartão
-                        </button>
-                    </div>
-
-                    {{-- Lista de cartões --}}
-                    {{-- $pm['card'] é \Stripe\StripeObject — acesso via -> --}}
-                    <div id="calcao-pm-list" class="row">
-                        @forelse($metodosPagamento as $pm)
-                            @php
-                                $card      = $pm['card'];
-                                $pmBrand   = strtolower($card->brand ?? '');
-                                $pmLast4   = $card->last4 ?? '';
-                                $pmMonth   = str_pad($card->exp_month ?? '', 2, '0', STR_PAD_LEFT);
-                                $pmYear    = $card->exp_year ?? '';
-                                $brandIcon = match($pmBrand) {
-                                    'visa'       => 'fab fa-cc-visa',
-                                    'mastercard' => 'fab fa-cc-mastercard',
-                                    'amex'       => 'fab fa-cc-amex',
-                                    'discover'   => 'fab fa-cc-discover',
-                                    'jcb'        => 'fab fa-cc-jcb',
-                                    default      => 'fas fa-credit-card',
-                                };
-                                $brandColor = match($pmBrand) {
-                                    'visa'       => '#1a1f71',
-                                    'mastercard' => '#eb001b',
-                                    'amex'       => '#007bc1',
-                                    'discover'   => '#e65c00',
-                                    default      => '#475569',
-                                };
-                            @endphp
-                            <div class="col-md-6 mb-3">
-                                <label class="calcao-pm-item" for="pm_{{ $pm['id'] }}">
-                                    <input type="radio" id="pm_{{ $pm['id'] }}" name="payment_method_id_radio"
-                                           class="calcao-pm-radio" value="{{ $pm['id'] }}"
-                                           {{ $loop->first ? 'checked' : '' }}>
-                                    <div class="calcao-pm-item__radio-dot"></div>
-                                    <div class="calcao-pm-item__brand-icon" style="color:{{ $brandColor }}">
-                                        <i class="{{ $brandIcon }}"></i>
-                                    </div>
-                                    <div class="calcao-pm-item__info">
-                                        <span class="calcao-pm-item__number">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ $pmLast4 }}</span>
-                                        <span class="calcao-pm-item__exp">Vence {{ $pmMonth }}/{{ $pmYear }}</span>
-                                    </div>
-                                    <span class="calcao-pm-item__badge">Salvo</span>
-                                </label>
-                            </div>
-                        @empty
-                            <div class="col-12">
-                                <div id="calcao-empty-state" class="calcao-pm-empty">
-                                    <i class="fas fa-credit-card"></i>
-                                    <p>Nenhum cartão salvo. Clique em <strong>Adicionar cartão</strong> para continuar.</p>
+                <div class="row">
+                    {{-- Lado Esquerdo: Pré-autorização Stripe --}}
+                    <div class="col-lg-6 mb-4">
+                        <div class="ci-block h-100 mb-0">
+                            <div class="ci-block-label">
+                                <i style="background:linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%)" class="fas fa-credit-card"></i>
+                                <div>
+                                    <strong>Pré-autorizar Calção no Cartão</strong>
+                                    <span>
+                                        O valor de <strong>R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}</strong>
+                                        será bloqueado (hold) no cartão. Será liberado ou capturado no check-out.
+                                    </span>
                                 </div>
                             </div>
-                        @endforelse
+
+                            {{-- Cabeçalho da seção de cartões --}}
+                            <div class="calcao-pm-header mt-3">
+                                <div class="calcao-pm-header__title">
+                                    <i class="fas fa-credit-card"></i>
+                                    @if(!empty($metodosPagamento))
+                                        Selecione o cartão para pré-autorização
+                                    @else
+                                        Nenhum cartão salvo
+                                    @endif
+                                </div>
+                                <button type="button" class="btn-action btn-primary calcao-btn-add" id="btnAbrirModalCartao">
+                                    <i class="fas fa-plus"></i>
+                                    Adicionar cartão
+                                </button>
+                            </div>
+
+                            {{-- Lista de cartões --}}
+                            <div id="calcao-pm-list" class="row">
+                                @forelse($metodosPagamento as $pm)
+                                    @php
+                                        $card      = $pm['card'];
+                                        $pmBrand   = strtolower($card->brand ?? '');
+                                        $pmLast4   = $card->last4 ?? '';
+                                        $pmMonth   = str_pad($card->exp_month ?? '', 2, '0', STR_PAD_LEFT);
+                                        $pmYear    = $card->exp_year ?? '';
+                                        $brandIcon = match($pmBrand) {
+                                            'visa'       => 'fab fa-cc-visa',
+                                            'mastercard' => 'fab fa-cc-mastercard',
+                                            'amex'       => 'fab fa-cc-amex',
+                                            'discover'   => 'fab fa-cc-discover',
+                                            'jcb'        => 'fab fa-cc-jcb',
+                                            default      => 'fas fa-credit-card',
+                                        };
+                                        $brandColor = match($pmBrand) {
+                                            'visa'       => '#1a1f71',
+                                            'mastercard' => '#eb001b',
+                                            'amex'       => '#007bc1',
+                                            'discover'   => '#e65c00',
+                                            default      => '#475569',
+                                        };
+                                    @endphp
+                                    <div class="col-md-6 mb-3">
+                                        <label class="calcao-pm-item" for="pm_{{ $pm['id'] }}">
+                                            <input type="radio" id="pm_{{ $pm['id'] }}" name="payment_method_id_radio"
+                                                   class="calcao-pm-radio" value="{{ $pm['id'] }}"
+                                                   {{ $loop->first ? 'checked' : '' }}>
+                                            <div class="calcao-pm-item__radio-dot"></div>
+                                            <div class="calcao-pm-item__brand-icon" style="color:{{ $brandColor }}">
+                                                <i class="{{ $brandIcon }}"></i>
+                                            </div>
+                                            <div class="calcao-pm-item__info">
+                                                <span class="calcao-pm-item__number">&bull;&bull;&bull;&bull; &bull;&bull;&bull;&bull; {{ $pmLast4 }}</span>
+                                                <span class="calcao-pm-item__exp">Vence {{ $pmMonth }}/{{ $pmYear }}</span>
+                                            </div>
+                                            <span class="calcao-pm-item__badge">Salvo</span>
+                                        </label>
+                                    </div>
+                                @empty
+                                    <div class="col-12">
+                                        <div id="calcao-empty-state" class="calcao-pm-empty">
+                                            <i class="fas fa-credit-card"></i>
+                                            <p>Nenhum cartão salvo. Clique em <strong>Adicionar cartão</strong>.</p>
+                                        </div>
+                                    </div>
+                                @endforelse
+                            </div>
+
+                            <div id="card-errors-global" class="calcao-error-msg d-none"></div>
+                            <div id="calcao-status" class="mt-3 d-none"></div>
+
+                            {{-- Botão de autorizar --}}
+                            <div class="calcao-action-bar mt-auto">
+                                <button id="btn-autorizar-calcao" type="button"
+                                        class="btn-action btn-action-success calcao-btn-autorizar"
+                                        {{ empty($metodosPagamento) ? 'disabled' : '' }}>
+                                    <i class="fas fa-lock"></i>
+                                    Pré-autorizar R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
-                    <div id="card-errors-global" class="calcao-error-msg d-none"></div>
-                    <div id="calcao-status" class="mt-3 d-none"></div>
+                    {{-- Lado Direito: Registro Manual --}}
+                    <div class="col-lg-6 mb-4">
+                        <div class="ci-block h-100 mb-0">
+                            <div class="ci-block-label">
+                                <i style="background:linear-gradient(135deg, #059669 0%, #10b981 100%)" class="fas fa-hand-holding-usd"></i>
+                                <div>
+                                    <strong>Registrar Calção Manualmente (Sem Cartão Online)</strong>
+                                    <span>
+                                        Escolha esta opção se o cliente pagou via PIX, Dinheiro, Transferência ou Maquininha física na retirada.
+                                    </span>
+                                </div>
+                            </div>
 
-                    {{-- Botão de autorizar --}}
-                    <div class="calcao-action-bar">
-                        <button id="btn-autorizar-calcao" type="button"
-                                class="btn-action btn-action-success calcao-btn-autorizar"
-                                {{ empty($metodosPagamento) ? 'disabled' : '' }}>
-                            <i class="fas fa-lock"></i>
-                            Pré-autorizar R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
-                        </button>
+                            <form id="form-calcao-presencial" class="mt-3 d-flex flex-column h-100" style="flex:1;">
+                                <div class="form-group mb-3">
+                                    <label for="manual_metodo" class="calcao-modal__label">Método de Pagamento</label>
+                                    <select id="manual_metodo" name="metodo" class="form-control form-control-sm" style="height: 42px; border-radius: 10px; border: 1.5px solid #dce6f4;">
+                                        <option value="pix">PIX</option>
+                                        <option value="dinheiro">Dinheiro</option>
+                                        <option value="transferencia">Transferência Bancária</option>
+                                        <option value="cartao_debito">Cartão de Débito (Maquininha)</option>
+                                        <option value="cartao_credito">Cartão de Crédito (Maquininha)</option>
+                                        <option value="outro">Outro / Manual</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="manual_valor" class="calcao-modal__label">Valor Cobrado (R$)</label>
+                                    <input type="number" step="0.01" id="manual_valor" name="valor" class="form-control form-control-sm" style="height: 42px; border-radius: 10px; border: 1.5px solid #dce6f4; background-color: #f1f5f9;" value="{{ (float)($calculo['valor_calculado'] ?? 0) }}" readonly>
+                                </div>
+
+                                <div class="form-group mb-3">
+                                    <label for="manual_observacao" class="calcao-modal__label">Observações</label>
+                                    <input type="text" id="manual_observacao" name="observacao" class="form-control form-control-sm" style="height: 42px; border-radius: 10px; border: 1.5px solid #dce6f4;" placeholder="Ex: Recebido na retirada">
+                                </div>
+
+                                <div id="manual-errors" class="calcao-error-msg d-none mb-3"></div>
+                                <div id="manual-status" class="mt-3 d-none"></div>
+
+                                <div class="calcao-action-bar mt-auto">
+                                    <button id="btn-registrar-calcao-manual" type="button" class="btn-action btn-action-success calcao-btn-autorizar" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+                                        <i class="fas fa-check-double"></i>
+                                        Confirmar Registro Manual de R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -921,5 +974,70 @@
         }
     });
 }());
+</script>
+
+<script>
+(function() {
+    const REGISTRAR_PRESENCIAL_URL = @json(route('reserva.calcao.presencial', $reserva->codigoReserva->codigo));
+    const SHOW_URL        = @json($voltarUrl ?? route('reserva.show', $reserva->codigoReserva->codigo));
+    const CSRF            = @json(csrf_token());
+
+    document.getElementById('btn-registrar-calcao-manual')?.addEventListener('click', async () => {
+        const btn      = document.getElementById('btn-registrar-calcao-manual');
+        const statusEl = document.getElementById('manual-status');
+        const errEl    = document.getElementById('manual-errors');
+        
+        const metodo     = document.getElementById('manual_metodo').value;
+        const valor      = document.getElementById('manual_valor').value;
+        const observacao = document.getElementById('manual_observacao').value;
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+        errEl.classList.add('d-none');
+        if (statusEl) statusEl.className = 'mt-3 d-none';
+
+        try {
+            const resp = await fetch(REGISTRAR_PRESENCIAL_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': CSRF,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ metodo, valor, observacao }),
+            });
+            const data = await resp.json();
+
+            if (data.success) {
+                btn.innerHTML = '<i class="fas fa-check"></i> Registrado!';
+                if (statusEl) {
+                    statusEl.className = 'mt-3';
+                    statusEl.innerHTML = `
+                        <div class="ci-block" style="background:#ecfdf5;border-left-color:#059669;margin-bottom:0;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <i class="fas fa-check-circle" style="color:#059669;font-size:1.2rem;flex-shrink:0;"></i>
+                                <div>
+                                    <strong style="color:#047857;font-size:.88rem;">Calção registrado com sucesso!</strong>
+                                    <p style="color:#475569;font-size:.8rem;margin:2px 0 0;">${data.message ?? ''}</p>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+                setTimeout(() => window.location.href = SHOW_URL, 1800);
+            } else {
+                const msg = data.error ?? 'Erro ao registrar o calção presencial.';
+                errEl.textContent = msg;
+                errEl.classList.remove('d-none');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check-double"></i> Confirmar Registro Manual';
+            }
+        } catch (e) {
+            errEl.textContent = 'Erro de comunicação. Tente novamente.';
+            errEl.classList.remove('d-none');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-check-double"></i> Confirmar Registro Manual';
+        }
+    });
+})();
 </script>
 @endpush

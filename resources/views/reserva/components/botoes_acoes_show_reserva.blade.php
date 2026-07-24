@@ -182,6 +182,13 @@
                 </button>
             @endif
 
+            @if(in_array((int)$reserva->status_reserva_id, [2, 3]) && !$checkoutJaFeito)
+                <a href="{{ route('reserva.renovacao', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="action-pill" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff;">
+                    <i class="fas fa-arrows-rotate"></i>
+                    <span>Renovar Reserva</span>
+                </a>
+            @endif
+
         </div>
 
         @if($moduloNfse ?? false)

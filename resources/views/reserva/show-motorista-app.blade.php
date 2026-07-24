@@ -110,10 +110,10 @@
     $veiculosDisponiveis = collect($veiculosDisponiveis ?? []);
     $veiculoAtual = $registro->veiculo;
     $estaEfetivada = !empty($registro->contrato_efetivado_em);
-    $estaCheckin = !empty($registro->checkin_realizado_em);
+    $estaCheckin = !empty($registro->checkin_realizado_em) || !empty($contratoCheckinMotoristaApp);
     $estaCheckout = !empty($registro->checkout_realizado_em);
     $contratoSnapshot = is_array($registro->contrato_snapshot_json ?? null) ? $registro->contrato_snapshot_json : [];
-    $contratoAssinado = !empty(data_get($contratoSnapshot, 'assinatura'));
+    $contratoAssinado = !empty(data_get($contratoSnapshot, 'assinatura')) || ($contratoCheckinMotoristaApp && $contratoCheckinMotoristaApp->assinado === 'S');
     $contratoAssinadoEm = data_get($contratoSnapshot, 'documento.data_assinatura') ?? data_get($contratoSnapshot, 'contrato.assinado_em');
     $temContratoPdf = !empty($registro->contrato_pdf_path);
     $contratoCheckinOperacional = $contratoCheckinMotoristaApp ?? null;
@@ -146,7 +146,7 @@
     $podeAssinarContrato = $estaCheckin && $temContratoPdf && !$contratoAssinado;
     $podeRegistrarCheckin = $pagamentoEfetuado && $termoConfirmacaoAceito && $calcaoConcluido && !$temContratoCheckin && !$estaCheckin && $statusRaw !== 'cancelada';
     $podeRegistrarCheckout = $estaCheckin && $checkinContratoAssinado && !$estaCheckout;
-    $podeRenovar = $contratoAssinado && $statusRaw === 'ativa' && !$estaCheckout;
+    $podeRenovar = $contratoAssinado && $statusRaw !== 'cancelada' && !$estaCheckout;
     $limiteCancelamento = $registro->created_at ? \Carbon\Carbon::parse($registro->created_at)->addHours(24) : null;
     $podeCancelar = !$estaEfetivada
         && strtolower((string) ($registro->status ?? '')) !== 'cancelada'
@@ -747,17 +747,17 @@
         </div>
         <div class="ma-action-panel__body">
             @if(!$pagamentoEfetuado && $pagamentoPendenteAtual)
-                <a href="{{ route('reserva.pagamento.efetuar', ['codigo' => $codigoReserva]) }}" class="ma-btn ma-btn--primary">
+                <a href="{{ route('reserva.pagamento.efetuar', ['id' => $codigoReserva]) }}" class="ma-btn ma-btn--primary">
                     <i class="fas fa-credit-card"></i>
                     <span>Pagar</span>
                 </a>
             @endif
 
             @if(!$pagamentoEfetuado && $statusRaw !== 'cancelada')
-                <button type="button" class="ma-btn ma-btn--ghost" data-toggle="modal" data-target="#modalEditarMotoristaApp">
+                <a href="{{ route('reserva-motorista-app.edit', $registro->id) }}" class="ma-btn ma-btn--ghost">
                     <i class="fas fa-pen"></i>
                     <span>Editar</span>
-                </button>
+                </a>
             @endif
 
             @if($podeAceitarTermo)
@@ -874,10 +874,10 @@
             @endif
 
             @if($podeRenovar)
-                <button type="button" class="ma-btn ma-btn--primary" data-toggle="modal" data-target="#modalRenovarMotoristaApp">
+                <a href="{{ route('reserva.renovacao', ['codigo' => $codigoReserva]) }}" class="ma-btn ma-btn--primary">
                     <i class="fas fa-arrows-rotate"></i>
                     <span>Renovar plano</span>
-                </button>
+                </a>
             @elseif($estaCheckout)
                 <span class="ma-btn ma-btn--disabled" title="Nao e possivel renovar apos o checkout">
                     <i class="fas fa-lock"></i>

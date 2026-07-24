@@ -8,9 +8,9 @@
         </div>
         <div class="d-flex align-items-center gap-3 flex-wrap" style="gap:12px">
             @if($pagamentoEfetuado)
-                {{-- <a href="{{ route('reserva.checkout.vistoria', $reserva->codigoReserva->codigo) }}" class="rs-btn rs-btn--outline">
+                <a href="{{ route('reserva.checkout.vistoria', $reserva->codigoReserva->codigo) }}" class="rs-btn rs-btn--outline">
                     <i class="fas fa-search"></i> Abrir vistoria / danos
-                </a> --}}
+                </a>
             @else
                 <span class="rs-btn rs-btn--outline" style="opacity:.5;cursor:not-allowed;pointer-events:none" title="Pagamento necessário para acessar o checkout">
                     <i class="fas fa-lock mr-1"></i> Abrir vistoria / danos
@@ -126,9 +126,24 @@
                         </a>
                     </div>
                 @endif
-
+            </div>
         </div>
     </div>
+    @endif
+
+    @if(!$reserva->contratoCheckout)
+        <div class="rs-card p-5 text-center text-muted" style="border: 1px dashed #cbd5e1; background: #fafbff; border-radius: 16px; margin-top: 16px;">
+            <i class="fas fa-flag-checkered fa-3x mb-3" style="color:#cbd5e1"></i>
+            <h5 class="font-weight-bold text-dark">Check-out não realizado</h5>
+            <p class="mb-3">Os dados e fotos da devolução do veículo ficarão disponíveis aqui após a conclusão do check-out operacional pelo operador.</p>
+            @if($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S')
+                <div class="mt-3">
+                    <a href="{{ route('reserva.checkout.vistoria', $reserva->codigoReserva->codigo) }}" class="btn btn-warning font-weight-bold text-white px-4 py-2" style="border-radius: 999px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);">
+                        <i class="fas fa-flag-checkered mr-2"></i> Iniciar Processo de Check-out
+                    </a>
+                </div>
+            @endif
+        </div>
     @endif
 
 </div>

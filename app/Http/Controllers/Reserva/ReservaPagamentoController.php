@@ -156,6 +156,8 @@ class ReservaPagamentoController extends Controller
         try {
             $calcao = $this->autorizarCalcaoAction->handle($reserva, $request->input('payment_method_id'));
 
+            $this->sincronizarStatusCalcaoMotoristaApp($codigo, $reserva);
+
             return response()->json([
                 'success' => true,
                 'calcao_id' => $calcao->id,
@@ -210,6 +212,8 @@ class ReservaPagamentoController extends Controller
                 $request->input('justificativa')
             );
 
+            $this->sincronizarStatusCalcaoMotoristaApp($codigo, $reserva);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Calcao capturado com sucesso.',
@@ -233,6 +237,9 @@ class ReservaPagamentoController extends Controller
 
         try {
             $this->liberarCalcaoAction->handle($reserva, $request->input('observacao', ''));
+
+            $reserva->load('calcao');
+            $this->sincronizarStatusCalcaoMotoristaApp($codigo, $reserva);
 
             return response()->json(['success' => true, 'message' => 'Calcao liberado com sucesso.']);
         } catch (\Throwable $e) {
@@ -263,6 +270,8 @@ class ReservaPagamentoController extends Controller
                 $request->input('observacao')
             );
 
+            $this->sincronizarStatusCalcaoMotoristaApp($codigo, $reserva);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Calção presencial registrado com sucesso.',
@@ -290,6 +299,9 @@ class ReservaPagamentoController extends Controller
 
         try {
             $this->devolverCalcaoPresencialAction->handle($reserva, $request->input('observacao'));
+
+            $reserva->load('calcao');
+            $this->sincronizarStatusCalcaoMotoristaApp($codigo, $reserva);
 
             return response()->json(['success' => true, 'message' => 'Calção devolvido com sucesso.']);
         } catch (\InvalidArgumentException $e) {

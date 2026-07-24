@@ -19,18 +19,43 @@ class ExibirCheckoutMotoristaAppAction
         $registro = $reserva->registro;
         $codigo = $reserva->codigo;
 
-        if (empty($registro->checkin_realizado_em)) {
-            return redirect()->route('reserva.show', $codigo)
-                ->with('error', 'O check-in precisa ser registrado antes do checkout.');
-        }
-
         $contratoId = (int) data_get($registro->documentos_json, 'checkin.contrato_checkin_id', 0);
         $contratoCheckin = null;
+
+        $operacionalId = $registro->codigoReserva?->reserva_id
+            ?? data_get($registro->documentos_json, 'checkin.reserva_operacional_id');
+
+        // Se o operacionalId não estiver no JSON, tenta buscar via observações da reserva operacional
+        if (!$operacionalId) {
+            $codigoMap = $registro->codigoReserva?->codigo ?? '';
+            if ($codigoMap) {
+                $operacionalId = (int) \App\Models\Reserva::withoutGlobalScopes()
+                    ->where('observacoes', 'like', '%' . $codigoMap . '%')
+                    ->latest('id')
+                    ->value('id');
+            }
+        }
+
+        if ($contratoId <= 0 && $operacionalId) {
+            $contratoId = (int) DB::table('contrato_checkin')->where('reserva_id', $operacionalId)->latest('id')->value('id');
+        }
+
         if ($contratoId > 0) {
             $contratoCheckin = DB::table('contrato_checkin')->find($contratoId);
         }
 
-        if (! $contratoCheckin || empty($contratoCheckin->assinatura)) {
+        if (!$contratoCheckin && $operacionalId) {
+            $contratoCheckin = DB::table('contrato_checkin')->where('reserva_id', $operacionalId)->latest('id')->first();
+        }
+
+        $checkinRealizado = !empty($registro->checkin_realizado_em) || ($contratoCheckin && $contratoCheckin->assinado === 'S');
+
+        if (!$checkinRealizado) {
+            return redirect()->route('reserva.show', $codigo)
+                ->with('error', 'O check-in precisa ser registrado antes do checkout.');
+        }
+
+        if (! $contratoCheckin || (empty($contratoCheckin->assinatura) && $contratoCheckin->assinado !== 'S')) {
             return redirect()->route('reserva.show', $codigo)
                 ->with('error', 'Assine o contrato de check-in antes de fazer checkout.');
         }

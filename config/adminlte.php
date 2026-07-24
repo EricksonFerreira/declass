@@ -426,6 +426,11 @@ return [
                     'route' => 'caracteristica_frota.index',
                     'icon' => 'fas fa-tags',
                 ],
+                [
+                    'text' => 'Planos de Motorista APP',
+                    'route' => 'plano_motorista_app.index',
+                    'icon' => 'fas fa-id-card',
+                ],
             ],
         ],
 

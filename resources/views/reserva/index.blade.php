@@ -1,14 +1,36 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title
-        :title="$titulo"
-        :createUrl="request()->routeIs('reserva.minhas') ? null : route('reserva.create')"
-        createCan="tem-perfil"
-    />
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-sm-items-center mb-3">
+        <x-page-title :title="$titulo" />
+        
+        @if(!request()->routeIs('reserva.minhas'))
+            @php
+                $empresa = auth()->user()->empresa;
+                $siteTipoReserva = $empresa?->site_tipo_reserva ?? 'ambas';
+                $aluguelAppAtivo = ($empresa?->aluguel_app_ativo ?? 'N') === 'S';
+                
+                $temComum = in_array($siteTipoReserva, ['reserva_comum', 'ambas']);
+                $temApp = $aluguelAppAtivo && in_array($siteTipoReserva, ['motorista_app', 'ambas']);
+            @endphp
+            
+            <div class="d-flex flex-wrap mt-2 mt-sm-0" style="gap: 10px;">
+                @if($temComum)
+                    <a href="{{ route('reserva.create') }}" class="btn btn-primary shadow-sm">
+                        <i class="fas fa-plus-circle mr-1"></i> Nova Reserva Comum
+                    </a>
+                @endif
+                @if($temApp)
+                    <a href="{{ route('reserva-motorista-app.create') }}" class="btn btn-info shadow-sm">
+                        <i class="fas fa-car mr-1"></i> Nova Reserva APP
+                    </a>
+                @endif
+            </div>
+        @endif
+    </div>
 @stop
 
 @section('content')

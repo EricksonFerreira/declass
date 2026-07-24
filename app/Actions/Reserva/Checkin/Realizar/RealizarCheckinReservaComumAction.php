@@ -215,11 +215,18 @@ class RealizarCheckinReservaComumAction
             /** @var \App\Models\ReservaMotoristaApp $motoristaApp */
             $motoristaApp = $reserva->registro;
         } else {
-            $motoristaApp = \App\Models\ReservaMotoristaApp::whereHas('codigoReserva', function ($q) use ($reserva) {
-                $q->where('reserva_id', (int) $reserva->registro->id);
-            })
-            ->orWhere('id', (int) $reserva->registro->id)
-            ->first();
+            // 1. Tenta buscar pelo reserva_operacional_id no documentos_json
+            $motoristaApp = \App\Models\ReservaMotoristaApp::whereJsonContains('documentos_json->checkin->reserva_operacional_id', (int) $reserva->registro->id)->first();
+
+            // 2. Se não encontrar, tenta buscar pelo código MAP contido nas observações da reserva operacional
+            if (!$motoristaApp && !empty($reserva->registro->observacoes)) {
+                if (preg_match('/(MAP-\d+-\d+)/', (string) $reserva->registro->observacoes, $matches)) {
+                    $codigoMap = $matches[1];
+                    $motoristaApp = \App\Models\ReservaMotoristaApp::whereHas('codigoReserva', function ($q) use ($codigoMap) {
+                        $q->where('codigo', $codigoMap);
+                    })->first();
+                }
+            }
         }
 
         if (!$motoristaApp) {

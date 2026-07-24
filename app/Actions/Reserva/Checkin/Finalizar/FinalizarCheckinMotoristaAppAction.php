@@ -17,18 +17,26 @@ class FinalizarCheckinMotoristaAppAction
     {
         $registro = $reserva->registro;
 
-        $contratoId = (int) data_get($registro->documentos_json, 'checkin.contrato_checkin_id');
-        $veiculoId = (int) (data_get($registro->documentos_json, 'checkin.veiculo_id') ?? $registro->veiculo_id);
-
-        if ($contratoId) {
-            $request->merge([
-                'contrato_id' => $contratoId,
-                'veiculo_id' => $veiculoId,
-            ]);
-        }
-
         $operacionalId = $registro->codigoReserva?->reserva_id
             ?? data_get($registro->documentos_json, 'checkin.reserva_operacional_id');
+
+        $contratoId = (int) $request->input('contrato_id');
+        if ($contratoId <= 0) {
+            $contratoId = (int) data_get($registro->documentos_json, 'checkin.contrato_checkin_id');
+        }
+        if ($contratoId <= 0 && $operacionalId) {
+            $contratoId = (int) \App\Models\ContratoCheckin::where('reserva_id', $operacionalId)->latest('id')->value('id');
+        }
+
+        $veiculoId = (int) $request->input('veiculo_id');
+        if ($veiculoId <= 0) {
+            $veiculoId = (int) (data_get($registro->documentos_json, 'checkin.veiculo_id') ?? $registro->veiculo_id);
+        }
+
+        $request->merge([
+            'contrato_id' => $contratoId,
+            'veiculo_id' => $veiculoId,
+        ]);
 
         if ($operacionalId) {
             $reservaOperacional = Reserva::find($operacionalId);

@@ -39,9 +39,11 @@
                         <select name="categoria_financeira_id" id="categoria_financeira_id" class="form-control @error('categoria_financeira_id') is-invalid @enderror" required>
                             <option value="" disabled {{ $selectedCategoria === '' ? 'selected' : '' }}>Selecione a categoria</option>
                             @foreach($categorias as $cat)
-                                <option value="{{ $cat->id }}" data-tipo="{{ $cat->tipo }}" {{ (string) $selectedCategoria === (string) $cat->id ? 'selected' : '' }}>
-                                    {{ $cat->nome }} ({{ ucfirst($cat->tipo) }})
-                                </option>
+                                @if($cat->status === 'ativo')
+                                    <option value="{{ $cat->id }}" data-tipo="{{ $cat->tipo }}" {{ !$cat->permite_lancamento ? 'disabled' : '' }} {{ (string) $selectedCategoria === (string) $cat->id ? 'selected' : '' }}>
+                                        {{ $cat->codigo }} — {{ $cat->categoriaPai ? $cat->categoriaPai->nome . ' > ' : '' }}{{ $cat->nome }}{{ !$cat->permite_lancamento ? ' (Grupo)' : '' }}
+                                    </option>
+                                @endif
                             @endforeach
                         </select>
                         @error('categoria_financeira_id')<div class="invalid-feedback">{{ $message }}</div>@enderror

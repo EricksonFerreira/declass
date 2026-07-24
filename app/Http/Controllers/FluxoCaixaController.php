@@ -260,7 +260,7 @@ class FluxoCaixaController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->get();
+        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->orderBy('codigo')->get();
 
         $breadcrumb = $this->breadcrumbFluxoCaixa('Lançamentos', route('financeiro.fluxo-caixa.index'));
         $titulo = 'Lançamentos Financeiros';
@@ -273,7 +273,7 @@ class FluxoCaixaController extends Controller
     public function create()
     {
         $empresaId = $this->getEmpresaId();
-        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->get();
+        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->orderBy('codigo')->get();
         $veiculos = Veiculo::where('empresa_id', $empresaId)->get();
         $reservas = Reserva::with('codigoReserva')->where('empresa_id', $empresaId)->orderByDesc('id')->limit(50)->get();
 
@@ -302,7 +302,7 @@ class FluxoCaixaController extends Controller
         }
 
         $empresaId = $this->getEmpresaId();
-        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->get();
+        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->orderBy('codigo')->get();
         $veiculos = Veiculo::where('empresa_id', $empresaId)->get();
         $reservas = Reserva::with('codigoReserva')->where('empresa_id', $empresaId)->orderByDesc('id')->limit(50)->get();
 
@@ -339,33 +339,120 @@ class FluxoCaixaController extends Controller
     public function categoriasIndex()
     {
         $empresaId = $this->getEmpresaId();
-        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->orderBy('nome')->get();
+        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)
+            ->with('categoriaPai')
+            ->orderBy('codigo')
+            ->get();
+
+        $categoriasPais = CategoriaFinanceira::where('empresa_id', $empresaId)
+            ->where('status', 'ativo')
+            ->orderBy('codigo')
+            ->get();
 
         $breadcrumb = $this->breadcrumbFluxoCaixa('Categorias', route('financeiro.fluxo-caixa.categorias.index'));
         $titulo = 'Categorias Financeiras';
 
-        return view('financeiro.fluxo_caixa.categorias.index', compact('categorias', 'breadcrumb', 'titulo'));
+        return view('financeiro.fluxo_caixa.categorias.index', compact('categorias', 'categoriasPais', 'breadcrumb', 'titulo'));
+    }
+
+    public function sugerirCodigo(Request $request)
+    {
+        $tipo = $request->input('tipo');
+        $categoriaPaiId = $request->input('categoria_pai_id');
+        $empresaId = $this->getEmpresaId();
+
+        if (!$tipo || !in_array($tipo, ['receita', 'despesa'])) {
+            return response()->json(['error' => 'Tipo inválido.'], 400);
+        }
+
+        $codigo = CategoriaFinanceira::sugerirCodigo($empresaId, $tipo, $categoriaPaiId ?: null);
+
+        return response()->json(['codigo' => $codigo]);
     }
 
     public function categoriasStore(Request $request)
     {
+        $empresaId = $this->getEmpresaId();
+
         $data = $request->validate([
             'nome' => ['required', 'string', 'max:255'],
             'tipo' => ['required', 'in:receita,despesa'],
+            'categoria_pai_id' => ['nullable', 'exists:categorias_financeiras,id'],
+            'codigo' => [
+                'nullable',
+                'string',
+                'max:30',
+                \Illuminate\Validation\Rule::unique('categorias_financeiras')->where(function ($query) use ($empresaId) {
+                    return $query->where('empresa_id', $empresaId);
+                })
+            ],
             'descricao' => ['nullable', 'string', 'max:255'],
+            'permite_lancamento' => ['nullable', 'boolean'],
+            'status' => ['nullable', 'in:ativo,inativo'],
         ]);
 
-        $data['empresa_id'] = $this->getEmpresaId();
+        $data['empresa_id'] = $empresaId;
+        $data['permite_lancamento'] = $request->has('permite_lancamento') ? (bool)$request->permite_lancamento : true;
+        $data['status'] = $request->input('status', 'ativo');
+
+        if (empty($data['codigo'])) {
+            $data['codigo'] = CategoriaFinanceira::sugerirCodigo($empresaId, $data['tipo'], $data['categoria_pai_id'] ?: null);
+        }
 
         CategoriaFinanceira::create($data);
 
         return redirect()->route('financeiro.fluxo-caixa.categorias.index')->with('success', 'Categoria financeira criada com sucesso!');
     }
 
+    public function categoriasUpdate(Request $request, CategoriaFinanceira $categoria)
+    {
+        if ($categoria->empresa_id !== $this->getEmpresaId()) {
+            abort(403, 'Acesso não autorizado.');
+        }
+
+        $empresaId = $this->getEmpresaId();
+        $hasLancamentos = $categoria->hasLancamentos;
+
+        $rules = [
+            'nome' => ['required', 'string', 'max:255'],
+            'descricao' => ['nullable', 'string', 'max:255'],
+            'permite_lancamento' => ['nullable', 'boolean'],
+            'status' => ['nullable', 'in:ativo,inativo'],
+        ];
+
+        if (!$hasLancamentos) {
+            $rules['tipo'] = ['required', 'in:receita,despesa'];
+            $rules['categoria_pai_id'] = ['nullable', 'exists:categorias_financeiras,id'];
+            $rules['codigo'] = [
+                'required',
+                'string',
+                'max:30',
+                \Illuminate\Validation\Rule::unique('categorias_financeiras')->ignore($categoria->id)->where(function ($query) use ($empresaId) {
+                    return $query->where('empresa_id', $empresaId);
+                })
+            ];
+        }
+
+        $data = $request->validate($rules);
+        $data['permite_lancamento'] = $request->has('permite_lancamento') ? (bool)$request->permite_lancamento : true;
+
+        $categoria->update($data);
+
+        return redirect()->route('financeiro.fluxo-caixa.categorias.index')->with('success', 'Categoria financeira atualizada com sucesso!');
+    }
+
     public function categoriasDestroy(CategoriaFinanceira $categoria)
     {
         if ($categoria->empresa_id !== $this->getEmpresaId()) {
             abort(403, 'Acesso não autorizado.');
+        }
+
+        if ($categoria->hasLancamentos) {
+            return redirect()->route('financeiro.fluxo-caixa.categorias.index')->with('error', 'Esta categoria não pode ser excluída pois já possui lançamentos financeiros associados.');
+        }
+
+        if ($categoria->subcategorias()->exists()) {
+            return redirect()->route('financeiro.fluxo-caixa.categorias.index')->with('error', 'Esta categoria não pode ser excluída pois possui subcategorias associadas.');
         }
 
         $categoria->delete();
