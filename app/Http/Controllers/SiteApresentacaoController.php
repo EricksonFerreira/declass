@@ -54,7 +54,6 @@ class SiteApresentacaoController extends Controller
             return $this->defaultResponse();
         }
 
-
         $this->activateEmpresaContext($empresa);
 
         $modelo = $this->resolveModelo((string) ($empresa->site_apresentacao_modelo ?? self::MODELO_1));
@@ -100,9 +99,9 @@ class SiteApresentacaoController extends Controller
             'modelo' => $modelo,
             'aluguelAppAtivo' => ($empresa->aluguel_app_ativo ?? 'N') === 'S',
             'heroTag' => $this->textValue($textos, 'hero_tag', ''),
-            'titulo' => $this->textValue($textos, 'hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veÃ­culos com praticidade e seguranÃ§a'),
-            'subtitulo' => $this->textValue($textos, 'hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rÃ¡pido e viaje com cobertura nacional.'),
-            'descricao' => $this->textValue($textos, 'hero_descricao', $empresa->site_apresentacao_descricao ?: 'Planos diÃ¡rios, semanais e mensais para pessoas fÃ­sicas e empresas.'),
+            'titulo' => $this->textValue($textos, 'hero_titulo', $empresa->site_apresentacao_titulo ?: 'Aluguel de veículos com praticidade e segurança'),
+            'subtitulo' => $this->textValue($textos, 'hero_subtitulo', $empresa->site_apresentacao_subtitulo ?: 'Reserve online, retire rápido e viaje com cobertura nacional.'),
+            'descricao' => $this->textValue($textos, 'hero_descricao', $empresa->site_apresentacao_descricao ?: 'Planos diários, semanais e mensais para pessoas físicas e empresas.'),
             'botaoTexto' => $empresa->site_apresentacao_botao_texto ?: 'Reservar agora',
             'botaoUrl' => $urlReserva,
             'botaoLoginUrl' => $urlAdminEntrada,
