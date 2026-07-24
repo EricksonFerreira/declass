@@ -12,7 +12,7 @@ return new class extends Migration {
             $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
             $table->foreignId('reserva_motorista_app_id')->constrained('reservas_motorista_app')->cascadeOnDelete();
             $table->foreignId('pagamento_id')->nullable()->constrained('reserva_motorista_app_pagamentos')->nullOnDelete();
-            $table->foreignId('contrato_checkin_id')->nullable()->constrained('contratos_checkin')->nullOnDelete();
+            $table->foreignId('contrato_checkin_id')->nullable()->constrained('contrato_checkin')->nullOnDelete();
             $table->unsignedInteger('numero_aditivo');
             $table->dateTime('data_inicio_anterior');
             $table->dateTime('data_fim_anterior');
