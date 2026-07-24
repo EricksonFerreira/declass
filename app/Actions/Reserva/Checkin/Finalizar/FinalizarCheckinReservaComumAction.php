@@ -81,11 +81,16 @@ class FinalizarCheckinReservaComumAction
 
             $this->reservaService->checkInRealizado((int) $registro->id, $contrato->veiculo_id);
 
+            $dataChegadaPrevista = $registro->data_fim
+                ? \Carbon\Carbon::parse($registro->data_fim)->toDateTimeString()
+                : null;
+
             $this->movimentacaoService->realizarCheckIn(
                 $veiculoId,
                 (int) $registro->estacao_retirada_id,
                 (int) $registro->id,
-                'Check-in realizado e contrato assinado'
+                'Check-in realizado e contrato assinado',
+                $dataChegadaPrevista
             );
 
             $this->reservaService->adicionaLog(

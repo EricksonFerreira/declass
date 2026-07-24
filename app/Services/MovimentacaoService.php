@@ -342,9 +342,9 @@ class MovimentacaoService extends AbstractBaseService
     }
 
     // Retirada de Veículo (Check-in)
-    public function realizarCheckIn($veiculo_id, $estacao_id, $reserva_id, $observacao = null)
+    public function realizarCheckIn($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?string $dataChegadaPrevista = null)
     {
-        $this->registrarMovimentacao($veiculo_id, $estacao_id, null, null, $reserva_id, $observacao, __FUNCTION__);
+        $this->registrarMovimentacao($veiculo_id, $estacao_id, null, null, $reserva_id, $observacao, __FUNCTION__, $dataChegadaPrevista);
     }
 
     // Devolução de Veículo (Check-out)
@@ -562,7 +562,8 @@ class MovimentacaoService extends AbstractBaseService
         $local_destino_id = null,
         $reserva_id = null,
         $observacao = null,
-        ?string $funcao = null
+        ?string $funcao = null,
+        ?string $dataChegadaPrevista = null
     )
     {
         if (!$funcao) {
@@ -592,6 +593,15 @@ class MovimentacaoService extends AbstractBaseService
             'observacoes' => $observacao,
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
         ];
+
+        if ($dataChegadaPrevista !== null) {
+            $valor['data_chegada_prevista'] = Carbon::parse($dataChegadaPrevista)->toDateTimeString();
+        } elseif ($validReservaId) {
+            $reserva = \App\Models\Reserva::find($validReservaId);
+            if ($reserva?->data_fim) {
+                $valor['data_chegada_prevista'] = Carbon::parse($reserva->data_fim)->toDateTimeString();
+            }
+        }
 
         $this->create($valor);
     }
