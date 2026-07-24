@@ -99,7 +99,7 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('{codigo}/verContratoCheckin', [ReservaCheckinController::class, 'verContratoCheckin'])->name('verContratoCheckin');
     // ── Contrato Checkout──
     Route::get('{codigo}/assinarContratoCheckout', [ReservaCheckoutController::class, 'assinarContratoCheckout'])->name('assinarContratoCheckout');
-    Route::post('{codigo}/salvar-assinatura-checkout', [ReservaCheckoutController::class, 'salvarAssinaturaContratoCheckout'])->name('salvarAssinaturaContratoCheckout');
+    Route::post('{codigo}/salvar-assinatura-checkout', [ReservaCheckoutController::class, 'salvarAssinarContratoCheckout'])->name('salvarAssinaturaContratoCheckout');
     Route::get('{codigo}/verContratoCheckout', [ReservaCheckoutController::class, 'verContratoCheckout'])->name('verContratoCheckout');
     // ── Renovacao ──
     Route::get('planos/{id}/opcionais', [\App\Http\Controllers\Reserva\PlanoController::class, 'opcionais'])->name('planos.opcionais');
