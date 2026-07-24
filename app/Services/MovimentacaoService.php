@@ -376,7 +376,7 @@ class MovimentacaoService extends AbstractBaseService
 
     // Chegada à Estação
     public function registrarChegadaNaEstacao($veiculo_id, $estacao_id, $observacao = 'Veículo chegou à estação'){
-        $this->registrarMovimentacao($veiculo_id, $estacao_id, null,null,null, $observacao, __FUNCTION__);
+        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, null, $observacao, __FUNCTION__);
     }
 
     // Veículo Indisponível

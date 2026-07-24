@@ -3252,19 +3252,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'foto_combustivel_co' => 'foto_combustivel_path',
             ];
 
-            $destDir = storage_path('app/public/'.$dir);
-            if (! is_dir($destDir)) {
-                mkdir($destDir, 0775, true);
-            }
-
             $dadosFotosCheckout = [];
             foreach ($mapFotosCheckout as $input => $col) {
                 if ($request->hasFile($input) && $request->file($input)->isValid()) {
                     $file = $request->file($input);
                     $extension = $file->getClientOriginalExtension() ?: 'jpg';
                     $filename = \Illuminate\Support\Str::random(40).'.'.$extension;
-                    $file->move($destDir, $filename);
-                    $dadosFotosCheckout[$col] = $dir.'/'.$filename;
+                    $storedPath = Storage::disk('public')->putFileAs($dir, $file, $filename);
+                    $dadosFotosCheckout[$col] = ltrim($storedPath, '/');
                 }
             }
 
@@ -3287,6 +3282,14 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 (int) $reserva_id,
                 'Check-out com vistoria de devolução'
             );
+
+            if (!empty($reserva->estacao_devolucao_id)) {
+                $this->movimentacaoService->registrarChegadaNaEstacao(
+                    (int) $reserva->veiculo_id,
+                    (int) $reserva->estacao_devolucao_id,
+                    'Chegada real registrada no check-out da reserva ' . $reserva_id
+                );
+            }
 
             $this->reservaService->checkOutRealizado($reserva_id);
             $this->liberarCalcaoAposCheckout($reserva);

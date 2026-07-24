@@ -46,7 +46,17 @@
         </div>
         <div class="row rs-photo-grid">
             @foreach($fotosCheckoutPaths as $label => $path)
-                @php $fotoUrl = $path ? asset('storage/' . $path) : null; @endphp
+                @php
+                    $fotoUrl = null;
+                    if (!empty($path)) {
+                        $cleanPath = ltrim((string) $path, '/');
+                        if (str_contains($cleanPath, 'http://') || str_contains($cleanPath, 'https://')) {
+                            $fotoUrl = $cleanPath;
+                        } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($cleanPath)) {
+                            $fotoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($cleanPath);
+                        }
+                    }
+                @endphp
                 <div class="col-6 col-md-2 rs-photo-item">
                     @if($fotoUrl)
                         <div class="rs-photo-frame js-lightbox-trigger"

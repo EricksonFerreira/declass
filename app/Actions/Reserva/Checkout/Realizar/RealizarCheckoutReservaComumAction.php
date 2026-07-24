@@ -10,6 +10,7 @@ use App\Services\ReservaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class RealizarCheckoutReservaComumAction
@@ -88,6 +89,14 @@ class RealizarCheckoutReservaComumAction
                 'Check-out com vistoria de devolução'
             );
 
+            if (!empty($reserva->estacao_devolucao_id)) {
+                $this->movimentacaoService->registrarChegadaNaEstacao(
+                    (int) $reserva->veiculo_id,
+                    (int) $reserva->estacao_devolucao_id,
+                    'Chegada real registrada no check-out da reserva '
+                );
+            }
+
             $this->reservaService->checkOutRealizado($reserva->id);
 
             $this->liberarCalcao($reserva);
@@ -113,19 +122,14 @@ class RealizarCheckoutReservaComumAction
             'foto_combustivel_co' => 'foto_combustivel_path',
         ];
 
-        $destDir = storage_path('app/public/' . $dir);
-        if (!is_dir($destDir)) {
-            mkdir($destDir, 0775, true);
-        }
-
         $dadosFotos = [];
         foreach ($mapFotos as $input => $col) {
             if ($request->hasFile($input) && $request->file($input)->isValid()) {
                 $file = $request->file($input);
                 $extension = $file->getClientOriginalExtension() ?: 'jpg';
                 $filename = Str::random(40) . '.' . $extension;
-                $file->move($destDir, $filename);
-                $dadosFotos[$col] = $dir . '/' . $filename;
+                $storedPath = Storage::disk('public')->putFileAs($dir, $file, $filename);
+                $dadosFotos[$col] = ltrim($storedPath, '/');
             }
         }
 
