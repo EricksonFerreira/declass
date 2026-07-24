@@ -312,14 +312,14 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="chassi"
                                         name="chassi" label="Chassi"
-                                        value="{{ old('chassi', $veiculo->chassi ?? '') }}" required />
+                                        value="{{ old('chassi', $veiculo->chassi ?? '') }}"  />
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="numero_motor"
                                         name="numero_motor" label="Número do Motor"
-                                        value="{{ old('numero_motor', $veiculo->numero_motor ?? '') }}" required />
+                                        value="{{ old('numero_motor', $veiculo->numero_motor ?? '') }}"  />
                                 </div>
                             </div>
                         </div>
@@ -403,7 +403,7 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm" id="data_compra"
                                         name="data_compra" label="Data de Compra"
-                                        value="{{ old('data_compra', $veiculo->data_compra ?? '') }}" required />
+                                        value="{{ old('data_compra', $veiculo->data_compra ?? '') }}"  />
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
@@ -421,7 +421,7 @@
                                         label="Próxima Manutenção"
                                         hint="Deve ser hoje ou uma data futura."
                                         value="{{ old('data_proxima_manutencao', $veiculo->data_proxima_manutencao ?? '') }}"
-                                        required />
+                                         />
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
@@ -430,7 +430,7 @@
                                         id="data_proxima_inspecao" name="data_proxima_inspecao" label="Próxima Inspeção"
                                         hint="Deve ser hoje ou uma data futura."
                                         value="{{ old('data_proxima_inspecao', $veiculo->data_proxima_inspecao ?? '') }}"
-                                        required />
+                                         />
                                 </div>
                             </div>
                         </div>
@@ -444,7 +444,7 @@
                                         name="kms" label="Km Atual"
                                         hint="Base usada para validar os limites abaixo."
                                         value="{{ old('kms', $veiculo->kms ?? '') }}"
-                                        min="0" required />
+                                        min="0"  />
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
@@ -453,7 +453,7 @@
                                         name="limite_kms" label="Limite de Km por Aluguel"
                                         hint="Não pode ser menor que o Km Atual."
                                         value="{{ old('limite_kms', $veiculo->limite_kms ?? '') }}" min="0"
-                                        required />
+                                         />
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
@@ -462,7 +462,7 @@
                                         id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da Próxima Revisão"
                                         hint="Não pode ser menor que o Km Atual."
                                         value="{{ old('proxima_revisao_kms', $veiculo->proxima_revisao_kms ?? '') }}"
-                                        min="0" required />
+                                        min="0"  />
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
@@ -472,7 +472,7 @@
                                         label="Km da Próxima Manutenção"
                                         hint="Não pode ser menor que o Km Atual."
                                         value="{{ old('proxima_manutencao_kms', $veiculo->proxima_manutencao_kms ?? '') }}"
-                                        min="0" required />
+                                        min="0"  />
                                 </div>
                             </div>
                         </div>
