@@ -5,44 +5,27 @@ namespace App\Actions\Reserva\Checkout\TermoDevolucao\Exibir;
 use App\Models\Reserva;
 use App\Services\PdfService;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\Response;
 
 class ExibirTermoDevolucaoReservaComumAction
 {
-    public function __construct(
-        private PdfService $pdfService
-    ) {}
+    public function __construct(private PdfService $pdfService) {}
 
-    public function servirPdf(Reserva $reserva): ?Response
+    public function servirPdf(Reserva $reserva): ?\Illuminate\Http\Response
     {
-        $contratoCheckout = $reserva->contratoCheckout;
-
-        if (! $contratoCheckout) {
+        if (! $reserva->contratoCheckout) {
             return null;
         }
 
-        if (
-            $contratoCheckout->pdf_path
-            && Storage::disk('public')->exists($contratoCheckout->pdf_path)
-        ) {
-            $caminhoCompleto = Storage::disk('public')->path(
-                $contratoCheckout->pdf_path
-            );
-
-            return response()->file($caminhoCompleto, [
+        if ($reserva->contratoCheckout->pdf_path && Storage::disk('public')->exists($reserva->contratoCheckout->pdf_path)) {
+            return response()->file(storage_path('app/public/'.$reserva->contratoCheckout->pdf_path), [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="termo-devolucao-'.$reserva->id.'.pdf"',
             ]);
         }
 
-        $exibirCheckinAction = app(
-            \App\Actions\Reserva\Checkin\Contrato\Exibir\ExibirContratoCheckinReservaComumAction::class
-        );
-
-        $data = $exibirCheckinAction->montarDados(
-            $reserva,
-            'checkout'
-        );
+        // Caso não exista o arquivo físico, gera o PDF dinamicamente
+        $exibirCheckinAction = app(\App\Actions\Reserva\Checkin\Contrato\Exibir\ExibirContratoCheckinReservaComumAction::class);
+        $data = $exibirCheckinAction->montarDados($reserva, 'checkout');
 
         $pdf = $this->pdfService->gerarConteudo(
             view: 'pdf.contratos.checkout.comum',
