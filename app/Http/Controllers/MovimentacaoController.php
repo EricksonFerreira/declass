@@ -118,7 +118,6 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::query()
             ->orderBy('nome')->get();
         $statusMovimentacaoObj = \App\Models\StatusMovimentacao::query()
-            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
             ->orderBy('nome')->get();
         $usuariosObj = \App\Models\User::query()
             ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
@@ -179,7 +178,6 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::query()
             ->orderBy('nome')->get();
         $statusMovimentacaoObj = \App\Models\StatusMovimentacao::query()
-            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
             ->orderBy('nome')->get();
         $usuariosObj = \App\Models\User::query()
             ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
