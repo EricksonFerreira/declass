@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('reservas')) {
             Schema::create('reservas', function (Blueprint $table) {
-                $table->id();
+                $table->bigIncrements('id');
                 $table->string('nome')->nullable();
                 $table->timestamps();
     });

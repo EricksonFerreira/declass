@@ -10,12 +10,14 @@ return new class extends Migration {
      */
     public function up(): void
     {
-        Schema::create('reserva_cupom', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('reserva_id')->constrained('reservas')->onDelete('cascade');
-            $table->foreignId('cupom_desconto_id')->constrained('cupom_desconto')->onDelete('cascade');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('reserva_cupom')) {
+            Schema::create('reserva_cupom', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('reserva_id')->constrained('reservas')->onDelete('cascade');
+                $table->foreignId('cupom_desconto_id')->constrained('cupom_desconto')->onDelete('cascade');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

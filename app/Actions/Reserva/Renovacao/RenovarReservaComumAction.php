@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reserva\Renovacao;
 
+use App\Models\Empresa;
 use App\Models\Reserva;
 use App\Models\Transacao;
 use Carbon\Carbon;
@@ -32,12 +33,18 @@ class RenovarReservaComumAction implements RenovacaoStrategyInterface
             'observacoes'            => 'nullable|string|max:1000',
         ]);
 
+        // Verify company is active
+        $empresa = $reserva->empresa ?? null;
+        if (!$empresa || $empresa->ativo !== 'S') {
+            throw new \RuntimeException('Empresa não está ativa. Renovação não permitida.');
+        }
+
         $novaDataHora = Carbon::parse(
             $request->input('data_fim_nova') . ' ' . $request->input('hora_fim_nova')
         );
         $dataFimAtual = Carbon::parse($reserva->data_fim);
 
-        if ($novaDataHora->lte($dataFimAtual)) {
+        if ($novaDataHora->lt($dataFimAtual)) {
             throw new \RuntimeException(
                 'A nova data de devolução deve ser posterior à data atual de devolução ('
                 . $dataFimAtual->format('d/m/Y H:i') . ').'

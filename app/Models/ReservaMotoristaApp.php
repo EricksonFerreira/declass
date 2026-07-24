@@ -121,4 +121,10 @@ class ReservaMotoristaApp extends Model
     {
         return $this->hasMany(Sinistro::class, 'reserva_motorista_app_id')->orderByDesc('id');
     }
+
+    // Aditivos de renovação (Termos Aditivos)
+    public function aditivos(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ReservaMotoristaAppAditivo::class, 'reserva_motorista_app_id');
+    }
 }

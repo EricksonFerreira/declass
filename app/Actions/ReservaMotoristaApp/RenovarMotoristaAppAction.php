@@ -11,6 +11,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
+use App\Models\Empresa;
+
 class RenovarMotoristaAppAction implements RenovacaoStrategyInterface
 {
     /**
@@ -26,6 +28,12 @@ class RenovarMotoristaAppAction implements RenovacaoStrategyInterface
      */
     public function handle(Request $request, mixed $reserva): ReservaMotoristaAppPagamento
     {
+        // Verify company is active
+        $empresa = $reserva->empresa ?? null;
+        if (!$empresa || $empresa->ativo !== 'S') {
+            throw new \RuntimeException('Empresa não está ativa. Renovação não permitida.');
+        }
+
         $acaoRenovacao = (string) ($request->input('acao_renovacao', 'mantem'));
         $periodos      = max(1, (int) $request->input('periodos', 1));
         $observacoes   = (string) $request->input('observacoes', '');

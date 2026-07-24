@@ -6,6 +6,7 @@ use App\Http\Controllers\Reserva\ReservaCheckoutController;
 use App\Http\Controllers\Reserva\ReservaController;
 use App\Http\Controllers\Reserva\ReservaMotoristaAppController;
 use App\Http\Controllers\Reserva\ReservaPagamentoController;
+use App\Http\Controllers\Reserva\ReservaRenovacaoController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('minhas-reservas', [ReservaController::class, 'minhas'])->name('reserva.minhas');
@@ -98,11 +99,12 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::get('{codigo}/verContratoCheckin', [ReservaCheckinController::class, 'verContratoCheckin'])->name('verContratoCheckin');
     // ── Contrato Checkout──
     Route::get('{codigo}/assinarContratoCheckout', [ReservaCheckoutController::class, 'assinarContratoCheckout'])->name('assinarContratoCheckout');
-    Route::post('{codigo}/salvar-assinatura-checkout', [ReservaCheckoutController::class, 'salvarAssinarContratoCheckout'])->name('salvarAssinaturaContratoCheckout');
+    Route::post('{codigo}/salvar-assinatura-checkout', [ReservaCheckoutController::class, 'salvarAssinaturaContratoCheckout'])->name('salvarAssinaturaContratoCheckout');
     Route::get('{codigo}/verContratoCheckout', [ReservaCheckoutController::class, 'verContratoCheckout'])->name('verContratoCheckout');
     // ── Renovacao ──
     Route::get('planos/{id}/opcionais', [\App\Http\Controllers\Reserva\PlanoController::class, 'opcionais'])->name('planos.opcionais');
-    Route::get('{codigo}/renovacao', [ReservaController::class, 'renovacao'])->name('renovacao');
-    Route::post('{id}/renovar-comum', [ReservaController::class, 'renovarComum'])->name('renovarComum');
+    Route::get('{codigo}/renovacao', [ReservaRenovacaoController::class, 'exibir'])->name('renovacao.exibir');
+    Route::post('{codigo}/renovacao', [ReservaRenovacaoController::class, 'executar'])->name('renovacao.executar');
+    // Route::post('{id}/renovar-comum', [ReservaController::class, 'renovarComum'])->name('renovarComum');
 });
 Route::resource('reserva', ReservaController::class);

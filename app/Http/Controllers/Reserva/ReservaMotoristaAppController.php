@@ -53,6 +53,13 @@ class ReservaMotoristaAppController extends Controller
         protected ExibirPagamentoAdminMotoristaAppAction $exibirPagamentoAdminMotoristaAppAction,
     ) {}
 
+    public function renovarMotoristaAppPorCodigo(Request $request, $codigo)
+    {
+        $codigoReserva = $this->dadosCodigoReservaPorIdentificador($codigo);
+        $id = $this->idReservaPorIdentificador($codigo, 'MAP', $codigoReserva, 'reserva_motorista_app_id');
+        return $this->renovarMotoristaApp($request, $id);
+    }
+
     public function renovarMotoristaApp(Request $request, $id)
     {
         $user = Auth::user();
@@ -62,7 +69,7 @@ class ReservaMotoristaAppController extends Controller
         $ehAdmin = (bool) ($user->isAdministrador() ?? false);
 
         $reserva = ReservaMotoristaApp::query()
-            ->with(['planoMotoristaApp.opcionais', 'empresa', 'veiculo', 'pagamentos'])
+            ->with(['planoMotoristaApp.opcionais', 'empresa', 'veiculo', 'pagamentos', 'contratoCheckin'])
             ->find($id);
 
         if ($reserva && !$ehAdmin && (int) $reserva->user_id !== (int) $user->id) {
@@ -81,7 +88,11 @@ class ReservaMotoristaAppController extends Controller
             return back()->with('error', 'Nao e possivel renovar o plano apos o checkout da locacao.');
         }
 
-        if (empty(data_get($reserva->contrato_snapshot_json, 'assinatura'))) {
+        $estaCheckin = !empty($reserva->checkin_realizado_em) || !empty($reserva->contratoCheckin);
+        $contratoAssinado = !empty(data_get($reserva->contrato_snapshot_json, 'assinatura'))
+            || ($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S');
+
+        if (!$estaCheckin || !$contratoAssinado) {
             return back()->with('error', 'A renovacao so fica disponivel apos o check-in e a assinatura do contrato.');
         }
 
