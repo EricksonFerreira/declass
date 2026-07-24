@@ -2541,7 +2541,7 @@
                                 <th>Perfil</th>
                                 <th>Nascimento</th>
                                 <th>Cadastro</th>
-                                <th class="text-center">AÃ§Ã£o</th>
+                                <th class="text-center">AÃ§ão</th>
                             </tr>
                         </thead><tbody>`;
                         data.usuarios.forEach(u => {

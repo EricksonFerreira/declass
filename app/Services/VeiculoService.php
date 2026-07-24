@@ -234,8 +234,8 @@ class VeiculoService extends AbstractBaseService
                     ->where('reservas.data_fim', '>', $data_inicio);
             })
             ->whereDoesntHave('movimentacoes', function ($query) use ($data_fim) {
-                // Bloqueia Veículo com movimentaÃ§Ã£o ainda nÃ£o concluÃ­da (ex: transferÃªncia entre estações),
-                // mesmo quando a movimentaÃ§Ã£o nÃ£o estÃ¡ vinculada a uma reserva.
+                // Bloqueia Veículo com movimentaÃ§ão ainda não concluÃ­da (ex: transferência entre estações),
+                // mesmo quando a movimentaÃ§ão não estÃ¡ vinculada a uma reserva.
                 $query->whereNull('data_chegada_real')
                     ->where(function ($sub) use ($data_fim) {
                         $sub->whereNull('data_saida')->orWhere('data_saida', '<', $data_fim);

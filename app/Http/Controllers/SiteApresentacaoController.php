@@ -995,7 +995,7 @@ class SiteApresentacaoController extends Controller
         return match ($doc) {
             'cnh_definitiva' => 'CNH definitiva',
             'cnh_ear' => 'CNH com EAR',
-            'comprovante_residencia' => 'Comprovante de residÃªncia',
+            'comprovante_residencia' => 'Comprovante de residência',
             'comprovante_cadastro_app' => 'Comprovante de cadastro ativo no aplicativo',
             'documento_adicional' => trim($documentoAdicionalLabel) !== '' ? $documentoAdicionalLabel : 'Documento adicional',
             'nenhum' => null,

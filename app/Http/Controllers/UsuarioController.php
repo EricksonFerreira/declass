@@ -492,11 +492,11 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
         if ($request->expectsJson()) {
             return response()->json([
-                'message' => 'Metodo de pagamento nÃ£o adicionado.',
+                'message' => 'Metodo de pagamento não adicionado.',
             ], 422);
         }
 
-        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento nÃ£o adicionado!', 'error');
+        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento não adicionado!', 'error');
     }
 
     public function excluirMetodoPagamento($usuarioId, $metodoId)

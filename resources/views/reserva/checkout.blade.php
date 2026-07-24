@@ -819,7 +819,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Quilometragem invÃ¡lida',
-                text: `A quilometragem na devoluÃ§Ã£o deve ser maior ou igual ao KM inicial do check-in (${kmInicial}).`,
+                text: `A quilometragem na devoluÃ§ão deve ser maior ou igual ao KM inicial do check-in (${kmInicial}).`,
                 confirmButtonColor: '#4338ca',
             });
             showStep(1);

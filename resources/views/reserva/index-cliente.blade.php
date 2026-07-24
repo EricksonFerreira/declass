@@ -233,7 +233,7 @@
 
                     </article>
                 @empty
-                    <div class="alert alert-info m-3">VocÃª ainda nÃ£o possui reservas.</div>
+                    <div class="alert alert-info m-3">Você ainda não possui reservas.</div>
                 @endforelse
             </div>
 
@@ -245,7 +245,7 @@
                             <th class="text-center">#</th>
                             <th>VeÃ­culo / Plano</th>
                             <th>Retirada</th>
-                            <th>DevoluÃ§Ã£o</th>
+                            <th>DevoluÃ§ão</th>
                             <th class="text-right">Total</th>
                             <th>Pagamento</th>
                             <th>Status</th>

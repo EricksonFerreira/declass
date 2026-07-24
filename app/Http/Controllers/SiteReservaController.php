@@ -296,7 +296,7 @@ class SiteReservaController extends Controller
             return response()->json([
                 'estacao_id' => $estacao->id,
                 'dias_disponiveis' => [],
-                'mensagem' => 'A estaÃ§Ã£o selecionada nao possui veiculos ativos para retirada.',
+                'mensagem' => 'A estaÃ§ão selecionada nao possui veiculos ativos para retirada.',
             ]);
         }
 
@@ -312,8 +312,8 @@ class SiteReservaController extends Controller
                 'estacao_id' => $estacao->id,
                 'dias_disponiveis' => [],
                 'mensagem' => $isDevolucao
-                    ? 'A estaÃ§Ã£o selecionada nao possui agenda de devolucao configurada para o periodo.'
-                    : 'A estaÃ§Ã£o selecionada nao possui agenda de retirada configurada para o periodo.',
+                    ? 'A estaÃ§ão selecionada nao possui agenda de devolucao configurada para o periodo.'
+                    : 'A estaÃ§ão selecionada nao possui agenda de retirada configurada para o periodo.',
             ]);
         }
 
