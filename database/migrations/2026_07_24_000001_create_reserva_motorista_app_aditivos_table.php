@@ -7,6 +7,10 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        if (Schema::hasTable('reserva_motorista_app_aditivos')) {
+            return;
+        }
+
         Schema::create('reserva_motorista_app_aditivos', function (Blueprint $table) {
             $table->id();
             $table->foreignId('empresa_id')->constrained('empresas')->cascadeOnDelete();
@@ -33,6 +37,7 @@ return new class extends Migration {
             $table->text('user_agent_assinatura')->nullable();
             $table->text('observacoes')->nullable();
             $table->timestamps();
+
             $table->unique(['reserva_motorista_app_id', 'numero_aditivo']);
         });
     }
