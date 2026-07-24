@@ -50,9 +50,10 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->aluguel_app_ativo ?? 'N') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->site_tipo_reserva ?? 'ambas') === 'nenhum') {
             return $this->defaultResponse();
         }
+
 
         $this->activateEmpresaContext($empresa);
 
@@ -207,7 +208,7 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ! in_array($empresa->site_tipo_reserva ?? 'ambas', ['motorista_app', 'ambas'], true)) {
             return $this->defaultResponse();
         }
 
@@ -291,7 +292,7 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->aluguel_app_ativo ?? 'N') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ! in_array($empresa->site_tipo_reserva ?? 'ambas', ['motorista_app', 'ambas'], true)) {
             return $this->defaultResponse();
         }
 
@@ -631,7 +632,7 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S') {
+        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ! in_array($empresa->site_tipo_reserva ?? 'ambas', ['motorista_app', 'ambas'], true)) {
             return $this->defaultResponse();
         }
 

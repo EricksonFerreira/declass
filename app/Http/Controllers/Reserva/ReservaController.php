@@ -753,6 +753,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 ->with(['user', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'planoMotoristaApp', 'solicitacao.planoMotoristaApp', 'pagamentos'])
                 ->find($idMotoristaApp);
 
+            // Obter opcionais atuais e calcular valor total deles
+            $opcionaisAtuaisValor = (float) ($reservaMotoristaApp->valor_opcionais ?? 0);
+
+
             if (! $reservaMotoristaApp) {
                 return redirect()->route('reserva.index')->with('error', 'Reserva não encontrada.');
             }
@@ -796,17 +800,22 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 ->orderBy('nome')
                 ->get();
 
+            $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Reservas', 'reserva.index', 'Renovação: ' . $codigo);
+
             return view('reserva.renovacao', [
                 'tipo'                   => 'MAP',
                 'reserva'                => $reservaMotoristaApp,
                 'codigo'                 => $codigo,
                 'plano'                  => $plano,
                 'planos'                 => $planos,
-                'valorPeriodoContratado' => $valorPeriodoContratado,
+                'valorPeriodoContratado'  => $valorPeriodoContratado,
+                'opcionaisAtuaisValor'    => $opcionaisAtuaisValor,
                 'inicioVigenciaFormatado' => $inicioVigenciaFormatado,
                 'fimVigenciaFormatado'   => $fimVigenciaFormatado,
                 'titulo'                 => 'Renovação de Plano de Motorista — ' . $codigo,
+                'breadcrumb'             => $breadcrumb,
             ]);
+
         }
 
         // Reserva Comum
@@ -820,6 +829,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
 
         $estacoes = \App\Models\Estacao::where('ativo', true)->get();
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Reservas', 'reserva.index', 'Renovação: ' . $codigo);
 
         return view('reserva.renovacao', [
             'tipo' => 'RES',
@@ -827,6 +837,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'codigo' => $codigo,
             'estacoes' => $estacoes,
             'titulo' => 'Renovação de Reserva — #' . $reserva->id,
+            'breadcrumb' => $breadcrumb,
         ]);
     }
 

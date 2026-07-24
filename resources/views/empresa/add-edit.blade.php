@@ -144,8 +144,9 @@
                             <option value="ambas" {{ $siteTipoReserva === 'ambas' ? 'selected' : '' }}>Ambas (Comum e Motorista App)</option>
                             <option value="reserva_comum" {{ $siteTipoReserva === 'reserva_comum' ? 'selected' : '' }}>Reserva Comum</option>
                             <option value="motorista_app" {{ $siteTipoReserva === 'motorista_app' ? 'selected' : '' }}>Motorista de App</option>
+                            <option value="nenhum" {{ $siteTipoReserva === 'nenhum' ? 'selected' : '' }}>Nenhum (Sem site de reservas)</option>
                         </select>
-                        <small class="text-muted d-block mt-1">Define qual tipo de reserva ficará disponível na página de apresentação (Modelo 1).</small>
+                        <small class="text-muted d-block mt-1">Define qual tipo de reserva ficará disponível na página de apresentação (Modelo 1). Selecione "Nenhum" caso não queira site de reservas.</small>
                     </div>
                     <div class="form-group form-group-empresa  col-3 ">
                         <label for="reserva_selecionar_modelo">Selecionar modelo na reserva</label>
@@ -636,19 +637,7 @@
                     <div class="empresa-section-title" id="sec-app">Motorista de App</div>
                 </div>
 
-                <div class="col-lg-4" data-empresa-step="8">
-                    <div class="form-group form-group-empresa">
-                        <label for="aluguel_app_ativo">Habilitar aluguel para app?</label>
-                        @php
-                            $aluguelAppAtivo = old('aluguel_app_ativo', $empresa->aluguel_app_ativo ?? 'N');
-                        @endphp
-                        <select class="form-control form-control-sm" id="aluguel_app_ativo" name="aluguel_app_ativo">
-                            <option value="N" {{ $aluguelAppAtivo === 'N' ? 'selected' : '' }}>Não</option>
-                            <option value="S" {{ $aluguelAppAtivo === 'S' ? 'selected' : '' }}>Sim</option>
-                        </select>
-                        <small class="text-muted d-block mt-1">Ativa a vitrine e o fluxo específico para motorista de aplicativo.</small>
-                    </div>
-                </div>
+                <input type="hidden" name="aluguel_app_ativo" id="aluguel_app_ativo" value="{{ $empresa->aluguel_app_ativo ?? 'N' }}">
 
                 <div class="col-lg-4" data-empresa-step="8">
                     <div class="form-group form-group-empresa">
@@ -2208,9 +2197,24 @@
         bindMask(cnpjInput, formatCnpj);
         bindMask(telefoneInput, formatTelefone);
 
+        const siteTipoReserva = document.getElementById('site_tipo_reserva');
+        const aluguelAppAtivoHidden = document.getElementById('aluguel_app_ativo');
+
+        function syncAluguelAppAtivo() {
+            if (siteTipoReserva && aluguelAppAtivoHidden) {
+                const val = siteTipoReserva.value;
+                aluguelAppAtivoHidden.value = (val === 'motorista_app' || val === 'ambas') ? 'S' : 'N';
+            }
+        }
+
+        if (siteTipoReserva) {
+            siteTipoReserva.addEventListener('change', syncAluguelAppAtivo);
+        }
+
         syncGatewayFields();
         syncCalcaoFields();
         syncThemePreview();
+        syncAluguelAppAtivo();
     })();
 </script>
 @stop

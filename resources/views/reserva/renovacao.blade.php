@@ -3,14 +3,19 @@
 @section('title', $titulo)
 
 @section('content_header')
-    <h1 class="m-0 text-dark" style="font-size:1.1rem;">
-        <a href="{{ route('reserva.index') }}" class="text-muted">Reservas</a>
-        <span class="mx-1 text-muted">/</span>
-        <a href="{{ route('reserva.show', $codigo) }}" class="text-muted">{{ $codigo }}</a>
-        <span class="mx-1 text-muted">/</span>
-        Renovação
-    </h1>
+    @if(isset($breadcrumb))
+        <x-breadcrumb :breadcrumbs="$breadcrumb" />
+    @else
+        <h1 class="m-0 text-dark" style="font-size:1.1rem;">
+            <a href="{{ route('reserva.index') }}" class="text-muted">Reservas</a>
+            <span class="mx-1 text-muted">/</span>
+            <a href="{{ route('reserva.show', $codigo) }}" class="text-muted">{{ $codigo }}</a>
+            <span class="mx-1 text-muted">/</span>
+            Renovação
+        </h1>
+    @endif
 @stop
+
 
 @section('content')
 
@@ -279,6 +284,14 @@
                                 <span>Valor por ciclo:</span>
                                 <strong id="resumoValorCiclo">R$ {{ number_format($valorPeriodoContratado, 2, ',', '.') }}</strong>
                             </div>
+                            <div class="rnv-resumo-linha" id="linhaOpcionaisAtuais" style="{{ $opcionaisAtuaisValor > 0 ? '' : 'display:none;' }}">
+                                <span>Opcionais atuais:</span>
+                                <strong id="resumoOpcionaisAtuais">R$ {{ number_format($opcionaisAtuaisValor, 2, ',', '.') }}</strong>
+                            </div>
+                            <div class="rnv-resumo-linha" id="linhaOpcionaisNovos" style="display:none;">
+                                <span>Opcionais novos:</span>
+                                <strong id="resumoOpcionaisNovos">R$ 0,00</strong>
+                            </div>
                             <div class="rnv-resumo-linha">
                                 <span>Ciclos adicionais:</span>
                                 <strong id="resumoCiclos">1x</strong>
@@ -289,7 +302,7 @@
                             </div>
                             <div class="rnv-resumo-linha rnv-resumo-total">
                                 <span>Total a cobrar:</span>
-                                <strong class="text-success" id="custoTotalMap">R$ {{ number_format($valorPeriodoContratado, 2, ',', '.') }}</strong>
+                                <strong class="text-success" id="custoTotalMap">R$ {{ number_format($valorPeriodoContratado + $opcionaisAtuaisValor, 2, ',', '.') }}</strong>
                             </div>
                         </div>
                         <button type="submit" class="ci-btn-create co-btn-finalizar" id="btn_confirmar_renovacao">
@@ -297,6 +310,7 @@
                             Confirmar Renovação
                         </button>
                     </div>
+
 
                 </form>
 
@@ -463,53 +477,64 @@
 <style>
     @include('reserva.partials.vistoria_reserva_estilos_inner')
 
-    /* ── Info cards (bloco de dados) ── */
+    /* Compactações globais para evitar scroll */
+    .ci-body { padding: 0.75rem !important; }
+    .ci-block { padding: 0.65rem 0.95rem !important; margin-bottom: 0.5rem !important; border-radius: 8px !important; }
+    .ci-block-label { margin-bottom: 0.5rem !important; padding-bottom: 0.4rem !important; }
+    .ci-block-label > i { width: 28px !important; height: 28px !important; font-size: 0.75rem !important; border-radius: 8px !important; }
+    .ci-card-header { padding: 0.85rem 1.25rem !important; }
+    .ci-header-icon { width: 42px !important; height: 42px !important; font-size: 1.1rem !important; border-radius: 10px !important; }
+    .row [class^="col-"] { margin-bottom: 0px !important; }
+    .form-group, .mb-3, .my-4 { margin-bottom: 0.5rem !important; margin-top: 0px !important; }
+    .pb-3, .py-3 { padding-bottom: 0.4rem !important; }
+    .pt-3, .py-3 { padding-top: 0.4rem !important; }
 
+    /* ── Info cards (bloco de dados) ── */
     .rnv-info-card {
         display: flex;
         flex-direction: column;
-        gap: 4px;
-        padding: 14px 16px;
+        gap: 2px;
+        padding: 8px 10px;
         background: #f8faff;
         border: 1px solid #e0e7ff;
-        border-radius: 12px;
-        height: 100%;
+        border-radius: 8px;
+        height: auto;
     }
     .rnv-info-card--end { border-left: 3px solid var(--c-green, #10b981); }
     .rnv-info-label {
-        font-size: 0.71rem;
+        font-size: 0.65rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.05em;
         color: var(--c-slate, #64748b);
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 4px;
     }
-    .rnv-info-label i { font-size: 0.65rem; opacity: 0.75; }
+    .rnv-info-label i { font-size: 0.6rem; opacity: 0.75; }
     .rnv-info-value {
-        font-size: 1.02rem;
+        font-size: 0.88rem;
         font-weight: 800;
         color: var(--c-ink, #0f172a);
-        line-height: 1.3;
+        line-height: 1.2;
     }
 
     /* ── Radio cards (manter/trocar plano) ── */
     .rnv-radio-group {
         display: flex;
-        gap: 12px;
+        gap: 8px;
         flex-wrap: wrap;
     }
     .rnv-radio-card {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 10px;
         flex: 1;
-        min-width: 220px;
-        padding: 14px 16px;
+        min-width: 200px;
+        padding: 8px 12px;
         background: #fff;
         border: 2px solid #e2e8f0;
-        border-radius: 14px;
+        border-radius: 10px;
         cursor: pointer;
         transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
         position: relative;
@@ -522,26 +547,26 @@
         box-shadow: 0 0 0 3px rgba(79,70,229,0.10);
     }
     .rnv-radio-card__icon {
-        width: 42px; height: 42px;
-        border-radius: 11px;
+        width: 32px; height: 32px;
+        border-radius: 8px;
         display: flex; align-items: center; justify-content: center;
-        font-size: 1rem; flex-shrink: 0;
+        font-size: 0.85rem; flex-shrink: 0;
         background: #eff6ff; color: #2563eb;
     }
     .rnv-radio-card__icon--blue  { background: #eff6ff; color: #2563eb; }
     .rnv-radio-card__icon--amber { background: #fffbeb; color: #d97706; }
     .rnv-radio-card__body {
         flex: 1;
-        display: flex; flex-direction: column; gap: 2px;
+        display: flex; flex-direction: column; gap: 1px;
     }
     .rnv-radio-card__body strong {
-        font-size: 0.9rem; font-weight: 800; color: var(--c-ink, #0f172a);
+        font-size: 0.82rem; font-weight: 800; color: var(--c-ink, #0f172a);
     }
     .rnv-radio-card__body span {
-        font-size: 0.77rem; color: var(--c-slate, #64748b);
+        font-size: 0.7rem; color: var(--c-slate, #64748b);
     }
     .rnv-radio-card__check {
-        font-size: 1.1rem;
+        font-size: 0.95rem;
         color: #d1d5db;
         transition: color 0.2s;
     }
@@ -553,75 +578,74 @@
     .rnv-vigencia-badge {
         display: inline-flex;
         align-items: center;
-        gap: 8px;
-        padding: 10px 16px;
+        gap: 6px;
+        padding: 6px 12px;
         background: #f0fdf4;
         border: 1px solid #bbf7d0;
-        border-radius: 10px;
+        border-radius: 8px;
         color: #166534;
-        font-size: 0.85rem;
+        font-size: 0.78rem;
         font-weight: 600;
         width: 100%;
-        margin-top: 22px;
+        margin-top: 0px;
     }
     .rnv-vigencia-badge i { color: #16a34a; }
 
     /* ── Resumo final (summary card adaptado) ── */
     .rnv-summary-final {
-        margin: 0 0 0 0;
+        margin: 0.25rem 0 0 0 !important;
         display: flex;
         align-items: center;
-        gap: 16px;
-        padding: 18px 20px;
+        gap: 12px;
+        padding: 10px 16px !important;
         background: #f8faff;
         border: 1.5px solid #e0e7ff;
-        border-radius: 16px;
-        margin-bottom: 8px;
+        border-radius: 12px;
     }
     .rnv-summary-final .ci-summary-card__icon {
-        width: 48px; height: 48px;
-        border-radius: 12px;
+        width: 38px; height: 38px;
+        border-radius: 8px;
         background: color-mix(in srgb, var(--c-indigo, #4f46e5) 12%, #fff 88%);
         color: var(--c-indigo, #4f46e5);
         display: flex; align-items: center; justify-content: center;
-        font-size: 1.1rem; flex-shrink: 0;
+        font-size: 0.95rem; flex-shrink: 0;
     }
     .rnv-summary-final .ci-summary-card__icon--green {
         background: #ecfdf5; color: #10b981;
     }
     .rnv-summary-final .ci-summary-card__content {
         flex: 1;
-        display: flex; flex-direction: column; gap: 4px;
+        display: flex; flex-direction: column; gap: 2px;
     }
     .rnv-summary-final .ci-summary-card__content strong {
-        font-size: 0.92rem; font-weight: 800; color: var(--c-ink, #0f172a);
+        font-size: 0.85rem; font-weight: 800; color: var(--c-ink, #0f172a);
     }
     .rnv-resumo-linha {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        font-size: 0.82rem;
+        font-size: 0.78rem;
         color: var(--c-slate, #64748b);
     }
     .rnv-resumo-linha strong { color: var(--c-ink, #0f172a); }
     .rnv-resumo-total {
         border-top: 1px solid #e0e7ff;
-        margin-top: 4px;
-        padding-top: 4px;
-        font-size: 0.88rem;
+        margin-top: 2px;
+        padding-top: 2px;
+        font-size: 0.82rem;
     }
-    .rnv-resumo-total strong { font-size: 1.08rem; }
+    .rnv-resumo-total strong { font-size: 0.98rem; }
 
     /* ── Opcionais AJAX ── */
     .rnv-opcional-item {
         display: flex;
         align-items: center;
-        gap: 10px;
-        padding: 10px 14px;
+        gap: 8px;
+        padding: 6px 10px;
         background: #fff;
         border: 1px solid #e2e8f0;
-        border-radius: 10px;
-        margin-bottom: 8px;
+        border-radius: 8px;
+        margin-bottom: 4px;
         transition: background 0.15s;
     }
     .rnv-opcional-item:hover { background: #f8faff; }
@@ -631,31 +655,32 @@
         margin: 0;
     }
     .rnv-opcional-badge {
-        font-size: 0.8rem; font-weight: 700;
-        padding: 2px 8px;
+        font-size: 0.72rem; font-weight: 700;
+        padding: 1px 6px;
         background: #eef2ff;
         color: var(--c-indigo, #4f46e5);
-        border-radius: 20px;
+        border-radius: 12px;
     }
 
     /* ── Cupom feedback ── */
     #cupom_feedback .cupom-ok {
-        display: flex; align-items: center; gap: 6px;
-        color: #166534; font-size: 0.82rem; font-weight: 600;
+        display: flex; align-items: center; gap: 4px;
+        color: #166534; font-size: 0.76rem; font-weight: 600;
         background: #f0fdf4; border: 1px solid #bbf7d0;
-        border-radius: 8px; padding: 6px 10px;
+        border-radius: 6px; padding: 4px 8px;
     }
     #cupom_feedback .cupom-erro {
-        display: flex; align-items: center; gap: 6px;
-        color: #991b1b; font-size: 0.82rem; font-weight: 600;
+        display: flex; align-items: center; gap: 4px;
+        color: #991b1b; font-size: 0.76rem; font-weight: 600;
         background: #fef2f2; border: 1px solid #fecaca;
-        border-radius: 8px; padding: 6px 10px;
+        border-radius: 6px; padding: 4px 8px;
     }
 
     /* ── Campos obrigatórios ── */
     .req { color: #ef4444; font-weight: 700; }
 </style>
 @stop
+
 
 @section('js')
 <script>
@@ -680,6 +705,8 @@ $(document).ready(function () {
         const $resumoDesconto = $('#resumoDesconto');
         const $vigBadge       = $('#vigenciaBadge');
 
+        let opcionaisAtuaisValor = parseFloat(@json($opcionaisAtuaisValor ?? 0)) || 0;
+
         // ── Calcular totais ────────────────────────
         function calcular() {
             const qtd  = parseInt($quantidade.val()) || 1;
@@ -688,7 +715,37 @@ $(document).ready(function () {
             $resumoCiclos.text(qtd + 'x');
             $resumoValor.text('R$ ' + fmt(ciclo));
 
-            const bruto = ciclo * qtd;
+            let opcionaisNovos = 0;
+            if ($('input[name="acao_renovacao"]:checked').val() === 'trocar') {
+                // Se mudou de plano, somar opcionais novos marcados
+                $('.opc-check:checked').each(function() {
+                    const labelText = $(this).siblings('label').find('.rnv-opcional-badge').text();
+                    const match = labelText.match(/R\$\s*([0-9.,]+)/);
+                    if (match) {
+                        opcionaisNovos += parseFloat(match[1].replace('.', '').replace(',', '.')) || 0;
+                    }
+                });
+                $('#linhaOpcionaisAtuais').hide();
+                if (opcionaisNovos > 0) {
+                    $('#linhaOpcionaisNovos').show();
+                    $('#resumoOpcionaisNovos').text('R$ ' + fmt(opcionaisNovos));
+                } else {
+                    $('#linhaOpcionaisNovos').hide();
+                }
+            } else {
+                // Se mantém plano atual, manter os opcionais atuais ativos
+                opcionaisNovos = 0;
+                $('#linhaOpcionaisNovos').hide();
+                if (opcionaisAtuaisValor > 0) {
+                    $('#linhaOpcionaisAtuais').show();
+                } else {
+                    $('#linhaOpcionaisAtuais').hide();
+                }
+            }
+
+            const custoOpcionais = ($('input[name="acao_renovacao"]:checked').val() === 'trocar') ? opcionaisNovos : opcionaisAtuaisValor;
+
+            const bruto = (ciclo * qtd) + (custoOpcionais * qtd);
             const total = Math.max(0, bruto - descontoCupom);
 
             if (descontoCupom > 0) {
@@ -701,6 +758,7 @@ $(document).ready(function () {
             $total.text('R$ ' + fmt(total));
             atualizarVigencia(qtd);
         }
+
 
         // ── Atualizar badge de vigência ────────────
         const fimCicloAtualStr = @json($fimVigenciaFormatado ?? '');
