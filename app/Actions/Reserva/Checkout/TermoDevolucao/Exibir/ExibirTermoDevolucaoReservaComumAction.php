@@ -10,7 +10,7 @@ class ExibirTermoDevolucaoReservaComumAction
 {
     public function __construct(private PdfService $pdfService) {}
 
-    public function servirPdf(Reserva $reserva): ?\Illuminate\Http\Response
+    public function servirPdf(Reserva $reserva): ?\Symfony\Component\HttpFoundation\Response
     {
         if (! $reserva->contratoCheckout) {
             return null;

@@ -16,7 +16,7 @@ class ExibirTermoDevolucaoMotoristaAppAction
         private ExibirContratoCheckinReservaComumAction $comumAction,
     ) {}
 
-    public function servirPdf(ReservaMotoristaApp $reserva): \Illuminate\Http\Response
+    public function servirPdf(ReservaMotoristaApp $reserva): \Symfony\Component\HttpFoundation\Response
     {
         $reserva->loadMissing([
             'codigoReserva', 'empresa', 'user', 'veiculo.marca', 'veiculo.modelo',

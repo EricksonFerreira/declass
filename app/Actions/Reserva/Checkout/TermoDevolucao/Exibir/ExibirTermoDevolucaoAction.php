@@ -12,7 +12,7 @@ class ExibirTermoDevolucaoAction
         private ReservaResolver $reservaResolver,
     ) {}
 
-    public function handle(string $codigo): ?\Illuminate\Http\Response
+    public function handle(string $codigo): ?\Symfony\Component\HttpFoundation\Response
     {
         $reservaResolvida = $this->reservaResolver->resolver($codigo);
 
