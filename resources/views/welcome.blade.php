@@ -53,27 +53,17 @@
         "offers": [
             {
                 "@type": "Offer",
-                "name": "Gestão",
-                "price": "247",
-                "priceCurrency": "BRL"
+                "name": "Starter",
+                "price": "149",
+                "priceCurrency": "BRL",
+                "description": "Plano inicial com até 10 veículos ativos, 3 usuários e os módulos essenciais da locadora."
             },
             {
                 "@type": "Offer",
-                "name": "Essencial",
-                "price": "397",
-                "priceCurrency": "BRL"
-            },
-            {
-                "@type": "Offer",
-                "name": "Crescimento",
-                "price": "697",
-                "priceCurrency": "BRL"
-            },
-            {
-                "@type": "Offer",
-                "name": "Escala",
-                "price": "1297",
-                "priceCurrency": "BRL"
+                "name": "Professional",
+                "price": "249",
+                "priceCurrency": "BRL",
+                "description": "Plano completo com usuários ilimitados, até 3 filiais, site de reservas e módulos avançados."
             }
         ]
     }
@@ -106,10 +96,10 @@
             },
             {
                 "@type": "Question",
-                "name": "Posso usar o sistema sem site de vendas?",
+                "name": "Como funciona a cobrança por veículos?",
                 "acceptedAnswer": {
                     "@type": "Answer",
-                    "text": "Sim. Existe um plano de gestão para quem quer começar apenas com os recursos internos da locadora."
+                    "text": "Cada plano inclui até 10 veículos ativos. Veículos ativos adicionais são cobrados mensalmente conforme o plano contratado."
                 }
             },
             {
@@ -307,7 +297,7 @@
     .hero-inner {
         position: relative; z-index: 1;
         display: grid; grid-template-columns: 1fr 1fr;
-        align-items: center; gap: 4rem; padding: rem 0;
+        align-items: center; gap: 4rem; padding: 4rem 0;
         width: 100%;
     }
     .hero-eyebrow {
@@ -1101,12 +1091,22 @@
         font-size: .65rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase;
         color: #fff; background: #22c55e; border-radius: 999px; padding: .2rem .55rem; margin-left: .3rem;
     }
-    .pricing-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; align-items: start; }
+    .pricing-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+        align-items: stretch;
+        max-width: 920px;
+        margin: 0 auto;
+    }
     .plan-card {
-        padding: 2.2rem; background: #fff;
-        border: 1.5px solid var(--border); border-radius: 16px;
+        padding: 1.6rem;
+        background: #fff;
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
         transition: border-color .3s, transform .35s cubic-bezier(.16,1,.3,1), box-shadow .3s;
-        position: relative; overflow: hidden;
+        position: relative;
+        overflow: hidden;
     }
     .plan-card:hover { transform: translateY(-4px); box-shadow: var(--shadow); }
     .plan-card.popular { border-color: var(--bg); box-shadow: 0 0 0 4px rgba(10,22,40,.06); }
@@ -1115,15 +1115,46 @@
         text-transform: uppercase; color: #fff; background: var(--bg);
         border-radius: 999px; padding: .25rem .75rem; margin-bottom: 1.1rem;
     }
-    .plan-name { font-family: 'Raleway', sans-serif; font-weight: 900; font-size: 1.2rem; color: var(--bg); margin-bottom: 1.4rem; }
-    .plan-price { margin-bottom: 1.5rem; }
+    .plan-name {
+        font-family: 'Raleway', sans-serif;
+        font-weight: 900;
+        font-size: 1.15rem;
+        color: var(--bg);
+        margin-bottom: .75rem;
+    }
+    .plan-price { margin-bottom: .9rem; }
     .plan-price .currency { font-size: 1.1rem; color: var(--muted); vertical-align: super; margin-right: 2px; }
-    .plan-price .amount { font-family: 'Raleway', sans-serif; font-size: 2.8rem; font-weight: 900; color: var(--bg); transition: all .4s; }
+    .plan-price .amount {
+        font-family: 'Raleway', sans-serif;
+        font-size: 2.35rem;
+        font-weight: 900;
+        color: var(--bg);
+        transition: all .4s;
+    }
     .plan-price .period { font-size: .8rem; color: var(--muted); }
     .plan-price .annual-note { font-size: .75rem; color: #22c55e; display: block; margin-top: .3rem; }
-    .plan-desc { font-size: .85rem; color: var(--muted); line-height: 1.65; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
-    .plan-features { display: flex; flex-direction: column; gap: .7rem; margin-bottom: 2rem; }
-    .plan-feature { display: flex; align-items: flex-start; gap: .6rem; font-size: .85rem; color: var(--text); }
+    .plan-desc {
+        font-size: .82rem;
+        color: var(--muted);
+        line-height: 1.55;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+    }
+    .plan-features {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .55rem .85rem;
+        margin-bottom: 1rem;
+    }
+    .plan-feature {
+        display: flex;
+        align-items: flex-start;
+        gap: .5rem;
+        font-size: .8rem;
+        line-height: 1.4;
+        color: var(--text);
+    }
     .plan-feature i { color: var(--bg); font-size: .78rem; margin-top: .18rem; flex-shrink: 0; }
     .btn-plan {
         display: block; width: 100%; padding: .85rem;
@@ -1134,6 +1165,185 @@
     .btn-plan-primary:hover { background: var(--bg-hover); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(10,22,40,.2); }
     .btn-plan-ghost { border: 1.5px solid var(--border); color: var(--bg); background: transparent; }
     .btn-plan-ghost:hover { border-color: var(--bg); background: rgba(10,22,40,.04); }
+
+    .plan-card {
+        display: flex;
+        flex-direction: column;
+    }
+    .plan-features {
+        flex: 1;
+    }
+    .plan-extra-info {
+        margin: 0 0 1.25rem;
+        padding: .9rem 1rem;
+        border-radius: 12px;
+        background: rgba(10,22,40,.045);
+        border: 1px solid rgba(10,22,40,.08);
+        color: var(--text);
+        font-size: .82rem;
+        line-height: 1.55;
+    }
+    .plan-extra-info strong {
+        color: var(--bg);
+    }
+
+    .plan-summary {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .45rem;
+        margin-bottom: 1rem;
+    }
+    .plan-summary-item {
+        display: inline-flex;
+        align-items: center;
+        gap: .4rem;
+        padding: .42rem .62rem;
+        border-radius: 999px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        color: var(--bg);
+        font-size: .72rem;
+        font-weight: 700;
+    }
+    .plan-summary-item i {
+        color: var(--cyan);
+        font-size: .7rem;
+    }
+    .plan-details {
+        margin-bottom: 1rem;
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
+    }
+    .plan-details summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: .8rem 0;
+        color: var(--bg);
+        font-size: .8rem;
+        font-weight: 800;
+        cursor: pointer;
+        list-style: none;
+    }
+    .plan-details summary::-webkit-details-marker {
+        display: none;
+    }
+    .plan-details summary::after {
+        content: '+';
+        font-size: 1rem;
+        color: var(--muted);
+        transition: transform .2s;
+    }
+    .plan-details[open] summary::after {
+        transform: rotate(45deg);
+    }
+    .plan-details .plan-features {
+        padding-bottom: .9rem;
+        margin-bottom: 0;
+    }
+    .plan-card .btn-plan {
+        margin-top: auto;
+    }
+    .plan-price-custom .amount {
+        font-size: 2rem;
+        color: var(--bg);
+    }
+    .pricing-footnote {
+        max-width: 860px;
+        margin: 1.4rem auto 0;
+        text-align: center;
+        color: var(--muted);
+        font-size: .82rem;
+        line-height: 1.65;
+    }
+    .pricing-addons {
+        margin-top: 4rem;
+    }
+    .pricing-addons-header {
+        max-width: 680px;
+        margin: 0 auto 2rem;
+        text-align: center;
+    }
+    .pricing-addons-eyebrow {
+        display: inline-block;
+        margin-bottom: .6rem;
+        color: var(--cyan);
+        font-size: .7rem;
+        font-weight: 800;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+    }
+    .pricing-addons-header h3 {
+        margin-bottom: .7rem;
+        font-family: 'Raleway', sans-serif;
+        color: var(--bg);
+        font-size: clamp(1.6rem, 3vw, 2.2rem);
+        font-weight: 900;
+    }
+    .pricing-addons-header p {
+        color: var(--muted);
+        font-size: .92rem;
+        line-height: 1.7;
+    }
+    .addons-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+    .addon-card {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.25rem;
+        border: 1.5px solid var(--border);
+        border-radius: 16px;
+        background: var(--surface);
+        transition: transform .25s, border-color .25s, box-shadow .25s;
+    }
+    .addon-card:hover {
+        transform: translateY(-3px);
+        border-color: var(--bg);
+        box-shadow: var(--shadow);
+    }
+    .addon-icon {
+        width: 46px;
+        height: 46px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 13px;
+        background: var(--bg);
+        color: #fff;
+        font-size: 1rem;
+    }
+    .addon-content h4 {
+        margin-bottom: .25rem;
+        font-family: 'Raleway', sans-serif;
+        color: var(--bg);
+        font-size: .95rem;
+        font-weight: 800;
+    }
+    .addon-content p {
+        color: var(--muted);
+        font-size: .8rem;
+        line-height: 1.55;
+    }
+    .addon-price {
+        min-width: 105px;
+        text-align: right;
+    }
+    .addon-price span {
+        display: block;
+        margin-bottom: .15rem;
+        color: var(--muted);
+        font-size: .68rem;
+    }
+    .addon-price strong {
+        color: var(--bg);
+        font-size: .88rem;
+    }
 
     /* ══ CTA FINAL ══ */
     .cta-section {
@@ -1268,9 +1478,9 @@
         .stats-grid { grid-template-columns: repeat(2, 1fr); }
         .footer-grid { grid-template-columns: 1fr 1fr; }
         .hero-carousel-caption { left: 14px; right: 14px; bottom: 14px; }
-        .pricing-grid { grid-template-columns: repeat(2, 1fr); }
         .pricing-highlight { grid-template-columns: auto 1fr; }
         .pricing-highlight-link { grid-column: 2; justify-self: start; }
+        .addons-grid { grid-template-columns: 1fr; }
     }
     @media (max-width: 768px) {
         .nav-links, .nav-actions { display: none; }
@@ -1296,6 +1506,9 @@
         .pricing-grid { grid-template-columns: 1fr; }
         .pricing-highlight { grid-template-columns: 1fr; }
         .pricing-highlight-link { grid-column: auto; justify-self: stretch; width: 100%; }
+        .addon-card { grid-template-columns: auto 1fr; }
+        .plan-features { grid-template-columns: 1fr; }
+        .addon-price { grid-column: 2; text-align: left; }
     }
     @media (max-width: 480px) {
         .hero-ctas { flex-direction: column; width: 100%; }
@@ -1809,106 +2022,189 @@
     <div class="container">
         <div class="section-header" style="text-align:center">
             <div class="section-tag reveal" style="justify-content:center">Planos</div>
-            <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Investimento justo para cada tamanho de locadora</h2>
-            <p class="section-sub reveal delay-2" style="margin:0 auto">Além do sistema administrativo, sua locadora também ganha um site de reservas para vender online e facilitar o aluguel dos veículos.</p>
+            <h2 class="section-title reveal delay-1" style="margin:0 auto .9rem">Escolha pelos recursos. Cresça conforme sua frota.</h2>
+            <p class="section-sub reveal delay-2" style="margin:0 auto">
+                Todos os planos incluem veículos ativos. Quando sua frota crescer, você adiciona somente os veículos necessários, sem precisar trocar de plano.
+            </p>
         </div>
+
         <div class="pricing-highlight reveal delay-1">
             <div class="pricing-highlight-icon">
-                <i class="fas fa-globe"></i>
+                <i class="fas fa-car-side"></i>
             </div>
             <div>
-                <h3>Seu sistema também vira vitrine de vendas</h3>
-                <p>Com o DeCars, a locadora não fica só no controle interno. Você pode oferecer um site público para clientes pesquisarem veículos, simularem aluguel e fazerem reservas pela internet.</p>
+                <h3>Cobrança baseada em veículos ativos</h3>
+                <p>
+                    Veículos inativos permanecem cadastrados no histórico e não entram na cobrança mensal.
+                    Assim, o valor acompanha a operação real da locadora.
+                </p>
             </div>
-            <a href="#funcionalidades" class="pricing-highlight-link">Ver como funciona</a>
+            <a href="#perguntas" class="pricing-highlight-link">Entender a cobrança</a>
         </div>
+
         <div class="pricing-toggle reveal delay-1">
             <span id="lblMonthly" class="active">Mensal</span>
             <button class="toggle-switch" id="pricingToggle" aria-label="Alternar período"></button>
             <span id="lblAnnual">Anual <span class="badge-save">-20%</span></span>
         </div>
+
         <div class="pricing-grid">
+
             <div class="plan-card reveal delay-1">
-                <div class="plan-name">Gestão</div>
+                <div class="plan-name">Starter</div>
+
                 <div class="plan-price">
                     <span class="currency">R$</span>
-                    <span class="amount" data-monthly="247" data-annual="197">247</span>
+                    <span class="amount" data-monthly="149" data-annual="119">149</span>
                     <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$600/ano</span>
+                    <span class="annual-note" style="display:none">
+                        Cobrado anualmente: R$ 1.428/ano
+                    </span>
                 </div>
-                <p class="plan-desc">Para quem quer começar com o sistema administrativo e deixar o site de vendas para uma próxima etapa.</p>
+
+                <p class="plan-desc">
+                    Para locadoras que querem organizar a operação com os recursos essenciais.
+                </p>
+
+                <div class="plan-summary">
+                    <span class="plan-summary-item"><i class="fas fa-car"></i> 10 veículos ativos</span>
+                    <span class="plan-summary-item"><i class="fas fa-users"></i> Usuários ilimitados</span>
+                    <span class="plan-summary-item"><i class="fas fa-cloud"></i> 5 GB</span>
+                </div>
+
                 <ul class="plan-features">
                     <li class="plan-feature"><i class="fas fa-check"></i> Gestão da frota</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Reservas e contratos</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Check-in digital</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Reservas</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Contratos digitais</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Check-in e check-out</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Vistorias com fotos</li>
                     <li class="plan-feature"><i class="fas fa-check"></i> Financeiro básico</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Sem site de vendas</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
                 </ul>
-                <a href="{{ url('/admin/comecar?plano=gestao&sem_site=1') }}" class="btn-plan btn-plan-ghost">Começar sem site</a>
-            </div>
-            <div class="plan-card reveal delay-1">
-                <div class="plan-name">Essencial</div>
-                <div class="plan-price">
-                    <span class="currency">R$</span>
-                    <span class="amount" data-monthly="397" data-annual="317">397</span>
-                    <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$960/ano</span>
+
+                <details class="plan-details">
+                    <summary>Ver todos os recursos</summary>
+                    <ul class="plan-features">
+                        <li class="plan-feature"><i class="fas fa-check"></i> Clientes e motoristas</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> Controle de avarias</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> Dashboard operacional</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> Suporte via WhatsApp</li>
+                    </ul>
+                </details>
+
+                <div class="plan-extra-info">
+                    <strong>Veículo adicional:</strong> R$ 3,00 por veículo ativo/mês
                 </div>
-                <p class="plan-desc">Para locadoras que querem começar com presença digital profissional e reservas online no mesmo pacote.</p>
-                <ul class="plan-features">
-                    <li class="plan-feature"><i class="fas fa-check"></i> Até 20 veículos</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Reservas e contratos</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Check-in digital</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Financeiro básico</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Site de vendas com 1 modelo</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Personalização de cores e textos</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Suporte via chat</li>
-                </ul>
-                <a href="{{ url('/admin/comecar?plano=essencial') }}" class="btn-plan btn-plan-ghost">Começar agora</a>
+
+                <a href="{{ url('/admin/comecar?plano=starter') }}" class="btn-plan btn-plan-ghost">
+                    Começar agora
+                </a>
             </div>
+
             <div class="plan-card popular reveal delay-2">
                 <div class="plan-badge">Mais escolhido</div>
-                <div class="plan-name">Crescimento</div>
+                <div class="plan-name">Professional</div>
+
                 <div class="plan-price">
                     <span class="currency">R$</span>
-                    <span class="amount" data-monthly="697" data-annual="557">697</span>
+                    <span class="amount" data-monthly="249" data-annual="199">249</span>
                     <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$1.680/ano</span>
+                    <span class="annual-note" style="display:none">
+                        Cobrado anualmente: R$ 2.388/ano
+                    </span>
                 </div>
-                <p class="plan-desc">Para locadoras que querem vender mais, acelerar reservas e ter um site com cara de marca forte.</p>
+
+                <p class="plan-desc">
+                    Para locadoras que precisam de gestão completa, manutenção e vendas online.
+                </p>
+
+                <div class="plan-summary">
+                    <span class="plan-summary-item"><i class="fas fa-car"></i> 10 veículos ativos</span>
+                    <span class="plan-summary-item"><i class="fas fa-users"></i> Usuários ilimitados</span>
+                    <span class="plan-summary-item"><i class="fas fa-cloud"></i> 10 GB</span>
+                    <span class="plan-summary-item"><i class="fas fa-building"></i> Até 3 filiais</span>
+                </div>
+
                 <ul class="plan-features">
-                    <li class="plan-feature"><i class="fas fa-check"></i> Até 80 veículos</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Tudo do Essencial</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Módulo de multas</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> NFS-e automática</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Portal de reservas para clientes</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Até 3 modelos de site</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Customização completa de branding</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Multi-estação / filiais</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Relatórios avançados</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Suporte prioritário</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Tudo do Starter</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Financeiro completo</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Multas e sinistros</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Ordens de serviço</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Manutenção preventiva</li>
+                    <li class="plan-feature"><i class="fas fa-check"></i> Site de reservas</li>
                 </ul>
-                <a href="{{ url('/admin/comecar?plano=crescimento') }}" class="btn-plan btn-plan-primary">Começar agora</a>
+
+                <details class="plan-details">
+                    <summary>Ver todos os recursos</summary>
+                    <ul class="plan-features">
+                        <li class="plan-feature"><i class="fas fa-check"></i> Contas a pagar e receber</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> Fluxo de caixa</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> Portal do cliente</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> Relatórios avançados</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> NFS-e</li>
+                        <li class="plan-feature"><i class="fas fa-check"></i> Suporte prioritário</li>
+                    </ul>
+                </details>
+
+                <div class="plan-extra-info">
+                    <strong>Veículo adicional:</strong> R$ 4,00 por veículo ativo/mês
+                </div>
+
+                <a href="{{ url('/admin/comecar?plano=professional') }}" class="btn-plan btn-plan-primary">
+                    Começar agora
+                </a>
             </div>
-            <div class="plan-card reveal delay-3">
-                <div class="plan-name">Escala</div>
-                <div class="plan-price">
-                    <span class="amount" data-monthly="1297" data-annual="1037" style="font-size:2rem;color:var(--muted)">1297</span>
-                    <span class="period">/mês</span>
-                    <span class="annual-note" style="display:none">Cobrado anualmente, economia de R$3.120/ano</span>
+
+        </div>
+
+        <p class="pricing-footnote reveal">
+            A cobrança considera apenas veículos ativos. Veículos vendidos, desativados ou mantidos somente no histórico não geram valor adicional.
+        </p>
+
+        <div class="pricing-addons">
+            <div class="pricing-addons-header reveal">
+                <span class="pricing-addons-eyebrow">Personalize seu plano</span>
+                <h3>Recursos adicionais</h3>
+                <p>
+                    Adicione somente os recursos necessários conforme a operação da sua locadora.
+                </p>
+            </div>
+
+            <div class="addons-grid">
+                {{-- <div class="addon-card reveal delay-1">
+                    <div class="addon-icon"><i class="fas fa-car"></i></div>
+                    <div class="addon-content">
+                        <h4>Veículo adicional no Professional</h4>
+                        <p>Cobrado por veículo ativo acima da franquia incluída no plano.</p>
+                    </div>
+                    <div class="addon-price">
+                        <span>Por veículo</span>
+                        <strong>R$ 4/mês</strong>
+                    </div>
+                </div> --}}
+
+                <div class="addon-card reveal delay-2">
+                    <div class="addon-icon"><i class="fas fa-cloud"></i></div>
+                    <div class="addon-content">
+                        <h4>Armazenamento adicional</h4>
+                        <p>Adicione mais espaço para fotos, documentos, contratos e vistorias.</p>
+                    </div>
+                    <div class="addon-price">
+                        <span>5 GB extras</span>
+                        <strong>R$ 5/mês</strong>
+                    </div>
                 </div>
-                <p class="plan-desc">Para operações que precisam de uma vitrine white-label, integrações e atendimento dedicado.</p>
-                <ul class="plan-features">
-                    <li class="plan-feature"><i class="fas fa-check"></i> Frota ilimitada</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Tudo do Crescimento</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> API de integração</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Site white-label de reservas</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Customizações</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> Gerente de conta dedicado</li>
-                    <li class="plan-feature"><i class="fas fa-check"></i> SLA 99,9% garantido</li>
-                </ul>
-                <a href="#" class="btn-plan btn-plan-ghost">Falar com consultor</a>
+
+                <div class="addon-card reveal delay-3">
+                    <div class="addon-icon"><i class="fas fa-building"></i></div>
+                    <div class="addon-content">
+                        <h4>Filial adicional</h4>
+                        <p>Adicione novas estações ou unidades na mesma operação.</p>
+                    </div>
+                    <div class="addon-price">
+                        <span>Filial adicional</span>
+                        <strong>R$ 29/mês</strong>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -1932,24 +2228,24 @@
             </article>
             <article class="faq-card reveal delay-2">
                 <div class="faq-q">
-                    <i class="fas fa-store"></i>
-                    <h3>Posso começar sem o site de vendas?</h3>
+                    <i class="fas fa-car"></i>
+                    <h3>Como funciona a cobrança por veículos?</h3>
                 </div>
-                <p>Sim. O plano Gestão é ideal para quem quer começar apenas com os recursos internos da locadora, sem incluir o portal de reservas.</p>
+                <p>Cada plano inclui até 10 veículos ativos. Quando a frota crescer, você paga somente pelos veículos ativos adicionais, sem precisar trocar de plano.</p>
             </article>
             <article class="faq-card reveal delay-3">
                 <div class="faq-q">
-                    <i class="fas fa-palette"></i>
-                    <h3>O site pode ser personalizado com a marca da empresa?</h3>
+                    <i class="fas fa-power-off"></i>
+                    <h3>Veículos inativos também são cobrados?</h3>
                 </div>
-                <p>Sim. É possível ajustar cores, textos e imagens para deixar o site com a identidade visual da locadora e mais alinhado à marca.</p>
+                <p>Não. Veículos vendidos, desativados ou mantidos apenas para consulta no histórico não entram na cobrança de veículos ativos.</p>
             </article>
             <article class="faq-card reveal delay-4">
                 <div class="faq-q">
-                    <i class="fas fa-chart-line"></i>
-                    <h3>Esse software serve para locadoras pequenas e maiores?</h3>
+                    <i class="fas fa-layer-group"></i>
+                    <h3>Posso contratar o Professional mesmo tendo poucos veículos?</h3>
                 </div>
-                <p>Serve para diferentes portes, desde operações iniciais até locadoras que precisam de mais escala, controle e recursos de crescimento.</p>
+                <p>Sim. O plano é escolhido pelos módulos e recursos necessários. A quantidade de veículos é calculada separadamente conforme a frota ativa.</p>
             </article>
         </div>
     </div>
