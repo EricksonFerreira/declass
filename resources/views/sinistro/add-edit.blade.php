@@ -77,7 +77,13 @@
                                                value="{{ old('reserva_id', $sinistro->reserva_id ?? $reserva?->id ?? '') }}"
                                                placeholder="ID da reserva">
                                         <div class="input-group-append">
-                                            <span class="input-group-text" id="reserva_lookup_icon" title="Buscando...">
+                                            <button type="button" class="btn btn-outline-secondary" id="btnBuscarReserva" title="Buscar reserva">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger d-none" id="btnLimparReserva" title="Limpar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                            <span class="input-group-text" id="reserva_lookup_icon" title="">
                                                 <i class="fas fa-link text-muted"></i>
                                             </span>
                                         </div>
@@ -635,6 +641,12 @@
         const infoEl    = document.getElementById('reserva_lookup_info');
         const iconEl    = document.getElementById('reserva_lookup_icon');
         const reservaEl = document.getElementById('reserva_id_input');
+        const btnLimpar = document.getElementById('btnLimparReserva');
+        const reservaManual = reservaEl?.value?.trim();
+
+        if (btnLimpar) {
+            btnLimpar.classList.toggle('d-none', !reservaManual);
+        }
 
         if (!veiculoId || !dataHora) return;
 
@@ -650,6 +662,7 @@
                     if (data.reserva) {
                         const r = data.reserva;
                         if (reservaEl && !reservaEl.value) reservaEl.value = r.id;
+                        if (btnLimpar) btnLimpar.classList.remove('d-none');
                         if (infoEl) infoEl.innerHTML =
                             `<span class="text-success"><i class="fas fa-check-circle mr-1"></i>Reserva <strong>#${r.id}</strong> — ${r.cliente} (${r.data_inicio} → ${r.data_fim})</span>`;
                     } else {
@@ -667,6 +680,26 @@
     document.addEventListener('DOMContentLoaded', function () {
         const veiculoHidden = document.getElementById('veiculo_id_input');
         const dataHoraInput = document.querySelector('[name=data_hora_ocorrido]');
+        const reservaInput = document.getElementById('reserva_id_input');
+        const btnBuscarReserva = document.getElementById('btnBuscarReserva');
+        const btnLimparReserva = document.getElementById('btnLimparReserva');
+
+        btnBuscarReserva?.addEventListener('click', function () {
+            snBuscarReserva();
+        });
+
+        btnLimparReserva?.addEventListener('click', function () {
+            if (reservaInput) reservaInput.value = '';
+            if (btnLimparReserva) btnLimparReserva.classList.add('d-none');
+            const infoEl = document.getElementById('reserva_lookup_info');
+            const iconEl = document.getElementById('reserva_lookup_icon');
+            if (infoEl) infoEl.innerHTML = '';
+            if (iconEl) iconEl.innerHTML = '<i class="fas fa-link text-muted"></i>';
+        });
+
+        reservaInput?.addEventListener('input', function () {
+            btnLimparReserva?.classList.toggle('d-none', !this.value.trim());
+        });
 
         // Polling para detectar mudança no hidden do veículo (o modal altera via JS)
         if (veiculoHidden) {

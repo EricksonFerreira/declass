@@ -174,16 +174,7 @@ class MultaController extends BaseController
                 return response()->json(['reserva' => null]);
             }
 
-            $reserva = Reserva::query()
-                ->with(['usuario', 'veiculo'])
-                ->where(function ($query) use ($veiculo) {
-                    $query->where('veiculo_id', (int) $veiculo->id)
-                        ->orWhere('modelo_id', (int) $veiculo->modelo_id);
-                })
-                ->where('data_inicio', '<=', $dt->toDateTimeString())
-                ->where('data_fim', '>=', $dt->toDateTimeString())
-                ->orderByDesc('data_inicio')
-                ->first();
+            $reserva = $this->buscarReservaContratualPorVeiculoData((int) $veiculo->id, $dt);
         }
 
         if (!$reserva) {
@@ -211,6 +202,10 @@ class MultaController extends BaseController
         $this->authorize('multa.create');
 
         $dados = $request->except(['anexo_comprovante', 'anexo_pdf']);
+        $erroReserva = $this->validarReservaPeriodoVeiculo($dados);
+        if ($erroReserva) {
+            return back()->withInput()->withErrors(['reserva_id' => $erroReserva]);
+        }
 
         $multa = $this->multaService->criar($dados);
 
@@ -294,6 +289,10 @@ class MultaController extends BaseController
         $this->authorize('multa.edit');
 
         $dados = $request->except(['anexo_comprovante', 'anexo_pdf']);
+        $erroReserva = $this->validarReservaPeriodoVeiculo($dados);
+        if ($erroReserva) {
+            return back()->withInput()->withErrors(['reserva_id' => $erroReserva]);
+        }
 
         $multa = $this->multaService->atualizar($id, $dados);
         if (!$multa) {
@@ -490,6 +489,62 @@ class MultaController extends BaseController
             $chave,
             'multa_registrada'
         ));
+    }
+
+    private function buscarReservaContratualPorVeiculoData(int $veiculoId, Carbon $dataHora): ?Reserva
+    {
+        $dataHoraSql = $dataHora->format('Y-m-d H:i:s');
+
+        $reservaId = DB::table('contrato_checkin as ci')
+            ->join('reservas as r', 'r.id', '=', 'ci.reserva_id')
+            ->leftJoin('contrato_checkout as co', 'co.reserva_id', '=', 'r.id')
+            ->where('ci.veiculo_id', $veiculoId)
+            ->whereRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) <= ?", [$dataHoraSql])
+            ->where(function ($query) use ($dataHoraSql) {
+                $query
+                    ->whereNull('co.id')
+                    ->orWhereNull('co.data_devolucao')
+                    ->orWhereRaw("TIMESTAMP(co.data_devolucao, COALESCE(co.hora_devolucao, '23:59:59')) >= ?", [$dataHoraSql]);
+            })
+            ->orderByRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) DESC")
+            ->value('r.id');
+
+        if (! $reservaId) {
+            return null;
+        }
+
+        return Reserva::query()
+            ->with(['usuario', 'veiculo', 'codigoReserva'])
+            ->find((int) $reservaId);
+    }
+
+    private function validarReservaPeriodoVeiculo(array $dados): ?string
+    {
+        $reservaId = (int) ($dados['reserva_id'] ?? 0);
+        $veiculoId = (int) ($dados['veiculo_id'] ?? 0);
+        $dataHora = $dados['data_hora_infracao'] ?? null;
+
+        if ($reservaId <= 0 || $veiculoId <= 0 || empty($dataHora)) {
+            return null;
+        }
+
+        try {
+            $reservaDoPeriodo = $this->buscarReservaContratualPorVeiculoData($veiculoId, Carbon::parse($dataHora));
+        } catch (\Throwable) {
+            return 'Nao foi possivel validar a reserva no periodo informado.';
+        }
+
+        if (! $reservaDoPeriodo) {
+            return 'O veiculo informado nao estava em nenhuma reserva nesse periodo.';
+        }
+
+        if ((int) $reservaDoPeriodo->id !== $reservaId) {
+            $codigo = $reservaDoPeriodo->codigoReserva?->codigo ?? ('#'.$reservaDoPeriodo->id);
+
+            return 'No periodo informado, este veiculo estava vinculado a reserva '.$codigo.'.';
+        }
+
+        return null;
     }
 
     public function destroy(int $id)

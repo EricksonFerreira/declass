@@ -8,21 +8,40 @@ class DeleteButton extends Component
 {
     public $action;
 
-    /**
-     * Create a new component instance.
-     *
-     * @return void
-     */
-    public function __construct($action)
-    {
+    public $icone;
+
+    public $titulo;
+
+    public $btnClass;
+
+    public $tituloMensagem;
+
+    public $mensagem;
+
+    public $textoConfirmacao;
+
+    public $corConfirmacao;
+
+    public function __construct(
+        $action,
+        $icone = null,
+        $titulo = null,
+        $btnClass = null,
+        $tituloMensagem = null,
+        $mensagem = null,
+        $textoConfirmacao = null,
+        $corConfirmacao = null
+    ) {
         $this->action = $action;
+        $this->icone = $icone;
+        $this->titulo = $titulo;
+        $this->btnClass = $btnClass;
+        $this->tituloMensagem = $tituloMensagem;
+        $this->mensagem = $mensagem;
+        $this->textoConfirmacao = $textoConfirmacao;
+        $this->corConfirmacao = $corConfirmacao;
     }
 
-    /**
-     * Get the view / contents that represent the component.
-     *
-     * @return \Illuminate\View\View|string
-     */
     public function render()
     {
         return view('components.delete-button');

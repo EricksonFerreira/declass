@@ -85,6 +85,12 @@
                                                value="{{ old('reserva_id', $multa->reserva_id ?? $reserva?->id ?? '') }}"
                                                placeholder="ID (auto ou manual)">
                                         <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-secondary" id="btnBuscarReserva" title="Buscar reserva">
+                                                <i class="fas fa-search"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-danger d-none" id="btnLimparReserva" title="Limpar">
+                                                <i class="fas fa-times"></i>
+                                            </button>
                                             <span class="input-group-text px-2" id="multa_reserva_icon" title="">
                                                 <i class="fas fa-link text-muted"></i>
                                             </span>
@@ -659,7 +665,26 @@
         multaBuscarReserva('force');
     });
 
+    document.getElementById('btnBuscarReserva')?.addEventListener('click', function () {
+        multaBuscarReserva('reservation');
+    });
+
+    document.getElementById('btnLimparReserva')?.addEventListener('click', function () {
+        const reservaEl = document.getElementById('multa_reserva_id_input');
+        const veiculoHidden = document.getElementById('veiculo_id_input');
+        const veiculoDisplay = document.getElementById('veiculo_display');
+        const placaInput = document.querySelector('[name=placa_momento]');
+        if (reservaEl) reservaEl.value = '';
+        if (veiculoHidden) veiculoHidden.value = '';
+        if (veiculoDisplay) veiculoDisplay.value = '';
+        if (placaInput) placaInput.value = '';
+        multaResetReservaInfo('');
+        multaSetAutoStatus('Reserva limpa. Selecione veículo e data/hora ou informe um novo ID.', 'muted');
+        document.getElementById('btnLimparReserva')?.classList.add('d-none');
+    });
+
     document.getElementById('multa_reserva_id_input')?.addEventListener('input', function () {
+        document.getElementById('btnLimparReserva')?.classList.toggle('d-none', !this.value.trim());
         clearTimeout(multaReservaTimer);
         multaReservaTimer = setTimeout(() => multaBuscarReserva('reservation'), 300);
     });
@@ -689,6 +714,8 @@
         if (veiculoHidden?.value && !document.getElementById('multa_reserva_id_input')?.value) {
             multaBuscarReserva('auto');
         }
+
+        document.getElementById('btnLimparReserva')?.classList.toggle('d-none', !document.getElementById('multa_reserva_id_input')?.value?.trim());
     })();
 
     // Preenche valor_final automaticamente

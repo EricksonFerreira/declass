@@ -91,6 +91,10 @@
         ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
             && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
         ->sum('valor');
+    $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
+    if ($pagamentoEfetuado && $totalPagoAprovado < $valorTotal) {
+        $totalPagoAprovado = $valorTotal;
+    }
     $saldoPendenteAssinatura = max(0, $valorTotal - $totalPagoAprovado);
     $pagamentoEmDiaAssinatura = $saldoPendenteAssinatura <= 0.009;
 
@@ -101,7 +105,6 @@
         }
     }
 
-    $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
     $totalMultas = $reserva->multas?->count() ?? 0;
     $sinistros = $reserva->sinistros ?? collect();
     $totalSinistros = $sinistros->count();
@@ -109,6 +112,7 @@
     $danosPendentes = $danosReserva->whereNull('correcao_data');
     $totalCobrancasAvaria = $reserva->avariaCobrancas?->count() ?? 0;
     $calcao = $reserva->calcao ?? null;
+    $codigoReservaExibicao = $reserva->codigoReserva?->codigo ?? ('#' . $reserva->id);
 @endphp
 
 <div class="rs-page">
@@ -122,7 +126,7 @@
             <div class="rs-hero__left">
                 <div class="rs-hero__eyebrow">
                     <i class="fas fa-ticket-alt"></i>
-                    <span style="font-size:1.8rem;font-weight:900;letter-spacing:.04em;color:#fff;">#{{ $reserva->id }}</span>
+                    <span style="font-size:1.8rem;font-weight:900;letter-spacing:.04em;color:#fff;">{{ $codigoReservaExibicao }}</span>
                 </div>
                 <h1 class="rs-hero__title">{{ $titulo }}</h1>
                 <div class="rs-hero__meta">

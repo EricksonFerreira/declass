@@ -8,8 +8,17 @@ use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Veiculo\StoreVeiculoRequest;
 use App\Http\Requests\Veiculo\UpdateVeiculoRequest;
+use App\Models\GrupoFrota;
+use App\Models\Marca;
+use App\Models\Modelo;
+use App\Models\Movimentacao;
+use App\Models\Reserva;
+use App\Models\StatusVeiculo;
+use App\Models\TipoFrota;
 use App\Services\BreadcrumbService;
+use App\Services\DisponibilidadeVeiculoService;
 use App\Services\EstacaoService;
+use App\Services\FipeCatalogService;
 use App\Services\GrupoFrotaService;
 use App\Services\MarcaService;
 use App\Services\ModeloService;
@@ -17,44 +26,44 @@ use App\Services\SegmentoService;
 use App\Services\StatusVeiculoService;
 use App\Services\TipoFrotaService;
 use App\Services\VeiculoService;
-use App\Services\DisponibilidadeVeiculoService;
-use App\Services\FipeCatalogService;
 use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use App\Traits\AtualizaFiltrosTrait;
+use App\Traits\FiltroTrait;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Traits\FiltroTrait;
-use App\Models\TipoFrota;
-use App\Models\GrupoFrota;
-use App\Models\Marca;
-use App\Models\Modelo;
-use App\Models\Movimentacao;
-use App\Models\Reserva;
-use App\Models\StatusVeiculo;
-use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class VeiculoController extends BaseController implements FiltroInterface, ResourceInterface
 {
-    use FiltroTrait;
     use AtualizaFiltrosTrait;
-    protected $veiculoService;
-    protected $breadcrumbService;
-    protected $tipoFrotaService;
-    protected $grupoFrotaService;
-    protected $marcaService;
-    protected $modeloService;
-    protected $segmentoService;
-    protected $statusVeiculoService;
-    protected $estacaoService;
-    protected $disponibilidadeVeiculoService;
-    protected $fipeCatalogService;
+    use FiltroTrait;
 
+    protected $veiculoService;
+
+    protected $breadcrumbService;
+
+    protected $tipoFrotaService;
+
+    protected $grupoFrotaService;
+
+    protected $marcaService;
+
+    protected $modeloService;
+
+    protected $segmentoService;
+
+    protected $statusVeiculoService;
+
+    protected $estacaoService;
+
+    protected $disponibilidadeVeiculoService;
+
+    protected $fipeCatalogService;
 
     public function __construct(
         VeiculoService $veiculoService,
@@ -69,7 +78,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         DisponibilidadeVeiculoService $disponibilidadeVeiculoService,
         FipeCatalogService $fipeCatalogService
     ) {
-        $this->titulo = "Veiculos";
+        $this->titulo = 'Veiculos';
         $this->nomeFiltro = 'veiculo';
         $this->veiculoService = $veiculoService;
         $this->breadcrumbService = $breadcrumbService;
@@ -89,8 +98,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->configurarSessao();
 
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
-        $perPage  = session()->get("$this->nomeFiltro.perPage", 10);
-        $orderBy  = session()->get("$this->nomeFiltro.orderBy", 'id');
+        $perPage = session()->get("$this->nomeFiltro.perPage", 10);
+        $orderBy = session()->get("$this->nomeFiltro.orderBy", 'id');
         $orderDir = session()->get("$this->nomeFiltro.orderDir", 'asc');
 
         $allowedOrderBy = [
@@ -103,7 +112,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'created_at',
         ];
 
-        if (!in_array($orderBy, $allowedOrderBy, true)) {
+        if (! in_array($orderBy, $allowedOrderBy, true)) {
             $orderBy = 'id';
         }
 
@@ -174,7 +183,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Veiculos', 'veiculo.index', 'Criar');
 
@@ -195,6 +204,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             ->value('id');
 
         [$metodo, $rota] = $this->getFormMethodAndRoute();
+
         return view('veiculo.add-edit', compact(
             'tipoFrotas',
             'grupoFrotas',
@@ -227,8 +237,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $modeloExists = Rule::exists('modelos', 'id');
 
         if ($empresaId !== null) {
-            $marcaExists = $marcaExists->where(fn($query) => $query->where('empresa_id', (int) $empresaId));
-            $modeloExists = $modeloExists->where(fn($query) => $query->where('empresa_id', (int) $empresaId));
+            $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
         }
 
         $dados = $request->validate([
@@ -239,7 +249,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $marca = Marca::query()->find($dados['marca_id']);
         $modelo = Modelo::query()->find($dados['modelo_id']);
 
-        if (!$marca || !$modelo) {
+        if (! $marca || ! $modelo) {
             return response()->json(['message' => 'Marca ou modelo nao encontrado no cadastro local.'], 422);
         }
 
@@ -264,14 +274,14 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     || str_contains($nomeSistema, $nomeApi);
             });
 
-            if (!$marcaApi) {
+            if (! $marcaApi) {
                 return response()->json(['message' => 'Nao foi possivel localizar a marca na FIPE.'], 422);
             }
 
             $codigoMarcaApi = (string) ($marcaApi['code'] ?? $marcaApi['codigo'] ?? '');
             $modelosResponse = $this->fipeCatalogService->fetchJsonForVehicleType(
                 $vehicleType,
-                'brands/' . $codigoMarcaApi . '/models'
+                'brands/'.$codigoMarcaApi.'/models'
             );
 
             $modelosApi = collect($modelosResponse);
@@ -287,26 +297,26 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     || str_contains($nomeSistema, $nomeApi);
             });
 
-            if (!$modeloApi) {
+            if (! $modeloApi) {
                 return response()->json(['message' => 'Nao foi possivel localizar o modelo na FIPE.'], 422);
             }
 
             $codigoModeloApi = (string) ($modeloApi['code'] ?? $modeloApi['codigo'] ?? '');
             $anosResponse = $this->fipeCatalogService->fetchJsonForVehicleType(
                 $vehicleType,
-                'brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years'
+                'brands/'.$codigoMarcaApi.'/models/'.$codigoModeloApi.'/years'
             );
 
             $anoApi = collect($anosResponse)->first(function (array $item) use ($anoModelo) {
                 return Str::contains((string) ($item['name'] ?? $item['nome'] ?? ''), (string) $anoModelo);
             });
 
-            if (!$anoApi) {
+            if (! $anoApi) {
                 return response()->json(['message' => 'Nao foi possivel localizar o ano/modelo na FIPE.'], 422);
             }
             $detalhe = $this->fipeCatalogService->fetchJsonForVehicleType(
                 $vehicleType,
-                'brands/' . $codigoMarcaApi . '/models/' . $codigoModeloApi . '/years/' . $anoApi['code']
+                'brands/'.$codigoMarcaApi.'/models/'.$codigoModeloApi.'/years/'.$anoApi['code']
             );
 
             return response()->json([
@@ -377,7 +387,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             },
         ]);
 
-        if (!$veiculo) {
+        if (! $veiculo) {
             abort(404, 'Veiculo nao encontrado.');
         }
 
@@ -400,8 +410,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         ) {
             $reservaBloqueioHoras = (int) (
                 DB::table('empresas')
-                ->where('id', (int) $empresaId)
-                ->value('reserva_bloqueio_pos_reserva_horas') ?? 0
+                    ->where('id', (int) $empresaId)
+                    ->value('reserva_bloqueio_pos_reserva_horas') ?? 0
             );
 
             if ($reservaBloqueioHoras < 0) {
@@ -449,7 +459,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         foreach ($dispGrade as $cell) {
             $tipo = $cell['tipo'] ?? 'off';
 
-            if (!array_key_exists($tipo, $dispStats)) {
+            if (! array_key_exists($tipo, $dispStats)) {
                 $dispStats[$tipo] = 0;
             }
 
@@ -522,13 +532,13 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $dispEstacoes = $this->estacaoService->getAllAtivos('id', 'nome', 'nome', 'asc');
 
         // --- Financeiro ---
-        $finReceita      = (float) $veiculo->reservas->sum('valor_total_final');
-        $finCustoMultas  = (float) $veiculo->multas->where('destino_cobranca', 'empresa')->sum('valor_final');
+        $finReceita = (float) $veiculo->reservas->sum('valor_total_final');
+        $finCustoMultas = (float) $veiculo->multas->where('destino_cobranca', 'empresa')->sum('valor_final');
         $finCustoSinistros = (float) $veiculo->sinistros->sum('valor_custo_empresa');
         $finLucroLiquido = $finReceita - $finCustoMultas - $finCustoSinistros;
 
-        $finValorCompra  = (float) ($veiculo->valor_compra ?? 0);
-        $finValorFipe    = (float) ($veiculo->valor_fipe ?? 0);
+        $finValorCompra = (float) ($veiculo->valor_compra ?? 0);
+        $finValorFipe = (float) ($veiculo->valor_fipe ?? 0);
         $finValorAtualEstimado = $veiculo->valor_atual_estimado !== null ? (float) $veiculo->valor_atual_estimado : null;
         $finDepreciacaoAcumulada = $veiculo->valor_depreciacao_acumulada !== null ? (float) $veiculo->valor_depreciacao_acumulada : null;
         $finDiferencaFipeCompra = $veiculo->diferenca_fipe_compra !== null ? (float) $veiculo->diferenca_fipe_compra : null;
@@ -539,7 +549,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         // Payback: meses desde a compra e receita líquida média mensal
         $finPaybackMeses = null;
-        if ($finValorCompra > 0 && !empty($veiculo->data_compra)) {
+        if ($finValorCompra > 0 && ! empty($veiculo->data_compra)) {
             $mesesUso = (int) Carbon::parse($veiculo->data_compra)->diffInMonths(Carbon::now());
             if ($mesesUso > 0 && $finLucroLiquido > 0) {
                 $receitaMediaMensal = $finLucroLiquido / $mesesUso;
@@ -554,7 +564,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             new BreadCrumbItem($veiculo->nome ?? 'Detalhes'),
         ]);
 
-        $titulo = 'Veículo: ' . ($veiculo->nome ?? '#' . $veiculo->id);
+        $titulo = 'Veículo: '.($veiculo->nome ?? '#'.$veiculo->id);
 
         return view('veiculo.show', compact(
             'veiculo',
@@ -594,11 +604,10 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $veiculo = $this->veiculoService->getById($id);
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Veiculos', 'veiculo.index', "Editar: $veiculo->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($veiculo);
-
 
         $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
         $grupoFrotas = $this->grupoFrotaService->getAllAtivos();
@@ -635,21 +644,130 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     public function update(UpdateVeiculoRequest $request, $id)
     {
         $success = $this->veiculoService->update($id, $request->all());
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function destroy($id)
     {
-        $success = $this->veiculoService->delete($id);
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
-    }
+        $veiculo = $this->veiculoService->getById($id);
 
+        if (! $veiculo) {
+            return redirect()
+                ->route('veiculo.index')
+                ->with('error', 'Veículo não encontrado.');
+        }
+
+        $reservasBloqueadoras = Reserva::query()
+            ->where('veiculo_id', (int) $veiculo->id)
+            ->whereIn('status_reserva_id', [
+                StatusReservaEnum::Pendente->value,
+                StatusReservaEnum::Confirmada->value,
+                StatusReservaEnum::Checkin->value,
+                StatusReservaEnum::Checkout->value,
+            ])
+            ->where(function ($query) {
+                $query->whereNull('data_fim')
+                    ->orWhere('data_fim', '>=', now());
+            })
+            ->with('codigoReserva:id,reserva_id,codigo')
+            ->orderBy('data_inicio')
+            ->get();
+
+        if ($reservasBloqueadoras->isNotEmpty()) {
+            $codigos = $reservasBloqueadoras
+                ->map(fn ($reserva) => $reserva->codigoReserva?->codigo ?? ('#'.$reserva->id))
+                ->implode(', ');
+
+            return redirect()
+                ->route('veiculo.index')
+                ->with(
+                    'error',
+                    'O veículo não pode ser arquivado porque possui reservas futuras ou em andamento: '.$codigos.'. Troque o veículo ou finalize/cancele essas reservas primeiro.'
+                );
+        }
+
+        DB::transaction(function () use ($veiculo) {
+            $dadosAtualizacao = [];
+
+            if (SchemaCache::hasColumn('veiculos', 'ativo')) {
+                $dadosAtualizacao['ativo'] = 0;
+            }
+
+            if (SchemaCache::hasColumn('veiculos', 'arquivado_em')) {
+                $dadosAtualizacao['arquivado_em'] = now();
+            }
+
+            if (SchemaCache::hasColumn('veiculos', 'arquivado_por')) {
+                $dadosAtualizacao['arquivado_por'] = Auth::id();
+            }
+
+            if (SchemaCache::hasColumn('veiculos', 'situacao_cadastral')) {
+                $dadosAtualizacao['situacao_cadastral'] = 'arquivado';
+            }
+
+            if (SchemaCache::hasColumn('veiculos', 'status_veiculo_id')) {
+                $statusArquivadoId = StatusVeiculo::query()
+                    ->where(function ($query) {
+                        $query->whereRaw('LOWER(nome) = ?', ['arquivado'])
+                            ->orWhereRaw('LOWER(nome) = ?', ['inativo']);
+                    })
+                    ->value('id');
+
+                if ($statusArquivadoId) {
+                    $dadosAtualizacao['status_veiculo_id'] = $statusArquivadoId;
+                }
+            }
+
+            if (! empty($dadosAtualizacao)) {
+                DB::table('veiculos')
+                    ->where('id', (int) $veiculo->id)
+                    ->update($dadosAtualizacao);
+            }
+
+            if (SchemaCache::hasTable('movimentacoes')) {
+                $movimentacao = [
+                    'veiculo_id' => (int) $veiculo->id,
+                ];
+
+                if (SchemaCache::hasColumn('movimentacoes', 'nome')) {
+                    $movimentacao['nome'] = 'Arquivamento do veículo';
+                }
+
+                if (SchemaCache::hasColumn('movimentacoes', 'observacoes')) {
+                    $movimentacao['observacoes'] = 'Veículo arquivado e retirado da operação pelo usuário '.(Auth::user()?->nome ?? Auth::id() ?? 'não identificado').'.';
+                }
+
+                if (SchemaCache::hasColumn('movimentacoes', 'user_id')) {
+                    $movimentacao['user_id'] = Auth::id();
+                }
+
+                if (SchemaCache::hasColumn('movimentacoes', 'data_registro')) {
+                    $movimentacao['data_registro'] = now();
+                }
+
+                if (SchemaCache::hasColumn('movimentacoes', 'created_at')) {
+                    $movimentacao['created_at'] = now();
+                }
+
+                if (SchemaCache::hasColumn('movimentacoes', 'updated_at')) {
+                    $movimentacao['updated_at'] = now();
+                }
+
+                DB::table('movimentacoes')->insert($movimentacao);
+            }
+        });
+
+        return redirect()
+            ->route('veiculo.index')
+            ->with('success', 'Veículo arquivado com sucesso. Todo o histórico foi preservado.');
+    }
 
     public function gruposPorTipo(Request $request)
     {
         $tipoId = (int) $request->input('tipo_frota_id');
         $grupos = \App\Models\GrupoFrota::where('ativo', 'S')
-            ->when($tipoId, fn($q) => $q->where('tipo_frota_id', $tipoId))
+            ->when($tipoId, fn ($q) => $q->where('tipo_frota_id', $tipoId))
             ->orderBy('nome')
             ->get(['id', 'nome']);
 
@@ -677,7 +795,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         }
 
         if ($queryTexto !== '') {
-            $query->where('grupos_frota.nome', 'like', '%' . $queryTexto . '%');
+            $query->where('grupos_frota.nome', 'like', '%'.$queryTexto.'%');
         }
 
         $items = $query
@@ -686,11 +804,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             ->get()
             ->map(function ($grupo) {
                 $partes = [];
-                if (!empty($grupo->tipo_frota_nome)) {
-                    $partes[] = 'Tipo: ' . $grupo->tipo_frota_nome;
+                if (! empty($grupo->tipo_frota_nome)) {
+                    $partes[] = 'Tipo: '.$grupo->tipo_frota_nome;
                 }
                 if ($grupo->valor_diario !== null) {
-                    $partes[] = 'Diária: ' . number_format((float) $grupo->valor_diario, 2, ',', '.');
+                    $partes[] = 'Diária: '.number_format((float) $grupo->valor_diario, 2, ',', '.');
                 }
 
                 return [
@@ -725,9 +843,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         if ($queryTexto !== '') {
             $query->where(function ($sub) use ($queryTexto) {
-                $sub->where('marcas.nome', 'like', '%' . $queryTexto . '%')
-                    ->orWhere('marcas.nome_fipe', 'like', '%' . $queryTexto . '%')
-                    ->orWhere('marcas.codigo_fipe', 'like', '%' . $queryTexto . '%');
+                $sub->where('marcas.nome', 'like', '%'.$queryTexto.'%')
+                    ->orWhere('marcas.nome_fipe', 'like', '%'.$queryTexto.'%')
+                    ->orWhere('marcas.codigo_fipe', 'like', '%'.$queryTexto.'%');
             });
         }
 
@@ -737,11 +855,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             ->get()
             ->map(function ($marca) {
                 $partes = [];
-                if (!empty($marca->codigo_fipe)) {
-                    $partes[] = 'Código FIPE: ' . $marca->codigo_fipe;
+                if (! empty($marca->codigo_fipe)) {
+                    $partes[] = 'Código FIPE: '.$marca->codigo_fipe;
                 }
-                if (!empty($marca->nome_fipe) && $marca->nome_fipe !== $marca->nome) {
-                    $partes[] = 'FIPE: ' . $marca->nome_fipe;
+                if (! empty($marca->nome_fipe) && $marca->nome_fipe !== $marca->nome) {
+                    $partes[] = 'FIPE: '.$marca->nome_fipe;
                 }
 
                 return [
@@ -789,11 +907,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         if ($queryTexto !== '') {
             $query->where(function ($sub) use ($queryTexto) {
-                $sub->where('modelos.nome', 'like', '%' . $queryTexto . '%')
-                    ->orWhere('marcas_modelo.nome', 'like', '%' . $queryTexto . '%')
-                    ->orWhere('segmentos.nome', 'like', '%' . $queryTexto . '%')
-                    ->orWhere('modelos.codigo_fipe', 'like', '%' . $queryTexto . '%')
-                    ->orWhere('modelos.nome_fipe', 'like', '%' . $queryTexto . '%');
+                $sub->where('modelos.nome', 'like', '%'.$queryTexto.'%')
+                    ->orWhere('marcas_modelo.nome', 'like', '%'.$queryTexto.'%')
+                    ->orWhere('segmentos.nome', 'like', '%'.$queryTexto.'%')
+                    ->orWhere('modelos.codigo_fipe', 'like', '%'.$queryTexto.'%')
+                    ->orWhere('modelos.nome_fipe', 'like', '%'.$queryTexto.'%');
             });
         }
 
@@ -803,17 +921,17 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             ->get()
             ->map(function ($modelo) {
                 $partes = [];
-                if (!empty($modelo->marca_nome)) {
-                    $partes[] = 'Marca: ' . $modelo->marca_nome;
+                if (! empty($modelo->marca_nome)) {
+                    $partes[] = 'Marca: '.$modelo->marca_nome;
                 }
-                if (!empty($modelo->ano_modelo)) {
-                    $partes[] = 'Ano modelo: ' . $modelo->ano_modelo;
+                if (! empty($modelo->ano_modelo)) {
+                    $partes[] = 'Ano modelo: '.$modelo->ano_modelo;
                 }
-                if (!empty($modelo->segmento_nome)) {
-                    $partes[] = 'Segmento: ' . $modelo->segmento_nome;
+                if (! empty($modelo->segmento_nome)) {
+                    $partes[] = 'Segmento: '.$modelo->segmento_nome;
                 }
-                if (!empty($modelo->codigo_fipe)) {
-                    $partes[] = 'Código FIPE: ' . $modelo->codigo_fipe;
+                if (! empty($modelo->codigo_fipe)) {
+                    $partes[] = 'Código FIPE: '.$modelo->codigo_fipe;
                 }
 
                 return [
@@ -832,12 +950,17 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function setOrdenacao(Request $request)
     {
-        $campo  = $request->input('orderBy', 'id');
-        $dir    = $request->input('orderDir', 'asc');
+        $campo = $request->input('orderBy', 'id');
+        $dir = $request->input('orderDir', 'asc');
         $allowed = ['id', 'nome', 'placa_licenca', 'renavam', 'ano_fabricacao', 'kms', 'created_at'];
-        if (!in_array($campo, $allowed)) $campo = 'id';
-        if (!in_array($dir, ['asc', 'desc'])) $dir = 'asc';
+        if (! in_array($campo, $allowed)) {
+            $campo = 'id';
+        }
+        if (! in_array($dir, ['asc', 'desc'])) {
+            $dir = 'asc';
+        }
         session(['veiculo.orderBy' => $campo, 'veiculo.orderDir' => $dir]);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -845,7 +968,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $marcaId = (int) $request->input('marca_id');
         $modelos = \App\Models\Modelo::where('ativo', 'S')
-            ->when($marcaId, fn($q) => $q->where('marca_id', $marcaId))
+            ->when($marcaId, fn ($q) => $q->where('marca_id', $marcaId))
             ->orderBy('nome')
             ->get(['id', 'nome', 'ano_modelo']);
 
@@ -888,9 +1011,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                     ->orWhere('veiculos.placa_licenca', 'like', "%{$q}%")
                     ->orWhere('veiculos.chassi', 'like', "%{$q}%")
                     ->orWhere('veiculos.cor', 'like', "%{$q}%")
-                    ->orWhereHas('modelo', fn($m) => $m->where('nome', 'like', "%{$q}%"))
-                    ->orWhereHas('marca', fn($m) => $m->where('nome', 'like', "%{$q}%"))
-                    ->orWhereHas('grupoFrota', fn($g) => $g->where('nome', 'like', "%{$q}%"));
+                    ->orWhereHas('modelo', fn ($m) => $m->where('nome', 'like', "%{$q}%"))
+                    ->orWhereHas('marca', fn ($m) => $m->where('nome', 'like', "%{$q}%"))
+                    ->orWhereHas('grupoFrota', fn ($g) => $g->where('nome', 'like', "%{$q}%"));
             });
         }
 
@@ -911,7 +1034,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $query->where('veiculos.marca_id', $v);
         }
         if ($v = trim((string) $request->input('modelo', ''))) {
-            $query->whereHas('modelo', fn($m) => $m->where('nome', 'like', "%{$v}%"));
+            $query->whereHas('modelo', fn ($m) => $m->where('nome', 'like', "%{$v}%"));
         }
         if ($v = (int) $request->input('grupo_frota_id', 0)) {
             $query->where('veiculos.grupo_frota_id', $v);
@@ -926,31 +1049,31 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $query->where('veiculos.ativo', (bool) $request->input('ativo'));
         }
         if ($v = (int) $request->input('ano_de', 0)) {
-            $query->whereHas('modelo', fn($m) => $m->where('ano_modelo', '>=', $v));
+            $query->whereHas('modelo', fn ($m) => $m->where('ano_modelo', '>=', $v));
         }
         if ($v = (int) $request->input('ano_ate', 0)) {
-            $query->whereHas('modelo', fn($m) => $m->where('ano_modelo', '<=', $v));
+            $query->whereHas('modelo', fn ($m) => $m->where('ano_modelo', '<=', $v));
         }
         if ($v = (int) $request->input('kms_ate', 0)) {
             $query->where('veiculos.kms', '<=', $v);
         }
 
-        $veiculos = $query->orderBy('veiculos.placa_licenca')->limit(80)->get()->map(fn($v) => [
-            'id'          => $v->id,
-            'nome'        => $v->nome ?? ('Veiculo #' . $v->id),
-            'placa'       => $v->placa_licenca ?? '',
-            'chassi'      => $v->chassi ?? '',
-            'marca'       => $v->marca?->nome ?? '',
-            'modelo'      => $v->modelo?->nome ?? '',
-            'grupo'       => $v->grupoFrota?->nome ?? '',
-            'tipo'        => $v->tipoFrota?->nome ?? '',
-            'status'      => $v->statusVeiculo?->nome ?? '',
-            'ano_fab'     => $v->ano_fabricacao ?? '',
-            'ano_mod'     => $v->modelo?->ano_modelo ?? '',
-            'cor'         => $v->cor ?? '',
-            'kms'         => $v->kms !== null ? number_format((float)$v->kms, 0, ',', '.') : '',
-            'ativo'       => $v->ativo ? 'Sim' : 'Não',
-            'estacao'     => $v->localDisponibilidade?->nome ?? '',
+        $veiculos = $query->orderBy('veiculos.placa_licenca')->limit(80)->get()->map(fn ($v) => [
+            'id' => $v->id,
+            'nome' => $v->nome ?? ('Veiculo #'.$v->id),
+            'placa' => $v->placa_licenca ?? '',
+            'chassi' => $v->chassi ?? '',
+            'marca' => $v->marca?->nome ?? '',
+            'modelo' => $v->modelo?->nome ?? '',
+            'grupo' => $v->grupoFrota?->nome ?? '',
+            'tipo' => $v->tipoFrota?->nome ?? '',
+            'status' => $v->statusVeiculo?->nome ?? '',
+            'ano_fab' => $v->ano_fabricacao ?? '',
+            'ano_mod' => $v->modelo?->ano_modelo ?? '',
+            'cor' => $v->cor ?? '',
+            'kms' => $v->kms !== null ? number_format((float) $v->kms, 0, ',', '.') : '',
+            'ativo' => $v->ativo ? 'Sim' : 'Não',
+            'estacao' => $v->localDisponibilidade?->nome ?? '',
         ]);
 
         return response()->json(['veiculos' => $veiculos]);
@@ -1040,6 +1163,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     public function filtro(Request $request)
     {
         $this->criarFiltros($request, $this->nomeFiltro);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -1047,6 +1171,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -1103,6 +1228,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         }
 
         $userEmpresaId = Auth::user()?->empresa_id;
+
         return $userEmpresaId ? (int) $userEmpresaId : null;
     }
 
@@ -1110,11 +1236,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         $model = $query->getModel();
         if ($empresaId !== null && SchemaCache::hasColumn($model->getTable(), 'empresa_id')) {
-            $query->where($model->getTable() . '.empresa_id', $empresaId);
+            $query->where($model->getTable().'.empresa_id', $empresaId);
         }
 
         if (SchemaCache::hasColumn($model->getTable(), 'ativo')) {
-            $query->where($model->getTable() . '.ativo', 'S');
+            $query->where($model->getTable().'.ativo', 'S');
         }
 
         $items = $query->orderBy('nome')->pluck('nome', 'id')->toArray();
@@ -1150,7 +1276,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     private function normalizarValorFipe(mixed $valor): ?float
     {
-        if (!is_string($valor) || trim($valor) === '') {
+        if (! is_string($valor) || trim($valor) === '') {
             return null;
         }
 

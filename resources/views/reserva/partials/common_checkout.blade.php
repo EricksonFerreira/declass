@@ -52,8 +52,14 @@
                         $cleanPath = ltrim((string) $path, '/');
                         if (str_contains($cleanPath, 'http://') || str_contains($cleanPath, 'https://')) {
                             $fotoUrl = $cleanPath;
+                        } elseif (str_starts_with($cleanPath, 'storage/')) {
+                            $fotoUrl = asset($cleanPath);
+                        } elseif (str_starts_with($cleanPath, 'public/')) {
+                            $fotoUrl = asset('storage/' . ltrim(substr($cleanPath, 7), '/'));
                         } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($cleanPath)) {
                             $fotoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($cleanPath);
+                        } else {
+                            $fotoUrl = asset('storage/' . $cleanPath);
                         }
                     }
                 @endphp

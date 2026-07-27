@@ -46,11 +46,6 @@
                             </tr>
                         </thead>
                         <tbody id="danos-detectados-container">
-                            <tr id="danos-detectados-loading">
-                                <td colspan="5" class="damage-empty">
-                                    <i class="fas fa-spinner fa-spin mr-1"></i> Carregando danos...
-                                </td>
-                            </tr>
                 @foreach($danosReserva as $d)
                     @php
                         $imagensDano = $d->imagens

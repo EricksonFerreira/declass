@@ -211,17 +211,24 @@
                         </div>
 
                         <div class="vc__foot">
-                            <a href="{{ route('veiculo.show', $veiculo->id) }}" class="btn btn-xs btn-info"
+                            {{-- <a href="{{ route('veiculo.show', $veiculo->id) }}" class="btn btn-xs btn-info"
                                 onclick="event.stopPropagation();">
                                 <i class="fas fa-eye mr-1"></i>Ver
-                            </a>
-                            <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn btn-xs btn-warning"
+                            </a> --}}
+                            {{-- <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn btn-xs btn-warning"
                                 onclick="event.stopPropagation();">
                                 <i class="fa fa-edit mr-1"></i>Editar
                             </a>
-                            <span onclick="event.stopPropagation();">
-                                <x-delete-button :action="route('veiculo.destroy', $veiculo->id)" />
-                            </span>
+                          <x-delete-button
+                                icone="fa fa-archive"
+                                btnClass="btn-info"
+                                titulo="Arquivar"
+                                tituloMensagem="Arquivar veículo?"
+                                mensagem="O veículo deixará de aparecer em novas reservas e operações, mas todo o histórico será preservado. Deseja continuar?"
+                                textoConfirmacao="Sim, arquivar veículo"
+                                corConfirmacao="#17a2b8"
+                                :action="route('veiculo.destroy', $veiculo->id)"
+                            /> --}}
                         </div>
                     </article>
                 @endforeach
@@ -309,7 +316,7 @@
                                     <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn btn-xs btn-warning">
                                         <i class="fa fa-edit"></i> Editar
                                     </a>
-                                    <x-delete-button :action="route('veiculo.destroy', $veiculo->id)" />
+                                    {{-- <x-delete-button :action="route('veiculo.destroy', $veiculo->id)" /> --}}
                                 </td>
                             </tr>
                         @endforeach

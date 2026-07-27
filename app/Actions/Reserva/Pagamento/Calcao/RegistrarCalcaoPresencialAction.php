@@ -2,6 +2,7 @@
 
 namespace App\Actions\Reserva\Pagamento\Calcao;
 
+use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
 use App\Models\Calcao;
 use App\Models\ConfiguracaoCalcao;
 use App\Models\Reserva;
@@ -15,6 +16,7 @@ class RegistrarCalcaoPresencialAction
 {
     public function __construct(
         private ReservaService $reservaService,
+        private RegistrarReceitaPagamentoReservaAction $registrarReceitaPagamentoReservaAction,
     ) {}
 
     public function handle(Reserva $reserva, string $metodo, ?float $valorInput, ?string $observacaoInput): Calcao
@@ -83,7 +85,17 @@ class RegistrarCalcaoPresencialAction
                 $transacaoPayload['empresa_id'] = $reserva->empresa_id ?? null;
             }
 
-            Transacao::create($transacaoPayload);
+            $transacao = Transacao::create($transacaoPayload);
+
+            $this->registrarReceitaPagamentoReservaAction->handle(
+                $reserva,
+                $valorPago,
+                $metodo,
+                now(),
+                'calcao_presencial_'.$calcao->id,
+                Auth::id(),
+                'transacao_'.$transacao->id
+            );
 
             $this->reservaService->adicionaLog((int) $reserva->id, Auth::id(), json_encode([
                 'acao' => 'Calção presencial registrado',

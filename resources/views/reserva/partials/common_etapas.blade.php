@@ -3,7 +3,8 @@
     $etapaCheckin = (bool) $reserva->contratoCheckin;
     $etapaCheckinAssinado = $etapaCheckin && ($reserva->contratoCheckin->assinado ?? '') === 'S';
     $etapaCheckout = (bool) ($reserva->contratoCheckout ?? null);
-    $etapaCheckoutAssinado = $etapaCheckout && ($reserva->contratoCheckout->assinado ?? '') === 'S';
+    $etapaCheckoutAssinado = $etapaCheckout
+        && (!empty($reserva->contratoCheckout->assinatura) || !empty($reserva->contratoCheckout->data_assinatura));
 @endphp
 
 <div class="rs-flow">

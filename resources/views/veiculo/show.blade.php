@@ -7,1772 +7,166 @@
 @stop
 
 @section('content')
-<div class="container-fluid px-0">
+<div class="container-fluid px-0 vehicle-show-page">
 
-    {{-- ════ HERO ════ --}}
-    <div class="module-card mb-4">
-        <div class="module-card-header">
+    {{-- HERO COMPACTO --}}
+    <div class="module-card mb-3">
+        <div class="module-card-header vehicle-hero-compact">
             <div class="module-header-left">
                 <div class="module-header-icon">
                     <i class="fas fa-car"></i>
                 </div>
                 <div>
-                    <div class="module-header-eyebrow">Frota &bull; Detalhes do Veículo</div>
+                    <div class="module-header-eyebrow">Frota &bull; Detalhes do veículo</div>
                     <h1 class="module-header-title">{{ $veiculo->nome }}</h1>
                     <p class="module-header-sub">
-                        Placa: <strong style="color:#93c5fd">{{ $veiculo->placa_licenca ?? '—' }}</strong>
-                        &bull; {{ optional($veiculo->marca)->nome ?? '—' }} / {{ optional($veiculo->modelo)->nome ?? '—' }}
+                        <strong>{{ $veiculo->placa_licenca ?? '—' }}</strong>
+                        &bull; {{ optional($veiculo->marca)->nome ?? '—' }}
+                        {{ optional($veiculo->modelo)->nome ?? '—' }}
+                        &bull; {{ $veiculo->ano_fabricacao ?? '—' }}/{{ $veiculo->modelo?->ano_modelo ?? '—' }}
                     </p>
                 </div>
             </div>
+
             <div class="module-header-right">
-                <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn-xp btn-xp--sm mr-2">
-                    <i class="fas fa-pen mr-1"></i>Editar
+                <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn-xp btn-xp--sm">
+                    <i class="fas fa-pen"></i> Editar
                 </a>
                 <a href="{{ route('veiculo.index') }}" class="btn-xp btn-xp--outline-light btn-xp--sm">
-                    <i class="fas fa-arrow-left mr-1"></i>Voltar
+                    <i class="fas fa-arrow-left"></i> Voltar
                 </a>
             </div>
         </div>
     </div>
 
-    {{-- ════ GRID PRINCIPAL ════ --}}
-    <div class="row">
-
-        {{-- ── Coluna esquerda (2/3) ── --}}
-        <div class="col-lg-8">
-
-            {{-- Identificação --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-id-card"></i>
-                        <div>
-                            <strong>Identificação</strong>
-                            <span>Dados cadastrais e documentais do veículo</span>
-                        </div>
-                    </div>
-                    <div class="veiculo-grid">
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Nome</span>
-                            <span class="veiculo-field__value">{{ $veiculo->nome ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Placa / Licença</span>
-                            <span class="veiculo-field__value">{{ $veiculo->placa_licenca ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Marca</span>
-                            <span class="veiculo-field__value">{{ optional($veiculo->marca)->nome ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Modelo</span>
-                            <span class="veiculo-field__value">{{ optional($veiculo->modelo)->nome ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Tipo de Frota</span>
-                            <span class="veiculo-field__value">{{ optional($veiculo->tipoFrota)->nome ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Grupo de Frota</span>
-                            <span class="veiculo-field__value">{{ optional($veiculo->grupoFrota)->nome ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Ano Fabricação</span>
-                            <span class="veiculo-field__value">{{ $veiculo->ano_fabricacao ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Ano Modelo</span>
-                            <span class="veiculo-field__value">{{ $veiculo->modelo?->ano_modelo ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Cor</span>
-                            <span class="veiculo-field__value">{{ $veiculo->cor ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Chassi</span>
-                            <span class="veiculo-field__value">{{ $veiculo->chassi ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">RENAVAM</span>
-                            <span class="veiculo-field__value">{{ $veiculo->renavam ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Nº Motor</span>
-                            <span class="veiculo-field__value">{{ $veiculo->numero_motor ?? '—' }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Situação operacional --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-tachometer-alt"></i>
-                        <div>
-                            <strong>Situação Operacional</strong>
-                            <span>Status, quilometragem e datas de manutenção</span>
-                        </div>
-                    </div>
-                    <div class="veiculo-grid">
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Status</span>
-                            <span class="veiculo-field__value">
-                                @php
-                                    $st = optional($veiculo->statusVeiculo)->nome ?? null;
-                                    $cor = optional($veiculo->statusVeiculo)->cor ?? 'secondary';
-                                @endphp
-                                @if($st)
-                                    <span class="badge badge-xs bg-{{ $cor }}">{{ $st }}</span>
-                                @else
-                                    <span class="text-muted">—</span>
-                                @endif
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Disponível</span>
-                            <span class="veiculo-field__value">
-                                @if($veiculo->disponivel)
-                                    <span class="status-badge status-badge--green"><i class="fas fa-check mr-1"></i>Sim</span>
-                                @else
-                                    <span class="status-badge status-badge--amber"><i class="fas fa-times mr-1"></i>Não</span>
-                                @endif
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Quilometragem Atual</span>
-                            <span class="veiculo-field__value">{{ number_format($veiculo->kms ?? 0, 0, ',', '.') }} km</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Limite de KMs</span>
-                            <span class="veiculo-field__value">{{ $veiculo->limite_kms ? number_format($veiculo->limite_kms, 0, ',', '.') . ' km' : '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Próxima Revisão (KM)</span>
-                            <span class="veiculo-field__value">{{ $veiculo->proxima_revisao_kms ? number_format($veiculo->proxima_revisao_kms, 0, ',', '.') . ' km' : '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Próxima Manutenção</span>
-                            <span class="veiculo-field__value">{{ $veiculo->data_proxima_manutencao ? \Carbon\Carbon::parse($veiculo->data_proxima_manutencao)->format('d/m/Y') : '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Próxima Inspeção</span>
-                            <span class="veiculo-field__value">{{ $veiculo->data_proxima_inspecao ? \Carbon\Carbon::parse($veiculo->data_proxima_inspecao)->format('d/m/Y') : '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Local de Disponibilidade</span>
-                            <span class="veiculo-field__value">{{ optional($veiculo->localDisponibilidade)->nome ?? '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Disponível a partir de</span>
-                            <span class="veiculo-field__value">{{ $veiculo->data_hora_disponibilidade ? \Carbon\Carbon::parse($veiculo->data_hora_disponibilidade)->format('d/m/Y H:i') : '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Data de Compra</span>
-                            <span class="veiculo-field__value">{{ $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('d/m/Y') : '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Validade Placa</span>
-                            <span class="veiculo-field__value">{{ $veiculo->data_placa_licenca ? \Carbon\Carbon::parse($veiculo->data_placa_licenca)->format('d/m/Y') : '—' }}</span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Vendido</span>
-                            <span class="veiculo-field__value">
-                                @if($veiculo->vendido)
-                                    <span class="status-badge status-badge--gray">Vendido em {{ $veiculo->data_vendido ? \Carbon\Carbon::parse($veiculo->data_vendido)->format('d/m/Y') : '—' }}</span>
-                                @else
-                                    <span class="status-badge status-badge--green">Em frota</span>
-                                @endif
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- Card Financeiro --}}
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-chart-line text-primary"></i>
-                        <div>
-                            <strong>Financeiro</strong>
-                            <span>Receita, custos e rentabilidade do veículo</span>
-                        </div>
-                    </div>
-                    <div class="veiculo-grid">
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Receita Total (Reservas)</span>
-                            <span class="veiculo-field__value text-success fw-bold">
-                                R$ {{ number_format($finReceita, 2, ',', '.') }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Custo — Multas (empresa)</span>
-                            <span class="veiculo-field__value {{ $finCustoMultas > 0 ? 'text-danger' : '' }}">
-                                R$ {{ number_format($finCustoMultas, 2, ',', '.') }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Custo — Sinistros (empresa)</span>
-                            <span class="veiculo-field__value {{ $finCustoSinistros > 0 ? 'text-danger' : '' }}">
-                                R$ {{ number_format($finCustoSinistros, 2, ',', '.') }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Lucro Líquido</span>
-                            <span class="veiculo-field__value fw-bold {{ $finLucroLiquido >= 0 ? 'text-success' : 'text-danger' }}">
-                                R$ {{ number_format($finLucroLiquido, 2, ',', '.') }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Rentabilidade Real</span>
-                            <span class="veiculo-field__value">
-                                @if($finRentabilidade !== null)
-                                    <span class="{{ $finRentabilidade >= 0 ? 'text-success' : 'text-danger' }}">
-                                        {{ number_format($finRentabilidade, 2, ',', '.') }}%
-                                        @if($finValorCompra > 0)
-                                            <small class="text-muted">(sobre valor de compra)</small>
-                                        @endif
-                                    </span>
-                                @else
-                                    <span class="text-muted">— (sem valor de compra)</span>
-                                @endif
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Payback Estimado</span>
-                            <span class="veiculo-field__value">
-                                @if($finPaybackMeses !== null)
-                                    {{ $finPaybackMeses }} meses
-                                    @if($finPaybackMeses >= 12)
-                                        <small class="text-muted">(≈ {{ number_format($finPaybackMeses / 12, 1, ',', '.') }} anos)</small>
-                                    @endif
-                                @elseif($finValorCompra <= 0)
-                                    <span class="text-muted">— (sem valor de compra)</span>
-                                @elseif(empty($veiculo->data_compra))
-                                    <span class="text-muted">— (data de compra não informada)</span>
-                                @else
-                                    <span class="text-muted">— (lucro insuficiente para calcular)</span>
-                                @endif
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="config-card mb-4">
-                <div class="config-block">
-                    <div class="config-block-label">
-                        <i class="fas fa-coins text-success"></i>
-                        <div>
-                            <strong>Depreciacao / FIPE</strong>
-                            <span>Base de compra, valor FIPE e valor estimado atual</span>
-                        </div>
-                    </div>
-                    <div class="veiculo-grid">
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Valor de Compra</span>
-                            <span class="veiculo-field__value">
-                                {{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : '—' }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Valor FIPE</span>
-                            <span class="veiculo-field__value">
-                                {{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : '—' }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Diferenca Compra / FIPE</span>
-                            <span class="veiculo-field__value">
-                                @if($veiculo->diferenca_fipe_compra !== null)
-                                    <span class="{{ (float) $veiculo->diferenca_fipe_compra >= 0 ? 'text-success' : 'text-danger' }}">
-                                        R$ {{ number_format((float) $veiculo->diferenca_fipe_compra, 2, ',', '.') }}
-                                    </span>
-                                @else
-                                    —
-                                @endif
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Depreciacao Acumulada</span>
-                            <span class="veiculo-field__value">
-                                {{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : '—' }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Valor Estimado Atual</span>
-                            <span class="veiculo-field__value">
-                                {{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : '—' }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Protecao Abaixo da FIPE</span>
-                            <span class="veiculo-field__value">
-                                @if($veiculo->tem_protecao_depreciacao)
-                                    <span class="status-badge status-badge--green">Ativa</span>
-                                @else
-                                    <span class="status-badge status-badge--gray">Inativa</span>
-                                @endif
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Taxa Anual</span>
-                            <span class="veiculo-field__value">
-                                {{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '—' }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Consulta FIPE</span>
-                            <span class="veiculo-field__value">
-                                {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}
-                            </span>
-                        </div>
-                        <div class="veiculo-field">
-                            <span class="veiculo-field__label">Codigo FIPE</span>
-                            <span class="veiculo-field__value">{{ $veiculo->codigo_fipe ?? '—' }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ════ ETAPAS OPERACIONAIS ════ --}}
-            
-
-        {{-- ── Coluna direita (1/3) ── --}}
+    {{-- RESUMO OPERACIONAL --}}
+    <div class="vehicle-status-strip mb-3">
+        <div class="vehicle-status-item">
+            <span>Status</span>
+            <strong>{{ optional($veiculo->statusVeiculo)->nome ?? 'Não informado' }}</strong>
+        </div>
+        <div class="vehicle-status-item">
+            <span>Disponibilidade</span>
+            <strong class="{{ $veiculo->disponivel ? 'text-success' : 'text-danger' }}">
+                <i class="fas {{ $veiculo->disponivel ? 'fa-check-circle' : 'fa-times-circle' }} mr-1"></i>
+                {{ $veiculo->disponivel ? 'Disponível' : 'Indisponível' }}
+            </strong>
+        </div>
+        <div class="vehicle-status-item">
+            <span>Quilometragem</span>
+            <strong>{{ number_format($veiculo->kms ?? 0, 0, ',', '.') }} km</strong>
+        </div>
+        <div class="vehicle-status-item">
+            <span>Local atual</span>
+            <strong>{{ optional($veiculo->localDisponibilidade)->nome ?? 'Não informado' }}</strong>
+        </div>
+        <div class="vehicle-status-item">
+            <span>Próxima manutenção</span>
+            <strong>{{ $veiculo->data_proxima_manutencao ? \Carbon\Carbon::parse($veiculo->data_proxima_manutencao)->format('d/m/Y') : 'Não informada' }}</strong>
+        </div>
+        <div class="vehicle-status-item vehicle-status-item--alerts">
+            <span>Pendências</span>
+            <strong>
+                {{
+                    $veiculo->veiculoDanos->whereNull('correcao_data')->count()
+                    + $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_ABERTA)->count()
+                    + $veiculo->sinistros->whereIn('status', ['aberto','em_analise','aguardando_documentos'])->count()
+                    + $veiculo->multas->whereIn('status_multa', ['pendente','em_analise'])->count()
+                }}
+            </strong>
+        </div>
     </div>
-    <div class="col-lg-4">
 
-        {{-- Ações rápidas (PRIMEIRO — mais acessado) --}}
-        <div class="config-card mb-4">
-            <div class="config-block">
-                <div class="config-block-label">
-                    <i class="fas fa-bolt"></i>
-                    <div>
-                        <strong>Ações rápidas</strong>
-                    </div>
-                </div>
-                <div class="veiculo-acoes-grid">
-                    <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="veiculo-acao veiculo-acao--primary">
-                        <i class="fas fa-pen"></i>
-                        <span>Editar veículo</span>
-                    </a>
-                    <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="veiculo-acao">
-                        <i class="fas fa-route"></i>
-                        <span>Transferir estação</span>
-                    </a>
-                    <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao veiculo-acao--danger">
-                        <i class="fas fa-car-crash"></i>
-                        <span>Registrar sinistro</span>
-                    </a>
-                    <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        <span>Cadastrar multa</span>
-                    </a>
-                    <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="veiculo-acao">
-                        <i class="fas fa-tools"></i>
-                        <span>Abrir OS</span>
-                    </a>
-                    <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="veiculo-acao">
-                        <i class="fas fa-shield-alt"></i>
-                        <span>Ver avarias</span>
-                    </a>
-                </div>
+    {{-- AÇÕES RÁPIDAS EM UMA LINHA --}}
+    <div class="vehicle-action-bar mb-3">
+        <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="vehicle-action vehicle-action--primary">
+            <i class="fas fa-pen"></i><span>Editar veículo</span>
+        </a>
+        <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="vehicle-action">
+            <i class="fas fa-route"></i><span>Transferir estação</span>
+        </a>
+        <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action">
+            <i class="fas fa-tools"></i><span>Abrir OS</span>
+        </a>
+        <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action vehicle-action--danger">
+            <i class="fas fa-car-crash"></i><span>Registrar sinistro</span>
+        </a>
+        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action">
+            <i class="fas fa-exclamation-triangle"></i><span>Cadastrar multa</span>
+        </a>
+        <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="vehicle-action">
+            <i class="fas fa-shield-alt"></i><span>Ver avarias</span>
+        </a>
+    </div>
+
+    {{-- DADOS COMPLEMENTARES EM ABAS --}}
+    <div class="config-card vehicle-info-tabs mb-3">
+        <div class="vehicle-tabs-nav" role="tablist">
+            <button class="vehicle-tab-button is-active" type="button" data-vehicle-tab="overview">
+                <i class="fas fa-eye"></i> Visão geral
+            </button>
+            <button class="vehicle-tab-button" type="button" data-vehicle-tab="registration">
+                <i class="fas fa-id-card"></i> Cadastro
+            </button>
+            <button class="vehicle-tab-button" type="button" data-vehicle-tab="financial">
+                <i class="fas fa-chart-line"></i> Financeiro
+            </button>
+            <button class="vehicle-tab-button" type="button" data-vehicle-tab="fipe">
+                <i class="fas fa-coins"></i> FIPE e depreciação
+            </button>
+        </div>
+
+        <div class="vehicle-tab-panel is-active" data-vehicle-tab-panel="overview">
+            <div class="veiculo-grid veiculo-grid--compact">
+                <div class="veiculo-field"><span class="veiculo-field__label">Placa</span><span class="veiculo-field__value">{{ $veiculo->placa_licenca ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Marca / Modelo</span><span class="veiculo-field__value">{{ optional($veiculo->marca)->nome ?? '—' }} / {{ optional($veiculo->modelo)->nome ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Ano</span><span class="veiculo-field__value">{{ $veiculo->ano_fabricacao ?? '—' }}/{{ $veiculo->modelo?->ano_modelo ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Cor</span><span class="veiculo-field__value">{{ $veiculo->cor ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Tipo de frota</span><span class="veiculo-field__value">{{ optional($veiculo->tipoFrota)->nome ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Grupo de frota</span><span class="veiculo-field__value">{{ optional($veiculo->grupoFrota)->nome ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Próxima revisão</span><span class="veiculo-field__value">{{ $veiculo->proxima_revisao_kms ? number_format($veiculo->proxima_revisao_kms, 0, ',', '.') . ' km' : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Disponível a partir de</span><span class="veiculo-field__value">{{ $veiculo->data_hora_disponibilidade ? \Carbon\Carbon::parse($veiculo->data_hora_disponibilidade)->format('d/m/Y H:i') : '—' }}</span></div>
             </div>
         </div>
 
-        {{-- Resumo --}}
-        <div class="config-card mb-4">
-            <div class="config-block">
-                <div class="config-block-label">
-                    <i class="fas fa-info-circle"></i>
-                    <div>
-                        <strong>Resumo</strong>
-                        <span>Visão rápida do veículo</span>
-                    </div>
-                </div>
-                <div class="veiculo-summary">
-                    <div class="veiculo-summary__row">
-                        <span>Avarias pendentes</span>
-                        <strong class="text-warning">{{ $veiculo->veiculoDanos->whereNull('correcao_data')->count() }}</strong>
-                    </div>
-                    <div class="veiculo-summary__row">
-                        <span>Avarias corrigidas</span>
-                        <strong class="text-success">{{ $veiculo->veiculoDanos->whereNotNull('correcao_data')->count() }}</strong>
-                    </div>
-                    <div class="veiculo-summary__row">
-                        <span>OS abertas</span>
-                        <strong class="text-info">{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_ABERTA)->count() }}</strong>
-                    </div>
-                    <div class="veiculo-summary__row">
-                        <span>Sinistros abertos</span>
-                        <strong class="text-danger">{{ $veiculo->sinistros->whereIn('status', ['aberto','em_analise','aguardando_documentos'])->count() }}</strong>
-                    </div>
-                    <div class="veiculo-summary__row">
-                        <span>Multas pendentes</span>
-                        <strong class="text-warning">{{ $veiculo->multas->whereIn('status_multa', ['pendente','em_analise'])->count() }}</strong>
-                    </div>
-                    <div class="veiculo-summary__row">
-                        <span>Reservas totais</span>
-                        <strong>{{ $veiculo->reservas->count() }}</strong>
-                    </div>
-                </div>
+        <div class="vehicle-tab-panel" data-vehicle-tab-panel="registration">
+            <div class="veiculo-grid veiculo-grid--compact">
+                <div class="veiculo-field"><span class="veiculo-field__label">Nome</span><span class="veiculo-field__value">{{ $veiculo->nome ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Chassi</span><span class="veiculo-field__value">{{ $veiculo->chassi ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">RENAVAM</span><span class="veiculo-field__value">{{ $veiculo->renavam ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Nº do motor</span><span class="veiculo-field__value">{{ $veiculo->numero_motor ?? '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Data de compra</span><span class="veiculo-field__value">{{ $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('d/m/Y') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Validade da placa</span><span class="veiculo-field__value">{{ $veiculo->data_placa_licenca ? \Carbon\Carbon::parse($veiculo->data_placa_licenca)->format('d/m/Y') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Próxima inspeção</span><span class="veiculo-field__value">{{ $veiculo->data_proxima_inspecao ? \Carbon\Carbon::parse($veiculo->data_proxima_inspecao)->format('d/m/Y') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Situação na frota</span><span class="veiculo-field__value">{{ $veiculo->vendido ? 'Vendido' : 'Em frota' }}</span></div>
             </div>
         </div>
 
-        {{-- Sinistros --}}
-        {{-- <div class="config-card mb-4">
-            <div class="config-block">
-                <div class="config-block-label">
-                    <i class="fas fa-car-crash text-danger"></i>
-                    <div>
-                        <strong>Sinistros</strong>
-                        <span>{{ $veiculo->sinistros->count() }} sinistro(s) registrado(s)</span>
-                    </div>
-                </div>
-
-                <div class="d-flex mb-2" style="gap:8px; flex-wrap: wrap">
-                    <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
-                        <i class="fas fa-plus mr-1"></i>Registrar sinistro
-                    </a>
-                    <a href="{{ route('sinistro.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
-                        <i class="fas fa-list mr-1"></i>Ver todos
-                    </a>
-                </div>
-
-                @if($veiculo->sinistros->isEmpty())
-                    <div class="empty-state mt-2">
-                        <i class="fas fa-shield-alt"></i>
-                        <p>Nenhum sinistro registrado para este veículo.</p>
-                    </div>
-                @else
-                    @foreach($veiculo->sinistros->take(5) as $sinistro)
-                        @php
-                            $snBadge = match($sinistro->status) {
-                                'encerrado', 'indenizado' => 'success',
-                                'aprovado'   => 'primary',
-                                'cancelado'  => 'secondary',
-                                'aguardando_documentos' => 'warning',
-                                default => 'danger',
-                            };
-                        @endphp
-                        <div class="veiculo-sinistro-item">
-                            <div class="veiculo-sinistro-item__head">
-                                <span class="xp-id">#{{ $sinistro->id }}</span>
-                                <span class="badge badge-{{ $snBadge }} ml-1">{{ $sinistro->label_status }}</span>
-                            </div>
-                            <div class="veiculo-sinistro-item__body">
-                                <span class="veiculo-sinistro-item__tipo">{{ $sinistro->label_tipo }}</span>
-                                <small class="text-muted">{{ $sinistro->data_hora_ocorrido?->format('d/m/Y') ?? '—' }}</small>
-                            </div>
-                            <a href="{{ route('sinistro.show', $sinistro->id) }}" class="btn-xp btn-xp--sm mt-1">
-                                <i class="fas fa-eye mr-1"></i>Ver
-                            </a>
-                        </div>
-                    @endforeach
-                    @if($veiculo->sinistros->count() > 5)
-                        <p class="text-muted small mb-0 mt-1">Mostrando os 5 mais recentes.</p>
-                    @endif
-                @endif
-            </div>
-        </div> --}}
-
-        {{-- Multas --}}
-        {{-- <div class="config-card mb-4">
-            <div class="config-block">
-                <div class="config-block-label">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <div>
-                        <strong>Multas</strong>
-                        <span>{{ $veiculo->multas->count() }} multa(s) registrada(s)</span>
-                    </div>
-                </div>
-
-                <div class="d-flex mb-2" style="gap:8px; flex-wrap: wrap">
-                    <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
-                        <i class="fas fa-plus mr-1"></i>Cadastrar multa
-                    </a>
-                    <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
-                        <i class="fas fa-list mr-1"></i>Ver todas
-                    </a>
-                </div>
-
-                @if($veiculo->multas->isEmpty())
-                    <div class="empty-state mt-2">
-                        <i class="fas fa-receipt"></i>
-                        <p>Nenhuma multa registrada para este veículo.</p>
-                    </div>
-                @else
-                    <div class="table-responsive mt-2">
-                        <table class="table table-hover xp-table">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Data</th>
-                                    <th>Status</th>
-                                    <th class="text-right">Valor</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($veiculo->multas->take(5) as $multa)
-                                    @php
-                                        $badgeMulta = match($multa->status_multa) {
-                                            'paga', 'deferida' => 'success',
-                                            'cancelada'  => 'secondary',
-                                            'recorrida'  => 'info',
-                                            'indeferida' => 'danger',
-                                            default      => 'warning',
-                                        };
-                                    @endphp
-                                    <tr>
-                                        <td><span class="xp-id">#{{ $multa->id }}</span></td>
-                                        <td>{{ $multa->data_hora_infracao?->format('d/m/Y') ?? '—' }}</td>
-                                        <td><span class="badge badge-{{ $badgeMulta }}">{{ $multa->label_status_multa }}</span></td>
-                                        <td class="text-right">R$ {{ number_format((float) $multa->valor_final, 2, ',', '.') }}</td>
-                                        <td>
-                                            <a href="{{ route('multa.show', $multa->id) }}" class="btn-xp btn-xp--sm">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @if($veiculo->multas->count() > 5)
-                        <p class="text-muted small mb-0">Mostrando as 5 mais recentes.</p>
-                    @endif
-                @endif
-            </div>
-        </div> --}}
-
-        {{-- Últimas reservas --}}
-        <div class="config-card mb-4">
-            <div class="config-block">
-                <div class="config-block-label">
-                    <i class="fas fa-calendar-alt"></i>
-                    <div>
-                        <strong>Últimas Reservas</strong>
-                        <span>5 reservas mais recentes</span>
-                    </div>
-                </div>
-                @forelse($veiculo->reservas->sortByDesc('id')->take(5) as $reserva)
-                    <div class="veiculo-reserva-item">
-                        <div class="veiculo-reserva-item__id">
-                            <a href="{{ route('reserva.show', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="xp-link">#{{ $reserva->codigoReserva?->codigo ?? $reserva->id }}</a>
-                        </div>
-                        <div class="veiculo-reserva-item__info">
-                            <span>{{ optional($reserva->statusReserva)->nome ?? '—' }}</span>
-                            <small>{{ $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y') : '—' }} → {{ $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y') : '—' }}</small>
-                        </div>
-                    </div>
-                @empty
-                    <p class="text-muted small mb-0">Nenhuma reserva registrada.</p>
-                @endforelse
+        <div class="vehicle-tab-panel" data-vehicle-tab-panel="financial">
+            <div class="veiculo-grid veiculo-grid--compact">
+                <div class="veiculo-field"><span class="veiculo-field__label">Receita total</span><span class="veiculo-field__value text-success">R$ {{ number_format($finReceita, 2, ',', '.') }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Custos com multas</span><span class="veiculo-field__value {{ $finCustoMultas > 0 ? 'text-danger' : '' }}">R$ {{ number_format($finCustoMultas, 2, ',', '.') }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Custos com sinistros</span><span class="veiculo-field__value {{ $finCustoSinistros > 0 ? 'text-danger' : '' }}">R$ {{ number_format($finCustoSinistros, 2, ',', '.') }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Lucro líquido</span><span class="veiculo-field__value {{ $finLucroLiquido >= 0 ? 'text-success' : 'text-danger' }}">R$ {{ number_format($finLucroLiquido, 2, ',', '.') }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Rentabilidade</span><span class="veiculo-field__value">{{ $finRentabilidade !== null ? number_format($finRentabilidade, 2, ',', '.') . '%' : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Payback</span><span class="veiculo-field__value">{{ $finPaybackMeses !== null ? $finPaybackMeses . ' meses' : '—' }}</span></div>
             </div>
         </div>
 
-    </div>
-    <div class="col-lg-12">
-        <div class="vs-shell mb-4">
-                <div class="vs-shell__intro">
-                    <div>
-                        <span class="vs-shell__eyebrow">Linha operacional do veículo</span>
-                        <h3 class="vs-shell__title">Acompanhe cada etapa com filtros e leitura mais clara</h3>
-                        <p class="vs-shell__sub">
-                            Navegue entre disponibilidade, avarias, ordens, movimentações, sinistros e multas
-                            sem perder o contexto do veículo.
-                        </p>
-                    </div>
-                    <div class="vs-shell__intro-badges">
-                        <span class="vs-badge-soft">
-                            <i class="fas fa-layer-group"></i>
-                            6 etapas monitoradas
-                        </span>
-                        <span class="vs-badge-soft {{ $veiculo->disponivel ? 'is-success' : 'is-warning' }}">
-                            <i class="fas {{ $veiculo->disponivel ? 'fa-check-circle' : 'fa-clock' }}"></i>
-                            @php
-                                $showPercentualDisponibilidade = (int) ($dispResumo['percentual'] ?? 0);
-                                $showStatusDisponibilidade = (string) ($dispResumo['status_mes'] ?? 'off');
-
-                                $showDisponivel = $showStatusDisponibilidade === 'ok' && $showPercentualDisponibilidade >= 100;
-                                $showParcial = $showStatusDisponibilidade === 'partial'
-                                    || ($showPercentualDisponibilidade > 0 && $showPercentualDisponibilidade < 100);
-
-                                $showLabelDisponibilidade = match (true) {
-                                    $showDisponivel => 'Disponível para operação',
-                                    $showParcial => 'Parcialmente disponível',
-                                    default => 'Indisponível no período',
-                                };
-
-                                $showIconDisponibilidade = match (true) {
-                                    $showDisponivel => 'fa-check-circle',
-                                    $showParcial => 'fa-adjust',
-                                    default => 'fa-clock',
-                                };
-
-                                $showClassDisponibilidade = match (true) {
-                                    $showDisponivel => 'is-success',
-                                    $showParcial => 'is-warning',
-                                    default => 'is-danger',
-                                };
-                            @endphp
-
-                            <span class="vs-badge-soft {{ $showClassDisponibilidade }}">
-                                <i class="fas {{ $showIconDisponibilidade }}"></i>
-                                {{ $showLabelDisponibilidade }} · {{ $showPercentualDisponibilidade }}%
-                            </span>
-                        </span>
-                    </div>
-                </div>
-
-                <div class="vs-steps" id="vsSteps">
-                    <button class="vs-step is-active" type="button" data-step="disp">
-                        <span class="vs-step__icon"><i class="fas fa-calendar-check"></i></span>
-                        <span class="vs-step__content">
-                            <strong>Disponibilidade</strong>
-                            <small>Agenda, bloqueios e calendário</small>
-                        </span>
-                        <span class="vs-step__count">{{ $veiculo->reservas->count() }}</span>
-                    </button>
-
-                    <button class="vs-step" type="button" data-step="fipe">
-                        <span class="vs-step__icon"><i class="fas fa-chart-pie"></i></span>
-                        <span class="vs-step__content">
-                            <strong>FIPE</strong>
-                            <small>Mercado, proteção e depreciação</small>
-                        </span>
-                        <span class="vs-step__count {{ $veiculo->tem_protecao_depreciacao ? 'vs-step__count--success' : 'vs-step__count--alert' }}">
-                            {{ $veiculo->valor_fipe !== null ? 'FIPE' : '—' }}
-                        </span>
-                    </button>
-
-                    <button class="vs-step" type="button" data-step="avarias">
-                        <span class="vs-step__icon"><i class="fas fa-car-crash"></i></span>
-                        <span class="vs-step__content">
-                            <strong>Avarias</strong>
-                            <small>Danos e correções do veículo</small>
-                        </span>
-                        <span class="vs-step__count {{ $veiculo->veiculoDanos->whereNull('correcao_data')->count() ? 'vs-step__count--alert' : '' }}">
-                            {{ $veiculo->veiculoDanos->count() }}
-                        </span>
-                    </button>
-
-                    <button class="vs-step" type="button" data-step="os">
-                        <span class="vs-step__icon"><i class="fas fa-tools"></i></span>
-                        <span class="vs-step__content">
-                            <strong>Ordens</strong>
-                            <small>Serviços, manutenção e execução</small>
-                        </span>
-                        <span class="vs-step__count">{{ $veiculo->ordensServico->count() }}</span>
-                    </button>
-
-                    <button class="vs-step" type="button" data-step="mov">
-                        <span class="vs-step__icon"><i class="fas fa-route"></i></span>
-                        <span class="vs-step__content">
-                            <strong>Movimentações</strong>
-                            <small>Saídas, chegadas e transferências</small>
-                        </span>
-                        <span class="vs-step__count">{{ $veiculo->movimentacoes->count() }}</span>
-                    </button>
-
-                    <button class="vs-step" type="button" data-step="sinistros">
-                        <span class="vs-step__icon"><i class="fas fa-shield-alt"></i></span>
-                        <span class="vs-step__content">
-                            <strong>Sinistros</strong>
-                            <small>Ocorrências, seguradora e análise</small>
-                        </span>
-                        <span class="vs-step__count {{ $veiculo->sinistros->whereIn('status',['aberto','em_analise','aguardando_documentos'])->count() ? 'vs-step__count--alert' : '' }}">
-                            {{ $veiculo->sinistros->count() }}
-                        </span>
-                    </button>
-
-                    <button class="vs-step" type="button" data-step="multas">
-                        <span class="vs-step__icon"><i class="fas fa-exclamation-triangle"></i></span>
-                        <span class="vs-step__content">
-                            <strong>Multas</strong>
-                            <small>Infrações, descontos e recursos</small>
-                        </span>
-                        <span class="vs-step__count {{ $veiculo->multas->whereIn('status_multa',['pendente','em_analise'])->count() ? 'vs-step__count--alert' : '' }}">
-                            {{ $veiculo->multas->count() }}
-                        </span>
-                    </button>
-                </div>
-
-                {{-- ── PAINEL: Disponibilidade ── --}}
-                <div class="vs-panel is-active" data-step-panel="disp">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 01</span>
-                            <h4 class="vs-panel-head__title">Disponibilidade do veículo</h4>
-                            <p class="vs-panel-head__sub">Visualize reservas, movimentações e bloqueios por período com foco em entendimento rápido.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Status atual</span>
-                                <strong>{{ $showLabelDisponibilidade }} · {{ $showPercentualDisponibilidade }}%</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Reservas totais</span>
-                                <strong>{{ $veiculo->reservas->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Bloqueio entre reservas</span>
-                                <strong>{{ $reservaBloqueioHoras ?? 0 }}h</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vs-info-banner">
-                        <i class="fas fa-info-circle"></i>
-                        <div>
-                            Use os filtros do calendário abaixo para navegar por mês, estação e tipo de ocupação.
-                            Os botões de legenda continuam funcionando dentro do calendário.
-                        </div>
-                    </div>
-
-                    @include('veiculo.components.disponibilidade', [
-                        'veiculo'             => $veiculo,
-                        'dispMes'             => $dispMes ?? null,
-                        'dispAno'             => $dispAno ?? null,
-                        'dispEstacaoId'       => $dispEstacaoId ?? 0,
-                        'dispEstacoes'        => $dispEstacoes ?? [],
-                        'dispDiasNoMes'       => $dispDiasNoMes ?? null,
-                        'dispFirstDow'        => $dispFirstDow ?? null,
-                        'dispGrade'           => $dispGrade ?? [],
-                        'dispStats'           => $dispStats ?? [],
-                        'dispReservas'        => $dispReservas ?? collect(),
-                        'dispMovimentacoes'   => $dispMovimentacoes ?? collect(),
-                        'reservaBloqueioHoras'=> $reservaBloqueioHoras ?? 0,
-                    ])
-                </div>
-
-                {{-- ── PAINEL: FIPE / DEPRECIAÇÃO ── --}}
-                <div class="vs-panel" data-step-panel="fipe">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 02</span>
-                            <h4 class="vs-panel-head__title">Monitoramento FIPE</h4>
-                            <p class="vs-panel-head__sub">Acompanhe o valor de compra, valor FIPE, depreciação acumulada e a proteção financeira do veículo.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Compra</span>
-                                <strong>{{ $finValorCompra > 0 ? 'R$ ' . number_format($finValorCompra, 2, ',', '.') : '—' }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>FIPE</span>
-                                <strong>{{ $finValorFipe > 0 ? 'R$ ' . number_format($finValorFipe, 2, ',', '.') : '—' }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Atual estimado</span>
-                                <strong>{{ $finValorAtualEstimado !== null ? 'R$ ' . number_format($finValorAtualEstimado, 2, ',', '.') : '—' }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-xl-7 mb-3">
-                            <div class="vs-chart-card">
-                                <div class="vs-chart-card__head">
-                                    <div>
-                                        <strong>Composição de valor</strong>
-                                        <small>Compra, depreciação e valor estimado atual</small>
-                                    </div>
-                                </div>
-                                <div class="vs-chart-wrap">
-                                    <canvas id="fipeValueChart" height="170"></canvas>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-5 mb-3">
-                            <div class="vs-metrics-stack">
-                                <div class="vs-metric-box">
-                                    <span class="vs-metric-box__label">Diferença Compra / FIPE</span>
-                                    <strong class="{{ ($finDiferencaFipeCompra ?? 0) >= 0 ? 'text-success' : 'text-danger' }}">
-                                        @if($finDiferencaFipeCompra !== null)
-                                            R$ {{ number_format($finDiferencaFipeCompra, 2, ',', '.') }}
-                                        @else
-                                            —
-                                        @endif
-                                    </strong>
-                                    <small>Quanto o veículo está acima ou abaixo do valor de mercado.</small>
-                                </div>
-                                <div class="vs-metric-box">
-                                    <span class="vs-metric-box__label">Depreciação acumulada</span>
-                                    <strong>{{ $finDepreciacaoAcumulada !== null ? 'R$ ' . number_format($finDepreciacaoAcumulada, 2, ',', '.') : '—' }}</strong>
-                                    <small>{{ $finPctDepreciacao !== null ? number_format($finPctDepreciacao, 2, ',', '.') . '% acumulado' : 'Taxa anual não informada.' }}</small>
-                                </div>
-                                <div class="vs-metric-box">
-                                    <span class="vs-metric-box__label">Proteção contra depreciação</span>
-                                    <strong class="{{ $finTemProtecaoDepreciacao ? 'text-success' : 'text-muted' }}">
-                                        {{ $finTemProtecaoDepreciacao ? 'Ativa' : 'Inativa' }}
-                                    </strong>
-                                    <small>
-                                        @if($finTemProtecaoDepreciacao && $finValorProtegidoDepreciacao !== null)
-                                            Protegido até R$ {{ number_format($finValorProtegidoDepreciacao, 2, ',', '.') }}.
-                                        @else
-                                            O valor de compra ainda não supera a FIPE.
-                                        @endif
-                                    </small>
-                                </div>
-                                <div class="vs-metric-box">
-                                    <span class="vs-metric-box__label">Consulta FIPE</span>
-                                    <strong>
-                                        {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}
-                                    </strong>
-                                    <small>{{ $veiculo->codigo_fipe ?? 'Sem código FIPE salvo' }}</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ── PAINEL: Avarias ── --}}
-                <div class="vs-panel" data-step-panel="avarias">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 03</span>
-                            <h4 class="vs-panel-head__title">Avarias registradas</h4>
-                            <p class="vs-panel-head__sub">Filtre rapidamente por pendências, tipo do dano, local afetado e vínculo com reserva.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Pendente</span>
-                                <strong>{{ $veiculo->veiculoDanos->where('status', 'pendente')->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Em correção</span>
-                                <strong>{{ $veiculo->veiculoDanos->where('status', 'em_correcao')->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Corrigidas</span>
-                                <strong>{{ $veiculo->veiculoDanos->whereIn('status', ['corrigida', 'parcialmente_corrigida', 'descartada'])->count() }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vs-filter-wrap">
-                        <div class="vs-filter-top">
-                            <div class="vs-filter-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="avf_busca" class="vs-search-input" placeholder="Buscar por local, tipo, observação ou reserva..." oninput="filtrarAvarias()">
-                            </div>
-
-                            <div class="vs-filter-actions">
-                                <button type="button" class="vs-chip is-active" data-chip-group="avarias" onclick="chipAvarias(this, 'todos')">Todos</button>
-                                <button type="button" class="vs-chip" data-chip-group="avarias" onclick="chipAvarias(this, 'pendente')">Pendentes</button>
-                                <button type="button" class="vs-chip" data-chip-group="avarias" onclick="chipAvarias(this, 'corrigido')">Corrigidas</button>
-                                <button type="button" class="vs-chip" data-chip-group="avarias" onclick="chipAvarias(this, 'reserva')">Com reserva</button>
-                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('avarias')">
-                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="vs-advanced-filters" id="vsAdvanced-avarias">
-                            <div class="vs-filter-grid">
-                                <div class="vs-filter-field">
-                                    <label>Status</label>
-                                    <select id="avf_status" class="vt-select" onchange="filtrarAvarias()">
-                                        <option value="">Todos</option>
-                                        <option value="pendente">Pendente</option>
-                                        <option value="corrigido">Corrigido</option>
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Tipo de dano</label>
-                                    <input type="text" id="avf_tipo" class="vt-input" placeholder="Ex: amassado, risco..." oninput="filtrarAvarias()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Local do dano</label>
-                                    <input type="text" id="avf_local" class="vt-input" placeholder="Ex: porta, para-choque..." oninput="filtrarAvarias()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Reserva #</label>
-                                    <input type="number" id="avf_reserva" class="vt-input" placeholder="ID da reserva" oninput="filtrarAvarias()">
-                                </div>
-
-                                <div class="vs-filter-field vs-filter-field--check">
-                                    <label class="vs-check">
-                                        <input type="checkbox" id="avf_com_reserva" onchange="filtrarAvarias()">
-                                        <span>Mostrar apenas itens com reserva vinculada</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="vs-filter-footer">
-                                <div class="vs-filter-result" id="avf_result"></div>
-                                <div class="vs-filter-footer__actions">
-                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroAvarias()">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </button>
-                                    <button type="button" class="vt-btn-filter" onclick="filtrarAvarias()">
-                                        <i class="fas fa-search"></i> Aplicar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vt-panel-actions">
-                        <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'todos']) }}" class="btn-xp btn-xp--sm btn-xp--outline">
-                            <i class="fas fa-list mr-1"></i>Ver todas as avarias
-                        </a>
-                    </div>
-
-                    @if($veiculo->veiculoDanos->isEmpty())
-                        <div class="empty-state"><i class="fas fa-shield-alt"></i><p>Nenhuma avaria registrada.</p></div>
-                    @else
-                    <div class="table-responsive">
-                        <table class="table table-hover xp-table" id="tabelaAvarias">
-                            <thead>
-                                <tr>
-                                    <th>Avaria</th>
-                                    <th>Local</th>
-                                    <th>Situação</th>
-                                    <th>Tratamento</th>
-                                    <th>Origem</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($veiculo->veiculoDanos->sortByDesc('id') as $dano)
-                                @php
-                                    $codigoReservaDano = $dano->reservaCodigo?->codigo
-                                        ?? $dano->reserva?->codigoReserva?->codigo
-                                        ?? $dano->contratoCheckin?->reserva?->codigoReserva?->codigo;
-
-                                    // Localizar OS associada
-                                    $itemOS = $dano->ordemServicoItens()->whereHas('ordemServico', function($q) {
-                                        $q->whereIn('status', ['aberta', 'em_andamento', 'concluida']);
-                                    })->with('ordemServico')->first();
-
-                                    $osAssociada = $itemOS?->ordemServico;
-
-                                    $statusClass = match($dano->status) {
-                                        'em_correcao' => 'status-badge--blue',
-                                        'corrigida' => 'status-badge--green',
-                                        'parcialmente_corrigida' => 'status-badge--green',
-                                        'descartada' => 'status-badge--gray',
-                                        default => 'status-badge--amber'
-                                    };
-                                    $statusText = match($dano->status) {
-                                        'em_correcao' => 'Em Correção',
-                                        'corrigida' => 'Corrigido',
-                                        'parcialmente_corrigida' => 'Parcialmente Corrigido',
-                                        'descartada' => 'Descartado',
-                                        default => 'Pendente'
-                                    };
-                                @endphp
-                                <tr
-                                    data-av-status="{{ $dano->status }}"
-                                    data-av-tipo="{{ strtolower($dano->tipo_dano ?? '') }}"
-                                    data-av-local="{{ strtolower($dano->local_dano ?? '') }}"
-                                    data-av-reserva="{{ $codigoReservaDano ?? '' }}"
-                                >
-                                    <td>
-                                        <span class="xp-id">#{{ $dano->id }}</span>
-                                        <div class="font-weight-bold text-dark">{{ $dano->tipo_dano ?? 'Avaria geral' }}</div>
-                                        <small class="text-muted d-block"><strong>Inicial:</strong> {{ \Illuminate\Support\Str::limit($dano->observacoes, 50) }}</small>
-                                        @if($dano->correcao_descricao)
-                                            <small class="text-success d-block"><i class="fas fa-check-circle mr-1"></i><strong>Laudo/Correção:</strong> {{ \Illuminate\Support\Str::limit($dano->correcao_descricao, 50) }}</small>
-                                        @endif
-                                    </td>
-                                    <td>{{ strtoupper($dano->local_dano ?? '—') }}</td>
-                                    <td>
-                                        <span class="status-badge {{ $statusClass }}">
-                                            <i class="fas fa-circle mr-1" style="font-size: 8px;"></i>{{ $statusText }}
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @if($osAssociada)
-                                            <a href="{{ route('ordem-servico.show', $osAssociada) }}" class="xp-link font-weight-bold">
-                                                <i class="fas fa-tools mr-1"></i>{{ $osAssociada->numero ?? 'OS #' . $osAssociada->id }}
-                                            </a>
-                                        @elseif($dano->correcao_data)
-                                            <span class="text-success font-weight-semibold"><i class="fas fa-check mr-1"></i>Correção rápida</span>
-                                        @else
-                                            <span class="text-muted small">Ainda não definido</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($codigoReservaDano)
-                                            <a href="{{ route('reserva.show', $codigoReservaDano) }}" class="xp-link">#{{ $codigoReservaDano }}</a>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @endif
-                </div>
-
-                {{-- ── PAINEL: Ordens de Serviço ── --}}
-                <div class="vs-panel" data-step-panel="os">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 04</span>
-                            <h4 class="vs-panel-head__title">Ordens de serviço</h4>
-                            <p class="vs-panel-head__sub">Acompanhe aberturas, andamento e conclusões com filtros mais objetivos.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Abertas</span>
-                                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_ABERTA)->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Em andamento</span>
-                                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_EM_ANDAMENTO)->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Concluídas</span>
-                                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_CONCLUIDA)->count() }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vs-filter-wrap">
-                        <div class="vs-filter-top">
-                            <div class="vs-filter-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="osf_busca" class="vs-search-input" placeholder="Buscar por número, status ou itens..." oninput="filtrarOs()">
-                            </div>
-
-                            <div class="vs-filter-actions">
-                                <button type="button" class="vs-chip is-active" data-chip-group="os" onclick="chipOs(this, 'todos')">Todas</button>
-                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'aberta')">Abertas</button>
-                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'em_andamento')">Em andamento</button>
-                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'concluida')">Concluídas</button>
-                                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, '30dias')">Últimos 30 dias</button>
-                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('os')">
-                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="vs-advanced-filters" id="vsAdvanced-os">
-                            <div class="vs-filter-grid">
-                                <div class="vs-filter-field">
-                                    <label>Status</label>
-                                    <select id="osf_status" class="vt-select" onchange="filtrarOs()">
-                                        <option value="">Todos</option>
-                                        <option value="aberta">Aberta</option>
-                                        <option value="em_andamento">Em Andamento</option>
-                                        <option value="concluida">Concluída</option>
-                                        <option value="cancelada">Cancelada</option>
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Número / ID</label>
-                                    <input type="text" id="osf_numero" class="vt-input" placeholder="Ex: OS-001" oninput="filtrarOs()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Abertura de</label>
-                                    <input type="date" id="osf_data_de" class="vt-input" onchange="filtrarOs()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Abertura até</label>
-                                    <input type="date" id="osf_data_ate" class="vt-input" onchange="filtrarOs()">
-                                </div>
-                            </div>
-
-                            <div class="vs-filter-footer">
-                                <div class="vs-filter-result" id="osf_result"></div>
-                                <div class="vs-filter-footer__actions">
-                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroOs()">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </button>
-                                    <button type="button" class="vt-btn-filter" onclick="filtrarOs()">
-                                        <i class="fas fa-search"></i> Aplicar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vt-panel-actions">
-                        <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-plus mr-1"></i>Nova OS para este veículo
-                        </a>
-                    </div>
-
-                    @if($veiculo->ordensServico->isEmpty())
-                        <div class="empty-state"><i class="fas fa-tools"></i><p>Nenhuma ordem de serviço registrada.</p></div>
-                    @else
-                    <div class="table-responsive">
-                        <table class="table table-hover xp-table" id="tabelaOs">
-                            <thead>
-                                <tr>
-                                    <th>Número</th>
-                                    <th>Status</th>
-                                    <th>Abertura</th>
-                                    <th>Conclusão</th>
-                                    <th>Itens</th>
-                                    <th>Valor</th>
-                                    <th>Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($veiculo->ordensServico->sortByDesc('id') as $os)
-                                @php
-                                    $osStatusVal = $os->status ?? '';
-                                    $osDataAb    = $os->created_at ? $os->created_at->format('Y-m-d') : '';
-                                    $osNumero    = strtolower($os->numero ?? (string)$os->id);
-                                @endphp
-                                <tr
-                                    data-os-status="{{ $osStatusVal }}"
-                                    data-os-numero="{{ $osNumero }}"
-                                    data-os-data="{{ $osDataAb }}"
-                                >
-                                    <td><span class="xp-id">{{ $os->numero ?? '#' . $os->id }}</span></td>
-                                    <td>
-                                        @if($osStatusVal === \App\Models\OrdemServico::STATUS_ABERTA)
-                                            <span class="badge badge-xs bg-amber">Aberta</span>
-                                        @elseif($osStatusVal === \App\Models\OrdemServico::STATUS_EM_ANDAMENTO)
-                                            <span class="badge badge-xs bg-blue">Em Andamento</span>
-                                        @elseif($osStatusVal === \App\Models\OrdemServico::STATUS_CONCLUIDA)
-                                            <span class="badge badge-xs bg-green">Concluída</span>
-                                        @else
-                                            <span class="badge badge-xs bg-gray">Cancelada</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $os->created_at ? $os->created_at->format('d/m/Y') : '—' }}</td>
-                                    <td>{{ $os->data_conclusao ? $os->data_conclusao->format('d/m/Y') : '—' }}</td>
-                                    <td>{{ $os->itens ? $os->itens->count() : '—' }}</td>
-                                    <td>
-                                        @if($os->valor_total > 0)
-                                            <strong>{{ number_format($os->valor_total, 2, ',', '.') }}</strong>
-                                        @else
-                                            <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('ordem-servico.show', $os) }}" class="btn-xp btn-xp--sm">
-                                            <i class="fas fa-eye mr-1"></i>Ver
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @endif
-                </div>
-
-                {{-- ── PAINEL: Movimentações ── --}}
-                <div class="vs-panel" data-step-panel="mov">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 05</span>
-                            <h4 class="vs-panel-head__title">Movimentações do veículo</h4>
-                            <p class="vs-panel-head__sub">Cruze tipo, status, origem, destino, data, usuário e vínculo com reserva em uma leitura só.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Total</span>
-                                <strong>{{ $veiculo->movimentacoes->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Com reserva</span>
-                                <strong>{{ $veiculo->movimentacoes->whereNotNull('reserva_id')->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Sem chegada</span>
-                                <strong>{{ $veiculo->movimentacoes->whereNull('data_chegada_real')->count() }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vs-filter-wrap">
-                        <div class="vs-filter-top">
-                            <div class="vs-filter-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="mvf_busca" class="vs-search-input" placeholder="Buscar por origem, destino, usuário, reserva ou OS..." oninput="filtrarMov()">
-                            </div>
-
-                            <div class="vs-filter-actions">
-                                <button type="button" class="vs-chip is-active" data-chip-group="mov" onclick="chipMov(this, 'todos')">Todas</button>
-                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'reserva')">Com reserva</button>
-                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'sem_chegada')">Sem chegada</button>
-                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'hoje')">Hoje</button>
-                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('mov')">
-                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="vs-advanced-filters" id="vsAdvanced-mov">
-                            <div class="vs-filter-grid">
-                                <div class="vs-filter-field">
-                                    <label>Tipo</label>
-                                    <select id="mvf_tipo" class="vt-select" onchange="filtrarMov()">
-                                        <option value="">Todos</option>
-                                        @foreach($veiculo->movimentacoes->pluck('tipoMovimentacao.nome','tipoMovimentacao.nome')->filter()->unique() as $tn)
-                                            <option value="{{ strtolower($tn) }}">{{ $tn }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Status</label>
-                                    <select id="mvf_status" class="vt-select" onchange="filtrarMov()">
-                                        <option value="">Todos</option>
-                                        @foreach($veiculo->movimentacoes->pluck('statusMovimentacao.nome','statusMovimentacao.nome')->filter()->unique() as $sn)
-                                            <option value="{{ strtolower($sn) }}">{{ $sn }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Origem</label>
-                                    <input type="text" id="mvf_origem" class="vt-input" placeholder="Nome da estação" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Destino</label>
-                                    <input type="text" id="mvf_destino" class="vt-input" placeholder="Nome da estação" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Saída de</label>
-                                    <input type="date" id="mvf_data_de" class="vt-input" onchange="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Saída até</label>
-                                    <input type="date" id="mvf_data_ate" class="vt-input" onchange="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Reserva #</label>
-                                    <input type="number" id="mvf_reserva" class="vt-input" placeholder="ID" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Usuário</label>
-                                    <input type="text" id="mvf_usuario" class="vt-input" placeholder="Nome do usuário" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field vs-filter-field--check">
-                                    <label class="vs-check">
-                                        <input type="checkbox" id="mvf_com_reserva" onchange="filtrarMov()">
-                                        <span>Mostrar apenas movimentações com reserva</span>
-                                    </label>
-                                </div>
-
-                                <div class="vs-filter-field vs-filter-field--check">
-                                    <label class="vs-check">
-                                        <input type="checkbox" id="mvf_sem_chegada" onchange="filtrarMov()">
-                                        <span>Mostrar apenas movimentações sem chegada registrada</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="vs-filter-footer">
-                                <div class="vs-filter-result" id="mvf_result"></div>
-                                <div class="vs-filter-footer__actions">
-                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroMov()">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </button>
-                                    <button type="button" class="vt-btn-filter" onclick="filtrarMov()">
-                                        <i class="fas fa-search"></i> Aplicar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vt-panel-actions">
-                        <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-route mr-1"></i>Transferir entre estações
-                        </a>
-                    </div>
-
-                    @if($veiculo->movimentacoes->isEmpty())
-                        <div class="empty-state"><i class="fas fa-route"></i><p>Nenhuma movimentação registrada.</p></div>
-                    @else
-                    <div class="table-responsive">
-                        <table class="table table-hover xp-table" id="tabelaMov">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tipo</th>
-                                    <th>Status</th>
-                                    <th>Origem</th>
-                                    <th>Destino</th>
-                                    <th>Saída</th>
-                                    <th>KM Saída</th>
-                                    <th>Chegada</th>
-                                    <th>KM Chegada</th>
-                                    <th>Reserva</th>
-                                    <th>OS</th>
-                                    <th>Usuário</th>
-                                    <th>Obs</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($veiculo->movimentacoes as $mov)
-                                @php
-                                    $mvTipo    = strtolower(optional($mov->tipoMovimentacao)->nome ?? '');
-                                    $mvStatus  = strtolower(optional($mov->statusMovimentacao)->nome ?? '');
-                                    $mvOrigem  = strtolower(optional($mov->localOrigem)->nome ?? '');
-                                    $mvDestino = strtolower(optional($mov->localDestino)->nome ?? '');
-                                    $mvUsuario = strtolower(optional($mov->usuario)->nome ?? '');
-                                    $mvDataSaida = $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('Y-m-d') : '';
-                                    $cor = optional($mov->statusMovimentacao)->cor ?? 'secondary';
-                                    $statusBadgeClass = [
-                                        'success' => 'bg-green',
-                                        'info' => 'bg-blue',
-                                        'primary' => 'bg-blue',
-                                        'warning' => 'bg-amber',
-                                        'orange' => 'bg-orange',
-                                        'danger' => 'bg-red',
-                                        'secondary' => 'bg-gray',
-                                        'gray' => 'bg-gray',
-                                        'grey' => 'bg-gray',
-                                        'purple' => 'bg-purple',
-                                        'teal' => 'bg-teal',
-                                    ][strtolower((string) $cor)] ?? 'bg-gray';
-                                @endphp
-                                <tr
-                                    data-mv-tipo="{{ $mvTipo }}"
-                                    data-mv-status="{{ $mvStatus }}"
-                                    data-mv-origem="{{ $mvOrigem }}"
-                                    data-mv-destino="{{ $mvDestino }}"
-                                    data-mv-reserva="{{ $mov->reserva_id ?? '' }}"
-                                    data-mv-usuario="{{ $mvUsuario }}"
-                                    data-mv-data="{{ $mvDataSaida }}"
-                                    data-mv-chegada="{{ $mov->data_chegada_real ? 1 : 0 }}"
-                                >
-                                    <td><span class="xp-id">#{{ $mov->id }}</span></td>
-                                    <td>{{ optional($mov->tipoMovimentacao)->nome ?? '—' }}</td>
-                                    <td>
-                                        <span class="status-badge badge badge-xs {{ $statusBadgeClass }}">
-                                            {{ optional($mov->statusMovimentacao)->nome ?? '—' }}
-                                        </span>
-                                    </td>
-                                    <td>{{ optional($mov->localOrigem)->nome ?? '—' }}</td>
-                                    <td>{{ optional($mov->localDestino)->nome ?? '—' }}</td>
-                                    <td>{{ $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('d/m/Y H:i') : '—' }}</td>
-                                    <td>{{ $mov->km_saida !== null ? number_format((float)$mov->km_saida, 0, ',', '.') : '—' }}</td>
-                                    <td>
-                                        @if($mov->data_chegada_real)
-                                            {{ \Carbon\Carbon::parse($mov->data_chegada_real)->format('d/m/Y H:i') }}
-                                        @elseif($mov->data_chegada_prevista)
-                                            <span class="text-muted">{{ \Carbon\Carbon::parse($mov->data_chegada_prevista)->format('d/m/Y H:i') }}</span>
-                                        @else —
-                                        @endif
-                                    </td>
-                                    <td>{{ $mov->km_chegada !== null ? number_format((float)$mov->km_chegada, 0, ',', '.') : '—' }}</td>
-                                    <td>
-                                        @if($mov->reserva?->codigoReserva?->codigo)
-                                            <a href="{{ route('reserva.show', $mov->reserva->codigoReserva->codigo) }}" class="xp-link">#{{ $mov->reserva->codigoReserva->codigo }}</a>
-                                        @else <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($mov->ordem_servico_id)
-                                            <a href="{{ route('ordem-servico.show', $mov->ordem_servico_id) }}" class="xp-link">
-                                                {{ optional($mov->ordemServico)->numero ?? ('#'.$mov->ordem_servico_id) }}
-                                            </a>
-                                        @else <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ optional($mov->usuario)->nome ?? '—' }}</td>
-                                    <td class="obs-cell">{{ \Illuminate\Support\Str::limit((string)($mov->observacoes ?? ''), 50) ?: '—' }}</td>
-                                    <td>
-                                        <a href="{{ route('movimentacao.edit', $mov->id) }}" class="btn btn-xs btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @endif
-                </div>
-
-                {{-- ── PAINEL: Sinistros ── --}}
-                <div class="vs-panel" data-step-panel="sinistros">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 06</span>
-                            <h4 class="vs-panel-head__title">Sinistros</h4>
-                            <p class="vs-panel-head__sub">Entenda rapidamente status, período, seguradora e números do processo.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Abertos</span>
-                                <strong>{{ $veiculo->sinistros->whereIn('status', ['aberto','em_analise','aguardando_documentos'])->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Encerrados</span>
-                                <strong>{{ $veiculo->sinistros->whereIn('status', ['encerrado','indenizado'])->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Total</span>
-                                <strong>{{ $veiculo->sinistros->count() }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vs-filter-wrap">
-                        <div class="vs-filter-top">
-                            <div class="vs-filter-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="snf_busca" class="vs-search-input" placeholder="Buscar por local, seguradora, número ou tipo..." oninput="filtrarSn()">
-                            </div>
-
-                            <div class="vs-filter-actions">
-                                <button type="button" class="vs-chip is-active" data-chip-group="sinistros" onclick="chipSn(this, 'todos')">Todos</button>
-                                <button type="button" class="vs-chip" data-chip-group="sinistros" onclick="chipSn(this, 'aberto')">Abertos</button>
-                                <button type="button" class="vs-chip" data-chip-group="sinistros" onclick="chipSn(this, 'aguardando_documentos')">Aguardando docs</button>
-                                <button type="button" class="vs-chip" data-chip-group="sinistros" onclick="chipSn(this, 'encerrado')">Encerrados</button>
-                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('sinistros')">
-                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="vs-advanced-filters" id="vsAdvanced-sinistros">
-                            <div class="vs-filter-grid">
-                                <div class="vs-filter-field">
-                                    <label>Status</label>
-                                    <select id="snf_status" class="vt-select" onchange="filtrarSn()">
-                                        <option value="">Todos</option>
-                                        @foreach(\App\Models\Sinistro::STATUS as $k => $v)
-                                            <option value="{{ $k }}">{{ $v }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Tipo</label>
-                                    <select id="snf_tipo" class="vt-select" onchange="filtrarSn()">
-                                        <option value="">Todos</option>
-                                        @foreach(\App\Models\Sinistro::TIPOS as $k => $v)
-                                            <option value="{{ $k }}">{{ $v }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Data ocorrido de</label>
-                                    <input type="date" id="snf_data_de" class="vt-input" onchange="filtrarSn()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Data ocorrido até</label>
-                                    <input type="date" id="snf_data_ate" class="vt-input" onchange="filtrarSn()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Seguradora</label>
-                                    <input type="text" id="snf_seguradora" class="vt-input" placeholder="Nome da seguradora" oninput="filtrarSn()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Nº Sinistro Seguradora</label>
-                                    <input type="text" id="snf_num_seg" class="vt-input" placeholder="Ex: SIN-2026-001" oninput="filtrarSn()">
-                                </div>
-                            </div>
-
-                            <div class="vs-filter-footer">
-                                <div class="vs-filter-result" id="snf_result"></div>
-                                <div class="vs-filter-footer__actions">
-                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroSn()">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </button>
-                                    <button type="button" class="vt-btn-filter" onclick="filtrarSn()">
-                                        <i class="fas fa-search"></i> Aplicar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vt-panel-actions">
-                        <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-plus mr-1"></i>Registrar sinistro
-                        </a>
-                        <a href="{{ route('sinistro.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
-                            <i class="fas fa-list mr-1"></i>Ver todos
-                        </a>
-                    </div>
-
-                    @if($veiculo->sinistros->isEmpty())
-                        <div class="empty-state"><i class="fas fa-shield-alt"></i><p>Nenhum sinistro registrado.</p></div>
-                    @else
-                    <div class="table-responsive">
-                        <table class="table table-hover xp-table" id="tabelaSn">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tipo</th>
-                                    <th>Data</th>
-                                    <th>Local</th>
-                                    <th>Seguradora</th>
-                                    <th>Nº Seg.</th>
-                                    <th>Prejuízo Est.</th>
-                                    <th>Resp. Cliente</th>
-                                    <th>Status</th>
-                                    <th>Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($veiculo->sinistros as $sn)
-                                @php
-                                    $snBadge = match($sn->status) {
-                                        'encerrado','indenizado' => 'success',
-                                        'aprovado'  => 'primary',
-                                        'cancelado' => 'secondary',
-                                        'aguardando_documentos' => 'warning',
-                                        default     => 'danger',
-                                    };
-                                @endphp
-                                <tr
-                                    data-sn-status="{{ $sn->status }}"
-                                    data-sn-tipo="{{ $sn->tipo_sinistro }}"
-                                    data-sn-seguradora="{{ strtolower($sn->seguradora ?? '') }}"
-                                    data-sn-num-seg="{{ strtolower($sn->numero_sinistro_seguradora ?? '') }}"
-                                    data-sn-data="{{ $sn->data_hora_ocorrido ? $sn->data_hora_ocorrido->format('Y-m-d') : '' }}"
-                                >
-                                    <td><span class="xp-id">#{{ $sn->id }}</span></td>
-                                    <td>{{ $sn->label_tipo }}</td>
-                                    <td>{{ $sn->data_hora_ocorrido ? $sn->data_hora_ocorrido->format('d/m/Y') : '—' }}</td>
-                                    <td class="obs-cell">{{ \Illuminate\Support\Str::limit($sn->local_ocorrido ?? '—', 35) }}</td>
-                                    <td>{{ $sn->seguradora ?? '—' }}</td>
-                                    <td>{{ $sn->numero_sinistro_seguradora ?? '—' }}</td>
-                                    <td>{{ $sn->valor_prejuizo_estimado !== null ? 'R$ '.number_format((float)$sn->valor_prejuizo_estimado,2,',','.') : '—' }}</td>
-                                    <td>{{ $sn->valor_responsabilidade_cliente !== null ? 'R$ '.number_format((float)$sn->valor_responsabilidade_cliente,2,',','.') : '—' }}</td>
-                                    <td><span class="badge badge-{{ $snBadge }}">{{ $sn->label_status }}</span></td>
-                                    <td>
-                                        <a href="{{ route('sinistro.show', $sn->id) }}" class="btn-xp btn-xp--sm">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @endif
-                </div>
-
-                {{-- ── PAINEL: Multas ── --}}
-                <div class="vs-panel" data-step-panel="multas">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 07</span>
-                            <h4 class="vs-panel-head__title">Multas e infrações</h4>
-                            <p class="vs-panel-head__sub">Use filtros mais ricos por status, órgão, auto, período, valor e desconto.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Pendentes</span>
-                                <strong>{{ $veiculo->multas->whereIn('status_multa', ['pendente','em_analise'])->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Pagas</span>
-                                <strong>{{ $veiculo->multas->where('status_multa', 'paga')->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Total</span>
-                                <strong>{{ $veiculo->multas->count() }}</strong>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vs-filter-wrap">
-                        <div class="vs-filter-top">
-                            <div class="vs-filter-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="mtf_busca" class="vs-search-input" placeholder="Buscar por órgão, auto, local ou reserva..." oninput="filtrarMt()">
-                            </div>
-
-                            <div class="vs-filter-actions">
-                                <button type="button" class="vs-chip is-active" data-chip-group="multas" onclick="chipMt(this, 'todos')">Todas</button>
-                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'pendente')">Pendentes</button>
-                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'paga')">Pagas</button>
-                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'recorrida')">Recorridas</button>
-                                <button type="button" class="vs-chip" data-chip-group="multas" onclick="chipMt(this, 'com_desconto')">Com desconto</button>
-                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('multas')">
-                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="vs-advanced-filters" id="vsAdvanced-multas">
-                            <div class="vs-filter-grid">
-                                <div class="vs-filter-field">
-                                    <label>Status da Multa</label>
-                                    <select id="mtf_status" class="vt-select" onchange="filtrarMt()">
-                                        <option value="">Todos</option>
-                                        @foreach(\App\Models\Multa::STATUS_MULTA as $k => $v)
-                                            <option value="{{ $k }}">{{ $v }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Status Desconto</label>
-                                    <select id="mtf_desconto" class="vt-select" onchange="filtrarMt()">
-                                        <option value="">Todos</option>
-                                        @foreach(\App\Models\Multa::STATUS_DESCONTO as $k => $v)
-                                            <option value="{{ $k }}">{{ $v }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Órgão Autuador</label>
-                                    <input type="text" id="mtf_orgao" class="vt-input" placeholder="Ex: DETRAN, PRF..." oninput="filtrarMt()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Nº Auto</label>
-                                    <input type="text" id="mtf_auto" class="vt-input" placeholder="Número do auto" oninput="filtrarMt()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Infração de</label>
-                                    <input type="date" id="mtf_data_de" class="vt-input" onchange="filtrarMt()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Infração até</label>
-                                    <input type="date" id="mtf_data_ate" class="vt-input" onchange="filtrarMt()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Valor mín. (R$)</label>
-                                    <input type="number" id="mtf_valor_min" class="vt-input" placeholder="0.00" step="0.01" oninput="filtrarMt()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Valor máx. (R$)</label>
-                                    <input type="number" id="mtf_valor_max" class="vt-input" placeholder="9999.99" step="0.01" oninput="filtrarMt()">
-                                </div>
-
-                                <div class="vs-filter-field vs-filter-field--check">
-                                    <label class="vs-check">
-                                        <input type="checkbox" id="mtf_com_desconto" onchange="filtrarMt()">
-                                        <span>Mostrar apenas multas com desconto aplicado</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="vs-filter-footer">
-                                <div class="vs-filter-result" id="mtf_result"></div>
-                                <div class="vs-filter-footer__actions">
-                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroMt()">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </button>
-                                    <button type="button" class="vt-btn-filter" onclick="filtrarMt()">
-                                        <i class="fas fa-search"></i> Aplicar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vt-panel-actions">
-                        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-plus mr-1"></i>Cadastrar multa
-                        </a>
-                        <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
-                            <i class="fas fa-list mr-1"></i>Ver todas
-                        </a>
-                    </div>
-
-                    @if($veiculo->multas->isEmpty())
-                        <div class="empty-state"><i class="fas fa-receipt"></i><p>Nenhuma multa registrada.</p></div>
-                    @else
-                    <div class="table-responsive">
-                        <table class="table table-hover xp-table" id="tabelaMt">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Data Infração</th>
-                                    <th>Órgão</th>
-                                    <th>Nº Auto</th>
-                                    <th>Local</th>
-                                    <th>Vencimento</th>
-                                    <th>Pontos</th>
-                                    <th class="text-right">Valor Orig.</th>
-                                    <th class="text-right">Desconto</th>
-                                    <th class="text-right">Valor Final</th>
-                                    <th>Status Multa</th>
-                                    <th>Status Desc.</th>
-                                    <th>Reserva</th>
-                                    <th>Ação</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($veiculo->multas as $mt)
-                                @php
-                                    $mtBadge = match($mt->status_multa) {
-                                        'paga','deferida' => 'success',
-                                        'cancelada'       => 'secondary',
-                                        'recorrida'       => 'info',
-                                        'indeferida'      => 'danger',
-                                        default           => 'warning',
-                                    };
-                                @endphp
-                                <tr
-                                    data-mt-status="{{ $mt->status_multa }}"
-                                    data-mt-desconto="{{ $mt->status_desconto }}"
-                                    data-mt-orgao="{{ strtolower($mt->orgao_autuador ?? '') }}"
-                                    data-mt-auto="{{ strtolower($mt->numero_auto ?? '') }}"
-                                    data-mt-data="{{ $mt->data_hora_infracao ? $mt->data_hora_infracao->format('Y-m-d') : '' }}"
-                                    data-mt-valor="{{ (float)($mt->valor_final ?? 0) }}"
-                                    data-mt-has-desconto="{{ $mt->valor_desconto !== null ? 1 : 0 }}"
-                                >
-                                    <td><span class="xp-id">#{{ $mt->id }}</span></td>
-                                    <td>{{ $mt->data_hora_infracao ? $mt->data_hora_infracao->format('d/m/Y H:i') : '—' }}</td>
-                                    <td>{{ $mt->orgao_autuador ?? '—' }}</td>
-                                    <td>{{ $mt->numero_auto ?? '—' }}</td>
-                                    <td class="obs-cell">{{ \Illuminate\Support\Str::limit($mt->local_infracao ?? '—', 30) }}</td>
-                                    <td>{{ $mt->data_vencimento ? $mt->data_vencimento->format('d/m/Y') : '—' }}</td>
-                                    <td>{{ $mt->pontos ?? '—' }}</td>
-                                    <td class="text-right">R$ {{ number_format((float)$mt->valor_original,2,',','.') }}</td>
-                                    <td class="text-right">{{ $mt->valor_desconto !== null ? 'R$ '.number_format((float)$mt->valor_desconto,2,',','.') : '—' }}</td>
-                                    <td class="text-right font-weight-bold">R$ {{ number_format((float)$mt->valor_final,2,',','.') }}</td>
-                                    <td><span class="badge badge-{{ $mtBadge }}">{{ $mt->label_status_multa }}</span></td>
-                                    <td><span class="badge badge-light text-dark">{{ $mt->label_status_desconto }}</span></td>
-                                    <td>
-                                        @if($mt->reserva?->codigoReserva?->codigo)
-                                            <a href="{{ route('reserva.show', $mt->reserva->codigoReserva->codigo) }}" class="xp-link">#{{ $mt->reserva->codigoReserva->codigo }}</a>
-                                        @else <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        <a href="{{ route('multa.show', $mt->id) }}" class="btn-xp btn-xp--sm">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @endif
-                </div>
+        <div class="vehicle-tab-panel" data-vehicle-tab-panel="fipe">
+            <div class="veiculo-grid veiculo-grid--compact">
+                <div class="veiculo-field"><span class="veiculo-field__label">Valor de compra</span><span class="veiculo-field__value">{{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Valor FIPE</span><span class="veiculo-field__value">{{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Valor estimado atual</span><span class="veiculo-field__value">{{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Depreciação acumulada</span><span class="veiculo-field__value">{{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Taxa anual</span><span class="veiculo-field__value">{{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Código FIPE</span><span class="veiculo-field__value">{{ $veiculo->codigo_fipe ?? '—' }}</span></div>
             </div>
+        </div>
     </div>
+
+        {{-- OPERAÇÃO E HISTÓRICO EM COMPONENTES --}}
+    @include('veiculo.components.operacional.index')
 </div>
 @stop
 
@@ -2734,12 +1128,209 @@
         }
     }
 
+
+
+    /* ===== Layout compacto da página do veículo ===== */
+    .vehicle-show-page { padding-bottom: 20px; }
+    .vehicle-hero-compact { padding: 17px 22px; }
+    .vehicle-hero-compact .module-header-icon { width: 44px; height: 44px; border-radius: 12px; }
+    .vehicle-hero-compact .module-header-title { font-size: 1.25rem; }
+
+    .vehicle-status-strip {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        background: #fff;
+        border: 1px solid var(--c-border);
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(12,20,40,.05);
+        overflow: hidden;
+    }
+    .vehicle-status-item { padding: 12px 14px; border-right: 1px solid #edf1f7; min-width: 0; }
+    .vehicle-status-item:last-child { border-right: 0; }
+    .vehicle-status-item span { display: block; font-size: .62rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: #64748b; margin-bottom: 4px; }
+    .vehicle-status-item strong { display: block; font-size: .84rem; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .vehicle-status-item--alerts strong { color: #dc2626; font-size: 1rem; }
+
+    .vehicle-action-bar {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .vehicle-action {
+        min-height: 54px;
+        padding: 9px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        border: 1px solid #dfe7f2;
+        border-radius: 12px;
+        background: #fff;
+        color: #1e293b;
+        font-size: .76rem;
+        font-weight: 700;
+        text-decoration: none;
+        box-shadow: 0 2px 8px rgba(12,20,40,.04);
+        transition: .16s ease;
+    }
+    .vehicle-action i { color: var(--c-indigo); font-size: .95rem; }
+    .vehicle-action:hover { transform: translateY(-1px); border-color: #c7d2fe; color: #1e293b; text-decoration: none; box-shadow: 0 5px 14px rgba(67,56,202,.10); }
+    .vehicle-action--primary { background: linear-gradient(135deg, #172554, #273c75); color: #fff; border-color: transparent; }
+    .vehicle-action--primary i, .vehicle-action--primary:hover { color: #fff; }
+    .vehicle-action--danger { border-color: #fecaca; background: #fff7f7; }
+    .vehicle-action--danger i { color: #dc2626; }
+
+    .vehicle-info-tabs { overflow: hidden; }
+    .vehicle-tabs-nav { display: flex; gap: 4px; padding: 8px; background: #f8fafc; border-bottom: 1px solid #e8eef7; overflow-x: auto; }
+    .vehicle-tab-button { border: 0; background: transparent; color: #64748b; padding: 9px 13px; border-radius: 9px; font-size: .78rem; font-weight: 700; white-space: nowrap; cursor: pointer; }
+    .vehicle-tab-button i { margin-right: 5px; }
+    .vehicle-tab-button.is-active { background: #fff; color: var(--c-indigo); box-shadow: 0 2px 8px rgba(15,23,42,.08); }
+    .vehicle-tab-panel { display: none; padding: 13px 14px; }
+    .vehicle-tab-panel.is-active { display: block; }
+    .veiculo-grid--compact { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+    .veiculo-grid--compact .veiculo-field { min-height: 56px; padding: 8px 10px; }
+
+    .vs-shell__intro { padding-top: 16px; }
+
+    @media (max-width: 1199px) {
+        .vehicle-status-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .vehicle-status-item:nth-child(3) { border-right: 0; }
+        .vehicle-status-item:nth-child(-n+3) { border-bottom: 1px solid #edf1f7; }
+        .vehicle-action-bar { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .veiculo-grid--compact { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 767px) {
+        .module-card-header, .vehicle-hero-compact { align-items: flex-start; flex-direction: column; }
+        .module-header-right { width: 100%; }
+        .module-header-right .btn-xp { flex: 1; justify-content: center; }
+        .vehicle-status-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .vehicle-status-item { border-bottom: 1px solid #edf1f7; }
+        .vehicle-status-item:nth-child(odd) { border-right: 1px solid #edf1f7; }
+        .vehicle-status-item:nth-child(even) { border-right: 0; }
+        .vehicle-action-bar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .veiculo-grid--compact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 480px) {
+        .vehicle-status-strip, .vehicle-action-bar, .veiculo-grid--compact { grid-template-columns: 1fr; }
+        .vehicle-status-item { border-right: 0 !important; }
+    }
+
+
+
+    /* Operação compacta: reduz a sensação de duas navegações concorrentes */
+    .vs-shell--compact {
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .vs-compact-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 16px 18px;
+        border-bottom: 1px solid #e7edf6;
+        background: #fff;
+    }
+
+    .vs-compact-head .vs-shell__title {
+        margin: 2px 0 0;
+        font-size: 1rem;
+    }
+
+    .vs-steps--compact {
+        display: grid;
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+        gap: 0;
+        padding: 0;
+        overflow: visible;
+        border-bottom: 1px solid #e7edf6;
+        background: #f8fafc;
+    }
+
+    .vs-steps--compact .vs-step {
+        min-width: 0;
+        min-height: 58px;
+        border: 0;
+        border-right: 1px solid #e7edf6;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 10px 12px;
+    }
+
+    .vs-steps--compact .vs-step:last-child {
+        border-right: 0;
+    }
+
+    .vs-steps--compact .vs-step.is-active {
+        background: #fff;
+        box-shadow: inset 0 -3px 0 var(--c-indigo);
+    }
+
+    .vs-steps--compact .vs-step__content small {
+        display: none;
+    }
+
+    .vs-shell--compact .vs-panel {
+        border: 0;
+        border-radius: 0;
+        padding: 18px;
+    }
+
+    @media (max-width: 1199px) {
+        .vs-steps--compact {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .vs-steps--compact .vs-step:nth-child(3n) {
+            border-right: 0;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .vs-compact-head {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .vs-steps--compact {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .vs-steps--compact .vs-step:nth-child(3n) {
+            border-right: 1px solid #e7edf6;
+        }
+
+        .vs-steps--compact .vs-step:nth-child(2n) {
+            border-right: 0;
+        }
+    }
+
 </style>
 @stop
 
 @section('js')
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var buttons = document.querySelectorAll('[data-vehicle-tab]');
+        var panels = document.querySelectorAll('[data-vehicle-tab-panel]');
+
+        buttons.forEach(function (button) {
+            button.addEventListener('click', function () {
+                var tab = this.dataset.vehicleTab;
+
+                buttons.forEach(function (item) {
+                    item.classList.toggle('is-active', item === button);
+                });
+
+                panels.forEach(function (panel) {
+                    panel.classList.toggle('is-active', panel.dataset.vehicleTabPanel === tab);
+                });
+            });
+        });
+    });
+
     (function () {
         function q(id) {
             return document.getElementById(id);

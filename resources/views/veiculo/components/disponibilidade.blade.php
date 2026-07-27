@@ -37,19 +37,6 @@
 
 <div class="vd-box">
 
-    <div class="vd-box__head">
-        <div class="vd-box__title">
-            <span class="vd-box__icon">
-                <i class="fas fa-calendar-alt"></i>
-            </span>
-
-            <div>
-                <strong>Disponibilidade do Veículo</strong>
-                <small>Visualize por dia, horários e motivo do bloqueio</small>
-            </div>
-        </div>
-    </div>
-
     <form method="GET" action="{{ route('veiculo.show', $veiculo->id) }}" class="vd__filters">
         <div class="vd__filters-row">
             <div class="vd__filters-item">
@@ -100,7 +87,7 @@
     </form>
 
     <div class="vd__summary">
-        <div class="vd__kpi">
+        <div class="vd__kpi vd__kpi--secondary">
             <div class="vd__kpi-label">Período</div>
             <div class="vd__kpi-value">{{ $nomesMeses[$dispMes] ?? $dispMes }}/{{ $dispAno }}</div>
         </div>
@@ -125,7 +112,7 @@
             <div class="vd__kpi-value">{{ $diasIndisponiveis }}</div>
         </div>
 
-        <div class="vd__kpi">
+        <div class="vd__kpi vd__kpi--secondary">
             <div class="vd__kpi-label">Sem local</div>
             <div class="vd__kpi-value">{{ $diasSemLocal }}</div>
         </div>
@@ -347,7 +334,7 @@
             @endif
         </details>
 
-        <details class="vd__details" open>
+        <details class="vd__details">
             <summary>
                 <strong>Movimentações no período</strong>
                 <span>({{ $dispMovimentacoes->count() }})</span>
@@ -830,6 +817,12 @@
             .disp-schedule-item__content {
                 grid-column: 2;
             }
+        }
+
+        .vd__kpi--secondary { display: none; }
+        @media (max-width: 767px) {
+            .vd__summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+            .vd__kpi--secondary { display: block; }
         }
     </style>
 

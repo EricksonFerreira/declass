@@ -1,51 +1,68 @@
 <form action="{{ $action }}" method="POST" class="d-inline delete-form">
     @csrf
     @method('DELETE')
-    <button type="button" class="btn btn-xs btn-danger delete-button">
-        <i class="fa fa-trash"></i> Excluir
+
+    <button
+        type="button"
+        class="btn btn-xs {{ $btnClass ?? 'btn-danger' }} delete-button"
+        data-confirm-title="{{ $tituloMensagem ?? 'Você tem certeza?' }}"
+        data-confirm-message="{{ $mensagem ?? 'Esta ação não pode ser desfeita!' }}"
+        data-confirm-button="{{ $textoConfirmacao ?? 'Sim, excluir!' }}"
+        data-confirm-color="{{ $corConfirmacao ?? '#d33' }}"
+    >
+        <i class="{{ $icone ?? 'fa fa-trash' }}"></i>
+        {{ $titulo ?? 'Excluir' }}
     </button>
 </form>
 
 @once
     <script>
         document.addEventListener('click', function (event) {
-            var button = event.target.closest('.delete-button');
+            const button = event.target.closest('.delete-button');
+
             if (!button) {
                 return;
             }
 
             event.preventDefault();
 
-            var form = button.closest('form.delete-form');
+            const form = button.closest('form.delete-form');
+
             if (!form) {
                 return;
             }
 
-            var confirmDelete = function () {
-                if (typeof window.Swal !== 'undefined' && typeof window.Swal.fire === 'function') {
-                    return window.Swal.fire({
-                        title: 'Você tem certeza?',
-                        text: 'Esta ação não pode ser desfeita!',
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonText: 'Sim, excluir!',
-                        cancelButtonText: 'Cancelar',
-                        confirmButtonColor: '#d33',
-                        cancelButtonColor: '#6c757d',
-                        focusCancel: true,
-                    }).then(function (result) {
-                        if (result && result.isConfirmed) {
-                            form.submit();
-                        }
-                    });
-                }
+            const title = button.dataset.confirmTitle || 'Você tem certeza?';
+            const message = button.dataset.confirmMessage || 'Esta ação não pode ser desfeita!';
+            const confirmButtonText = button.dataset.confirmButton || 'Sim, excluir!';
+            const confirmButtonColor = button.dataset.confirmColor || '#d33';
 
-                if (window.confirm('Você tem certeza? Esta ação não pode ser desfeita!')) {
-                    form.submit();
-                }
-            };
+            if (
+                typeof window.Swal !== 'undefined'
+                && typeof window.Swal.fire === 'function'
+            ) {
+                window.Swal.fire({
+                    title: title,
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: confirmButtonText,
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: confirmButtonColor,
+                    cancelButtonColor: '#6c757d',
+                    focusCancel: true,
+                }).then(function (result) {
+                    if (result && result.isConfirmed) {
+                        form.submit();
+                    }
+                });
 
-            confirmDelete();
+                return;
+            }
+
+            if (window.confirm(title + '\n\n' + message)) {
+                form.submit();
+            }
         });
     </script>
 @endonce

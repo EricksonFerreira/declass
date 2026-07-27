@@ -984,7 +984,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
-            new BreadCrumbItem('Detalhes da Reserva Nº'.$id),
+            new BreadCrumbItem('Detalhes da Reserva Nº'.($codigoReserva->codigo ?? $id)),
         ]);
         $reserva = Reserva::withoutGlobalScopes()
             ->with(['contratoCheckin', 'contratoCheckout', 'codigoReserva'])
@@ -1023,15 +1023,19 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'calcao',
 
             'veiculoDanos' => fn ($query) => $query
-                ->with('imagens')
+                ->with(['imagens', 'dano.categoria', 'usuarioCorrecao'])
                 ->orderByDesc('veiculo_danos.id')
-                ->take(10),
+                ->take(50),
 
             'avariaCobrancas' => fn ($query) => $query
                 ->orderByDesc('avaria_cobrancas.id')
                 ->take(10),
 
             'multas' => fn ($query) => $query
+                ->orderByDesc('id')
+                ->take(5),
+
+            'sinistros' => fn ($query) => $query
                 ->orderByDesc('id')
                 ->take(5),
         ]);

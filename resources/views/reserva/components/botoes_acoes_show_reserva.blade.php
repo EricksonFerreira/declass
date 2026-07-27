@@ -16,6 +16,9 @@
         ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
             && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovadoReserva, true))
         ->sum('valor'));
+    if (($pagamentoEfetuado ?? $reserva->isPagamentoEfetuado()) && $totalPagoReserva < $valorTotalReserva) {
+        $totalPagoReserva = $valorTotalReserva;
+    }
     $saldoPendenteReserva = max(0, $valorTotalReserva - $totalPagoReserva);
     $pagamentoEmDia = $saldoPendenteReserva <= 0.009;
     $codigoPagamentoReserva = $reserva->codigoReserva?->codigo ?? ('RES-' . $reserva->id);
@@ -54,7 +57,7 @@
                 @endif
             @endcan
 
-            @if($reserva->podeEfetuarPagamento() || (!$pagamentoEmDia && $saldoPendenteReserva > 0))
+            @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
                 <a href="{{ route('reserva.pagamento.efetuar', ['id' => $codigoPagamentoReserva]) }}" class="action-pill action-pill--accent">
                     <i class="fas fa-credit-card"></i>
                     <span>{{ $saldoPendenteReserva > 0 ? 'Pagar saldo pendente' : 'Efetuar pagamento' }}</span>

@@ -2,7 +2,9 @@
 
 namespace App\Actions\Reserva\Pagamento\Calcao;
 
+use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
 use App\Models\Calcao;
+use App\Models\Transacao;
 use App\Models\Reserva;
 use App\Services\Pagamentos\GatewayEmpresaConfigService;
 use App\Services\ReservaService;
@@ -15,6 +17,7 @@ class CapturarCalcaoAction
     public function __construct(
         private GatewayEmpresaConfigService $gatewayConfig,
         private ReservaService $reservaService,
+        private RegistrarReceitaPagamentoReservaAction $registrarReceitaPagamentoReservaAction,
     ) {}
 
     public function handle(Reserva $reserva, float $valorCaptura, ?string $justificativa): Calcao
@@ -65,6 +68,32 @@ class CapturarCalcaoAction
         ]);
 
         $calcaoCap = $calcao->fresh();
+
+        $transacao = Transacao::create([
+            'user_id' => $reserva->user_id,
+            'pago_por_user_id' => Auth::id(),
+            'reserva_id' => $reserva->id,
+            'valor' => $valorCaptura,
+            'moeda' => 'BRL',
+            'metodo_pagamento' => 'stripe',
+            'gateway_transaction_id' => $intent->id ?? $calcao->payment_intent_id,
+            'status' => $intent->status ?? 'succeeded',
+            'info_pagamento' => [
+                'tipo' => 'calcao',
+                'acao' => 'capturado_stripe',
+                'calcao_id' => $calcaoCap->id,
+            ],
+        ]);
+
+        $this->registrarReceitaPagamentoReservaAction->handle(
+            $reserva,
+            $valorCaptura,
+            'stripe',
+            now(),
+            (string) ($transacao->gateway_transaction_id ?: 'calcao_'.$calcaoCap->id),
+            Auth::id(),
+            'calcao_'.$calcaoCap->id
+        );
 
         $this->reservaService->adicionaLog($reserva->id, Auth::id(), json_encode([
             'acao'            => 'Calcao capturado',

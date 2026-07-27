@@ -269,13 +269,7 @@ class SinistroController extends BaseController
             return response()->json(['reserva' => null]);
         }
 
-        // Busca reserva pelo modelo do veículo que contenha essa data/hora
-        $reserva = Reserva::where('modelo_id', $veiculo->modelo_id)
-            ->where('data_inicio', '<=', $dt->toDateTimeString())
-            ->where('data_fim', '>=', $dt->toDateString())
-            ->with(['usuario'])
-            ->orderByDesc('data_inicio')
-            ->first();
+        $reserva = $this->buscarReservaContratualPorVeiculoData((int) $veiculo->id, $dt);
 
         if (!$reserva) {
             return response()->json(['reserva' => null]);
@@ -285,10 +279,40 @@ class SinistroController extends BaseController
             'reserva' => [
                 'id'          => $reserva->id,
                 'cliente'     => $reserva->usuario?->nome ?? 'Cliente #' . $reserva->user_id,
+                'veiculo_id'   => $reserva->veiculo_id ?? null,
+                'veiculo'      => trim((string) ($reserva->veiculo?->nome ?? $reserva->veiculo?->modelo?->nome ?? '')),
+                'placa'        => $reserva->veiculo?->placa_licenca ?? null,
                 'data_inicio' => $reserva->data_inicio,
                 'data_fim'    => $reserva->data_fim,
             ],
         ]);
+    }
+
+    private function buscarReservaContratualPorVeiculoData(int $veiculoId, Carbon $dataHora): ?Reserva
+    {
+        $dataHoraSql = $dataHora->format('Y-m-d H:i:s');
+
+        $reservaId = \Illuminate\Support\Facades\DB::table('contrato_checkin as ci')
+            ->join('reservas as r', 'r.id', '=', 'ci.reserva_id')
+            ->leftJoin('contrato_checkout as co', 'co.reserva_id', '=', 'r.id')
+            ->where('ci.veiculo_id', $veiculoId)
+            ->whereRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) <= ?", [$dataHoraSql])
+            ->where(function ($query) use ($dataHoraSql) {
+                $query
+                    ->whereNull('co.id')
+                    ->orWhereNull('co.data_devolucao')
+                    ->orWhereRaw("TIMESTAMP(co.data_devolucao, COALESCE(co.hora_devolucao, '23:59:59')) >= ?", [$dataHoraSql]);
+            })
+            ->orderByRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) DESC")
+            ->value('r.id');
+
+        if (! $reservaId) {
+            return null;
+        }
+
+        return Reserva::query()
+            ->with(['usuario', 'veiculo', 'codigoReserva'])
+            ->find((int) $reservaId);
     }
 
     public function confirmarPagamentoEmpresa(Request $request, int $id): \Illuminate\Http\JsonResponse
