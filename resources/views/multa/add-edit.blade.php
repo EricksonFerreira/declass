@@ -98,7 +98,11 @@
                                     </div>
                                     <small id="multa_reserva_info" class="text-muted d-block mt-1" style="font-size:.75rem;">
                                         @if(!empty($multa->reserva_id ?? $reserva?->id))
-                                            <span class="text-success"><i class="fas fa-check-circle mr-1"></i>Reserva #{{ $multa->reserva_id ?? $reserva?->id }} vinculada.</span>
+                                            @php
+                                                $codigoReservaMulta = $reserva?->codigoReserva?->codigo
+                                                    ?? ($multa->reserva_id ? 'RES-' . str_pad((string) $multa->reserva_id, 6, '0', STR_PAD_LEFT) : null);
+                                            @endphp
+                                            <span class="text-success"><i class="fas fa-check-circle mr-1"></i>Reserva #{{ $codigoReservaMulta ?? $multa->reserva_id }} vinculada.</span>
                                         @endif
                                     </small>
                                 </div>
@@ -644,9 +648,9 @@
                     const cliente = r.cliente ? `Cliente: ${r.cliente}` : 'Reserva localizada';
                     if (infoEl) infoEl.innerHTML =
                         `<span class="text-success"><i class="fas fa-check-circle mr-1"></i>` +
-                        `Reserva <strong>#${r.id}</strong> detectada automaticamente — ${cliente}.` +
+                        `Reserva <strong>#${r.codigo || r.codigo_reserva || r.id}</strong> detectada automaticamente — ${cliente}.` +
                         `</span>`;
-                    multaSetAutoStatus(`Reserva #${r.id} vinculada automaticamente.`, 'success');
+                    multaSetAutoStatus(`Reserva #${r.codigo || r.codigo_reserva || r.id} vinculada automaticamente.`, 'success');
                 } else {
                     if (infoEl) infoEl.innerHTML =
                         `<span class="text-warning"><i class="fas fa-exclamation-circle mr-1"></i>` +

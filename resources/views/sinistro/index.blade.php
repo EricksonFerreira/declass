@@ -81,6 +81,8 @@
             <div class="sx-cards">
                 @forelse($sinistros as $sinistro)
                     @php
+                        $codigoReserva = $sinistro->reserva?->codigoReserva?->codigo
+                            ?? ($sinistro->reserva_id ? 'RES-' . str_pad((string) $sinistro->reserva_id, 6, '0', STR_PAD_LEFT) : null);
                         $badgeStatus = match($sinistro->status) {
                             'encerrado', 'indenizado' => 'sx__badge--green',
                             'aprovado' => 'sx__badge--blue',
@@ -108,8 +110,8 @@
                                 <div class="sx__title">{{ $sinistro->placa_momento ?? 'Placa não informada' }}</div>
                                 <div class="sx__sub">
                                     {{ $sinistro->label_tipo }}
-                                    @if($sinistro->reserva_id)
-                                        · Reserva #{{ $sinistro->reserva_id }}
+                                    @if($codigoReserva)
+                                        · Reserva #{{ $codigoReserva }}
                                     @endif
                                 </div>
                             </div>
@@ -195,6 +197,14 @@
                                 <td>
                                     <div class="font-weight-bold">#{{ $sinistro->id }} · {{ $sinistro->placa_momento ?? '-' }}</div>
                                     <small class="text-muted">{{ $sinistro->label_tipo }}</small>
+                                    <br>
+                                    <small class="text-muted">
+                                        @if($codigoReserva)
+                                            Reserva #{{ $codigoReserva }}
+                                        @else
+                                            Sem reserva
+                                        @endif
+                                    </small>
                                 </td>
                                 <td>
                                     <div>{{ $sinistro->veiculo?->nome ?? '-' }}</div>
@@ -203,8 +213,8 @@
                                 <td>
                                     <div>{{ $sinistro->data_hora_ocorrido?->format('d/m/Y H:i') ?? '-' }}</div>
                                     <small class="text-muted">
-                                        @if($sinistro->reserva_id)
-                                            Reserva #{{ $sinistro->reserva_id }}
+                                        @if($codigoReserva)
+                                            Reserva #{{ $codigoReserva }}
                                         @else
                                             Sem reserva
                                         @endif

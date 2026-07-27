@@ -7,6 +7,12 @@
 @stop
 
 @section('content')
+@php
+    $codigoReserva = $multa->reserva?->codigoReserva?->codigo
+        ?? $multa->reserva?->codigo_reserva
+        ?? $multa->reserva?->codigoReserva?->codigo
+        ?? ($multa->reserva_id ? 'RES-' . str_pad((string) $multa->reserva_id, 6, '0', STR_PAD_LEFT) : null);
+@endphp
 <div class="container-fluid px-0">
 
     {{-- ════ HERO ════ --}}
@@ -142,8 +148,8 @@
                         <div class="veiculo-field">
                             <span class="veiculo-field__label">Reserva</span>
                             <span class="veiculo-field__value">
-                                @if($multa->reserva_id)
-                                    <a href="{{ route('reserva.show', $multa->reserva_id) }}" class="xp-link">#{{ $multa->reserva_id }}</a>
+                                @if($codigoReserva)
+                                    <a href="{{ route('reserva.show', $codigoReserva) }}" class="xp-link">#{{ $codigoReserva }}</a>
                                 @else —
                                 @endif
                             </span>
@@ -346,8 +352,8 @@
                             <i class="fas fa-pen"></i><span>Editar multa</span>
                         </a>
                         @endcan
-                        @if($multa->reserva_id)
-                        <a href="{{ route('reserva.show', $multa->reserva_id) }}" class="veiculo-acao">
+                        @if($codigoReserva)
+                        <a href="{{ route('reserva.show', $codigoReserva) }}" class="veiculo-acao">
                             <i class="fas fa-calendar-alt"></i><span>Ver reserva</span>
                         </a>
                         @endif

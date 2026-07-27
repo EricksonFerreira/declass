@@ -7,6 +7,11 @@
 @stop
 
 @section('content')
+@php
+    $codigoReserva = $sinistro->reserva?->codigoReserva?->codigo
+        ?? $sinistro->reserva?->codigo_reserva
+        ?? ($sinistro->reserva_id ? 'RES-' . str_pad((string) $sinistro->reserva_id, 6, '0', STR_PAD_LEFT) : null);
+@endphp
 <div class="container-fluid px-0">
 
     {{-- ════ HERO ════ --}}
@@ -165,8 +170,8 @@
                         <div class="veiculo-field">
                             <span class="veiculo-field__label">Reserva</span>
                             <span class="veiculo-field__value">
-                                @if($sinistro->reserva_id)
-                                    <a href="{{ route('reserva.show', $sinistro->reserva_id) }}" class="xp-link">#{{ $sinistro->reserva_id }}</a>
+                                @if($codigoReserva)
+                                    <a href="{{ route('reserva.show', $codigoReserva) }}" class="xp-link">#{{ $codigoReserva }}</a>
                                     @if($sinistro->reserva?->usuario)
                                         — {{ $sinistro->reserva->usuario->nome }}
                                     @endif
@@ -346,8 +351,8 @@
                             @else
                                 <div class="alert alert-warning py-2 px-3 small mb-2">
                                     <i class="fas fa-clock mr-1"></i>Pagamento pendente
-                                    @if($sinistro->reserva_id)
-                                        <br><small>Cobrado na reserva <a href="{{ route('reserva.show', $sinistro->reserva_id) }}">#{{ $sinistro->reserva_id }}</a></small>
+                                    @if($codigoReserva)
+                                        <br><small>Cobrado na reserva <a href="{{ route('reserva.show', $codigoReserva) }}">#{{ $codigoReserva }}</a></small>
                                     @endif
                                 </div>
                                 @can('sinistro.edit')
@@ -475,8 +480,8 @@
                             <i class="fas fa-pen"></i><span>Editar sinistro</span>
                         </a>
                         @endcan
-                        @if($sinistro->reserva_id)
-                        <a href="{{ route('reserva.show', $sinistro->reserva_id) }}" class="veiculo-acao">
+                        @if($codigoReserva)
+                        <a href="{{ route('reserva.show', $codigoReserva) }}" class="veiculo-acao">
                             <i class="fas fa-calendar-alt"></i><span>Ver reserva</span>
                         </a>
                         @endif

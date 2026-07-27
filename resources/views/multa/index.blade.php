@@ -81,6 +81,8 @@
             <div class="mx-cards">
                 @forelse($multas as $multa)
                     @php
+                        $codigoReserva = $multa->reserva?->codigoReserva?->codigo
+                            ?? ($multa->reserva_id ? 'RES-' . str_pad((string) $multa->reserva_id, 6, '0', STR_PAD_LEFT) : null);
                         $badgeMulta = match($multa->status_multa) {
                             'paga'       => 'mx__badge--green',
                             'cancelada'  => 'mx__badge--slate',
@@ -115,8 +117,8 @@
                                 <div class="mx__title">{{ $multa->placa_momento ?? 'Placa não informada' }}</div>
                                 <div class="mx__sub">
                                     {{ $multa->orgao_autuador ?? 'Órgão não informado' }}
-                                    @if($multa->reserva_id)
-                                        · Reserva #{{ $multa->reserva_id }}
+                                    @if($codigoReserva)
+                                        · Reserva #{{ $codigoReserva }}
                                     @endif
                                 </div>
                             </div>
@@ -207,8 +209,8 @@
                                 <td>
                                     <div class="font-weight-bold">#{{ $multa->id }} · {{ $multa->placa_momento ?? '-' }}</div>
                                     <small class="text-muted">
-                                        @if($multa->reserva_id)
-                                            Reserva #{{ $multa->reserva_id }}
+                                        @if($codigoReserva)
+                                            Reserva #{{ $codigoReserva }}
                                         @else
                                             Sem reserva
                                         @endif
