@@ -61,8 +61,8 @@ class StoreVeiculoRequest extends FormRequest
             'limite_kms' => 'nullable|integer|min:0',
             'proxima_revisao_kms' => 'nullable|integer|min:0',
             'proxima_manutencao_kms' => 'nullable|integer|min:0',
-            'local_disponibilidade' => 'required|string|max:11',
-            'data_hora_disponibilidade' => 'required|date',
+            'local_disponibilidade' => 'nullable|string|max:11',
+            'data_hora_disponibilidade' => 'nullable|date',
         ];
     }
 
@@ -103,8 +103,6 @@ class StoreVeiculoRequest extends FormRequest
             'data_compra.date' => 'O campo data de compra deve ser uma data válida',
             'data_validade.required' => 'O campo data de validade é obrigatório',
             'data_validade.date' => 'O campo data de validade deve ser uma data válida',
-            'data_proxima_manutencao.required' => 'O campo
-            data da próxima manutenção é obrigatório',
             'data_proxima_manutencao.date' => 'O campo data da próxima manutenção deve ser uma data válida',
             'data_proxima_manutencao.after_or_equal' => 'O campo data da próxima manutenção deve ser hoje ou uma data futura',
             'data_proxima_inspecao.required' => 'O campo data da próxima inspeção é obrigatório',
@@ -125,10 +123,8 @@ class StoreVeiculoRequest extends FormRequest
             'proxima_manutencao_kms.integer' => 'O campo quilometragem da próxima manutenção deve ser um número inteiro',
             'proxima_manutencao_kms.min' => 'O campo quilometragem da próxima manutenção deve ser no mínimo 0',
             'proxima_manutencao_kms.gte' => 'A quilometragem da próxima manutenção não pode ser menor que a quilometragem atual',
-            'local_disponibilidade.required' => 'O campo local de disponibilidade é obrigatório',
-            'local_disponibilidade.max' => 'O campo local de disponibilidade deve ter no máximo 11 caracteres',
-            'data_hora_disponibilidade.required' => 'O campo data e hora de disponibilidade é obrigatório',
-            'data_hora_disponibilidade.date' => 'O campo data e hora de disponibilidade deve ser uma data válida',
+                        'local_disponibilidade.max' => 'O campo local de disponibilidade deve ter no máximo 11 caracteres',
+                        'data_hora_disponibilidade.date' => 'O campo data e hora de disponibilidade deve ser uma data válida',
         ];
 
             // 'status_veiculo_id.required' => 'O campo status é obrigatório',
@@ -157,7 +153,6 @@ class StoreVeiculoRequest extends FormRequest
             // 'data_compra.date' => 'O campo data de compra deve ser uma data válida',
             // 'data_validade.required' => 'O campo data de validade é obrigatório',
             // 'data_validade.date' => 'O campo data de validade deve ser uma data válida',
-            // 'data_proxima_manutencao.required' => 'O campo data da próxima manutenção é obrigatório',
             // 'data_proxima_manutencao.date' => 'O campo data da próxima manutenção deve ser uma data válida',
             // 'data_proxima_inspecao.required' => 'O campo data da próxima inspeção é obrigatório',
             // 'data_proxima_inspecao.date' => 'O campo data da próxima inspeção deve ser uma data válida',
@@ -178,3 +173,4 @@ class StoreVeiculoRequest extends FormRequest
             // 'vendido.in' => 'O campo status de venda deve ser "N" (Não Vendido) ou "S" (Vendido)',
     }
 }
+

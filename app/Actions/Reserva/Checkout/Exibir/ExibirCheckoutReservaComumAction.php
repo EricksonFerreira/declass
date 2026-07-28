@@ -88,10 +88,10 @@ class ExibirCheckoutReservaComumAction
             Calcao::STATUS_PARCIALMENTE_CAPTURADO,
         ];
 
-        if (in_array((string) $calcao->status, $ok, true)) {
+        if ($calcao->data_hora_autorizacao && in_array((string) $calcao->status, $ok, true)) {
             return null;
         }
 
-        return 'Para fazer o checkout e obrigatorio registrar o calcao. Status atual do calcao: '.(string) ($calcao->label_status ?? $calcao->status);
+        return 'Para fazer o checkout e obrigatorio registrar o calcao antes. Status atual do calcao: '.(string) ($calcao->label_status ?? $calcao->status);
     }
 }

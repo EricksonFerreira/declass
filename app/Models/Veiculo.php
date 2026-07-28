@@ -108,9 +108,29 @@ class Veiculo extends Model
         return $this->hasMany(\App\Models\OrdemServico::class, 'veiculo_id');
     }
 
+    public function manutencoesPreventivas()
+    {
+        return $this->hasMany(ExecucaoManutencaoPreventiva::class, 'veiculo_id');
+    }
+
+    public function pendenciasManutencaoPreventiva()
+    {
+        return $this->hasMany(PendenciaManutencaoPreventiva::class, 'veiculo_id');
+    }
+
     public function multas()
     {
         return $this->hasMany(\App\Models\Multa::class, 'veiculo_id');
+    }
+
+    public function documentacoesVeiculo()
+    {
+        return $this->hasMany(DocumentacaoVeiculo::class, 'veiculo_id');
+    }
+
+    public function planoManutencaoPreventiva()
+    {
+        return $this->hasOne(PlanoManutencaoPreventiva::class, 'grupo_frota_id', 'grupo_frota_id');
     }
 
     public function sinistros()

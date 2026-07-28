@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Enums\StatusReservaEnum;
 use App\Exceptions\ReservaJobException;
+use App\Actions\Financeiro\CreateLancamentoAction;
 use App\Models\Reserva;
 use App\Models\Empresa;
 use App\Traits\LogTrait;
@@ -27,6 +28,7 @@ class ReservaService extends AbstractBaseService
     protected ModeloService $modeloService;
     protected VeiculoService $veiculoService;
     protected SaldoService $saldoService;
+    protected CreateLancamentoAction $createLancamentoAction;
 
     public function __construct(
         Reserva $reserva,
@@ -35,7 +37,8 @@ class ReservaService extends AbstractBaseService
         GrupoFrotaService $grupoFrotaService,
         ModeloService $modeloService,
         VeiculoService $veiculoService,
-        SaldoService $saldoService
+        SaldoService $saldoService,
+        CreateLancamentoAction $createLancamentoAction
     ) {
         $this->model = $reserva;
         $this->movimentacaoService = $movimentacaoService;
@@ -44,6 +47,7 @@ class ReservaService extends AbstractBaseService
         $this->modeloService = $modeloService;
         $this->veiculoService = $veiculoService;
         $this->saldoService = $saldoService;
+        $this->createLancamentoAction = $createLancamentoAction;
     }
 
     public function setModel(Model $model): void
@@ -93,6 +97,14 @@ class ReservaService extends AbstractBaseService
                 'created_at' => now(),
                 'updated_at' => null,
             ];
+
+            if (SchemaCache::hasColumn($this->model->getTable(), 'status_pagamento')) {
+                $dadosReserva['status_pagamento'] = 'pendente';
+            }
+
+            if (SchemaCache::hasColumn($this->model->getTable(), 'pagamento_efetuado')) {
+                $dadosReserva['pagamento_efetuado'] = false;
+            }
 
             if (SchemaCache::hasColumn($this->model->getTable(), 'criado_por_user_id')) {
                 $dadosReserva['criado_por_user_id'] = $this->resolverCriadorCadastroReserva($data);
@@ -179,7 +191,6 @@ class ReservaService extends AbstractBaseService
         return $reserva;
     }
 
-
     public function cancelar($id)
     {
         $reserva = $this->model->find($id);
@@ -209,30 +220,48 @@ class ReservaService extends AbstractBaseService
                 $this->movimentacaoService->cancelarMovimentacoesReserva((int) $id, null, 'Cancelada por cancelamento de reserva');
             }
 
-            // Integração Financeira: Registrar reembolso/despesa
-            $valorPago = (float) $reserva->transacoes()
+            // Integra��o Financeira: Registrar estornos por pagamento efetivado
+            $transacoesPagas = $reserva->transacoes()
                 ->whereIn('status', ['succeeded', 'approved', 'pago', 'paid', 'concluido', 'authorized'])
-                ->sum('valor');
+                ->orderBy('id')
+                ->get();
 
-            if ($valorPago > 0) {
+            foreach ($transacoesPagas as $transacao) {
+                $valorTransacao = round((float) ($transacao->valor ?? 0), 2);
+                if ($valorTransacao <= 0) {
+                    continue;
+                }
+
                 $categoria = \App\Models\CategoriaFinanceira::firstOrCreate(
-                    ['empresa_id' => $reserva->empresa_id, 'nome' => 'Cancelamento de Reserva'],
+                    ['empresa_id' => $reserva->empresa_id, 'nome' => 'Estorno de Reserva'],
                     ['tipo' => 'despesa', 'ativo' => true]
                 );
 
+                $chave = 'estorno_cancelamento|reserva|' . $reserva->id . '|transacao|' . $transacao->id;
+                $jaExiste = \App\Models\LancamentoFinanceiro::query()
+                    ->where('empresa_id', $reserva->empresa_id)
+                    ->where('valor', '<', 0)
+                    ->where('observacoes', 'like', '%'.$chave.'%')
+                    ->exists();
+
+                if ($jaExiste) {
+                    continue;
+                }
+
                 app(\App\Actions\Financeiro\CreateLancamentoAction::class)->handle([
                     'empresa_id' => $reserva->empresa_id,
-                    'descricao' => 'Estorno por Cancelamento de Reserva RES-' . str_pad($reserva->id, 4, '0', STR_PAD_LEFT),
-                    'valor' => $valorPago,
+                    'descricao' => 'Estorno do pagamento da reserva #' . str_pad((string) $reserva->id, 4, '0', STR_PAD_LEFT),
+                    'valor' => -1 * abs($valorTransacao),
                     'tipo' => 'despesa',
                     'categoria_financeira_id' => $categoria->id,
                     'data_vencimento' => now()->toDateString(),
                     'data_pagamento' => now()->toDateString(),
                     'status' => 'pago',
                     'reserva_id' => $reserva->id,
-                    'veiculo_id' => $veiculoIdOriginal,
+                    'veiculo_id' => $transacao->veiculo_id ?? $veiculoIdOriginal,
                     'user_id' => Auth::id() ?? $reserva->user_id,
-                    'observacoes' => 'Gerado automaticamente no cancelamento da reserva.',
+                    'metodo_pagamento' => $transacao->metodo_pagamento ?? null,
+                    'observacoes' => 'Gerado automaticamente no cancelamento da reserva. Pagamento original: transacao ' . $transacao->id . '. Chave: ' . $chave,
                 ]);
             }
 
@@ -1130,3 +1159,5 @@ class ReservaService extends AbstractBaseService
         }
     }
 }
+
+

@@ -255,7 +255,7 @@ function setCupomDesconto(cupom) {
 }
 
 function getMinhaReserva() {
-    return reserva;
+    return window.reserva;
 }
 
 function getTarifaBase() {
@@ -395,6 +395,39 @@ function getValorDiario() {
 
 // Atualizar a função atualizarMinhaReserva para usar a formatação de moeda
 function atualizarMinhaReserva() {
+    const opcionaisReservaAtual = Array.isArray(window.reserva.opcionais) ? window.reserva.opcionais : [];
+    const temOpcionaisNoEstado = opcionaisReservaAtual.length > 0;
+
+    if (!temOpcionaisNoEstado) {
+        const opcionaisDoDOM = [];
+        $('#opcionais .opcional-item.activated').each(function() {
+            const $item = $(this);
+            const idTexto = String($item.attr('id') || '').replace('list_opcional', '');
+            const id = Number(idTexto);
+            if (!Number.isFinite(id) || id <= 0) {
+                return;
+            }
+
+            const nome = ($item.find('.opcional-item__name').text() || '').trim();
+            const quantidade = Number($item.find(`#opcional${id}_input`).val() || $item.find(`#valueopcional${id}`).text() || 1) || 1;
+            const valorUnitario = Number($item.find('.opcional-price__value').data('valor')) || 0;
+            const tipoCobranca = ($item.find('.opcional-price__type').text() || '').includes('por dia') ? 'por_dia' : 'integral';
+
+            opcionaisDoDOM.push({
+                id,
+                nome,
+                preco_por_dia: tipoCobranca === 'por_dia' ? valorUnitario : 0,
+                preco_integral: tipoCobranca === 'integral' ? valorUnitario : 0,
+                tipo_cobranca: tipoCobranca,
+                quantidade,
+            });
+        });
+
+        if (opcionaisDoDOM.length > 0) {
+            setOpcionaisReserva(opcionaisDoDOM);
+        }
+    }
+
     $('#tarifa_base').text(formatarMoeda(getTarifaBase()));
 
     const grupoNome = window.reserva.grupo_frota_nome || null;
@@ -441,8 +474,15 @@ function atualizarMinhaReserva() {
     $('#minhaReserva_opcionals_ul').empty();
 
     getOpcionaisReserva().forEach(opcional => {
-        const valorOpcional = opcional.tipo_cobranca === "por_dia" ? opcional.preco_por_dia : opcional.preco_integral;
-        adicionarOpcionalNoHtmlDaMinhaReserva(opcional.nome, opcional.quantidade, formatarMoeda(valorOpcional));
+        const quantidade = Math.max(0, Number(opcional.quantidade || 0));
+        const valorUnitario = opcional.tipo_cobranca === "por_dia"
+            ? Number(opcional.preco_por_dia || 0)
+            : Number(opcional.preco_integral || 0);
+        const valorTotalOpcional = opcional.tipo_cobranca === "por_dia"
+            ? valorUnitario * getQuantidadeDias() * quantidade
+            : valorUnitario * quantidade;
+
+        adicionarOpcionalNoHtmlDaMinhaReserva(opcional.nome, quantidade, valorTotalOpcional);
     });
 
     const taxaColeta = getTaxaColeta();

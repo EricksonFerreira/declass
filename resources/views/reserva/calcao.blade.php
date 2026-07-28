@@ -18,7 +18,7 @@
                 </div>
                 <div>
                     <div class="ci-header-eyebrow">Calção</div>
-                    <h4 class="ci-header-title">Reserva #{{ $reserva->id }}</h4>
+                    <h4 class="ci-header-title">Reserva #{{ $reserva->codigoReserva->codigo }}</h4>
                     <p class="ci-header-sub">
                         <i class="fas fa-user mr-1"></i>{{ $reserva->usuario?->nome ?? 'Cliente' }}
                         &nbsp;&middot;&nbsp;
@@ -303,16 +303,12 @@
                                     <label for="manual_observacao" class="calcao-modal__label">Observações</label>
                                     <input type="text" id="manual_observacao" name="observacao" class="form-control form-control-sm" style="height: 42px; border-radius: 10px; border: 1.5px solid #dce6f4;" placeholder="Ex: Recebido na retirada">
                                 </div>
-
-                                <div id="manual-errors" class="calcao-error-msg d-none mb-3"></div>
-                                <div id="manual-status" class="mt-3 d-none"></div>
-
-                                <div class="calcao-action-bar mt-auto">
-                                    <button id="btn-registrar-calcao-manual" type="button" class="btn-action btn-action-success calcao-btn-autorizar" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
-                                        <i class="fas fa-check-double"></i>
-                                        Confirmar Registro Manual de R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
-                                    </button>
-                                </div>
+                                <div id="manual-errors" class="calcao-error-msg d-none mb-1"></div>
+                                <div id="manual-status" class="mt-1 d-none"></div>
+                                <button id="btn-registrar-calcao-manual" type="button" class="btn-action btn-action-success calcao-btn-autorizar" style="background: linear-gradient(135deg, #059669 0%, #10b981 100%); border: none;">
+                                    <i class="fas fa-check-double"></i>
+                                    Confirmar Registro Manual de R$ {{ number_format((float)$calculo['valor_calculado'], 2, ',', '.') }}
+                                </button>
                             </form>
                         </div>
                     </div>

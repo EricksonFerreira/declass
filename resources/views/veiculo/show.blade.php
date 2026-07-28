@@ -8,6 +8,11 @@
 
 @section('content')
 <div class="container-fluid px-0 vehicle-show-page">
+@php
+    $pendenciasCadastro = [];
+    if (empty($veiculo->local_disponibilidade)) $pendenciasCadastro[] = 'Estação de origem';
+    if (empty($veiculo->data_hora_disponibilidade)) $pendenciasCadastro[] = 'Data inicial de disponibilidade';
+@endphp
 
     {{-- HERO COMPACTO --}}
     <div class="module-card mb-3">
@@ -31,6 +36,9 @@
             <div class="module-header-right">
                 <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="btn-xp btn-xp--sm">
                     <i class="fas fa-pen"></i> Editar
+                </a>
+                <a href="{{ route('veiculo.documentacao') }}" class="btn-xp btn-xp--outline-light btn-xp--sm" target="_blank" rel="noopener">
+                    <i class="fas fa-file-alt"></i> Documentação
                 </a>
                 <a href="{{ route('veiculo.index') }}" class="btn-xp btn-xp--outline-light btn-xp--sm">
                     <i class="fas fa-arrow-left"></i> Voltar
@@ -75,6 +83,12 @@
                 }}
             </strong>
         </div>
+        @if($pendenciasCadastro)
+        <div class="vehicle-status-item vehicle-status-item--alerts">
+            <span>Cadastro inicial</span>
+            <strong class="text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>{{ count($pendenciasCadastro) }} pendência(s)</strong>
+        </div>
+        @endif
     </div>
 
     {{-- AÇÕES RÁPIDAS EM UMA LINHA --}}
@@ -754,6 +768,18 @@
     .vs-step__count--alert {
         background: #fee2e2;
         color: #b91c1c;
+    }
+    .vs-step__count--warn {
+        background: #ffedd5;
+        color: #c2410c;
+    }
+    .vs-step__count--success {
+        background: #dcfce7;
+        color: #166534;
+    }
+    .vs-step__count--muted {
+        background: #e2e8f0;
+        color: #0f172a;
     }
 
     .vs-panel {

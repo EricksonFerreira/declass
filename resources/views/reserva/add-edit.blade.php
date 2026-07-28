@@ -794,129 +794,63 @@
                 <div class="modal-body pt-2">
                     <div id="modalNovoUsuarioAlert" class="alert alert-danger d-none" role="alert"></div>
                     <div class="alert alert-info py-2 mb-3">
-                        Perfil de acesso definido automaticamente como <strong>Cliente</strong>.
+                        Cadastro rápido para a reserva. Os demais dados poderão ser completados depois.
                     </div>
 
                     <form id="formNovoUsuarioReserva">
                         @csrf
                         <input type="hidden" name="cadastro_reserva" value="1">
-                        <ul class="nav nav-pills reserva-user-modal__tabs" id="novoUsuarioReservaTabs" role="tablist">
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link active" id="tab-dados-pessoais-tab" data-toggle="pill" href="#tab-dados-pessoais" role="tab" aria-controls="tab-dados-pessoais" aria-selected="true">
-                                    <i class="fas fa-user mr-1"></i> Dados Pessoais
-                                </a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-contato-endereco-tab" data-toggle="pill" href="#tab-contato-endereco" role="tab" aria-controls="tab-contato-endereco" aria-selected="false">
-                                    <i class="fas fa-phone-alt mr-1"></i> Contato e Endereço
-                                </a>
-                            </li>
-                            <li class="nav-item" role="presentation">
-                                <a class="nav-link" id="tab-carta-conducao-tab" data-toggle="pill" href="#tab-carta-conducao" role="tab" aria-controls="tab-carta-conducao" aria-selected="false">
-                                    <i class="fas fa-id-card mr-1"></i> Carta de Condução
-                                </a>
-                            </li>
-                        </ul>
-
-                        <div class="tab-content reserva-user-modal__tab-content" id="novoUsuarioReservaTabsContent">
-                            <div class="tab-pane fade show active" id="tab-dados-pessoais" role="tabpanel" aria-labelledby="tab-dados-pessoais-tab">
-                                <div class="reserva-user-modal__section-title">Informações Pessoais</div>
-                                <div class="form-row">
-                                    <div class="col-md-6">
-                                        <label for="novo_usuario_nome">Nome <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_nome" name="nome" value="{{ old('nome') }}" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="novo_usuario_email">E-mail <span class="text-danger">*</span></label>
-                                        <input type="email" class="form-control form-control-sm" id="novo_usuario_email" name="email" value="{{ old('email') }}" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_sexo">Sexo <span class="text-danger">*</span></label>
-                                        <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_sexo" name="sexo" data-size="6" required>
-                                            <option value="">Selecione...</option>
-                                            <option value="M" {{ old('sexo') == 'M' ? 'selected' : '' }}>Masculino</option>
-                                            <option value="F" {{ old('sexo') == 'F' ? 'selected' : '' }}>Feminino</option>
-                                            <option value="O" {{ old('sexo') == 'O' ? 'selected' : '' }}>Outro</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_data_nascimento">Data de Nascimento <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_nascimento" name="data_nascimento" value="{{ old('data_nascimento') }}" required>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="novo_usuario_local_nascimento">Local de Nascimento <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_local_nascimento" name="local_nascimento" value="{{ old('local_nascimento') }}" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_numero_identificacao">Número de Identificação <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_identificacao" name="numero_identificacao" value="{{ old('numero_identificacao') }}" required>
-                                    </div>
-                                </div>
+                        <div class="reserva-user-modal__section-title">Dados mínimos</div>
+                        <div class="form-row">
+                            <div class="col-md-6">
+                                <label for="novo_usuario_nome">Nome <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="novo_usuario_nome" name="nome" value="{{ old('nome') }}" required>
                             </div>
-
-                            <div class="tab-pane fade" id="tab-contato-endereco" role="tabpanel" aria-labelledby="tab-contato-endereco-tab">
-                                <div class="reserva-user-modal__section-title">Contato e Endereço</div>
-                                <div class="form-row">
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_telefone">Telefone <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_telefone" name="telefone" value="{{ old('telefone') }}" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_celular">Celular <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_celular" name="celular" value="{{ old('celular') }}" placeholder="(99) 99999-9999" required>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_pais_sigla">País <span class="text-danger">*</span></label>
-                                        <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_sigla" name="pais_sigla" data-live-search="true" data-size="8" required>
-                                            <option value="">Selecione...</option>
-                                            @foreach (($paises ?? []) as $siglaPais => $nomePais)
-                                                <option value="{{ $siglaPais }}" {{ old('pais_sigla') == $siglaPais ? 'selected' : '' }}>{{ $nomePais }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <label for="novo_usuario_zip_code">Zip Code <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_zip_code" name="zip_code" value="{{ old('zip_code') }}" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_cidade">Cidade <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_cidade" name="cidade" value="{{ old('cidade') }}" required>
-                                    </div>
-                                    <div class="col-md-8">
-                                        <label for="novo_usuario_endereco">Endereço <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_endereco" name="endereco" value="{{ old('endereco') }}" required>
-                                    </div>
-                                </div>
+                            <div class="col-md-3">
+                                <label for="novo_usuario_celular">Celular <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control form-control-sm" id="novo_usuario_celular" name="celular" value="{{ old('celular') }}" placeholder="(99) 99999-9999" required>
                             </div>
+                            <div class="col-md-3">
+                                <label for="novo_usuario_email">E-mail</label>
+                                <input type="email" class="form-control form-control-sm" id="novo_usuario_email" name="email" value="{{ old('email') }}" placeholder="email@exemplo.com">
+                            </div>
+                            <div class="col-md-4 mt-2">
+                                <label for="novo_usuario_numero_identificacao">Documento de identificação</label>
+                                <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_identificacao" name="numero_identificacao" value="{{ old('numero_identificacao') }}" placeholder="CPF, RG ou outro">
+                            </div>
+                            <div class="col-md-3 mt-2">
+                                <label for="novo_usuario_data_nascimento">Data de nascimento</label>
+                                <input type="date" class="form-control form-control-sm" id="novo_usuario_data_nascimento" name="data_nascimento" value="{{ old('data_nascimento') }}">
+                            </div>
+                        </div>
 
-                            <div class="tab-pane fade" id="tab-carta-conducao" role="tabpanel" aria-labelledby="tab-carta-conducao-tab">
-                                <div class="reserva-user-modal__section-title">Carta de Condução</div>
-                                <div class="form-row">
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_numero_carta_conducao">Número da Carta de Condução <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_numero_carta_conducao" name="numero_carta_conducao" value="{{ old('numero_carta_conducao') }}" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_local_emissao_carta_conducao">Local de Emissão <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control form-control-sm" id="novo_usuario_local_emissao_carta_conducao" name="local_emissao_carta_conducao" value="{{ old('local_emissao_carta_conducao') }}" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_pais_emissao_carta_conducao">País de Emissão <span class="text-danger">*</span></label>
-                                        <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_emissao_carta_conducao" name="pais_emissao_carta_conducao" data-live-search="true" data-size="8" required>
-                                            <option value="">Selecione...</option>
-                                            @foreach (($paises ?? []) as $siglaPais => $nomePais)
-                                                <option value="{{ $siglaPais }}" {{ old('pais_emissao_carta_conducao') == $siglaPais ? 'selected' : '' }}>{{ $nomePais }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_data_emissao_carta_conducao">Data de Emissão <span class="text-danger">*</span></label>
-                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_emissao_carta_conducao" name="data_emissao_carta_conducao" value="{{ old('data_emissao_carta_conducao') }}" required>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label for="novo_usuario_data_validade_carta_conducao">Data de Validade</label>
-                                        <input type="date" class="form-control form-control-sm" id="novo_usuario_data_validade_carta_conducao" name="data_validade_carta_conducao" value="{{ old('data_validade_carta_conducao') }}">
-                                    </div>
+                        <div class="border rounded p-3 mt-3 bg-light">
+                            <div class="text-muted small mb-2">Dados complementares opcionais</div>
+                            <div class="form-row">
+                                <div class="col-md-3 mb-2">
+                                    <label for="novo_usuario_telefone">Telefone</label>
+                                    <input type="text" class="form-control form-control-sm" id="novo_usuario_telefone" name="telefone" value="{{ old('telefone') }}">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label for="novo_usuario_pais_sigla">País</label>
+                                    <select class="form-control form-control-sm js-selectpicker" id="novo_usuario_pais_sigla" name="pais_sigla" data-live-search="true" data-size="8">
+                                        <option value="">Selecione...</option>
+                                        @foreach (($paises ?? []) as $siglaPais => $nomePais)
+                                            <option value="{{ $siglaPais }}" {{ old('pais_sigla') == $siglaPais ? 'selected' : '' }}>{{ $nomePais }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label for="novo_usuario_zip_code">CEP</label>
+                                    <input type="text" class="form-control form-control-sm" id="novo_usuario_zip_code" name="zip_code" value="{{ old('zip_code') }}">
+                                </div>
+                                <div class="col-md-3 mb-2">
+                                    <label for="novo_usuario_cidade">Cidade</label>
+                                    <input type="text" class="form-control form-control-sm" id="novo_usuario_cidade" name="cidade" value="{{ old('cidade') }}">
+                                </div>
+                                <div class="col-md-6 mb-2">
+                                    <label for="novo_usuario_endereco">Endereço</label>
+                                    <input type="text" class="form-control form-control-sm" id="novo_usuario_endereco" name="endereco" value="{{ old('endereco') }}">
                                 </div>
                             </div>
                         </div>
@@ -4456,6 +4390,76 @@
             atualizarCardCliente(hiddenId?.value, hiddenNome?.value);
         })();
 
+        function atualizarResumoOpcionaisReserva() {
+            const $lista = $('#minhaReserva_opcionals_ul');
+            if (!$lista.length) {
+                return;
+            }
+
+            const itens = [];
+            let totalOpcionais = 0;
+
+            $('#opcionais .opcional-item').each(function() {
+                const $item = $(this);
+                const id = String($item.attr('id') || '').replace('list_opcional', '');
+                const nome = ($item.find('.opcional-item__name').text() || '').trim();
+                const valorUnitario = Number($item.find('.opcional-price__value').data('valor')) || 0;
+                const quantidadeInput = $item.find(`#opcional${id}_input`);
+                const qtdTexto = $item.find(`#valueopcional${id}`).text();
+                const quantidade = Number(quantidadeInput.val() || qtdTexto || 0) || 0;
+
+                if (!($item.hasClass('activated') && quantidade > 0)) {
+                    return;
+                }
+
+                const totalItem = quantidade > 0 ? (valorUnitario * quantidade) : valorUnitario;
+                totalOpcionais += totalItem;
+                itens.push({ nome, quantidade, totalItem });
+            });
+
+            if (!itens.length) {
+                $lista.html('<li class="minha-reserva-list__empty">Selecione opcionais para aparecerem aqui.</li>');
+            } else {
+                $lista.empty();
+                itens.forEach(function(item) {
+                    const qt = item.quantidade > 1 ? ` x${item.quantidade}` : '';
+                    const totalFormatado = typeof formatarMoeda === 'function'
+                        ? formatarMoeda(item.totalItem)
+                        : Number(item.totalItem).toFixed(2);
+                    $lista.append(`
+                        <li class="minha-reserva-list__item">
+                            <span class="minha-reserva-list__label">${item.nome}${qt}</span>
+                            <span class="minha-reserva-list__value">${totalFormatado}</span>
+                        </li>
+                    `);
+                });
+            }
+
+            const totalElement = document.getElementById('minhaReserva_valor_sem_desconto');
+            if (totalElement) {
+                totalElement.textContent = typeof formatarMoeda === 'function'
+                    ? formatarMoeda(totalOpcionais)
+                    : totalOpcionais.toFixed(2);
+                totalElement.classList.toggle('d-none', totalOpcionais <= 0);
+            }
+        }
+
+        (function bindResumoOpcionaisReserva() {
+            const originalAtualizarMinhaReserva = window.atualizarMinhaReserva;
+            window.atualizarMinhaReserva = function() {
+                if (typeof originalAtualizarMinhaReserva === 'function') {
+                    originalAtualizarMinhaReserva.apply(this, arguments);
+                }
+                atualizarResumoOpcionaisReserva();
+            };
+
+            $(document).on('change click', '#opcionais input, #opcionais button', function() {
+                setTimeout(atualizarResumoOpcionaisReserva, 0);
+            });
+
+            setTimeout(atualizarResumoOpcionaisReserva, 250);
+        })();
+
         // ── Validação completa no submit ──────────────────────────────────────
         (function initValidacaoSubmit() {
             const form = document.getElementById('formularioReserva');
@@ -4502,6 +4506,9 @@
                     }
                     return;
                 }
+
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processando...';
 
                 // Tudo ok — submete
                 form.requestSubmit ? form.requestSubmit() : form.submit();

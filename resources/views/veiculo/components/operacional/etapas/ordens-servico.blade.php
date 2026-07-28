@@ -1,234 +1,283 @@
-{{-- ── PAINEL: Movimentações ── --}}
-                <div class="vs-panel" data-step-panel="mov">
-                    <div class="vs-panel-head">
-                        <div>
-                            <span class="vs-panel-head__eyebrow">Etapa 05</span>
-                            <h4 class="vs-panel-head__title">Movimentações do veículo</h4>
-                            <p class="vs-panel-head__sub">Cruze tipo, status, origem, destino, data, usuário e vínculo com reserva em uma leitura só.</p>
-                        </div>
-                        <div class="vs-kpis">
-                            <div class="vs-kpi">
-                                <span>Total</span>
-                                <strong>{{ $veiculo->movimentacoes->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Com reserva</span>
-                                <strong>{{ $veiculo->movimentacoes->whereNotNull('reserva_id')->count() }}</strong>
-                            </div>
-                            <div class="vs-kpi">
-                                <span>Sem chegada</span>
-                                <strong>{{ $veiculo->movimentacoes->whereNull('data_chegada_real')->count() }}</strong>
-                            </div>
-                        </div>
-                    </div>
+<div class="vs-panel" data-step-panel="os">
+    <div class="vs-panel-head">
+        <div>
+            <span class="vs-panel-head__eyebrow">Etapa 04</span>
+            <h4 class="vs-panel-head__title">Ordens de serviço</h4>
+            <p class="vs-panel-head__sub">Acompanhe aberturas, andamento, conclusão e vínculo com avarias em uma leitura só.</p>
+        </div>
+        <div class="vs-kpis">
+            <div class="vs-kpi">
+                <span>Abertas</span>
+                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_ABERTA)->count() }}</strong>
+            </div>
+            <div class="vs-kpi">
+                <span>Em andamento</span>
+                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_EM_ANDAMENTO)->count() }}</strong>
+            </div>
+            <div class="vs-kpi">
+                <span>Concluídas</span>
+                <strong>{{ $veiculo->ordensServico->where('status', \App\Models\OrdemServico::STATUS_CONCLUIDA)->count() }}</strong>
+            </div>
+        </div>
+    </div>
 
-                    <div class="vs-filter-wrap">
-                        <div class="vs-filter-top">
-                            <div class="vs-filter-search">
-                                <i class="fas fa-search"></i>
-                                <input type="text" id="mvf_busca" class="vs-search-input" placeholder="Buscar por origem, destino, usuário, reserva ou OS..." oninput="filtrarMov()">
-                            </div>
+    <div class="vs-filter-wrap">
+        <div class="vs-filter-top">
+            <div class="vs-filter-search">
+                <i class="fas fa-search"></i>
+                <input type="text" id="osf_busca" class="vs-search-input" placeholder="Buscar por número, status, categoria, avarias ou observações..." oninput="filtrarOs()">
+            </div>
 
-                            <div class="vs-filter-actions">
-                                <button type="button" class="vs-chip is-active" data-chip-group="mov" onclick="chipMov(this, 'todos')">Todas</button>
-                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'reserva')">Com reserva</button>
-                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'sem_chegada')">Sem chegada</button>
-                                <button type="button" class="vs-chip" data-chip-group="mov" onclick="chipMov(this, 'hoje')">Hoje</button>
-                                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('mov')">
-                                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
-                                </button>
-                            </div>
-                        </div>
+            <div class="vs-filter-actions">
+                <button type="button" class="vs-chip is-active" data-chip-group="os" onclick="chipOs(this, 'todos')">Todas</button>
+                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'aberta')">Abertas</button>
+                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'em_andamento')">Em andamento</button>
+                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'concluida')">Concluídas</button>
+                <button type="button" class="vs-chip" data-chip-group="os" onclick="chipOs(this, 'cancelada')">Canceladas</button>
+                <button type="button" class="btn-xp btn-xp--sm btn-xp--outline" onclick="toggleFiltrosAvancados('os')">
+                    <i class="fas fa-sliders-h mr-1"></i>Filtros avançados
+                </button>
+            </div>
+        </div>
 
-                        <div class="vs-advanced-filters" id="vsAdvanced-mov">
-                            <div class="vs-filter-grid">
-                                <div class="vs-filter-field">
-                                    <label>Tipo</label>
-                                    <select id="mvf_tipo" class="vt-select" onchange="filtrarMov()">
-                                        <option value="">Todos</option>
-                                        @foreach($veiculo->movimentacoes->pluck('tipoMovimentacao.nome','tipoMovimentacao.nome')->filter()->unique() as $tn)
-                                            <option value="{{ strtolower($tn) }}">{{ $tn }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Status</label>
-                                    <select id="mvf_status" class="vt-select" onchange="filtrarMov()">
-                                        <option value="">Todos</option>
-                                        @foreach($veiculo->movimentacoes->pluck('statusMovimentacao.nome','statusMovimentacao.nome')->filter()->unique() as $sn)
-                                            <option value="{{ strtolower($sn) }}">{{ $sn }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Origem</label>
-                                    <input type="text" id="mvf_origem" class="vt-input" placeholder="Nome da estação" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Destino</label>
-                                    <input type="text" id="mvf_destino" class="vt-input" placeholder="Nome da estação" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Saída de</label>
-                                    <input type="date" id="mvf_data_de" class="vt-input" onchange="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Saída até</label>
-                                    <input type="date" id="mvf_data_ate" class="vt-input" onchange="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Reserva #</label>
-                                    <input type="number" id="mvf_reserva" class="vt-input" placeholder="ID" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field">
-                                    <label>Usuário</label>
-                                    <input type="text" id="mvf_usuario" class="vt-input" placeholder="Nome do usuário" oninput="filtrarMov()">
-                                </div>
-
-                                <div class="vs-filter-field vs-filter-field--check">
-                                    <label class="vs-check">
-                                        <input type="checkbox" id="mvf_com_reserva" onchange="filtrarMov()">
-                                        <span>Mostrar apenas movimentações com reserva</span>
-                                    </label>
-                                </div>
-
-                                <div class="vs-filter-field vs-filter-field--check">
-                                    <label class="vs-check">
-                                        <input type="checkbox" id="mvf_sem_chegada" onchange="filtrarMov()">
-                                        <span>Mostrar apenas movimentações sem chegada registrada</span>
-                                    </label>
-                                </div>
-                            </div>
-
-                            <div class="vs-filter-footer">
-                                <div class="vs-filter-result" id="mvf_result"></div>
-                                <div class="vs-filter-footer__actions">
-                                    <button type="button" class="vt-btn-clear" onclick="limparFiltroMov()">
-                                        <i class="fas fa-times"></i> Limpar
-                                    </button>
-                                    <button type="button" class="vt-btn-filter" onclick="filtrarMov()">
-                                        <i class="fas fa-search"></i> Aplicar
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="vt-panel-actions">
-                        <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-route mr-1"></i>Transferir entre estações
-                        </a>
-                    </div>
-
-                    @if($veiculo->movimentacoes->isEmpty())
-                        <div class="empty-state"><i class="fas fa-route"></i><p>Nenhuma movimentação registrada.</p></div>
-                    @else
-                    <div class="table-responsive">
-                        <table class="table table-hover xp-table" id="tabelaMov">
-                            <thead>
-                                <tr>
-                                    <th>#</th>
-                                    <th>Tipo</th>
-                                    <th>Status</th>
-                                    <th>Origem</th>
-                                    <th>Destino</th>
-                                    <th>Saída</th>
-                                    <th>KM Saída</th>
-                                    <th>Chegada</th>
-                                    <th>KM Chegada</th>
-                                    <th>Reserva</th>
-                                    <th>OS</th>
-                                    <th>Usuário</th>
-                                    <th>Obs</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($veiculo->movimentacoes as $mov)
-                                @php
-                                    $mvTipo    = strtolower(optional($mov->tipoMovimentacao)->nome ?? '');
-                                    $mvStatus  = strtolower(optional($mov->statusMovimentacao)->nome ?? '');
-                                    $mvOrigem  = strtolower(optional($mov->localOrigem)->nome ?? '');
-                                    $mvDestino = strtolower(optional($mov->localDestino)->nome ?? '');
-                                    $mvUsuario = strtolower(optional($mov->usuario)->nome ?? '');
-                                    $mvDataSaida = $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('Y-m-d') : '';
-                                    $cor = optional($mov->statusMovimentacao)->cor ?? 'secondary';
-                                    $statusBadgeClass = [
-                                        'success' => 'bg-green',
-                                        'info' => 'bg-blue',
-                                        'primary' => 'bg-blue',
-                                        'warning' => 'bg-amber',
-                                        'orange' => 'bg-orange',
-                                        'danger' => 'bg-red',
-                                        'secondary' => 'bg-gray',
-                                        'gray' => 'bg-gray',
-                                        'grey' => 'bg-gray',
-                                        'purple' => 'bg-purple',
-                                        'teal' => 'bg-teal',
-                                    ][strtolower((string) $cor)] ?? 'bg-gray';
-                                @endphp
-                                <tr
-                                    data-mv-tipo="{{ $mvTipo }}"
-                                    data-mv-status="{{ $mvStatus }}"
-                                    data-mv-origem="{{ $mvOrigem }}"
-                                    data-mv-destino="{{ $mvDestino }}"
-                                    data-mv-reserva="{{ $mov->reserva_id ?? '' }}"
-                                    data-mv-usuario="{{ $mvUsuario }}"
-                                    data-mv-data="{{ $mvDataSaida }}"
-                                    data-mv-chegada="{{ $mov->data_chegada_real ? 1 : 0 }}"
-                                >
-                                    <td><span class="xp-id">#{{ $mov->id }}</span></td>
-                                    <td>{{ optional($mov->tipoMovimentacao)->nome ?? '—' }}</td>
-                                    <td>
-                                        <span class="status-badge badge badge-xs {{ $statusBadgeClass }}">
-                                            {{ optional($mov->statusMovimentacao)->nome ?? '—' }}
-                                        </span>
-                                    </td>
-                                    <td>{{ optional($mov->localOrigem)->nome ?? '—' }}</td>
-                                    <td>{{ optional($mov->localDestino)->nome ?? '—' }}</td>
-                                    <td>{{ $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('d/m/Y H:i') : '—' }}</td>
-                                    <td>{{ $mov->km_saida !== null ? number_format((float)$mov->km_saida, 0, ',', '.') : '—' }}</td>
-                                    <td>
-                                        @if($mov->data_chegada_real)
-                                            {{ \Carbon\Carbon::parse($mov->data_chegada_real)->format('d/m/Y H:i') }}
-                                        @elseif($mov->data_chegada_prevista)
-                                            <span class="text-muted">{{ \Carbon\Carbon::parse($mov->data_chegada_prevista)->format('d/m/Y H:i') }}</span>
-                                        @else —
-                                        @endif
-                                    </td>
-                                    <td>{{ $mov->km_chegada !== null ? number_format((float)$mov->km_chegada, 0, ',', '.') : '—' }}</td>
-                                    <td>
-                                        @if($mov->reserva?->codigoReserva?->codigo)
-                                            <a href="{{ route('reserva.show', $mov->reserva->codigoReserva->codigo) }}" class="xp-link">#{{ $mov->reserva->codigoReserva->codigo }}</a>
-                                        @else <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($mov->ordem_servico_id)
-                                            <a href="{{ route('ordem-servico.show', $mov->ordem_servico_id) }}" class="xp-link">
-                                                {{ optional($mov->ordemServico)->numero ?? ('#'.$mov->ordem_servico_id) }}
-                                            </a>
-                                        @else <span class="text-muted">—</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ optional($mov->usuario)->nome ?? '—' }}</td>
-                                    <td class="obs-cell">{{ \Illuminate\Support\Str::limit((string)($mov->observacoes ?? ''), 50) ?: '—' }}</td>
-                                    <td>
-                                        <a href="{{ route('movimentacao.edit', $mov->id) }}" class="btn btn-xs btn-outline-primary">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                    </td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
-                    @endif
+        <div class="vs-advanced-filters" id="vsAdvanced-os">
+            <div class="vs-filter-grid">
+                <div class="vs-filter-field">
+                    <label>Status</label>
+                    <select id="osf_status" class="vt-select" onchange="filtrarOs()">
+                        <option value="">Todos</option>
+                        <option value="aberta">Aberta</option>
+                        <option value="em_andamento">Em andamento</option>
+                        <option value="concluida">Concluída</option>
+                        <option value="cancelada">Cancelada</option>
+                    </select>
                 </div>
+
+                <div class="vs-filter-field">
+                    <label>Número / ID</label>
+                    <input type="text" id="osf_numero" class="vt-input" placeholder="Ex: OS-001" oninput="filtrarOs()">
+                </div>
+
+                <div class="vs-filter-field">
+                    <label>Categoria</label>
+                    <input type="text" id="osf_categoria" class="vt-input" placeholder="Ex: mecânica" oninput="filtrarOs()">
+                </div>
+
+                <div class="vs-filter-field">
+                    <label>Data de abertura</label>
+                    <input type="date" id="osf_data_de" class="vt-input" onchange="filtrarOs()">
+                </div>
+
+                <div class="vs-filter-field">
+                    <label>Data até</label>
+                    <input type="date" id="osf_data_ate" class="vt-input" onchange="filtrarOs()">
+                </div>
+
+                <div class="vs-filter-field">
+                    <label>Valor mínimo</label>
+                    <input type="number" step="0.01" id="osf_valor_min" class="vt-input" placeholder="0,00" oninput="filtrarOs()">
+                </div>
+
+                <div class="vs-filter-field">
+                    <label>Valor máximo</label>
+                    <input type="number" step="0.01" id="osf_valor_max" class="vt-input" placeholder="0,00" oninput="filtrarOs()">
+                </div>
+
+                <div class="vs-filter-field vs-filter-field--check">
+                    <label class="vs-check">
+                        <input type="checkbox" id="osf_com_avarias" onchange="filtrarOs()">
+                        <span>Somente OS com avarias vinculadas</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="vs-filter-footer">
+                <div class="vs-filter-result" id="osf_result"></div>
+                <div class="vs-filter-footer__actions">
+                    <button type="button" class="vt-btn-clear" onclick="limparFiltroOs()">
+                        <i class="fas fa-times"></i> Limpar
+                    </button>
+                    <button type="button" class="vt-btn-filter" onclick="filtrarOs()">
+                        <i class="fas fa-search"></i> Aplicar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="vt-panel-actions">
+        <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
+            <i class="fas fa-plus mr-1"></i>Nova OS para este veículo
+        </a>
+    </div>
+
+    @if($veiculo->ordensServico->isEmpty())
+        <div class="empty-state">
+            <i class="fas fa-tools"></i>
+            <p>Nenhuma ordem de serviço registrada.</p>
+        </div>
+    @else
+        <div class="table-responsive">
+            <table class="table table-hover xp-table" id="tabelaOs">
+                <thead>
+                    <tr>
+                        <th>Número</th>
+                        <th>Status</th>
+                        <th>Abertura</th>
+                        <th>Conclusão</th>
+                        <th>Categoria</th>
+                        <th>Itens</th>
+                        <th>Valor</th>
+                        <th>Vínculos</th>
+                        <th>Ação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($veiculo->ordensServico->sortByDesc('id') as $os)
+                        @php
+                            $osStatus = strtolower((string) ($os->status ?? ''));
+                            $osNumero = strtolower((string) ($os->numero ?? $os->id));
+                            $osData = $os->created_at ? $os->created_at->format('Y-m-d') : '';
+                            $osCategoria = strtolower((string) ($os->categoria?->nome ?? ''));
+                            $osTemAvarias = $os->itens->whereNotNull('veiculo_dano_id')->count() > 0;
+                            $statusBadgeClass = match ($os->status) {
+                                \App\Models\OrdemServico::STATUS_ABERTA => 'badge-warning',
+                                \App\Models\OrdemServico::STATUS_EM_ANDAMENTO => 'badge-primary',
+                                \App\Models\OrdemServico::STATUS_CONCLUIDA => 'badge-success',
+                                \App\Models\OrdemServico::STATUS_CANCELADA => 'badge-secondary',
+                                default => 'badge-secondary',
+                            };
+                        @endphp
+                        <tr
+                            data-os-status="{{ $osStatus }}"
+                            data-os-numero="{{ $osNumero }}"
+                            data-os-data="{{ $osData }}"
+                            data-os-categoria="{{ $osCategoria }}"
+                            data-os-valor="{{ (float) ($os->valor_total ?? 0) }}"
+                            data-os-avarias="{{ $osTemAvarias ? '1' : '0' }}"
+                        >
+                            <td>
+                                <div class="font-weight-bold">{{ $os->numero ?? '#' . $os->id }}</div>
+                                <div class="text-muted text-xs">OS #{{ $os->id }}</div>
+                            </td>
+                            <td>
+                                <span class="badge {{ $statusBadgeClass }}">
+                                    {{ ucfirst(str_replace('_', ' ', (string) $os->status)) }}
+                                </span>
+                            </td>
+                            <td>{{ $os->created_at ? $os->created_at->format('d/m/Y') : '—' }}</td>
+                            <td>{{ $os->data_conclusao ? $os->data_conclusao->format('d/m/Y') : '—' }}</td>
+                            <td>{{ $os->categoria?->nome ?? '—' }}</td>
+                            <td>{{ $os->itens ? $os->itens->count() : '—' }}</td>
+                            <td>{{ $os->valor_total > 0 ? 'R$ ' . number_format((float) $os->valor_total, 2, ',', '.') : '—' }}</td>
+                            <td>
+                                @if($os->reserva?->codigoReserva?->codigo)
+                                    <div class="text-xs"><i class="fas fa-calendar-alt mr-1"></i>Reserva #{{ $os->reserva->codigoReserva->codigo }}</div>
+                                @endif
+                                @if($os->sinistro_id)
+                                    <div class="text-xs"><i class="fas fa-shield-alt mr-1"></i>Sinistro #{{ $os->sinistro_id }}</div>
+                                @endif
+                                @if($osTemAvarias)
+                                    <div class="text-xs"><i class="fas fa-car-crash mr-1"></i>Avarias vinculadas</div>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('ordem-servico.show', $os) }}" class="btn-xp btn-xp--sm">
+                                    <i class="fas fa-eye mr-1"></i>Ver
+                                </a>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @endif
+</div>
+
+@push('js')
+<script>
+(function () {
+    const tabela = document.getElementById('tabelaOs');
+    if (!tabela) return;
+    const chips = Array.prototype.slice.call(document.querySelectorAll('[data-chip-group="os"]'));
+
+    function normalize(value) {
+        return (value || '').toString().trim().toLowerCase();
+    }
+
+    function inRange(value, min, max) {
+        const num = parseFloat(String(value || '0').replace(',', '.')) || 0;
+        if (min !== '' && !isNaN(parseFloat(min)) && num < parseFloat(min)) return false;
+        if (max !== '' && !isNaN(parseFloat(max)) && num > parseFloat(max)) return false;
+        return true;
+    }
+
+    window.chipOs = function (button, action) {
+        chips.forEach(function (chip) { chip.classList.remove('is-active'); });
+        if (button) button.classList.add('is-active');
+
+        const status = document.getElementById('osf_status');
+        if (status) status.value = '';
+
+        if (action === 'aberta' || action === 'em_andamento' || action === 'concluida' || action === 'cancelada') {
+            if (status) status.value = action;
+        }
+
+        filtrarOs();
+    };
+
+    window.filtrarOs = function () {
+        const busca = normalize(document.getElementById('osf_busca')?.value);
+        const status = normalize(document.getElementById('osf_status')?.value);
+        const numero = normalize(document.getElementById('osf_numero')?.value);
+        const categoria = normalize(document.getElementById('osf_categoria')?.value);
+        const dataDe = document.getElementById('osf_data_de')?.value || '';
+        const dataAte = document.getElementById('osf_data_ate')?.value || '';
+        const valorMin = document.getElementById('osf_valor_min')?.value || '';
+        const valorMax = document.getElementById('osf_valor_max')?.value || '';
+        const comAvarias = document.getElementById('osf_com_avarias')?.checked;
+
+        const rows = Array.prototype.slice.call(document.querySelectorAll('#tabelaOs tbody tr'));
+        let visiveis = 0;
+
+        rows.forEach(function (row) {
+            const ds = row.dataset || {};
+            const texto = normalize(row.textContent);
+
+            const ok =
+                (!busca || texto.includes(busca)) &&
+                (!status || normalize(ds.osStatus) === status) &&
+                (!numero || normalize(ds.osNumero).includes(numero)) &&
+                (!categoria || normalize(ds.osCategoria).includes(categoria)) &&
+                (!dataDe || ds.osData >= dataDe) &&
+                (!dataAte || ds.osData <= dataAte) &&
+                inRange(ds.osValor, valorMin, valorMax) &&
+                (!comAvarias || ds.osAvarias === '1');
+
+            row.style.display = ok ? '' : 'none';
+            if (ok) visiveis++;
+        });
+
+        const result = document.getElementById('osf_result');
+        if (result) {
+            result.textContent = visiveis + ' registro(s) visível(eis)';
+        }
+    };
+
+    window.limparFiltroOs = function () {
+        ['osf_busca', 'osf_status', 'osf_numero', 'osf_categoria', 'osf_data_de', 'osf_data_ate', 'osf_valor_min', 'osf_valor_max'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.value = '';
+        });
+        const avarias = document.getElementById('osf_com_avarias');
+        if (avarias) avarias.checked = false;
+        chips.forEach(function (chip) { chip.classList.remove('is-active'); });
+        const firstChip = document.querySelector('[data-chip-group="os"]');
+        if (firstChip) firstChip.classList.add('is-active');
+        filtrarOs();
+    };
+
+    filtrarOs();
+})();
+</script>
+@endpush

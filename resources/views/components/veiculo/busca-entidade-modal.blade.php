@@ -214,7 +214,7 @@
 
                 $.get(config.buscarUrl, getParams(config))
                     .done(function (resp) {
-                        renderRows(config, resp.items || []);
+                        renderRows(config, resp.items || resp.veiculos || []);
                     })
                     .fail(function () {
                         renderRows(config, []);

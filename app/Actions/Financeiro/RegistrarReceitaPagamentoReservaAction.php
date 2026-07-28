@@ -75,6 +75,7 @@ class RegistrarReceitaPagamentoReservaAction
             'descricao' => 'Pagamento da reserva #'.$codigo,
             'valor' => $valorPago,
             'status' => 'pago',
+            'data_lancamento' => $pagoEm->format('Y-m-d H:i:s'),
             'data_vencimento' => $pagoEm->toDateString(),
             'data_pagamento' => $pagoEm->toDateString(),
             'metodo_pagamento' => $metodoPagamento ?: 'nao_informado',

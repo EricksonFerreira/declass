@@ -97,16 +97,16 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     {
         // Bloqueia criacao de usuario se o plano atingiu o limite.
         $empresa = auth()->user()?->empresa;
-        if ($empresa) {
-            $plano = $empresa->planoAtivo()?->with('plano')->first()?->plano;
-            if ($plano && $plano->limite_usuarios !== null) {
-                $totalUsuarios = \App\Models\User::where('empresa_id', $empresa->id)->count();
-                if ($totalUsuarios >= $plano->limite_usuarios) {
-                    return redirect()->route('usuario.index')
-                        ->with('error', "Seu plano permite até {$plano->limite_usuarios} usuario(s). Faça upgrade para adicionar mais colaboradores.");
-                }
-            }
-        }
+        // if ($empresa) {
+        //     $plano = $empresa->planoAtivo()?->with('plano')->first()?->plano;
+        //     if ($plano && $plano->limite_usuarios !== null) {
+        //         $totalUsuarios = \App\Models\User::where('empresa_id', $empresa->id)->count();
+        //         if ($totalUsuarios >= $plano->limite_usuarios) {
+        //             return redirect()->route('usuario.index')
+        //                 ->with('error', "Seu plano permite até {$plano->limite_usuarios} usuario(s). Faça upgrade para adicionar mais colaboradores.");
+        //         }
+        //     }
+        // }
 
         $sexo = [
             'M' => 'Masculino',
@@ -155,6 +155,12 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
                 $data['role_id'] = $roleClienteId;
                 $data['acesso_todas_estacoes'] = true;
+                if (empty($data['email'])) {
+                    $documentoBase = preg_replace('/\D+/', '', (string) ($data['numero_identificacao'] ?? ''));
+                    $celularBase = preg_replace('/\D+/', '', (string) ($data['celular'] ?? ''));
+                    $fallbackLocal = $documentoBase !== '' ? $documentoBase : ($celularBase !== '' ? $celularBase : uniqid('reserva', true));
+                    $data['email'] = 'reserva+' . $fallbackLocal . '@sem-email.local';
+                }
             }
 
             $data['password'] = self::SENHA_PADRAO_ACESSO;

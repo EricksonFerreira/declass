@@ -56,7 +56,7 @@
                 <div class="rs-hero__meta">
                     <span><i class="fas fa-car"></i>
                         @if($ordem_servico->veiculo_id)
-                            <a href="{{ route('veiculo.show', $ordem_servico->veiculo_id) }}" class="text-white font-weight-bold text-decoration-underline" style="color: #fff !important;">
+                            <a href="{{ route('veiculo.show', $ordem_servico->veiculo_id) }}" class="text-gray font-weight-bold text-decoration-underline">
                                 {{ optional($ordem_servico->veiculo)->nome ?? ('Veículo #' . $ordem_servico->veiculo_id) }}
                             </a>
                         @else
@@ -89,6 +89,19 @@
                     <div class="rs-kpi">
                         <span>Itens</span>
                         <strong>{{ $ordem_servico->itens->count() }}</strong>
+                    </div>
+                    <div class="rs-kpi-divider"></div>
+                    <div class="rs-kpi">
+                        <span>Veículo</span>
+                        @if($ordem_servico->veiculo_id)
+                            <strong>
+                                <a href="{{ route('veiculo.show', $ordem_servico->veiculo_id) }}" class="text-white text-decoration-underline" style="color:#fff !important;">
+                                    {{ $ordem_servico->veiculo?->nome ?? ('Veículo #' . $ordem_servico->veiculo_id) }}
+                                </a>
+                            </strong>
+                        @else
+                            <strong>-</strong>
+                        @endif
                     </div>
                     <div class="rs-kpi-divider"></div>
                     <div class="rs-kpi">

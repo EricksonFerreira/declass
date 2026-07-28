@@ -13,6 +13,7 @@ class PlanoManutencaoPreventiva extends Model
 
     protected $fillable = [
         'empresa_id',
+        'veiculo_id',
         'grupo_frota_id',
         'nome',
         'descricao',
@@ -21,6 +22,11 @@ class PlanoManutencaoPreventiva extends Model
     public function empresa()
     {
         return $this->belongsTo(Empresa::class);
+    }
+
+    public function veiculo()
+    {
+        return $this->belongsTo(Veiculo::class, 'veiculo_id');
     }
 
     public function grupoFrota()

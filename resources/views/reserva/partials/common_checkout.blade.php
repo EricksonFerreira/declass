@@ -152,7 +152,9 @@
             <i class="fas fa-flag-checkered fa-3x mb-3" style="color:#cbd5e1"></i>
             <h5 class="font-weight-bold text-dark">Check-out não realizado</h5>
             <p class="mb-3">Os dados e fotos da devolução do veículo ficarão disponíveis aqui após a conclusão do check-out operacional pelo operador.</p>
-            @if($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S')
+                 @php $calcaoAtual = $reserva->calcao ?? null; @endphp
+        @php( $podeFazerCalcao = !$calcaoAtual || $calcaoAtual->status === 'falhou')
+            @if($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S' && !$podeFazerCalcao)
                 <div class="mt-3">
                     <a href="{{ route('reserva.checkout.vistoria', $reserva->codigoReserva->codigo) }}" class="btn btn-warning font-weight-bold text-white px-4 py-2" style="border-radius: 999px; box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);">
                         <i class="fas fa-flag-checkered mr-2"></i> Iniciar Processo de Check-out

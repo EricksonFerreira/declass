@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Financeiro\RegistrarLancamentoMultaAction;
 use App\DTO\BreadCrumbItem;
 use App\Http\Requests\Multa\StoreMultaRequest;
 use App\Http\Requests\Multa\UpdateMultaRequest;
@@ -36,6 +37,7 @@ class MultaController extends BaseController
 {
     public function __construct(
         private readonly MultaService      $multaService,
+        private readonly RegistrarLancamentoMultaAction $registrarLancamentoMultaAction,
         private readonly BreadcrumbService $breadcrumbService,
         private readonly ReservaService    $reservaService,
         private readonly UsuarioService    $usuarioService,
@@ -208,6 +210,7 @@ class MultaController extends BaseController
         }
 
         $multa = $this->multaService->criar($dados);
+        $this->registrarLancamentoMultaAction->lancamentoDespesaEmpresa($multa);
 
         $this->notificarLocatarioMultaCriada($multa);
 
@@ -262,6 +265,48 @@ class MultaController extends BaseController
 
         return view('multa.show', compact('multa', 'breadcrumb', 'metodosPagamento'))
             ->with('titulo', 'Multa #' . $multa->id);
+    }
+
+    public function atribuirAoCliente(Request $request, int $id)
+    {
+        $this->authorize('multa.edit');
+
+        $multa = $this->multaService->queryScoped()->with(['reserva.usuario', 'veiculo', 'empresa'])->findOrFail($id);
+
+        if (!in_array($multa->status_multa, ['pendente', 'em_analise'], true)) {
+            return back()->with('error', 'Esta multa nao pode ser atribuida neste momento.');
+        }
+
+        if (!$multa->data_hora_infracao || !$multa->veiculo_id) {
+            return back()->with('error', 'Nao foi possivel identificar a data, hora ou o veiculo da multa.');
+        }
+
+        $reserva = $this->buscarReservaContratualPorVeiculoData((int) $multa->veiculo_id, $multa->data_hora_infracao);
+        if (!$reserva) {
+            return back()->with('error', 'Esta multa nao ocorreu dentro de nenhuma reserva valida.');
+        }
+
+        DB::transaction(function () use ($multa, $reserva) {
+            $multa->update([
+                'cliente_id' => $reserva->user_id,
+                'reserva_id' => $reserva->id,
+                'destino_cobranca' => 'cliente',
+                'status_multa' => 'aguardando_pagamento_cliente',
+            ]);
+
+            $this->registrarLancamentoMultaAction->cancelarDespesaEmpresa($multa);
+        });
+
+        if (!empty($multa->reserva_id)) {
+            $this->reservaService->adicionaLog((int) $multa->reserva_id, Auth::id(), json_encode([
+                'acao' => 'Multa atribuida ao cliente',
+                'multa_id' => $multa->id,
+                'reserva_id' => $reserva->id,
+            ]));
+        }
+
+        return redirect()->route('multa.show', $multa->id)
+            ->with('success', 'Multa atribuida ao cliente com sucesso.');
     }
 
     public function edit(int $id)
@@ -428,6 +473,8 @@ class MultaController extends BaseController
             }
         }
 
+        $destinoCliente = $multa->destino_cobranca === 'cliente' || $multa->status_multa === 'aguardando_pagamento_cliente';
+
         $multa->update([
             'forma_pagamento'      => $forma,
             'referencia_pagamento' => $referencia,
@@ -435,6 +482,26 @@ class MultaController extends BaseController
             'pago_por_user_id'     => Auth::id(),
             'status_multa'         => 'paga',
         ]);
+
+        if ($destinoCliente) {
+            $this->registrarLancamentoMultaAction->lancamentoReceitaCliente($multa, $multa->pago_em);
+        } else {
+            $empresaId = (int) ($multa->empresa_id ?? $multa->reserva?->empresa_id ?? 0);
+            if ($empresaId > 0 && SchemaCache::hasTable('lancamentos_financeiros')) {
+                $lancamento = \App\Models\LancamentoFinanceiro::query()
+                    ->where('empresa_id', $empresaId)
+                    ->where('tipo', 'despesa')
+                    ->where('descricao', 'like', '%#'.$multa->id)
+                    ->latest('id')
+                    ->first();
+                if ($lancamento && $lancamento->status !== 'pago') {
+                    $lancamento->update([
+                        'status' => 'pago',
+                        'data_pagamento' => now()->toDateString(),
+                    ]);
+                }
+            }
+        }
 
         if (!empty($multa->reserva_id)) {
             $this->reservaService->adicionaLog((int) $multa->reserva_id, Auth::id(), json_encode([
@@ -494,19 +561,21 @@ class MultaController extends BaseController
     private function buscarReservaContratualPorVeiculoData(int $veiculoId, Carbon $dataHora): ?Reserva
     {
         $dataHoraSql = $dataHora->format('Y-m-d H:i:s');
+        $inicioContratoSql = "TIMESTAMP(ci.data_saida, COALESCE(NULLIF(TRIM(ci.hora_saida), ''), '00:00:00'))";
+        $fimContratoSql = "TIMESTAMP(co.data_devolucao, COALESCE(NULLIF(TRIM(co.hora_devolucao), ''), '23:59:59'))";
 
         $reservaId = DB::table('contrato_checkin as ci')
             ->join('reservas as r', 'r.id', '=', 'ci.reserva_id')
             ->leftJoin('contrato_checkout as co', 'co.reserva_id', '=', 'r.id')
             ->where('ci.veiculo_id', $veiculoId)
-            ->whereRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) <= ?", [$dataHoraSql])
-            ->where(function ($query) use ($dataHoraSql) {
+            ->whereRaw("$inicioContratoSql <= ?", [$dataHoraSql])
+            ->where(function ($query) use ($dataHoraSql, $fimContratoSql) {
                 $query
                     ->whereNull('co.id')
                     ->orWhereNull('co.data_devolucao')
-                    ->orWhereRaw("TIMESTAMP(co.data_devolucao, COALESCE(co.hora_devolucao, '23:59:59')) >= ?", [$dataHoraSql]);
+                    ->orWhereRaw("$fimContratoSql >= ?", [$dataHoraSql]);
             })
-            ->orderByRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) DESC")
+            ->orderByRaw("$inicioContratoSql DESC")
             ->value('r.id');
 
         if (! $reservaId) {

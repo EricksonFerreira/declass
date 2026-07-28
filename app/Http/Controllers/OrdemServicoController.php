@@ -169,13 +169,12 @@ class OrdemServicoController extends Controller
     public function show(OrdemServico $ordem_servico)
     {
         $ordem_servico->load(['itens.veiculoDano', 'anexos.usuario', 'veiculo', 'reserva', 'usuarioAbertura', 'usuarioEncerramento', 'valoresCampos.campo']);
-
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Ordens de serviço', route('ordem-servico.index')),
             new BreadCrumbItem($ordem_servico->numero ?? 'OS #' . $ordem_servico->id),
         ]);
-
+        
         return view('ordem-servico.show', compact('ordem_servico', 'breadcrumb'))
             ->with('titulo', 'OS ' . ($ordem_servico->numero ?? '#' . $ordem_servico->id));
     }
@@ -308,15 +307,23 @@ class OrdemServicoController extends Controller
             });
 
         $preventivas = \App\Models\PendenciaManutencaoPreventiva::query()
-            ->with('item')
+            ->with(['item', 'veiculo:id,kms'])
             ->where('veiculo_id', $veiculoId)
             ->whereIn('status', ['pendente', 'atrasado'])
             ->orderByDesc('id')
             ->get()
             ->map(function ($p) {
+                $vencidaPorData = !empty($p->data_prevista) && \Carbon\Carbon::parse($p->data_prevista)->isPast();
+                $vencidaPorKm = $p->km_previsto !== null && (int) ($p->veiculo?->kms ?? 0) >= (int) $p->km_previsto;
+                $vencida = in_array((string) $p->status, ['pendente', 'atrasado'], true) && ($vencidaPorData || $vencidaPorKm);
+
                 return [
                     'id' => $p->id,
-                    'label' => $p->item->nome . ' (Vence ' . ($p->data_prevista ? \Carbon\Carbon::parse($p->data_prevista)->format('d/m/Y') : '') . ($p->km_previsto ? ' ou ' . $p->km_previsto . ' KM' : '') . ')',
+                    'label' => $p->item?->nome ?? ('Preventiva #' . $p->id),
+                    'data_prevista' => $p->data_prevista ? \Carbon\Carbon::parse($p->data_prevista)->format('d/m/Y') : null,
+                    'km_previsto' => $p->km_previsto !== null ? number_format((float) $p->km_previsto, 0, ',', '.') : null,
+                    'status' => (string) $p->status,
+                    'vencida' => $vencida,
                 ];
             });
 

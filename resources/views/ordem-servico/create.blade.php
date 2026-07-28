@@ -467,7 +467,7 @@
         pContainer.innerHTML = '';
         
         if (!list || !list.length) {
-            pContainer.innerHTML = '<p class="text-muted small mb-0">Nenhuma preventiva pendente para este veículo.</p>';
+            pContainer.innerHTML = '<p class="text-muted small mb-0">Nenhuma preventiva encontrada para este veículo.</p>';
             return;
         }
 
@@ -475,6 +475,12 @@
             const id = 'prev_cb_' + p.id;
             const wrap = document.createElement('div');
             wrap.className = 'custom-control custom-checkbox mb-2';
+            if (p.vencida) {
+                wrap.style.padding = '8px 10px';
+                wrap.style.borderRadius = '8px';
+                wrap.style.background = '#fef2f2';
+                wrap.style.border = '1px solid #fecaca';
+            }
             const input = document.createElement('input');
             input.type = 'checkbox';
             input.className = 'custom-control-input';
@@ -485,7 +491,12 @@
             const label = document.createElement('label');
             label.className = 'custom-control-label';
             label.setAttribute('for', id);
-            label.textContent = p.label;
+            label.innerHTML = `<strong>${p.label}</strong>
+                <span class="d-block small text-muted">
+                    ${p.data_prevista ? 'Prevista: ' + p.data_prevista : ''}
+                    ${p.km_previsto ? (p.data_prevista ? ' | ' : '') + 'KM: ' + p.km_previsto + ' km' : ''}
+                </span>
+                ${p.vencida ? '<span class="badge badge-danger mt-1">Vencida</span>' : '<span class="badge badge-secondary mt-1">Pendente</span>'}`;
 
             wrap.appendChild(input);
             wrap.appendChild(label);

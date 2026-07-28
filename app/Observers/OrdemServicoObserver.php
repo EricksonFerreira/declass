@@ -14,7 +14,7 @@ class OrdemServicoObserver
 {
     public function updated(OrdemServico $os)
     {
-        if ($os->isDirty('status') && $os->status === OrdemServico::STATUS_CONCLUIDA) {
+        if ($os->wasChanged('status') && $os->status === OrdemServico::STATUS_CONCLUIDA) {
             $this->processPreventiveMaintenance($os);
         }
     }

@@ -351,6 +351,14 @@
                         <a href="{{ route('multa.edit', $multa->id) }}" class="veiculo-acao veiculo-acao--primary">
                             <i class="fas fa-pen"></i><span>Editar multa</span>
                         </a>
+                        @if(in_array($multa->status_multa, ['pendente', 'em_analise'], true) && $multa->data_hora_infracao && $multa->veiculo_id)
+                        <form action="{{ route('multa.atribuirAoCliente', $multa->id) }}" method="POST" class="veiculo-acao-form">
+                            @csrf
+                            <button type="submit" class="veiculo-acao">
+                                <i class="fas fa-user-check"></i><span>Atribuir multa ao cliente</span>
+                            </button>
+                        </form>
+                        @endif
                         @endcan
                         @if($codigoReserva)
                         <a href="{{ route('reserva.show', $codigoReserva) }}" class="veiculo-acao">
@@ -511,6 +519,8 @@
 .veiculo-summary__row:last-child { border-bottom:none; }
 .veiculo-acoes-grid { display:grid;grid-template-columns:1fr 1fr;gap:.5rem; }
 .veiculo-acao { display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.35rem;padding:.75rem .5rem;border-radius:10px;background:#f8fafc;border:1px solid #e2e8f0;text-align:center;font-size:.76rem;font-weight:700;color:#334155;cursor:pointer;text-decoration:none;transition:background .15s,border-color .15s; }
+.veiculo-acao-form { margin:0; }
+.veiculo-acao-form .veiculo-acao { width:100%; }
 .veiculo-acao:hover { background:#e0f2fe;border-color:#38bdf8;color:#0369a1;text-decoration:none; }
 .veiculo-acao i { font-size:1.1rem;color:#64748b; }
 .veiculo-acao:hover i { color:#0369a1; }

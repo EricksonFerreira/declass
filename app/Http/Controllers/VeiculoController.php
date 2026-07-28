@@ -367,6 +367,15 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'veiculoDanos.reserva.codigoReserva',
             'veiculoDanos.contratoCheckin.reserva.codigoReserva',
             'ordensServico',
+            'manutencoesPreventivas' => function ($query) {
+                $query->with(['item', 'ordemServico:id,numero,status'])->orderByDesc('data_execucao')->orderByDesc('id');
+            },
+            'pendenciasManutencaoPreventiva' => function ($query) {
+                $query->with('item')->orderByDesc('id');
+            },
+            'documentacoesVeiculo' => function ($query) {
+                $query->with('categoriaFinanceira')->orderByDesc('id');
+            },
             'multas' => function ($query) {
                 $query->with(['reserva.codigoReserva', 'responsavelLancamento:id,nome'])
                     ->orderByDesc('id');
@@ -469,6 +478,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $dispInicioMes = Carbon::create($dispAno, $dispMes, 1)->startOfDay();
         $dispFimMesExclusivo = $dispInicioMes->copy()->addMonth()->startOfDay();
         $dispInicioMesComFolga = $dispInicioMes->copy()->subHours($reservaBloqueioHoras);
+        $planoManutencao = $veiculo->planoManutencaoPreventiva;
 
         $dispReservas = Reserva::query()
             ->select(['id', 'veiculo_id', 'data_inicio', 'data_fim', 'status_reserva_id', 'user_id'])
@@ -558,6 +568,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         }
         // ---
 
+        $this->garantirRegistroInicialManutencaoPreventiva($veiculo);
+
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Veiculos', route('veiculo.index')),
@@ -595,8 +607,107 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'finTemProtecaoDepreciacao',
             'finValorProtegidoDepreciacao',
             'finRentabilidade',
-            'finPaybackMeses'
+            'finPaybackMeses',
+            'planoManutencao'
         ));
+    }
+
+    public function concluirManutencaoPreventiva(Request $request, \App\Models\Veiculo $veiculo)
+    {
+        $dados = $request->validate([
+            'item_id' => ['required', 'integer'],
+        ]);
+
+        $plano = \App\Models\PlanoManutencaoPreventiva::query()
+            ->with('itens')
+            ->where('grupo_frota_id', $veiculo->grupo_frota_id)
+            ->firstOrFail();
+
+        $planoItem = $plano->itens->firstWhere('item_id', (int) $dados['item_id']);
+        if (! $planoItem) {
+            return back()->with('error', 'Item não pertence ao plano deste grupo de frota.');
+        }
+
+        $pendencia = \App\Models\PendenciaManutencaoPreventiva::query()
+            ->where('veiculo_id', $veiculo->id)
+            ->where('item_id', (int) $dados['item_id'])
+            ->whereIn('status', ['pendente', 'atrasado'])
+            ->orderByDesc('id')
+            ->first();
+
+        if ($pendencia) {
+            $pendencia->update(['status' => 'concluida']);
+        }
+
+        \App\Models\ExecucaoManutencaoPreventiva::create([
+            'empresa_id' => $veiculo->empresa_id,
+            'veiculo_id' => $veiculo->id,
+            'item_id' => (int) $dados['item_id'],
+            'ordem_servico_id' => null,
+            'data_execucao' => now()->toDateString(),
+            'km_execucao' => (int) ($veiculo->kms ?? 0),
+        ]);
+
+        \App\Models\PendenciaManutencaoPreventiva::create([
+            'empresa_id' => $veiculo->empresa_id,
+            'veiculo_id' => $veiculo->id,
+            'item_id' => (int) $dados['item_id'],
+            'data_prevista' => $planoItem->frequencia_meses ? now()->addMonths((int) $planoItem->frequencia_meses)->toDateString() : null,
+            'km_previsto' => $planoItem->frequencia_km ? ((int) ($veiculo->kms ?? 0) + (int) $planoItem->frequencia_km) : null,
+            'status' => 'pendente',
+        ]);
+
+        return back()->with('success', 'Manutenção marcada como concluída.');
+    }
+
+    private function garantirRegistroInicialManutencaoPreventiva(\App\Models\Veiculo $veiculo): void
+    {
+        if (! $veiculo->grupo_frota_id) {
+            return;
+        }
+
+        $plano = \App\Models\PlanoManutencaoPreventiva::query()
+            ->with('itens')
+            ->where('grupo_frota_id', $veiculo->grupo_frota_id)
+            ->first();
+
+        if (! $plano || $plano->itens->isEmpty()) {
+            return;
+        }
+
+        $veiculo->loadMissing(['manutencoesPreventivas', 'pendenciasManutencaoPreventiva']);
+
+        foreach ($plano->itens as $planoItem) {
+            $itemId = (int) $planoItem->item_id;
+
+            $jaTemExecucao = $veiculo->manutencoesPreventivas->where('item_id', $itemId)->isNotEmpty();
+            if ($jaTemExecucao) {
+                continue;
+            }
+
+            \App\Models\ExecucaoManutencaoPreventiva::create([
+                'empresa_id' => $veiculo->empresa_id,
+                'veiculo_id' => $veiculo->id,
+                'item_id' => $itemId,
+                'ordem_servico_id' => null,
+                'data_execucao' => now()->toDateString(),
+                'km_execucao' => (int) ($veiculo->kms ?? 0),
+            ]);
+
+            $jaTemPendencia = $veiculo->pendenciasManutencaoPreventiva->where('item_id', $itemId)->isNotEmpty();
+            if ($jaTemPendencia) {
+                continue;
+            }
+
+            \App\Models\PendenciaManutencaoPreventiva::create([
+                'empresa_id' => $veiculo->empresa_id,
+                'veiculo_id' => $veiculo->id,
+                'item_id' => $itemId,
+                'data_prevista' => $planoItem->frequencia_meses ? now()->addMonths((int) $planoItem->frequencia_meses)->toDateString() : null,
+                'km_previsto' => $planoItem->frequencia_km ? ((int) ($veiculo->kms ?? 0) + (int) $planoItem->frequencia_km) : null,
+                'status' => 'pendente',
+            ]);
+        }
     }
 
     public function edit($id)
@@ -1158,6 +1269,22 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'mes',
             'ano'
         ));
+    }
+
+    public function documentacao()
+    {
+        $titulo = 'Documentação de Veículos';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex($titulo);
+
+        $itens = [
+            ['titulo' => 'Documento do veículo', 'descricao' => 'Cadastro principal com placa, RENAVAM, chassi, motor e datas de validade.'],
+            ['titulo' => 'Licenciamento', 'descricao' => 'Controle da placa/licença e sua validade.'],
+            ['titulo' => 'Seguro', 'descricao' => 'Cadastro de apólice, vigência e status.'],
+            ['titulo' => 'IPVA', 'descricao' => 'Controle de vencimento e situação do imposto.'],
+            ['titulo' => 'Pendências', 'descricao' => 'Sinalização de qualquer documento vencido ou ausente.'],
+        ];
+
+        return view('veiculo.documentacao', compact('titulo', 'breadcrumb', 'itens'));
     }
 
     public function filtro(Request $request)

@@ -17,11 +17,13 @@ class LancamentoFinanceiro extends Model
         'valor',
         'tipo',
         'categoria_financeira_id',
+        'data_lancamento',
         'data_vencimento',
         'data_pagamento',
         'status',
         'metodo_pagamento',
         'veiculo_id',
+        'documentacao_veiculo_id',
         'reserva_id',
         'user_id',
         'observacoes',
@@ -34,6 +36,7 @@ class LancamentoFinanceiro extends Model
 
     protected $casts = [
         'valor' => 'float',
+        'data_lancamento' => 'datetime',
         'data_vencimento' => 'date:Y-m-d',
         'data_pagamento' => 'date:Y-m-d',
     ];
@@ -56,6 +59,11 @@ class LancamentoFinanceiro extends Model
     public function reserva()
     {
         return $this->belongsTo(Reserva::class, 'reserva_id');
+    }
+
+    public function documentacaoVeiculo()
+    {
+        return $this->belongsTo(DocumentacaoVeiculo::class, 'documentacao_veiculo_id');
     }
 
     public function user()

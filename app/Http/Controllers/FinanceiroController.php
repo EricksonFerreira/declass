@@ -229,6 +229,271 @@ class FinanceiroController extends Controller
         ));
     }
 
+    public function analiseClientes(Request $request)
+    {
+        $filters = $this->extractFilters($request);
+        $empresaId = $this->empresaIdParaConsulta();
+        $moedaEmpresa = $this->moedaEmpresaParaConsulta();
+
+        $base = DB::table('transacoes')
+            ->leftJoin('users', 'users.id', '=', 'transacoes.user_id')
+            ->leftJoin('reservas', 'reservas.id', '=', 'transacoes.reserva_id')
+            ->whereNotNull('transacoes.user_id');
+
+        if ($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id')) {
+            $base->where('transacoes.empresa_id', $empresaId);
+        }
+
+        $base = $this->applyFilters($base, $filters);
+
+        $perPage = (int) $request->integer('per_page', 15);
+        $perPage = in_array($perPage, [10, 15, 25, 50, 100], true) ? $perPage : 15;
+
+        $clienteId = (int) $request->integer('cliente_id', 0);
+        if ($clienteId > 0) {
+            $base->where('transacoes.user_id', $clienteId);
+        }
+
+        $busca = trim((string) $request->input('busca', ''));
+        if ($busca !== '') {
+            $base->where(function ($query) use ($busca) {
+                $query->where('users.nome', 'like', "%{$busca}%")
+                    ->orWhere('users.celular', 'like', "%{$busca}%")
+                    ->orWhere('users.telefone', 'like', "%{$busca}%");
+            });
+        }
+
+        $statusCobrança = trim((string) $request->input('status_cobranca', ''));
+        if ($statusCobrança !== '') {
+            if ($statusCobrança === 'em_aberto') {
+                $base->whereIn('transacoes.status', self::STATUS_PENDENTES);
+            } elseif ($statusCobrança === 'pago') {
+                $base->whereIn('transacoes.status', self::STATUS_APROVADOS);
+            } elseif ($statusCobrança === 'cancelado') {
+                $base->whereIn('transacoes.status', self::STATUS_CANCELADOS);
+            }
+        }
+
+        $analise = (clone $base)
+            ->select([
+                'transacoes.user_id',
+                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
+                DB::raw('MAX(users.celular) as celular'),
+                DB::raw('MAX(users.telefone) as telefone'),
+            ])
+            ->selectRaw('COUNT(transacoes.id) as quantidade')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pago')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("cancelado","cancelada","cancelled","canceled","refunded","reembolsado","reembolsada") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_cancelado')
+            ->selectRaw('MAX(transacoes.created_at) as ultima_movimentacao')
+            ->groupBy('transacoes.user_id', 'users.nome')
+            ->orderByDesc('total_pago')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $totais = (clone $base)
+            ->selectRaw('COUNT(DISTINCT transacoes.user_id) as clientes')
+            ->selectRaw('COUNT(transacoes.id) as transacoes')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as pago')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as aberto')
+            ->first();
+
+        $melhoresClientes = (clone $base)
+            ->select([
+                'transacoes.user_id',
+                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
+            ])
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pago')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
+            ->groupBy('transacoes.user_id', 'users.nome')
+            ->orderByDesc('total_pago')
+            ->limit(5)
+            ->get();
+
+        $pioresClientes = (clone $base)
+            ->select([
+                'transacoes.user_id',
+                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
+            ])
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
+            ->selectRaw('COUNT(transacoes.id) as quantidade')
+            ->groupBy('transacoes.user_id', 'users.nome')
+            ->orderByDesc('total_pendente')
+            ->limit(5)
+            ->get();
+
+        $clientesSelect = DB::table('transacoes')
+            ->leftJoin('users', 'users.id', '=', 'transacoes.user_id')
+            ->whereNotNull('transacoes.user_id');
+
+        if ($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id')) {
+            $clientesSelect->where('transacoes.empresa_id', $empresaId);
+        }
+
+        $clientes = $clientesSelect
+            ->select('transacoes.user_id as id', DB::raw('COALESCE(users.nome, "Sem cliente") as nome'))
+            ->distinct()
+            ->orderBy('nome')
+            ->get();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new \App\DTO\BreadCrumbItem('Análise por Cliente'),
+        ]);
+
+        $titulo = 'Análise Financeira por Cliente';
+
+        return view('financeiro.analise_clientes', compact(
+            'analise',
+            'clientes',
+            'melhoresClientes',
+            'pioresClientes',
+            'totais',
+            'moedaEmpresa',
+            'breadcrumb',
+            'titulo',
+            'perPage',
+            'clienteId',
+            'busca',
+            'statusCobrança'
+        ));
+    }
+
+    public function analiseClientesRelatorio(Request $request)
+    {
+        $empresaId = $this->empresaIdParaConsulta();
+        $moedaEmpresa = $this->moedaEmpresaParaConsulta();
+
+        $query = DB::table('transacoes')
+            ->leftJoin('users', 'users.id', '=', 'transacoes.user_id')
+            ->whereNotNull('transacoes.user_id');
+
+        if ($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id')) {
+            $query->where('transacoes.empresa_id', $empresaId);
+        }
+
+        $clienteId = (int) $request->integer('cliente_id', 0);
+        if ($clienteId > 0) {
+            $query->where('transacoes.user_id', $clienteId);
+        }
+
+        $busca = trim((string) $request->input('busca', ''));
+        if ($busca !== '') {
+            $query->where(function ($sub) use ($busca) {
+                $sub->where('users.nome', 'like', "%{$busca}%")
+                    ->orWhere('users.celular', 'like', "%{$busca}%")
+                    ->orWhere('users.telefone', 'like', "%{$busca}%");
+            });
+        }
+
+        if ($request->filled('data_inicio')) {
+            $query->whereDate('transacoes.created_at', '>=', $request->input('data_inicio'));
+        }
+
+        if ($request->filled('data_fim')) {
+            $query->whereDate('transacoes.created_at', '<=', $request->input('data_fim'));
+        }
+
+        $statusCobranca = (string) $request->input('status_cobranca', '');
+        if ($statusCobranca === 'em_aberto') {
+            $query->whereIn('transacoes.status', self::STATUS_PENDENTES);
+        } elseif ($statusCobranca === 'pago') {
+            $query->whereIn('transacoes.status', self::STATUS_APROVADOS);
+        } elseif ($statusCobranca === 'cancelado') {
+            $query->whereIn('transacoes.status', self::STATUS_CANCELADOS);
+        }
+
+        $perPage = (int) $request->integer('per_page', 15);
+        $perPage = in_array($perPage, [10, 15, 25, 50, 100], true) ? $perPage : 15;
+
+        $base = clone $query;
+
+        $analise = (clone $base)
+            ->select([
+                'transacoes.user_id',
+                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
+                DB::raw('MAX(users.celular) as celular'),
+                DB::raw('MAX(users.telefone) as telefone'),
+            ])
+            ->selectRaw('COUNT(transacoes.id) as quantidade')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pago')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("cancelado","cancelada","cancelled","canceled","refunded","reembolsado","reembolsada") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_cancelado')
+            ->selectRaw('MAX(transacoes.created_at) as ultima_movimentacao')
+            ->groupBy('transacoes.user_id', 'users.nome')
+            ->orderByDesc('total_pendente')
+            ->paginate($perPage)
+            ->withQueryString();
+
+        $totais = (clone $base)
+            ->selectRaw('COUNT(DISTINCT transacoes.user_id) as clientes')
+            ->selectRaw('COUNT(transacoes.id) as transacoes')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as pago')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as aberto')
+            ->first();
+
+        $melhoresClientes = (clone $base)
+            ->select([
+                'transacoes.user_id',
+                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
+                DB::raw('MAX(users.celular) as celular'),
+            ])
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pago')
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
+            ->groupBy('transacoes.user_id', 'users.nome')
+            ->orderByDesc('total_pago')
+            ->limit(5)
+            ->get();
+
+        $pioresClientes = (clone $base)
+            ->select([
+                'transacoes.user_id',
+                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
+                DB::raw('MAX(users.celular) as celular'),
+            ])
+            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
+            ->selectRaw('COUNT(transacoes.id) as quantidade')
+            ->groupBy('transacoes.user_id', 'users.nome')
+            ->orderByDesc('total_pendente')
+            ->limit(5)
+            ->get();
+
+        $clientes = DB::table('transacoes')
+            ->leftJoin('users', 'users.id', '=', 'transacoes.user_id')
+            ->whereNotNull('transacoes.user_id')
+            ->when($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id'), function ($q) use ($empresaId) {
+                $q->where('transacoes.empresa_id', $empresaId);
+            })
+            ->select('transacoes.user_id as id', DB::raw('COALESCE(users.nome, "Sem cliente") as nome'))
+            ->distinct()
+            ->orderBy('nome')
+            ->get();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new \App\DTO\BreadCrumbItem('Análise por Cliente'),
+        ]);
+
+        $titulo = 'Análise Financeira por Cliente';
+
+        return view('financeiro.analise_clientes', compact(
+            'analise',
+            'totais',
+            'melhoresClientes',
+            'pioresClientes',
+            'clientes',
+            'moedaEmpresa',
+            'breadcrumb',
+            'titulo',
+            'perPage',
+            'clienteId',
+            'busca',
+            'statusCobranca'
+        ));
+    }
+
     public function reservas(Request $request)
     {
         $filters = $this->extractFilters($request);

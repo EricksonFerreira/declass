@@ -23,6 +23,7 @@
     $pagamentoEmDia = $saldoPendenteReserva <= 0.009;
     $codigoPagamentoReserva = $reserva->codigoReserva?->codigo ?? ('RES-' . $reserva->id);
     $codigoCheckinReserva = $reserva->codigoReserva?->codigo ?? $reserva->id;
+    $reservaCancelada = in_array(strtolower((string) ($reserva->statusReserva->nome ?? '')), ['cancelada', 'cancelado'], true);
 @endphp
 
 <section class="reservation-actions-card">
@@ -57,7 +58,7 @@
                 @endif
             @endcan
 
-            @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
+            @if(!$reservaCancelada && !$pagamentoEmDia && $saldoPendenteReserva > 0)
                 <a href="{{ route('reserva.pagamento.efetuar', ['id' => $codigoPagamentoReserva]) }}" class="action-pill action-pill--accent">
                     <i class="fas fa-credit-card"></i>
                     <span>{{ $saldoPendenteReserva > 0 ? 'Pagar saldo pendente' : 'Efetuar pagamento' }}</span>
@@ -67,14 +68,14 @@
                 </a>
             @endif
 
-            @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
+            @if(!$reservaCancelada && !$pagamentoEmDia && $saldoPendenteReserva > 0)
             <button type="button" class="action-pill" style="background:linear-gradient(135deg,#059669,#34d399);" data-toggle="modal" data-target="#modalPagamentoDinheiro">
                 <i class="fas fa-money-bill-wave"></i>
                 <span>Pagamento em dinheiro</span>
             </button>
             @endif
 
-            @if(!$pagamentoEmDia && $saldoPendenteReserva > 0)
+            @if(!$reservaCancelada && !$pagamentoEmDia && $saldoPendenteReserva > 0)
                 <div class="reservation-actions-card__alert" style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px 14px;margin-top:8px;">
                     <div style="display:flex;align-items:flex-start;gap:10px;">
                         <i class="fas fa-exclamation-circle" style="color:#dc2626;font-size:18px;margin-top:2px;"></i>
@@ -103,12 +104,12 @@
             @endif
 
             {{-- Check-in --}}
-            @if(!$reserva->contratoCheckin && ($pagamentoEfetuado ?? false) && $pagamentoEmDia)
+            @if(!$reservaCancelada && !$reserva->contratoCheckin && ($pagamentoEfetuado ?? false) && $pagamentoEmDia)
                 <a href="{{ route('reserva.checkin', ['codigo' => $codigoCheckinReserva]) }}" class="action-pill action-pill--success">
                     <i class="fas fa-file-signature"></i>
                     <span>Iniciar check-in</span>
                 </a>
-            @elseif($reserva->contratoCheckin && $reserva->contratoCheckin->assinado !== 'S')
+            @elseif(!$reservaCancelada && $reserva->contratoCheckin && $reserva->contratoCheckin->assinado !== 'S')
                 @if($pagamentoEmDia)
                     <a href="{{ route('reserva.assinarContratoCheckin', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="action-pill action-pill--success">
                         <i class="fas fa-pen"></i>
@@ -132,15 +133,16 @@
                 $dataFim           = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
                 $isAntesDaDataFim  = $dataFim && now()->lt($dataFim);
 
-                // Calção: ok se não há regra configurada, ou se já foi autorizado/capturado
+                // Calção: se houver regra configurada, o check-out só abre após efetivação do calção.
                 $calcaoOkCo = true;
                 try {
                     $calculo = app(\App\Services\CalcaoService::class)->calcularValor($reserva);
-                    if ((float)($calculo['valor_calculado'] ?? 0) > 0) {
-                        $calcaoStatus = $reserva->calcao?->status ?? '';
-                        $calcaoOkCo = in_array($calcaoStatus, ['autorizado','capturado','parcialmente_capturado'], true);
+                    if ((float) ($calculo['valor_calculado'] ?? 0) > 0) {
+                        $calcao = $reserva->calcao;
+                        $calcaoOkCo = $calcao
+                            && in_array((string) $calcao->status, ['autorizado', 'capturado', 'parcialmente_capturado'], true);
                     }
-                } catch (\Throwable $e) { $calcaoOkCo = true; }
+                } catch (\Throwable $e) { $calcaoOkCo = false; }
 
                 $podeCheckout = !$checkoutJaFeito && ($pagamentoEfetuado ?? false) && $checkinAssinadoCo && $calcaoOkCo;
 
@@ -157,7 +159,7 @@
                     <i class="fas fa-{{ $jaSatisfacaoBtn ? 'check-circle' : 'star' }}"></i>
                     <span>{{ $jaSatisfacaoBtn ? 'Ver avaliação' : 'Avaliar atendimento' }}</span>
                 </button> --}}
-            @elseif($checkinAssinadoCo)
+            @elseif(!$reservaCancelada && $checkinAssinadoCo)
                 {{-- Check-in feito: mostra botão ativo ou bloqueado --}}
                 @if($podeCheckout)
                     <button type="button" id="btn-iniciar-checkout"
@@ -168,7 +170,7 @@
                         <i class="fas fa-flag-checkered"></i>
                         <span>Fazer check-out</span>
                     </button>
-                @else
+                @elseif($calcaoOkCo === false)
                     <span class="action-pill action-pill--disabled checkout-bloqueado"
                           data-motivos="{{ implode('|', $motivosBloqueio) }}">
                         <i class="fas fa-lock"></i>
@@ -185,7 +187,7 @@
                 </button>
             @endif
 
-            @if(in_array((int)$reserva->status_reserva_id, [2, 3]) && !$checkoutJaFeito)
+            @if(!$reservaCancelada && in_array((int)$reserva->status_reserva_id, [2, 3]) && !$checkoutJaFeito)
                 <a href="{{ route('reserva.renovacao.exibir', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="action-pill" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff;">
                     <i class="fas fa-arrows-rotate"></i>
                     <span>Renovar Reserva</span>

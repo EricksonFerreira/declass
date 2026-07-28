@@ -44,6 +44,20 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-2 mb-2">
+                        <label for="reserva_id" class="fc-label">Reserva</label>
+                        <select name="reserva_id" id="reserva_id" class="form-control">
+                            <option value="">Todas</option>
+                            @foreach($reservas as $reserva)
+                                @php
+                                    $codigoReserva = $reserva->codigoReserva?->codigo ?? $reserva->id;
+                                @endphp
+                                <option value="{{ $reserva->id }}" {{ request('reserva_id') == $reserva->id ? 'selected' : '' }}>
+                                    #{{ $codigoReserva }} - {{ $reserva->user?->nome ?? 'Cliente' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-3 mb-2 fc-actions">
                         <button type="submit" class="btn btn-primary fc-btn flex-grow-1"><i class="fas fa-filter"></i> Filtrar</button>
                         <a href="{{ route('financeiro.fluxo-caixa.index') }}" class="btn btn-outline-secondary fc-btn">Limpar</a>
@@ -72,6 +86,7 @@
                         <thead>
                             <tr>
                                 <th class="px-4 py-3">Vencimento</th>
+                                <th class="py-3">Data de Lançamento</th>
                                 <th class="py-3">Descrição</th>
                                 <th class="py-3">Categoria</th>
                                 <th class="py-3">Tipo</th>
@@ -82,53 +97,55 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($lancamentos as $lancamento)
+                            @forelse($lancamentos as $item)
                                 @php
-                                    $codigoReserva = $lancamento->reserva?->codigoReserva?->codigo ?? $lancamento->reserva?->id;
+                                    $codigoReserva = $item->reserva?->codigoReserva?->codigo ?? $item->reserva?->id;
+                                    $dataLancamentoExibicao = $item->data_lancamento ?? $item->data_pagamento ?? $item->updated_at ?? $item->created_at;
                                 @endphp
                                 <tr>
-                                    <td class="px-4 py-3">{{ $lancamento->data_vencimento ? $lancamento->data_vencimento->format('d/m/Y') : '-' }}</td>
+                                    <td class="px-4 py-3">{{ $item->data_vencimento ? $item->data_vencimento->format('d/m/Y') : '-' }}</td>
+                                    <td class="py-3">{{ $dataLancamentoExibicao ? $dataLancamentoExibicao->format('d/m/Y H:i') : '-' }}</td>
                                     <td class="py-3">
-                                        <span class="font-weight-bold text-dark">{{ $lancamento->descricao }}</span>
-                                        @if($lancamento->data_pagamento)
-                                            <div class="text-xs text-muted">Pago em: {{ $lancamento->data_pagamento->format('d/m/Y') }}</div>
+                                        <span class="font-weight-bold text-dark">{{ $item->descricao }}</span>
+                                        @if($item->data_pagamento)
+                                            <div class="text-xs text-muted">Pago em: {{ $item->data_pagamento->format('d/m/Y H:i') }}</div>
                                         @endif
                                     </td>
                                     <td class="py-3 text-secondary">
-                                        @if($lancamento->categoria)
-                                            <span class="text-xs font-weight-bold text-muted">{{ $lancamento->categoria->codigo }}</span><br>
-                                            <span class="text-dark">{{ $lancamento->categoria->categoriaPai ? $lancamento->categoria->categoriaPai->nome . ' > ' : '' }}{{ $lancamento->categoria->nome }}</span>
+                                        @if($item->categoria)
+                                            <span class="text-xs font-weight-bold text-muted">{{ $item->categoria->codigo }}</span><br>
+                                            <span class="text-dark">{{ $item->categoria->categoriaPai ? $item->categoria->categoriaPai->nome . ' > ' : '' }}{{ $item->categoria->nome }}</span>
                                         @else
                                             -
                                         @endif
                                     </td>
                                     <td class="py-3">
-                                        <span class="fc-badge {{ $lancamento->tipo === 'receita' ? 'fc-badge--receita' : 'fc-badge--despesa' }}">
-                                            {{ $lancamento->tipo === 'receita' ? 'Receita' : 'Despesa' }}
+                                        <span class="fc-badge {{ $item->tipo === 'receita' ? 'fc-badge--receita' : 'fc-badge--despesa' }}">
+                                            {{ $item->tipo === 'receita' ? 'Receita' : 'Despesa' }}
                                         </span>
                                     </td>
-                                    <td class="py-3 font-weight-bold {{ $lancamento->tipo === 'receita' ? 'text-success' : 'text-danger' }}">
-                                        {{ $moeda === 'BRL' ? 'R$' : $moeda }} {{ number_format($lancamento->valor, 2, ',', '.') }}
+                                    <td class="py-3 font-weight-bold {{ $item->tipo === 'receita' ? 'text-success' : 'text-danger' }}">
+                                        {{ $moeda === 'BRL' ? 'R$' : $moeda }} {{ number_format($item->valor, 2, ',', '.') }}
                                     </td>
                                     <td class="py-3">
-                                        <span class="fc-badge fc-badge--{{ $lancamento->status }}">
-                                            {{ ucfirst($lancamento->status) }}
+                                        <span class="fc-badge fc-badge--{{ $item->status }}">
+                                            {{ ucfirst($item->status) }}
                                         </span>
                                     </td>
                                     <td class="py-3 text-xs">
-                                        @if($lancamento->veiculo)
-                                            <span class="font-weight-bold text-primary"><i class="fas fa-car mr-1"></i>{{ $lancamento->veiculo->placa_licenca }}</span>
-                                        @elseif($lancamento->reserva)
+                                        @if($item->veiculo)
+                                            <span class="font-weight-bold text-primary"><i class="fas fa-car mr-1"></i>{{ $item->veiculo->placa_licenca }}</span>
+                                        @elseif($item->reserva)
                                             <span class="font-weight-bold text-primary"><i class="fas fa-calendar-alt mr-1"></i>Reserva #{{ $codigoReserva }}</span>
                                         @else
                                             <span class="text-muted">-</span>
                                         @endif
                                     </td>
                                     <td class="py-3 text-right px-4">
-                                        <a href="{{ route('financeiro.fluxo-caixa.edit', $lancamento->id) }}" class="btn btn-sm btn-outline-primary mr-1" title="Editar">
+                                        <a href="{{ route('financeiro.fluxo-caixa.edit', $item->id) }}" class="btn btn-sm btn-outline-primary mr-1" title="Editar">
                                             <i class="fas fa-edit"></i>
                                         </a>
-                                        <form action="{{ route('financeiro.fluxo-caixa.destroy', $lancamento->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este lançamento?');">
+                                        <form action="{{ route('financeiro.fluxo-caixa.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Deseja excluir este lançamento?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-sm btn-outline-danger" title="Excluir">
@@ -139,7 +156,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="text-center py-5 text-muted">Nenhum lançamento encontrado.</td>
+                                    <td colspan="9" class="text-center py-5 text-muted">Nenhum lançamento encontrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -156,3 +173,4 @@
 
     @include('financeiro.fluxo_caixa._styles')
 @stop
+

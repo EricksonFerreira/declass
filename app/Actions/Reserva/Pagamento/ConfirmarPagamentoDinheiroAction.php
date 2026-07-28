@@ -3,9 +3,11 @@
 namespace App\Actions\Reserva\Pagamento;
 
 use App\Actions\Financeiro\RegistrarReceitaPagamentoReservaAction;
+use App\Enums\StatusReservaEnum;
 use App\Models\Reserva;
 use App\Models\Transacao;
 use App\Services\ReservaService;
+use App\Support\SchemaCache;
 use Illuminate\Support\Facades\Auth;
 
 class ConfirmarPagamentoDinheiroAction
@@ -77,6 +79,28 @@ class ConfirmarPagamentoDinheiroAction
             Auth::id(),
             'transacao_'.$transacao->id
         );
+
+        $reservaAtualizada = $reserva->fresh(['transacoes', 'codigoReserva', 'contratoCheckin']);
+        if ($reservaAtualizada) {
+            $statusAprovadoAtual = ['succeeded', 'approved', 'paid', 'completed', 'complete', 'confirmed', 'concluido'];
+            $totalPagoAtual = (float) $reservaAtualizada->transacoes
+                ->whereIn('status', $statusAprovadoAtual)
+                ->sum('valor');
+            $valorTotalAtual = (float) ($reservaAtualizada->valor_total_final ?? $reservaAtualizada->valor_total_com_desconto ?? $reservaAtualizada->valor_total_tarifa_base ?? 0);
+
+            if ($valorTotalAtual > 0 && $totalPagoAtual + 0.009 >= $valorTotalAtual) {
+                $payload = [
+                    'status_reserva_id' => StatusReservaEnum::Confirmada->value,
+                    'pagamento_efetuado' => true,
+                ];
+
+                if (SchemaCache::hasColumn($reservaAtualizada->getTable(), 'status_pagamento')) {
+                    $payload['status_pagamento'] = 'pago';
+                }
+
+                $reservaAtualizada->forceFill($payload)->save();
+            }
+        }
 
         return $transacao;
     }

@@ -87,6 +87,14 @@
                     </div>
 
                     <div class="col-md-6 form-group mb-3">
+                        <label for="data_lancamento" class="fc-label">Data do lançamento</label>
+                        <input type="datetime-local" name="data_lancamento" id="data_lancamento" class="form-control @error('data_lancamento') is-invalid @enderror" value="{{ old('data_lancamento', isset($lancamento) && $lancamento->data_lancamento ? $lancamento->data_lancamento->format('Y-m-d\TH:i') : now()->format('Y-m-d\TH:i')) }}">
+                        @error('data_lancamento')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 form-group mb-3">
                         <label for="data_pagamento" class="fc-label">Data de pagamento</label>
                         <input type="date" name="data_pagamento" id="data_pagamento" class="form-control @error('data_pagamento') is-invalid @enderror" value="{{ old('data_pagamento', isset($lancamento) && $lancamento->data_pagamento ? $lancamento->data_pagamento->format('Y-m-d') : '') }}">
                         @error('data_pagamento')<div class="invalid-feedback">{{ $message }}</div>@enderror

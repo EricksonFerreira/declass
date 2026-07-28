@@ -225,10 +225,71 @@ class FluxoCaixaController extends Controller
         ));
     }
 
+    public function contasPagar(Request $request)
+    {
+        $empresaId = $this->getEmpresaId();
+        $moeda = $this->getMoedaEmpresa();
+
+        $lancamentos = LancamentoFinanceiro::with(['categoria', 'veiculo', 'reserva.codigoReserva'])
+            ->where('empresa_id', $empresaId)
+            ->where('tipo', 'despesa')
+            ->where('status', '!=', 'cancelado')
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+            ->when($request->filled('data_inicio'), fn ($query) => $query->whereDate('data_vencimento', '>=', $request->input('data_inicio')))
+            ->when($request->filled('data_fim'), fn ($query) => $query->whereDate('data_vencimento', '<=', $request->input('data_fim')))
+            ->orderByDesc(DB::raw('COALESCE(data_lancamento, data_pagamento, data_vencimento, created_at)'))
+            ->paginate(15)
+            ->withQueryString();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new BreadCrumbItem('Fluxo de Caixa', route('financeiro.fluxo-caixa.dashboard')),
+            new BreadCrumbItem('Contas a Pagar'),
+        ]);
+
+        $titulo = 'Contas a Pagar';
+
+        return view('financeiro.contas_pagar', compact('lancamentos', 'moeda', 'breadcrumb', 'titulo'));
+    }
+
+    public function contasReceber(Request $request)
+    {
+        $empresaId = $this->getEmpresaId();
+        $moeda = $this->getMoedaEmpresa();
+
+        $lancamentos = LancamentoFinanceiro::with(['categoria', 'veiculo', 'reserva.codigoReserva'])
+            ->where('empresa_id', $empresaId)
+            ->where('tipo', 'receita')
+            ->where('status', '!=', 'cancelado')
+            ->when($request->filled('status'), fn ($query) => $query->where('status', $request->input('status')))
+            ->when($request->filled('data_inicio'), fn ($query) => $query->whereDate('data_vencimento', '>=', $request->input('data_inicio')))
+            ->when($request->filled('data_fim'), fn ($query) => $query->whereDate('data_vencimento', '<=', $request->input('data_fim')))
+            ->orderByDesc(DB::raw('COALESCE(data_lancamento, data_pagamento, data_vencimento, created_at)'))
+            ->paginate(15)
+            ->withQueryString();
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new BreadCrumbItem('Home', route('home')),
+            new BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new BreadCrumbItem('Fluxo de Caixa', route('financeiro.fluxo-caixa.dashboard')),
+            new BreadCrumbItem('Contas a Receber'),
+        ]);
+
+        $titulo = 'Contas a Receber';
+
+        return view('financeiro.contas_receber', compact('lancamentos', 'moeda', 'breadcrumb', 'titulo'));
+    }
+
     public function index(Request $request)
     {
         $empresaId = $this->getEmpresaId();
         $moeda = $this->getMoedaEmpresa();
+        $reservas = Reserva::with('codigoReserva')
+            ->where('empresa_id', $empresaId)
+            ->orderByDesc('id')
+            ->limit(100)
+            ->get();
 
         $query = LancamentoFinanceiro::with(['categoria', 'veiculo', 'reserva.codigoReserva'])
             ->where('empresa_id', $empresaId);
@@ -246,6 +307,9 @@ class FluxoCaixaController extends Controller
         if ($request->filled('categoria_id')) {
             $query->where('categoria_financeira_id', $request->categoria_id);
         }
+        if ($request->filled('reserva_id')) {
+            $query->where('reserva_id', $request->reserva_id);
+        }
         if ($request->filled('data_inicio')) {
             $query->whereDate('data_vencimento', '>=', $request->data_inicio);
         }
@@ -256,7 +320,7 @@ class FluxoCaixaController extends Controller
         $perPage = (int) $request->integer('per_page', 15);
         $perPage = in_array($perPage, [10, 15, 25, 50, 100], true) ? $perPage : 15;
 
-        $lancamentos = $query->orderByDesc('data_vencimento')
+        $lancamentos = $query->orderByDesc(DB::raw('COALESCE(data_lancamento, data_pagamento, data_vencimento, created_at)'))
             ->paginate($perPage)
             ->withQueryString();
 
@@ -266,7 +330,7 @@ class FluxoCaixaController extends Controller
         $titulo = 'Lançamentos Financeiros';
 
         return view('financeiro.fluxo_caixa.lancamentos.index', compact(
-            'lancamentos', 'categorias', 'breadcrumb', 'titulo', 'moeda', 'perPage'
+            'lancamentos', 'categorias', 'reservas', 'breadcrumb', 'titulo', 'moeda', 'perPage'
         ));
     }
 

@@ -51,6 +51,7 @@
     $clienteNome = $reserva->usuario?->nome ?? auth()->user()?->nome ?? 'Cliente';
     $clienteEmail = $reserva->usuario?->email ?? auth()->user()?->email ?? '-';
     $clienteTelefone = $reserva->usuario?->telefone ?? auth()->user()?->telefone ?? '-';
+    $danosVeiculo = $reserva->veiculo?->veiculoDanos ?? collect();
     $podeCancelarMinhaReserva = method_exists($reserva, 'podeCancelarComoCliente') ? $reserva->podeCancelarComoCliente() : false;
     $podeCancelarReserva = method_exists($reserva, 'podeFazerCancelamento') ? $reserva->podeFazerCancelamento() : false;
     $usuarioEhCriador = auth()->check() && (int) auth()->id() === (int) ($reserva->user_id ?? 0);
@@ -321,6 +322,58 @@
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="rs-card mb-3">
+                <div class="rs-card__head">
+                    <div class="rs-card__icon"><i class="fas fa-car-crash"></i></div>
+                    <div>
+                        <div class="rs-card__title">Danos do veículo</div>
+                        <div class="rs-card__sub">Histórico de danos registrados para este carro</div>
+                    </div>
+                    <span class="rs-status is-warning ml-auto">{{ $danosVeiculo->count() }} {{ $danosVeiculo->count() === 1 ? 'dano' : 'danos' }}</span>
+                </div>
+                <div class="rs-card__body">
+                    @if($danosVeiculo->isEmpty())
+                        <div class="rs-note">Nenhum dano registrado para este veículo.</div>
+                    @else
+                        <div class="rs-list">
+                            @foreach($danosVeiculo as $dano)
+                                @php
+                                    $statusDano = strtolower((string) ($dano->status ?? 'pendente'));
+                                    $statusLabel = match ($statusDano) {
+                                        'corrigida' => 'Corrigido',
+                                        'parcialmente_corrigida' => 'Parcial',
+                                        'descartada' => 'Descartado',
+                                        'em_correcao' => 'Em correção',
+                                        default => 'Pendente',
+                                    };
+                                    $badgeClass = match ($statusDano) {
+                                        'corrigida', 'parcialmente_corrigida' => 'success',
+                                        'descartada' => 'secondary',
+                                        'em_correcao' => 'warning',
+                                        default => 'danger',
+                                    };
+                                @endphp
+                                <div class="rs-list__item">
+                                    <div class="d-flex justify-content-between align-items-start gap-2">
+                                        <div>
+                                            <div class="rs-list__label">{{ $dano->dano?->categoria?->nome ?? 'Dano' }}</div>
+                                            <div class="rs-list__value">{{ $dano->observacoes ?: $dano->local_dano ?: $dano->localizacao_problema ?: 'Sem descrição' }}</div>
+                                            <div class="text-muted" style="font-size:.74rem;">
+                                                {{ $dano->created_at ? \Carbon\Carbon::parse($dano->created_at)->format('d/m/Y H:i') : '-' }}
+                                                @if($dano->quilometragem_veiculo)
+                                                    · {{ number_format((float) $dano->quilometragem_veiculo, 0, ',', '.') }} km
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <span class="badge badge-{{ $badgeClass }}">{{ $statusLabel }}</span>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             </div>
 

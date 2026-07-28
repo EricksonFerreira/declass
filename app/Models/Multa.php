@@ -69,6 +69,7 @@ class Multa extends Model
 
     const STATUS_MULTA = [
         'pendente'                       => 'Pendente',
+        'aguardando_pagamento_cliente'   => 'Aguardando pagamento do cliente',
         'em_analise'                     => 'Em Analise',
         'aguardando_identificacao_condutor' => 'Aguardando Identificacao do Condutor',
         'recorrida'                      => 'Recorrida',

@@ -64,6 +64,15 @@
                         $iniciais = collect($partesNome)->filter()->take(2)
                             ->map(fn($parte) => mb_strtoupper(mb_substr($parte, 0, 1)))->implode('');
                         $iniciais = $iniciais ?: 'US';
+                        $pendenciasUsuario = [];
+                        if (empty($usuario->email)) $pendenciasUsuario[] = 'E-mail';
+                        if (empty($usuario->numero_identificacao)) $pendenciasUsuario[] = 'Documento';
+                        if (empty($usuario->celular)) $pendenciasUsuario[] = 'Celular';
+                        if (empty($usuario->data_nascimento)) $pendenciasUsuario[] = 'Nascimento';
+                        if (empty($usuario->pais_sigla) || empty($usuario->cidade) || empty($usuario->endereco)) $pendenciasUsuario[] = 'Contato/Endereço';
+                        $statusUsuario = !empty($usuario->data_validade_carta_conducao) && \Carbon\Carbon::parse($usuario->data_validade_carta_conducao)->isPast()
+                            ? 'Documento vencido'
+                            : (count($pendenciasUsuario) > 0 ? 'Cadastro incompleto' : 'Apto para locação');
                     @endphp
 
                     <article class="ux-card">
@@ -78,6 +87,12 @@
                             <div class="ux-card__badges">
                                 @if ($usuario->tipoUsuario)
                                     <span class="ux-card__badge ux-card__badge--blue">{{ $usuario->tipoUsuario->name }}</span>
+                                @endif
+                                <span class="ux-card__badge {{ count($pendenciasUsuario) > 0 ? 'ux-card__badge--amber' : (\Carbon\Carbon::parse($usuario->data_validade_carta_conducao ?? now()->toDateString())->isPast() ? 'ux-card__badge--red' : 'ux-card__badge--green') }}">
+                                    {{ $statusUsuario }}
+                                </span>
+                                @if (count($pendenciasUsuario) > 0)
+                                    <span class="ux-card__badge ux-card__badge--gray">{{ count($pendenciasUsuario) }} pendência(s)</span>
                                 @endif
                             </div>
                         </div>
@@ -427,6 +442,26 @@
             background: rgba(59,130,246,.12);
             color: #1d4ed8;
             border-color: rgba(59,130,246,.2);
+        }
+        .ux-card__badge--green {
+            background: rgba(34,197,94,.12);
+            color: #15803d;
+            border-color: rgba(34,197,94,.2);
+        }
+        .ux-card__badge--amber {
+            background: rgba(245,158,11,.15);
+            color: #b45309;
+            border-color: rgba(245,158,11,.25);
+        }
+        .ux-card__badge--red {
+            background: rgba(239,68,68,.12);
+            color: #b91c1c;
+            border-color: rgba(239,68,68,.2);
+        }
+        .ux-card__badge--gray {
+            background: rgba(148,163,184,.15);
+            color: #334155;
+            border-color: rgba(148,163,184,.2);
         }
 
         .ux-card__meta {

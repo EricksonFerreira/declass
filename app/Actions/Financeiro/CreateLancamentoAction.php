@@ -3,6 +3,7 @@
 namespace App\Actions\Financeiro;
 
 use App\Models\LancamentoFinanceiro;
+use App\Support\SchemaCache;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -10,6 +11,11 @@ class CreateLancamentoAction
 {
     public function handle(array $data): LancamentoFinanceiro
     {
+        if (SchemaCache::hasColumn('lancamentos_financeiros', 'data_lancamento')) {
+            $data['data_lancamento'] = $data['data_lancamento'] ?? now()->toDateTimeString();
+        } else {
+            unset($data['data_lancamento']);
+        }
         $recorrente = (bool) ($data['recorrente'] ?? false);
         $recorrencia = $data['recorrencia'] ?? null;
         $parcelasTotais = isset($data['parcelas_totais']) ? (int) $data['parcelas_totais'] : null;

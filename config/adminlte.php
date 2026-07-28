@@ -354,11 +354,23 @@ return [
                     'text' => 'Veículos',
                     'route' => 'veiculo.index',
                     'icon' => 'fas fa-car-side',
-                ],
-                [
-                    'text' => 'Disponibilidade',
-                    'route' => 'veiculo.disponibilidade',
-                    'icon' => 'fas fa-calendar-check',
+                    'submenu' => [
+                        [
+                            'text' => 'Cadastro',
+                            'route' => 'veiculo.index',
+                            'icon' => 'fas fa-list',
+                        ],
+                        [
+                            'text' => 'Manut. Preventiva',
+                            'route' => 'manutencao.preventivas.index',
+                            'icon' => 'fas fa-tools',
+                        ],
+                        [
+                            'text' => 'Documentação',
+                            'route' => 'veiculo.documentacao',
+                            'icon' => 'fas fa-file-alt',
+                        ],
+                    ],
                 ],
                 [
                     'text' => 'Ordens de Serviço',
@@ -455,6 +467,21 @@ return [
                     'icon' => 'fas fa-chart-pie',
                 ],
                 [
+                    'text' => 'Contas a Pagar',
+                    'route' => 'financeiro.contas-pagar',
+                    'icon' => 'fas fa-file-invoice-dollar',
+                ],
+                [
+                    'text' => 'Contas a Receber',
+                    'route' => 'financeiro.contas-receber',
+                    'icon' => 'fas fa-hand-holding-usd',
+                ],
+                [
+                    'text' => 'Análise por Cliente',
+                    'route' => 'financeiro.analise-clientes',
+                    'icon' => 'fas fa-user-friends',
+                ],
+                [
                     'text' => 'Lançamentos',
                     'route' => 'financeiro.fluxo-caixa.index',
                     'icon' => 'fas fa-file-invoice-dollar',
@@ -512,10 +539,11 @@ return [
                             'route' => 'os-subcategorias.index',
                             'icon' => 'fas fa-list',
                         ],
+                        
                         [
                             'text' => 'Planos de Manut. Preventiva',
                             'route' => 'manutencao.planos.index',
-                            'icon' => 'fas fa-shield-alt',
+                            'icon' => 'fas fa-clipboard-list',
                         ],
                     ],
                 ],
@@ -576,6 +604,20 @@ return [
                     'route' => 'termo_consentimento.index',
                     'icon' => 'fas fa-file-contract',
                     'can' => 'termo_consentimento.index',
+                ],
+               
+            ],
+        ],
+        [
+            'text' => 'Configurações Gerais',
+            'icon' => 'fas fa-cogs',
+            'can' => 'acessar-superadmin',
+            'submenu' => [
+                [
+                    'text' => 'Gestão de Empresas',
+                    'route' => 'empresa.index',
+                    'icon' => 'fas fa-building',
+                    'can' => 'acessar-superadmin',
                 ],
                 [
                     'text' => 'Replicação de Base',

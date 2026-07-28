@@ -155,6 +155,9 @@
                             : '-';
 
                         $showStatusBadge = $statusNome !== '';
+                        $pendenciasCadastro = [];
+                        if (empty($veiculo->local_disponibilidade)) $pendenciasCadastro[] = 'Estação';
+                        if (empty($veiculo->data_hora_disponibilidade)) $pendenciasCadastro[] = 'Disponibilidade';
                     @endphp
 
                     <article class="vc {{ $accentClass }}" data-avail="{{ $availKey }}"
@@ -172,6 +175,11 @@
                                 <span class="vc__badge {{ $statusBadgeClassDisponibilidade }}">
                                     {{ $statusLabelDisponibilidade }} · {{ $percentualDisponibilidade }}%
                                 </span>
+                                @if ($pendenciasCadastro)
+                                    <span class="vc__badge vc__badge--amber" title="{{ implode(', ', $pendenciasCadastro) }}">
+                                        {{ count($pendenciasCadastro) }} pendência(s)
+                                    </span>
+                                @endif
                                 @if ($showStatusBadge)
                                     <span class="badge badge-xs bg-{{ $statusCor }}" title="Status do veiculo">
                                         {{ $statusNome }}
@@ -279,6 +287,10 @@
                                     'parcial' => 'bg-amber',
                                     default => 'bg-red',
                                 };
+
+                                $pendenciasCadastro = [];
+                                if (empty($veiculo->local_disponibilidade)) $pendenciasCadastro[] = 'Estação';
+                                if (empty($veiculo->data_hora_disponibilidade)) $pendenciasCadastro[] = 'Disponibilidade';
                             @endphp
                             <tr data-avail="{{ $availKey }}"
                                 onclick="window.location='{{ route('veiculo.show', $veiculo->id) }}';"
@@ -308,6 +320,11 @@
                                     <span class="badge badge-xs {{ $badgeDisponibilidade }}">
                                         {{ $statusLabelDisponibilidade }} · {{ $percentualDisponibilidade }}%
                                     </span>
+                                    @if ($pendenciasCadastro)
+                                        <span class="badge badge-warning mt-1" title="{{ implode(', ', $pendenciasCadastro) }}">
+                                            {{ count($pendenciasCadastro) }} pendência(s)
+                                        </span>
+                                    @endif
                                 </td>
                                 <td style="width: 180px;" onclick="event.stopPropagation();">
                                     <a href="{{ route('veiculo.show', $veiculo->id) }}" class="btn btn-xs btn-info">

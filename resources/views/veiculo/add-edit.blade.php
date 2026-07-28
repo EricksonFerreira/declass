@@ -81,12 +81,9 @@
             'data_placa_licenca',
             'data_compra',
             'data_validade',
-            'data_proxima_manutencao',
-            'data_proxima_inspecao',
             'kms',
             'limite_kms',
             'proxima_revisao_kms',
-            'proxima_manutencao_kms',
         ];
         $errosDisp = ['local_disponibilidade', 'data_hora_disponibilidade'];
         $startStep = 1;
@@ -414,25 +411,6 @@
                                         value="{{ old('data_validade', $veiculo->data_validade ?? '') }}" required />
                                 </div>
                             </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="date" class="form-control form-control-sm"
-                                        id="data_proxima_manutencao" name="data_proxima_manutencao"
-                                        label="Próxima Manutenção"
-                                        hint="Deve ser hoje ou uma data futura."
-                                        value="{{ old('data_proxima_manutencao', $veiculo->data_proxima_manutencao ?? '') }}"
-                                         />
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="date" class="form-control form-control-sm"
-                                        id="data_proxima_inspecao" name="data_proxima_inspecao" label="Próxima Inspeção"
-                                        hint="Deve ser hoje ou uma data futura."
-                                        value="{{ old('data_proxima_inspecao', $veiculo->data_proxima_inspecao ?? '') }}"
-                                         />
-                                </div>
-                            </div>
                         </div>
 
                         <div class="veiculo-section-title"><i class="fas fa-tachometer-alt mr-1"></i>Métricas e Limites de
@@ -465,16 +443,6 @@
                                         min="0"  />
                                 </div>
                             </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" class="form-control form-control-sm"
-                                        id="proxima_manutencao_kms" name="proxima_manutencao_kms"
-                                        label="Km da Próxima Manutenção"
-                                        hint="Não pode ser menor que o Km Atual."
-                                        value="{{ old('proxima_manutencao_kms', $veiculo->proxima_manutencao_kms ?? '') }}"
-                                        min="0"  />
-                                </div>
-                            </div>
                         </div>
                     </div>
 
@@ -495,7 +463,7 @@
                                                 'local_disponibilidade',
                                                 $veiculo->local_disponibilidade ?? null,
                                             )"
-                                            class="form-control form-control-sm" required />
+                                            class="form-control form-control-sm" />
                                     </div>
                                 </div>
                                 <div class="col-lg-4 col-md-6">
@@ -503,8 +471,7 @@
                                         <x-form-input type="datetime-local" class="form-control form-control-sm"
                                             id="data_hora_disponibilidade" name="data_hora_disponibilidade"
                                             label="Data e Hora de Disponibilidade"
-                                            value="{{ old('data_hora_disponibilidade', $veiculo->data_hora_disponibilidade ?? '') }}"
-                                            required />
+                                            value="{{ old('data_hora_disponibilidade', $veiculo->data_hora_disponibilidade ?? '') }}" />
                                     </div>
                                 </div>
                             </div>

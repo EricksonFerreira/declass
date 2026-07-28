@@ -291,19 +291,21 @@ class SinistroController extends BaseController
     private function buscarReservaContratualPorVeiculoData(int $veiculoId, Carbon $dataHora): ?Reserva
     {
         $dataHoraSql = $dataHora->format('Y-m-d H:i:s');
+        $inicioContratoSql = "TIMESTAMP(ci.data_saida, COALESCE(NULLIF(TRIM(ci.hora_saida), ''), '00:00:00'))";
+        $fimContratoSql = "TIMESTAMP(co.data_devolucao, COALESCE(NULLIF(TRIM(co.hora_devolucao), ''), '23:59:59'))";
 
         $reservaId = \Illuminate\Support\Facades\DB::table('contrato_checkin as ci')
             ->join('reservas as r', 'r.id', '=', 'ci.reserva_id')
             ->leftJoin('contrato_checkout as co', 'co.reserva_id', '=', 'r.id')
             ->where('ci.veiculo_id', $veiculoId)
-            ->whereRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) <= ?", [$dataHoraSql])
-            ->where(function ($query) use ($dataHoraSql) {
+            ->whereRaw("$inicioContratoSql <= ?", [$dataHoraSql])
+            ->where(function ($query) use ($dataHoraSql, $fimContratoSql) {
                 $query
                     ->whereNull('co.id')
                     ->orWhereNull('co.data_devolucao')
-                    ->orWhereRaw("TIMESTAMP(co.data_devolucao, COALESCE(co.hora_devolucao, '23:59:59')) >= ?", [$dataHoraSql]);
+                    ->orWhereRaw("$fimContratoSql >= ?", [$dataHoraSql]);
             })
-            ->orderByRaw("TIMESTAMP(ci.data_saida, COALESCE(ci.hora_saida, '00:00:00')) DESC")
+            ->orderByRaw("$inicioContratoSql DESC")
             ->value('r.id');
 
         if (! $reservaId) {

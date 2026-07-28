@@ -152,6 +152,47 @@
     </div>
 </div>
 
+@if(!empty($calcao))
+<div class="rs-card mt-4">
+    <div class="rs-card__header rs-card__header--between">
+        <div class="rs-card__header-left">
+            <i class="fas fa-shield-alt rs-card__icon"></i>
+            <h2>Calção</h2>
+        </div>
+        <span class="rs-status-badge rs-status-badge--sm {{ in_array(strtolower((string) $calcao->status), ['autorizado', 'capturado', 'parcialmente_capturado'], true) ? 'rs-status-badge--green' : 'rs-status-badge--amber' }}">
+            {{ $calcao->label_status ?? ucfirst((string) $calcao->status) }}
+        </span>
+    </div>
+    <div class="rs-card__body">
+        <div class="rs-finance-kpis">
+            <div class="rs-fkpi rs-fkpi--default">
+                <i class="fas fa-calculator"></i>
+                <div>
+                    <strong>R$ {{ number_format((float) ($calcao->valor_calculado ?? 0), 2, ',', '.') }}</strong>
+                    <span>Valor calculado</span>
+                </div>
+            </div>
+            <div class="rs-fkpi rs-fkpi--green">
+                <i class="fas fa-lock"></i>
+                <div>
+                    <strong>R$ {{ number_format((float) ($calcao->valor_capturado ?? $calcao->valor_autorizado ?? 0), 2, ',', '.') }}</strong>
+                    <span>Valor do calção</span>
+                </div>
+            </div>
+            @if(!empty($calcao->data_hora_captura))
+            <div class="rs-fkpi rs-fkpi--default">
+                <i class="fas fa-clock"></i>
+                <div>
+                    <strong>{{ \Illuminate\Support\Carbon::parse($calcao->data_hora_captura)->format('d/m/Y H:i') }}</strong>
+                    <span>Capturado em</span>
+                </div>
+            </div>
+            @endif
+        </div>
+    </div>
+</div>
+@endif
+
 @if($moduloNfse)
 <div class="rs-card mt-4">
     <div class="rs-card__header rs-card__header--between">

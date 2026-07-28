@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', 'Detalhes da Reserva')
 
@@ -110,6 +110,7 @@
     $totalSinistros = $sinistros->count();
     $danosReserva = $reserva->veiculoDanos ?? collect();
     $danosPendentes = $danosReserva->whereNull('correcao_data');
+    $totalDano = $danosReserva->count();
     $totalCobrancasAvaria = $reserva->avariaCobrancas?->count() ?? 0;
     $calcao = $reserva->calcao ?? null;
     $codigoReservaExibicao = $reserva->codigoReserva?->codigo ?? ('#' . $reserva->id);
@@ -240,6 +241,17 @@
             </li>
             {{-- @if($moduloMultas) --}}
             <li class="nav-item">
+                <a class="nav-link" id="tab-danos" data-toggle="tab" href="#pane-danos" role="tab">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Danos</span>
+                    @if($totalDano > 0)
+                        <span class="rs-tab-badge rs-tab-badge--red">{{ $totalDano }}</span>
+                    @endif
+                </a>
+            </li>
+            {{-- @endif --}}
+            {{-- @if($moduloMultas) --}}
+            <li class="nav-item">
                 <a class="nav-link" id="tab-multas" data-toggle="tab" href="#pane-multas" role="tab">
                     <i class="fas fa-exclamation-triangle"></i>
                     <span>Multas</span>
@@ -294,7 +306,11 @@
                 @include('reserva.partials.common_financeiro')
             </div>
 
-            {{-- ══════════ TAB 5 — MULTAS ══════════ --}}
+            {{-- ══════════ TAB 5 — DANOS ══════════ --}}
+            <div class="tab-pane fade" id="pane-danos" role="tabpanel">
+                @include('reserva.partials.common_danos')
+            </div>
+            {{-- ══════════ TAB 6 — MULTAS ══════════ --}}
             <div class="tab-pane fade" id="pane-multas" role="tabpanel">
                 @include('reserva.partials.common_multas')
             </div>
@@ -304,7 +320,7 @@
             </div>
             {{-- @endif --}}
 
-            {{-- ══════════ TAB 6 — HISTÓRICO ══════════ --}}
+            {{-- ══════════ TAB 7 — HISTÓRICO ══════════ --}}
             <div class="tab-pane fade" id="pane-historico" role="tabpanel">
                 <div class="rs-card rs-historico-card">
                     <div class="rs-card__header">
@@ -850,9 +866,11 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
     }
     .rs-flow__step.is-done { border-color: #bbf7d0; background: #f0fdf4; }
     .rs-flow__step.is-current { border-color: #fde68a; background: #fffbeb; }
+    .rs-flow__step.is-cancelled { border-color: #fecaca; background: #fef2f2; }
     .rs-flow__icon { font-size: .65rem; }
     .rs-flow__step.is-done .rs-flow__icon { color: #16a34a; }
     .rs-flow__step.is-current .rs-flow__icon { color: #d97706; }
+    .rs-flow__step.is-cancelled .rs-flow__icon { color: #dc2626; }
     .rs-flow__step:not(.is-done):not(.is-current) .rs-flow__icon { color: #94a3b8; }
     .rs-flow__label { font-weight: 800; color: #64748b; }
     .rs-flow__value { font-weight: 700; color: #0f172a; }

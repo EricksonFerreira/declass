@@ -1304,6 +1304,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'estacaoRetirada',
             'estacaoDevolucao',
             'grupoFrota',
+            'veiculo.veiculoDanos' => fn ($query) => $query->with(['dano.categoria', 'imagens', 'usuarioCorrecao'])->orderByDesc('id'),
             'cupomDesconto',
             'opcionais',
             'transacoes' => function ($query) {
@@ -3366,7 +3367,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             return null; // nÃƒÂ£o exige calção
         }
 
-        $calcao = $reserva->calcao;
+        $calcao = $reserva->relationLoaded('calcao')
+            ? $reserva->calcao
+            : $reserva->calcao()->first();
         if (! $calcao) {
             return 'Para fazer o checkout ÃƒÂ© obrigatÃƒÂ³rio registrar o pagamento do calção primeiro.';
         }
@@ -3377,7 +3380,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             Calcao::STATUS_PARCIALMENTE_CAPTURADO,
         ];
 
-        if (in_array((string) $calcao->status, $ok, true)) {
+        $statusCalcao = strtolower(trim((string) $calcao->status));
+
+        if (in_array($statusCalcao, $ok, true)) {
             return null;
         }
 
@@ -3471,8 +3476,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $user = Auth::user();
         $ehDonoDaReserva = $user && (int) $reservaAntes->user_id === (int) $user->id;
         $redirectRoute = $ehDonoDaReserva ? 'reserva.minhas' : 'reserva.index';
-
-        if ($user && ! $ehDonoDaReserva) {
+        
+        $podeCancelar = $ehDonoDaReserva || $user->isAdministrador();
+    if ($user && ! $podeCancelar) {
             $message = 'Sem permissao para cancelar esta reserva.';
 
             return $request->expectsJson()
@@ -3504,7 +3510,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
         $cancelamentoMensagem = null;
         if ($reserva) {
-            $cancelamentoMensagem = $this->cancelarTransacaoGateway($reserva);
+            $cancelamentoMensagem = $this->cancelarTransacoesGatewayReserva($reserva);
+            $this->registrarEstornosLancamentosReserva($reserva);
             $this->registrarCancelamentoTransacao($reserva);
 
             $this->reservaService->adicionaLog((int) $id, Auth::id(), json_encode([
@@ -3617,6 +3624,61 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         DB::table('transacoes')->insert($payload);
     }
 
+    private function registrarEstornosLancamentosReserva(Reserva $reserva): void
+    {
+        if (! SchemaCache::hasTable('lancamentos_financeiros')) {
+            return;
+        }
+
+        $lancamentos = DB::table('lancamentos_financeiros')
+            ->where('reserva_id', $reserva->id)
+            ->where('valor', '>', 0)
+            ->whereIn(DB::raw('LOWER(COALESCE(status, ""))'), ['pendente', 'pago'])
+            ->get();
+
+        foreach ($lancamentos as $lancamento) {
+            $chave = 'estorno_cancelamento|reserva|' . $reserva->id . '|lancamento|' . $lancamento->id;
+            $jaExiste = DB::table('lancamentos_financeiros')
+                ->where('empresa_id', $reserva->empresa_id)
+                ->where('valor', '<', 0)
+                ->where('observacoes', 'like', '%'.$chave.'%')
+                ->exists();
+
+            if ($jaExiste) {
+                continue;
+            }
+
+            $payload = [
+                'empresa_id' => $reserva->empresa_id,
+                'categoria_financeira_id' => $lancamento->categoria_financeira_id,
+                'descricao' => 'Estorno do cancelamento - ' . ($lancamento->descricao ?? 'Reserva #'.$reserva->id),
+                'tipo' => $lancamento->tipo === 'receita' ? 'despesa' : 'receita',
+                'valor' => -1 * abs((float) $lancamento->valor),
+                'status' => 'pago',
+                'data_vencimento' => now()->toDateString(),
+                'data_pagamento' => now()->toDateTimeString(),
+                'metodo_pagamento' => $lancamento->metodo_pagamento ?? null,
+                'reserva_id' => $reserva->id,
+                'veiculo_id' => $lancamento->veiculo_id ?? $reserva->veiculo_id,
+                'user_id' => $lancamento->user_id ?? $reserva->user_id,
+                'observacoes' => 'Gerado automaticamente no cancelamento da reserva. Chave: '.$chave,
+                'recorrente' => false,
+                'recorrencia' => null,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            if (SchemaCache::hasColumn('lancamentos_financeiros', 'pago_por_user_id')) {
+                $payload['pago_por_user_id'] = auth()->id() ?? $lancamento->pago_por_user_id ?? $reserva->user_id;
+            }
+            if (SchemaCache::hasColumn('lancamentos_financeiros', 'categoria_financeira_id')) {
+                $payload['categoria_financeira_id'] = $lancamento->categoria_financeira_id;
+            }
+
+            DB::table('lancamentos_financeiros')->insert($payload);
+        }
+    }
+
     private function cancelarTransferenciasReserva(Reserva $reserva): void
     {
         if (! SchemaCache::hasTable('movimentacoes') || ! SchemaCache::hasColumn('movimentacoes', 'reserva_id')) {
@@ -3650,28 +3712,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
     }
 
-    private function cancelarTransacaoGateway(Reserva $reserva): ?string
+    private function cancelarTransacoesGatewayReserva(Reserva $reserva): ?string
     {
-        $transacao = Transacao::query()
-            ->where('reserva_id', $reserva->id)
-            ->orderByDesc('id')
-            ->first();
-
-        if (! $transacao) {
-            return null;
-        }
-
-        $statusAtual = strtolower((string) ($transacao->status ?? ''));
-        if (in_array($statusAtual, ['refunded', 'refund', 'estorno', 'cancelled', 'canceled'], true)) {
-            $this->criarTransacaoEstorno($transacao, [
-                'status' => 'success',
-                'action' => $transacao->status ?? 'refunded',
-                'message' => 'Estorno registrado a partir do status atual.',
-            ], $reserva);
-
-            return null;
-        }
-
         $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $reserva->empresa_id);
         if (! $empresa) {
             return 'Pagamento nao foi cancelado: empresa nao encontrada para o gateway.';
@@ -3681,50 +3723,52 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
 
         $provider = $this->gerenciadorDePagamentos->resolver($gateway);
-        if (empty($transacao->gateway_transaction_id)) {
-            $transacao->status = $transacao->status ?: 'cancelled';
+        if (! $provider) {
+            return 'Pagamento nao foi cancelado: gateway indisponivel.';
+        }
+
+        $mensagens = [];
+        $transacoes = Transacao::query()
+            ->where('reserva_id', $reserva->id)
+            ->whereNotNull('gateway_transaction_id')
+            ->orderByDesc('id')
+            ->get();
+
+        foreach ($transacoes as $transacao) {
+            $statusAtual = strtolower((string) ($transacao->status ?? ''));
+            if (in_array($statusAtual, ['refunded', 'refund', 'estorno', 'cancelled', 'canceled'], true)) {
+                continue;
+            }
+
+            $gatewayTransactionId = (string) ($transacao->gateway_transaction_id ?? '');
+            if ($gatewayTransactionId === '') {
+                continue;
+            }
+
+            $resultado = $provider->cancelarPagamento($gatewayTransactionId, $credenciais);
             $info = is_array($transacao->info_pagamento ?? null) ? $transacao->info_pagamento : [];
-            $info['cancelamento'] = [
-                'status' => 'error',
-                'message' => 'Transacao sem identificador do gateway.',
-            ];
+            $info['cancelamento'] = $resultado;
+
+            if (($resultado['status'] ?? 'error') !== 'success') {
+                $resultado = $provider->reembolsarPagamento($gatewayTransactionId, $credenciais);
+                $info['reembolso'] = $resultado;
+            }
+
+            if (($resultado['status'] ?? 'error') === 'success') {
+                $transacao->status = (string) ($resultado['raw_status'] ?? $resultado['action'] ?? 'refunded');
+                $transacao->info_pagamento = $info;
+                $transacao->save();
+                $this->criarTransacaoEstorno($transacao, $resultado, $reserva);
+                continue;
+            }
+
+            $transacao->status = $transacao->status ?: 'cancel_failed';
             $transacao->info_pagamento = $info;
             $transacao->save();
-
-            return 'Pagamento nao foi cancelado: transacao sem identificador no gateway.';
+            $mensagens[] = $resultado['message'] ?? 'Pagamento nao foi cancelado no gateway.';
         }
 
-        $resultado = $provider->cancelarPagamento((string) $transacao->gateway_transaction_id, $credenciais);
-
-        $info = is_array($transacao->info_pagamento ?? null) ? $transacao->info_pagamento : [];
-        $info['cancelamento'] = $resultado;
-
-        if (($resultado['status'] ?? 'error') === 'success') {
-            $transacao->status = (string) ($resultado['raw_status'] ?? $resultado['action'] ?? 'cancelled');
-            $transacao->info_pagamento = $info;
-            $transacao->save();
-            $this->criarTransacaoEstorno($transacao, $resultado, $reserva);
-
-            return null;
-        }
-
-        $resultadoReembolso = $provider->reembolsarPagamento((string) $transacao->gateway_transaction_id, $credenciais);
-        $info['reembolso'] = $resultadoReembolso;
-
-        if (($resultadoReembolso['status'] ?? 'error') === 'success') {
-            $transacao->status = (string) ($resultadoReembolso['raw_status'] ?? $resultadoReembolso['action'] ?? 'refunded');
-            $transacao->info_pagamento = $info;
-            $transacao->save();
-            $this->criarTransacaoEstorno($transacao, $resultadoReembolso, $reserva);
-
-            return null;
-        }
-
-        $transacao->status = $transacao->status ?: 'cancel_failed';
-        $transacao->info_pagamento = $info;
-        $transacao->save();
-
-        return $resultado['message'] ?? $resultadoReembolso['message'] ?? 'Pagamento nao foi cancelado no gateway.';
+        return $mensagens ? implode(' ', array_unique($mensagens)) : null;
     }
 
     private function criarTransacaoEstorno(Transacao $transacao, array $resultado, Reserva $reserva): void
