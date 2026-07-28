@@ -65,6 +65,7 @@ class MigrationController extends Controller
 
         $output = '';
 
+        Artisan::call('optimize:clear');
         try {
             Artisan::call('migrate:status');
             $output .= "=== MIGRATIONS STATUS ===\n".Artisan::output();
