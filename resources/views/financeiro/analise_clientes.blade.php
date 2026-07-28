@@ -95,7 +95,7 @@
 <div class="ac-page">
     <section class="ac-hero">
         <div class="ac-hero__eyebrow">Financeiro</div>
-        <h1 class="ac-hero__title">Análise por cliente</h1>
+        <h1 class="ac-hero__title">Análise por Cliente</h1>
         <p class="ac-hero__text">
             Acompanhe o que ainda precisa ser cobrado, destaque reservas próximas do horário e marque cobranças feitas pessoalmente
             com justificativa para limpar a sinalização.
