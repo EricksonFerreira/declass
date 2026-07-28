@@ -342,7 +342,8 @@ class FinanceiroController extends Controller
             new \App\DTO\BreadCrumbItem('Análise por Cliente'),
         ]);
 
-        $titulo = 'Análise Financeira por Cliente';
+        $titulo = '';
+        // $titulo = 'Análise Financeira por Cliente';
 
         return view('financeiro.analise_clientes', compact(
             'analise',
