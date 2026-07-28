@@ -37,6 +37,9 @@ class Reserva extends Model
         'valor_total_final',
         'taxa_coleta',
         'taxa_entrega',
+        'cobranca_efetuada_pessoalmente_em',
+        'cobranca_efetuada_pessoalmente_por_user_id',
+        'cobranca_efetuada_pessoalmente_justificativa',
     ];
 
     protected $casts = [

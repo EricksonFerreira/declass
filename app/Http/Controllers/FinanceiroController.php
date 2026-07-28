@@ -364,111 +364,113 @@ class FinanceiroController extends Controller
     {
         $empresaId = $this->empresaIdParaConsulta();
         $moedaEmpresa = $this->moedaEmpresaParaConsulta();
-
-        $query = DB::table('transacoes')
-            ->leftJoin('users', 'users.id', '=', 'transacoes.user_id')
-            ->whereNotNull('transacoes.user_id');
-
-        if ($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id')) {
-            $query->where('transacoes.empresa_id', $empresaId);
-        }
-
         $clienteId = (int) $request->integer('cliente_id', 0);
-        if ($clienteId > 0) {
-            $query->where('transacoes.user_id', $clienteId);
-        }
-
         $busca = trim((string) $request->input('busca', ''));
-        if ($busca !== '') {
-            $query->where(function ($sub) use ($busca) {
-                $sub->where('users.nome', 'like', "%{$busca}%")
-                    ->orWhere('users.celular', 'like', "%{$busca}%")
-                    ->orWhere('users.telefone', 'like', "%{$busca}%");
-            });
-        }
-
-        if ($request->filled('data_inicio')) {
-            $query->whereDate('transacoes.created_at', '>=', $request->input('data_inicio'));
-        }
-
-        if ($request->filled('data_fim')) {
-            $query->whereDate('transacoes.created_at', '<=', $request->input('data_fim'));
-        }
-
+        $perPage = in_array((int) $request->integer('per_page', 15), [10, 15, 25, 50, 100], true) ? (int) $request->integer('per_page', 15) : 15;
         $statusCobranca = (string) $request->input('status_cobranca', '');
+
+        $clientesBase = DB::table('users')
+            ->select('id', 'nome', 'celular', 'telefone')
+            ->when($clienteId > 0, fn ($q) => $q->where('id', $clienteId))
+            ->when($busca !== '', function ($q) use ($busca) {
+                $q->where(function ($sub) use ($busca) {
+                    $sub->where('nome', 'like', "%{$busca}%")
+                        ->orWhere('celular', 'like', "%{$busca}%")
+                        ->orWhere('telefone', 'like', "%{$busca}%");
+                });
+            })
+            ->get();
+
+        $analiseRows = $clientesBase->map(function ($cliente) use ($empresaId, $request) {
+            $reservas = DB::table('reservas')
+                ->where('user_id', $cliente->id)
+                ->when($empresaId !== null && Schema::hasColumn('reservas', 'empresa_id'), fn ($q) => $q->where('empresa_id', $empresaId))
+                ->when($request->filled('data_inicio'), fn ($q) => $q->whereDate('data_inicio', '>=', $request->input('data_inicio')))
+                ->when($request->filled('data_fim'), fn ($q) => $q->whereDate('data_inicio', '<=', $request->input('data_fim')))
+                ->get();
+
+            $multas = DB::table('multas')
+                ->where(function ($q) use ($cliente) {
+                    $q->where('cliente_id', $cliente->id)
+                        ->orWhereExists(function ($sub) use ($cliente) {
+                            $sub->selectRaw(1)
+                                ->from('reservas')
+                                ->whereColumn('reservas.id', 'multas.reserva_id')
+                                ->where('reservas.user_id', $cliente->id);
+                        });
+                })
+                ->when($empresaId !== null && Schema::hasColumn('multas', 'empresa_id'), fn ($q) => $q->where('empresa_id', $empresaId))
+                ->whereIn('status_multa', ['pendente', 'aguardando_pagamento_cliente', 'em_analise'])
+                ->get();
+
+            $sinistros = DB::table('sinistros')
+                ->where(function ($q) use ($cliente) {
+                    $q->where('cliente_id', $cliente->id)
+                        ->orWhereExists(function ($sub) use ($cliente) {
+                            $sub->selectRaw(1)
+                                ->from('reservas')
+                                ->whereColumn('reservas.id', 'sinistros.reserva_id')
+                                ->where('reservas.user_id', $cliente->id);
+                        });
+                })
+                ->when($empresaId !== null && Schema::hasColumn('sinistros', 'empresa_id'), fn ($q) => $q->where('empresa_id', $empresaId))
+                ->whereIn('status', ['aberto', 'em_analise', 'aguardando_documentos'])
+                ->get();
+
+            $reservasPendentes = $reservas->filter(fn ($r) => empty($r->pagamento_efetuado) && empty($r->cobranca_efetuada_pessoalmente_em));
+            $reservasProximas = $reservasPendentes->filter(function ($r) {
+                if (empty($r->data_inicio)) {
+                    return false;
+                }
+                return now()->diffInHours(\Carbon\Carbon::parse($r->data_inicio), false) <= 24;
+            });
+
+            $totalReservas = (float) $reservasPendentes->sum(fn ($r) => (float) ($r->valor_total_final ?? $r->valor_total_com_desconto ?? 0));
+            $totalMultas = (float) $multas->sum(fn ($m) => (float) ($m->valor_final ?? 0));
+            $totalSinistros = (float) $sinistros->sum(fn ($s) => (float) ($s->valor_responsabilidade_cliente ?? 0));
+
+            return (object) [
+                'user_id' => $cliente->id,
+                'cliente_nome' => $cliente->nome,
+                'celular' => $cliente->celular,
+                'telefone' => $cliente->telefone,
+                'total_pago' => 0,
+                'total_pendente' => round($totalReservas + $totalMultas + $totalSinistros, 2),
+                'total_reserva_pendente' => round($totalReservas, 2),
+                'total_multa_pendente' => round($totalMultas, 2),
+                'total_sinistro_pendente' => round($totalSinistros, 2),
+                'reservas_proximas_count' => $reservasProximas->count(),
+                'reservas_pendentes_count' => $reservasPendentes->count(),
+                'multas_pendentes_count' => $multas->count(),
+                'sinistros_pendentes_count' => $sinistros->count(),
+                'proxima_reserva_id' => optional($reservasProximas->sortBy('data_inicio')->first())->id,
+                'proxima_reserva_inicio' => optional($reservasProximas->sortBy('data_inicio')->first())->data_inicio,
+                'ultima_movimentacao' => collect([$reservas->max('data_inicio'), $multas->max('data_vencimento'), $sinistros->max('data_hora_ocorrido')])->filter()->max(),
+            ];
+        })->filter(fn ($row) => $row->total_pendente > 0 || $row->reservas_proximas_count > 0);
+
         if ($statusCobranca === 'em_aberto') {
-            $query->whereIn('transacoes.status', self::STATUS_PENDENTES);
-        } elseif ($statusCobranca === 'pago') {
-            $query->whereIn('transacoes.status', self::STATUS_APROVADOS);
-        } elseif ($statusCobranca === 'cancelado') {
-            $query->whereIn('transacoes.status', self::STATUS_CANCELADOS);
+            $analiseRows = $analiseRows->filter(fn ($row) => $row->total_pendente > 0);
         }
 
-        $perPage = (int) $request->integer('per_page', 15);
-        $perPage = in_array($perPage, [10, 15, 25, 50, 100], true) ? $perPage : 15;
+        $analise = new \Illuminate\Pagination\LengthAwarePaginator(
+            $analiseRows->sortByDesc('total_pendente')->values()->forPage(max(1, (int) $request->integer('page', 1)), $perPage),
+            $analiseRows->count(),
+            $perPage,
+            max(1, (int) $request->integer('page', 1)),
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
-        $base = clone $query;
+        $totais = (object) [
+            'clientes' => $analiseRows->count(),
+            'transacoes' => $analiseRows->count(),
+            'pago' => 0,
+            'aberto' => $analiseRows->sum('total_pendente'),
+        ];
 
-        $analise = (clone $base)
-            ->select([
-                'transacoes.user_id',
-                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
-                DB::raw('MAX(users.celular) as celular'),
-                DB::raw('MAX(users.telefone) as telefone'),
-            ])
-            ->selectRaw('COUNT(transacoes.id) as quantidade')
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pago')
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("cancelado","cancelada","cancelled","canceled","refunded","reembolsado","reembolsada") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_cancelado')
-            ->selectRaw('MAX(transacoes.created_at) as ultima_movimentacao')
-            ->groupBy('transacoes.user_id', 'users.nome')
-            ->orderByDesc('total_pendente')
-            ->paginate($perPage)
-            ->withQueryString();
-
-        $totais = (clone $base)
-            ->selectRaw('COUNT(DISTINCT transacoes.user_id) as clientes')
-            ->selectRaw('COUNT(transacoes.id) as transacoes')
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as pago')
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as aberto')
-            ->first();
-
-        $melhoresClientes = (clone $base)
-            ->select([
-                'transacoes.user_id',
-                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
-                DB::raw('MAX(users.celular) as celular'),
-            ])
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("aprovado","approved","succeeded","success","completa") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pago')
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
-            ->groupBy('transacoes.user_id', 'users.nome')
-            ->orderByDesc('total_pago')
-            ->limit(5)
-            ->get();
-
-        $pioresClientes = (clone $base)
-            ->select([
-                'transacoes.user_id',
-                DB::raw('COALESCE(users.nome, "Sem cliente") as cliente_nome'),
-                DB::raw('MAX(users.celular) as celular'),
-            ])
-            ->selectRaw('SUM(CASE WHEN transacoes.status IN ("pendente","pending","aguardando","processando","processing") THEN COALESCE(transacoes.valor,0) ELSE 0 END) as total_pendente')
-            ->selectRaw('COUNT(transacoes.id) as quantidade')
-            ->groupBy('transacoes.user_id', 'users.nome')
-            ->orderByDesc('total_pendente')
-            ->limit(5)
-            ->get();
-
-        $clientes = DB::table('transacoes')
-            ->leftJoin('users', 'users.id', '=', 'transacoes.user_id')
-            ->whereNotNull('transacoes.user_id')
-            ->when($empresaId !== null && Schema::hasColumn('transacoes', 'empresa_id'), function ($q) use ($empresaId) {
-                $q->where('transacoes.empresa_id', $empresaId);
-            })
-            ->select('transacoes.user_id as id', DB::raw('COALESCE(users.nome, "Sem cliente") as nome'))
-            ->distinct()
-            ->orderBy('nome')
-            ->get();
+        $melhoresClientes = $analiseRows->sortByDesc('total_pendente')->take(5)->values();
+        $pioresClientes = $analiseRows->sortByDesc('total_pendente')->take(5)->values();
+        $clientes = $clientesBase->sortBy('nome')->values();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
@@ -569,6 +571,25 @@ class FinanceiroController extends Controller
             'statusAprovados',
             'statusPendentes'
         ));
+    }
+
+    public function marcarCobrancaReservaPessoal(Request $request, \App\Models\Reserva $reserva)
+    {
+        $validated = $request->validate([
+            'justificativa' => ['required', 'string', 'min:5', 'max:1000'],
+        ]);
+
+        if ($this->empresaIdParaConsulta() !== null && (int) ($reserva->empresa_id ?? 0) !== (int) $this->empresaIdParaConsulta()) {
+            abort(404);
+        }
+
+        $reserva->forceFill([
+            'cobranca_efetuada_pessoalmente_em' => now(),
+            'cobranca_efetuada_pessoalmente_por_user_id' => auth()->id(),
+            'cobranca_efetuada_pessoalmente_justificativa' => trim((string) $validated['justificativa']),
+        ])->save();
+
+        return redirect()->route('financeiro.analise-clientes')->with('success', 'Cobrança registrada como efetuada pessoalmente.');
     }
 
     private function extractFilters(Request $request): array

@@ -33,6 +33,7 @@ Route::prefix('financeiro')->name('financeiro.')->group(function () {
     Route::get('/contas-a-pagar', [FluxoCaixaController::class, 'contasPagar'])->name('contas-pagar');
     Route::get('/contas-a-receber', [FluxoCaixaController::class, 'contasReceber'])->name('contas-receber');
     Route::get('/analise-clientes', [FinanceiroController::class, 'analiseClientesRelatorio'])->name('analise-clientes');
+    Route::post('/analise-clientes/reservas/{reserva}/cobranca-pessoal', [FinanceiroController::class, 'marcarCobrancaReservaPessoal'])->name('analise-clientes.reservas.cobranca-pessoal');
     Route::get('/analise-veiculos', [FluxoCaixaController::class, 'analiseVeiculos'])->name('analise-veiculos');
     Route::get('/fluxo-caixa/categorias', [FluxoCaixaController::class, 'categoriasIndex'])->name('fluxo-caixa.categorias.index');
     Route::get('/fluxo-caixa/categorias/sugerir-codigo', [FluxoCaixaController::class, 'sugerirCodigo'])->name('fluxo-caixa.categorias.sugerir-codigo');
