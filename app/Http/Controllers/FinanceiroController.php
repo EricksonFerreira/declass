@@ -23,9 +23,18 @@ class FinanceiroController extends Controller
 
     public function portal()
     {
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Financeiro - Portal');
+        $breadcrumb = $this->breadcrumbFinanceiro('Portal Financeiro');
         $titulo = 'Painel Financeiro';
         return view('financeiro.portal', compact('breadcrumb', 'titulo'));
+    }
+
+    private function breadcrumbFinanceiro(string $pagina): array
+    {
+        return $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Financeiro', route('financeiro.index')),
+            new \App\DTO\BreadCrumbItem($pagina),
+        ]);
     }
 
     public function index(Request $request)

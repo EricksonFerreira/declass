@@ -457,7 +457,7 @@ return [
                     'icon' => 'fas fa-home',
                 ],
                 [
-                    'text' => 'Faturamento Reservas',
+                    'text' => 'Faturamento por Reserva',
                     'route' => 'financeiro.reservas',
                     'icon' => 'fas fa-receipt',
                 ],
@@ -492,7 +492,7 @@ return [
                     'icon' => 'fas fa-car-side',
                 ],
                 [
-                    'text' => 'Notas Fiscais (NFSe)',
+                    'text' => 'Notas Fiscais (NFS-e)',
                     'route' => 'financeiro.nfse.index',
                     'icon' => 'fas fa-file-invoice',
                 ],

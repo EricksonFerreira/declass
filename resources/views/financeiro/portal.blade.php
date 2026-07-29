@@ -8,116 +8,122 @@
 @stop
 
 @section('content')
-    <div class="row">
+    <style>
+        .fp-page { display:grid; gap:20px; }
+        .fp-hero {
+            border-radius:24px; padding:24px; color:#fff;
+            background:
+                radial-gradient(circle at top right, rgba(56,189,248,.18), transparent 25%),
+                radial-gradient(circle at bottom left, rgba(16,185,129,.15), transparent 22%),
+                linear-gradient(135deg, #0f172a 0%, #1e3a8a 52%, #2563eb 100%);
+            box-shadow:0 24px 60px rgba(15,23,42,.18);
+        }
+        .fp-hero__eyebrow { font-size:.72rem; letter-spacing:.18em; text-transform:uppercase; font-weight:800; opacity:.72; }
+        .fp-hero__title { margin:.35rem 0 .25rem; font-size:1.7rem; font-weight:900; letter-spacing:-.02em; }
+        .fp-hero__text { margin:0; max-width:62rem; color:rgba(255,255,255,.86); line-height:1.6; }
+        .fp-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }
+        @media (min-width: 1200px) { .fp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (max-width: 767px) { .fp-grid { grid-template-columns: 1fr; } }
+        .fp-card {
+            border:1px solid #dbe4f0; border-radius:18px; background:#fff; box-shadow:0 14px 36px rgba(15,23,42,.06);
+            overflow:hidden; transition: transform .18s ease, box-shadow .18s ease;
+        }
+        .fp-card:hover { transform: translateY(-3px); box-shadow:0 18px 44px rgba(15,23,42,.1); }
+        .fp-card__body { padding:20px; display:flex; flex-direction:column; gap:14px; min-height: 220px; }
+        .fp-card__icon {
+            width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center;
+            font-size:1.5rem;
+        }
+        .fp-card__title { margin:0; font-size:1.05rem; font-weight:900; color:#0f172a; }
+        .fp-card__text { margin:0; color:#64748b; line-height:1.6; }
+        .fp-card__action {
+            margin-top:auto; display:inline-flex; align-items:center; justify-content:center;
+            border-radius:12px; font-weight:800; min-height:42px;
+        }
+        .bg-primary-light { background-color:#eff6ff; }
+        .bg-success-light { background-color:#ecfdf5; }
+        .bg-info-light { background-color:#e0f2fe; }
+        .bg-danger-light { background-color:#fef2f2; }
+        .bg-warning-light { background-color:#fffbeb; }
+        .bg-slate-light { background-color:#f1f5f9; }
+    </style>
 
-        <!-- Faturamento por Reserva -->
-        <div class="col-md-4 col-sm-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm portal-card" style="border-radius: 16px; transition: transform 0.2s, box-shadow 0.2s;">
-                <div class="card-body d-flex flex-column justify-content-between p-4">
+    <div class="fp-page">
+        <section class="fp-hero">
+            <div class="fp-hero__eyebrow">Financeiro</div>
+            <h1 class="fp-hero__title">Portal financeiro da operação</h1>
+            <p class="fp-hero__text">
+                Acesso rápido aos painéis de faturamento, fluxo de caixa, NFS-e, análises e ferramentas de cobrança.
+                A navegação segue o mesmo padrão visual do restante do sistema.
+            </p>
+        </section>
+
+        <div class="fp-grid">
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-success-light text-success"><i class="fas fa-receipt"></i></div>
                     <div>
-                        <div class="portal-icon bg-success-light text-success mb-3">
-                            <i class="fas fa-receipt fa-2x"></i>
-                        </div>
-                        <h4 class="font-weight-bold mb-2" style="color: #1e293b;">Faturamento por Reserva</h4>
-                        <p class="text-secondary small">Visualize o faturamento total acumulado e o ticket médio agrupados detalhadamente por contrato de locação.</p>
+                        <h4 class="fp-card__title">Faturamento por Reserva</h4>
+                        <p class="fp-card__text">Veja o faturamento acumulado por locação, com leitura rápida do volume financeiro e do ticket médio.</p>
                     </div>
-                    <a href="{{ route('financeiro.reservas') }}" class="btn btn-success w-100 font-weight-bold mt-3 py-2" style="border-radius: 8px;">
-                        Acessar Faturamento
-                    </a>
+                    <a href="{{ route('financeiro.reservas') }}" class="btn btn-success fp-card__action">Acessar faturamento</a>
                 </div>
             </div>
-        </div>
 
-        <!-- Fluxo de Caixa -->
-        <div class="col-md-4 col-sm-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm portal-card" style="border-radius: 16px; transition: transform 0.2s, box-shadow 0.2s;">
-                <div class="card-body d-flex flex-column justify-content-between p-4">
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-info-light text-info"><i class="fas fa-chart-line"></i></div>
                     <div>
-                        <div class="portal-icon bg-info-light text-info mb-3">
-                            <i class="fas fa-chart-line fa-2x"></i>
-                        </div>
-                        <h4 class="font-weight-bold mb-2" style="color: #1e293b;">Fluxo de Caixa</h4>
-                        <p class="text-secondary small">Controle geral de entradas, despesas operacionais da frota, saldos de caixa, vencimentos e projeções financeiras.</p>
+                        <h4 class="fp-card__title">Fluxo de Caixa</h4>
+                        <p class="fp-card__text">Controle entradas, despesas, saldos e projeções com visual diário e categorias principais.</p>
                     </div>
-                    <a href="{{ route('financeiro.fluxo-caixa.dashboard') }}" class="btn btn-info w-100 text-white font-weight-bold mt-3 py-2" style="border-radius: 8px;">
-                        Acessar Fluxo de Caixa
-                    </a>
+                    <a href="{{ route('financeiro.fluxo-caixa.dashboard') }}" class="btn btn-info text-white fp-card__action">Acessar fluxo de caixa</a>
                 </div>
             </div>
-        </div>
 
-        <!-- Notas Fiscais -->
-        <div class="col-md-4 col-sm-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm portal-card" style="border-radius: 16px; transition: transform 0.2s, box-shadow 0.2s;">
-                <div class="card-body d-flex flex-column justify-content-between p-4">
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-danger-light text-danger"><i class="fas fa-file-invoice"></i></div>
                     <div>
-                        <div class="portal-icon bg-danger-light text-danger mb-3">
-                            <i class="fas fa-file-invoice fa-2x"></i>
-                        </div>
-                        <h4 class="font-weight-bold mb-2" style="color: #1e293b;">Notas Fiscais (NFS-e)</h4>
-                        <p class="text-secondary small">Gerencie a emissão, cancelamento e o lote de envio de Notas Fiscais de Serviço eletrônicas com a prefeitura.</p>
+                        <h4 class="fp-card__title">Notas Fiscais (NFS-e)</h4>
+                        <p class="fp-card__text">Consulte emissões, baixas e importações de notas fiscais com foco operacional.</p>
                     </div>
-                    <a href="{{ route('financeiro.nfse.index') }}" class="btn btn-danger w-100 font-weight-bold mt-3 py-2" style="border-radius: 8px;">
-                        Acessar Notas Fiscais
-                    </a>
+                    <a href="{{ route('financeiro.nfse.index') }}" class="btn btn-danger fp-card__action">Acessar notas fiscais</a>
                 </div>
             </div>
-        </div>
 
-        <!-- Analise por Veiculo -->
-        <div class="col-md-4 col-sm-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm portal-card" style="border-radius: 16px; transition: transform 0.2s, box-shadow 0.2s;">
-                <div class="card-body d-flex flex-column justify-content-between p-4">
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-primary-light text-primary"><i class="fas fa-user-friends"></i></div>
                     <div>
-                        <div class="portal-icon bg-primary-light text-primary mb-3">
-                            <i class="fas fa-car-side fa-2x"></i>
-                        </div>
-                        <h4 class="font-weight-bold mb-2" style="color: #1e293b;">Análise por Veículo</h4>
-                        <p class="text-secondary small">Compare receitas, despesas e resultado operacional por placa para identificar quais ativos dão lucro ou prejuízo.</p>
+                        <h4 class="fp-card__title">Análise por Cliente</h4>
+                        <p class="fp-card__text">Monitore pendências, reservas próximas e cobranças pessoais com justificativa.</p>
                     </div>
-                    <a href="{{ route('financeiro.analise-veiculos') }}" class="btn btn-primary w-100 font-weight-bold mt-3 py-2" style="border-radius: 8px;">
-                        Acessar DRE por Carro
-                    </a>
+                    <a href="{{ route('financeiro.analise-clientes') }}" class="btn btn-primary fp-card__action">Abrir análise</a>
                 </div>
             </div>
-        </div>
 
-        <!-- Cupons de Desconto -->
-        <div class="col-md-4 col-sm-6 mb-4">
-            <div class="card h-100 border-0 shadow-sm portal-card" style="border-radius: 16px; transition: transform 0.2s, box-shadow 0.2s;">
-                <div class="card-body d-flex flex-column justify-content-between p-4">
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-slate-light text-secondary"><i class="fas fa-car-side"></i></div>
                     <div>
-                        <div class="portal-icon bg-warning-light text-warning mb-3">
-                            <i class="fas fa-percentage fa-2x"></i>
-                        </div>
-                        <h4 class="font-weight-bold mb-2" style="color: #1e293b;">Cupons de Desconto</h4>
-                        <p class="text-secondary small">Cadastre, edite e configure regras de validade de cupons promocionais para aluguel de veículos.</p>
+                        <h4 class="fp-card__title">Análise por Veículo</h4>
+                        <p class="fp-card__text">Compare receitas, despesas e resultado operacional por veículo da frota.</p>
                     </div>
-                    <a href="{{ route('financeiro.cupom_desconto.index') }}" class="btn btn-warning w-100 font-weight-bold mt-3 py-2 text-dark" style="border-radius: 8px;">
-                        Acessar Cupons
-                    </a>
+                    <a href="{{ route('financeiro.analise-veiculos') }}" class="btn btn-secondary fp-card__action">Abrir análise</a>
+                </div>
+            </div>
+
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-warning-light text-warning"><i class="fas fa-percentage"></i></div>
+                    <div>
+                        <h4 class="fp-card__title">Cupons de Desconto</h4>
+                        <p class="fp-card__text">Gerencie promoções, validade e regras de desconto com acesso centralizado.</p>
+                    </div>
+                    <a href="{{ route('financeiro.cupom_desconto.index') }}" class="btn btn-warning text-dark fp-card__action">Acessar cupons</a>
                 </div>
             </div>
         </div>
     </div>
-
-    <style>
-        .portal-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08) !important;
-        }
-        .portal-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 16px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .bg-primary-light { background-color: #eff6ff; }
-        .bg-success-light { background-color: #ecfdf5; }
-        .bg-info-light { background-color: #e0f2fe; }
-        .bg-danger-light { background-color: #fef2f2; }
-        .bg-warning-light { background-color: #fffbeb; }
-    </style>
 @stop
