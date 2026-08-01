@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Concerns\HasAuditColumns;
 
@@ -15,6 +14,7 @@ class EmpresaPlano extends Model
     protected $table = 'empresa_planos';
 
     protected $fillable = [
+        'empresa_id',
         'plano_id',
         'proximo_plano_id',
         'periodicidade',
@@ -61,16 +61,9 @@ class EmpresaPlano extends Model
         return $this->belongsTo(Plano::class, 'plano_id');
     }
 
-    public function empresa(): HasOneThrough
+    public function empresa(): BelongsTo
     {
-        return $this->hasOneThrough(
-            Empresa::class,
-            EmpresaPlanoPagamento::class,
-            'empresa_plano_id',
-            'id',
-            'id',
-            'empresa_id'
-        );
+        return $this->belongsTo(Empresa::class, 'empresa_id');
     }
 
     public function proximoPlano(): BelongsTo

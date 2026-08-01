@@ -11,6 +11,7 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\EmpresaPlano;
 use App\Models\EmpresaPlanoPagamento;
 use App\Models\OnboardingStep;
 use App\Models\ArquivoRastreado;
@@ -110,16 +111,13 @@ class Empresa extends Model
 
     public function planos(): HasMany
     {
-        return EmpresaPlanoPagamento::query()
-            ->with(['empresaPlano.plano'])
-            ->where('empresa_id', $this->id)
-            ->latest('id');
+        return $this->hasMany(EmpresaPlano::class, 'empresa_id')->latest('id');
     }
 
     public function planoAtivo(): HasOne
     {
-        return $this->hasOne(EmpresaPlanoPagamento::class, 'empresa_id')
-            ->whereIn('status', ['pago', 'pendente', 'vencido', 'cancelado'])
+        return $this->hasOne(EmpresaPlano::class, 'empresa_id')
+            ->whereIn('status', ['ativo', 'trial', 'aguardando_pagamento', 'inadimplente', 'cancelado'])
             ->latestOfMany('id');
     }
 

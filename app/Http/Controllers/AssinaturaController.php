@@ -653,17 +653,12 @@ class AssinaturaController extends Controller
 
     private function resolverEmpresaDaAssinatura(EmpresaPlano $assinatura): ?Empresa
     {
-        $empresa = $assinatura->pagamentos->first()?->empresa;
-        if ($empresa) {
-            return $empresa;
+        if ($assinatura->empresa) {
+            return $assinatura->empresa;
         }
 
-        $empresaId = $assinatura->pagamentos()->value('empresa_id');
-        if ($empresaId) {
-            return Empresa::find($empresaId);
-        }
-
-        return null;
+        $empresaId = $assinatura->empresa_id;
+        return $empresaId ? Empresa::find($empresaId) : null;
     }
 
     /** Processa contratação interna: cria assinatura + pagamento pendente. */

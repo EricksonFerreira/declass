@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -69,7 +69,7 @@
                         <th>Armazenamento</th>
                         <th>Cores</th>
                         <th>Status</th>
-                        <th class="text-center" style="width:220px;">Acoes</th>
+                        <th class="text-center" style="width:260px;">AÃ§Ãµes</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -128,16 +128,23 @@
                                     </div>
                                     <div class="text-muted" style="font-size:10px;">
                                         {{ $planoAtivo->periodicidade_texto }}
-                                        {{ $planoAtivo->data_vencimento ? '· até ' . $planoAtivo->data_vencimento->format('d/m/Y') : '' }}
+                                        {{ $planoAtivo->data_vencimento ? 'Â· atÃ© ' . $planoAtivo->data_vencimento->format('d/m/Y') : '' }}
                                     </div>
                                 @else
-                                    <span class="text-muted font-italic">Sem plano</span>
+                                    <div class="d-flex flex-column" style="gap:4px;">
+                                        <span class="text-muted font-italic">Sem plano</span>
+                                        <button
+                                            type="button"
+                                            class="btn btn-xs btn-outline-primary btn-atribuir-assinatura"
+                                            data-toggle="modal"
+                                            data-target="#modalAtribuirAssinatura"
+                                            data-empresa-id="{{ $empresa->id }}"
+                                            data-empresa-nome="{{ $empresa->nome }}"
+                                        >
+                                            <i class="fas fa-link mr-1"></i> Atribuir assinatura
+                                        </button>
+                                    </div>
                                 @endif
-                                <div style="margin-top:2px;">
-                                    <a href="{{ route('assinatura.index') }}" class="text-primary" style="font-size:10px;">
-                                        <i class="fas fa-external-link-alt mr-1"></i> Gerenciar assinaturas
-                                    </a>
-                                </div>
                             </td>
 
                             <td class="align-middle">
@@ -182,24 +189,21 @@
 
                             <td class="align-middle">
                                 @if($corPrimaria || $corSecundaria || $corTerciaria)
-                                    <div class="d-flex flex-wrap align-items-center" style="gap: 6px;">
+                                    <div class="d-flex flex-wrap align-items-center empresa-cor-group">
                                         @if($corPrimaria)
-                                            <span class="empresa-cor-chip" title="Cor primaria">
+                                            <button type="button" class="empresa-cor-chip js-copy-color" data-color="{{ $corPrimaria }}" title="Clique para copiar {{ $corPrimaria }}">
                                                 <span class="empresa-cor-dot" style="background: {{ $corPrimaria }}"></span>
-                                                <span>{{ $corPrimaria }}</span>
-                                            </span>
+                                            </button>
                                         @endif
                                         @if($corSecundaria)
-                                            <span class="empresa-cor-chip" title="Cor secundaria">
+                                            <button type="button" class="empresa-cor-chip js-copy-color" data-color="{{ $corSecundaria }}" title="Clique para copiar {{ $corSecundaria }}">
                                                 <span class="empresa-cor-dot" style="background: {{ $corSecundaria }}"></span>
-                                                <span>{{ $corSecundaria }}</span>
-                                            </span>
+                                            </button>
                                         @endif
                                         @if($corTerciaria)
-                                            <span class="empresa-cor-chip" title="Cor terciaria">
+                                            <button type="button" class="empresa-cor-chip js-copy-color" data-color="{{ $corTerciaria }}" title="Clique para copiar {{ $corTerciaria }}">
                                                 <span class="empresa-cor-dot" style="background: {{ $corTerciaria }}"></span>
-                                                <span>{{ $corTerciaria }}</span>
-                                            </span>
+                                            </button>
                                         @endif
                                     </div>
                                 @else
@@ -213,16 +217,15 @@
                                 </span>
                             </td>
                             <td class="text-center align-middle">
-                                <a href="{{ route('empresa.site-editor.edit', $empresa->id) }}" class="btn btn-xs btn-info mb-1" style="background:#0ea5e9;border-color:#0ea5e9;">
-                                    <i class="fa fa-paint-brush"></i> Editor Site
-                                </a>
-                                {{-- <a href="{{ route('empresa.site-apresentacao.edit', $empresa->id) }}" class="btn btn-xs btn-info mb-1">
-                                    <i class="fa fa-globe"></i> Site
-                                </a> --}}
-                                <a href="{{ route('empresa.edit', $empresa->id) }}" class="btn btn-xs btn-warning">
-                                    <i class="fa fa-edit"></i> Editar
-                                </a>
-                                <x-delete-button :action="route('empresa.destroy', $empresa->id)" />
+                                <div class="d-flex flex-wrap justify-content-center empresa-actions-group">
+                                    <a href="{{ route('empresa.site-editor.edit', $empresa->id) }}" class="btn btn-xs btn-info" style="background:#0ea5e9;border-color:#0ea5e9;">
+                                        <i class="fa fa-paint-brush"></i> Editor Site
+                                    </a>
+                                    <a href="{{ route('empresa.edit', $empresa->id) }}" class="btn btn-xs btn-warning">
+                                        <i class="fa fa-edit"></i> Editar
+                                    </a>
+                                    <x-delete-button :action="route('empresa.destroy', $empresa->id)" />
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -269,20 +272,30 @@
     }
 
     .empresa-table .text-xs {
-        font-size: 12px;
+        font-size: 11px;
         line-height: 1.35;
     }
 
     .empresa-cor-chip {
         display: inline-flex;
         align-items: center;
-        gap: 5px;
-        font-size: 11px;
-        padding: 2px 7px;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        padding: 0;
         border-radius: 999px;
-        background: #f1f5f9;
-        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        border: 1px solid #d7e0ea;
         color: #334155;
+        cursor: pointer;
+        box-shadow: 0 1px 2px rgba(15, 23, 42, .06);
+        transition: transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+    }
+
+    .empresa-cor-chip:hover {
+        transform: translateY(-1px);
+        border-color: #94a3b8;
+        box-shadow: 0 4px 10px rgba(15, 23, 42, .10);
     }
 
     .empresa-cor-dot {
@@ -292,9 +305,296 @@
         border: 1px solid rgba(15, 23, 42, .15);
         display: inline-block;
     }
+
+    .empresa-cor-group {
+        gap: 4px;
+    }
+
+    .empresa-cor-copied {
+        outline: 2px solid rgba(37, 99, 235, .24);
+        border-color: #2563eb !important;
+    }
+
+    .empresa-actions-group {
+        gap: 4px;
+    }
+
+    .empresa-actions-group > * {
+        margin: 0 !important;
+    }
+
+    .btn-atribuir-assinatura {
+        width: fit-content;
+    }
+    .veiculo-section-title {
+        font-size: .96rem;
+        font-weight: 700;
+        color: #21364f;
+        letter-spacing: .02em;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e5eaf2;
+        margin-bottom: 14px;
+    }
+
+    .veiculo-info-tip {
+        border: 1px solid #dbe6f3;
+        border-radius: 10px;
+        background: #f8fbff;
+        color: #334155;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 8px 10px;
+        margin-bottom: 10px;
+    }
+
+    .veiculo-lookup-help {
+        display: block;
+        margin-top: .35rem;
+        font-size: .75rem;
+        color: #6b7280;
+    }
+
+    .form-control-sm {
+        border-radius: 10px;
+    }
+
+    .modal-xl {
+        max-width: 1180px;
+    }
 </style>
 @stop
 
 @section('js')
-<script></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+<script>
+    (function () {
+            var $modal = $('#modalAtribuirAssinatura');
+            var $form = $('#formAtribuirAssinatura');
+            var $empresaId = $form.find('[name="empresa_id"]');
+            var $empresaNome = $form.find('#empresa_nome_modal');
+            var $planSelect = $form.find('[name="plano_id"]');
+            var $periodicidade = $form.find('[name="periodicidade"]');
+            var $dataInicio = $form.find('[name="data_inicio"]');
+            var $dataVencimento = $form.find('[name="data_vencimento"]');
+            var $valorExibido = $form.find('#valorExibido');
+            var $planoStorage = $form.find('#planoStorage');
+
+            $modal.on('show.bs.modal', function (event) {
+                var trigger = $(event.relatedTarget);
+                var empresaId = trigger.data('empresa-id');
+                var empresaNome = trigger.data('empresa-nome');
+
+                if (empresaId) {
+                    $empresaId.val(String(empresaId));
+                }
+
+                if (empresaNome) {
+                    $empresaNome.val(empresaNome);
+                    $modal.find('.modal-title').text('Atribuir assinatura para ' + empresaNome);
+                }
+
+                atualizarPreview();
+            });
+
+        function formatarMoeda(valor) {
+            return Number(valor || 0).toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function calcularVencimento(dataInicio, periodicidade) {
+            if (!dataInicio) {
+                return '';
+            }
+
+            var data = new Date(dataInicio + 'T00:00:00');
+            if (Number.isNaN(data.getTime())) {
+                return '';
+            }
+
+            if (periodicidade === 'anual') {
+                data.setFullYear(data.getFullYear() + 1);
+            } else {
+                data.setMonth(data.getMonth() + 1);
+            }
+
+            return data.toISOString().slice(0, 10);
+        }
+
+        function atualizarPreview() {
+            var $selected = $planSelect.find('option:selected');
+            var mensal = parseFloat($selected.data('mensal') || 0);
+            var anual = parseFloat($selected.data('anual') || 0);
+            var storage = $selected.data('storage');
+            var periodicidade = $periodicidade.val() || 'mensal';
+            var valor = periodicidade === 'anual' ? anual : mensal;
+
+            $valorExibido.val(formatarMoeda(valor));
+            $planoStorage.val(storage ? storage + ' MB' : '');
+
+            var vencimento = calcularVencimento($dataInicio.val(), periodicidade);
+            if (vencimento) {
+                $dataVencimento.val(vencimento);
+            }
+        }
+
+        $planSelect.on('change', atualizarPreview);
+        $periodicidade.on('change', atualizarPreview);
+        $dataInicio.on('change', atualizarPreview);
+        atualizarPreview();
+
+        function copyColor(hex, trigger) {
+            if (!hex) {
+                return;
+            }
+
+            var text = String(hex).trim();
+            var el = trigger instanceof HTMLElement ? trigger : null;
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text);
+            } else {
+                var input = document.createElement('input');
+                input.value = text;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+            }
+
+            if (el) {
+                el.classList.add('empresa-cor-copied');
+                el.setAttribute('title', 'Copiado: ' + text);
+                setTimeout(function () {
+                    el.classList.remove('empresa-cor-copied');
+                }, 700);
+            }
+        }
+
+        document.querySelectorAll('.js-copy-color').forEach(function (button) {
+            button.addEventListener('click', function () {
+                copyColor(button.dataset.color || '', button);
+            });
+        });
+    })();
+</script>
 @stop
+
+<div class="modal fade" id="modalAtribuirAssinatura" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <form id="formAtribuirAssinatura" action="{{ route('assinatura.atribuir.processar') }}" method="POST">
+                @csrf
+                <input type="hidden" name="empresa_id" value="">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-link mr-1"></i> Atribuir assinatura</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <div class="card card-outline card-light mb-0">
+                                <div class="card-body p-4">
+                                    <div class="veiculo-section-title">
+                                        <i class="fas fa-link mr-1"></i>Dados da assinatura
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-12 mb-3">
+                                            <label class="mb-1">Empresa <span class="text-danger">*</span></label>
+                                            <input type="hidden" name="empresa_id" value="">
+                                            <input type="text" class="form-control form-control-sm" id="empresa_nome_modal" readonly>
+                                            <small class="veiculo-lookup-help">A empresa vem preenchida automaticamente a partir da linha selecionada.</small>
+                                        </div>
+
+                                        <div class="col-lg-6 col-md-6 mb-3">
+                                            <label class="mb-1">Plano <span class="text-danger">*</span></label>
+                                            <select name="plano_id" class="form-control form-control-sm" required>
+                                                <option value="">Selecione o plano...</option>
+                                                @foreach (\App\Models\Plano::orderBy('nome')->get() as $plano)
+                                                    <option value="{{ $plano->id }}" data-mensal="{{ $plano->valor_mensal }}" data-anual="{{ $plano->valor_anual }}" data-storage="{{ $plano->limite_armazenamento_mb ?? 0 }}">
+                                                        {{ $plano->nome }} - R$ {{ number_format($plano->valor_mensal, 2, ',', '.') }}/mês
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 mb-3">
+                                            <label class="mb-1">Periodicidade <span class="text-danger">*</span></label>
+                                            <select name="periodicidade" class="form-control form-control-sm" required>
+                                                <option value="mensal">Mensal</option>
+                                                <option value="anual">Anual (com desconto)</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 mb-3">
+                                            <label class="mb-1">Dia de vencimento</label>
+                                            <input type="number" name="dia_vencimento" class="form-control form-control-sm" min="1" max="28" placeholder="Ex.: 10">
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 mb-3">
+                                            <label class="mb-1">Data de início <span class="text-danger">*</span></label>
+                                            <input type="date" name="data_inicio" class="form-control form-control-sm" value="{{ now()->toDateString() }}" required>
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 mb-3">
+                                            <label class="mb-1">Data de vencimento</label>
+                                            <input type="date" name="data_vencimento" class="form-control form-control-sm" value="{{ now()->addMonth()->toDateString() }}">
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 mb-3">
+                                            <label class="mb-1">Valor a cobrar (R$) <span class="text-danger">*</span></label>
+                                            <div class="input-group input-group-sm">
+                                                <div class="input-group-prepend">
+                                                    <span class="input-group-text">R$</span>
+                                                </div>
+                                                <input type="text" id="valorExibido" class="form-control" readonly required>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-lg-3 col-md-6 mb-3">
+                                            <label class="mb-1">Armazenamento do plano</label>
+                                            <input type="text" class="form-control form-control-sm" id="planoStorage" readonly placeholder="Selecione um plano...">
+                                        </div>
+
+                                        <div class="col-12 mb-2">
+                                            <label class="mb-1">Observação</label>
+                                            <textarea name="observacao" class="form-control form-control-sm" rows="2" placeholder="Observação interna sobre esta atribuição..."></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4 mt-3 mt-lg-0">
+                            <div class="card card-outline card-light h-100 mb-0">
+                                <div class="card-body p-4">
+                                    <div class="veiculo-section-title">
+                                        <i class="fas fa-info-circle mr-1"></i>Resumo
+                                    </div>
+                                    <div class="veiculo-info-tip">
+                                        Verifique o plano, a periodicidade e a data de vencimento antes de confirmar a atribuição.
+                                    </div>
+                                    <div class="veiculo-info-tip">
+                                        O valor exibido muda conforme o plano selecionado e o tipo de cobrança.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save mr-1"></i> Atribuir assinatura
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
