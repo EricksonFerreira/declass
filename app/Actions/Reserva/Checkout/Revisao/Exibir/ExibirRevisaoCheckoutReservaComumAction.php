@@ -8,7 +8,9 @@ use App\Models\AvariaCobranca;
 use App\Models\CategoriaDano;
 use App\Models\VeiculoDanos;
 use App\Services\BreadcrumbService;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
+use RuntimeException;
 
 class ExibirRevisaoCheckoutReservaComumAction
 {
@@ -40,14 +42,22 @@ class ExibirRevisaoCheckoutReservaComumAction
         if (! $checkout) {
             return redirect()
                 ->route('reserva.show', $reserva->codigo)
-                ->with('warning', 'Nenhum checkout encontrado para revisão.');
+                ->with('warning', 'Nenhum checkout encontrado para revisao.');
+        }
+
+        if (! $this->checkoutAssinado($checkout)) {
+            throw new RuntimeException('Nao e possivel acessar a revisao do checkout porque o contrato ainda nao foi assinado.');
+        }
+
+        if (($registro->revisao_checkout_concluida ?? 'N') === 'S') {
+            throw new RuntimeException('A revisao do checkout ja foi concluida para esta reserva.');
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
             new BreadCrumbItem('Detalhes da Reserva Nº'.$reserva->codigo, route('reserva.show', $reserva->codigo)),
-            new BreadCrumbItem('Revisão do Check-out'),
+            new BreadCrumbItem('Revisao do Check-out'),
         ]);
 
         $categoriasDano = CategoriaDano::query()
@@ -79,8 +89,15 @@ class ExibirRevisaoCheckoutReservaComumAction
             'danosCobrar' => $danosCobrar,
             'danosNaoCobrar' => $danosNaoCobrar,
             'breadcrumb' => $breadcrumb,
-            'titulo' => 'Revisão do Check-out - Reserva Nº '.$registro->id,
+            'titulo' => 'Revisao do Check-out - Reserva Nº '.$registro->id,
         ]);
+    }
+
+    private function checkoutAssinado($checkout): bool
+    {
+        return filled($checkout?->assinatura)
+            || filled($checkout?->data_assinatura)
+            || ($checkout?->assinado ?? 'N') === 'S';
     }
 
     private function montarDanosRevisao($registro)
@@ -139,10 +156,6 @@ class ExibirRevisaoCheckoutReservaComumAction
             return ['label' => 'Check-out', 'class' => 'mini-chip--warn'];
         }
 
-        if (($dano->reserva_id ?? null) && (int) $dano->reserva_id !== $reservaIdAtual) {
-            return ['label' => 'Outra reserva', 'class' => 'mini-chip--ok'];
-        }
-
         return ['label' => 'Outra reserva', 'class' => 'mini-chip--ok'];
     }
 
@@ -197,8 +210,6 @@ class ExibirRevisaoCheckoutReservaComumAction
         }
 
         return false;
-
-        // return $valorSugerido > 0;
     }
 
     private function obterValorSugerido(VeiculoDanos $dano): float
@@ -214,15 +225,15 @@ class ExibirRevisaoCheckoutReservaComumAction
     private function obterStatusLabel(VeiculoDanos $dano, string $cobrancaStatus = '', bool $cobrancaPendente = false): string
     {
         if ($cobrancaPendente) {
-            return 'Cobrança pendente';
+            return 'Cobranca pendente';
         }
 
         if ($this->isCobrancaEfetivadaStatus($cobrancaStatus)) {
-            return 'Cobrança confirmada';
+            return 'Cobranca confirmada';
         }
 
         return match ($dano->status ?? VeiculoDanos::STATUS_PENDENTE) {
-            VeiculoDanos::STATUS_EM_CORRECAO => 'Em correção',
+            VeiculoDanos::STATUS_EM_CORRECAO => 'Em correcao',
             VeiculoDanos::STATUS_CORRIGIDA => 'Corrigido',
             VeiculoDanos::STATUS_PARCIALMENTE_CORRIGIDA => 'Parcialmente corrigido',
             VeiculoDanos::STATUS_DESCARTADA => 'Descartado',
@@ -233,22 +244,22 @@ class ExibirRevisaoCheckoutReservaComumAction
     private function obterMotivoCobranca(VeiculoDanos $dano, ?AvariaCobranca $cobranca, float $valorSugerido): string
     {
         if (($dano->status ?? null) === VeiculoDanos::STATUS_DESCARTADA) {
-            return 'Este dano foi descartado e não entra na cobrança.';
+            return 'Este dano foi descartado e nao entra na cobranca.';
         }
 
         if ($this->isCobrancaPendente($cobranca)) {
-            return 'Cobrança salva como pendente e editável até a finalização.';
+            return 'Cobranca salva como pendente e editavel ate a finalizacao.';
         }
 
         if ($this->isCobrancaEfetivada($cobranca)) {
-            return 'Este dano já possui cobrança finalizada.';
+            return 'Este dano ja possui cobranca finalizada.';
         }
 
         if ($valorSugerido <= 0) {
-            return 'Sem valor estimado para cobrança.';
+            return 'Sem valor estimado para cobranca.';
         }
 
-        return 'Dano com valor estimado e sem cobrança vinculada.';
+        return 'Dano com valor estimado e sem cobranca vinculada.';
     }
 
     private function calcularCobrancaTotal($danosRevisados): float
@@ -260,101 +271,71 @@ class ExibirRevisaoCheckoutReservaComumAction
 
     private function montarResumoFinanceiro($registro, $danosVeiculo): array
     {
-        $cobrancas = collect($registro->avariaCobrancas ?? []);
-        $valorCaucao = (float) (
-            $registro->calcao?->valor_capturado
-            ?? $registro->calcao?->valor_autorizado
-            ?? $registro->calcao?->valor_calculado
-            ?? $registro->calcao?->valor
-            ?? 0
-        );
-
-        $danosComCobranca = $danosVeiculo->filter(fn ($dano) => (bool) ($dano['deve_cobrar'] ?? false));
-        $totalCobrancas = (float) $danosComCobranca->sum(fn ($dano) => (float) ($dano['valor_exibido'] ?? $dano['valor_sugerido'] ?? 0));
-        // dd($danosComCobranca);
-        $valorUsadoSolicitado = (float) $danosComCobranca
-            ->filter(fn ($dano) => (bool) ($dano['usar_calcao'] ?? false))
-            ->sum(fn ($dano) => (float) ($dano['valor_sugerido'] ?? 0));
-
-        $valorUsadoCaucao = min($valorUsadoSolicitado, $totalCobrancas, $valorCaucao);
-        $valorAindaCobrar = max(0, $totalCobrancas - $valorUsadoCaucao);
-        $valorDevolver = max(0, $valorCaucao - $totalCobrancas);
-
-        $totalComCalcao = $valorUsadoCaucao;
-        $totalSemCalcao = $valorAindaCobrar;
-
         return [
-            'total_avarias' => (float) $danosVeiculo->sum(fn ($dano) => (float) ($dano['valor_exibido'] ?? $dano['valor_sugerido'] ?? 0)),
-            'total_combustivel' => 0,
-            'total_limpeza' => 0,
-            'total_diaria_extra' => 0,
-            'total_outros' => 0,
-            'total_cobrancas' => $totalCobrancas,
-            'resultado_revisao' => $totalCobrancas,
-            'valor_caucao' => $valorCaucao,
-            'valor_usado_caucao' => $valorUsadoCaucao,
-            'valor_ainda_cobrar' => $valorAindaCobrar,
-            'valor_devolver' => $valorDevolver,
-            'total_com_calcao' => $totalComCalcao,
-            'total_sem_calcao' => $totalSemCalcao,
-            'total_previsto' => $totalCobrancas,
-            'total_pendente' => $valorAindaCobrar,
-            'total_cobrado' => $totalUsadoCaucao = $valorUsadoCaucao,
-            'valor_calcao_utilizado' => $valorUsadoCaucao,
-            'valor_calcao_restante' => $valorDevolver,
-            'valor_calcao_autorizado' => $valorCaucao,
-            'qtd_com_calcao' => $danosComCobranca->filter(fn ($dano) => (bool) ($dano['usar_calcao'] ?? false))->count(),
-            'qtd_sem_calcao' => $danosComCobranca->filter(fn ($dano) => ! (bool) ($dano['usar_calcao'] ?? false))->count(),
-            'cobrancas_pendentes' => 0,
-            'cobrancas_pagas' => 0,
-            'cobrancas_canceladas' => 0,
-            'danos_total' => $danosVeiculo->count(),
-            'danos_cobrar' => $danosVeiculo->filter(fn ($dano) => (bool) ($dano['deve_cobrar'] ?? false))->count(),
-            'danos_nao_cobrar' => $danosVeiculo->filter(fn ($dano) => in_array(($dano['status_revisao'] ?? ''), [
-                VeiculoDanos::REVISAO_NAO_COBRAR,
-                VeiculoDanos::REVISAO_JA_EXISTENTE,
-                VeiculoDanos::REVISAO_DESGASTE_NORMAL,
-            ], true))->count(),
+            'total_cobrancas' => $this->calcularCobrancaTotal($danosVeiculo),
         ];
-    }
-
-    private function mapearImagens(VeiculoDanos $dano): array
-    {
-        return collect($dano->imagem ?? $dano->imagens ?? collect())
-            ->map(function ($imagem) {
-                $path = $imagem->caminho_imagem ?? $imagem->path ?? null;
-
-                return $path ? asset('storage/'.ltrim($path, '/')) : null;
-            })
-            ->filter()
-            ->values()
-            ->all();
-    }
-
-    private function isCobrancaPendente(?AvariaCobranca $cobranca): bool
-    {
-        return $cobranca
-            && strtolower((string) $cobranca->status) === AvariaCobranca::STATUS_PENDENTE
-            && strtolower((string) $cobranca->metodo) === AvariaCobranca::METODO_MANUAL;
-    }
-
-    private function isCobrancaEfetivada(?AvariaCobranca $cobranca): bool
-    {
-        return $this->isCobrancaEfetivadaStatus((string) ($cobranca?->status ?? ''));
-    }
-
-    private function isCobrancaEfetivadaStatus(string $status): bool
-    {
-        return in_array(strtolower($status), [
-            AvariaCobranca::STATUS_COBRADO,
-            AvariaCobranca::STATUS_PROCESSANDO,
-        ], true);
     }
 
     private function isDanoSinalizado(array $dano): bool
     {
-        return ! empty($dano['cobranca_pendente'])
-            || ! empty($dano['ja_cobrado'])
-            || ($dano['status'] ?? null) === VeiculoDanos::STATUS_DESCARTADA;
+        return filled($dano['status_revisao'] ?? null) || filled($dano['cobranca_id'] ?? null);
+    }
+
+    private function isCobrancaPendente(?AvariaCobranca $cobranca): bool
+    {
+        if (! $cobranca) {
+            return false;
+        }
+
+        return in_array((string) ($cobranca->status ?? ''), ['pendente', 'aguardando'], true);
+    }
+
+    private function isCobrancaEfetivada(?AvariaCobranca $cobranca): bool
+    {
+        if (! $cobranca) {
+            return false;
+        }
+
+        return in_array((string) ($cobranca->status ?? ''), ['cobrado', 'pago'], true);
+    }
+
+    private function isCobrancaEfetivadaStatus(string $status): bool
+    {
+        return in_array($status, ['cobrado', 'pago'], true);
+    }
+
+    private function mapearImagens(VeiculoDanos $dano): array
+    {
+        return collect($dano->imagem ?? [])
+            ->map(function ($imagem) {
+                $path = trim((string) ($imagem->caminho_imagem ?? $imagem->nome_imagem ?? ''));
+
+                if ($path === '') {
+                    return null;
+                }
+
+                if (str_starts_with($path, 'http://') || str_starts_with($path, 'https://')) {
+                    return $path;
+                }
+
+                $path = ltrim($path, '/');
+
+                if (str_starts_with($path, 'storage/')) {
+                    return asset($path);
+                }
+
+                if (str_starts_with($path, 'public/')) {
+                    return asset('storage/' . ltrim(substr($path, 7), '/'));
+                }
+
+                if (Storage::disk('public')->exists($path)) {
+                    return asset('storage/' . $path);
+                }
+
+                return asset('storage/' . $path);
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 }

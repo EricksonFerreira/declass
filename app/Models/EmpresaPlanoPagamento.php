@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\HasAuditColumns;
 
 class EmpresaPlanoPagamento extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
     protected $table = 'empresa_plano_pagamentos';
 
     protected $fillable = [
@@ -33,6 +34,10 @@ class EmpresaPlanoPagamento extends Model
         'referencia_interna',
         'instrucoes_pagamento',
         'registrado_por_user_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -41,6 +46,8 @@ class EmpresaPlanoPagamento extends Model
         'pago_em'        => 'datetime',
         'pix_expira_em'  => 'datetime',
         'metadados'      => 'array',
+        'datainc'        => 'datetime',
+        'datatu'         => 'datetime',
     ];
 
     public function empresaPlano(): BelongsTo
@@ -80,5 +87,19 @@ class EmpresaPlanoPagamento extends Model
             'manual'       => 'Manual',
             default        => ucfirst($this->metodo),
         };
+    }
+    public function getPlanoAttribute()
+    {
+        return $this->empresaPlano?->plano;
+    }
+
+    public function getPeriodicidadeTextoAttribute(): string
+    {
+        return $this->periodicidade === 'anual' ? 'Anual' : 'Mensal';
+    }
+
+    public function getMetodoCobrancaTextoAttribute(): string
+    {
+        return $this->metodo_texto;
     }
 }

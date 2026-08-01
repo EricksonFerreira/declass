@@ -95,23 +95,11 @@
         </div>
         <div class="row rs-photo-grid">
             @foreach($fotosCheckoutPaths as $label => $path)
-                @php
-                    $fotoUrl = null;
-                    if (!empty($path)) {
-                        $cleanPath = ltrim((string) $path, '/');
-                        if (str_contains($cleanPath, 'http://') || str_contains($cleanPath, 'https://')) {
-                            $fotoUrl = $cleanPath;
-                        } elseif (str_starts_with($cleanPath, 'storage/')) {
-                            $fotoUrl = asset($cleanPath);
-                        } elseif (str_starts_with($cleanPath, 'public/')) {
-                            $fotoUrl = asset('storage/' . ltrim(substr($cleanPath, 7), '/'));
-                        } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($cleanPath)) {
-                            $fotoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($cleanPath);
-                        } else {
-                            $fotoUrl = asset('storage/' . $cleanPath);
-                        }
-                    }
-                @endphp
+                   @php
+        $fotoUrl = $path
+            ? asset('storage/' . ltrim($path, '/'))
+            : null;
+    @endphp
                 <div class="col-6 col-md-2 rs-photo-item">
                     @if($fotoUrl)
                         <div class="rs-photo-frame js-lightbox-trigger"

@@ -7,6 +7,7 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Empresa\StoreEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaRequest;
 use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
+use App\Models\ArquivoRastreado;
 use App\Models\ConfiguracaoCalcao;
 use App\Models\Empresa;
 use App\Models\GrupoFrota;
@@ -341,6 +342,60 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome);
 
         return view('empresa.show', compact('empresa', 'breadcrumb'));
+    }
+
+    public function armazenamento(Request $request, $id)
+    {
+        $empresa = $this->empresaService->getById($id);
+        if (! $empresa) {
+            return redirect()->route('empresa.index')->with('error', 'Empresa nao encontrada.');
+        }
+
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome . ' · Armazenamento');
+
+        $query = ArquivoRastreado::query()
+            ->where('empresa_id', $empresa->id)
+            ->when($request->filled('modulo'), function ($query) use ($request) {
+                $query->where('modulo', $request->string('modulo')->toString());
+            })
+            ->when($request->filled('entidade'), function ($query) use ($request) {
+                $query->where('entidade', $request->string('entidade')->toString());
+            });
+
+        $ordemTamanho = $request->string('ordenar_tamanho')->toString();
+        if ($ordemTamanho === 'maior') {
+            $query->orderByDesc('size_bytes');
+        } elseif ($ordemTamanho === 'menor') {
+            $query->orderBy('size_bytes');
+        } else {
+            $query->latest('id');
+        }
+
+        $arquivos = $query->paginate(20)->withQueryString();
+
+        $stats = [
+            'total_arquivos' => (int) ArquivoRastreado::query()->where('empresa_id', $empresa->id)->count(),
+            'total_bytes' => (int) ArquivoRastreado::query()->where('empresa_id', $empresa->id)->sum('size_bytes'),
+        ];
+
+        $modulos = ArquivoRastreado::query()
+            ->where('empresa_id', $empresa->id)
+            ->whereNotNull('modulo')
+            ->distinct()
+            ->orderBy('modulo')
+            ->pluck('modulo');
+
+        $entidades = ArquivoRastreado::query()
+            ->where('empresa_id', $empresa->id)
+            ->when($request->filled('modulo'), function ($query) use ($request) {
+                $query->where('modulo', $request->string('modulo')->toString());
+            })
+            ->whereNotNull('entidade')
+            ->distinct()
+            ->orderBy('entidade')
+            ->pluck('entidade');
+
+        return view('empresa.armazenamento', compact('empresa', 'breadcrumb', 'arquivos', 'stats', 'modulos', 'entidades'));
     }
 
     public function edit($id)

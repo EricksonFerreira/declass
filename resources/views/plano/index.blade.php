@@ -67,10 +67,10 @@
                                     <i class="fas fa-car text-primary mr-2" style="width:14px;text-align:center;"></i>
                                     <span><strong>{{ $plano->limite_veiculos_texto }}</strong> veiculos</span>
                                 </div>
-                                {{-- Usuarios --}}
+                                {{-- Carros --}}
                                 <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">
-                                    <i class="fas fa-users text-primary mr-2" style="width:14px;text-align:center;"></i>
-                                    <span><strong>{{ $plano->limite_usuarios_texto }}</strong> usuario(s)</span>
+                                    <i class="fas fa-car text-primary mr-2" style="width:14px;text-align:center;"></i>
+                                    <span><strong>{{ $plano->limite_veiculos_texto }}</strong> carro(s)</span>
                                 </div>
                                 {{-- Multi-estacao --}}
                                 <div class="d-flex align-items-center mb-1" style="font-size:.82rem;">

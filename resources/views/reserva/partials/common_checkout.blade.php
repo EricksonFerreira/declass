@@ -1,6 +1,9 @@
-@if($reserva->contratoCheckout)
+﻿@if($reserva->contratoCheckout)
 @php
     $co = $reserva->contratoCheckout;
+    $checkoutDocs = is_array($reserva->documentos_json ?? null)
+        ? data_get($reserva->documentos_json, 'checkout', [])
+        : [];
     $coAssinado = ! empty($co->assinatura) || ! empty($co->data_assinatura) || $co->assinado === 'S';
     $revisaoCheckoutConcluida = ($reserva->revisao_checkout_concluida ?? 'N') === 'S';
     $coVeiculo = $co->veiculo?->nome ?? ('ID ' . $co->veiculo_id);
@@ -13,12 +16,29 @@
     $coBadgeIcon = $coAssinado ? 'fa-check-circle' : 'fa-clock';
 
     $fotosCheckoutPaths = [
-        'Direita' => $co->foto_direita_path ?? null,
-        'Esquerda' => $co->foto_esquerda_path ?? null,
-        'Frente' => $co->foto_frente_path ?? null,
-        'Trás' => $co->foto_tras_path ?? null,
-        'Velocímetro' => $co->foto_velocimetro_path ?? null,
-        'Combustível' => $co->foto_combustivel_path ?? null,
+        'Direita' => $co->foto_direita_path
+            ?? data_get($checkoutDocs, 'foto_direita_co')
+            ?? data_get($checkoutDocs, 'fotos.foto_direita_co'),
+
+        'Esquerda' => $co->foto_esquerda_path
+            ?? data_get($checkoutDocs, 'foto_esquerda_co')
+            ?? data_get($checkoutDocs, 'fotos.foto_esquerda_co'),
+
+        'Frente' => $co->foto_frente_path
+            ?? data_get($checkoutDocs, 'foto_frente_co')
+            ?? data_get($checkoutDocs, 'fotos.foto_frente_co'),
+
+        'Trás' => $co->foto_tras_path
+            ?? data_get($checkoutDocs, 'foto_tras_co')
+            ?? data_get($checkoutDocs, 'fotos.foto_tras_co'),
+
+        'Velocímetro' => $co->foto_velocimetro_path
+            ?? data_get($checkoutDocs, 'foto_velocimetro_co')
+            ?? data_get($checkoutDocs, 'fotos.foto_velocimetro_co'),
+
+        'Combustível' => $co->foto_combustivel_path
+            ?? data_get($checkoutDocs, 'foto_combustivel_co')
+            ?? data_get($checkoutDocs, 'fotos.foto_combustivel_co'),
     ];
 @endphp
 
@@ -81,7 +101,7 @@
             </a>
             @if($coAssinado && ! $revisaoCheckoutConcluida)
             <a href="{{ route('reserva.checkout.revisao', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" class="rs-ci-btn rs-ci-btn--edit">
-                <i class="fas fa-clipboard-check"></i> Ir para revisão
+                <i class="fas fa-clipboard-check"></i> Ir para revisÃƒÂ£o
             </a>
             @endif
             @if(!$coAssinado)
@@ -98,7 +118,7 @@
                 </button>
                 @if(!$coAssinado)
                 <a href=" {{ route('reserva.assinarContratoCheckout', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" class="rs-ci-btn rs-ci-btn--sign">
-                    <i class="fas fa-signature"></i> Assinar Check-out / Devolução
+                    <i class="fas fa-signature"></i> Assinar Check-out / DevoluÃƒÂ§ÃƒÂ£o
                 </a>
                 @endif
             @endif
@@ -113,23 +133,8 @@
         </div>
         <div class="row rs-photo-grid">
             @foreach($fotosCheckoutPaths as $label => $path)
-                @php
-                    $fotoUrl = null;
-                    if (!empty($path)) {
-                        $cleanPath = ltrim((string) $path, '/');
-                        if (str_contains($cleanPath, 'http://') || str_contains($cleanPath, 'https://')) {
-                            $fotoUrl = $cleanPath;
-                        } elseif (str_starts_with($cleanPath, 'storage/')) {
-                            $fotoUrl = asset($cleanPath);
-                        } elseif (str_starts_with($cleanPath, 'public/')) {
-                            $fotoUrl = asset('storage/' . ltrim(substr($cleanPath, 7), '/'));
-                        } elseif (\Illuminate\Support\Facades\Storage::disk('public')->exists($cleanPath)) {
-                            $fotoUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($cleanPath);
-                        } else {
-                            $fotoUrl = asset('storage/' . $cleanPath);
-                        }
-                    }
-                @endphp
+               @php $fotoUrl = $path ? asset('storage/' . $path) : null; @endphp
+                   
                 <div class="col-6 col-md-2 rs-photo-item">
                     @if($fotoUrl)
                         <div class="rs-photo-frame js-lightbox-trigger"
@@ -162,3 +167,5 @@
         @endif --}}
     </div>
 @endif
+
+

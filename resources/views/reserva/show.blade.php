@@ -7,114 +7,6 @@
 @stop
 
 @section('content')
-@php
-    $diasReserva    = (int) ($reserva->quantidade_dias ?? 0);
-    $tarifaBase     = (float) ($reserva->tarifa_base ?? 0);
-    $valorTarifaBase = $tarifaBase * $diasReserva;
-    $valorOpcionais  = (float) ($reserva->valor_opcionais ?? 0);
-
-    if ($valorOpcionais <= 0 && $reserva->opcionais?->isNotEmpty()) {
-        $valorOpcionais = (float) $reserva->opcionais->sum(function ($opcional) {
-            return (float) ($opcional->pivot->preco_total ?? 0);
-        });
-    }
-
-    $percentualDesconto = (float) ($reserva->percentual_desconto ?? 0);
-    $taxaColeta         = (float) ($taxaColeta  ?? 0);
-    $taxaEntrega        = (float) ($taxaEntrega ?? 0);
-    $subtotal           = $valorTarifaBase + $valorOpcionais + $taxaColeta + $taxaEntrega;
-    $valorDesconto      = $subtotal * ($percentualDesconto / 100);
-    $valorTotal         = max(0, $subtotal - $valorDesconto);
-
-    $grupoFrotaNome     = $reserva->grupoFrota?->nome ?? null;
-    $cupomCodigo        = $reserva->cupomDesconto?->codigo ?? null;
-
-    $createdAt        = $reserva->created_at ? \Carbon\Carbon::parse($reserva->created_at)->format('d/m/Y H:i') : '-';
-    $inicioFormatado  = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y H:i') : '-';
-    $fimFormatado     = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y H:i')    : '-';
-
-    $inicioData = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('d/m/Y') : '-';
-    $inicioHora = $reserva->data_inicio ? \Carbon\Carbon::parse($reserva->data_inicio)->format('H:i')   : '';
-    $fimData    = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('d/m/Y')    : '-';
-    $fimHora    = $reserva->data_fim    ? \Carbon\Carbon::parse($reserva->data_fim)->format('H:i')      : '';
-
-    $statusReservaNome  = $reserva->statusReserva->nome ?? 'Status';
-    $statusReservaSlug  = strtolower((string) $statusReservaNome);
-    $statusReservaClass = match ($statusReservaSlug) {
-        'confirmada'         => 'is-success',
-        'cancelada'          => 'is-danger',
-        'criada', 'pendente' => 'is-warning',
-        default              => 'is-neutral',
-    };
-    $statusIcon = match ($statusReservaSlug) {
-        'confirmada'         => 'fas fa-check-circle',
-        'cancelada'          => 'fas fa-times-circle',
-        'criada', 'pendente' => 'fas fa-clock',
-        default              => 'fas fa-info-circle',
-    };
-
-    $clienteNome    = $reserva->usuario->nome ?? 'Não informado';
-    $clientePartes  = preg_split('/\s+/', trim((string) $clienteNome)) ?: [];
-    $clienteIniciais = collect($clientePartes)
-        ->filter()
-        ->take(2)
-        ->map(fn ($parte) => mb_strtoupper(mb_substr($parte, 0, 1)))
-        ->implode('');
-    $clienteIniciais = $clienteIniciais ?: 'CL';
-
-    $nfseAtual       = $reserva->nfseAtual ?? null;
-    $nfseStatusRaw   = strtolower((string) ($nfseAtual->status ?? ''));
-    $nfseStatusLabel = $nfseAtual ? ucfirst($nfseAtual->status ?? 'pendente') : 'Não emitida';
-    $nfseBadgeClass  = match ($nfseStatusRaw) {
-        'emitida'   => 'is-success',
-        'erro'      => 'is-danger',
-        'cancelada' => 'is-neutral',
-        default     => 'is-warning',
-    };
-    $nfseMotivo        = $nfseAtual ? (app(\App\Services\NfseService::class)->mensagemErro($nfseAtual) ?? null) : null;
-    $reservaConfirmada = isset($reserva->status_reserva_id) && (int) $reserva->status_reserva_id === 2;
-    $nfseNaoEmitida    = !$nfseAtual || ($nfseAtual->status ?? '') !== 'emitida';
-    $nfseErroDetalhado = null;
-    $transacoesReserva = $reserva->transacoes ?? collect();
-    $statusPagamentoAprovado  = ['succeeded', 'approved', 'paid', 'completed', 'complete'];
-    $statusPagamentoPendente  = ['pending', 'processing', 'requires_action', 'requires_payment_method'];
-    $statusPagamentoEstornado = ['refunded', 'refund', 'estorno', 'cancelled', 'canceled', 'cancelado', 'cancelada', 'reembolsado', 'reembolsada'];
-    $transacoesPagamento = $transacoesReserva->filter(fn ($item) => (float) ($item->valor ?? 0) >= 0);
-    $transacoesEstorno   = $transacoesReserva->filter(fn ($item) =>
-        (float) ($item->valor ?? 0) < 0
-        || in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoEstornado, true));
-    $transacoesPendentes = $transacoesReserva->filter(fn ($item) =>
-        in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoPendente, true));
-    $totalPagamentos = (float) $transacoesPagamento->sum('valor');
-    $totalEstornos   = abs((float) $transacoesEstorno->sum('valor'));
-    $totalPagoAprovado = (float) $transacoesReserva
-        ->filter(fn ($item) => (float) ($item->valor ?? 0) > 0
-            && in_array(strtolower((string) ($item->status ?? '')), $statusPagamentoAprovado, true))
-        ->sum('valor');
-    $pagamentoEfetuado = $reserva->isPagamentoEfetuado();
-    if ($pagamentoEfetuado && $totalPagoAprovado < $valorTotal) {
-        $totalPagoAprovado = $valorTotal;
-    }
-    $saldoPendenteAssinatura = max(0, $valorTotal - $totalPagoAprovado);
-    $pagamentoEmDiaAssinatura = $saldoPendenteAssinatura <= 0.009;
-
-    if ($nfseAtual && ($nfseAtual->status ?? '') === 'erro' && is_array($nfseAtual->response ?? null)) {
-        $nfseErroDetalhado = $nfseAtual->response['message'] ?? $nfseAtual->response['error'] ?? $nfseAtual->response['erro'] ?? null;
-        if (!$nfseErroDetalhado && !empty($nfseAtual->response['errors'])) {
-            $nfseErroDetalhado = implode(' ', (array) $nfseAtual->response['errors']);
-        }
-    }
-
-    $totalMultas = $reserva->multas?->count() ?? 0;
-    $sinistros = $reserva->sinistros ?? collect();
-    $totalSinistros = $sinistros->count();
-    $danosReserva = $reserva->veiculoDanos ?? collect();
-    $danosPendentes = $danosReserva->whereNull('correcao_data');
-    $totalDano = $danosReserva->count();
-    $totalCobrancasAvaria = $reserva->avariaCobrancas?->count() ?? 0;
-    $calcao = $reserva->calcao ?? null;
-    $codigoReservaExibicao = $reserva->codigoReserva?->codigo ?? ('#' . $reserva->id);
-@endphp
 
 <div class="rs-page">
 
@@ -172,12 +64,12 @@
     {{-- ══════════════════════════════════════════
          PAINEL DE AÇÕES
     ══════════════════════════════════════════ --}}
-    @include('reserva.components.botoes_acoes_show_reserva', ['moduloNfse' => $moduloNfse])
+    @include('reserva.components.botoes_acoes_show_reserva', ['moduloNfse' => []])
 
     {{-- ══════════════════════════════════════════
          ALERTA NFS-e PENDENTE
     ══════════════════════════════════════════ --}}
-    @if($moduloNfse && $reservaConfirmada && $nfseNaoEmitida)
+    {{-- @if($moduloNfse && $reservaConfirmada && $nfseNaoEmitida)
         <div class="rs-alert rs-alert--warning">
             <div class="rs-alert__icon"><i class="fas fa-file-invoice"></i></div>
             <div class="rs-alert__content">
@@ -192,7 +84,7 @@
                 </button>
             </form>
         </div>
-    @endif
+    @endif --}}
 
     {{-- ══════════════════════════════════════════
          ETAPAS DO FLUXO

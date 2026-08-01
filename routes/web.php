@@ -1,26 +1,26 @@
 <?php
 
+use App\Http\Controllers\CadastroEmpresaController;
+use App\Http\Controllers\EmpresaAlertaController;
 use App\Http\Controllers\EmpresaContextController;
+use App\Http\Controllers\FipeCatalogController;
 use App\Http\Controllers\HomeController;
-use Illuminate\Support\Facades\Artisan;
-use App\Http\Controllers\TourController;
 use App\Http\Controllers\IndicadoresController;
+use App\Http\Controllers\MigrationController;
 use App\Http\Controllers\NotificacaoController;
 use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\PowerBIController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\FipeCatalogController;
 use App\Http\Controllers\Reserva\ReservaController;
 use App\Http\Controllers\SiteApresentacaoController;
 use App\Http\Controllers\SiteReservaController;
 use App\Http\Controllers\StripeController;
 use App\Http\Controllers\StripeWebhookController;
 use App\Http\Controllers\TipoTransacaoController;
-use App\Http\Controllers\EmpresaAlertaController;
-use App\Http\Controllers\MigrationController;
-use App\Http\Controllers\CadastroEmpresaController;
+use App\Http\Controllers\TourController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 // Webhook Stripe — sem CSRF, sem auth
@@ -29,9 +29,9 @@ Route::middleware('auth')->prefix('admin')->group(function () {
     Route::patch('alerta/{alerta}/resolver', [EmpresaAlertaController::class, 'resolver'])->name('alerta.resolver');
 
     // Tour guiado — status e conclusão por tela
-    Route::get('tour/status/{chave}',    [TourController::class, 'status'])->name('tour.status');
+    Route::get('tour/status/{chave}', [TourController::class, 'status'])->name('tour.status');
     Route::post('tour/concluir/{chave}', [TourController::class, 'concluir'])->name('tour.concluir');
-    Route::post('tour/resetar/{chave}',  [TourController::class, 'resetar'])->name('tour.resetar');
+    Route::post('tour/resetar/{chave}', [TourController::class, 'resetar'])->name('tour.resetar');
 });
 
 Route::post('/webhook/stripe', [StripeWebhookController::class, 'handle'])
@@ -50,31 +50,31 @@ Route::get('/sitemap.xml', function (Request $request) {
 
     $urls = [
         [
-            'loc' => $baseUrl . '/',
+            'loc' => $baseUrl.'/',
             'priority' => '1.0',
             'changefreq' => 'daily',
         ],
         [
-            'loc' => $baseUrl . '/reserva',
+            'loc' => $baseUrl.'/reserva',
             'priority' => '0.9',
             'changefreq' => 'weekly',
         ],
         [
-            'loc' => $baseUrl . '/sobre',
+            'loc' => $baseUrl.'/sobre',
             'priority' => '0.6',
             'changefreq' => 'monthly',
         ],
     ];
 
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n";
-    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>'."\n";
+    $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'."\n";
 
     foreach ($urls as $url) {
         $xml .= "  <url>\n";
-        $xml .= '    <loc>' . e($url['loc']) . "</loc>\n";
-        $xml .= '    <lastmod>' . $lastMod . "</lastmod>\n";
-        $xml .= '    <changefreq>' . e($url['changefreq']) . "</changefreq>\n";
-        $xml .= '    <priority>' . e($url['priority']) . "</priority>\n";
+        $xml .= '    <loc>'.e($url['loc'])."</loc>\n";
+        $xml .= '    <lastmod>'.$lastMod."</lastmod>\n";
+        $xml .= '    <changefreq>'.e($url['changefreq'])."</changefreq>\n";
+        $xml .= '    <priority>'.e($url['priority'])."</priority>\n";
         $xml .= "  </url>\n";
     }
 
@@ -170,7 +170,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         Route::get('fipe/sincronizar-catalogo/motos-caminhoes', [FipeCatalogController::class, 'runMotorcyclesAndTrucks'])->name('fipe.catalogo.motos-caminhoes.run');
     });
 
-    require __DIR__ . '/auth.php';
+    require __DIR__.'/auth.php';
 
     $authGroupFiles = [
         'reserva',
@@ -218,7 +218,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
 
     foreach ($authGroupFiles as $groupFile) {
         Route::middleware('auth')->group(function () use ($groupFile): void {
-            require base_path('routes/grupos/' . $groupFile . '.php');
+            require base_path('routes/grupos/'.$groupFile.'.php');
         });
     }
 
@@ -254,7 +254,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
 
     foreach ($webGroupFiles as $groupFile) {
         Route::middleware('web')->group(function () use ($groupFile): void {
-            require base_path('routes/grupos/' . $groupFile . '.php');
+            require base_path('routes/grupos/'.$groupFile.'.php');
         });
     }
 
@@ -263,11 +263,16 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
 
 Route::delete('/admin/veiculo-danos/{id}', function ($id) {
     $dano = \App\Models\VeiculoDanos::find($id);
-    if ($dano) { $dano->imagem()->delete(); $dano->delete(); }
+    if ($dano) {
+        $dano->imagem()->delete();
+        $dano->delete();
+    }
+
     return response()->json(['success' => true]);
 })->middleware(['auth', 'can:acessar-superadmin']);
 
 Route::post('/limpar-cache', function () {
     Artisan::call('cache:clear');
+
     return back()->with('success', 'Cache limpo com sucesso!');
 })->middleware(['auth', 'can:acessar-superadmin'])->name('limpar-cache');

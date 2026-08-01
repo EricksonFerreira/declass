@@ -566,7 +566,7 @@ return [
                             'route' => 'os-subcategorias.index',
                             'icon' => 'fas fa-list',
                         ],
-                        
+
                         [
                             'text' => 'Planos de Manut. Preventiva',
                             'route' => 'manutencao.planos.index',
@@ -632,7 +632,7 @@ return [
                     'icon' => 'fas fa-file-contract',
                     'can' => 'termo_consentimento.index',
                 ],
-               
+
             ],
         ],
         [
@@ -646,6 +646,31 @@ return [
                     'icon' => 'fas fa-building',
                     'can' => 'acessar-superadmin',
                 ],
+                [
+                    'text' => 'Planos',
+                    'route' => 'plano.index',
+                    'icon' => 'fas fa-file-signature',
+                    'can' => 'acessar-superadmin',
+                ],
+                [
+                    'text' => 'Assinaturas',
+                    'route' => 'assinatura.index',
+                    'icon' => 'fas fa-file-signature',
+                    'can' => 'acessar-superadmin',
+                ],
+                [
+                    'text' => 'Monitoramento de Pagamentos',
+                    'route' => 'assinatura.monitoramento-pagamentos',
+                    'icon' => 'fas fa-bell',
+                    'can' => 'acessar-superadmin',
+                ],
+                [
+                    'text' => 'Finanças das Assinaturas',
+                    'route' => 'assinatura.financas',
+                    'icon' => 'fas fa-chart-line',
+                    'can' => 'acessar-superadmin',
+                ],
+
                 [
                     'text' => 'Replicação de Base',
                     'route' => 'replicacao_base.index',

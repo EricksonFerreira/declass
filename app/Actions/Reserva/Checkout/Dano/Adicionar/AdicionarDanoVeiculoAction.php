@@ -25,9 +25,9 @@ class AdicionarDanoVeiculoAction
         $dados['reserva_codigo_id'] = $reservaCodigoId;
 
         return match (true) {
-            $reservaResolvida->ehComum() => $this->comum->handle($dados, $reservaCodigoId, $request),
+            $reservaResolvida->ehComum() => $this->comum->handle($dados, $reservaId, $reservaCodigoId, $request),
             $reservaResolvida->ehMotoristaApp() => $this->motoristaApp->handle($dados, $reservaCodigoId, $request),
-            default => throw new \LogicException('Tipo de reserva não suportado para adicionar dano.'),
+            default => throw new \LogicException('Tipo de reserva nÃ£o suportado para adicionar dano.'),
         };
     }
 }

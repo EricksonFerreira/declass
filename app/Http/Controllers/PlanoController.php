@@ -9,6 +9,7 @@ use App\Services\BreadcrumbService;
 use App\Services\PlanoPermissaoService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
 use Illuminate\Support\Str;
@@ -67,6 +68,7 @@ class PlanoController extends Controller
             'valor_mensal'    => 'required|numeric|min:0',
             'valor_anual'     => 'required|numeric|min:0',
             'limite_veiculos' => 'nullable|integer|min:1',
+            'limite_armazenamento_mb' => 'nullable|integer|min:1',
             'site_vendas'     => 'boolean',
             'modulo_multas'   => 'boolean',
             'modulo_nfse'     => 'boolean',
@@ -176,6 +178,7 @@ class PlanoController extends Controller
             'valor_mensal'    => 'required|numeric|min:0',
             'valor_anual'     => 'required|numeric|min:0',
             'limite_veiculos' => 'nullable|integer|min:1',
+            'limite_armazenamento_mb' => 'nullable|integer|min:1',
             'site_vendas'     => 'boolean',
             'modulo_multas'   => 'boolean',
             'modulo_nfse'     => 'boolean',
@@ -204,11 +207,15 @@ class PlanoController extends Controller
 
     public function destroy(Plano $plano): RedirectResponse
     {
-        if ($plano->assinaturas()->whereIn('status', ['ativo', 'trial'])->exists()) {
-            return back()->with('error', 'Não é possível excluir um plano com assinaturas ativas.');
+        if ($plano->assinaturas()->exists()) {
+            return back()->with('error', 'Não é possível excluir um plano que já possui assinaturas vinculadas.');
         }
 
-        $plano->delete();
+        try {
+            $plano->delete();
+        } catch (QueryException $e) {
+            return back()->with('error', 'Não é possível excluir este plano porque ele ainda possui vínculos no sistema.');
+        }
 
         return redirect()->route('plano.index')
             ->with('success', "Plano \"{$plano->nome}\" removido.");

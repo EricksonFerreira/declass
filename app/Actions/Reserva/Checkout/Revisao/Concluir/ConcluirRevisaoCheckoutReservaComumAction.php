@@ -8,6 +8,7 @@ use App\Models\Calcao;
 use App\Models\CategoriaFinanceira;
 use App\Models\Reserva;
 use App\Models\Transacao;
+use App\Services\MovimentacaoService;
 use App\Services\ReservaService;
 use App\Services\SaldoService;
 use App\Support\SchemaCache;
@@ -24,6 +25,7 @@ class ConcluirRevisaoCheckoutReservaComumAction
         private readonly ReservaService $reservaService,
         private readonly SaldoService $saldoService,
         private readonly CreateLancamentoAction $createLancamentoAction,
+        private readonly MovimentacaoService $movimentacaoService,
     ) {}
 
     public function handle(Reserva $reserva, array $dados): void
@@ -40,6 +42,7 @@ class ConcluirRevisaoCheckoutReservaComumAction
 
             $this->concluirRevisao($reserva);
             $this->marcarAvariasComoRevisadas($reserva);
+            $this->registrarEntradaVeiculo($reserva);
 
             $this->registrarLog(
                 reserva: $reserva,
@@ -312,6 +315,19 @@ class ConcluirRevisaoCheckoutReservaComumAction
         $reserva->update([
             'revisao_checkout_concluida' => 'S',
         ]);
+    }
+
+    private function registrarEntradaVeiculo(Reserva $reserva): void
+    {
+        if (! $reserva->veiculo_id || ! $reserva->estacao_devolucao_id) {
+            return;
+        }
+
+        $this->movimentacaoService->registrarChegadaNaEstacao(
+            (int) $reserva->veiculo_id,
+            (int) $reserva->estacao_devolucao_id,
+            'Veículo liberado após conclusão da revisão do checkout da reserva ' . $this->codigoReserva($reserva)
+        );
     }
 
     private function marcarAvariasComoRevisadas(

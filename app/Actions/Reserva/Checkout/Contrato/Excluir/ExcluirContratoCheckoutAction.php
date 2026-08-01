@@ -85,7 +85,7 @@ class ExcluirContratoCheckoutAction
                     'data_assinatura' => null,
                     'assinatura' => null,
                     'pdf_path' => null,
-                    'pdf_hash' => null,
+                    // 'pdf_hash' => null,
                 ])->save();
             } else {
                 $contrato->delete();

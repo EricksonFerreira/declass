@@ -166,13 +166,17 @@
                                     $labelColor = $pct >= 90 ? 'text-danger' : ($pct >= 60 ? 'text-warning' : 'text-success');
                                 @endphp
                                 <div class="{{ $labelColor }}" style="font-weight:600;font-size:11px;">
-                                    <i class="fas fa-database mr-1"></i> {{ $empresa->storage_used }}
+                                    <a href="{{ route('empresa.armazenamento', $empresa->id) }}" class="text-reset" style="text-decoration:none;">
+                                        <i class="fas fa-database mr-1"></i> {{ $empresa->storage_used }}
+                                    </a>
                                 </div>
                                 <div style="margin-top:3px;background:#e5e7eb;border-radius:4px;height:8px;width:100px;overflow:hidden;">
                                     <div style="width:{{ min($pct, 100) }}%;height:100%;background:{{ $barColor }};border-radius:4px;"></div>
                                 </div>
                                 <div class="text-muted" style="font-size:9px;margin-top:1px;">
-                                    {{ $pct }}% do limite ({{ $empresa->planoAtivo?->plano?->nome ?? 'Sem plano' }})
+                                    <a href="{{ route('empresa.armazenamento', $empresa->id) }}" class="text-muted" style="text-decoration:none;">
+                                        {{ $pct }}% do limite ({{ $empresa->planoAtivo?->plano?->nome ?? 'Sem plano' }})
+                                    </a>
                                 </div>
                             </td>
 

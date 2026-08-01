@@ -72,7 +72,7 @@ class EmpresaPlanoService
 
         return EmpresaPlanoPagamento::create([
             'empresa_plano_id'      => $assinatura->id,
-            'empresa_id'            => $assinatura->empresa_id,
+            'empresa_id'            => $assinatura->pagamentos()->value('empresa_id'),
             'valor'                 => $valorCobrar,
             'periodicidade'         => $novaPeriodicidade,
             'metodo'                => $metodoPagamento,
@@ -185,7 +185,7 @@ class EmpresaPlanoService
             }
 
             // Cancela assinaturas anteriores ativas.
-            EmpresaPlano::where('empresa_id', $empresa->id)
+            EmpresaPlano::whereHas('pagamentos', fn ($query) => $query->where('empresa_id', $empresa->id))
                 ->whereIn('status', ['ativo', 'trial', 'aguardando_pagamento', 'inadimplente'])
                 ->update(['status' => 'cancelado']);
 
@@ -206,7 +206,6 @@ class EmpresaPlanoService
             };
 
             $assinatura = EmpresaPlano::create([
-                'empresa_id'          => $empresa->id,
                 'plano_id'            => $plano->id,
                 'periodicidade'       => $periodicidade,
                 'status'              => 'aguardando_pagamento',

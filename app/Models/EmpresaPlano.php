@@ -6,14 +6,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Models\Concerns\HasAuditColumns;
 
 class EmpresaPlano extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
     protected $table = 'empresa_planos';
 
     protected $fillable = [
-        'empresa_id',
         'plano_id',
         'proximo_plano_id',
         'periodicidade',
@@ -36,6 +36,10 @@ class EmpresaPlano extends Model
         'gateway_customer_id',
         'metadados',
         'criado_por_user_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -47,12 +51,9 @@ class EmpresaPlano extends Model
         'valor_cobrado'        => 'decimal:2',
         'renovacao_automatica' => 'boolean',
         'metadados'            => 'array',
+        'datainc'              => 'datetime',
+        'datatu'               => 'datetime',
     ];
-
-    public function empresa(): BelongsTo
-    {
-        return $this->belongsTo(Empresa::class, 'empresa_id');
-    }
 
     public function plano(): BelongsTo
     {

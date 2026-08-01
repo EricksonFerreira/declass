@@ -13,44 +13,47 @@
     ], true);
     $etapaCheckout = (bool) ($reserva->contratoCheckout ?? null);
     $etapaCheckoutAssinado = $etapaCheckout
-        && (!empty($reserva->contratoCheckout->assinatura) || !empty($reserva->contratoCheckout->data_assinatura));
+        && (! empty($reserva->contratoCheckout->assinatura) || ! empty($reserva->contratoCheckout->data_assinatura));
+    $etapaRevisaoConcluida = ($reserva->revisao_checkout_concluida ?? 'N') === 'S';
 @endphp
 
 <style>
     .rs-flow {
         display: grid;
-        grid-template-columns: repeat(7, minmax(0, 1fr));
-        gap: 10px;
-        margin-bottom: 18px;
+        grid-template-columns: repeat(10, minmax(0, 1fr));
+        gap: 6px;
+        margin-bottom: 14px;
     }
     .rs-flow__step {
         display: flex;
         flex-direction: column;
-        gap: 4px;
+        gap: 3px;
         align-items: center;
         justify-content: center;
         text-align: center;
-        min-height: 78px;
-        border-radius: 14px;
+        min-height: 62px;
+        border-radius: 11px;
         border: 1px solid #dbe4ee;
         background: #fff;
-        padding: 10px 8px;
+        padding: 7px 4px;
     }
     .rs-flow__step.is-done { border-color: #bbf7d0; background: #f0fdf4; }
     .rs-flow__step.is-current { border-color: #fde68a; background: #fffbeb; }
     .rs-flow__step.is-cancelled { border-color: #fecaca; background: #fef2f2; }
-    .rs-flow__icon { font-size: .85rem; }
+    .rs-flow__icon { font-size: .76rem; }
     .rs-flow__step.is-done .rs-flow__icon { color: #16a34a; }
     .rs-flow__step.is-current .rs-flow__icon { color: #d97706; }
     .rs-flow__step.is-cancelled .rs-flow__icon { color: #dc2626; }
     .rs-flow__step:not(.is-done):not(.is-current) .rs-flow__icon { color: #94a3b8; }
-    .rs-flow__label { font-weight: 800; color: #64748b; font-size: .74rem; }
-    .rs-flow__value { font-weight: 700; color: #0f172a; font-size: .86rem; line-height: 1.2; }
+    .rs-flow__label { font-weight: 800; color: #64748b; font-size: .64rem; line-height: 1; }
+    .rs-flow__value { font-weight: 700; color: #0f172a; font-size: .72rem; line-height: 1.05; }
     @media (max-width: 992px) {
         .rs-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 576px) {
         .rs-flow { grid-template-columns: 1fr; }
+        .rs-flow__step { min-height: 52px; padding: 6px 5px; }
+        .rs-flow__value { font-size: .76rem; }
     }
 </style>
 
@@ -90,11 +93,9 @@
         <span class="rs-flow__label">7.</span>
         <span class="rs-flow__value">Assinatura</span>
     </div>
-    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckoutAssinado ? 'is-done' : ($etapaCheckout ? 'is-current' : '')) }}">
-        <i class="rs-flow__icon fas {{ $etapaCheckoutAssinado ? 'fa-check-circle' : 'fa-clock' }}"></i>
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaRevisaoConcluida ? 'is-done' : ($etapaCheckoutAssinado ? 'is-current' : '')) }}">
+        <i class="rs-flow__icon fas {{ $etapaRevisaoConcluida ? 'fa-check-circle' : 'fa-clock' }}"></i>
         <span class="rs-flow__label">8.</span>
         <span class="rs-flow__value">Revisão</span>
     </div>
-
-
 </div>

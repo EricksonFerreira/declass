@@ -225,12 +225,12 @@
                 </button>
             @endif
 
-            @if(!$reservaCancelada && in_array((int)$reserva->status_reserva_id, [2, 3]) && !$checkoutJaFeito)
+            {{-- @if(!$reservaCancelada && in_array((int)$reserva->status_reserva_id, [2, 3]) && !$checkoutJaFeito)
                 <a href="{{ route('reserva.renovacao.exibir', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="action-pill" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #fff;">
                     <i class="fas fa-arrows-rotate"></i>
                     <span>Renovar Reserva</span>
                 </a>
-            @endif
+            @endif --}}
 
         </div>
 

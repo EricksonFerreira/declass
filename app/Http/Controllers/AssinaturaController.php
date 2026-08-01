@@ -6,20 +6,20 @@ use App\Models\Empresa;
 use App\Models\EmpresaPlano;
 use App\Models\EmpresaPlanoPagamento;
 use App\Models\Plano;
+use App\Services\BreadcrumbService;
 use App\Services\EmpresaAlertaService;
 use App\Services\EmpresaPlanoService;
-use App\Services\BreadcrumbService;
 use App\Services\StripePixService;
 use Illuminate\Http\JsonResponse;
-use Stripe\Stripe;
-use Stripe\PaymentIntent;
-use Stripe\Customer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
+use Stripe\Customer;
+use Stripe\PaymentIntent;
+use Stripe\Stripe;
 
 class AssinaturaController extends Controller
 {
@@ -35,39 +35,286 @@ class AssinaturaController extends Controller
     public function index(Request $request): View
     {
         $titulo = 'Assinaturas';
-        $subtitulo = 'Gestao de planos contratados por cada locadora';
+        $subtitulo = 'Gestão de planos contratados por cada locadora';
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
             new \App\DTO\BreadCrumbItem('Assinaturas', null),
         ]);
 
-        $query = EmpresaPlano::with(['empresa', 'plano'])
+        $query = EmpresaPlano::with(['plano', 'pagamentos.empresa'])
             ->orderByRaw("FIELD(status, 'inadimplente', 'aguardando_pagamento', 'ativo', 'trial', 'cancelado')")
             ->orderBy('data_vencimento');
 
-        if ($request->filled('empresa')) {
-            $query->whereHas('empresa', fn ($q) => $q->where('nome', 'like', "%{$request->empresa}%"));
+        $empresaFiltro = trim((string) $request->input('empresa', ''));
+        $statusFiltro = trim((string) $request->input('status', ''));
+        $planoFiltro = trim((string) $request->input('plano_id', ''));
+
+        if ($statusFiltro !== '') {
+            $query->where('status', $statusFiltro);
         }
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-        if ($request->filled('plano_id')) {
-            $query->where('plano_id', $request->plano_id);
+        if ($planoFiltro !== '') {
+            $query->where('plano_id', $planoFiltro);
         }
 
         $assinaturas = $query->paginate(20)->withQueryString();
-        $planos      = Plano::ativos()->get();
+        $planos = Plano::orderBy('nome')->get();
 
         return view('assinatura.index', compact('assinaturas', 'planos', 'breadcrumb', 'titulo', 'subtitulo'));
     }
 
+    public function monitoramentoPagamentos(Request $request): View
+    {
+        $titulo = 'Monitoramento de Pagamentos';
+        $subtitulo = 'Acompanhamento das assinaturas pendentes, vencidas e proximas do vencimento';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Monitoramento', null),
+        ]);
+
+        $status = trim((string) $request->input('status', 'pendente'));
+        $prazo = (int) $request->input('prazo', 7);
+        if ($prazo <= 0) {
+            $prazo = 7;
+        }
+
+        $baseQuery = EmpresaPlanoPagamento::query()
+            ->with(['empresa', 'empresaPlano.plano'])
+            ->whereIn('status', ['pendente', 'vencido'])
+            ->whereHas('empresaPlano');
+
+        $totais = [
+            'pendentes' => (clone $baseQuery)->count(),
+            'empresas' => (clone $baseQuery)->distinct('empresa_id')->count('empresa_id'),
+            'vencidos' => (clone $baseQuery)->where('data_vencimento', '<', now()->startOfDay())->count(),
+            'proximos' => (clone $baseQuery)->whereBetween('data_vencimento', [now()->startOfDay(), now()->copy()->addDays($prazo)->endOfDay()])->count(),
+            'a_vencer_mes' => (clone $baseQuery)->whereBetween('data_vencimento', [now()->startOfDay(), now()->copy()->addDays(30)->endOfDay()])->count(),
+        ];
+
+        $filtrosAtivos = [
+            'empresa' => trim((string) $request->input('empresa', '')),
+            'plano_id' => trim((string) $request->input('plano_id', '')),
+            'status' => trim((string) $request->input('status', 'pendente')),
+            'prazo' => $prazo,
+        ];
+
+        $query = EmpresaPlanoPagamento::query()
+            ->with(['empresa', 'empresaPlano.plano'])
+            ->whereHas('empresaPlano')
+            ->whereIn('status', ['pendente', 'vencido'])
+            ->when($request->filled('empresa'), function ($q) use ($request) {
+                $empresa = trim((string) $request->input('empresa'));
+                $q->whereHas('empresa', fn ($empresaQuery) => $empresaQuery->where('nome', 'like', "%{$empresa}%"));
+            })
+            ->when($request->filled('plano_id'), fn ($q) => $q->whereHas('empresaPlano', fn ($planoQuery) => $planoQuery->where('plano_id', $request->input('plano_id'))))
+            ->when($status === 'pendente', fn ($q) => $q->where('data_vencimento', '>=', now()->startOfDay()))
+            ->when($status === 'vencido', fn ($q) => $q->where('data_vencimento', '<', now()->startOfDay()))
+            ->when($status === 'proximo', fn ($q) => $q->whereBetween('data_vencimento', [now()->startOfDay(), now()->copy()->addDays($prazo)->endOfDay()]))
+            ->orderByRaw('CASE WHEN data_vencimento < ? THEN 0 ELSE 1 END', [now()->toDateString()])
+            ->orderBy('data_vencimento')
+            ->orderBy('empresa_id');
+
+        $pagamentos = $query->paginate(20)->withQueryString();
+
+        $listaVencidos = (clone $baseQuery)
+            ->where('data_vencimento', '<', now()->startOfDay())
+            ->orderBy('data_vencimento')
+            ->limit(12)
+            ->get();
+
+        $listaProximos = (clone $baseQuery)
+            ->whereBetween('data_vencimento', [now()->startOfDay(), now()->copy()->addDays($prazo)->endOfDay()])
+            ->orderBy('data_vencimento')
+            ->limit(12)
+            ->get();
+
+        $listaAcompanhamento = (clone $baseQuery)
+            ->where('data_vencimento', '>', now()->copy()->addDays($prazo)->endOfDay())
+            ->orderBy('data_vencimento')
+            ->limit(12)
+            ->get();
+
+        $proximosDias = [3, 7, 10, 15, 30];
+        $planos = Plano::orderBy('nome')->get();
+
+        return view('assinatura.monitoramento-pagamentos', compact(
+            'titulo',
+            'subtitulo',
+            'breadcrumb',
+            'pagamentos',
+            'totais',
+            'planos',
+            'prazo',
+            'filtrosAtivos',
+            'listaVencidos',
+            'listaProximos',
+            'listaAcompanhamento',
+            'proximosDias'
+        ));
+    }
+
+    public function financas(Request $request): View
+    {
+        $titulo = 'Finanças das Assinaturas';
+        $subtitulo = 'Receita realizada, previsão do mês e leitura por filtros para decisão rápida';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Finanças', null),
+        ]);
+
+        $inicioMes = now()->startOfMonth();
+        $fimMes = now()->endOfMonth();
+        $inicioProximoMes = now()->copy()->addMonthNoOverflow()->startOfMonth();
+        $fimProximoMes = now()->copy()->addMonthNoOverflow()->endOfMonth();
+
+        $filtros = [
+            'empresa' => trim((string) $request->input('empresa', '')),
+            'plano_id' => trim((string) $request->input('plano_id', '')),
+            'status' => trim((string) $request->input('status', '')),
+            'metodo' => trim((string) $request->input('metodo', '')),
+            'periodicidade' => trim((string) $request->input('periodicidade', '')),
+            'mes' => trim((string) $request->input('mes', now()->format('Y-m'))),
+            'meses' => max(1, min(24, (int) $request->input('meses', 6))),
+        ];
+
+        $baseQuery = EmpresaPlanoPagamento::query()
+            ->with(['empresaPlano.plano', 'empresa'])
+            ->when($filtros['empresa'] !== '', fn ($q) => $q->whereHas('empresa', fn ($empresaQuery) => $empresaQuery->where('nome', 'like', '%'.$filtros['empresa'].'%')))
+            ->when($filtros['plano_id'] !== '', fn ($q) => $q->whereHas('empresaPlano', fn ($planoQuery) => $planoQuery->where('plano_id', $filtros['plano_id'])))
+            ->when($filtros['status'] !== '', fn ($q) => $q->where('status', $filtros['status']))
+            ->when($filtros['metodo'] !== '', fn ($q) => $q->where('metodo', $filtros['metodo']))
+            ->when($filtros['periodicidade'] !== '', fn ($q) => $q->where('periodicidade', $filtros['periodicidade']));
+
+        $pagamentosMes = (clone $baseQuery)
+            ->whereBetween('data_vencimento', [$inicioMes, $fimMes])
+            ->get();
+
+        $pagamentosProximoMes = (clone $baseQuery)
+            ->whereBetween('data_vencimento', [$inicioProximoMes, $fimProximoMes])
+            ->get();
+
+        $pagamentosPagos = (clone $baseQuery)
+            ->where('status', 'pago')
+            ->whereBetween('pago_em', [$inicioMes->copy()->startOfDay(), $fimMes->copy()->endOfDay()])
+            ->get();
+
+        $receitaRealizadaMes = (float) $pagamentosPagos->sum('valor');
+        $receitaPrevistaMes = (float) (clone $baseQuery)
+            ->whereBetween('data_vencimento', [$inicioMes, $fimMes])
+            ->whereIn('status', ['pago', 'pendente', 'vencido', 'aguardando_pagamento'])
+            ->sum('valor');
+
+        $receitaPrevistaProximoMes = (float) $pagamentosProximoMes
+            ->whereIn('status', ['pendente', 'vencido', 'aguardando_pagamento'])
+            ->sum('valor');
+
+        $receitaEmAtraso = (float) (clone $baseQuery)
+            ->where('status', '!=', 'pago')
+            ->where('data_vencimento', '<', now()->startOfDay())
+            ->sum('valor');
+
+        $futuroRecebivel = (float) (clone $baseQuery)
+            ->whereIn('status', ['pendente', 'aguardando_pagamento'])
+            ->where('data_vencimento', '>=', now()->startOfDay())
+            ->sum('valor');
+
+        $dadosMensais = EmpresaPlanoPagamento::query()
+            ->where('status', 'pago')
+            ->whereBetween('pago_em', [now()->copy()->subMonths($filtros['meses'] - 1)->startOfMonth(), $fimMes])
+            ->selectRaw("DATE_FORMAT(pago_em, '%Y-%m') as mes")
+            ->selectRaw('SUM(valor) as total')
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->pluck('total', 'mes')
+            ->toArray();
+
+        $labelsMensais = [];
+        $valoresMensais = [];
+        for ($i = $filtros['meses'] - 1; $i >= 0; $i--) {
+            $mes = now()->copy()->subMonths($i)->format('Y-m');
+            $labelsMensais[] = now()->copy()->subMonths($i)->locale('pt_BR')->translatedFormat('M/Y');
+            $valoresMensais[] = (float) ($dadosMensais[$mes] ?? 0);
+        }
+
+        $pagamentosRecentes = (clone $baseQuery)
+            ->whereBetween('data_vencimento', [now()->copy()->subMonths(1)->startOfMonth(), $fimMes])
+            ->orderByDesc('data_vencimento')
+            ->orderByDesc('id')
+            ->paginate(18)
+            ->withQueryString();
+
+        $empresas = Empresa::orderBy('nome')->get();
+        $planos = Plano::orderBy('nome')->get();
+        $metodos = [
+            'pix' => 'PIX',
+            'boleto' => 'Boleto',
+            'cartao' => 'Cartão',
+            'dinheiro' => 'Dinheiro',
+            'transferencia' => 'Transferência',
+            'manual' => 'Manual',
+        ];
+        $periodicidades = [
+            'mensal' => 'Mensal',
+            'anual' => 'Anual',
+        ];
+        $statusList = [
+            'pago' => 'Pago',
+            'pendente' => 'Pendente',
+            'vencido' => 'Vencido',
+            'cancelado' => 'Cancelado',
+            'aguardando_pagamento' => 'Aguardando pagamento',
+        ];
+
+        return view('assinatura.financas', compact(
+            'titulo',
+            'subtitulo',
+            'breadcrumb',
+            'filtros',
+            'empresas',
+            'planos',
+            'metodos',
+            'periodicidades',
+            'statusList',
+            'pagamentosMes',
+            'pagamentosProximoMes',
+            'pagamentosRecentes',
+            'receitaRealizadaMes',
+            'receitaPrevistaMes',
+            'receitaPrevistaProximoMes',
+            'receitaEmAtraso',
+            'futuroRecebivel',
+            'labelsMensais',
+            'valoresMensais'
+        ));
+    }
+
     public function show(EmpresaPlano $assinatura): View
     {
-        $assinatura->load(['empresa', 'plano.itens', 'pagamentos.registradoPor', 'criadoPor']);
+        $assinatura->load(['plano.itens', 'pagamentos.registradoPor', 'pagamentos.empresa', 'criadoPor']);
         $planos = Plano::ativos()->get();
+        $empresa = $this->resolverEmpresaDaAssinatura($assinatura);
 
-        return view('assinatura.show', compact('assinatura', 'planos'));
+        $qtdEstacoes = $empresa ? \App\Models\Estacao::where('empresa_id', $empresa->id)->count() : 0;
+        $qtdVeiculos = $empresa ? \App\Models\Veiculo::where('empresa_id', $empresa->id)->count() : 0;
+        $armazenamentoUsadoBytes = $empresa?->storage_used_bytes ?? 0;
+        $armazenamentoLimiteBytes = $empresa?->storage_limit_bytes ?? 0;
+        $armazenamentoUsadoTexto = $empresa?->storage_used ?? '0 B';
+        $armazenamentoLimiteTexto = $empresa?->storage_formatted ?? '0 B';
+        $armazenamentoPercentual = $empresa?->storage_percent ?? 0;
+
+        return view('assinatura.show', compact(
+            'assinatura',
+            'planos',
+            'qtdEstacoes',
+            'qtdVeiculos',
+            'armazenamentoUsadoBytes',
+            'armazenamentoLimiteBytes',
+            'armazenamentoUsadoTexto',
+            'armazenamentoLimiteTexto',
+            'armazenamentoPercentual'
+        ));
     }
 
     public function regras(): View
@@ -99,11 +346,11 @@ class AssinaturaController extends Controller
         $md = str_replace(["\r\n", "\r"], "\n", $md);
 
         $parts = preg_split('/^##\\s+/m', $md);
-        if (!$parts || count($parts) <= 1) {
+        if (! $parts || count($parts) <= 1) {
             return [[
-                'id'    => 'faq-1',
-                'q'     => 'Como usar este modulo?',
-                'aHtml' => Str::markdown("Edite o arquivo `docs/ajuda-planos.md` e crie perguntas usando titulos `##`."),
+                'id' => 'faq-1',
+                'q' => 'Como usar este modulo?',
+                'aHtml' => Str::markdown('Edite o arquivo `docs/ajuda-planos.md` e crie perguntas usando titulos `##`.'),
             ]];
         }
 
@@ -111,16 +358,20 @@ class AssinaturaController extends Controller
         $faqs = [];
         foreach ($parts as $i => $chunk) {
             $chunk = ltrim($chunk);
-            if ($chunk === '') continue;
+            if ($chunk === '') {
+                continue;
+            }
 
             $lines = explode("\n", $chunk, 2);
             $q = trim($lines[0] ?? '');
             $a = trim($lines[1] ?? '');
-            if ($q === '') continue;
+            if ($q === '') {
+                continue;
+            }
 
             $faqs[] = [
-                'id'    => 'faq-' . ($i + 1),
-                'q'     => $q,
+                'id' => 'faq-'.($i + 1),
+                'q' => $q,
                 'aHtml' => Str::markdown($a === '' ? '_' : $a),
             ];
         }
@@ -131,7 +382,9 @@ class AssinaturaController extends Controller
     /** Exibe formulario para admin atribuir plano. */
     public function criarAtribuir(Request $request)
     {
-        $empresas = Empresa::orderBy('nome')->get();
+        $empresas = Empresa::with(['planoAtivo.plano'])
+            ->orderBy('nome')
+            ->get();
         $planos = Plano::ativos()->get();
         $stripePublicKey = config('services.stripe.key');
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
@@ -148,197 +401,38 @@ class AssinaturaController extends Controller
     public function atribuir(Request $request): RedirectResponse
     {
         $data = $request->validate([
-            'empresa_id'      => 'required|exists:empresas,id',
-            'plano_id'        => 'required|exists:planos,id',
-            'periodicidade'   => 'required|in:mensal,anual',
-            'metodo_cobranca' => 'required|in:dinheiro,pix,cartao,boleto,automatico,manual',
-            'data_inicio'     => 'required|date',
-            'data_vencimento' => 'required|date|after_or_equal:data_inicio',
-            'dia_vencimento'  => 'nullable|integer|min:1|max:28',
-            'observacao'      => 'nullable|string|max:500',
-            'payment_method_id' => 'nullable|string',
+            'empresa_id' => 'required|exists:empresas,id',
+            'plano_id' => 'required|exists:planos,id',
+            'periodicidade' => 'required|in:mensal,anual',
+            'data_inicio' => 'required|date',
+            'data_vencimento' => 'nullable|date|after_or_equal:data_inicio',
+            'dia_vencimento' => 'nullable|integer|min:1|max:28',
+            'observacao' => 'nullable|string|max:500',
         ]);
 
         $empresa = Empresa::findOrFail($data['empresa_id']);
-        $plano   = Plano::findOrFail($data['plano_id']);
-        $metodo  = $data['metodo_cobranca'];
+        $plano = Plano::findOrFail($data['plano_id']);
 
-        // Cria a assinatura
-        $metodoDb = match ($metodo) {
-            'dinheiro' => 'manual',
-            'cartao'   => 'automatico',
-            default    => $metodo,
-        };
+        $assinaturaAtual = $empresa->planoAtivo()->first();
+        if ($assinaturaAtual) {
+            $planoAtual = $assinaturaAtual->plano?->nome ?? 'plano atual';
+
+            return redirect()->back()
+                ->withInput()
+                ->with('error', "A empresa {$empresa->nome} já está vinculada ao {$planoAtual}. Cancele ou encerre a assinatura atual antes de atribuir outro plano.");
+        }
 
         $empresaPlano = $this->planoService->contratar(
-            empresa:         $empresa,
-            plano:           $plano,
-            periodicidade:   $data['periodicidade'],
-            metodoPagamento: $metodoDb,
-            diaVencimento:   $data['dia_vencimento'] ?? null,
+            empresa: $empresa,
+            plano: $plano,
+            periodicidade: $data['periodicidade'],
+            metodoPagamento: 'manual',
+            diaVencimento: $data['dia_vencimento'] ?? null,
             criadoPorUserId: Auth::id(),
         );
 
-        // Se for dinheiro, ja marca como pago
-        if ($metodo === 'dinheiro') {
-            $empresaPlano->pagamentos()->create([
-                'empresa_plano_id'  => $empresaPlano->id,
-                'empresa_id'        => $empresa->id,
-                'valor'             => $empresaPlano->valor_cobrado,
-                'metodo'            => 'dinheiro',
-                'status'            => 'pago',
-                'data_vencimento'   => $data['data_vencimento'],
-                'pago_em'           => now(),
-                'registrado_por_user_id' => Auth::id(),
-            ]);
-            $empresaPlano->update(['status' => 'ativo']);
-
-            return redirect()->route('assinatura.index')
-                ->with('success', 'Plano atribuído e pagamento em dinheiro registrado. Assinatura ativada.');
-        }
-
-        if ($metodo === 'cartao') {
-            $paymentMethodId = $data['payment_method_id'] ?? '';
-            $stripeSecret = config('services.stripe.secret');
-
-            if ($paymentMethodId && $stripeSecret) {
-                try {
-                    \Stripe\Stripe::setApiKey($stripeSecret);
-
-                    $customer = \Stripe\Customer::create([
-                        'email' => $empresa->email ?? 'admin@' . strtolower(str_replace(' ', '', $empresa->nome)) . '.com.br',
-                        'name'  => $empresa->nome,
-                    ]);
-
-                    $intent = \Stripe\PaymentIntent::create([
-                        'amount'             => (int) round($empresaPlano->valor_cobrado * 100),
-                        'currency'           => 'brl',
-                        'payment_method'     => $paymentMethodId,
-                        'customer'           => $customer->id,
-                        'confirm'            => true,
-                        'off_session'        => true,
-                        'payment_method_types' => ['card'],
-                        'description'        => 'Plano: ' . $plano->nome . ' - ' . $empresa->nome,
-                    ]);
-
-                    if ($intent->status === 'succeeded') {
-                        $empresaPlano->pagamentos()->create([
-                            'empresa_plano_id'       => $empresaPlano->id,
-                            'empresa_id'             => $empresa->id,
-                            'valor'                  => $empresaPlano->valor_cobrado,
-                            'metodo'                 => 'cartao',
-                            'status'                 => 'pago',
-                            'data_vencimento'        => $data['data_vencimento'],
-                            'pago_em'                => now(),
-                            'stripe_payment_intent_id' => $intent->id,
-                            'registrado_por_user_id' => Auth::id(),
-                        ]);
-                        $empresaPlano->update(['status' => 'ativo', 'gateway_customer_id' => $customer->id]);
-
-                        return redirect()->route('assinatura.index')
-                            ->with('success', 'Plano atribuído e pagamento aprovado. Assinatura ativada.');
-                    }
-
-                    $empresaPlano->pagamentos()->create([
-                        'empresa_plano_id'       => $empresaPlano->id,
-                        'empresa_id'             => $empresa->id,
-                        'valor'                  => $empresaPlano->valor_cobrado,
-                        'metodo'                 => 'cartao',
-                        'status'                 => $intent->status === 'requires_action' ? 'pendente' : 'cancelado',
-                        'data_vencimento'        => $data['data_vencimento'],
-                        'stripe_payment_intent_id' => $intent->id,
-                        'registrado_por_user_id' => Auth::id(),
-                    ]);
-
-                    return redirect()->route('assinatura.index')
-                        ->with('warning', 'Pagamento requer autenticação. Status: ' . $intent->status);
-                } catch (\Stripe\Exception\ApiErrorException $e) {
-                    return redirect()->route('assinatura.atribuir')
-                        ->with('error', 'Erro no pagamento: ' . $e->getMessage())
-                        ->withInput();
-                } catch (\Throwable $e) {
-                    return redirect()->route('assinatura.atribuir')
-                        ->with('error', 'Erro ao processar pagamento: ' . $e->getMessage())
-                        ->withInput();
-                }
-            }
-
-            return redirect()->route('assinatura.index')
-                ->with('warning', 'Plano atribuído, mas sem método de pagamento configurado.');
-        }
-
-        // Se for cartao, processa pagamento via Stripe
-        if ($metodo === 'cartao') {
-            $paymentMethodId = $data['payment_method_id'] ?? '';
-            $stripeSecret = config('services.stripe.secret');
-
-            if ($paymentMethodId && $stripeSecret) {
-                try {
-                    \Stripe\Stripe::setApiKey($stripeSecret);
-
-                    $customer = \Stripe\Customer::create([
-                        'email' => $empresa->email ?? 'admin@' . strtolower(str_replace(' ', '', $empresa->nome)) . '.com.br',
-                        'name'  => $empresa->nome,
-                    ]);
-
-                    $intent = \Stripe\PaymentIntent::create([
-                        'amount'             => (int) round($empresaPlano->valor_cobrado * 100),
-                        'currency'           => 'brl',
-                        'payment_method'     => $paymentMethodId,
-                        'customer'           => $customer->id,
-                        'confirm'            => true,
-                        'off_session'        => true,
-                        'payment_method_types' => ['card'],
-                        'description'        => 'Plano: ' . $plano->nome . ' - ' . $empresa->nome,
-                    ]);
-
-                    if ($intent->status === 'succeeded') {
-                        $empresaPlano->pagamentos()->create([
-                            'empresa_id'     => $empresa->id,
-                            'valor'          => $empresaPlano->valor_cobrado,
-                            'metodo'         => 'cartao',
-                            'status'         => 'pago',
-                            'data_vencimento'=> $dataVencimento,
-                            'data_pagamento' => now(),
-                            'gateway_id'     => $intent->id,
-                            'confirmado_por_user_id' => Auth::id(),
-                        ]);
-                        $empresaPlano->update(['status' => 'ativo', 'gateway_customer_id' => $customer->id]);
-
-                        return redirect()->route('assinatura.index')
-                            ->with('success', 'Plano atribuído e pagamento aprovado. Assinatura ativada.');
-                    }
-
-                    $empresaPlano->pagamentos()->create([
-                        'empresa_id'     => $empresa->id,
-                        'valor'          => $empresaPlano->valor_cobrado,
-                        'metodo'         => 'cartao',
-                        'status'         => $intent->status === 'requires_action' ? 'pendente' : 'cancelado',
-                        'data_vencimento'=> $dataVencimento,
-                        'gateway_id'     => $intent->id,
-                        'confirmado_por_user_id' => Auth::id(),
-                    ]);
-
-                    return redirect()->route('assinatura.index')
-                        ->with('warning', 'Pagamento requer autenticação. Status: ' . $intent->status);
-                } catch (\Stripe\Exception\ApiErrorException $e) {
-                    return redirect()->route('assinatura.atribuir')
-                        ->with('error', 'Erro no pagamento: ' . $e->getMessage())
-                        ->withInput();
-                } catch (\Throwable $e) {
-                    return redirect()->route('assinatura.atribuir')
-                        ->with('error', 'Erro ao processar pagamento: ' . $e->getMessage())
-                        ->withInput();
-                }
-            }
-
-            return redirect()->route('assinatura.index')
-                ->with('warning', 'Plano atribuído, mas sem método de pagamento configurado.');
-        }
-
-        // Outros metodos — aguardando pagamento
         return redirect()->route('assinatura.index')
-            ->with('success', 'Plano atribuído. Registre o pagamento para ativar a assinatura.');
+            ->with('success', 'Assinatura lançada com sucesso. O pagamento pode ser registrado depois.');
     }
 
     public function alterarStatus(Request $request, EmpresaPlano $assinatura): RedirectResponse
@@ -351,49 +445,132 @@ class AssinaturaController extends Controller
 
     public function registrarPagamento(Request $request, EmpresaPlano $assinatura): RedirectResponse
     {
-        $data = $request->validate([
-            'valor'          => 'required|numeric|min:0.01',
-            'metodo'         => 'required|in:boleto,cartao,pix,dinheiro,transferencia,manual',
-            'status'         => 'required|in:pendente,pago,vencido,cancelado',
-            'data_vencimento'=> 'required|date',
-            'pago_em'        => 'nullable|date',
-            'observacao'     => 'nullable|string|max:500',
-        ]);
+        $baseRules = [
+            'valor' => 'nullable|numeric|min:0.01',
+            'metodo' => 'nullable|in:boleto,cartao,pix,dinheiro,transferencia,manual',
+            'status' => 'nullable|in:pendente,pago,vencido,cancelado',
+            'data_vencimento' => 'nullable|date',
+            'pago_em' => 'nullable|date|required_if:status,pago',
+            'observacao' => 'nullable|string|max:500',
+            'parcelas' => 'nullable|array|min:1',
+            'parcelas.*.valor' => 'required|numeric|min:0.01',
+            'parcelas.*.metodo' => 'required|in:boleto,cartao,pix,dinheiro,transferencia,manual',
+            'parcelas.*.status' => 'required|in:pendente,pago,vencido,cancelado',
+            'parcelas.*.data_vencimento' => 'required|date',
+            'parcelas.*.pago_em' => 'nullable|date|required_if:parcelas.*.status,pago',
+            'parcelas.*.observacao' => 'nullable|string|max:500',
+        ];
 
-        EmpresaPlanoPagamento::create([
-            'empresa_plano_id'      => $assinatura->id,
-            'empresa_id'            => $assinatura->empresa_id,
-            'valor'                 => $data['valor'],
-            'periodicidade'         => $assinatura->periodicidade,
-            'metodo'                => $data['metodo'],
-            'status'                => $data['status'],
-            'data_vencimento'       => $data['data_vencimento'],
-            'pago_em'               => $data['pago_em'] ?? null,
-            'metadados'             => $data['observacao'] ? ['observacao' => $data['observacao']] : null,
-            'registrado_por_user_id'=> Auth::id(),
-        ]);
+        $data = $request->validate($baseRules);
 
-        if ($data['status'] === 'pago' && !$assinatura->estaAtivo()) {
+        $linhas = collect($data['parcelas'] ?? [array_intersect_key($data, array_flip([
+            'valor', 'metodo', 'status', 'data_vencimento', 'pago_em', 'observacao',
+        ]))])
+            ->filter(fn ($item) => filled(data_get($item, 'valor')))
+            ->values();
+
+        foreach ($linhas as $linha) {
+            EmpresaPlanoPagamento::create([
+                'empresa_plano_id' => $assinatura->id,
+                'empresa_id' => $empresa?->id,
+                'valor' => $linha['valor'],
+                'periodicidade' => $assinatura->periodicidade,
+                'metodo' => $linha['metodo'] ?? 'boleto',
+                'status' => $linha['status'] ?? 'pendente',
+                'data_vencimento' => $linha['data_vencimento'],
+                'pago_em' => $linha['pago_em'] ?? null,
+                'metadados' => filled($linha['observacao'] ?? null) ? ['observacao' => $linha['observacao']] : null,
+                'registrado_por_user_id' => Auth::id(),
+            ]);
+        }
+
+        if (collect($linhas)->contains(fn ($linha) => ($linha['status'] ?? 'pendente') === 'pago') && ! $assinatura->estaAtivo()) {
             $assinatura->update(['status' => 'ativo']);
         }
 
-        return redirect()->back()->with('success', 'Pagamento registrado.');
+        return redirect()->back()->with('success', count($linhas) > 1 ? 'Pagamentos registrados.' : 'Pagamento registrado.');
+    }
+
+    public function update(Request $request, EmpresaPlano $assinatura): RedirectResponse
+    {
+        $data = $request->validate([
+            'plano_id' => 'required|exists:planos,id',
+            'periodicidade' => 'required|in:mensal,anual',
+            'status' => 'required|in:ativo,trial,inadimplente,cancelado,aguardando_pagamento',
+            'metodo_cobranca' => 'required|in:boleto,cartao,pix,dinheiro,transferencia,manual',
+            'data_inicio' => 'required|date',
+            'data_vencimento' => 'required|date|after_or_equal:data_inicio',
+            'dia_vencimento' => 'nullable|integer|min:1|max:28',
+            'valor_cobrado' => 'required|numeric|min:0',
+        ]);
+
+        $assinatura->update($data);
+
+        return redirect()->back()->with('success', 'Assinatura atualizada com sucesso.');
+    }
+
+    public function destroy(EmpresaPlano $assinatura): RedirectResponse
+    {
+        $temPagamentos = $assinatura->pagamentos()->exists();
+        if ($temPagamentos) {
+            return redirect()->back()->with('error', 'Não foi possível remover esta assinatura porque ela já possui pagamentos vinculados.');
+        }
+
+        $assinatura->delete();
+
+        return redirect()->route('assinatura.index')->with('success', 'Assinatura removida com sucesso.');
+    }
+
+    public function atualizarPagamento(Request $request, EmpresaPlanoPagamento $pagamento): RedirectResponse
+    {
+        $data = $request->validate([
+            'valor' => 'required|numeric|min:0.01',
+            'metodo' => 'required|in:boleto,cartao,pix,dinheiro,transferencia,manual',
+            'status' => 'required|in:pendente,pago,vencido,cancelado',
+            'data_vencimento' => 'required|date',
+            'pago_em' => 'nullable|date|required_if:status,pago',
+            'gateway_payment_id' => 'nullable|string|max:200',
+            'observacao' => 'nullable|string|max:500',
+        ]);
+
+        $pagamento->update([
+            'valor' => $data['valor'],
+            'metodo' => $data['metodo'],
+            'status' => $data['status'],
+            'data_vencimento' => $data['data_vencimento'],
+            'pago_em' => $data['pago_em'] ?? null,
+            'gateway_payment_id' => $data['gateway_payment_id'] ?? null,
+            'metadados' => $data['observacao'] ? array_merge((array) ($pagamento->metadados ?? []), ['observacao' => $data['observacao']]) : $pagamento->metadados,
+        ]);
+
+        return redirect()->back()->with('success', 'Pagamento atualizado.');
+    }
+
+    public function excluirPagamento(EmpresaPlanoPagamento $pagamento): RedirectResponse
+    {
+        if ($pagamento->status === 'pago') {
+            return redirect()->back()->with('error', 'Não é possível remover um pagamento já pago.');
+        }
+
+        $pagamento->delete();
+
+        return redirect()->back()->with('success', 'Pagamento removido.');
     }
 
     public function confirmarPagamento(Request $request, EmpresaPlanoPagamento $pagamento): RedirectResponse
     {
         $data = $request->validate([
-            'pago_em'            => 'required|date',
-            'metodo'             => 'required|in:boleto,cartao,pix,dinheiro,transferencia,manual',
+            'pago_em' => 'required|date',
+            'metodo' => 'required|in:boleto,cartao,pix,dinheiro,transferencia,manual',
             'gateway_payment_id' => 'nullable|string|max:200',
-            'observacao'         => 'nullable|string|max:500',
+            'observacao' => 'nullable|string|max:500',
         ]);
 
         $this->planoService->ativarAposConfirmacao($pagamento);
 
         $pagamento->update([
-            'metodo'             => $data['metodo'],
-            'pago_em'            => $data['pago_em'],
+            'metodo' => $data['metodo'],
+            'pago_em' => $data['pago_em'],
             'gateway_payment_id' => $data['gateway_payment_id'] ?? null,
         ]);
 
@@ -413,7 +590,7 @@ class AssinaturaController extends Controller
             ->orderByDesc('created_at')
             ->first();
 
-        if (!$pagamento) {
+        if (! $pagamento) {
             return redirect()->route('onboarding.orientacoes');
         }
 
@@ -425,14 +602,14 @@ class AssinaturaController extends Controller
     /** Exibe o plano atual, histórico de pagamentos e lista de planos disponíveis. */
     public function meuPlano(): View
     {
-        $empresa    = Auth::user()->empresa;
-        if (!$empresa) {
+        $empresa = Auth::user()->empresa;
+        if (! $empresa) {
             return redirect()->route('home')->with('error', 'Seu usuario nao esta vinculado a uma empresa.');
         }
 
         $assinatura = $empresa->planoAtivo()->with('plano.itens')->first();
-        $planos     = Plano::ativos()->with('itens')->get();
-        $historico  = $empresa->pagamentosPlano()
+        $planos = Plano::ativos()->with('itens')->get();
+        $historico = $empresa->pagamentosPlano()
             ->with('empresaPlano.plano')
             ->orderByDesc('data_vencimento')
             ->paginate(10);
@@ -446,19 +623,19 @@ class AssinaturaController extends Controller
      */
     public function prepararContratacao(Request $request): View|RedirectResponse
     {
-        $planoId       = $request->query('plano_id');
+        $planoId = $request->query('plano_id');
         $periodicidade = $request->query('periodicidade', 'mensal');
 
-        if (!$planoId) {
+        if (! $planoId) {
             return redirect()->route('assinatura.meu-plano');
         }
 
-        $plano   = Plano::with('itens')->findOrFail($planoId);
+        $plano = Plano::with('itens')->findOrFail($planoId);
         $empresa = Auth::user()->empresa;
 
-        $totalVeiculos    = $empresa ? \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count() : 0;
-        $assinaturaAtual  = $empresa?->planoAtivo()->with('plano')->first();
-        $erroDowngrade    = null;
+        $totalVeiculos = $empresa ? \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count() : 0;
+        $assinaturaAtual = $empresa?->planoAtivo()->with('plano')->first();
+        $erroDowngrade = null;
 
         $cartoesSalvos = [];
         if ($empresa && $empresa->gateway_customer_id) {
@@ -472,18 +649,33 @@ class AssinaturaController extends Controller
         return view('assinatura.contratar', compact('plano', 'periodicidade', 'empresa', 'totalVeiculos', 'assinaturaAtual', 'erroDowngrade', 'cartoesSalvos'));
     }
 
+    private function resolverEmpresaDaAssinatura(EmpresaPlano $assinatura): ?Empresa
+    {
+        $empresa = $assinatura->pagamentos->first()?->empresa;
+        if ($empresa) {
+            return $empresa;
+        }
+
+        $empresaId = $assinatura->pagamentos()->value('empresa_id');
+        if ($empresaId) {
+            return Empresa::find($empresaId);
+        }
+
+        return null;
+    }
+
     /** Processa contratação interna: cria assinatura + pagamento pendente. */
     public function contratar(Request $request): RedirectResponse|\Illuminate\Http\JsonResponse
     {
         $data = $request->validate([
-            'plano_id'             => 'required|exists:planos,id',
-            'periodicidade'        => 'required|in:mensal,anual',
-            'metodo_pagamento'     => 'required|in:pix,cartao',
+            'plano_id' => 'required|exists:planos,id',
+            'periodicidade' => 'required|in:mensal,anual',
+            'metodo_pagamento' => 'required|in:pix,cartao',
             'renovacao_automatica' => 'nullable|boolean',
-            'dia_vencimento'       => 'nullable|integer|min:1|max:28',
+            'dia_vencimento' => 'nullable|integer|min:1|max:28',
         ], [
-            'plano_id.required'        => 'Selecione um plano.',
-            'metodo_pagamento.required'=> 'Escolha um método de pagamento.',
+            'plano_id.required' => 'Selecione um plano.',
+            'metodo_pagamento.required' => 'Escolha um método de pagamento.',
         ]);
 
         $empresa = Auth::user()->empresa;
@@ -502,6 +694,7 @@ class AssinaturaController extends Controller
             if ($message) {
                 return redirect($url)->with('success', $message);
             }
+
             return redirect($url);
         };
 
@@ -512,15 +705,16 @@ class AssinaturaController extends Controller
             }
 
             $valorAtualTotal = (float) ($assinaturaAtual->valor_cobrado ?? 0);
-            $valorNovoTotal  = (float) $this->planoService->valorTotalPlano($plano, (string) $data['periodicidade']);
+            $valorNovoTotal = (float) $this->planoService->valorTotalPlano($plano, (string) $data['periodicidade']);
 
             if ((string) $assinaturaAtual->periodicidade === 'anual' && (string) $data['periodicidade'] === 'mensal') {
                 $this->agendarMudancaPlano(
-                    assinatura:    $assinaturaAtual,
-                    proximoPlano:  $plano,
+                    assinatura: $assinaturaAtual,
+                    proximoPlano: $plano,
                     periodicidade: $data['periodicidade'],
-                    tipo:          'downgrade',
+                    tipo: 'downgrade',
                 );
+
                 return $jsonRedirect(route('assinatura.meu-plano'), 'Mudanca para mensal agendada para a proxima renovacao anual.');
             }
 
@@ -528,21 +722,23 @@ class AssinaturaController extends Controller
                 $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
                 if ($excedentes->isNotEmpty()) {
                     session([
-                        'downgrade_plano_id'       => $data['plano_id'],
-                        'downgrade_periodicidade'  => $data['periodicidade'],
-                        'downgrade_metodo'         => $data['metodo_pagamento'],
+                        'downgrade_plano_id' => $data['plano_id'],
+                        'downgrade_periodicidade' => $data['periodicidade'],
+                        'downgrade_metodo' => $data['metodo_pagamento'],
                         'downgrade_dia_vencimento' => $data['dia_vencimento'],
-                        'downgrade_origem'         => 'agendar',
+                        'downgrade_origem' => 'agendar',
                     ]);
+
                     return $jsonRedirect(route('assinatura.downgrade'));
                 }
 
                 $this->agendarMudancaPlano(
-                    assinatura:    $assinaturaAtual,
-                    proximoPlano:  $plano,
+                    assinatura: $assinaturaAtual,
+                    proximoPlano: $plano,
                     periodicidade: $data['periodicidade'],
-                    tipo:          'downgrade',
+                    tipo: 'downgrade',
                 );
+
                 return $jsonRedirect(route('assinatura.meu-plano'), 'Downgrade agendado para a proxima renovacao.');
             }
 
@@ -557,16 +753,17 @@ class AssinaturaController extends Controller
 
             try {
                 $this->planoService->criarCobrancaUpgrade(
-                    assinatura:        $assinaturaAtual,
-                    novoPlano:         $plano,
+                    assinatura: $assinaturaAtual,
+                    novoPlano: $plano,
                     novaPeriodicidade: $data['periodicidade'],
-                    metodoPagamento:   $data['metodo_pagamento'],
-                    criadoPorUserId:   Auth::id(),
+                    metodoPagamento: $data['metodo_pagamento'],
+                    criadoPorUserId: Auth::id(),
                 );
             } catch (\Throwable $e) {
                 if ($request->expectsJson() || $request->ajax()) {
                     return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
                 }
+
                 return back()->withErrors(['metodo_pagamento' => $e->getMessage()])->withInput();
             }
 
@@ -577,35 +774,37 @@ class AssinaturaController extends Controller
 
         if ($excedentes->isNotEmpty()) {
             session([
-                'downgrade_plano_id'       => $data['plano_id'],
-                'downgrade_periodicidade'  => $data['periodicidade'],
-                'downgrade_metodo'         => $data['metodo_pagamento'],
+                'downgrade_plano_id' => $data['plano_id'],
+                'downgrade_periodicidade' => $data['periodicidade'],
+                'downgrade_metodo' => $data['metodo_pagamento'],
                 'downgrade_dia_vencimento' => $data['dia_vencimento'],
-                'downgrade_origem'         => 'assinatura',
+                'downgrade_origem' => 'assinatura',
             ]);
+
             return $jsonRedirect(route('assinatura.downgrade'));
         }
 
         $assinatura = $this->planoService->contratar(
-            empresa:             $empresa,
-            plano:               $plano,
-            periodicidade:       $data['periodicidade'],
-            metodoPagamento:     $data['metodo_pagamento'],
-            diaVencimento:       $data['dia_vencimento'] ?? null,
-            criadoPorUserId:     Auth::id(),
-            renovacaoAutomatica: !empty($data['renovacao_automatica']),
+            empresa: $empresa,
+            plano: $plano,
+            periodicidade: $data['periodicidade'],
+            metodoPagamento: $data['metodo_pagamento'],
+            diaVencimento: $data['dia_vencimento'] ?? null,
+            criadoPorUserId: Auth::id(),
+            renovacaoAutomatica: ! empty($data['renovacao_automatica']),
         );
 
         $pagamento = $assinatura?->pagamentos()->where('status', 'pendente')->first();
 
         if ($request->expectsJson() || $request->ajax()) {
-            if (!$pagamento) {
+            if (! $pagamento) {
                 return response()->json(['success' => false, 'message' => 'Erro ao criar pagamento.'], 422);
             }
+
             return response()->json([
-                'success'      => true,
+                'success' => true,
                 'pagamento_id' => $pagamento->id,
-                'message'      => 'Assinatura criada. Realize o pagamento.',
+                'message' => 'Assinatura criada. Realize o pagamento.',
             ]);
         }
 
@@ -624,7 +823,7 @@ class AssinaturaController extends Controller
             ? EmpresaPlanoPagamento::where('empresa_id', $empresa->id)->with('empresaPlano.plano.itens')->find($pagamentoId)
             : null;
 
-        if (!$pagamento) {
+        if (! $pagamento) {
             $pagamento = $empresa->pagamentosPlano()
                 ->with('empresaPlano.plano.itens')
                 ->where('status', 'pago')
@@ -632,13 +831,13 @@ class AssinaturaController extends Controller
                 ->first();
         }
 
-        if (!$pagamento) {
+        if (! $pagamento) {
             return redirect()->route('assinatura.meu-plano')
                 ->with('error', 'Nenhum pagamento encontrado.');
         }
 
         $assinatura = $pagamento->empresaPlano;
-        $plano      = $assinatura?->plano;
+        $plano = $assinatura?->plano;
 
         return view('assinatura.concluido', compact('pagamento', 'assinatura', 'plano', 'empresa'));
     }
@@ -648,14 +847,14 @@ class AssinaturaController extends Controller
     {
         $planoId = session('downgrade_plano_id');
 
-        if (!$planoId) {
+        if (! $planoId) {
             return redirect()->route('assinatura.meu-plano');
         }
 
-        $empresa    = Auth::user()->empresa;
-        $plano      = Plano::findOrFail($planoId);
+        $empresa = Auth::user()->empresa;
+        $plano = Plano::findOrFail($planoId);
         $excedentes = $this->planoService->veiculosExcedentes($empresa, $plano);
-        $todos      = $this->planoService->veiculosAtivos($empresa);
+        $todos = $this->planoService->veiculosAtivos($empresa);
 
         return view('assinatura.downgrade', compact('plano', 'excedentes', 'todos'));
     }
@@ -664,15 +863,15 @@ class AssinaturaController extends Controller
     {
         $planoId = session('downgrade_plano_id');
 
-        if (!$planoId) {
+        if (! $planoId) {
             return redirect()->route('assinatura.meu-plano');
         }
 
-        $plano   = Plano::findOrFail($planoId);
+        $plano = Plano::findOrFail($planoId);
         $empresa = Auth::user()->empresa;
 
         $data = $request->validate([
-            'veiculos_desativar'   => 'required|array|min:1',
+            'veiculos_desativar' => 'required|array|min:1',
             'veiculos_desativar.*' => 'integer|exists:veiculos,id',
         ], [
             'veiculos_desativar.required' => 'Selecione ao menos um veículo para desativar.',
@@ -697,10 +896,10 @@ class AssinaturaController extends Controller
             $assinaturaAtual = $empresa->planoAtivo()->firstOrFail();
 
             $this->agendarMudancaPlano(
-                assinatura:      $assinaturaAtual,
-                proximoPlano:    $plano,
-                periodicidade:   (string) session('downgrade_periodicidade', 'mensal'),
-                tipo:            'downgrade',
+                assinatura: $assinaturaAtual,
+                proximoPlano: $plano,
+                periodicidade: (string) session('downgrade_periodicidade', 'mensal'),
+                tipo: 'downgrade',
                 metadadosExtras: [
                     'veiculos_desativar' => array_values($data['veiculos_desativar']),
                 ],
@@ -708,13 +907,13 @@ class AssinaturaController extends Controller
         } else {
             // Fluxo original: contratação/alteração imediata (cria nova assinatura + cobrança pendente).
             $this->planoService->contratar(
-                empresa:          $empresa,
-                plano:            $plano,
-                periodicidade:    session('downgrade_periodicidade', 'mensal'),
-                metodoPagamento:  session('downgrade_metodo', 'boleto'),
-                diaVencimento:    session('downgrade_dia_vencimento'),
-                criadoPorUserId:  Auth::id(),
-                veiculosDesativar:$data['veiculos_desativar'],
+                empresa: $empresa,
+                plano: $plano,
+                periodicidade: session('downgrade_periodicidade', 'mensal'),
+                metodoPagamento: session('downgrade_metodo', 'boleto'),
+                diaVencimento: session('downgrade_dia_vencimento'),
+                criadoPorUserId: Auth::id(),
+                veiculosDesativar: $data['veiculos_desativar'],
             );
         }
 
@@ -736,20 +935,20 @@ class AssinaturaController extends Controller
             // Reutiliza intent existente se ainda não expirado
             if ($pagamento->stripe_payment_intent_id && $pagamento->pix_expira_em?->isFuture()) {
                 return response()->json([
-                    'qr_image'   => $pagamento->pix_qr_code_image,
-                    'qr_text'    => $pagamento->pix_qr_code_text,
-                    'expira_em'  => $pagamento->pix_expira_em->toIso8601String(),
-                    'valor'      => number_format($pagamento->valor, 2, ',', '.'),
+                    'qr_image' => $pagamento->pix_qr_code_image,
+                    'qr_text' => $pagamento->pix_qr_code_text,
+                    'expira_em' => $pagamento->pix_expira_em->toIso8601String(),
+                    'valor' => number_format($pagamento->valor, 2, ',', '.'),
                 ]);
             }
 
             $pagamento = $this->stripePixService->criarIntentPix($pagamento);
 
             return response()->json([
-                'qr_image'   => $pagamento->pix_qr_code_image,
-                'qr_text'    => $pagamento->pix_qr_code_text,
-                'expira_em'  => $pagamento->pix_expira_em?->toIso8601String(),
-                'valor'      => number_format($pagamento->valor, 2, ',', '.'),
+                'qr_image' => $pagamento->pix_qr_code_image,
+                'qr_text' => $pagamento->pix_qr_code_text,
+                'expira_em' => $pagamento->pix_expira_em?->toIso8601String(),
+                'valor' => number_format($pagamento->valor, 2, ',', '.'),
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -765,9 +964,9 @@ class AssinaturaController extends Controller
         $pagamento->refresh();
 
         return response()->json([
-            'status'   => $pagamento->status,
-            'pago'     => $pagamento->status === 'pago',
-            'pago_em'  => $pagamento->pago_em?->format('d/m/Y H:i'),
+            'status' => $pagamento->status,
+            'pago' => $pagamento->status === 'pago',
+            'pago_em' => $pagamento->pago_em?->format('d/m/Y H:i'),
         ]);
     }
 
@@ -778,21 +977,21 @@ class AssinaturaController extends Controller
         abort_unless($empresa && $pagamento->empresa_id === $empresa->id && $pagamento->status === 'pendente', 403);
 
         $data = $request->validate([
-            'metodo'               => 'required|in:pix,cartao',
+            'metodo' => 'required|in:pix,cartao',
             'renovacao_automatica' => 'nullable|boolean',
         ]);
 
-        $renovacaoAutomatica = !empty($data['renovacao_automatica']);
+        $renovacaoAutomatica = ! empty($data['renovacao_automatica']);
 
         $pagamento->update([
-            'metodo'               => $data['metodo'],
-            'pix_chave'            => $data['metodo'] === 'pix' ? env('PIX_CHAVE') : null,
+            'metodo' => $data['metodo'],
+            'pix_chave' => $data['metodo'] === 'pix' ? env('PIX_CHAVE') : null,
             'instrucoes_pagamento' => $this->instrucoesPagamentoTexto($data['metodo'], $pagamento->valor, $renovacaoAutomatica),
         ]);
 
         // Atualiza metodo_cobranca e renovacao_automatica na assinatura
         $pagamento->empresaPlano?->update([
-            'metodo_cobranca'      => $data['metodo'],
+            'metodo_cobranca' => $data['metodo'],
             'renovacao_automatica' => $data['metodo'] === 'cartao' && $renovacaoAutomatica,
         ]);
 
@@ -809,30 +1008,31 @@ class AssinaturaController extends Controller
     ): void {
         $metadados = is_array($assinatura->metadados) ? $assinatura->metadados : [];
 
-        if (!empty($metadadosExtras)) {
+        if (! empty($metadadosExtras)) {
             $metadados['mudanca'] = array_merge($metadados['mudanca'] ?? [], $metadadosExtras);
         }
 
         $assinatura->update([
-            'proximo_plano_id'      => $proximoPlano->id,
+            'proximo_plano_id' => $proximoPlano->id,
             'proxima_periodicidade' => $periodicidade,
-            'mudanca_tipo'          => $tipo,
-            'mudanca_efetiva_em'    => $assinatura->data_vencimento,
+            'mudanca_tipo' => $tipo,
+            'mudanca_efetiva_em' => $assinatura->data_vencimento,
             'mudanca_solicitada_em' => now(),
-            'metadados'             => $metadados,
+            'metadados' => $metadados,
         ]);
     }
 
     private function instrucoesPagamentoTexto(string $metodo, float $valor, bool $renovacaoAutomatica = false): string
     {
-        $v = 'R$ ' . number_format($valor, 2, ',', '.');
+        $v = 'R$ '.number_format($valor, 2, ',', '.');
+
         return match ($metodo) {
-            'pix'    => "Pague {$v} via PIX usando a chave abaixo. O pagamento é instantâneo.",
+            'pix' => "Pague {$v} via PIX usando a chave abaixo. O pagamento é instantâneo.",
             'boleto' => "Boleto de {$v}. Você receberá o boleto por e-mail em até 24 horas.",
             'cartao' => $renovacaoAutomatica
                 ? "Cartão de crédito {$v} com renovação automática. Nossa equipe entrará em contato para salvar o cartão."
                 : "Cartão de crédito {$v}. Nossa equipe entrará em contato para processar o pagamento.",
-            default  => "Pagamento de {$v}. Entre em contato com nosso suporte para finalizar.",
+            default => "Pagamento de {$v}. Entre em contato com nosso suporte para finalizar.",
         };
     }
 
@@ -856,14 +1056,16 @@ class AssinaturaController extends Controller
 
             // Cria ou reutiliza Customer
             $customerId = $empresa->gateway_customer_id ?? null;
-            if (!$customerId) {
+            if (! $customerId) {
                 $emailEmpresa = filter_var($empresa->email ?? '', FILTER_VALIDATE_EMAIL) ? $empresa->email : null;
                 $emailUsuario = $empresa->users()->whereNotNull('email')->get()
                     ->first(fn ($u) => filter_var($u->email, FILTER_VALIDATE_EMAIL))?->email;
                 $emailFinal = $emailEmpresa ?? $emailUsuario ?? null;
 
                 $customerData = ['name' => $empresa->nome, 'metadata' => ['empresa_id' => $empresa->id]];
-                if ($emailFinal) $customerData['email'] = $emailFinal;
+                if ($emailFinal) {
+                    $customerData['email'] = $emailFinal;
+                }
 
                 $customer = Customer::create($customerData);
                 $customerId = $customer->id;
@@ -871,14 +1073,14 @@ class AssinaturaController extends Controller
             }
 
             $intentParams = [
-                'amount'               => $valorCentavos,
-                'currency'             => 'brl',
+                'amount' => $valorCentavos,
+                'currency' => 'brl',
                 'payment_method_types' => ['card'],
-                'customer'             => $customerId,
-                'description'          => 'Plano ' . ($pagamento->empresaPlano?->plano?->nome ?? 'DeCars'),
-                'metadata'             => [
+                'customer' => $customerId,
+                'description' => 'Plano '.($pagamento->empresaPlano?->plano?->nome ?? 'DeCars'),
+                'metadata' => [
                     'pagamento_id' => $pagamento->id,
-                    'empresa_id'   => $pagamento->empresa_id,
+                    'empresa_id' => $pagamento->empresa_id,
                 ],
             ];
 
@@ -896,8 +1098,8 @@ class AssinaturaController extends Controller
 
             return response()->json([
                 'client_secret' => $intent->client_secret,
-                'intent_id'     => $intent->id,
-                'stripe_key'    => config('services.stripe.key'),
+                'intent_id' => $intent->id,
+                'stripe_key' => config('services.stripe.key'),
             ]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 422);
@@ -917,16 +1119,16 @@ class AssinaturaController extends Controller
             $intent = PaymentIntent::retrieve($request->payment_intent_id);
 
             if ($intent->status !== 'succeeded') {
-                return response()->json(['error' => 'Pagamento não confirmado. Status: ' . $intent->status], 422);
+                return response()->json(['error' => 'Pagamento não confirmado. Status: '.$intent->status], 422);
             }
 
             $this->planoService->ativarAposConfirmacao($pagamento);
 
             $pagamento->update([
-                'status'             => 'pago',
-                'pago_em'            => now(),
+                'status' => 'pago',
+                'pago_em' => now(),
                 'gateway_payment_id' => $intent->id,
-                'metodo'             => 'cartao',
+                'metodo' => 'cartao',
             ]);
 
             $redirect = route('assinatura.concluido', ['pagamento' => $pagamento->id]);
@@ -947,22 +1149,23 @@ class AssinaturaController extends Controller
             return response()->json(['success' => false, 'error' => 'Apenas pagamentos pendentes podem ser cancelados.'], 400);
         }
         $pagamento->update(['status' => 'cancelado', 'observacao' => 'Cancelado pelo usuário']);
+
         return response()->json(['success' => true]);
     }
 
     public function cancelar(): RedirectResponse
     {
-        $empresa    = Auth::user()->empresa;
+        $empresa = Auth::user()->empresa;
         abort_unless($empresa, 403);
         $assinatura = $empresa->planoAtivo()->firstOrFail();
 
         $assinatura->update([
-            'mudanca_tipo'          => 'cancelamento',
-            'mudanca_efetiva_em'    => $assinatura->data_vencimento,
+            'mudanca_tipo' => 'cancelamento',
+            'mudanca_efetiva_em' => $assinatura->data_vencimento,
             'mudanca_solicitada_em' => now(),
-            'renovacao_automatica'  => false,
+            'renovacao_automatica' => false,
             // Cancelamento prevalece sobre qualquer downgrade agendado.
-            'proximo_plano_id'      => null,
+            'proximo_plano_id' => null,
             'proxima_periodicidade' => null,
         ]);
 
@@ -972,15 +1175,15 @@ class AssinaturaController extends Controller
 
     public function removerMudancaAgendada(): RedirectResponse
     {
-        $empresa    = Auth::user()->empresa;
+        $empresa = Auth::user()->empresa;
         abort_unless($empresa, 403);
         $assinatura = $empresa->planoAtivo()->firstOrFail();
 
         $assinatura->update([
-            'proximo_plano_id'      => null,
+            'proximo_plano_id' => null,
             'proxima_periodicidade' => null,
-            'mudanca_tipo'          => null,
-            'mudanca_efetiva_em'    => null,
+            'mudanca_tipo' => null,
+            'mudanca_efetiva_em' => null,
             'mudanca_solicitada_em' => null,
         ]);
 
@@ -996,14 +1199,14 @@ class AssinaturaController extends Controller
 
     public function renovar(Request $request): RedirectResponse
     {
-        $empresa    = Auth::user()->empresa;
+        $empresa = Auth::user()->empresa;
         $assinatura = $empresa->planoAtivo()->firstOrFail();
 
         $data = $request->validate([
-            'periodicidade'        => 'required|in:mensal,anual',
-            'metodo_cobranca'      => 'required|in:pix,cartao,manual',
+            'periodicidade' => 'required|in:mensal,anual',
+            'metodo_cobranca' => 'required|in:pix,cartao,manual',
             'renovacao_automatica' => 'nullable|boolean',
-            'dia_vencimento'       => 'nullable|integer|min:1|max:28',
+            'dia_vencimento' => 'nullable|integer|min:1|max:28',
         ]);
 
         if ($assinatura->mudanca_tipo === 'cancelamento') {
@@ -1025,14 +1228,14 @@ class AssinaturaController extends Controller
         }
 
         $this->planoService->contratar(
-            empresa:             $empresa,
-            plano:               $planoRenovar,
-            periodicidade:       $periodicidadeRenovar,
-            metodoPagamento:     $data['metodo_cobranca'],
-            diaVencimento:       $data['dia_vencimento'] ?? null,
-            criadoPorUserId:     Auth::id(),
-            veiculosDesativar:   $veiculosDesativar,
-            renovacaoAutomatica: !empty($data['renovacao_automatica']),
+            empresa: $empresa,
+            plano: $planoRenovar,
+            periodicidade: $periodicidadeRenovar,
+            metodoPagamento: $data['metodo_cobranca'],
+            diaVencimento: $data['dia_vencimento'] ?? null,
+            criadoPorUserId: Auth::id(),
+            veiculosDesativar: $veiculosDesativar,
+            renovacaoAutomatica: ! empty($data['renovacao_automatica']),
         );
 
         return redirect()->route('assinatura.meu-plano')

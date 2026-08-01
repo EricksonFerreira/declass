@@ -239,7 +239,7 @@
                     <i class="fas fa-arrow-up"></i>
                     <div>
                         <strong>R$ {{ number_format($totalEstornos, 2, ',', '.') }}</strong>
-                        <span>{{ $transacoesEstorno->count() }} estorno(s)</span>
+                        <span>{{ $transacoesEstorno->count() }} devolução(ões)</span>
                     </div>
                 </div>
                 @if($transacoesPendentes->count() > 0)
@@ -305,7 +305,7 @@
             @else
                 <div class="rs-empty">
                     <i class="fas fa-inbox"></i>
-                    <span>Nenhuma transferencia vinculada.</span>
+                    <span>Nenhuma movimentação financeira vinculada.</span>
                 </div>
             @endif
         </div>

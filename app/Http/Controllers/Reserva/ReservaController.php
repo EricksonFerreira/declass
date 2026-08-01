@@ -15,6 +15,7 @@ use App\Actions\Reserva\Pagamento\Calcao\SalvarCartaoCalcaoAction;
 use App\Actions\Reserva\Pagamento\ConfirmarPagamentoDinheiroAction;
 use App\Actions\Reserva\Pagamento\ExibirFormularioPagamentoAction;
 use App\Actions\Reserva\Pagamento\RealizarPagamentoAction;
+use App\Actions\Reserva\Exibir\ExibirReservaComumAction;
 use App\Actions\Reserva\Renovacao\RenovarReservaComumAction;
 use App\DTO\BreadCrumbItem;
 use App\Enums\StatusReservaEnum;
@@ -1090,7 +1091,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             abort(403, 'Sem permissao para acessar esta acao.');
         }
 
-        return view('reserva.show', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
+        return app(ExibirReservaComumAction::class)->handle(
+            app(ReservaResolver::class)->resolver($codigoReserva->codigo ?? $reserva->id),
+            request()
+        );
     }
 
     private function reservasUnificadasAdmin($user, int $perPage)
@@ -3367,7 +3371,6 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             }
 
             $this->reservaService->checkOutRealizado($reserva_id);
-            $this->liberarCalcaoAposCheckout($reserva);
             $this->reservaService->adicionaLog(
                 $reserva_id,
                 Auth::id(),

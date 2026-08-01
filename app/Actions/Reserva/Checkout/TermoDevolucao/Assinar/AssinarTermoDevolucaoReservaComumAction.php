@@ -21,7 +21,7 @@ class AssinarTermoDevolucaoReservaComumAction
     {
         $checkout = $reserva->contratoCheckout;
         if (! $checkout) {
-            throw new \RuntimeException('Check-out não encontrado para esta reserva.');
+            throw new \RuntimeException('Check-out nÃ£o encontrado para esta reserva.');
         }
 
         $checkout->assinatura = $assinaturaBase64;
@@ -88,7 +88,6 @@ class AssinarTermoDevolucaoReservaComumAction
                 'acao' => 'Termo de devolução assinado',
                 'contrato_checkout_id' => $checkout->id,
                 'pdf_path' => $checkout->pdf_path,
-                'pdf_hash' => $checkout->pdf_hash,
                 'data_assinatura' => optional($checkout->data_assinatura)->toDateTimeString(),
                 'signatario_nome' => $checkout->signatario_nome,
             ],
@@ -100,11 +99,11 @@ class AssinarTermoDevolucaoReservaComumAction
             (int) $reserva->id,
             (int) auth()->id(),
             [
-                'acao' => 'Checkout colocado em conferência',
+                'acao' => 'Checkout colocado em conferÃªncia',
                 'contrato_checkout_id' => $checkout->id,
-                'status_operacional' => 'Em conferência',
+                'status_operacional' => 'Em conferÃªncia',
             ],
-            'Checkout em conferência',
+            'Checkout em conferÃªncia',
             'info'
         );
     }

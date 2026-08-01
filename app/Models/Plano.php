@@ -6,10 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use App\Models\Concerns\HasAuditColumns;
 
 class Plano extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
     protected $table = 'planos';
 
     protected $fillable = [
@@ -19,6 +20,7 @@ class Plano extends Model
         'valor_mensal',
         'valor_anual',
         'limite_veiculos',
+        'limite_armazenamento_mb',
         'limite_usuarios',
         'limite_permissoes_por_regra',
         'site_vendas',
@@ -29,6 +31,10 @@ class Plano extends Model
         'ativo',
         'destaque',
         'ordem',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -42,6 +48,9 @@ class Plano extends Model
         'ativo'          => 'boolean',
         'destaque'       => 'boolean',
         'limite_permissoes_por_regra' => 'integer',
+        'limite_armazenamento_mb' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function itens(): HasMany
@@ -95,6 +104,11 @@ class Plano extends Model
     public function getLimiteUsuariosTextoAttribute(): string
     {
         return $this->limite_usuarios === null ? 'Ilimitado' : (string) $this->limite_usuarios;
+    }
+
+    public function getLimiteArmazenamentoTextoAttribute(): string
+    {
+        return $this->limite_armazenamento_mb === null ? 'Ilimitado' : (string) $this->limite_armazenamento_mb . ' MB';
     }
 
     /**

@@ -154,49 +154,6 @@
             @endforeach
         </div>
     </div>
-
-    {{-- Calção --}}
-    @if(isset($reserva->calcao))
-    @php $calcao = $reserva->calcao; @endphp
-    @if($calcao || ($ci->assinado === 'S'))
-    <div class="rs-card">
-        <div class="rs-card__header">
-            <i class="fas fa-shield-alt rs-card__icon" style="color:#6f42c1"></i>
-            <h2>Calção no Cartão</h2>
-        </div>
-        @if($calcao)
-            @php
-                $calcaoBadge = match($calcao->status) {
-                    'autorizado' => '#28a745', 'capturado' => '#dc3545',
-                    'parcialmente_capturado' => '#fd7e14', 'cancelado' => '#6c757d',
-                    'falhou' => '#dc3545', default => '#17a2b8',
-                };
-            @endphp
-            <div class="rs-info-rows">
-                <div class="rs-info-row">
-                    <span>Status</span>
-                    <strong style="color:{{ $calcaoBadge }}">{{ $calcao->label_status }}</strong>
-                </div>
-                <div class="rs-info-row">
-                    <span>Valor Autorizado</span>
-                    <strong>R$ {{ number_format((float)$calcao->valor_autorizado, 2, ',', '.') }}</strong>
-                </div>
-                @if($calcao->valor_capturado)
-                <div class="rs-info-row">
-                    <span>Valor Capturado</span>
-                    <strong>R$ {{ number_format((float)$calcao->valor_capturado, 2, ',', '.') }}</strong>
-                </div>
-                @endif
-                <div class="rs-info-row">
-                    <span>Regra Aplicada</span>
-                    <strong>{{ $calcao->tipo_regra_aplicada }} / {{ $calcao->origem_regra_aplicada }}</strong>
-                </div>
-            </div>
-        @endif
-    </div>
-    @endif
-    @endif
-
 </div>
 @else
     <div class="rs-empty py-5">

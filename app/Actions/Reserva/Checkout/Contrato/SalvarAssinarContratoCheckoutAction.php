@@ -75,7 +75,7 @@ class SalvarAssinarContratoCheckoutAction
             $co = $reserva->contratoCheckout;
 
             if (! $co) {
-                return response()->json(['error' => 'Check-out não registrado.'], 404);
+                return response()->json(['error' => 'Check-out nÃƒÆ’Ã‚Â£o registrado.'], 404);
             }
 
             if ($modo === 'upload') {
@@ -92,14 +92,13 @@ class SalvarAssinarContratoCheckoutAction
                     (int) $reserva->id,
                     (int) auth()->id(),
                     [
-                        'acao' => 'Termo de devolução assinado',
+                        'acao' => 'Termo de devoluÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o assinado',
                         'contrato_checkout_id' => $co->id,
                         'pdf_path' => $caminhoArquivo,
-                        'pdf_hash' => $co->pdf_hash,
                         'data_assinatura' => optional($co->data_assinatura)->toDateTimeString(),
                         'signatario_nome' => $co->signatario_nome,
                     ],
-                    'Termo de devolução assinado',
+                    'Termo de devoluÃƒÆ’Ã‚Â§ÃƒÆ’Ã‚Â£o assinado',
                     'success'
                 );
 

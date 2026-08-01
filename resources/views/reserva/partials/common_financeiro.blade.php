@@ -1,3 +1,81 @@
+@php
+    $norm = fn ($value) => strtolower(trim((string) $value));
+    $infoPagamento = fn ($transacao) => is_array($transacao->info_pagamento ?? null) ? $transacao->info_pagamento : [];
+
+    $isCaucao = function ($transacao) use ($norm, $infoPagamento) {
+        return $norm($transacao->metodo_pagamento ?? '') === 'caucao'
+            || $norm(data_get($infoPagamento($transacao), 'tipo')) === 'calcao'
+            || str_contains($norm(data_get($infoPagamento($transacao), 'acao')), 'caucao');
+    };
+
+    $isDevolucaoCaucao = function ($transacao) use ($norm, $isCaucao) {
+        if (! $isCaucao($transacao)) {
+            return false;
+        }
+
+        $status = $norm($transacao->status ?? '');
+
+        return (float) ($transacao->valor ?? 0) < 0
+            || in_array($status, ['refunded', 'refund', 'reembolsado', 'cancelled', 'canceled', 'cancelado', 'cancelada', 'devolvido'], true);
+    };
+
+    $isRecebimentoCaucao = fn ($transacao) => $isCaucao($transacao) && ! $isDevolucaoCaucao($transacao);
+    $isPagamentoReserva = fn ($transacao) => ! $isCaucao($transacao) && (float) ($transacao->valor ?? 0) > 0;
+
+    $metodoLabel = function ($transacao) use ($isCaucao, $isDevolucaoCaucao, $infoPagamento, $norm) {
+        if ($isCaucao($transacao)) {
+            $metodoReal = $norm(data_get($infoPagamento($transacao), 'metodo_real', data_get($infoPagamento($transacao), 'metodo')));
+
+            return match ($metodoReal) {
+                'pix' => 'PIX',
+                'dinheiro', 'cash', 'especie', 'espécie' => 'Dinheiro',
+                'cartao', 'cartão', 'credit_card', 'debito', 'débito' => 'Cartão',
+                'transferencia', 'transferência', 'ted', 'doc' => 'Transferência',
+                default => 'PIX',
+            };
+        }
+
+        return $transacao->metodo_pagamento_label
+            ?: ucfirst((string) ($transacao->metodo_pagamento ?? '-'));
+    };
+
+    $tipoLabel = function ($transacao) use ($isCaucao, $isDevolucaoCaucao) {
+        if ($isDevolucaoCaucao($transacao)) {
+            return 'Devolução de caução';
+        }
+
+        if ($isCaucao($transacao)) {
+            return 'Recebimento de caução';
+        }
+
+        return 'Pagamento da reserva';
+    };
+
+    $statusLabel = function ($transacao) use ($isCaucao, $isDevolucaoCaucao, $norm) {
+        if ($isDevolucaoCaucao($transacao)) {
+            return 'Devolvido';
+        }
+
+        return match ($norm($transacao->status ?? '')) {
+            'approved', 'succeeded', 'paid', 'completed', 'complete', 'confirmed', 'concluido' => $isCaucao($transacao) ? 'Recebido' : 'Recebido',
+            'pending', 'processing', 'requires_action', 'requires_payment_method' => 'Pendente',
+            'refunded', 'refund', 'reembolsado', 'cancelled', 'canceled', 'cancelado', 'cancelada' => 'Cancelado',
+            default => $transacao->status ?? '-',
+        };
+    };
+
+    $totalPagoReserva = (float) ($transacoesReserva ?? collect())
+        ->filter($isPagamentoReserva)
+        ->sum('valor');
+    $totalCaucaoRecebida = (float) ($transacoesReserva ?? collect())
+        ->filter($isRecebimentoCaucao)
+        ->sum(fn ($transacao) => abs((float) ($transacao->valor ?? 0)));
+    $totalCaucaoDevolvida = (float) ($transacoesReserva ?? collect())
+        ->filter($isDevolucaoCaucao)
+        ->sum(fn ($transacao) => abs((float) ($transacao->valor ?? 0)));
+    $saldoCaucao = max(0, $totalCaucaoRecebida - $totalCaucaoDevolvida);
+@endphp
+
 <div class="rs-card mb-4">
     <div class="rs-card__header rs-card__header--between">
         <div class="rs-card__header-left">
@@ -22,40 +100,40 @@
                 </div>
             </div>
             @if($valorOpcionais > 0)
-            <div class="rs-fkpi rs-fkpi--default">
-                <i class="fas fa-puzzle-piece"></i>
-                <div>
-                    <strong>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</strong>
-                    <span>Opcionais</span>
+                <div class="rs-fkpi rs-fkpi--default">
+                    <i class="fas fa-puzzle-piece"></i>
+                    <div>
+                        <strong>R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</strong>
+                        <span>Opcionais</span>
+                    </div>
                 </div>
-            </div>
             @endif
             @if($taxaColeta > 0)
-            <div class="rs-fkpi rs-fkpi--amber">
-                <i class="fas fa-exclamation-triangle"></i>
-                <div>
-                    <strong>R$ {{ number_format($taxaColeta, 2, ',', '.') }}</strong>
-                    <span>Retirada fora expediente</span>
+                <div class="rs-fkpi rs-fkpi--amber">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>R$ {{ number_format($taxaColeta, 2, ',', '.') }}</strong>
+                        <span>Retirada fora expediente</span>
+                    </div>
                 </div>
-            </div>
             @endif
             @if($taxaEntrega > 0)
-            <div class="rs-fkpi rs-fkpi--amber">
-                <i class="fas fa-exclamation-triangle"></i>
-                <div>
-                    <strong>R$ {{ number_format($taxaEntrega, 2, ',', '.') }}</strong>
-                    <span>Devolução fora expediente</span>
+                <div class="rs-fkpi rs-fkpi--amber">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <strong>R$ {{ number_format($taxaEntrega, 2, ',', '.') }}</strong>
+                        <span>Devolução fora expediente</span>
+                    </div>
                 </div>
-            </div>
             @endif
             @if($percentualDesconto > 0)
-            <div class="rs-fkpi rs-fkpi--green">
-                <i class="fas fa-percent"></i>
-                <div>
-                    <strong>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</strong>
-                    <span>Desconto ({{ number_format($percentualDesconto, 0) }}%)@if($cupomCodigo) &middot; {{ $cupomCodigo }}@endif</span>
+                <div class="rs-fkpi rs-fkpi--green">
+                    <i class="fas fa-percent"></i>
+                    <div>
+                        <strong>&minus; R$ {{ number_format($valorDesconto, 2, ',', '.') }}</strong>
+                        <span>Desconto ({{ number_format($percentualDesconto, 0) }}%)@if($cupomCodigo) &middot; {{ $cupomCodigo }}@endif</span>
+                    </div>
                 </div>
-            </div>
             @endif
             <div class="rs-fkpi rs-fkpi--total">
                 <i class="fas fa-coins"></i>
@@ -64,29 +142,33 @@
                     <span>Total da reserva</span>
                 </div>
             </div>
-            <div class="rs-fkpi {{ $pagamentoEfetuado ? 'rs-fkpi--green' : 'rs-fkpi--amber' }}">
-                <i class="fas {{ $pagamentoEfetuado ? 'fa-check-circle' : 'fa-clock' }}"></i>
+            <div class="rs-fkpi rs-fkpi--green">
+                <i class="fas fa-check-circle"></i>
                 <div>
-                    <strong>R$ {{ number_format($totalPagamentos, 2, ',', '.') }}</strong>
-                    <span>{{ $pagamentoEfetuado ? 'Pago' : 'Total pago' }}</span>
+                    <strong>R$ {{ number_format($totalPagoReserva, 2, ',', '.') }}</strong>
+                    <span>Pago pela reserva</span>
                 </div>
             </div>
             @if(!empty($calcao))
-                @php
-                    $valorCalcao = (float) ($calcao->valor_capturado ?? $calcao->valor_autorizado ?? $calcao->valor_calculado ?? 0);
-                @endphp
                 <div class="rs-fkpi rs-fkpi--amber">
                     <i class="fas fa-shield-alt"></i>
                     <div>
-                        <strong>R$ {{ number_format($valorCalcao, 2, ',', '.') }}</strong>
-                        <span>Calção</span>
+                        <strong>R$ {{ number_format($totalCaucaoRecebida, 2, ',', '.') }}</strong>
+                        <span>Caução recebida</span>
                     </div>
                 </div>
                 <div class="rs-fkpi rs-fkpi--default">
-                    <i class="fas fa-calculator"></i>
+                    <i class="fas fa-undo-alt"></i>
                     <div>
-                        <strong>R$ {{ number_format((float) ($calcao->valor_calculado ?? 0), 2, ',', '.') }}</strong>
-                        <span>Valor calculado</span>
+                        <strong>R$ {{ number_format($totalCaucaoDevolvida, 2, ',', '.') }}</strong>
+                        <span>Caução devolvida</span>
+                    </div>
+                </div>
+                <div class="rs-fkpi rs-fkpi--default">
+                    <i class="fas fa-balance-scale"></i>
+                    <div>
+                        <strong>R$ {{ number_format($saldoCaucao, 2, ',', '.') }}</strong>
+                        <span>Saldo da caução</span>
                     </div>
                 </div>
             @endif
@@ -97,7 +179,7 @@
 <div class="rs-card">
     <div class="rs-card__header">
         <i class="fas fa-exchange-alt rs-card__icon"></i>
-        <h2>Histórico de transferências</h2>
+        <h2>Movimentações financeiras</h2>
         <span class="rs-card__badge">{{ $transacoesReserva->count() }}</span>
     </div>
     <div class="rs-card__body p-0">
@@ -105,7 +187,7 @@
             <div class="rs-card__body">
                 <div class="rs-empty">
                     <i class="fas fa-inbox"></i>
-                    <span>Nenhuma transferência vinculada.</span>
+                    <span>Nenhuma movimentação financeira vinculada.</span>
                 </div>
             </div>
         @else
@@ -114,6 +196,7 @@
                     <thead>
                         <tr>
                             <th>Data</th>
+                            <th>Tipo</th>
                             <th>Método</th>
                             <th>Valor</th>
                             <th>Status</th>
@@ -123,27 +206,30 @@
                     <tbody>
                         @foreach($transacoesReserva as $transacao)
                             @php
-                                $valorTx  = (float) ($transacao->valor ?? 0);
+                                $valorTx = (float) ($transacao->valor ?? 0);
                                 $statusTx = strtolower((string) ($transacao->status ?? ''));
-                                $isEstorno = $valorTx < 0 || in_array($statusTx, $statusPagamentoEstornado, true);
-                                $metodoPag   = strtolower($transacao->metodo_pagamento ?? '');
-                                $isDinheiro  = in_array($metodoPag, ['dinheiro','cash','especie','espécie']);
-                                $isPendente  = in_array($statusTx, ['pending','pendente','aguardando']);
-                                $jaConfirmado= !empty($transacao->confirmado_em);
-                                $podeConfirmar = $isDinheiro && $isPendente && !$jaConfirmado;
+                                $isCaucaoTx = $isCaucao($transacao);
+                                $isDevolucaoTx = $isDevolucaoCaucao($transacao);
+                                $isPendente = in_array($statusTx, ['pending', 'processing', 'requires_action', 'requires_payment_method', 'pendente', 'aguardando'], true);
+                                $jaConfirmado = !empty($transacao->confirmado_em);
+                                $podeConfirmar = strtolower((string) ($transacao->metodo_pagamento ?? '')) === 'dinheiro' && $isPendente && !$jaConfirmado;
                             @endphp
                             <tr>
                                 <td>
                                     <div class="font-weight-bold">{{ \Illuminate\Support\Carbon::parse($transacao->created_at)->format('d/m/Y H:i') }}</div>
                                 </td>
-                                <td>{{ $transacao->metodo_pagamento_label }}</td>
                                 <td>
-                                    <div class="font-weight-bold {{ $isEstorno ? 'text-danger' : 'text-success' }}">
+                                    <div class="font-weight-bold">{{ $tipoLabel($transacao) }}</div>
+                                </td>
+                                <td>{{ $metodoLabel($transacao) }}</td>
+                                <td>
+                                    <div class="font-weight-bold {{ $isDevolucaoTx ? 'text-warning' : ($isCaucaoTx ? 'text-info' : 'text-success') }}">
                                         R$ {{ number_format($valorTx, 2, ',', '.') }}
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge badge-{{ $isEstorno ? 'danger' : ($isPendente ? 'warning' : 'success') }}">{{ $transacao->status ?? '-' }}</span>
+                                    @php $badgeClass = $isDevolucaoTx ? 'warning' : ($isPendente ? 'warning' : 'success'); @endphp
+                                    <span class="badge badge-{{ $badgeClass }}">{{ $statusLabel($transacao) }}</span>
                                     @if($jaConfirmado)
                                         <div class="small text-success mt-1">
                                             <i class="fas fa-check-circle"></i>
@@ -176,10 +262,19 @@
     <div class="rs-card__header rs-card__header--between">
         <div class="rs-card__header-left">
             <i class="fas fa-shield-alt rs-card__icon"></i>
-            <h2>Calção</h2>
+            <h2>Caução</h2>
         </div>
-        <span class="rs-status-badge rs-status-badge--sm {{ in_array(strtolower((string) $calcao->status), ['autorizado', 'capturado', 'parcialmente_capturado'], true) ? 'rs-status-badge--green' : 'rs-status-badge--amber' }}">
-            {{ $calcao->label_status ?? ucfirst((string) $calcao->status) }}
+        @php
+            $statusCalcao = strtolower((string) ($calcao->status ?? ''));
+            $labelCalcao = match ($statusCalcao) {
+                'devolvida' => 'DEVOLVIDA',
+                'retida_integralmente' => 'RETIDA',
+                'parcialmente_retida', 'parcialmente_capturado', 'capturado' => 'RETIDA PARCIALMENTE',
+                default => strtoupper((string) ($calcao->label_status ?? $calcao->status ?? '-')),
+            };
+        @endphp
+        <span class="rs-status-badge rs-status-badge--sm {{ in_array($statusCalcao, ['autorizado', 'capturado', 'parcialmente_capturado', 'devolvida', 'retida_integralmente', 'parcialmente_retida'], true) ? 'rs-status-badge--green' : 'rs-status-badge--amber' }}">
+            {{ $labelCalcao }}
         </span>
     </div>
     <div class="rs-card__body">
@@ -195,24 +290,24 @@
                 <i class="fas fa-lock"></i>
                 <div>
                     <strong>R$ {{ number_format((float) ($calcao->valor_capturado ?? $calcao->valor_autorizado ?? 0), 2, ',', '.') }}</strong>
-                    <span>Valor do calção</span>
+                    <span>Valor da caução</span>
                 </div>
             </div>
             @if(!empty($calcao->data_hora_captura))
-            <div class="rs-fkpi rs-fkpi--default">
-                <i class="fas fa-clock"></i>
-                <div>
-                    <strong>{{ \Illuminate\Support\Carbon::parse($calcao->data_hora_captura)->format('d/m/Y H:i') }}</strong>
-                    <span>Capturado em</span>
+                <div class="rs-fkpi rs-fkpi--default">
+                    <i class="fas fa-clock"></i>
+                    <div>
+                        <strong>{{ \Illuminate\Support\Carbon::parse($calcao->data_hora_captura)->format('d/m/Y H:i') }}</strong>
+                        <span>Capturada em</span>
+                    </div>
                 </div>
-            </div>
             @endif
         </div>
     </div>
 </div>
 @endif
 
-@if($moduloNfse)
+{{-- @if($moduloNfse)
 <div class="rs-card mt-4">
     <div class="rs-card__header rs-card__header--between">
         <div class="rs-card__header-left">
@@ -274,4 +369,4 @@
         @endif
     </div>
 </div>
-@endif
+@endif --}}
