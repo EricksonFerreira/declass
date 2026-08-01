@@ -469,6 +469,8 @@ class AssinaturaController extends Controller
             ->filter(fn ($item) => filled(data_get($item, 'valor')))
             ->values();
 
+        $empresa = $this->resolverEmpresaDaAssinatura($assinatura);
+
         foreach ($linhas as $linha) {
             EmpresaPlanoPagamento::create([
                 'empresa_plano_id' => $assinatura->id,

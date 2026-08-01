@@ -155,15 +155,10 @@
                                                 {{ data_get($pag->metadados, 'observacao') ?? '—' }}
                                             </span>
                                         </td>
-                                        <td class="align-middle text-muted" style="max-width:220px;">
-                                            <span class="d-inline-block text-truncate" style="max-width:220px;" title="{{ data_get($pag->metadados, 'observacao') ?? '—' }}">
-                                                {{ data_get($pag->metadados, 'observacao') ?? '—' }}
-                                            </span>
-                                        </td>
                                         <td class="text-center align-middle">
                                             <button
                                                 type="button"
-                                                class="btn btn-xs btn-outline-secondary mr-1"
+                                                class="btn btn-xs btn-outline-secondary mr-1 mb-1"
                                                 data-id="{{ $pag->id }}"
                                                 data-action="{{ route('assinatura.pagamento.atualizar', $pag) }}"
                                                 data-valor="{{ $pag->valor }}"
@@ -181,7 +176,7 @@
                                                 <form action="{{ route('assinatura.pagamento.excluir', $pag) }}" method="POST" class="d-inline js-form-excluir-pagamento">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-xs btn-outline-danger js-btn-excluir-pagamento">
+                                                    <button type="submit" class="btn btn-xs btn-outline-danger js-btn-excluir-pagamento mb-1">
                                                         <i class="fas fa-trash"></i> Remover
                                                     </button>
                                                 </form>
@@ -775,3 +770,4 @@
         }
     </style>
 @stop
+
