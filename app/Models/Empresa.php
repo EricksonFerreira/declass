@@ -9,6 +9,7 @@ use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Storage;
 use App\Models\OnboardingStep;
+use App\Models\ArquivoRastreado;
 
 class Empresa extends Model
 {
@@ -113,6 +114,11 @@ class Empresa extends Model
         return $this->hasMany(EmpresaPlanoPagamento::class, 'empresa_id');
     }
 
+    public function arquivosRastreados()
+    {
+        return $this->hasMany(ArquivoRastreado::class, 'empresa_id');
+    }
+
     public function onboardingStep()
     {
         return $this->hasOne(OnboardingStep::class, 'empresa_id');
@@ -150,63 +156,7 @@ class Empresa extends Model
 
     public function getStorageUsedBytesAttribute(): int
     {
-        $totalBytes = 0;
-        $disk = Storage::disk('public');
-
-        if ($this->logo_path && $disk->exists($this->logo_path)) {
-            $totalBytes += $disk->size($this->logo_path);
-        }
-
-        $siteImages = $this->site_apresentacao_imagens ?? [];
-        if (is_array($siteImages)) {
-            foreach ($siteImages as $area => $path) {
-                if (is_string($path) && $disk->exists($path)) {
-                    $totalBytes += $disk->size($path);
-                }
-            }
-        }
-
-        $reservaIds = \App\Models\Reserva::where('empresa_id', $this->id)->pluck('id');
-        if ($reservaIds->isNotEmpty()) {
-            $checkins = \App\Models\ContratoCheckin::whereIn('reserva_id', $reservaIds)->get();
-            foreach ($checkins as $ci) {
-                foreach (['foto_direita_path','foto_esquerda_path','foto_frente_path','foto_tras_path','foto_velocimetro_path','foto_combustivel_path'] as $col) {
-                    if ($ci->$col && $disk->exists($ci->$col)) $totalBytes += $disk->size($ci->$col);
-                }
-                if ($ci->assinatura && $disk->exists('assinaturas/' . $ci->assinatura)) $totalBytes += $disk->size('assinaturas/' . $ci->assinatura);
-                if ($ci->pdf_path && $disk->exists($ci->pdf_path)) $totalBytes += $disk->size($ci->pdf_path);
-            }
-            $checkouts = \App\Models\ContratoCheckout::whereIn('reserva_id', $reservaIds)->get();
-            foreach ($checkouts as $co) {
-                foreach (['foto_direita_path','foto_esquerda_path','foto_frente_path','foto_tras_path','foto_velocimetro_path','foto_combustivel_path'] as $col) {
-                    if ($co->$col && $disk->exists($co->$col)) $totalBytes += $disk->size($co->$col);
-                }
-            }
-            $danoImagens = \App\Models\VeiculoDanosImagem::whereHas('dano', fn($q) => $q->whereIn('reserva_id', $reservaIds))->get();
-            foreach ($danoImagens as $img) {
-                if ($img->caminho_imagem && $disk->exists($img->caminho_imagem)) $totalBytes += $disk->size($img->caminho_imagem);
-            }
-            foreach (\App\Models\Multa::whereIn('reserva_id', $reservaIds)->get() as $m) {
-                foreach (['anexo_comprovante_path','anexo_pdf_path'] as $col) { if ($m->$col && $disk->exists($m->$col)) $totalBytes += $disk->size($m->$col); }
-            }
-            foreach (\App\Models\Sinistro::whereIn('reserva_id', $reservaIds)->get() as $s) {
-                foreach (['anexo_bo_path','anexo_foto1_path','anexo_foto2_path','anexo_foto3_path','anexo_laudo_path'] as $col) { if ($s->$col && $disk->exists($s->$col)) $totalBytes += $disk->size($s->$col); }
-            }
-        }
-
-        foreach (\App\Models\GrupoFrota::where('empresa_id', $this->id)->get() as $g) {
-            if ($g->imagem && $disk->exists($g->imagem)) $totalBytes += $disk->size($g->imagem);
-            $imagens = is_string($g->imagens) ? json_decode($g->imagens, true) : (($g->imagens ?? []) ?: []);
-            foreach ((array) $imagens as $imgPath) { if (is_string($imgPath) && $disk->exists($imgPath)) $totalBytes += $disk->size($imgPath); }
-        }
-        foreach (\App\Models\CaracteristicaFrota::where('empresa_id', $this->id)->get() as $c) {
-            if ($c->imagem && $disk->exists($c->imagem)) $totalBytes += $disk->size($c->imagem);
-        }
-        foreach (\App\Models\Modelo::where('empresa_id', $this->id)->get() as $m) {
-            if ($m->imagem && $disk->exists($m->imagem)) $totalBytes += $disk->size($m->imagem);
-        }
-
-        return $totalBytes;
+        return (int) $this->arquivosRastreados()->sum('size_bytes');
     }
 
     public function getStorageLimitBytesAttribute(): int

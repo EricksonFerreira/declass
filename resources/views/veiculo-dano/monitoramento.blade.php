@@ -134,13 +134,13 @@
                                     </td>
                                     <td class="py-3">
                                         @php
-                                            $badgeClass = match($dano->status) {
+                                            $badgeClass = match($dano->status_reparo ?? 'pendente') {
                                                 'em_correcao' => 'fc-badge--receita',
                                                 'corrigida', 'parcialmente_corrigida' => 'fc-badge--pago',
                                                 'descartada' => 'fc-badge--cancelado',
                                                 default => 'fc-badge--despesa'
                                             };
-                                            $badgeText = match($dano->status) {
+                                            $badgeText = match($dano->status_reparo ?? 'pendente') {
                                                 'em_correcao' => 'Em Correção',
                                                 'corrigida' => 'Corrigido',
                                                 'parcialmente_corrigida' => 'Parcialmente Corrigido',
@@ -153,7 +153,7 @@
                                         </span>
                                     </td>
                                     <td class="py-3 text-center px-4">
-                                        @if($dano->status === 'pendente')
+                                        @if(($dano->status_reparo ?? 'pendente') === 'pendente')
                                             <div class="dano-actions d-flex flex-column gap-2 align-items-center">
                                                 <button type="button"
                                                     class="btn btn-xs btn-primary btn-resolver-avaria font-weight-bold w-100"
@@ -161,10 +161,10 @@
                                                     data-veiculo="{{ optional($dano->veiculo)->placa_licenca ?? $dano->veiculo_id }}"
                                                     data-create-os-url="{{ route('ordem-servico.create', ['veiculo_id' => $dano->veiculo_id, 'dano_ids' => [$dano->id]]) }}"
                                                     style="border-radius: 6px;">
-                                                    <i class="fas fa-wrench mr-1"></i> Resolver Avaria
+                                                    <i class="fas fa-wrench mr-1"></i> Tratar Avaria
                                                 </button>
                                             </div>
-                                        @elseif($dano->status === 'em_correcao')
+                                        @elseif(($dano->status_reparo ?? '') === 'em_correcao')
                                             <div class="dano-actions d-flex flex-column gap-1 align-items-center">
                                                 @if($dano->os_associada)
                                                     <a href="{{ route('ordem-servico.show', $dano->os_associada) }}" class="btn btn-xs btn-outline-primary font-weight-bold w-100" style="border-radius: 6px;">

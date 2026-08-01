@@ -2,10 +2,10 @@
 
 namespace App\Actions\Reserva\Checkout\Contrato;
 
-use Illuminate\Http\Request;
-use App\Services\Reserva\ReservaResolver;
-use App\Services\BreadcrumbService;
 use App\DTO\BreadCrumbItem;
+use App\Services\BreadcrumbService;
+use App\Services\Reserva\ReservaResolver;
+use Illuminate\Http\Request;
 
 class AssinarContratoCheckoutAction
 {
@@ -17,16 +17,27 @@ class AssinarContratoCheckoutAction
             $reservaResolvida = $reservaResolver->resolver($codigo);
         } catch (\Throwable $e) {
             return redirect()
-                ->route('reserva.index')
+                ->route($request->routeIs('reserva.minhas.*') ? 'reserva.minhas' : 'reserva.index')
                 ->with('error', $e->getMessage());
         }
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
-            new BreadCrumbItem('Home', route('home')),
-            new BreadCrumbItem('Reservas', route('reserva.index')),
-            new BreadCrumbItem('Detalhes da Reserva Nº ' . $codigo, route('reserva.show', $codigo)),
-            new BreadCrumbItem('Assinar Contrato de Check-out'),
-        ]);
+        $origemMinhasReservas = $request->routeIs('reserva.minhas.*');
+
+        if ($origemMinhasReservas) {
+            $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+                new BreadCrumbItem('Home', route('home')),
+                new BreadCrumbItem('Minhas Reservas', route('reserva.minhas')),
+                new BreadCrumbItem('Detalhes da Reserva Nº '.$codigo, route('reserva.minhas.show', ['id' => $codigo])),
+                new BreadCrumbItem('Assinar Contrato de Check-out'),
+            ]);
+        } else {
+            $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+                new BreadCrumbItem('Home', route('home')),
+                new BreadCrumbItem('Reservas', route('reserva.index')),
+                new BreadCrumbItem('Detalhes da Reserva Nº '.$codigo, route('reserva.show', $codigo)),
+                new BreadCrumbItem('Assinar Contrato de Check-out'),
+            ]);
+        }
 
         if ($reservaResolvida->ehMotoristaApp()) {
             /** @var \App\Models\ReservaMotoristaApp $reg */
@@ -52,6 +63,8 @@ class AssinarContratoCheckoutAction
             return view('reserva.assinar-contrato-checkout', [
                 'reserva' => $reg,
                 'breadcrumb' => $breadcrumb,
+                'origemMinhasReservas' => $origemMinhasReservas,
+                'redirectAfterSignUrl' => $origemMinhasReservas ? route('reserva.minhas.show', ['id' => $codigo]) : route('reserva.show', $codigo),
                 'contextoAssinatura' => [
                     'empresa' => $reg->empresa,
                     'usuario' => $reg->user,
@@ -60,14 +73,14 @@ class AssinarContratoCheckoutAction
                     'data_inicio' => $reg->data_inicio,
                     'data_fim' => $reg->data_fim,
                     'quantidade_dias' => $reg->quantidade_dias,
-                    'tarifa_label' => 'Valor do Ciclo (' . ($plano?->nome ?? 'Plano') . ')',
+                    'tarifa_label' => 'Valor do Ciclo ('.($plano?->nome ?? 'Plano').')',
                     'tarifa_valor' => $tarifaValor,
                     'valor_opcionais' => $valorOpcionais,
                     'valor_total' => $valorTotal,
                     'tipo' => 'MAP',
                     'plano_nome' => $plano?->nome ?? 'Plano Motorista App',
                 ],
-                'titulo' => 'Assinar Contrato de Check-out — Reserva Nº ' . $codigo,
+                'titulo' => 'Assinar Contrato de Check-out — Reserva Nº '.$codigo,
             ]);
         }
 
@@ -75,15 +88,26 @@ class AssinarContratoCheckoutAction
         $reserva = $reservaResolvida->registro;
         $reserva->loadMissing(['usuario', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'contratoCheckout', 'estacaoRetirada', 'estacaoDevolucao']);
 
-        if (!$reserva->contratoCheckout) {
+        if (! $reserva->contratoCheckout) {
             return redirect()
-                ->route('reserva.show', $codigo)
+                ->route($origemMinhasReservas ? 'reserva.minhas.show' : 'reserva.show', $origemMinhasReservas ? ['id' => $codigo] : $codigo)
                 ->with('error', 'Check-out não encontrado para esta reserva.');
+        }
+
+        $checkout = $reserva->contratoCheckout;
+        $checkoutJaAssinado = ! empty($checkout->assinatura) || ! empty($checkout->data_assinatura) || (string) ($checkout->assinado ?? 'N') === 'S';
+
+        if ($checkoutJaAssinado) {
+            return redirect()
+                ->route($origemMinhasReservas ? 'reserva.minhas.show' : 'reserva.show', $origemMinhasReservas ? ['id' => $codigo] : $codigo)
+                ->with('info', 'O contrato de check-out já foi assinado.');
         }
 
         return view('reserva.assinar-contrato-checkout', [
             'reserva' => $reserva,
             'breadcrumb' => $breadcrumb,
+            'origemMinhasReservas' => $origemMinhasReservas,
+            'redirectAfterSignUrl' => $origemMinhasReservas ? route('reserva.minhas.show', ['id' => $codigo]) : route('reserva.show', $codigo),
             'contextoAssinatura' => [
                 'empresa' => $reserva->empresa,
                 'usuario' => $reserva->usuario,
@@ -101,7 +125,7 @@ class AssinarContratoCheckoutAction
                 'estacao_retirada' => $reserva->estacaoRetirada?->nome ?? '-',
                 'estacao_devolucao' => $reserva->estacaoDevolucao?->nome ?? '-',
             ],
-            'titulo' => 'Assinar Contrato de Check-out — Reserva Nº ' . $codigo,
+            'titulo' => 'Assinar Contrato de Check-out — Reserva Nº '.$codigo,
         ]);
     }
 }

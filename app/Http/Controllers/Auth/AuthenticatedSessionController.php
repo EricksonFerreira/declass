@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -32,7 +33,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('profile.force-password.edit');
         }
 
-        return redirect()->intended(route('home'));
+        return redirect()->intended($this->redirectPosLogin($request->user()));
     }
 
     /**
@@ -47,5 +48,18 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/');
+    }
+
+    private function redirectPosLogin(?User $user): string
+    {
+        if (!$user) {
+            return route('home');
+        }
+
+        if ($user->isAdministrador()) {
+            return route('home');
+        }
+
+        return route('reserva.minhas');
     }
 }

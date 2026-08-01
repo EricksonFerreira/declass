@@ -37,6 +37,12 @@
                             <span>{{ $dataInicio }}@if($dataFim) &rarr; {{ $dataFim }}@endif</span>
                         </div>
                     @endif
+                    @if($reserva->contratoCheckout && empty($reserva->contratoCheckout->assinatura))
+                        <a href="{{ route('reserva.assinarContratoCheckout', ['codigo' => $reserva->codigoReserva->codigo ?? $reserva->id]) }}" class="ci-btn-back" style="margin-left:8px;background:#16a34a;color:#fff;border-color:#16a34a;">
+                            <i class="fas fa-signature"></i>
+                            <span>Assinar</span>
+                        </a>
+                    @endif
                     <a href="{{ route('reserva.show', $reserva->id) }}" class="ci-btn-back">
                         <i class="fas fa-arrow-left"></i>
                         <span>Voltar</span>
@@ -86,8 +92,7 @@
                         </div>
                     </div>
 
-                    <form id="form_dados_devolucao" enctype="multipart/form-data">
-                        <input type="hidden" name="assinatura" id="coAssinaturaInput">
+                    <form id="form_dados_devolucao">
                         {{-- Bloco: Veículo vinculado --}}
                         <div class="ci-block">
                             <div class="ci-block-label">
@@ -279,7 +284,7 @@
                                             @if($fotoUrl)
                                                 Foto atual. Selecione para substituir.
                                             @else
-                                                Opcional. Max 8MB. JPG/PNG/WEBP.
+                                                Obrigatória. Max 8MB. JPG/PNG/WEBP.
                                             @endif
                                         </small>
                                     </div>
@@ -450,6 +455,7 @@
                         </button>
                     </div>
                 </div>
+
 
             </div>
         </div>
@@ -733,9 +739,9 @@
             btn.classList.toggle('completed', t < current);
         });
 
-        prevBtn.style.visibility = current === 1 ? 'hidden' : 'visible';
-        nextBtn.style.display    = current === lastStep ? 'none' : 'inline-flex';
-        createBtn.classList.toggle('d-none', current !== lastStep);
+        if (prevBtn) prevBtn.style.visibility = current === 1 ? 'hidden' : 'visible';
+        if (nextBtn) nextBtn.style.display = current === lastStep ? 'none' : 'inline-flex';
+        if (createBtn) createBtn.classList.toggle('d-none', current !== lastStep);
 
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -767,17 +773,6 @@
             });
             if (!valido) { Swal.fire({ icon: 'warning', title: 'Fotos obrigatórias', text: 'Tire todas as fotos da devolução antes de continuar: ' + pendentes.join(', ') + '.', confirmButtonColor: '#4338ca' }); return false; }
         }
-        if (step === 5) {
-            if (!coSigned) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Assinatura Pendente',
-                    text: 'Por favor, colete a assinatura do motorista antes de finalizar.',
-                    confirmButtonColor: '#4338ca'
-                });
-                return false;
-            }
-        }
         return true;
     }
 
@@ -793,21 +788,26 @@
         });
     });
 
-    prevBtn.addEventListener('click', () => showStep(current - 1));
-    nextBtn.addEventListener('click', function () {
+    prevBtn?.addEventListener('click', () => showStep(current - 1));
+    nextBtn?.addEventListener('click', function () {
         if (!validateStep(current)) return;
         showStep(current + 1);
     });
 
     function triggerFinalizar() {
         if (!validateStep(4)) return;
-        document.getElementById('form_dados_devolucao').dispatchEvent(new Event('submit'));
+        const form = document.getElementById('form_dados_devolucao');
+        if (form) {
+            form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+        }
     }
 
     document.getElementById('btn_finalizar_checkout')?.addEventListener('click', triggerFinalizar);
     createBtn?.addEventListener('click', triggerFinalizar);
 
-    document.getElementById('form_dados_devolucao').addEventListener('submit', function (event) {
+    const checkoutForm = document.getElementById('form_dados_devolucao');
+
+    checkoutForm?.addEventListener('submit', function (event) {
         event.preventDefault();
 
         const kmInicialRaw = @json($reserva->contratoCheckin?->quilometragem_atual);
@@ -818,8 +818,8 @@
             if (campoKm) campoKm.classList.add('is-invalid');
             Swal.fire({
                 icon: 'error',
-                title: 'Quilometragem invÃ¡lida',
-                text: `A quilometragem na devoluÃ§ão deve ser maior ou igual ao KM inicial do check-in (${kmInicial}).`,
+                title: 'Quilometragem inválida',
+                text: `A quilometragem na devolução deve ser maior ou igual ao KM inicial do check-in (${kmInicial}).`,
                 confirmButtonColor: '#4338ca',
             });
             showStep(1);
@@ -853,8 +853,26 @@
         const url = "{{ route('reserva.checkout.finalizar', ':codigo') }}".replace(':codigo', codigo);
         const csrf = document.querySelector('meta[name="csrf-token"]').content;
 
-        const formEl = document.getElementById('form_dados_devolucao');
-        const payload = new FormData(formEl);
+        const checkout = {
+            quilometragem_devolucao: document.getElementById('quilometragem_devolucao')?.value || null,
+            nivel_combustivel_devolucao: document.getElementById('nivel_combustivel_devolucao')?.value || null,
+            data_devolucao: document.getElementById('data_devolucao')?.value || null,
+            hora_devolucao: document.getElementById('hora_devolucao')?.value || null,
+            notas_devolucao: document.getElementById('notas_devolucao')?.value || null,
+            observacoes_devolucao: document.getElementById('observacoes_devolucao')?.value || null,
+        };
+
+        const payload = new FormData();
+        Object.entries(checkout).forEach(([campo, valor]) => {
+            payload.append(campo, valor ?? '');
+        });
+
+        PHOTO_INPUT_IDS.forEach(id => {
+            const input = document.getElementById(id);
+            if (input && input.files && input.files[0]) {
+                payload.append(id, input.files[0]);
+            }
+        });
 
         const btnFinal = document.getElementById('btn_finalizar_checkout');
         const wizBtn   = document.getElementById('wizardCreateBtn');
@@ -874,6 +892,11 @@
             processData: false,
             contentType: false,
             success: function (data) {
+                try {
+                    if (window.jQuery && $.fn.modal) {
+                        $('.modal.show').modal('hide');
+                    }
+                } catch (e) {}
                 Swal.fire({
                     icon: 'success',
                     title: data.message || 'Check-out concluído!',
@@ -1033,4 +1056,3 @@
 })();
 </script>
 @endpush
-

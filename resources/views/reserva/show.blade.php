@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', 'Detalhes da Reserva')
 
@@ -197,7 +197,7 @@
     {{-- ══════════════════════════════════════════
          ETAPAS DO FLUXO
     ══════════════════════════════════════════ --}}
-    @include('reserva.partials.common_etapas')
+    <x-reserva.etapas :reserva="$reserva" />
 
     {{-- ══════════════════════════════════════════
          ABAS PRINCIPAIS
@@ -221,18 +221,26 @@
                         </span>
                     @endif
                 </a>
-            </li>
             @if($reserva->contratoCheckin)
             <li class="nav-item">
                 <a class="nav-link" id="tab-checkout" data-toggle="tab" href="#pane-checkout" role="tab">
-                    <i class="fas fa-car-crash"></i>
+                    <i class="fas fa-flag-checkered"></i>
                     <span>Check-out</span>
-                    @if(($danosReserva->count() ?? 0) > 0)
-                        <span class="rs-tab-badge rs-tab-badge--amber">{{ $danosReserva->count() }}</span>
+                    @if($reserva->contratoCheckout)
+                        @php
+                            $co = $reserva->contratoCheckout;
+                            $coAssinado = ! empty($co->assinatura) || ! empty($co->data_assinatura) || $co->assinado === 'S';
+                        @endphp
+                        <span class="rs-tab-badge {{ $coAssinado ? 'rs-tab-badge--green' : 'rs-tab-badge--amber' }}">
+                            {{ $coAssinado ? 'Assinado' : 'Pendente' }}
+                        </span>
+                    @else
+                        <span class="rs-tab-badge rs-tab-badge--amber">Pendente</span>
                     @endif
                 </a>
             </li>
             @endif
+
             <li class="nav-item">
                 <a class="nav-link" id="tab-financeiro" data-toggle="tab" href="#pane-financeiro" role="tab">
                     <i class="fas fa-file-invoice-dollar"></i>
@@ -391,7 +399,9 @@
                     </div>
                     <div class="form-group">
                         <label>Valor (opcional)</label>
-                        <input type="number" step="0.01" min="0.01" id="calcao_presencial_valor" class="form-control" placeholder="Deixe vazio para usar o valor calculado">
+                        <input type="number" step="0.01" min="0.01" id="calcao_presencial_valor" class="form-control"
+                               placeholder="Deixe vazio para usar o valor calculado"
+                               value="{{ number_format($valorTotal, 2, '.', '') }}">
                     </div>
                     <div class="form-group mb-0">
                         <label>Observação (opcional)</label>
@@ -2932,7 +2942,7 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
             container.innerHTML = '';
 
             if (!items.length) {
-                container.innerHTML = '<tr><td colspan="5" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>';
+                container.innerHTML = '<tr><td colspan="6" class="damage-empty"><i class="fas fa-shield-alt"></i> Nenhuma avaria nesta reserva</td></tr>';
             } else {
                 items.forEach(function (d) {
                     const payload = encodeURIComponent(JSON.stringify(d));
@@ -2954,12 +2964,17 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                         ? '<small class="d-block text-muted mt-1">' + escapeHtml(d.nome_dano) + '</small>'
                         : '';
 
+                    const etapaBadge = d.contrato_id
+                        ? '<span class="badge badge-info"><i class="fas fa-sign-in-alt mr-1"></i>Check-in</span>'
+                        : '<span class="badge badge-danger"><i class="fas fa-sign-out-alt mr-1"></i>Check-out</span>';
+
                     var tr = document.createElement('tr');
                     tr.className = 'js-dano-detalhe-trigger rs-damage-table__row';
                     tr.dataset.dano = payload;
                     tr.innerHTML = '<td>' + locLabel + '</td>'
                         + '<td>' + descricao + km + '</td>'
                         + '<td>' + tipoBadge(d.tipo_dano) + nomeDano + '</td>'
+                        + '<td>' + etapaBadge + '</td>'
                         + '<td>' + formatCusto(d.custo_estimado) + '</td>'
                         + '<td>' + thumbsHtml + '</td>';
                     container.appendChild(tr);
@@ -3119,6 +3134,50 @@ document.getElementById('btn-confirmar-captura')?.addEventListener('click', func
                     form.innerHTML = `
                         <input type="hidden" name="_token" value="${CSRF_TOKEN}">
                         <input type="hidden" name="_method" value="DELETE">
+                    `;
+                    document.body.appendChild(form);
+                    form.submit();
+                });
+            });
+        });
+
+        /* ── Excluir contrato check-out ── */
+        document.querySelectorAll('.js-excluir-contrato-checkout').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const url = this.dataset.url;
+                const assinado = this.dataset.assinado === '1';
+                const msg = assinado
+                    ? 'Este contrato <strong>já foi assinado</strong>. A ação vai invalidar o checkout e exigir justificativa. Deseja continuar?'
+                    : 'O contrato de check-out será excluído e o checkout será reaberto. Deseja continuar?';
+
+                Swal.fire({
+                    title: assinado ? 'Invalidar contrato de check-out?' : 'Excluir contrato de check-out?',
+                    html: msg,
+                    icon: assinado ? 'warning' : 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#ef4444',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: assinado ? 'Sim, invalidar' : 'Sim, excluir',
+                    cancelButtonText: 'Cancelar',
+                    input: assinado ? 'textarea' : undefined,
+                    inputPlaceholder: assinado ? 'Informe a justificativa da invalidação' : undefined,
+                    inputAttributes: assinado ? { 'aria-label': 'Justificativa da invalidação' } : undefined,
+                    inputValidator: assinado ? function (value) {
+                        if (!value || value.trim().length < 5) {
+                            return 'Informe uma justificativa com pelo menos 5 caracteres.';
+                        }
+                        return null;
+                    } : undefined,
+                }).then(function (result) {
+                    if (!result.isConfirmed) return;
+
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = url;
+                    form.innerHTML = `
+                        <input type="hidden" name="_token" value="${CSRF_TOKEN}">
+                        <input type="hidden" name="_method" value="DELETE">
+                        ${assinado ? `<input type="hidden" name="justificativa" value="${String(result.value || '').replace(/"/g, '&quot;')}">` : ''}
                     `;
                     document.body.appendChild(form);
                     form.submit();

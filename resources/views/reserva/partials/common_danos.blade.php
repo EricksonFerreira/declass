@@ -13,8 +13,12 @@
             @endif
         </div>
 
-        @if(($danosReserva->count() ?? 0) > 0)
-            <div class="rs-info-rows mb-3">
+@if(($danosReserva->count() ?? 0) > 0)
+    @php
+        $reservaCodigoAtual = $reserva->codigoReserva?->id ?? null;
+        $reservaIdAtual = $reserva->id ?? null;
+    @endphp
+    <div class="rs-info-rows mb-3">
                 <div class="rs-info-row">
                     <span><i class="fas fa-list"></i>Total registradas</span>
                     <strong>{{ $danosReserva->count() }}</strong>
@@ -41,6 +45,7 @@
                                 <th>Localização</th>
                                 <th>Descrição</th>
                                 <th>Tipo</th>
+                                <th>Etapa</th>
                                 <th>Custo Est.</th>
                                 <th>Imagem</th>
                             </tr>
@@ -48,6 +53,10 @@
                         <tbody id="danos-detectados-container">
                 @foreach($danosReserva as $d)
                     @php
+                        $origemDano = !empty($d->contrato_id) ? 'Check-in' : 'Check-out';
+                        $pertenceReservaAtual = (int) ($d->reserva_id ?? 0) === (int) $reservaIdAtual
+                            || (int) ($d->reserva_codigo_id ?? 0) === (int) $reservaCodigoAtual;
+                        $rotuloReserva = $pertenceReservaAtual ? 'Desta reserva' : 'Outra reserva';
                         $imagensDano = $d->imagens
                             ->map(function ($img) {
                                 $path = $img->caminho_imagem ?: $img->nome_imagem;
@@ -77,6 +86,7 @@
                             'correcao_usuario' => $d->usuarioCorrecao?->nome,
                             'correcao_realizada' => (bool) $d->correcao_data,
                             'imagens' => $imagensDano->all(),
+                            'contrato_id' => $d->contrato_id,
                         ];
                     @endphp
                     <tr class="js-dano-detalhe-trigger rs-damage-table__row" data-dano='@json($danoPayload)'>
@@ -105,6 +115,15 @@
                                     @else
                                         <span class="badge badge-warning">Pendente</span>
                                     @endif
+                            </div>
+                        </td>
+                        <td>
+                            <div class="d-flex flex-column" style="gap:4px;">
+                                <span class="badge {{ $origemDano === 'Check-in' ? 'badge-info' : 'badge-danger' }}">
+                                    <i class="fas {{ $origemDano === 'Check-in' ? 'fa-sign-in-alt' : 'fa-sign-out-alt' }} mr-1"></i>
+                                    {{ $origemDano }}
+                                </span>
+                                <small class="text-muted">{{ $rotuloReserva }}</small>
                             </div>
                         </td>
                         <td>

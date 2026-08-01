@@ -3,7 +3,7 @@
     <table class="detail-table">
         <tbody>
             <tr>
-                <td><strong>Valor</strong><br>{{ $caucao['valor_capturado'] ?? $caucao['valor_autorizado'] ?? $caucao['valor_calculado'] ?? '-' }}</td>
+                <td><strong>Valor</strong><br>{{ $caucao['valor_calculado'] ?? $caucao['valor_autorizado'] ?? $caucao['valor_calculado'] ?? '-' }}</td>
             </tr>
         </tbody>
     </table>

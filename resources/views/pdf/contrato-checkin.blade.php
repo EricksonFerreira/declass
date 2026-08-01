@@ -600,8 +600,10 @@
                     <thead>
                         <tr>
                             <th>Opcional</th>
-                            <th style="text-align:center">Qtd</th>
+                            <th style="text-align:right">Tipo Cobrança</th>
                             <th style="text-align:right">Unit.</th>
+                            <th style="text-align:right">Total Individual</th>
+                            <th style="text-align:center">Qtd</th>
                             <th style="text-align:right">Total</th>
                         </tr>
                     </thead>
@@ -609,8 +611,16 @@
                         @foreach($data['opcionais'] as $opcional)
                             <tr>
                                 <td>{!! $opcional['nome'] !!}</td>
-                                <td style="text-align:center">{{ $opcional['quantidade'] }}</td>
+                                <td style="text-align:right">
+                                    {{ match ($opcional['tipo_cobranca'] ?? null) {
+                                        'por_dia' => 'Por dia',
+                                        'valor_integral' => 'Valor integral',
+                                        default => '-',
+                                    } }}
+                                </td>
                                 <td style="text-align:right">{!! $opcional['preco_unitario'] !!}</td>
+                                <td style="text-align:right">{!! $opcional['valor_individual'] !!}</td>
+                                <td style="text-align:center">{{ $opcional['quantidade'] }}</td>
                                 <td style="text-align:right">{!! $opcional['valor_total'] !!}</td>
                             </tr>
                         @endforeach

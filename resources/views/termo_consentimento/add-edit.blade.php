@@ -19,10 +19,10 @@
 
     <div class="col-xl-12 col-lg-12 col-md-12 col-sm-12 col-xs-12 px-0">
         <div class="card card-termo-consentimento shadow-sm border-0">
-            <div class="card-header card-header-termo-consentimento border-0">
+                <div class="card-header card-header-termo-consentimento border-0">
                 <div>
                     <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Configure as condições gerais da locação para check-in e check-out.</p>
+                    <p class="mb-0 text-muted">Configure o termo de aceite e as cláusulas de check-in/check-out do contrato, tanto para reserva comum quanto para motorista app.</p>
                 </div>
             </div>
 
@@ -35,7 +35,7 @@
                     <div class="col-lg-2 col-md-12">
                         <div class="form-group form-group-termo-consentimento">
                             <x-form-input type="number" class="form-control form-control-sm" id="ordem" name="ordem"
-                                label="Ordem" value="{{ old('ordem', $termo_consentimento->ordem ?? '') }}" required />
+                                label="Ordem" value="{{ old('ordem', $termo_consentimento->ordem ?? '1') }}" required />
                         </div>
                     </div>
 
@@ -56,6 +56,9 @@
                                         : null,
                                 )"
                                 class="form-control form-control-sm" required />
+                            <small class="text-muted d-block mt-1">
+                                Use este campo para definir se o registro é um termo de aceite ou uma cláusula de check-in/check-out do contrato.
+                            </small>
                         </div>
                     </div>
 
@@ -64,9 +67,7 @@
                             <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione"
                                 :selected="old(
                                     'ativo',
-                                    isset($termo_consentimento->ativo) && $termo_consentimento->ativo
-                                        ? $termo_consentimento->ativo
-                                        : null,
+                                    $termo_consentimento->ativo ?? 'S',
                                 )"
                                 class="form-control form-control-sm" required />
                         </div>
@@ -80,7 +81,7 @@
                         <div class="form-group form-group-termo-consentimento">
                             <label for="texto">Texto</label>
                             <div id="editor" class="quill-editor" style="height:180px;">{!! old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : '') !!}</div>
-                            <textarea name="texto" id="texto" class="d-none" required>{{ old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : '') }}</textarea>
+                            <textarea name="texto" id="texto" class="d-none">{{ old('texto', isset($termo_consentimento->texto) && $termo_consentimento->texto ? $termo_consentimento->texto : '') }}</textarea>
                             <small class="text-muted d-block mt-1">Texto completo da cláusula exibida no contrato.</small>
                         </div>
                     </div>

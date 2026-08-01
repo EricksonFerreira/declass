@@ -37,11 +37,11 @@ class ExibirCalcaoCheckinAction
         }
 
         return [
-            'calcaoExistente'  => $calcaoExistente,
-            'calculo'          => $calculo,
-            'stripePublicKey'  => $stripePublicKey,
+            'calcaoExistente' => $calcaoExistente,
+            'calculo' => $calculo,
+            'stripePublicKey' => $stripePublicKey,
             'metodosPagamento' => $metodosPagamento,
-            'empresa'          => $empresa,
+            'empresa' => $empresa,
         ];
     }
 
@@ -49,24 +49,24 @@ class ExibirCalcaoCheckinAction
     {
         $config = $this->resolverConfiguracao($reserva);
 
-        if (!$config) {
+        if (! $config) {
             $valorMotoristaApp = $this->valorCalcaoMotoristaApp($reserva);
             if ($valorMotoristaApp > 0) {
                 return [
-                    'valor_calculado'        => $valorMotoristaApp,
-                    'tipo_regra_aplicada'    => 'fixo',
-                    'origem_regra_aplicada'  => 'motorista_app',
+                    'valor_calculado' => $valorMotoristaApp,
+                    'tipo_regra_aplicada' => 'fixo',
+                    'origem_regra_aplicada' => 'motorista_app',
                     'configuracao_calcao_id' => null,
-                    'configuracao'           => null,
+                    'configuracao' => null,
                 ];
             }
 
             return [
-                'valor_calculado'        => 0,
-                'tipo_regra_aplicada'    => null,
-                'origem_regra_aplicada'  => null,
+                'valor_calculado' => 0,
+                'tipo_regra_aplicada' => null,
+                'origem_regra_aplicada' => null,
                 'configuracao_calcao_id' => null,
-                'configuracao'           => null,
+                'configuracao' => null,
             ];
         }
 
@@ -86,26 +86,28 @@ class ExibirCalcaoCheckinAction
         }
 
         return [
-            'valor_calculado'        => round($valor, 2),
-            'tipo_regra_aplicada'    => $config->tipo_regra_valor,
-            'origem_regra_aplicada'  => $config->nivel,
+            'valor_calculado' => round($valor, 2),
+            'tipo_regra_aplicada' => $config->tipo_regra_valor,
+            'origem_regra_aplicada' => $config->nivel,
             'configuracao_calcao_id' => $config->id,
-            'configuracao'           => $config,
+            'configuracao' => $config,
         ];
     }
 
     private function resolverConfiguracao(Reserva $reserva): ?ConfiguracaoCalcao
     {
         $empresaId = $reserva->empresa_id;
-        $grupoId   = $reserva->grupo_frota_id;
-        $modeloId  = $reserva->modelo_id;
+        $grupoId = $reserva->grupo_frota_id;
+        $modeloId = $reserva->modelo_id;
 
         if ($modeloId) {
             $config = ConfiguracaoCalcao::where('empresa_id', $empresaId)
                 ->where('modelo_id', $modeloId)
                 ->where('ativo', true)
                 ->first();
-            if ($config) return $config;
+            if ($config) {
+                return $config;
+            }
         }
 
         if ($grupoId) {
@@ -114,7 +116,9 @@ class ExibirCalcaoCheckinAction
                 ->whereNull('modelo_id')
                 ->where('ativo', true)
                 ->first();
-            if ($config) return $config;
+            if ($config) {
+                return $config;
+            }
         }
 
         return ConfiguracaoCalcao::where('empresa_id', $empresaId)

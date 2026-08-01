@@ -307,7 +307,7 @@
                                             $tipo = $cell['tipo'] ?? 'off';
                                             $tituloCell = $cell['titulo'] ?? 'Indisponível';
                                             $percentualDia = (int) ($cell['percentual_disponivel'] ?? 0);
-                                            $intervalosJson = e(json_encode($cell['intervalos'] ?? []));
+                                            $intervalosJson = json_encode($cell['intervalos'] ?? [], JSON_UNESCAPED_UNICODE);
                                             $diaFormatado = str_pad((string) $dia, 2, '0', STR_PAD_LEFT);
 
                                             $hasReserva = !empty($cell['reserva_id']);
@@ -336,7 +336,7 @@
                                                     data-estacao="{{ $estacao }}" data-dia="{{ $diaFormatado }}"
                                                     data-titulo="{{ $tituloCell }}" data-tipo="{{ $tipo }}"
                                                     data-percentual="{{ $percentualDia }}"
-                                                    data-intervalos="{{ $intervalosJson }}">
+                                                    data-intervalos='{{ $intervalosJson }}'>
                                                     @if ($tipo === 'ok')
                                                         <i class="fas fa-check"></i>
                                                     @elseif ($tipo === 'partial')

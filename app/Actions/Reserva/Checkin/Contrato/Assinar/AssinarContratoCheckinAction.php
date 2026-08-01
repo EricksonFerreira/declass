@@ -116,12 +116,31 @@ class AssinarContratoCheckinAction
 
         /** @var \App\Models\Reserva $reserva */
         $reserva = $reservaResolvida->registro;
-        $reserva->loadMissing(['usuario', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'contratoCheckin', 'estacaoRetirada', 'estacaoDevolucao']);
+        $reserva->loadMissing(['usuario', 'empresa', 'veiculo.marca', 'veiculo.modelo', 'contratoCheckin', 'estacaoRetirada', 'estacaoDevolucao', 'calcao', 'calcao.configuracao']);
 
         if (!$reserva->contratoCheckin) {
             return redirect()
                 ->route('reserva.show', $codigo)
                 ->with('error', 'Contrato de check-in não encontrado.');
+        }
+
+        $calcaoRecord = $reserva->calcao;
+        $valorCalculado = 0.0;
+        if ($calcaoRecord) {
+            $valorCalculado = (float) (
+                $calcaoRecord->valor_capturado
+                ?? $calcaoRecord->valor_autorizado
+                ?? $calcaoRecord->valor_calculado
+                ?? 0
+            );
+        } else {
+            try {
+                $calcaoService = app(\App\Services\CalcaoService::class);
+                $calculo = $calcaoService->calcularValor($reserva);
+                $valorCalculado = (float) ($calculo['valor_calculado'] ?? 0);
+            } catch (\Throwable $e) {
+                // fallback silencioso
+            }
         }
 
         return view('reserva.assinar-contrato-checkin', [
@@ -143,6 +162,7 @@ class AssinarContratoCheckinAction
                 'tipo' => 'RES',
                 'estacao_retirada' => $reserva->estacaoRetirada?->nome ?? '-',
                 'estacao_devolucao' => $reserva->estacaoDevolucao?->nome ?? '-',
+                'caucao' => $valorCalculado,
             ],
             'titulo' => 'Assinar Contrato de Check-in — Reserva Nº ' . $codigo,
         ]);

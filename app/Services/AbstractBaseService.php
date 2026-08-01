@@ -412,7 +412,7 @@ abstract class AbstractBaseService implements BaseServiceInterface
     protected function allowedEstacaoIdsForUser(): ?array
     {
         $user = Auth::user();
-        if (!$user || $user->isAdministrador() || $user->hasAcessoTodasEstacoes()) {
+        if (!$user || $user->isAdministrador() || $user->hasAcessoTodasEstacoes() || strtolower($user->tipoUsuario?->name ?? '') === 'cliente') {
             return null;
         }
 

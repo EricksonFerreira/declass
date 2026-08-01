@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Services\BreadcrumbService;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -98,6 +99,16 @@ class ProfileController extends Controller
         $user->email_verified_at = now();
         $user->save();
 
-        return redirect()->route('onboarding.plano')->with('success', 'Senha atualizada com sucesso. Vamos configurar seu plano.');
+        return redirect()->to($this->redirectPosTrocaSenha($user))
+            ->with('success', 'Senha atualizada com sucesso.');
+    }
+
+    private function redirectPosTrocaSenha(User $user): string
+    {
+        if ($user->isAdministrador()) {
+            return route('home');
+        }
+
+        return route('reserva.minhas');
     }
 }

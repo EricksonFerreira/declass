@@ -1,6 +1,6 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
-@section('title', 'Minha reserva #' . $reserva->id)
+@section('title', 'Minha reserva #' . $reserva->codigoReserva->codigo)
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
@@ -55,12 +55,32 @@
     $podeCancelarMinhaReserva = method_exists($reserva, 'podeCancelarComoCliente') ? $reserva->podeCancelarComoCliente() : false;
     $podeCancelarReserva = method_exists($reserva, 'podeFazerCancelamento') ? $reserva->podeFazerCancelamento() : false;
     $usuarioEhCriador = auth()->check() && (int) auth()->id() === (int) ($reserva->user_id ?? 0);
-    $podeExibirBotaoCancelar = $usuarioEhCriador || $podeCancelarReserva;
+    $podeExibirBotaoCancelar = ($usuarioEhCriador || $podeCancelarReserva) && !($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S');
     $textoBotaoCancelar = ($usuarioEhCriador && !$podeCancelarMinhaReserva)
         ? 'O cancelamento so fica disponivel ate 24 horas apos a criacao da reserva.'
         : 'Cancelar esta reserva.';
     $jaSatisfacao = $reserva->satisfacao()->exists();
-    $podeResponderSatisfacao = $reserva->contratoCheckout()->exists() && !$jaSatisfacao;
+    $checkoutAssinado = $reserva->contratoCheckout()->exists()
+        && (
+            !empty($reserva->contratoCheckout?->assinatura)
+            || !empty($reserva->contratoCheckout?->data_assinatura)
+            || (($reserva->contratoCheckout?->assinado ?? 'N') === 'S')
+        );
+    $podeResponderSatisfacao = $checkoutAssinado && !$jaSatisfacao;
+    $checkinExiste = (bool) $reserva->contratoCheckin;
+    $checkinAssinado = $checkinExiste && ($reserva->contratoCheckin->assinado ?? '') === 'S';
+    $checkoutExiste = (bool) $reserva->contratoCheckout;
+    $checkoutAssinado = $checkoutExiste && (
+        !empty($reserva->contratoCheckout->assinatura)
+        || !empty($reserva->contratoCheckout->data_assinatura)
+        || (($reserva->contratoCheckout->assinado ?? 'N') === 'S')
+    );
+    $souDonoDaReserva = auth()->check() && (int) auth()->id() === (int) ($reserva->user_id ?? $reserva->usuario_id ?? 0);
+    $precisaAssinarCheckin = $checkinExiste && ! $checkinAssinado;
+    $totalMultas = $reserva->multas?->count() ?? 0;
+    $totalSinistros = $reserva->sinistros?->count() ?? 0;
+    $moduloMultas = true;
+    $moduloNfse = (bool) ($reserva->empresa?->planoAtivo?->plano?->modulo_nfse ?? false);
 @endphp
 
 <style>
@@ -101,6 +121,20 @@
         padding: 14px 18px; border-bottom:1px solid #eef2f7;
         background: linear-gradient(120deg,#f8fbff,#f1f6ff);
         display:flex; align-items:center; gap:10px;
+    }
+    .rs-card__header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 18px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .rs-card__header h2 {
+        margin: 0;
+        font-size: 0.92rem;
+        font-weight: 700;
+        color: var(--ink);
     }
     .rs-card__icon {
         width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center;
@@ -196,11 +230,67 @@
         font-weight:800; background:#fff; color:#0f172a; transition:all .15s ease;
         box-shadow:0 1px 2px rgba(15,23,42,.04);
     }
-    .rs-survey__option input:checked + span { transform:translateY(-1px) scale(1.03); border-color:rgba(15,23,42,.2); box-shadow:0 10px 18px rgba(15,23,42,.08); }
+    .rs-survey__option input:checked + span {
+        transform: translateY(-2px) scale(1.05);
+        border: 3px solid #000000 !important;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+    }
     .rs-survey__textarea {
         width:100%; min-height:84px; border-radius:12px; border:1px solid #cbd5e1; background:#fff;
         color:#0f172a; padding:10px 12px; resize:vertical; outline:none;
     }
+    .rs-tabs-wrapper {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        box-shadow: 0 10px 24px rgba(15,23,42,.05);
+        overflow: hidden;
+    }
+    .rs-nav-tabs.nav-tabs {
+        border-bottom: 1px solid #e5eef8;
+        padding: 0 10px;
+        gap: 6px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        flex-wrap: nowrap;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .rs-nav-tabs.nav-tabs::-webkit-scrollbar { display: none; }
+    .rs-nav-tabs .nav-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        border: 0;
+        border-bottom: 3px solid transparent;
+        color: #475569;
+        font-weight: 700;
+        padding: 14px 16px;
+        white-space: nowrap;
+        border-radius: 0;
+    }
+    .rs-nav-tabs .nav-link.active {
+        color: var(--p);
+        border-bottom-color: var(--p);
+        background: transparent;
+    }
+    .rs-tab-badge {
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width: 20px;
+        height: 20px;
+        padding: 0 7px;
+        border-radius: 999px;
+        font-size: .72rem;
+        font-weight: 800;
+        margin-left: 2px;
+    }
+    .rs-tab-badge--green { background: #dcfce7; color: #15803d; }
+    .rs-tab-badge--amber { background: #fef3c7; color: #b45309; }
+    .rs-tab-badge--red { background: #fee2e2; color: #dc2626; }
+    .rs-tab-badge--slate { background: #f1f5f9; color: #475569; }
+    .rs-tab-content { padding: 18px; background: #f8fbff; }
     .rs-nps--red { background:#B91C1C !important; color:#fff !important; border-color:#991B1B !important; }
     .rs-nps--orange { background:#F59E0B !important; color:#fff !important; border-color:#D97706 !important; }
     .rs-nps--yellow { background:#FACC15 !important; color:#111827 !important; border-color:#EAB308 !important; }
@@ -218,18 +308,348 @@
         .rs-vehicle { grid-template-columns: 1fr; }
         .rs-price { grid-template-columns: 1fr; }
     }
+
+    /* Checkin/checkout single column layout */
+    .rs-checkin-layout {
+        display: grid;
+        gap: 20px;
+    }
+
+    /* ── Card Contrato de Check-in ── */
+    .rs-ci-card {
+        border-radius: 18px;
+        border: 1px solid rgba(0,0,0,.07);
+        padding: 20px 24px;
+        box-shadow: 0 4px 18px rgba(15,23,42,.07);
+        margin-bottom: 20px;
+    }
+    .rs-ci-card__top {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-bottom: 16px;
+    }
+    .rs-ci-card__icon {
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem; flex-shrink: 0;
+    }
+    .rs-ci-card__info {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .rs-ci-card__title {
+        font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0;
+    }
+    .rs-ci-card__badge {
+        display: inline-flex; align-items: center;
+        padding: 4px 12px; border-radius: 999px;
+        font-size: .76rem; font-weight: 700;
+        width: fit-content;
+    }
+    .rs-ci-card__details {
+        display: flex; flex-wrap: wrap; gap: 6px 0;
+        margin-bottom: 16px;
+        border-top: 1px solid rgba(0,0,0,.07);
+        padding-top: 14px;
+    }
+    .rs-ci-detail {
+        width: 50%; display: flex; flex-direction: column;
+        padding: 4px 12px 4px 0;
+    }
+    .rs-ci-detail span { font-size: .75rem; color: #64748b; margin-bottom: 2px; }
+    .rs-ci-detail strong { font-size: .88rem; color: #0f172a; }
+    .rs-ci-card__actions {
+        display: flex; flex-wrap: wrap; gap: 8px;
+        border-top: 1px solid rgba(0,0,0,.07);
+        padding-top: 14px;
+    }
+    .rs-ci-btn {
+        display: inline-flex; align-items: center; gap: 7px;
+        border: none; border-radius: 10px;
+        padding: 9px 16px; font-size: .83rem; font-weight: 700;
+        cursor: pointer; text-decoration: none;
+        transition: opacity .15s, transform .15s;
+    }
+    .rs-ci-btn:hover { opacity:.82; transform:translateY(-1px); text-decoration:none; }
+    .rs-ci-btn--view   { background:rgba(59,130,246,.13);  color:#1d4ed8; }
+    .rs-ci-btn--sign   { background:rgba(16,185,129,.13);  color:#047857; }
+    .rs-ci-btn--edit   { background:rgba(245,158,11,.14);  color:#92400e; }
+    .rs-ci-btn--delete { background:rgba(239,68,68,.11);   color:#b91c1c; }
+    .rs-ci-btn--disabled { background:rgba(100,116,139,.13); color:#64748b; cursor:not-allowed; }
+    .rs-ci-btn--disabled:hover { opacity:1; transform:none; }
+
+    /* ── Info Rows ── */
+    .rs-info-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 14px;
+    }
+    .rs-info-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .rs-info-row span { font-size: 0.82rem; color: #64748b; }
+    .rs-info-row strong { font-size: 0.88rem; color: #0f172a; }
+
+    /* ── Empty State ── */
+    .rs-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 20px;
+        color: #94a3b8;
+        text-align: center;
+    }
+    .rs-empty i {
+        font-size: 1.8rem;
+    }
+    .rs-empty span {
+        font-size: 0.8rem;
+    }
+
+    /* ── Card adjustment for admin-style headers ── */
+    .rs-card:has(.rs-card__header) {
+        padding: 20px 22px;
+        overflow: visible;
+    }
+
+    /* ── Lightbox ── */
+    .rs-lightbox {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .rs-lightbox__backdrop {
+        position: absolute;
+        inset: 0;
+        background: rgba(0,0,0,0.88);
+        cursor: pointer;
+    }
+    .rs-lightbox__inner {
+        position: relative;
+        z-index: 1;
+        max-width: 90vw;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    .rs-lightbox__img {
+        max-width: 90vw;
+        max-height: 80vh;
+        border-radius: 16px;
+        box-shadow: 0 24px 60px rgba(0,0,0,0.5);
+        object-fit: contain;
+    }
+    .rs-lightbox__label {
+        color: #fff;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.06em;
+    }
+    .rs-lightbox__close {
+        position: absolute;
+        top: -44px;
+        right: 0;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.15);
+        border: none;
+        color: #fff;
+        font-size: 1rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.15s;
+    }
+    .rs-lightbox__close:hover {
+        background: rgba(255,255,255,0.3);
+    }
+    .rs-photo-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin: 10px 0;
+    }
+    .rs-photo-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+    }
+    .rs-photo-frame {
+        position: relative;
+        cursor: pointer;
+        border-radius: 12px;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        background: #f8fbff;
+        width: 100px;
+        height: 100px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .rs-photo-thumb {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .rs-photo-zoom {
+        position: absolute;
+        inset: 0;
+        background: rgba(15,23,42,0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        opacity: 0;
+        transition: opacity 0.15s;
+    }
+    .rs-photo-frame:hover .rs-photo-zoom {
+        opacity: 1;
+    }
+    .rs-photo-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 12px;
+        border: 1px dashed var(--line);
+        background: #f8fbff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: var(--muted);
+        font-size: 0.8rem;
+        gap: 4px;
+    }
+    .rs-photo-label {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+    }
+
+    /* ── Histórico ── */
+    .rs-historico-card .rs-card__header { display:flex; align-items:center; gap:10px; user-select:none; }
+    .rs-timeline { padding: 1rem 1.5rem; }
+    .rs-tl-item {
+        display: flex;
+        gap: 14px;
+        padding-bottom: 1.4rem;
+        position: relative;
+    }
+    .rs-tl-item:not(:last-child)::before {
+        content:'';
+        position:absolute;
+        left: 17px;
+        top: 36px;
+        bottom: 0;
+        width: 2px;
+        background: #e2e8f0;
+    }
+    .rs-tl-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        flex-shrink: 0;
+        color: #fff;
+    }
+    .rs-tl-icon--info    { background: #3b82f6; }
+    .rs-tl-icon--success { background: #10b981; }
+    .rs-tl-icon--warning { background: #f59e0b; }
+    .rs-tl-icon--danger  { background: #ef4444; }
+    .rs-tl-body { flex:1; min-width:0; }
+    .rs-tl-acao {
+        font-size: .88rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 2px;
+    }
+    .rs-tl-meta {
+        font-size: .76rem;
+        color: #64748b;
+        margin-bottom: 4px;
+    }
+    .rs-tl-detalhes {
+        font-size: .78rem;
+        color: #475569;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 6px 10px;
+        margin-top: 4px;
+    }
+    .rs-tl-table { width:100%; border-collapse:collapse; }
+    .rs-tl-table tr + tr td { border-top: 1px solid #f1f5f9; }
+    .rs-tl-table td { padding: 3px 8px 3px 0; vertical-align:top; font-size:.78rem; }
+    .rs-tl-table__key { color:#94a3b8; white-space:nowrap; font-weight:600; width:35%; padding-right:10px; }
+    .rs-tl-bloco { margin-top:6px; }
+    .rs-tl-bloco__title { font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:3px; padding-bottom:2px; border-bottom:1px solid #e2e8f0; }
+    .rs-tl-pre { margin:0; font-size:.72rem; background:#f1f5f9; border-radius:4px; padding:3px 6px; white-space:pre-wrap; word-break:break-all; }
+    .rs-tl-item--clickable { cursor:pointer; transition:background .15s ease; border-radius:8px; margin-left:-8px; padding-left:8px; padding-right:8px; }
+    .rs-tl-item--clickable:hover { background:#f1f5f9; }
+    .rs-tl-chevron { display:flex; align-items:center; color:#94a3b8; font-size:.75rem; flex-shrink:0; padding-left:4px; }
+    .rs-tl-details-badge { display:inline-flex; align-items:center; color:#3b82f6; font-weight:600; }
 </style>
 
 <div class="rs-client-page">
+    @if (session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 12px; margin-bottom: 18px;">
+            <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert" style="border-radius: 12px; margin-bottom: 18px;">
+            <i class="fas fa-exclamation-circle mr-2"></i> {{ session('error') }}
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    @endif
+
     <div class="rs-client-hero">
         <div class="rs-client-hero__top">
             <div>
-                <h1 class="rs-client-hero__title">Minha reserva #{{ $reserva->id }}</h1>
+                <h1 class="rs-client-hero__title">Minha reserva #{{ $reserva->codigoReserva->codigo }}</h1>
                 <p class="rs-client-hero__sub">Resumo simples com as informações mais importantes da sua viagem.</p>
                 <div class="rs-client-hero__meta">
                     <span class="rs-chip"><i class="{{ $statusIcon }}"></i> {{ $statusNome }}</span>
                     <span class="rs-chip"><i class="fas fa-calendar-plus"></i> Criada em {{ $createdAt }}</span>
                     <span class="rs-chip"><i class="fas fa-user"></i> {{ $clienteNome }}</span>
+                    @if($podeResponderSatisfacao)
+                        <a href="#card-satisfacao" class="rs-chip" style="background: #eab308; border-color: #eab308; cursor: pointer; text-decoration: none;" onclick="document.getElementById('card-satisfacao').scrollIntoView({behavior: 'smooth'}); return false;">
+                            <i class="fas fa-exclamation-circle text-dark"></i>
+                            <strong style="color: #000;">Avaliação Pendente - Clique para responder</strong>
+                        </a>
+                    @elseif($jaSatisfacao)
+                        <span class="rs-chip" style="background: rgba(16,185,129,.2); border-color: #10b981; color: #dcfce7;">
+                            <i class="fas fa-check-circle text-success"></i>
+                            <strong>Avaliação Enviada</strong>
+                        </span>
+                    @endif
                 </div>
             </div>
             <div class="rs-status {{ $statusClass }}">
@@ -239,406 +659,168 @@
         </div>
     </div>
 
+    <div class="rs-card mb-3">
+        <div class="rs-card__head">
+            <div class="rs-card__icon"><i class="fas fa-stream"></i></div>
+            <div>
+                <div class="rs-card__title">Etapas da reserva</div>
+                <div class="rs-card__sub">Acompanhe o progresso do pagamento até a devolução</div>
+            </div>
+        </div>
+        <div class="rs-card__body">
+            <x-reserva.etapas :reserva="$reserva" />
+        </div>
+    </div>
+
+    @if($precisaAssinarCheckin)
+        <div class="rs-card mb-3" style="border-left:4px solid #f59e0b;">
+            <div class="rs-card__head">
+                <div class="rs-card__icon"><i class="fas fa-file-signature"></i></div>
+                <div>
+                    <div class="rs-card__title">Assinatura pendente do check-in</div>
+                    <div class="rs-card__sub">
+                        {{ $souDonoDaReserva ? 'Você precisa confirmar o termo de check-in para concluir esta etapa.' : 'O contrato de check-in ainda não foi assinado.' }}
+                    </div>
+                </div>
+            </div>
+            <div class="rs-card__body">
+                <div class="rs-note" style="margin-bottom:12px;">
+                    O check-in já foi criado. Para seguir com a reserva, o contrato precisa ser assinado e, se você for o titular, o aceite do termo será exigido na tela de assinatura.
+                </div>
+                <div class="rs-actions">
+                    <a href="{{ route('reserva.minhas.assinar-checkin', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="rs-btn rs-btn--primary">
+                        <i class="fas fa-signature"></i>
+                        <span>Assinar check-in</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="rs-client-grid">
         <div class="rs-main">
-            <div class="rs-card mb-3">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-route"></i></div>
-                    <div>
-                        <div class="rs-card__title">Sua viagem</div>
-                        <div class="rs-card__sub">Retirada, devolução e período contratado</div>
-                    </div>
-                </div>
-                <div class="rs-card__body">
-                    <div class="rs-route">
-                        <div class="rs-stop">
-                            <div class="rs-dot rs-dot--a"></div>
-                            <div>
-                                <div class="rs-label">Retirada</div>
-                                <div class="rs-place">{{ $estacaoRetirada }}</div>
-                                <div class="rs-date">{{ $inicioFormatado }}</div>
-                            </div>
-                        </div>
-                        <div class="rs-mid">
-                            <div class="rs-mid__line"></div>
-                            <div class="rs-mid__pill">{{ $diasReserva }} {{ $diasReserva === 1 ? 'dia' : 'dias' }}</div>
-                            <div class="rs-mid__line"></div>
-                        </div>
-                        <div class="rs-stop rs-stop--right">
-                            <div class="rs-dot rs-dot--b"></div>
-                            <div>
-                                <div class="rs-label">Devolução</div>
-                                <div class="rs-place">{{ $estacaoDevolucao }}</div>
-                                <div class="rs-date">{{ $fimFormatado }}</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="rs-actions">
-                        @if($podeExibirBotaoCancelar)
-                            <button
-                                type="button"
-                                class="rs-btn"
-                                data-cancelar-reserva="1"
-                                data-action="{{ route('reserva.cancelar', $reserva->id) }}"
-                                data-pode-cancelar="{{ ($podeCancelarMinhaReserva || $podeCancelarReserva) ? '1' : '0' }}"
-                                data-toggle="tooltip"
-                                title="{{ $textoBotaoCancelar }}"
-                                style="background:#fee2e2;color:#991b1b;border-color:#fecaca;{{ ($usuarioEhCriador && !$podeCancelarMinhaReserva) ? 'opacity:.7;' : '' }}"
-                            >
-                                <i class="fas fa-ban"></i> Cancelar reserva
-                            </button>
-                        @endif
-                    </div>
-                </div>
-            </div>
-
-            <div class="rs-card mb-3">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-car"></i></div>
-                    <div>
-                        <div class="rs-card__title">Veículo reservado</div>
-                        <div class="rs-card__sub">Grupo, modelo e informações essenciais</div>
-                    </div>
-                </div>
-                <div class="rs-card__body">
-                    <div class="rs-vehicle">
-                        <div class="rs-vehicle__img">
-                            <img src="{{ $reserva->grupoFrota?->imagem_url ?: asset('assets/imgs/logo-sem-texto.png') }}" alt="{{ $grupoNome }}">
-                        </div>
-                        <div>
-                            <div class="rs-vehicle__badges">
-                                <span class="rs-badge rs-badge--blue"><i class="fas fa-layer-group"></i> {{ $grupoNome }}</span>
-                                <span class="rs-badge"><i class="fas fa-car-side"></i> {{ $modeloNome }}</span>
-                                @if(!empty($reserva->modelos?->combustivel))
-                                    <span class="rs-badge rs-badge--green"><i class="fas fa-gas-pump"></i> {{ $reserva->modelos->combustivel }}</span>
-                                @endif
-                                @if(!empty($reserva->modelos?->transmissao))
-                                    <span class="rs-badge rs-badge--amber"><i class="fas fa-cogs"></i> {{ $reserva->modelos->transmissao }}</span>
-                                @endif
-                            </div>
-                            <div class="rs-note">
-                                A imagem acima representa o grupo/modelo reservado. Se houver substituição de veículo, a equipe pode informar no balcão de atendimento.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="rs-card mb-3">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-car-crash"></i></div>
-                    <div>
-                        <div class="rs-card__title">Danos do veículo</div>
-                        <div class="rs-card__sub">Histórico de danos registrados para este carro</div>
-                    </div>
-                    <span class="rs-status is-warning ml-auto">{{ $danosVeiculo->count() }} {{ $danosVeiculo->count() === 1 ? 'dano' : 'danos' }}</span>
-                </div>
-                <div class="rs-card__body">
-                    @if($danosVeiculo->isEmpty())
-                        <div class="rs-note">Nenhum dano registrado para este veículo.</div>
-                    @else
-                        <div class="rs-list">
-                            @foreach($danosVeiculo as $dano)
-                                @php
-                                    $statusDano = strtolower((string) ($dano->status ?? 'pendente'));
-                                    $statusLabel = match ($statusDano) {
-                                        'corrigida' => 'Corrigido',
-                                        'parcialmente_corrigida' => 'Parcial',
-                                        'descartada' => 'Descartado',
-                                        'em_correcao' => 'Em correção',
-                                        default => 'Pendente',
-                                    };
-                                    $badgeClass = match ($statusDano) {
-                                        'corrigida', 'parcialmente_corrigida' => 'success',
-                                        'descartada' => 'secondary',
-                                        'em_correcao' => 'warning',
-                                        default => 'danger',
-                                    };
-                                @endphp
-                                <div class="rs-list__item">
-                                    <div class="d-flex justify-content-between align-items-start gap-2">
-                                        <div>
-                                            <div class="rs-list__label">{{ $dano->dano?->categoria?->nome ?? 'Dano' }}</div>
-                                            <div class="rs-list__value">{{ $dano->observacoes ?: $dano->local_dano ?: $dano->localizacao_problema ?: 'Sem descrição' }}</div>
-                                            <div class="text-muted" style="font-size:.74rem;">
-                                                {{ $dano->created_at ? \Carbon\Carbon::parse($dano->created_at)->format('d/m/Y H:i') : '-' }}
-                                                @if($dano->quilometragem_veiculo)
-                                                    · {{ number_format((float) $dano->quilometragem_veiculo, 0, ',', '.') }} km
-                                                @endif
-                                            </div>
-                                        </div>
-                                        <span class="badge badge-{{ $badgeClass }}">{{ $statusLabel }}</span>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="rs-card">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                    <div>
-                        <div class="rs-card__title">Valores da reserva</div>
-                        <div class="rs-card__sub">Resumo financeiro simples para você acompanhar</div>
-                    </div>
-                </div>
-                <div class="rs-card__body">
-                    <div class="rs-price">
-                        <div class="rs-price__box">
-                            <div class="rs-price__label">Tarifa base</div>
-                            <div class="rs-price__value">R$ {{ number_format($valorTarifaBase, 2, ',', '.') }}</div>
-                        </div>
-                        <div class="rs-price__box">
-                            <div class="rs-price__label">Opcionais</div>
-                            <div class="rs-price__value">R$ {{ number_format($valorOpcionais, 2, ',', '.') }}</div>
-                        </div>
-                        <div class="rs-price__box">
-                            <div class="rs-price__label">Total</div>
-                            <div class="rs-price__value">R$ {{ number_format($valorTotal, 2, ',', '.') }}</div>
-                        </div>
-                    </div>
-                    <div style="margin-top:12px" class="rs-list">
-                        <div class="rs-list__item">
-                            <div class="rs-list__label">Pagamento</div>
-                            <div class="rs-list__value">{{ $pagamentoEfetuado ? 'Pago' : 'Pendente' }}</div>
-                        </div>
-                        <div class="rs-list__item">
-                            <div class="rs-list__label">Saldo pendente</div>
-                            <div class="rs-list__value">R$ {{ number_format($saldoPendente, 2, ',', '.') }}</div>
-                        </div>
-                        @if($percentualDesconto > 0)
-                            <div class="rs-list__item">
-                                <div class="rs-list__label">Desconto</div>
-                                <div class="rs-list__value">{{ number_format($percentualDesconto, 0) }}% @if($cupomCodigo) - Cupom {{ $cupomCodigo }} @endif</div>
-                            </div>
-                        @endif
-                    </div>
-                    @if(!$pagamentoEfetuado)
-                        <div class="rs-actions" style="margin-top:14px;">
-                            <a href="{{ route('reserva.pagamento.efetuar', ['id' => $reserva->codigoReserva?->codigo ?? ('RES-' . $reserva->id)]) }}" class="rs-btn rs-btn--primary">
-                                <i class="fas fa-credit-card"></i> Pagar
-                            </a>
-                        </div>
-                    @endif
-                </div>
-            </div>
-
-            <div class="rs-card mt-3">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-star"></i></div>
-                    <div>
-                        <div class="rs-card__title">Sua avaliação</div>
-                        <div class="rs-card__sub">Pode ser preenchida apenas uma vez</div>
-                    </div>
-                </div>
-                <div class="rs-card__body">
-                    @if($podeResponderSatisfacao)
-                        <form method="POST" action="{{ route('reserva.satisfacao.store', $reserva->id) }}" class="rs-survey">
-                            @csrf
-                            <div class="rs-survey__group">
-                                <label class="rs-survey__label">1. Como foi sua experiência geral?</label>
-                                <div class="rs-survey__options">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <label class="rs-survey__option">
-                                            <input type="radio" name="satisfacao_geral" value="{{ $i }}" required>
-                                            <span>{{ $i }}</span>
-                                        </label>
-                                    @endfor
-                                </div>
-                            </div>
-
-                            <div class="rs-survey__group">
-                                <label class="rs-survey__label">2. Foi fácil concluir a reserva?</label>
-                                <div class="rs-survey__options">
-                                    @for($i = 1; $i <= 5; $i++)
-                                        <label class="rs-survey__option">
-                                            <input type="radio" name="facilidade_reserva" value="{{ $i }}" required>
-                                            <span>{{ $i }}</span>
-                                        </label>
-                                    @endfor
-                                </div>
-                            </div>
-
-                            <div class="rs-survey__group">
-                                <label class="rs-survey__label">3. De 0 a 10, quanto você recomendaria a empresa?</label>
-                                <div class="rs-survey__options rs-survey__options--nps">
-                                    @for($i = 0; $i <= 10; $i++)
-                                        @php
-                                            $npsClass = match (true) {
-                                                $i <= 2 => 'rs-nps rs-nps--red',
-                                                $i <= 5 => 'rs-nps rs-nps--orange',
-                                                $i <= 7 => 'rs-nps rs-nps--yellow',
-                                                $i === 8 => 'rs-nps rs-nps--lightgreen',
-                                                $i === 9 => 'rs-nps rs-nps--green',
-                                                default => 'rs-nps rs-nps--darkgreen',
-                                            };
-                                        @endphp
-                                        <label class="rs-survey__option">
-                                            <input type="radio" name="nps_nota" value="{{ $i }}" required>
-                                            <span class="{{ $npsClass }}">{{ $i }}</span>
-                                        </label>
-                                    @endfor
-                                </div>
-                            </div>
-
-                            <div class="rs-survey__group mb-0">
-                                <label class="rs-survey__label" for="comentario">O que podemos melhorar? <span style="font-weight:400;">(opcional)</span></label>
-                                <textarea id="comentario" name="comentario" class="rs-survey__textarea" placeholder="Deixe uma observação rápida."></textarea>
-                            </div>
-
-                            <div class="rs-actions" style="margin-top:14px;">
-                                <button type="submit" class="rs-btn rs-btn--primary">
-                                    <i class="fas fa-paper-plane"></i> Enviar avaliação
-                                </button>
-                            </div>
-                        </form>
-                    @else
-                        <div class="rs-note">
-                            @if($jaSatisfacao)
-                                Obrigado! Sua avaliação já foi enviada e não pode ser alterada.
-                            @else
-                                A avaliação ficará disponível após a conclusão da reserva.
+            <div class="rs-tabs-wrapper">
+                <ul class="nav nav-tabs rs-nav-tabs" id="reservaMainTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="tab-visao-geral" data-toggle="tab" href="#pane-visao-geral" role="tab">
+                            <i class="fas fa-home"></i>
+                            <span>Visão Geral</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-checkin" data-toggle="tab" href="#pane-checkin" role="tab">
+                            <i class="fas fa-file-signature"></i>
+                            <span>Check-in</span>
+                            @if($reserva->contratoCheckin)
+                                @php $ciAssinadoTab = $reserva->contratoCheckin->assinado === 'S'; @endphp
+                                <span class="rs-tab-badge {{ $ciAssinadoTab ? 'rs-tab-badge--green' : 'rs-tab-badge--amber' }}">
+                                    {{ $ciAssinadoTab ? 'Assinado' : 'Pendente' }}
+                                </span>
                             @endif
-                        </div>
+                            </a>
+                        </li >
+                    @if($reserva->contratoCheckin)
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-checkout" data-toggle="tab" href="#pane-checkout" role="tab">
+                            <i class="fas fa-flag-checkered"></i>
+                            <span>Check-out</span>
+                            @if($checkoutExiste)
+                                <span class="rs-tab-badge {{ $checkoutAssinado ? 'rs-tab-badge--green' : 'rs-tab-badge--amber' }}">
+                                    {{ $checkoutAssinado ? 'Assinado' : 'Pendente' }}
+                                </span>
+                            @else
+                                <span class="rs-tab-badge rs-tab-badge--amber">Pendente</span>
+                            @endif
+                        </a>
+                    </li>
                     @endif
-                </div>
-            </div>
 
-            <div class="rs-card mt-3">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-receipt"></i></div>
-                    <div>
-                        <div class="rs-card__title">Histórico de pagamentos</div>
-                        <div class="rs-card__sub">Transações financeiras da reserva</div>
-                    </div>
-                </div>
-                <div class="rs-card__body p-0">
-                    @php $transacoes = $reserva->transacoes ?? collect(); @endphp
-                    @if($transacoes->isEmpty())
-                        <div class="rs-card__body">
-                            <div class="rs-note">Nenhuma transação registrada para esta reserva.</div>
-                        </div>
-                    @else
-                        <div class="table-responsive">
-                            <table class="table table-sm mb-0">
-                                <thead>
-                                    <tr>
-                                        <th class="pl-3">Data</th>
-                                        <th>Valor</th>
-                                        <th>Método</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($transacoes as $t)
-                                        @php
-                                            $statusTransacao = strtolower((string) ($t->status ?? ''));
-                                            $badgeClass = match ($statusTransacao) {
-                                                'confirmado', 'pago', 'aprovado' => 'badge-success',
-                                                'pendente', 'aguardando' => 'badge-warning',
-                                                'cancelado', 'recusado' => 'badge-danger',
-                                                default => 'badge-secondary',
-                                            };
-                                        @endphp
-                                        <tr>
-                                            <td class="pl-3">{{ $t->created_at ? \Carbon\Carbon::parse($t->created_at)->format('d/m/Y H:i') : '-' }}</td>
-                                            <td class="font-weight-bold">R$ {{ number_format((float) ($t->valor ?? 0), 2, ',', '.') }}</td>
-                                            <td>{{ $t->metodo_pagamento ?: ($t->metodo_pagamento_label ?? '-') }}</td>
-                                            <td><span class="badge {{ $badgeClass }}">{{ ucfirst($statusTransacao ?: 'N/I') }}</span></td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-financeiro" data-toggle="tab" href="#pane-financeiro" role="tab">
+                            <i class="fas fa-file-invoice-dollar"></i>
+                            <span>Financeiro</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-danos" data-toggle="tab" href="#pane-danos" role="tab">
+                            <i class="fas fa-car-crash"></i>
+                            <span>Danos</span>
+                            @if($danosVeiculo->count() > 0)
+                                <span class="rs-tab-badge rs-tab-badge--red">{{ $danosVeiculo->count() }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    @if($moduloMultas)
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-multas" data-toggle="tab" href="#pane-multas" role="tab">
+                            <i class="fas fa-circle-exclamation"></i>
+                            <span>Multas</span>
+                            @if($totalMultas > 0)
+                                <span class="rs-tab-badge rs-tab-badge--red">{{ $totalMultas }}</span>
+                            @endif
+                        </a>
+                    </li>
                     @endif
-                </div>
-            </div>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-sinistros" data-toggle="tab" href="#pane-sinistros" role="tab">
+                            <i class="fas fa-car-crash"></i>
+                            <span>Sinistros</span>
+                            @if($totalSinistros > 0)
+                                <span class="rs-tab-badge rs-tab-badge--red">{{ $totalSinistros }}</span>
+                            @endif
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tab-historico" data-toggle="tab" href="#pane-historico" role="tab">
+                            <i class="fas fa-history"></i>
+                            <span>Histórico</span>
+                            <span class="rs-tab-badge rs-tab-badge--slate d-none" id="historicoCount"></span>
+                        </a>
+                    </li>
+                </ul>
 
-            <div class="rs-card mt-3">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-car-crash"></i></div>
-                    <div>
-                        <div class="rs-card__title">Sinistros</div>
-                        <div class="rs-card__sub">Ocorrências ligadas a esta reserva</div>
+                <div class="tab-content rs-tab-content" id="reservaMainTabContent">
+                    {{-- TAB 1 — VISÃO GERAL --}}
+                    <div class="tab-pane fade show active" id="pane-visao-geral" role="tabpanel">
+                        @include('reserva.partials.cliente_visao_geral')
                     </div>
-                </div>
-                <div class="rs-card__body">
-                    @php $sinistrosCliente = $reserva->avariaCobrancas ?? collect(); @endphp
-                    @if($sinistrosCliente->isEmpty())
-                        <div class="rs-note">Nenhum sinistro vinculado a esta reserva.</div>
-                    @else
-                        <div class="rs-list">
-                            @foreach($sinistrosCliente as $sinistro)
-                                @php
-                                    $statusSinistro = strtolower((string) ($sinistro->status ?? 'aberto'));
-                                    $labelStatus = match ($statusSinistro) {
-                                        'aberto', 'em_analise' => 'Em análise',
-                                        'pago', 'cobrado' => 'Cobrado',
-                                        'cancelado' => 'Cancelado',
-                                        default => ucfirst($statusSinistro),
-                                    };
-                                @endphp
-                                <div class="rs-list__item" style="border-bottom:1px solid var(--ma-line);padding:10px 0;">
-                                    <div class="d-flex justify-content-between align-items-start gap-2">
-                                        <div>
-                                            <div class="rs-list__label">{{ $sinistro->descricao ?: 'Sinistro' }}</div>
-                                            <div class="text-muted" style="font-size:.74rem;">
-                                                {{ $sinistro->created_at ? \Carbon\Carbon::parse($sinistro->created_at)->format('d/m/Y') : '-' }}
-                                            </div>
-                                        </div>
-                                        <span class="badge badge-{{ $statusSinistro === 'pago' || $statusSinistro === 'cobrado' ? 'success' : ($statusSinistro === 'cancelado' ? 'danger' : 'warning') }}">{{ $labelStatus }}</span>
-                                    </div>
-                                    <div class="mt-2 text-dark font-weight-bold">R$ {{ number_format((float) ($sinistro->valor ?? 0), 2, ',', '.') }}</div>
-                                </div>
-                            @endforeach
-                        </div>
-                    @endif
-                </div>
-            </div>
 
-            <div class="rs-card mt-3">
-                <div class="rs-card__head">
-                    <div class="rs-card__icon"><i class="fas fa-circle-exclamation"></i></div>
-                    <div>
-                        <div class="rs-card__title">Multas</div>
-                        <div class="rs-card__sub">Infrações vinculadas a esta reserva</div>
+                    {{-- TAB 2 — CHECK-IN --}}
+                    <div class="tab-pane fade" id="pane-checkin" role="tabpanel">
+                        @include('reserva.partials.cliente_checkin')
                     </div>
-                </div>
-                <div class="rs-card__body">
-                    @php $multasCliente = $reserva->multas ?? collect(); @endphp
-                    @if($multasCliente->isEmpty())
-                        <div class="rs-note">Nenhuma multa vinculada a esta reserva.</div>
-                    @else
-                        <div class="rs-list">
-                            @foreach($multasCliente as $multa)
-                                @php
-                                    $statusMulta = strtolower((string) ($multa->status_multa ?? 'pendente'));
-                                    $labelMulta = match ($statusMulta) {
-                                        'paga' => 'Paga',
-                                        'pendente', 'em_analise' => 'Pendente',
-                                        'cancelada' => 'Cancelada',
-                                        default => ucfirst($statusMulta),
-                                    };
-                                @endphp
-                                <div class="rs-list__item" style="border-bottom:1px solid var(--ma-line);padding:10px 0;">
-                                    <div class="d-flex justify-content-between align-items-start gap-2">
-                                        <div>
-                                            <div class="rs-list__label">Multa #{{ $multa->id }}</div>
-                                            <div class="rs-list__value">{{ $multa->local_infracao ?: 'Local não informado' }}</div>
-                                            <div class="text-muted" style="font-size:.74rem;">
-                                                {{ $multa->data_hora_infracao ? \Carbon\Carbon::parse($multa->data_hora_infracao)->format('d/m/Y H:i') : '-' }}
-                                            </div>
-                                        </div>
-                                        <span class="badge badge-{{ $statusMulta === 'paga' ? 'success' : ($statusMulta === 'cancelada' ? 'danger' : 'warning') }}">{{ $labelMulta }}</span>
-                                    </div>
-                                    <div class="mt-2 text-dark font-weight-bold">R$ {{ number_format((float) ($multa->valor_final ?? $multa->valor_original ?? 0), 2, ',', '.') }}</div>
-                                </div>
-                            @endforeach
-                        </div>
+
+                    {{-- TAB 3 — CHECK-OUT --}}
+                    <div class="tab-pane fade" id="pane-checkout" role="tabpanel">
+                        @include('reserva.partials.cliente_checkout')
+                    </div>
+
+                    {{-- TAB 4 — FINANCEIRO --}}
+                    <div class="tab-pane fade" id="pane-financeiro" role="tabpanel">
+                        @include('reserva.partials.cliente_financeiro')
+                    </div>
+
+                    {{-- TAB 5 — DANOS --}}
+                    <div class="tab-pane fade" id="pane-danos" role="tabpanel">
+                        @include('reserva.partials.cliente_danos')
+                    </div>
+
+                    {{-- TAB 6 — MULTAS --}}
+                    @if($moduloMultas)
+                    <div class="tab-pane fade" id="pane-multas" role="tabpanel">
+                        @include('reserva.partials.cliente_multas')
+                    </div>
                     @endif
+
+                    {{-- TAB 7 — SINISTROS --}}
+                    <div class="tab-pane fade" id="pane-sinistros" role="tabpanel">
+                        @include('reserva.partials.cliente_sinistros')
+                    </div>
+
+                    {{-- TAB 8 — HISTÓRICO --}}
+                    <div class="tab-pane fade" id="pane-historico" role="tabpanel">
+                        @include('reserva.partials.cliente_historico')
+                    </div>
                 </div>
             </div>
         </div>
@@ -702,9 +884,268 @@
         </aside>
     </div>
 </div>
+    {{-- ── Modal Detalhes do Historico ── --}}
+    <div class="modal fade" id="modalDetalhesLog" tabindex="-1" data-backdrop="static">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rs-dano-modal">
+                <div class="modal-header rs-dano-modal__header">
+                    <div>
+                        <div class="rs-dano-modal__eyebrow">Detalhes do registro</div>
+                        <h5 class="modal-title" id="logModalAcao"></h5>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex align-items-center mb-4 pb-3" style="border-bottom:2px solid #e2e8f0;gap:16px;flex-wrap:wrap">
+                        <span class="small" style="display:flex;align-items:center;gap:6px"><i class="fas fa-user text-muted"></i> <strong id="logModalUsuario"></strong></span>
+                        <span class="small" style="display:flex;align-items:center;gap:6px"><i class="fas fa-clock text-muted"></i> <span id="logModalData"></span></span>
+                        <span class="ml-auto"><span class="badge" id="logModalNivel"></span></span>
+                    </div>
+                    <div id="logModalDetalhes"></div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">
+                        <i class="fas fa-times mr-1"></i> Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Lightbox overlay --}}
+    <div id="rs-lightbox" class="rs-lightbox d-none" role="dialog" aria-modal="true">
+        <div class="rs-lightbox__backdrop" id="rs-lightbox-backdrop"></div>
+        <div class="rs-lightbox__inner">
+            <div class="rs-lightbox__label" id="rs-lightbox-label"></div>
+            <img src="" alt="" id="rs-lightbox-img" class="rs-lightbox__img">
+            <button type="button" class="rs-lightbox__close" id="rs-lightbox-close">&times;</button>
+        </div>
+    </div>
+
 @section('js')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
+        (function () {
+            const RESERVA_ID    = @json($reserva->id);
+            const HISTORICO_URL = "{{ route('reserva.historico', $reserva->id) }}";
+
+            /* ── Ícones por nível ── */
+            const nivelIcone = {
+                info:    'fas fa-info-circle',
+                success: 'fas fa-check-circle',
+                warning: 'fas fa-exclamation-circle',
+                danger:  'fas fa-times-circle',
+            };
+
+            /* ── Abre modal com detalhes do log ── */
+            function openLogModal(log) {
+                const modal   = document.getElementById('modalDetalhesLog');
+                if (!modal) return;
+
+                document.getElementById('logModalAcao').textContent  = log.acao || '';
+                document.getElementById('logModalUsuario').textContent = log.usuario || '';
+                document.getElementById('logModalData').textContent    = log.data || '';
+                document.getElementById('logModalNivel').textContent   = (log.nivel || 'info').toUpperCase();
+
+                const badge = document.getElementById('logModalNivel');
+                badge.className = 'badge badge-' + ({
+                    info: 'info', success: 'success', warning: 'warning', danger: 'danger'
+                }[log.nivel] || 'secondary');
+
+                const container = document.getElementById('logModalDetalhes');
+                container.innerHTML = '';
+
+                const det = log.detalhes || {};
+
+                // Tabela de chaves simples
+                const simples = {};
+                const objetos = {};
+                Object.keys(det).forEach(function (k) {
+                    if (det[k] !== null && typeof det[k] === 'object') {
+                        objetos[k] = det[k];
+                    } else {
+                        simples[k] = det[k];
+                    }
+                });
+
+                if (Object.keys(simples).length > 0) {
+                    const table = document.createElement('table');
+                    table.className = 'rs-tl-table';
+                    table.innerHTML = Object.keys(simples).map(function (k) {
+                        return `<tr><td class="rs-tl-table__key">${k}</td><td>${formatLogValue(simples[k])}</td></tr>`;
+                    }).join('');
+                    container.appendChild(table);
+                }
+
+                Object.keys(objetos).forEach(function (k) {
+                    const blockCard = document.createElement('div');
+                    blockCard.className = 'rs-tl-bloco';
+                    blockCard.innerHTML = `<div class="rs-tl-bloco__title">${k}</div>`;
+
+                    const obj = objetos[k];
+                    if (obj.antes || obj.depois) {
+                        const subTable = document.createElement('table');
+                        subTable.className = 'rs-tl-table';
+                        const keys = Array.from(new Set(Object.keys(obj.antes || {}).concat(Object.keys(obj.depois || {}))));
+                        subTable.innerHTML = keys.map(function (subKey) {
+                            const v1 = obj.antes ? obj.antes[subKey] : undefined;
+                            const v2 = obj.depois ? obj.depois[subKey] : undefined;
+                            return `<tr>
+                                <td class="rs-tl-table__key" style="width:25%">${subKey}</td>
+                                <td style="width:37.5%;color:#dc2626">${formatDiffValue(v1)}</td>
+                                <td style="width:37.5%;color:#16a34a">${formatDiffValue(v2)}</td>
+                            </tr>`;
+                        }).join('');
+                        blockCard.appendChild(subTable);
+                    } else {
+                        const pre = document.createElement('pre');
+                        pre.className = 'rs-tl-pre';
+                        pre.textContent = JSON.stringify(obj, null, 2);
+                        blockCard.appendChild(pre);
+                    }
+                    container.appendChild(blockCard);
+                });
+
+                $(modal).modal('show');
+            }
+
+            function formatLogValue(v) {
+                if (v === null || v === undefined) return '<span class="text-muted">—</span>';
+                if (typeof v === 'boolean') return v ? '<span class="text-success">Sim</span>' : '<span class="text-danger">Não</span>';
+                if (typeof v === 'object') return '<pre class="mb-0 small" style="background:#f1f5f9;border-radius:6px;padding:4px 8px;max-height:80px;overflow:auto;white-space:pre-wrap;margin:0">' + JSON.stringify(v, null, 2) + '</pre>';
+                return String(v);
+            }
+
+            function formatDiffValue(v) {
+                if (v === null || v === undefined) return '<span class="text-muted small">—</span>';
+                if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
+                if (typeof v === 'object') return '<span class="small">' + JSON.stringify(v) + '</span>';
+                return String(v);
+            }
+
+            /* ── Render timeline ── */
+            function renderHistorico(logs) {
+                const container = document.getElementById('historicoTimeline');
+                const countEl   = document.getElementById('historicoCount');
+                const countPaneEl = document.getElementById('historicoCountPane');
+                if (countEl) {
+                    countEl.textContent = logs.length;
+                    countEl.classList.toggle('d-none', logs.length === 0);
+                }
+                if (countPaneEl) countPaneEl.textContent = logs.length;
+
+                if (!logs.length) {
+                    container.innerHTML = '<p class="text-muted text-center py-3"><i class="fas fa-inbox mr-1"></i>Nenhum registro encontrado.</p>';
+                    container.classList.remove('d-none');
+                    return;
+                }
+
+                function hasDetalhes(det) {
+                    return det && typeof det === 'object' && Object.keys(det).length > 0;
+                }
+
+                container.innerHTML = logs.map(function (log, idx) {
+                    const nivel    = log.nivel || 'info';
+                    const icon     = nivelIcone[nivel] || nivelIcone.info;
+                    const det      = log.detalhes || {};
+                    const hasDet   = hasDetalhes(det);
+                    const detCount = hasDet ? Object.keys(det).length : 0;
+                    const logJson  = hasDet ? JSON.stringify(log).replace(/"/g, '&quot;') : '';
+
+                    return `
+                    <div class="rs-tl-item ${hasDet ? 'rs-tl-item--clickable' : ''}" ${hasDet ? 'data-log=\'' + logJson + '\'' : ''}>
+                        <div class="rs-tl-icon rs-tl-icon--${nivel}"><i class="${icon}"></i></div>
+                        <div class="rs-tl-body">
+                            <div class="rs-tl-acao">${log.acao || 'Ação registrada'}</div>
+                            <div class="rs-tl-meta">
+                                <i class="fas fa-user mr-1"></i>${log.usuario}
+                                &nbsp;&middot;&nbsp;
+                                <i class="fas fa-clock mr-1"></i>${log.data}
+                                ${hasDet ? '&nbsp;&middot;&nbsp;<span class="rs-tl-details-badge"><i class="fas fa-list mr-1"></i>' + detCount + ' detalhe(s)</span>' : ''}
+                            </div>
+                        </div>
+                        ${hasDet ? '<div class="rs-tl-chevron"><i class="fas fa-chevron-right"></i></div>' : ''}
+                    </div>`;
+                }).join('');
+
+                container.querySelectorAll('.rs-tl-item--clickable').forEach(function (el) {
+                    el.addEventListener('click', function () {
+                        try {
+                            var logData = JSON.parse(this.dataset.log);
+                            openLogModal(logData);
+                        } catch (e) {
+                            // ignore parse errors
+                        }
+                    });
+                });
+
+                container.classList.remove('d-none');
+            }
+
+            /* ── Carregar histórico ── */
+            let historicoCarregado = false;
+            function carregarHistorico() {
+                if (historicoCarregado) return;
+                historicoCarregado = true;
+                document.getElementById('historicoLoading')?.classList.remove('d-none');
+
+                fetch(HISTORICO_URL, { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+                    .then(r => r.json())
+                    .then(data => {
+                        document.getElementById('historicoLoading')?.classList.add('d-none');
+                        renderHistorico(data.logs || []);
+                    })
+                    .catch(() => {
+                        const el = document.getElementById('historicoLoading');
+                        if (el) el.textContent = 'Erro ao carregar histórico.';
+                    });
+            }
+
+            /* ── Auto-load histórico when tab opened ── */
+            document.getElementById('tab-historico')?.addEventListener('shown.bs.tab', carregarHistorico);
+            // jQuery fallback for AdminLTE Bootstrap 4
+            $('#tab-historico').on('shown.bs.tab', carregarHistorico);
+
+            /* ── Lightbox ── */
+            const lightbox     = document.getElementById('rs-lightbox');
+            const lightboxImg  = document.getElementById('rs-lightbox-img');
+            const lightboxLbl  = document.getElementById('rs-lightbox-label');
+            const lightboxClose = document.getElementById('rs-lightbox-close');
+            const lightboxBack  = document.getElementById('rs-lightbox-backdrop');
+
+            function openLightbox(src, label) {
+                if (!lightbox) return;
+                lightboxImg.src = src;
+                lightboxLbl.textContent = label || '';
+                lightbox.classList.remove('d-none');
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeLightbox() {
+                if (!lightbox) return;
+                lightbox.classList.add('d-none');
+                lightboxImg.src = '';
+                document.body.style.overflow = '';
+            }
+
+            // Using event delegation because tabs/partials can load or be updated
+            document.addEventListener('click', function (e) {
+                const trigger = e.target.closest('.js-lightbox-trigger');
+                if (trigger) {
+                    e.preventDefault();
+                    openLightbox(trigger.dataset.src, trigger.dataset.label);
+                }
+            });
+
+            lightboxClose?.addEventListener('click', closeLightbox);
+            lightboxBack?.addEventListener('click', closeLightbox);
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeLightbox();
+            });
+        })();
+
         document.addEventListener('DOMContentLoaded', function () {
             const btn = document.querySelector('[data-cancelar-reserva="1"]');
             if (!btn) return;

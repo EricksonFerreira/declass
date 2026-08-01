@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 // Exceptions
 use App\Exceptions\ClienteNaoEncontradoException;
+use App\Exceptions\JaExisteClienteComEmailException;
 use App\Exceptions\MultiplosClientesComEmailException;
 
 use App\Http\Controllers\Interfaces\FiltroInterface;
@@ -156,10 +157,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 $data['role_id'] = $roleClienteId;
                 $data['acesso_todas_estacoes'] = true;
                 if (empty($data['email'])) {
-                    $documentoBase = preg_replace('/\D+/', '', (string) ($data['numero_identificacao'] ?? ''));
-                    $celularBase = preg_replace('/\D+/', '', (string) ($data['celular'] ?? ''));
-                    $fallbackLocal = $documentoBase !== '' ? $documentoBase : ($celularBase !== '' ? $celularBase : uniqid('reserva', true));
-                    $data['email'] = 'reserva+' . $fallbackLocal . '@sem-email.local';
+                    $data['email'] = $this->gerarEmailTemporarioReserva($data);
                 }
             }
 
@@ -168,8 +166,26 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
             $stripeSecret = $this->resolveStripeSecret(null, isset($data['empresa_id']) ? (int) $data['empresa_id'] : null);
 
+            if (!empty(trim((string) $data['email']))) {
+                $query = User::query()->whereRaw('LOWER(email) = ?', [mb_strtolower(trim((string) $data['email']))]);
+                if (SchemaCache::hasColumn('users', 'empresa_id')) {
+                    $query->where('empresa_id', (int) ($data['empresa_id'] ?? auth()->user()?->empresa_id ?? 0));
+                }
+
+                if ($query->exists()) {
+                    return response()->json([
+                        'message' => 'Nao foi possivel cadastrar o usuario no momento.',
+                        'error' => 'Este e-mail ja possui cadastro para esta empresa.',
+                    ], 422);
+                }
+            }
+
             // Cria o cliente no Stripe
             $cliente = $this->clienteStripeService->criarCliente($data['email'], $data['nome'], $stripeSecret);
+
+            if (!$cliente || empty($cliente->id)) {
+                throw new \RuntimeException('Nao foi possivel identificar o cliente no Stripe.');
+            }
 
             // Cria o usuario no sistema
             $data['stripe_id'] = $cliente->id;
@@ -202,6 +218,22 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 ->withInput()
                 ->withErrors(['usuario' => $mensagemErro]);
         }
+    }
+
+    private function gerarEmailTemporarioReserva(array $data): string
+    {
+        $documentoBase = preg_replace('/\D+/', '', (string) ($data['numero_identificacao'] ?? ''));
+        $celularBase = preg_replace('/\D+/', '', (string) ($data['celular'] ?? ''));
+        $empresaBase = (int) (auth()->user()?->empresa_id ?? 0);
+        $partes = array_filter([
+            'reserva',
+            $empresaBase > 0 ? (string) $empresaBase : null,
+            $documentoBase !== '' ? $documentoBase : null,
+            $celularBase !== '' ? $celularBase : null,
+            uniqid('', true),
+        ]);
+
+        return 'reserva+' . implode('-', $partes) . '@sem-email.local';
     }
 
     public function selectOptions(Request $request)

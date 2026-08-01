@@ -62,12 +62,22 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
             'N' => 'Inativo'
         ];
         $tipos = [
-            'aceito-motorista-app' => 'Aceite Motorista App',
-            'aceito-reserva' => 'Aceite Reservas',
-            'checkin-motorista-app' => 'Check-in Motorista App',
-            'checkout-motorista-app' => 'Check-out Motorista App',
-            'checkin-reserva' => 'Check-in Reservas',
-            'checkout-reserva' => 'Check-out Reservas',
+            [
+                'label' => 'Reserva Comum',
+                'options' => [
+                    'aceito-reserva' => 'Aceite do Termo - Reserva Comum',
+                    'checkin-reserva' => 'Check-in do Contrato - Reserva Comum',
+                    'checkout-reserva' => 'Check-out do Contrato - Reserva Comum',
+                ],
+            ],
+            [
+                'label' => 'Motorista App',
+                'options' => [
+                    'aceito-motorista-app' => 'Aceite do Termo - Motorista App',
+                    'checkin-motorista-app' => 'Check-in do Contrato - Motorista App',
+                    'checkout-motorista-app' => 'Check-out do Contrato - Motorista App',
+                ],
+            ],
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Termos de Consentimento','termo_consentimento.index','Criar');
 
@@ -96,12 +106,22 @@ class TermoConsentimentoController extends BaseController implements FiltroInter
             'N' => 'Inativo'
         ];
         $tipos = [
-            'aceito-motorista-app' => 'Aceite Motorista App',
-            'aceito-reserva' => 'Aceite Reservas',
-            'checkin-motorista-app' => 'Check-in Motorista App',
-            'checkout-motorista-app' => 'Check-out Motorista App',
-            'checkin-reserva' => 'Check-in Reservas',
-            'checkout-reserva' => 'Check-out Reservas',
+            [
+                'label' => 'Reserva Comum',
+                'options' => [
+                    'aceito-reserva' => 'Aceite do Termo - Reserva Comum',
+                    'checkin-reserva' => 'Check-in do Contrato - Reserva Comum',
+                    'checkout-reserva' => 'Check-out do Contrato - Reserva Comum',
+                ],
+            ],
+            [
+                'label' => 'Motorista App',
+                'options' => [
+                    'aceito-motorista-app' => 'Aceite do Termo - Motorista App',
+                    'checkin-motorista-app' => 'Check-in do Contrato - Motorista App',
+                    'checkout-motorista-app' => 'Check-out do Contrato - Motorista App',
+                ],
+            ],
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Termos de Consentimento','termo_consentimento.index',"Editar: " . ($termo_consentimento->titulo ?: $termo_consentimento->nome));
         [$metodo,$rota] = $this->getFormMethodAndRoute($termo_consentimento);

@@ -8,17 +8,11 @@
 @stop
 
 @php
-    $storagePath = storage_path('app/public');
-    $totalBytes = 0;
-    $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($storagePath, FilesystemIterator::SKIP_DOTS));
-    foreach ($iterator as $file) {
-        $totalBytes += $file->getSize();
-    }
-    $totalMB = $totalBytes / 1048576;
-    if ($totalMB >= 1024) {
-        $storageFormatted = number_format($totalMB / 1024, 2, ',', '.') . ' GB';
+    $totalBytes = (int) \App\Models\ArquivoRastreado::query()->sum('size_bytes');
+    if ($totalBytes >= 1073741824) {
+        $storageFormatted = number_format($totalBytes / 1073741824, 2, ',', '.') . ' GB';
     } else {
-        $storageFormatted = number_format($totalMB, 2, ',', '.') . ' MB';
+        $storageFormatted = number_format($totalBytes / 1048576, 2, ',', '.') . ' MB';
     }
 @endphp
 

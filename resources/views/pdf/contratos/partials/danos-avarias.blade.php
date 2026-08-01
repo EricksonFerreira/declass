@@ -39,7 +39,9 @@
                 <tr>
                     <td>
                         <strong>{{ $dano['localizacao'] ?? '-' }}</strong><br>
-                        <span class="muted">{{ $dano['categoria'] ?? '-' }}</span>
+                        <span class="muted">
+                            {{ $dano['nome_dano'] ?? $dano['categoria'] ?? 'Dano não informado' }}
+                        </span>
                     </td>
                     <td>
                         {{ $dano['observacoes'] ?? 'Sem descrição' }}<br>

@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Contrato de Aluguel</title>
+    <title>Termo de Devolução</title>
     <link rel="icon" href="{{ asset('favicon.ico') }}">
     @include('pdf.contratos.partials.styles')
 </head>
@@ -17,6 +17,7 @@
     $pagamentos = $data['pagamentos'] ?? [];
     $opcionais = $data['opcionais'] ?? [];
     $cobrancasAvaria = $data['cobrancas_avaria'] ?? [];
+    $estadoViatura = $data['estado_viatura']['itens'] ?? [];
     $formatarTipoDano = function ($tipo) {
         $map = [
             'amolgadela_grave' => 'Amassado grave',
@@ -39,6 +40,38 @@
         'get' => $get,
     ])
     <div class="accent-stripe"></div>
+    <div class="section-title">Termo de Devolução / Check-out</div>
+    <table class="info-table">
+        <tr>
+            <td>
+                <div class="field-label">Contrato</div>
+                <div class="field-value">{{ $get('contrato.numero', '-') }}</div>
+            </td>
+            <td>
+                <div class="field-label">Status</div>
+                <div class="field-value">{{ $get('reserva.status', '-') }}</div>
+            </td>
+            <td>
+                <div class="field-label">Origem</div>
+                <div class="field-value">{{ $get('reserva.origem', '-') }}</div>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div class="field-label">Saída</div>
+                <div class="field-value">{{ $get('reserva.alugado_em.data', '-') }} {{ $get('reserva.alugado_em.hora', '-') }}</div>
+            </td>
+            <td>
+                <div class="field-label">Devolução</div>
+                <div class="field-value">{{ $get('reserva.devolver_em.data', '-') }} {{ $get('reserva.devolver_em.hora', '-') }}</div>
+            </td>
+            <td>
+                <div class="field-label">Emissão</div>
+                <div class="field-value">{{ $get('documento.data_emissao', '-') }}</div>
+            </td>
+        </tr>
+    </table>
+
     <div class="two-col">
         <div class="col-left">
             @include('pdf.contratos.partials.dados-cliente', [
@@ -52,15 +85,14 @@
         </div>
     </div>
     <hr class="divider">
-    @include('pdf.contratos.partials.resumo-reserva', [
+    @include('pdf.contratos.partials.checkout-resumo', [
         'get' => $get,
     ])
-    @include('pdf.contratos.partials.valores', [
-        'get' => $get,
+    @include('pdf.contratos.partials.checkout-estado-viatura', [
+        'estadoViatura' => $estadoViatura,
+        'formatarTipoDano' => $formatarTipoDano,
     ])
-    @include('pdf.contratos.partials.caucao', [
-        'caucao' => $caucao,
-    ])
+   
     @include('pdf.contratos.partials.danos-avarias', [
         'danos' => $danos,
         'formatarTipoDano' => $formatarTipoDano,
@@ -69,14 +101,14 @@
     @include('pdf.contratos.partials.cobrancas-avaria', [
         'cobrancasAvaria' => $cobrancasAvaria,
     ])
-    @include('pdf.contratos.partials.faturacao', [
-        'get' => $get,
-        'opcionais' => $opcionais,
-    ])
+     
     @include('pdf.contratos.partials.declaracao')
-    @include('pdf.contratos.partials.assinaturas', [
-        'get' => $get,
-    ])
+    @if(!empty($data['assinatura']) && !empty($data['documento']['data_assinatura'] ?? null))
+        @include('pdf.contratos.partials.assinaturas', [
+            'get' => $get,
+        ])
+    @endif
+ 
     @include('pdf.contratos.partials.footer', [
         'get' => $get,
     ])

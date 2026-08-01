@@ -4,6 +4,7 @@ namespace App\Actions\Reserva\Checkout\Dano\Adicionar;
 
 use App\Models\VeiculoDanos;
 use App\Services\ReservaService;
+use App\Support\ArquivoAnexoHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -14,9 +15,12 @@ class AdicionarDanoReservaComumAction
         private ReservaService $reservaService,
     ) {}
 
-    public function handle(array $dados, $reservaCodigoId, Request $request): mixed
+    public function handle(array $dados, int $reservaId, int $reservaCodigoId, Request $request): mixed
     {
+        $dados['reserva_id'] = $reservaId;
         $dados['reserva_codigo_id'] = $reservaCodigoId;
+        $dados['status_revisao'] = $dados['status_revisao'] ?? \App\Models\VeiculoDanos::REVISAO_PENDENTE;
+        $dados['status_reparo'] = $dados['status_reparo'] ?? \App\Models\VeiculoDanos::REPARO_PENDENTE;
         $fotos = $request->file('fotos', []);
         unset($dados['fotos']);
 
@@ -26,10 +30,18 @@ class AdicionarDanoReservaComumAction
             $dano = VeiculoDanos::create($dados);
 
             if ($dano && !empty($fotos)) {
-                $dir = 'danos/reserva_codigo_' . (int) $reservaCodigoId . '/dano_' . (int) $dano->id;
+                $dir = 'danos';
 
                 foreach ($fotos as $foto) {
-                    $path = \App\Support\ArquivoAnexoHelper::armazenar($foto, $dir);
+                    $path = ArquivoAnexoHelper::armazenarRastreado($foto, $dir, [
+                        'empresa_id' => $dados['empresa_id'] ?? null,
+                        'user_id' => Auth::id(),
+                        'modulo' => 'checkout',
+                        'entidade' => 'veiculo_dano',
+                        'entidade_id' => $dano->id,
+                        'campo' => 'imagem',
+                        'contexto' => 'dano',
+                    ])['path'] ?? null;
                     if (!$path) continue;
 
                     $dano->imagens()->create([

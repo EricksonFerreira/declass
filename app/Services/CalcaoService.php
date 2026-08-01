@@ -208,13 +208,13 @@ class CalcaoService
         if ($status === Calcao::STATUS_AUTORIZADO) {
             try {
                 $categoria = \App\Models\CategoriaFinanceira::firstOrCreate(
-                    ['empresa_id' => $empresa->id, 'nome' => 'Recebimento de Calção'],
-                    ['tipo' => 'receita', 'ativo' => true]
+                    ['empresa_id' => $empresa->id, 'nome' => 'Caução recebida'],
+                    ['tipo' => 'receita', 'codigo' => 'C.01', 'status' => 'ativo']
                 );
 
                 app(\App\Actions\Financeiro\CreateLancamentoAction::class)->handle([
                     'empresa_id' => $empresa->id,
-                    'descricao' => 'Recebimento de Calção RES-' . str_pad($reserva->id, 4, '0', STR_PAD_LEFT),
+                    'descricao' => 'Caução recebida RES-' . str_pad($reserva->id, 4, '0', STR_PAD_LEFT),
                     'valor' => $calculo['valor_calculado'],
                     'tipo' => 'receita',
                     'categoria_financeira_id' => $categoria->id,
@@ -324,13 +324,13 @@ class CalcaoService
 
         try {
             $categoria = \App\Models\CategoriaFinanceira::firstOrCreate(
-                ['empresa_id' => $calcao->empresa_id, 'nome' => 'Devolução de Calção'],
-                ['tipo' => 'despesa', 'ativo' => true]
+                ['empresa_id' => $calcao->empresa_id, 'nome' => 'Devolução de caução'],
+                ['tipo' => 'despesa', 'codigo' => 'C.02', 'status' => 'ativo']
             );
 
             app(\App\Actions\Financeiro\CreateLancamentoAction::class)->handle([
                 'empresa_id' => $calcao->empresa_id,
-                'descricao' => 'Devolução de Calção RES-' . str_pad($calcao->reserva_id, 4, '0', STR_PAD_LEFT),
+                'descricao' => 'Devolução de caução RES-' . str_pad($calcao->reserva_id, 4, '0', STR_PAD_LEFT),
                 'valor' => $calcao->valor_autorizado,
                 'tipo' => 'despesa',
                 'categoria_financeira_id' => $categoria->id,

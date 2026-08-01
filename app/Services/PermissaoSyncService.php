@@ -419,6 +419,7 @@ class PermissaoSyncService
             'reserva.checkin.veiculosDisponiveis',
             'reserva.checkin.veiculosModal',
             'reserva.checkin.excluirContrato',
+            'reserva.minhas.assinar-checkin',
             'reserva.criarContratoCheckin',
             'reserva.assinarContratoCheckin',
             'reserva.salvarAssinarContratoCheckIn',

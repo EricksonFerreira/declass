@@ -3,6 +3,8 @@
 namespace App\Actions\Reserva\Renovacao\Exibir;
 
 use App\Services\Reserva\ReservaResolver;
+use App\Actions\Reserva\Renovacao\Exibir\ExibirRenovacaoReservaComumAction;
+use App\Actions\Reserva\Renovacao\Exibir\ExibirRenovacaoReservaMotoristaAppAction;
 
 class ExibirRenovacaoActionAction
 {

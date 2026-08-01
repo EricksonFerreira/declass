@@ -38,6 +38,7 @@
     $ano = $veic?->ano_fabricacao ?? ($veic?->modelo?->ano_modelo ?? '-');
     $km = $ci?->quilometragem_atual ?? $reserva->quilometragem_inicial ?? $veic?->quilometragem ?? 0;
     $comb = $ci?->nivel_combustivel ?? $reserva->nivel_combustivel_inicial ?? '-';
+    $exigirAceiteTermo = auth()->check() && (int) auth()->id() === (int) ($reserva->user_id ?? $reserva->usuario_id ?? 0);
 @endphp
 
 <div class="assinatura-page">
@@ -54,6 +55,14 @@
                 <div class="assinatura-hero__eyebrow">Contrato de Check-in</div>
                 <h1 class="assinatura-hero__title">Assinatura Digital</h1>
                 <p class="assinatura-hero__sub">Reserva {{ $codigoAssinatura }}</p>
+                <div class="mt-2" style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <a href="{{ $origemMinhasReservas ?? false ? route('reserva.minhas.show', ['id' => $reserva->id]) : route('reserva.show', ['reserva' => $codigoAssinatura]) }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-arrow-left mr-1"></i> Voltar
+                    </a>
+                    <a href="{{ $origemMinhasReservas ?? false ? route('reserva.minhas.vercontratocheckin', ['codigo' => $codigoAssinatura]) : route('reserva.verContratoCheckin', ['codigo' => $codigoAssinatura]) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-file-pdf mr-1"></i> Ver PDF do contrato
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -146,10 +155,27 @@
                         @if($taxaColetaAssinatura > 0)
                         <tr><td>Taxa de coleta</td><td>{{ $moedaSimbolo }} {{ number_format($taxaColetaAssinatura, 2, ',', '.') }}</td></tr>
                         @endif
-                        @if(!empty($ctx['caucao']))
-                        <tr><td>Caução do Plano</td><td>{{ $moedaSimbolo }} {{ number_format((float)$ctx['caucao'], 2, ',', '.') }}</td></tr>
-                        @endif
                         <tr><td style="font-weight:700;font-size:.9rem;">Valor total por ciclo</td><td style="font-weight:800;font-size:.9rem;color:#059669;">{{ $moedaSimbolo }} {{ number_format($valorTotalAssinatura, 2, ',', '.') }}</td></tr>
+                        @if(!empty($ctx['caucao']))
+                        @php
+                            $caucaoPago = isset($reserva->calcao) && in_array($reserva->calcao->status, ['capturado', 'autorizado', 'pago', 'sucesso'], true);
+                        @endphp
+                        <tr>
+                            <td style="font-size:.85rem;color:#475569;padding-top:6px;">
+                                Caução
+                                @if(!$caucaoPago)
+                                    <span style="font-size: 0.72rem; color: #b45309; font-weight: 700; margin-left: 4px; background-color: #fef3c7; padding: 1px 4px; border-radius: 3px;">Pendente</span>
+                                @else
+                                    <span style="font-size: 0.72rem; color: #15803d; font-weight: 700; margin-left: 4px; background-color: #dcfce7; padding: 1px 4px; border-radius: 3px;">Confirmado</span>
+                                @endif
+                            </td>
+                            <td style="font-size:.85rem;padding-top:6px;">
+                                <strong style="color: {{ !$caucaoPago ? '#b45309' : '#15803d' }};">
+                                    {{ $moedaSimbolo }} {{ number_format((float)$ctx['caucao'], 2, ',', '.') }}
+                                </strong>
+                            </td>
+                        </tr>
+                        @endif
                     </table>
                 </div>
 
@@ -182,6 +208,7 @@
                 <form id="form-assinatura-checkin" enctype="multipart/form-data" class="d-flex flex-column h-100" style="flex:1; justify-content: space-between;">
                     <div>
                         {{-- Tabs de modo --}}
+                        @if(empty($origemMinhasReservas))
                         <div class="assinatura-tabs">
                             <button type="button" class="assinatura-tab active" data-tab="digital">
                                 <i class="fas fa-signature"></i> Assinar Digitalmente
@@ -190,6 +217,7 @@
                                 <i class="fas fa-file-upload"></i> Anexar Contrato PDF
                             </button>
                         </div>
+                        @endif
 
                         {{-- Tab: Assinatura Digital --}}
                         <div id="tab-digital" class="assinatura-tab-content active">
@@ -205,6 +233,27 @@
                                 <div class="assinatura-pad-hint">Área de assinatura</div>
                             </div>
 
+                            @if($exigirAceiteTermo)
+                                @php
+                                    $termoAceitoReserva = \App\Models\TermoConsentimento::where('empresa_id', $empresa->id ?? null)
+                                        ->where('tipo', 'aceito-reserva')
+                                        ->where('ativo', 'S')
+                                        ->orderBy('ordem')
+                                        ->first();
+                                @endphp
+                                <div class="assinatura-aceite" style="margin: 8px 0 16px;">
+                                    <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;font-size:.92rem;color:#0f172a;">
+                                        <input type="checkbox" id="aceite_termo_checkin" name="aceite_termo_checkin" value="1" style="margin-top:4px;">
+                                        <span>
+                                            Li e aceito o termo de check-in da reserva, confirmando que recebi as informações do veículo e concordo com as condições registradas.
+                                            @if($termoAceitoReserva)
+                                                <a href="#" data-toggle="modal" data-target="#modalTermoConsentimento" style="text-decoration: underline; color: #4338ca; font-weight: 600;">(Ver Termo)</a>
+                                            @endif
+                                        </span>
+                                    </label>
+                                </div>
+                            @endif
+
                             {{-- Ações --}}
                             <div class="assinatura-actions mb-4">
                                 <button type="button" id="btn_limpar" class="assinatura-btn assinatura-btn--ghost">
@@ -219,6 +268,7 @@
                         </div>
 
                         {{-- Tab: Upload PDF --}}
+                        @if(empty($origemMinhasReservas))
                         <div id="tab-upload" class="assinatura-tab-content" style="display:none;">
                             <div class="assinatura-instruction">
                                 <i class="fas fa-cloud-upload-alt"></i>
@@ -251,6 +301,7 @@
                                 </button>
                             </div>
                         </div>
+                        @endif
                     </div>
 
                     {{-- Status --}}
@@ -259,6 +310,28 @@
             </div>
         </div>
     </div>
+
+    @if(isset($termoAceitoReserva) && $termoAceitoReserva)
+    <!-- Modal Termo de Consentimento -->
+    <div class="modal fade" id="modalTermoConsentimento" tabindex="-1" role="dialog" aria-labelledby="modalTermoTitle" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 16px; overflow: hidden; border: none; box-shadow: 0 15px 40px rgba(0,0,0,0.15);">
+                <div class="modal-header" style="background: linear-gradient(135deg, #0c1428 0%, #1a2848 100%); color: white; padding: 18px 24px;">
+                    <h5 class="modal-title" id="modalTermoTitle" style="font-weight: 700;">{{ $termoAceitoReserva->titulo }}</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color: white; opacity: 0.8; background: transparent; border: none; font-size: 1.5rem;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" style="padding: 24px; max-height: 60vh; overflow-y: auto; font-size: 0.95rem; line-height: 1.6; color: #334155;">
+                    {!! $termoAceitoReserva->texto !!}
+                </div>
+                <div class="modal-footer" style="justify-content: flex-end; padding: 14px 24px; background-color: #f8fafc; border-top: 1px solid #e2e8f0; display: flex;">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 10px; font-weight: 600; padding: 8px 20px;">Fechar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
 
 </div>
 
@@ -595,6 +668,7 @@
     // ─── Signature Pad ───
     const canvas = document.getElementById('signature-pad');
     const hint   = document.querySelector('.assinatura-pad-hint');
+    const aceiteTermo = document.getElementById('aceite_termo_checkin');
 
     function resizeCanvas() {
         const ratio  = Math.max(window.devicePixelRatio || 1, 1);
@@ -634,20 +708,40 @@
         const dataURL     = signaturePad.toDataURL();
         const veiculo_id  = "{{ $ci?->veiculo_id ?? $reserva->veiculo_id ?? 0 }}";
         const contrato_id = "{{ $ci?->id ?? 0 }}";
+        @if($exigirAceiteTermo)
+        if (!aceiteTermo || !aceiteTermo.checked) {
+            btnSalvar.disabled = false;
+            btnSalvar.innerHTML = originalHtml;
+            showStatus('<i class="fas fa-exclamation-triangle"></i> Você precisa aceitar o termo de check-in antes de confirmar a assinatura.', 'error');
+            return;
+        }
+        @endif
 
+
+        @php
+            $urlSalvarAssinatura = request()->routeIs('reserva.minhas.*')
+                ? route('reserva.minhas.salvarAssinarContratoCheckInMinhaReserva', [
+                    'codigo' => $codigoAssinatura,
+                ])
+                : route('reserva.salvarAssinarContratoCheckIn', [
+                    'codigo' => $codigoAssinatura,
+                ]);
+        @endphp
         $.ajax({
-            url: "{{ route('reserva.salvarAssinarContratoCheckIn', ['codigo' => $codigoAssinatura]) }}",
+            url: @json($urlSalvarAssinatura),
             method: 'POST',
             data: {
                 assinatura: dataURL,
                 veiculo_id,
                 contrato_id,
+                aceite_termo_checkin: aceiteTermo && aceiteTermo.checked ? 1 : 0,
+                origem_minhas: "{{ $origemMinhasReservas ?? false ? '1' : '0' }}",
                 _token: '{{ csrf_token() }}',
             },
             success: function (response) {
                 showStatus('<i class="fas fa-check-circle"></i> Assinatura salva com sucesso! Redirecionando...', 'success');
                 setTimeout(() => {
-                    window.location.href = @json($redirectAfterSignUrl ?? route('reserva.show', ['reserva' => $codigoAssinatura]));
+                    window.location.href = response.redirect || @json($redirectAfterSignUrl ?? route('reserva.show', ['reserva' => $codigoAssinatura]));
                 }, 1600);
             },
             error: function (xhr) {
@@ -740,10 +834,14 @@
         formData.append('veiculo_id', "{{ $ci?->veiculo_id ?? $reserva->veiculo_id ?? 0 }}");
         formData.append('contrato_id', "{{ $ci?->id ?? 0 }}");
         formData.append('modo', 'upload');
+        formData.append('origem_minhas', "{{ $origemMinhasReservas ?? false ? '1' : '0' }}");
+        if (aceiteTermo && aceiteTermo.checked) {
+            formData.append('aceite_termo_checkin', '1');
+        }
         formData.append('_token', '{{ csrf_token() }}');
 
         $.ajax({
-            url: "{{ route('reserva.salvarAssinarContratoCheckIn', ['codigo' => $codigoAssinatura]) }}",
+            url: @json($urlSalvarAssinatura),
             method: 'POST',
             data: formData,
             processData: false,
@@ -751,7 +849,7 @@
             success: function (response) {
                 showStatus('<i class="fas fa-check-circle"></i> Contrato assinado enviado com sucesso! Redirecionando...', 'success');
                 setTimeout(() => {
-                    window.location.href = @json($redirectAfterSignUrl ?? route('reserva.show', ['reserva' => $codigoAssinatura]));
+                    window.location.href = response.redirect || @json($redirectAfterSignUrl ?? route('reserva.show', ['reserva' => $codigoAssinatura]));
                 }, 1600);
             },
             error: function (xhr) {
@@ -774,4 +872,3 @@
 })();
 </script>
 @endsection
-

@@ -370,6 +370,11 @@ return [
                             'route' => 'veiculo.documentacao',
                             'icon' => 'fas fa-file-alt',
                         ],
+                        [
+                            'text' => 'Disponibilidade de Veículos',
+                            'route' => 'veiculo.disponibilidade',
+                            'icon' => 'fas fa-calendar-check',
+                        ],
                     ],
                 ],
                 [
@@ -503,6 +508,28 @@ return [
                 ],
             ],
         ],
+        [
+            'text' => 'Suporte',
+            'icon' => 'fas fa-headset',
+            'submenu' => [
+                [
+                    'text' => 'Criar chamado',
+                    'route' => 'chamado.create',
+                    'icon' => 'fas fa-plus-circle',
+                ],
+                [
+                    'text' => 'Meus chamados',
+                    'route' => 'chamado.meus',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Atendimento chamado',
+                    'route' => 'chamado.atendimento',
+                    'icon' => 'fas fa-headset',
+                    'can' => 'acessar-superadmin',
+                ],
+            ],
+        ],
 
         [
             'text' => 'Configurações & Cadastros',
@@ -624,6 +651,27 @@ return [
                     'route' => 'replicacao_base.index',
                     'icon' => 'fas fa-copy',
                     'can' => 'acessar-superadmin',
+                ],
+                [
+                    'text' => 'Config. Chamados',
+                    'icon' => 'fas fa-life-ring',
+                    'submenu' => [
+                        [
+                            'text' => 'Categorias',
+                            'route' => 'config_chamados.categorias.index',
+                            'icon' => 'fas fa-list',
+                        ],
+                        [
+                            'text' => 'Subcategorias',
+                            'route' => 'config_chamados.subcategorias.index',
+                            'icon' => 'fas fa-stream',
+                        ],
+                        [
+                            'text' => 'Status de Chamados',
+                            'route' => 'config_chamados.status.index',
+                            'icon' => 'fas fa-info-circle',
+                        ],
+                    ],
                 ],
                 [
                     'text' => 'Sincronizar catálogo FIPE',

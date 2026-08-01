@@ -4,6 +4,7 @@ namespace App\Actions\Reserva\Checkout\Dano\Adicionar;
 
 use App\Models\VeiculoDanos;
 use App\Services\ReservaService;
+use App\Support\ArquivoAnexoHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,7 +30,15 @@ class AdicionarDanoMotoristaAppAction
                 $dir = 'danos/reserva_codigo_' . (int) $reservaCodigoId . '/dano_' . (int) $dano->id;
 
                 foreach ($fotos as $foto) {
-                    $path = \App\Support\ArquivoAnexoHelper::armazenar($foto, $dir);
+                    $path = ArquivoAnexoHelper::armazenarRastreado($foto, $dir, [
+                        'empresa_id' => $dados['empresa_id'] ?? null,
+                        'user_id' => Auth::id(),
+                        'modulo' => 'checkout',
+                        'entidade' => 'veiculo_dano',
+                        'entidade_id' => $dano->id,
+                        'campo' => 'imagem',
+                        'contexto' => 'dano-motorista-app',
+                    ])['path'] ?? null;
                     if (!$path) continue;
 
                     $dano->imagens()->create([

@@ -2,18 +2,21 @@
 
 namespace App\Http\Controllers\Reserva;
 
+use App\Actions\Reserva\Checkout\Contrato\AssinarContratoCheckoutAction;
+use App\Actions\Reserva\Checkout\Contrato\ClienteSalvarAssinarContratoCheckoutAction;
+use App\Actions\Reserva\Checkout\Contrato\Excluir\ExcluirContratoCheckoutAction;
+use App\Actions\Reserva\Checkout\Contrato\SalvarAssinarContratoCheckoutAction;
 use App\Actions\Reserva\Checkout\Dano\Adicionar\AdicionarDanoVeiculoAction;
 use App\Actions\Reserva\Checkout\Exibir\ExibirCheckoutAction;
 use App\Actions\Reserva\Checkout\Realizar\RealizarCheckoutAction;
+use App\Actions\Reserva\Checkout\TermoDevolucao\Exibir\ExibirTermoDevolucaoAction;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Reserva\AdicionarDanoVeiculoRequest;
 use App\Http\Requests\Reserva\FinalizarCheckoutVistoriaRequest;
 use App\Services\BreadcrumbService;
 use App\Services\CategoriaDanoService;
-use App\Services\ReservaService;
-use App\Actions\Reserva\Checkout\Contrato\AssinarContratoCheckoutAction;
-use App\Actions\Reserva\Checkout\Contrato\SalvarAssinarContratoCheckoutAction;
 use App\Services\Reserva\ReservaResolver;
+use App\Services\ReservaService;
 use Illuminate\Http\Request;
 
 class ReservaCheckoutController extends Controller
@@ -26,7 +29,8 @@ class ReservaCheckoutController extends Controller
         protected CategoriaDanoService $categoriaDanoService,
         protected ExibirCheckoutAction $exibirCheckoutAction,
         protected RealizarCheckoutAction $realizarCheckoutAction,
-        protected AdicionarDanoVeiculoAction $adicionarDanoVeiculoAction
+        protected AdicionarDanoVeiculoAction $adicionarDanoVeiculoAction,
+        protected ExibirTermoDevolucaoAction $exibirTermoDevolucaoAction
     ) {}
 
     public function checkoutVistoria(Request $request, $codigo)
@@ -79,18 +83,26 @@ class ReservaCheckoutController extends Controller
         return $action->handle($request, $codigo, $reservaResolver);
     }
 
-    public function verContratoCheckout(Request $request, $codigo, \App\Services\Reserva\ReservaResolver $reservaResolver)
+    public function salvarAssinarContratoCheckoutCliente(Request $request, $codigo, ReservaResolver $reservaResolver, ClienteSalvarAssinarContratoCheckoutAction $action)
+    {
+        return $action->handle($request, $codigo, $reservaResolver);
+    }
+
+    public function verContratoCheckout(Request $request, $codigo, ReservaResolver $reservaResolver)
     {
         try {
-            $reservaResolvida = $reservaResolver->resolver($codigo);
+            $reservaResolver->resolver($codigo);
 
-            // Exibir/Gerar PDF de devolução
-            $exibirAction = app(\App\Actions\Reserva\Checkout\TermoDevolucao\Exibir\ExibirTermoDevolucaoAction::class);
-            return $exibirAction->handle($codigo);
+            return $this->exibirTermoDevolucaoAction->handle($codigo);
         } catch (\Throwable $e) {
             return redirect()
                 ->route('reserva.index')
                 ->with('error', $e->getMessage());
         }
+    }
+
+    public function excluirContratoCheckout(Request $request, $codigo, ExcluirContratoCheckoutAction $action)
+    {
+        return $action->handle($request, $codigo);
     }
 }

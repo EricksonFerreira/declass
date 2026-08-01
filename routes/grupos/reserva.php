@@ -3,6 +3,7 @@
 use App\Http\Controllers\AvariaCobrancaController;
 use App\Http\Controllers\Reserva\ReservaCheckinController;
 use App\Http\Controllers\Reserva\ReservaCheckoutController;
+use App\Http\Controllers\Reserva\ReservaCheckoutRevisaoController;
 use App\Http\Controllers\Reserva\ReservaController;
 use App\Http\Controllers\Reserva\ReservaMotoristaAppController;
 use App\Http\Controllers\Reserva\ReservaPagamentoController;
@@ -23,6 +24,16 @@ Route::post('reserva-motorista-app/salvar-documentos', [ReservaMotoristaAppContr
 Route::get('reserva-motorista-app/veiculos-disponiveis', [ReservaMotoristaAppController::class, 'veiculosDisponiveisAjax'])->name('reserva-motorista-app.veiculos-disponiveis');
 Route::get('minhas-reservas/{id}/efetuar-pagamento', [ReservaPagamentoController::class, 'efetuarPagamentoMinhas'])->name('reserva.minhas.pagamento.efetuar');
 Route::post('minhas-reservas/{codigo}/confirmar-pagamento', [ReservaPagamentoController::class, 'confirmarPagamentoMinhas'])->name('reserva.minhas.pagamento.confirmar');
+Route::post('minhas-reservas/{codigo}/salvar-assinatura-checkout', [ReservaCheckoutController::class, 'salvarAssinarContratoCheckoutCliente'])->name('reserva.minhas.salvar-assinatura-checkout');
+// Checkout Minhas Resevas
+Route::get('minhas-reservas/{codigo}/assinarcontratocheckout', [ReservaController::class, 'assinarContratoCheckoutMinhaReserva'])->name('reserva.minhas.assinar-checkout');
+Route::get('minhas-reservas/{codigo}/vercontratocheckout', [ReservaController::class, 'verContratoCheckoutMinhaReserva'])->name('reserva.minhas.vercontratocheckout');
+Route::post('minhas-reservas/{codigo}/salvar-assinatura-checkin', [ReservaCheckinController::class, 'salvarAssinarContratoCheckInMinhaReserva'])->name('reserva.minhas.salvarAssinarContratoCheckInMinhaReserva');
+
+//  Checkin Minhas Reservas
+Route::get('minhas-reservas/{codigo}/vercontratocheckin', [ReservaCheckinController::class, 'verContratoCheckinMinhaReserva'])->name('reserva.minhas.vercontratocheckin');
+Route::get('minhas-reservas/{codigo}/assinar-checkin', [ReservaCheckinController::class, 'assinarCheckinMinhaReserva'])->name('reserva.minhas.assinar-checkin');
+
 Route::get('minhas-reservas/{id}', [ReservaController::class, 'showMinhas'])->name('reserva.minhas.show');
 Route::post('reserva/minhas/motorista-app/{id}/efetivar', [ReservaMotoristaAppController::class, 'efetivarMotoristaApp'])->name('reserva.minhas.motorista-app.efetivar');
 Route::post('reserva/minhas/motorista-app/{id}/aceitar-termo', [ReservaMotoristaAppController::class, 'aceitarTermoConfirmacaoMotoristaApp'])->name('reserva.minhas.motorista-app.aceitar-termo');
@@ -38,6 +49,7 @@ Route::get('reserva/minhas/multa/{id}', [ReservaController::class, 'showMinhaMul
 Route::get('minha-reserva', fn () => redirect()->route('reserva.minhas'));
 Route::get('minha-reserva/motorista-app/{id}', fn ($id) => redirect()->route('reserva.minhas.motorista-app.show', ['id' => $id]));
 Route::get('minha-reserva/{id}', fn ($id) => redirect()->route('reserva.minhas.show', ['id' => $id]));
+Route::post('minha-reserva/{codigo}/satisfacao', [ReservaController::class, 'salvarSatisfacao'])->name('reserva.minhas.satisfacao.store');
 Route::get('reserva/minhas', fn () => redirect()->route('reserva.minhas'));
 Route::get('reserva/minhas/motorista-app/{id}', fn ($id) => redirect()->route('reserva.minhas.motorista-app.show', ['id' => $id]));
 Route::get('reserva/minhas/{id}', fn ($id) => redirect()->route('reserva.minhas.show', ['id' => $id]));
@@ -62,16 +74,7 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{codigo}/emitir-nfse', [ReservaController::class, 'emitirNfse'])->name('emitirNfse');
     Route::post('{codigo}/cancelar', [ReservaController::class, 'cancelar'])->name('cancelar');
 
-    // ── Checkout ──
-    Route::get('{codigo}/checkout', [ReservaCheckoutController::class, 'checkoutVistoria'])->name('checkout.vistoria');
-    Route::post('{codigo}/checkout/finalizar', [ReservaCheckoutController::class, 'finalizarCheckoutVistoria'])->name('checkout.finalizar');
 
-    // ── Checkin ──
-    Route::get('{codigo}/checkin/veiculos-disponiveis', [ReservaCheckinController::class, 'veiculosDisponiveisCheckin'])->name('checkin.veiculosDisponiveis');
-    Route::get('{codigo}/checkin/veiculos-modal', [ReservaCheckinController::class, 'veiculosModalCheckin'])->name('checkin.veiculosModal');
-    Route::get('{codigo}/checkin/diagnostico', [ReservaCheckinController::class, 'diagnosticoDisponibilidadeCheckin'])->name('checkin.diagnostico');
-    Route::get('{codigo}/checkin/status-upgrade', [ReservaCheckinController::class, 'checkinStatusUpgrade'])->name('checkin.statusUpgrade');
-    Route::delete('{codigo}/checkin/contrato', [ReservaCheckinController::class, 'excluirContratoCheckin'])->name('checkin.excluirContrato');
 
     Route::get('{id}/historico', [ReservaController::class, 'historicoReserva'])->name('historico');
     Route::get('{codigo}/checkin', [ReservaCheckinController::class, 'checkin'])->name('checkin');
@@ -79,7 +82,6 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     Route::post('{id}/atualizar-no-show', [ReservaController::class, 'atualizarNoShow'])->name('atualizarNoShow');
     Route::post('{codigo}/criarContratoCheckin', [ReservaCheckinController::class, 'criarContratoCheckIn'])->name('criarContratoCheckin');
     Route::post('{id}/adicionarDanoVeiculo', [ReservaCheckoutController::class, 'adicionarDanoVeiculo'])->name('adicionarDanoVeiculo');
-    Route::post('{codigo}/satisfacao', [ReservaController::class, 'salvarSatisfacao'])->name('satisfacao.store');
     // ── Calção e Pagamento presencial ──
     Route::get('{codigo}/calcao', [ReservaPagamentoController::class, 'calcaoCheckin'])->name('calcao');
     Route::post('{codigo}/calcao/autorizar', [ReservaPagamentoController::class, 'autorizarCalcao'])->name('calcao.autorizar');
@@ -93,14 +95,31 @@ Route::prefix('reserva')->name('reserva.')->group(function () {
     // ── Cobrança de Avarias ──
     Route::get('{id}/avarias/cobranca', [AvariaCobrancaController::class, 'create'])->name('avarias.cobranca');
     Route::post('{id}/avarias/cobrar', [AvariaCobrancaController::class, 'store'])->name('avarias.cobrar');
+    
     // ── Contrato Checkin──
     Route::get('{codigo}/assinarContratoCheckin', [ReservaCheckinController::class, 'assinarContratoCheckin'])->name('assinarContratoCheckin');
     Route::post('{codigo}/salvar-assinatura-checkin', [ReservaCheckinController::class, 'salvarAssinarContratoCheckIn'])->name('salvarAssinarContratoCheckIn');
     Route::get('{codigo}/verContratoCheckin', [ReservaCheckinController::class, 'verContratoCheckin'])->name('verContratoCheckin');
+    Route::get('{codigo}/checkin/veiculos-disponiveis', [ReservaCheckinController::class, 'veiculosDisponiveisCheckin'])->name('checkin.veiculosDisponiveis');
+    Route::get('{codigo}/checkin/veiculos-modal', [ReservaCheckinController::class, 'veiculosModalCheckin'])->name('checkin.veiculosModal');
+    Route::get('{codigo}/checkin/diagnostico', [ReservaCheckinController::class, 'diagnosticoDisponibilidadeCheckin'])->name('checkin.diagnostico');
+    Route::get('{codigo}/checkin/status-upgrade', [ReservaCheckinController::class, 'checkinStatusUpgrade'])->name('checkin.statusUpgrade');
+    Route::delete('{codigo}/checkin/contrato', [ReservaCheckinController::class, 'excluirContratoCheckin'])->name('checkin.excluirContrato');
+
     // ── Contrato Checkout──
     Route::get('{codigo}/assinarContratoCheckout', [ReservaCheckoutController::class, 'assinarContratoCheckout'])->name('assinarContratoCheckout');
     Route::post('{codigo}/salvar-assinatura-checkout', [ReservaCheckoutController::class, 'salvarAssinarContratoCheckout'])->name('salvarAssinaturaContratoCheckout');
+    Route::delete('{codigo}/checkout/contrato', [ReservaCheckoutController::class, 'excluirContratoCheckout'])->name('checkout.excluirContrato');
     Route::get('{codigo}/verContratoCheckout', [ReservaCheckoutController::class, 'verContratoCheckout'])->name('verContratoCheckout');
+    Route::get('{codigo}/checkout', [ReservaCheckoutController::class, 'checkoutVistoria'])->name('checkout.vistoria');
+    Route::post('{codigo}/checkout/finalizar', [ReservaCheckoutController::class, 'finalizarCheckoutVistoria'])->name('checkout.finalizar');
+    Route::get('{codigo}/checkout/revisao', [ReservaCheckoutRevisaoController::class, 'revisar'])->name('checkout.revisao');
+    Route::post('{codigo}/checkout/revisao/concluir', [ReservaCheckoutRevisaoController::class, 'concluir'])->name('checkout.revisao.concluir');
+    Route::post('{codigo}/checkout/revisao/ocorrencia', [ReservaCheckoutRevisaoController::class, 'ocorrencia'])->name('checkout.revisao.ocorrencia');
+    Route::post('{codigo}/checkout/revisao/invalidar', [ReservaCheckoutRevisaoController::class, 'invalidar'])->name('checkout.revisao.invalidar');
+    Route::post('{codigo}/checkout/revisao/danos', [ReservaCheckoutRevisaoController::class, 'adicionarDano'])->name('checkout.revisao.danos');
+
+    
     // ── Renovacao ──
     Route::get('planos/{id}/opcionais', [\App\Http\Controllers\Reserva\PlanoController::class, 'opcionais'])->name('planos.opcionais');
     Route::get('{codigo}/renovacao', [ReservaRenovacaoController::class, 'exibir'])->name('renovacao.exibir');

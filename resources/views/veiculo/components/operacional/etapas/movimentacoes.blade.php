@@ -144,6 +144,7 @@
                         <th>Saída</th>
                         <th>KM Saída</th>
                         <th>Chegada</th>
+                        <th>Chegada Prevista</th>
                         <th>KM Chegada</th>
                         <th>Reserva</th>
                         <th>OS</th>
@@ -201,7 +202,12 @@
                             <td>
                                 @if($mov->data_chegada_real)
                                     {{ \Carbon\Carbon::parse($mov->data_chegada_real)->format('d/m/Y H:i') }}
-                                @elseif($mov->data_chegada_prevista)
+                                @else
+                                    —
+                                @endif
+                            </td>
+                            <td>
+                                @if($mov->data_chegada_prevista)
                                     <span class="text-muted">{{ \Carbon\Carbon::parse($mov->data_chegada_prevista)->format('d/m/Y H:i') }}</span>
                                 @else
                                     —

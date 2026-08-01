@@ -2,23 +2,53 @@
 @if(!empty($opcionais))
     <table class="opcionais-table">
         <thead>
-            <tr>
-                <th>Opcional</th>
-                <th style="text-align:center">Qtd</th>
-                <th style="text-align:right">Unit.</th>
-                <th style="text-align:right">Total</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($opcionais as $opcional)
-                <tr>
-                    <td>{{ $opcional['nome'] ?? '-' }}</td>
-                    <td style="text-align:center">{{ $opcional['quantidade'] ?? '-' }}</td>
-                    <td style="text-align:right">{{ $opcional['preco_unitario'] ?? '-' }}</td>
-                    <td style="text-align:right">{{ $opcional['valor_total'] ?? '-' }}</td>
-                </tr>
-            @endforeach
-        </tbody>
+    <tr>
+        <th>Opcional</th>
+        <th style="text-align:center">Cobrança</th>
+        <th style="text-align:center">Qtd.</th>
+        <th style="text-align:center">Período</th>
+        <th style="text-align:right">Valor unitário</th>
+        <th style="text-align:right">Total Por dia</th>
+    </tr>
+</thead>
+
+<tbody>
+    @forelse($opcionais as $opcional)
+        <tr>
+            <td>{{ $opcional['nome'] ?? '-' }}</td>
+
+            <td style="text-align:center">
+                {{ $opcional['tipo_cobranca_formatado'] ?? '-' }}
+            </td>
+
+            <td style="text-align:center">
+                {{ $opcional['quantidade'] ?? 0 }}
+            </td>
+
+            <td style="text-align:center">
+                {{ $opcional['periodo'] ?? '-' }}
+            </td>
+
+            <td style="text-align:right">
+                {{ $opcional['preco_unitario'] ?? '-' }}
+
+                @if(($opcional['tipo_cobranca'] ?? null) === 'por_dia')
+                    /dia
+                @endif
+            </td>
+
+            <td style="text-align:right">
+                {{ $opcional['valor_total'] ?? '-' }}
+            </td>
+        </tr>
+    @empty
+        <tr>
+            <td colspan="6" style="text-align:center">
+                Nenhum opcional contratado.
+            </td>
+        </tr>
+    @endforelse
+</tbody>
     </table>
 @endif
 <div class="finance-box">

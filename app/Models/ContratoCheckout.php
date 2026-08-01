@@ -17,17 +17,21 @@ class ContratoCheckout extends Model
         'nivel_combustivel_devolucao',
         'data_devolucao',
         'hora_devolucao',
+
         'notas_devolucao',
         'observacoes_devolucao',
+
         'foto_direita_path',
         'foto_esquerda_path',
         'foto_frente_path',
         'foto_tras_path',
         'foto_velocimetro_path',
         'foto_combustivel_path',
+
         'assinatura',
         'data_assinatura',
         'pdf_path',
+        'assinado',
     ];
 
     public function reserva(): BelongsTo

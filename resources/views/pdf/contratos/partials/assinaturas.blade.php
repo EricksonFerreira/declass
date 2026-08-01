@@ -11,7 +11,7 @@
             CPF: {{ $get('cliente.nif', '-') }}<br>
             CNH: {{ $get('cliente.carta_conducao.numero', '-') }}
         </div>
-        @if($get('documento.data_assinatura', null))
+        @if($get('documento.data_assinatura', null) && !empty($get('assinatura', null)) && $get('assinatura') !== '<br>')
             <div class="signature-doc" style="margin-top:2px;">
                 Assinado em: {{ $get('documento.data_assinatura') }}
             </div>

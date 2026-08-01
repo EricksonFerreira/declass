@@ -71,6 +71,25 @@
                     <span>{{ $pagamentoEfetuado ? 'Pago' : 'Total pago' }}</span>
                 </div>
             </div>
+            @if(!empty($calcao))
+                @php
+                    $valorCalcao = (float) ($calcao->valor_capturado ?? $calcao->valor_autorizado ?? $calcao->valor_calculado ?? 0);
+                @endphp
+                <div class="rs-fkpi rs-fkpi--amber">
+                    <i class="fas fa-shield-alt"></i>
+                    <div>
+                        <strong>R$ {{ number_format($valorCalcao, 2, ',', '.') }}</strong>
+                        <span>Calção</span>
+                    </div>
+                </div>
+                <div class="rs-fkpi rs-fkpi--default">
+                    <i class="fas fa-calculator"></i>
+                    <div>
+                        <strong>R$ {{ number_format((float) ($calcao->valor_calculado ?? 0), 2, ',', '.') }}</strong>
+                        <span>Valor calculado</span>
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 </div>

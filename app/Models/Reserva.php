@@ -40,6 +40,7 @@ class Reserva extends Model
         'cobranca_efetuada_pessoalmente_em',
         'cobranca_efetuada_pessoalmente_por_user_id',
         'cobranca_efetuada_pessoalmente_justificativa',
+        'revisao_checkout_concluida',
     ];
 
     protected $casts = [

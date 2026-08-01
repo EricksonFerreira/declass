@@ -8,10 +8,10 @@ use App\Services\ContratoCheckinService;
 use App\Services\ReservaService;
 use App\Services\VeiculoDanoService;
 use App\Services\VeiculoService;
+use App\Support\ArquivoAnexoHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 
 class RealizarCheckinReservaComumAction
 {
@@ -34,8 +34,8 @@ class RealizarCheckinReservaComumAction
         if (empty($dados['marca_id']) || empty($dados['modelo_id'])) {
             $veiculo = $this->veiculoService->getById((int) $dados['veiculo_id']);
             if ($veiculo) {
-                $dados['marca_id']  = !empty($dados['marca_id']) ? (int) $dados['marca_id'] : (int) ($veiculo->marca_id ?: ($veiculo->modelo?->marca_id ?? 0));
-                $dados['modelo_id'] = !empty($dados['modelo_id']) ? (int) $dados['modelo_id'] : (int) ($veiculo->modelo_id ?? 0);
+                $dados['marca_id'] = ! empty($dados['marca_id']) ? (int) $dados['marca_id'] : (int) ($veiculo->marca_id ?: ($veiculo->modelo?->marca_id ?? 0));
+                $dados['modelo_id'] = ! empty($dados['modelo_id']) ? (int) $dados['modelo_id'] : (int) ($veiculo->modelo_id ?? 0);
             }
         }
 
@@ -46,7 +46,7 @@ class RealizarCheckinReservaComumAction
 
         try {
             // Salva as fotos do check-in no storage
-            $dir = 'checkin/reserva_' . (int) $reserva_id;
+            $dir = 'checkin/reserva_'.(int) $reserva_id;
             $map = [
                 'foto_direita' => 'foto_direita_path',
                 'foto_esquerda' => 'foto_esquerda_path',
@@ -56,24 +56,30 @@ class RealizarCheckinReservaComumAction
                 'foto_combustivel' => 'foto_combustivel_path',
             ];
 
-            $destDir = storage_path('app/public/' . $dir);
-            if (!is_dir($destDir)) {
+            $destDir = storage_path('app/public/'.$dir);
+            if (! is_dir($destDir)) {
                 mkdir($destDir, 0775, true);
             }
 
+            $arquivosSalvos = [];
             foreach ($map as $input => $col) {
                 if ($request->hasFile($input) && $request->file($input)->isValid()) {
-                    if ($contratoExistente && !empty($contratoExistente->$col)) {
-                        $oldPath = storage_path('app/public/' . $contratoExistente->$col);
-                        if (file_exists($oldPath)) {
-                            @unlink($oldPath);
-                        }
+                    $path = $this->salvarFotoRastreada(
+                        $request->file($input),
+                        $dir,
+                        $contratoExistente?->$col,
+                        $registro->empresa_id ?? null,
+                        'checkin',
+                        'contrato_checkin',
+                        $contratoExistente?->id,
+                        $col,
+                        'checkin'
+                    );
+
+                    if ($path) {
+                        $dados[$col] = $path;
+                        $arquivosSalvos[] = $path;
                     }
-                    $file      = $request->file($input);
-                    $extension = $file->getClientOriginalExtension() ?: 'jpg';
-                    $filename  = Str::random(40) . '.' . $extension;
-                    $file->move($destDir, $filename);
-                    $dados[$col] = $dir . '/' . $filename;
                 } elseif ($contratoExistente) {
                     $dados[$col] = $contratoExistente->$col;
                 }
@@ -84,44 +90,58 @@ class RealizarCheckinReservaComumAction
 
             if ($contratoExistente) {
                 $contratoExistente->update($dados);
+                if (! empty($arquivosSalvos)) {
+                    \App\Models\ArquivoRastreado::whereIn('path', $arquivosSalvos)
+                        ->update(['entidade_id' => $contratoExistente->id]);
+                }
                 $this->sincronizarCheckinMotoristaApp($reserva, $contratoExistente->fresh(), $dados);
                 $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
-                    'houve_upgrade'  => $dados['houve_upgrade_categoria'] ?? false,
+                    'houve_upgrade' => $dados['houve_upgrade_categoria'] ?? false,
                     'motivo_upgrade' => $dados['motivo_upgrade'] ?? null,
-                    'veiculo_id'     => $dados['veiculo_id'] ?? null,
+                    'veiculo_id' => $dados['veiculo_id'] ?? null,
                 ], 'Contrato de check-in editado', 'info');
 
                 // Salva danos coletados ao editar check-in
-                if (!empty($dados['danos'])) {
+                if (! empty($dados['danos'])) {
                     $danosData = is_string($dados['danos']) ? json_decode($dados['danos'], true) : $dados['danos'];
                     if (is_array($danosData)) {
                         $fotoIdx = 0;
                         $reservaCodigoId = \App\Models\ReservaCodigo::where('reserva_id', $reserva_id)->value('id');
                         foreach ($danosData as $item) {
                             $mappedData = [
-                                'reserva_id'        => $reserva_id,
+                                'reserva_id' => $reserva_id,
                                 'reserva_codigo_id' => $reservaCodigoId,
-                                'categoria_id'      => $item['categoria_id'] ?? null,
-                                'dano_id'           => $item['dano_id'] ?? null,
-                                'local_dano'        => $item['local_dano'] ?? null,
+                                'categoria_id' => $item['categoria_id'] ?? null,
+                                'dano_id' => $item['dano_id'] ?? null,
+                                'local_dano' => $item['local_dano'] ?? null,
                                 'localizacao_problema' => $item['localizacao_problema'] ?? null,
-                                'tipo_dano'         => $item['tipo_dano'] ?? null,
-                                'custo_estimado'    => $item['custo_estimado'] ?? 0,
+                                'tipo_dano' => $item['tipo_dano'] ?? null,
+                                'custo_estimado' => $item['custo_estimado'] ?? 0,
                                 'quilometragem_veiculo' => $item['quilometragem_veiculo'] ?: ($dados['quilometragem_atual'] ?? 0),
-                                'observacoes'       => $item['observacoes'] ?? null,
-                                'veiculo_id'        => $dados['veiculo_id'] ?? null,
-                                'contrato_id'       => $contratoExistente->id,
+                                'observacoes' => $item['observacoes'] ?? null,
+                                'veiculo_id' => $dados['veiculo_id'] ?? null,
+                                'contrato_id' => $contratoExistente->id,
                             ];
 
                             $dano = \App\Models\VeiculoDanos::create($mappedData);
-                            $fotoInput = 'danos_fotos_' . $fotoIdx;
+                            $fotoInput = 'danos_fotos_'.$fotoIdx;
                             if ($dano && $request->hasFile($fotoInput)) {
-                                $dirDano = 'danos/reserva_codigo_' . (int) $reservaCodigoId . '/dano_' . (int) $dano->id;
-                                $path = \App\Support\ArquivoAnexoHelper::armazenar($request->file($fotoInput), $dirDano);
+                                $dirDano = 'danos/reserva_codigo_'.(int) $reservaCodigoId.'/dano_'.(int) $dano->id;
+                                $path = $this->salvarFotoRastreada(
+                                    $request->file($fotoInput),
+                                    $dirDano,
+                                    null,
+                                    $registro->empresa_id ?? null,
+                                    'checkin',
+                                    'veiculo_dano',
+                                    $dano->id,
+                                    'imagem',
+                                    'checkin-dano'
+                                );
                                 if ($path) {
                                     $dano->imagens()->create([
                                         'caminho_imagem' => $path,
-                                        'nome_imagem'    => basename($path),
+                                        'nome_imagem' => basename($path),
                                     ]);
                                 }
                             }
@@ -133,45 +153,59 @@ class RealizarCheckinReservaComumAction
                 return response()->json($contratoExistente->fresh());
             } else {
                 $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
-                    'houve_upgrade'  => $dados['houve_upgrade_categoria'] ?? false,
+                    'houve_upgrade' => $dados['houve_upgrade_categoria'] ?? false,
                     'motivo_upgrade' => $dados['motivo_upgrade'] ?? null,
-                    'veiculo_id'     => $dados['veiculo_id'] ?? null,
+                    'veiculo_id' => $dados['veiculo_id'] ?? null,
                 ], 'Contrato de check-in criado', 'success');
 
                 $contrato = $this->contratoCheckinService->create($dados);
+                if (! empty($arquivosSalvos)) {
+                    \App\Models\ArquivoRastreado::whereIn('path', $arquivosSalvos)
+                        ->update(['entidade_id' => $contrato->id]);
+                }
                 $this->sincronizarCheckinMotoristaApp($reserva, $contrato, $dados);
 
                 // Salva danos coletados (enviados como JSON no campo "danos")
-                if (!empty($dados['danos'])) {
+                if (! empty($dados['danos'])) {
                     $danosData = is_string($dados['danos']) ? json_decode($dados['danos'], true) : $dados['danos'];
                     if (is_array($danosData)) {
                         $fotoIdx = 0;
                         $reservaCodigoId = \App\Models\ReservaCodigo::where('reserva_id', $reserva_id)->value('id');
                         foreach ($danosData as $item) {
                             $mappedData = [
-                                'reserva_id'        => $reserva_id,
+                                'reserva_id' => $reserva_id,
                                 'reserva_codigo_id' => $reservaCodigoId,
-                                'categoria_id'      => $item['categoria_id'] ?? null,
-                                'dano_id'           => $item['dano_id'] ?? null,
-                                'local_dano'        => $item['local_dano'] ?? null,
+                                'categoria_id' => $item['categoria_id'] ?? null,
+                                'dano_id' => $item['dano_id'] ?? null,
+                                'local_dano' => $item['local_dano'] ?? null,
                                 'localizacao_problema' => $item['localizacao_problema'] ?? null,
-                                'tipo_dano'         => $item['tipo_dano'] ?? null,
-                                'custo_estimado'    => $item['custo_estimado'] ?? 0,
+                                'tipo_dano' => $item['tipo_dano'] ?? null,
+                                'custo_estimado' => $item['custo_estimado'] ?? 0,
                                 'quilometragem_veiculo' => $item['quilometragem_veiculo'] ?: ($dados['quilometragem_atual'] ?? 0),
-                                'observacoes'       => $item['observacoes'] ?? null,
-                                'veiculo_id'        => $dados['veiculo_id'] ?? null,
-                                'contrato_id'       => $contrato->id,
+                                'observacoes' => $item['observacoes'] ?? null,
+                                'veiculo_id' => $dados['veiculo_id'] ?? null,
+                                'contrato_id' => $contrato->id,
                             ];
 
                             $dano = \App\Models\VeiculoDanos::create($mappedData);
-                            $fotoInput = 'danos_fotos_' . $fotoIdx;
+                            $fotoInput = 'danos_fotos_'.$fotoIdx;
                             if ($dano && $request->hasFile($fotoInput)) {
-                                $dirDano = 'danos/reserva_codigo_' . (int) $reservaCodigoId . '/dano_' . (int) $dano->id;
-                                $path = \App\Support\ArquivoAnexoHelper::armazenar($request->file($fotoInput), $dirDano);
+                                $dirDano = 'danos/reserva_codigo_'.(int) $reservaCodigoId.'/dano_'.(int) $dano->id;
+                                $path = $this->salvarFotoRastreada(
+                                    $request->file($fotoInput),
+                                    $dirDano,
+                                    null,
+                                    $registro->empresa_id ?? null,
+                                    'checkin',
+                                    'veiculo_dano',
+                                    $dano->id,
+                                    'imagem',
+                                    'checkin-dano'
+                                );
                                 if ($path) {
                                     $dano->imagens()->create([
                                         'caminho_imagem' => $path,
-                                        'nome_imagem'    => basename($path),
+                                        'nome_imagem' => basename($path),
                                     ]);
                                 }
                             }
@@ -183,7 +217,8 @@ class RealizarCheckinReservaComumAction
                 return response()->json($contrato);
             }
         } catch (\Exception $e) {
-            Log::error('Erro ao realizar checkin: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            Log::error('Erro ao realizar checkin: '.$e->getMessage(), ['trace' => $e->getTraceAsString()]);
+
             return response()->json(['message' => $e->getMessage()], 500);
         }
     }
@@ -206,7 +241,7 @@ class RealizarCheckinReservaComumAction
 
     private function sincronizarCheckinMotoristaApp(ReservaResolvida $reserva, ?ContratoCheckin $contrato, array $dados): void
     {
-        if (!$contrato) {
+        if (! $contrato) {
             return;
         }
 
@@ -219,7 +254,7 @@ class RealizarCheckinReservaComumAction
             $motoristaApp = \App\Models\ReservaMotoristaApp::whereJsonContains('documentos_json->checkin->reserva_operacional_id', (int) $reserva->registro->id)->first();
 
             // 2. Se não encontrar, tenta buscar pelo código MAP contido nas observações da reserva operacional
-            if (!$motoristaApp && !empty($reserva->registro->observacoes)) {
+            if (! $motoristaApp && ! empty($reserva->registro->observacoes)) {
                 if (preg_match('/(MAP-\d+-\d+)/', (string) $reserva->registro->observacoes, $matches)) {
                     $codigoMap = $matches[1];
                     $motoristaApp = \App\Models\ReservaMotoristaApp::whereHas('codigoReserva', function ($q) use ($codigoMap) {
@@ -229,7 +264,7 @@ class RealizarCheckinReservaComumAction
             }
         }
 
-        if (!$motoristaApp) {
+        if (! $motoristaApp) {
             return;
         }
 
@@ -254,5 +289,29 @@ class RealizarCheckinReservaComumAction
             'nivel_combustivel_inicial' => $dados['nivel_combustivel'] ?? $contrato->nivel_combustivel,
             'documentos_json' => $documentos,
         ])->save();
+    }
+
+    private function salvarFotoRastreada(
+        ?\Illuminate\Http\UploadedFile $arquivo,
+        string $diretorio,
+        ?string $arquivoAntigo,
+        ?int $empresaId,
+        string $modulo,
+        string $entidade,
+        ?int $entidadeId,
+        string $campo,
+        string $contexto
+    ): ?string {
+        $dados = [
+            'empresa_id' => $empresaId,
+            'user_id' => Auth::id(),
+            'modulo' => $modulo,
+            'entidade' => $entidade,
+            'entidade_id' => $entidadeId,
+            'campo' => $campo,
+            'contexto' => $contexto,
+        ];
+
+        return ArquivoAnexoHelper::armazenarUploadRastreado($arquivo, $diretorio, $dados, $arquivoAntigo);
     }
 }

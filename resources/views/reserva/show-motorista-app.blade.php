@@ -821,7 +821,7 @@
             @endif
 
             @if($estaCheckout)
-                <a href="{{ route('reserva.verContratoCheckout', ['codigo' => $codigoReserva]) }}" target="_blank" class="ma-btn ma-btn--ghost">
+                <a href="{{ route('reserva.minhas.vercontratocheckout', ['codigo' => $codigoReserva]) }}" target="_blank" class="ma-btn ma-btn--ghost">
                     <i class="fas fa-file-pdf"></i>
                     <span>Ver PDF do check-out</span>
                 </a>

@@ -21,7 +21,7 @@ class RealizarCheckoutMotoristaAppAction
 
         $documentos = (array) ($reserva->documentos_json ?? []);
         $fotos = [];
-        $dir = 'motorista-app/checkout/reserva_' . (int) $reserva->id;
+        $dir = 'motorista-app/checkout';
 
         foreach (['foto_direita_co', 'foto_esquerda_co', 'foto_frente_co', 'foto_tras_co', 'foto_velocimetro_co', 'foto_combustivel_co'] as $input) {
             if ($request->hasFile($input)) {

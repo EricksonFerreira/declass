@@ -52,18 +52,37 @@ class RegistrarReceitaPagamentoReservaAction
             return $existente;
         }
 
-        $categoria = CategoriaFinanceira::firstOrCreate(
-            [
-                'empresa_id' => $empresaId,
-                'nome' => 'Pagamento de Reserva',
-                'tipo' => 'receita',
-            ],
-            [
-                'descricao' => 'Receitas geradas automaticamente ao confirmar pagamentos de reservas.',
-            ]
-        );
+        $isCalcao = str_contains($referencia, 'calcao_');
 
-        $codigo = $this->codigoReserva($reserva);
+        if ($isCalcao) {
+            $categoria = CategoriaFinanceira::firstOrCreate(
+                [
+                    'empresa_id' => $empresaId,
+                    'nome' => 'Caução recebida',
+                    'tipo' => 'receita',
+                ],
+                [
+                    'codigo' => 'C.01',
+                    'status' => 'ativo',
+                    'descricao' => 'Valores recebidos a título de caução/garantia.',
+                ]
+            );
+            $descricaoLancamento = 'Recebimento de Caução RES-' . str_pad($reserva->id, 4, '0', STR_PAD_LEFT);
+        } else {
+            $categoria = CategoriaFinanceira::firstOrCreate(
+                [
+                    'empresa_id' => $empresaId,
+                    'nome' => 'Pagamento de Reserva',
+                    'tipo' => 'receita',
+                ],
+                [
+                    'descricao' => 'Receitas geradas automaticamente ao confirmar pagamentos de reservas.',
+                ]
+            );
+            $codigo = $this->codigoReserva($reserva);
+            $descricaoLancamento = 'Pagamento da reserva #' . $codigo;
+        }
+
         $reservaId = $reserva instanceof Reserva
             ? (int) $reserva->id
             : $this->reservaOperacionalId($reserva);
@@ -72,7 +91,7 @@ class RegistrarReceitaPagamentoReservaAction
             'empresa_id' => $empresaId,
             'categoria_financeira_id' => $categoria->id,
             'tipo' => 'receita',
-            'descricao' => 'Pagamento da reserva #'.$codigo,
+            'descricao' => $descricaoLancamento,
             'valor' => $valorPago,
             'status' => 'pago',
             'data_lancamento' => $pagoEm->format('Y-m-d H:i:s'),

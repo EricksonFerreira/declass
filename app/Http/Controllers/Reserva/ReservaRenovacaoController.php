@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Reserva;
 
+use App\Actions\Reserva\Renovacao\Executa\ExecutaRenovacaoActionAction;
+use App\Actions\Reserva\Renovacao\Exibir\ExibirRenovacaoActionAction;
 use App\Http\Controllers\Controller;
 use App\Services\BreadcrumbService;
 use App\Services\CategoriaDanoService;
@@ -12,7 +14,7 @@ use App\Services\UpgradeVeiculoService;
 use App\Services\VeiculoService;
 use Illuminate\Http\Request;
 
-class ReservaCheckinController extends Controller
+class ReservaRenovacaoController extends Controller
 {
     use ReservaHelpersTrait;
 
@@ -24,8 +26,8 @@ class ReservaCheckinController extends Controller
         protected ModeloService $modeloService,
         protected CategoriaDanoService $categoriaDanoService,
         protected UpgradeVeiculoService $upgradeVeiculoService,
-        protected ExecutaRenovacaoAction $executaRenovacaoAction,
-        protected ExibirenovacaoAction $exibirenovacaoAction,
+        protected ExecutaRenovacaoActionAction $executaRenovacaoAction,
+        protected ExibirRenovacaoActionAction $exibirenovacaoAction,
     ) {}
 
     public function exibir(Request $request, $codigo)

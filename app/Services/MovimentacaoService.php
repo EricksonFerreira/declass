@@ -211,7 +211,7 @@ class MovimentacaoService extends AbstractBaseService
             'status_movimentacao_id' => $statusMovimentacao,
             'local_destino_id' => $data['local_disponibilidade'] ?? null,
             'data_registro' => Carbon::now(),
-            'data_saida' => Carbon::now(),
+            'data_saida' => null,
             'data_chegada_prevista' => $dataHoraCarbon ?? Carbon::now(),
             'data_chegada_real' => ($statusMovimentacao === 1) ? ($dataHoraCarbon ?? Carbon::now()) : null,
             'observacoes' => $data['observacoes'] ?? 'Cadastro inicial do veiculo',
@@ -342,15 +342,27 @@ class MovimentacaoService extends AbstractBaseService
     }
 
     // Retirada de Veículo (Check-in)
-    public function realizarCheckIn($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?string $dataChegadaPrevista = null)
+    public function realizarCheckIn($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?string $dataChegadaPrevista = null, ?int $kmSaida = null)
     {
-        $this->registrarMovimentacao($veiculo_id, $estacao_id, null, null, $reserva_id, $observacao, __FUNCTION__, $dataChegadaPrevista);
+        $this->registrarMovimentacao($veiculo_id, $estacao_id, null, null, $reserva_id, $observacao, __FUNCTION__, $dataChegadaPrevista, $kmSaida, null);
     }
 
     // Devolução de Veículo (Check-out)
-    public function realizarCheckOut($veiculo_id, $estacao_id, $reserva_id, $observacao = null)
+    public function realizarCheckOut($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?int $kmChegada = null)
     {
-        $this->registrarMovimentacao($veiculo_id, null,null,$estacao_id, $reserva_id, $observacao, __FUNCTION__);
+        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, $reserva_id, $observacao, __FUNCTION__, null, null, $kmChegada);
+
+        if ($reserva_id) {
+            $tipoCheckIn = \App\Models\TipoMovimentacao::where('nome', 'like', '%Check-in%')->value('id') ?? 2;
+            $statusConcluido = \App\Models\StatusMovimentacao::where('nome', 'Concluído')->value('id') ?? 1;
+
+            \App\Models\Movimentacao::query()
+                ->where('reserva_id', (int) $reserva_id)
+                ->where('tipo_movimentacao_id', $tipoCheckIn)
+                ->update([
+                    'status_movimentacao_id' => $statusConcluido
+                ]);
+        }
     }
 
     // Problema Mecânico
@@ -441,6 +453,13 @@ class MovimentacaoService extends AbstractBaseService
 
             if (SchemaCache::hasColumn('veiculos', 'data_hora_disponibilidade')) {
                 $updates['data_hora_disponibilidade'] = $movimentacao->data_chegada_real;
+            }
+        }
+
+        if (!empty($movimentacao->data_chegada_real)) {
+            $statusDisponivelIds = $this->veiculoService->getStatusVeiculoDisponivelIds();
+            if (!empty($statusDisponivelIds)) {
+                $updates['status_veiculo_id'] = (int) reset($statusDisponivelIds);
             }
         }
 
@@ -563,7 +582,9 @@ class MovimentacaoService extends AbstractBaseService
         $reserva_id = null,
         $observacao = null,
         ?string $funcao = null,
-        ?string $dataChegadaPrevista = null
+        ?string $dataChegadaPrevista = null,
+        ?int $kmSaida = null,
+        ?int $kmChegada = null
     )
     {
         if (!$funcao) {
@@ -581,6 +602,14 @@ class MovimentacaoService extends AbstractBaseService
             }
         }
 
+        $ehChegada = in_array($funcao, [
+            'adicionarAoEstoque',
+            'realizarCheckOut',
+            'registrarChegadaNaEstacao',
+            'registrarChegadaNaOficina',
+            'registrarRetornoDaOficina'
+        ], true);
+
         $valor = [
             'veiculo_id' => $veiculo_id,
             'tipo_movimentacao_id' => $tipoMovimentacao,
@@ -588,11 +617,20 @@ class MovimentacaoService extends AbstractBaseService
             'local_origem_id' => $local_origem_id ?? $local_id,
             'local_destino_id' => $local_destino_id,
             'data_registro' => Carbon::now(),
-            'data_saida' => Carbon::now(),
+            'data_saida' => $ehChegada ? null : Carbon::now(),
+            'data_chegada_real' => $ehChegada ? Carbon::now() : null,
             'reserva_id' => $validReservaId,
             'observacoes' => $observacao,
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
         ];
+
+        if ($kmSaida !== null) {
+            $valor['km_saida'] = $kmSaida;
+        }
+
+        if ($kmChegada !== null) {
+            $valor['km_chegada'] = $kmChegada;
+        }
 
         if ($dataChegadaPrevista !== null) {
             $valor['data_chegada_prevista'] = Carbon::parse($dataChegadaPrevista)->toDateTimeString();

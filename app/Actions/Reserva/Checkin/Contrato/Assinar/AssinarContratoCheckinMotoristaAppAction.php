@@ -41,7 +41,7 @@ class AssinarContratoCheckinMotoristaAppAction
         data_set($snapshot, 'contrato.assinado_em', $dataAssinatura);
         data_set($snapshot, 'contrato.assinatura_path', $assinaturaPath);
 
-        $arquivoContrato = $reserva->contrato_pdf_path ?: 'contratos/motorista-app/reserva-' . (int) $reserva->id . '-' . time() . '.pdf';
+        $arquivoContrato = $reserva->contrato_pdf_path ?: 'contratos/checkin/checkin-' . (int) $reserva->id . '-' . time() . '.pdf';
         Storage::disk('public')->put(
             $arquivoContrato,
             $this->pdfService->gerarCheckinPdfContent($snapshot)

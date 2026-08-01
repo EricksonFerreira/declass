@@ -130,9 +130,11 @@
         'get' => $get,
         'opcionais' => $opcionais,
     ])
-    @include('pdf.contratos.partials.assinaturas', [
-        'get' => $get,
-    ])
+    @if(!empty($data['assinatura']) && !empty($data['documento']['data_assinatura'] ?? null))
+        @include('pdf.contratos.partials.assinaturas', [
+            'get' => $get,
+        ])
+    @endif
     @include('pdf.contratos.partials.footer', [
         'get' => $get,
     ])

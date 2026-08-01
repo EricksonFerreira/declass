@@ -61,9 +61,9 @@ class ExibirCheckinReservaComumAction
         $contratoExistente = $this->contratoCheckinService->getModel()->newQuery()
             ->with('veiculo')->where('reserva_id', $reservaId)->first();
 
-        if ($contratoExistente && $contratoExistente->assinado === 'S') {
+        if ($contratoExistente) {
             return redirect()->route('reserva.show', $codigo)
-                ->with('warning', 'O contrato ja foi assinado e nao pode ser editado.');
+                ->with('warning', 'O check-in desta reserva ja foi criado. Para abrir novamente, exclua o contrato atual.');
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([

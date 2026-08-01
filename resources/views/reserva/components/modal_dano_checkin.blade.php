@@ -613,23 +613,38 @@
         const parsedValue = Number.parseInt(rawValue, 10);
         return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
     }
+    const formDano = document.getElementById('form_dano');
 
-    document.getElementById('form_dano').addEventListener('submit', function (event) {
+if (formDano) {
+    formDano.addEventListener('submit', function (event) {
         event.preventDefault();
-        const campos = document.querySelectorAll('#form_dano input[required], #form_dano select[required], #form_dano textarea[required]');
+
+        const campos = formDano.querySelectorAll(
+            'input[required], select[required], textarea[required]'
+        );
+
         let valido = true;
+
         campos.forEach(campo => {
             const invalido = !campo.value;
             campo.classList.toggle('is-invalid', invalido);
-            if (invalido) valido = false;
+
+            if (invalido) {
+                valido = false;
+            }
         });
-        if (!valido) return;
+
+        if (! valido) {
+            return;
+        }
+
         if (window.danosModoLocal) {
             adicionarDanoLocal();
         } else {
             adicionarDanoVeiculo();
         }
     });
+}
 
     function adicionarDanoVeiculo() {
         const custoRaw = document.getElementById('custo_estimado')?.value || '';

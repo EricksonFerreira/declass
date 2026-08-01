@@ -285,14 +285,16 @@ class FluxoCaixaController extends Controller
     {
         $empresaId = $this->getEmpresaId();
         $moeda = $this->getMoedaEmpresa();
-        $reservas = Reserva::with('codigoReserva')
-            ->where('empresa_id', $empresaId)
-            ->orderByDesc('id')
-            ->limit(100)
-            ->get();
+        $reservasQuery = Reserva::with('codigoReserva');
+        if ($empresaId !== null) {
+            $reservasQuery->where('empresa_id', $empresaId);
+        }
+        $reservas = $reservasQuery->orderByDesc('id')->limit(100)->get();
 
-        $query = LancamentoFinanceiro::with(['categoria', 'veiculo', 'reserva.codigoReserva'])
-            ->where('empresa_id', $empresaId);
+        $query = LancamentoFinanceiro::with(['categoria', 'veiculo', 'reserva.codigoReserva']);
+        if ($empresaId !== null) {
+            $query->where('empresa_id', $empresaId);
+        }
 
         // Apply filters
         if ($request->filled('descricao')) {
@@ -320,11 +322,34 @@ class FluxoCaixaController extends Controller
         $perPage = (int) $request->integer('per_page', 15);
         $perPage = in_array($perPage, [10, 15, 25, 50, 100], true) ? $perPage : 15;
 
-        $lancamentos = $query->orderByDesc(DB::raw('COALESCE(data_lancamento, data_pagamento, data_vencimento, created_at)'))
-            ->paginate($perPage)
+        $orderBy = $request->input('order_by', 'data_lancamento');
+        $orderDir = strtolower($request->input('order_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $allowedSorts = [
+            'data_lancamento' => 'data_lancamento',
+            'data_vencimento' => 'data_vencimento',
+            'data_pagamento' => 'data_pagamento',
+            'valor' => 'valor',
+            'descricao' => 'descricao',
+            'created_at' => 'created_at',
+        ];
+
+        $sortField = $allowedSorts[$orderBy] ?? 'data_lancamento';
+
+        if ($sortField === 'data_lancamento') {
+            $query->orderBy(DB::raw('COALESCE(data_lancamento, data_pagamento, created_at)'), $orderDir);
+        } else {
+            $query->orderBy($sortField, $orderDir);
+        }
+
+        $lancamentos = $query->paginate($perPage)
             ->withQueryString();
 
-        $categorias = CategoriaFinanceira::where('empresa_id', $empresaId)->orderBy('codigo')->get();
+        $categoriasQuery = CategoriaFinanceira::orderBy('codigo');
+        if ($empresaId !== null) {
+            $categoriasQuery->where('empresa_id', $empresaId);
+        }
+        $categorias = $categoriasQuery->get();
 
         $breadcrumb = $this->breadcrumbFluxoCaixa('Lançamentos', route('financeiro.fluxo-caixa.index'));
         $titulo = 'Lançamentos Financeiros';

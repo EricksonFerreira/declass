@@ -229,7 +229,7 @@ class VeiculoService extends AbstractBaseService
                 }
 
                 $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
+                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::NoShow->value])
                     ->where('reservas.data_inicio', '<', $data_fim)
                     ->where('reservas.data_fim', '>', $data_inicio);
             })
@@ -292,40 +292,13 @@ class VeiculoService extends AbstractBaseService
      */
     public function getModelosComVeiculosDisponiveis(int $idGrupoFrota, int $idLocal, string $data_inicio, string $data_fim)
     {
-        $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($data_inicio);
-
-        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+        $query = $this->baseQueryVeiculosDisponiveisNoPeriodo($data_inicio, $data_fim, null, null, $idLocal)
             ->whereHas('modelo.gruposFrota', function ($query) use ($idGrupoFrota) {
                 $query->where('grupos_frota.id', $idGrupoFrota);
             })
-            ->where('local_disponibilidade', $idLocal)
-            ->where(function ($query) use ($data_inicio) {
-                $query->whereNull('data_hora_disponibilidade')
-                    ->orWhere('data_hora_disponibilidade', '<=', $data_inicio);
-            })
-            ->whereDoesntHave('movimentacoes', function ($query) use ($data_inicio, $data_fim, $dataInicioComFolga) {
-                $query->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
-                    ->where('reservas.data_inicio', '<', $data_fim)
-                    ->where('reservas.data_fim', '>', $dataInicioComFolga);
-            })
-            ->whereDoesntHave('movimentacoes', function ($query) use ($data_fim) {
-                $query->whereNull('data_chegada_real')
-                    ->where(function ($sub) use ($data_fim) {
-                        $sub->whereNull('data_saida')->orWhere('data_saida', '<', $data_fim);
-                    });
-
-                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
-                if (!empty($cancelados)) {
-                    $query->whereNotIn('status_movimentacao_id', $cancelados);
-                }
-            })
             ->with('modelo');
 
-        $query = $this->scopeStatusVeiculoDisponivel($query);
-
-        return $query
-            ->get()
+        return $query->get()
             ->pluck('modelo')
             ->filter()
             ->unique('id')
@@ -345,36 +318,7 @@ class VeiculoService extends AbstractBaseService
             return 0;
         }
 
-        $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($data_inicio);
-
-        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
-            ->where('grupo_frota_id', $idGrupoFrota)
-            ->where('local_disponibilidade', $idLocal)
-            ->where(function ($subQuery) use ($data_inicio) {
-                $subQuery->whereNull('data_hora_disponibilidade')
-                    ->orWhere('data_hora_disponibilidade', '<=', $data_inicio);
-            })
-            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicioComFolga, $data_fim) {
-                $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
-                    ->where('reservas.data_inicio', '<', $data_fim)
-                    ->where('reservas.data_fim', '>', $dataInicioComFolga);
-            })
-            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($data_fim) {
-                $subQuery->whereNull('data_chegada_real')
-                    ->where(function ($sub) use ($data_fim) {
-                        $sub->whereNull('data_saida')->orWhere('data_saida', '<', $data_fim);
-                    });
-
-                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
-                if (!empty($cancelados)) {
-                    $subQuery->whereNotIn('status_movimentacao_id', $cancelados);
-                }
-            });
-
-        $query = $this->scopeStatusVeiculoDisponivel($query);
-
-        return (int) $query->count();
+        return (int) $this->baseQueryVeiculosDisponiveisNoPeriodo($data_inicio, $data_fim, $idGrupoFrota, null, $idLocal)->count();
     }
 
     /**
@@ -431,39 +375,7 @@ class VeiculoService extends AbstractBaseService
             return 0;
         }
 
-        $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($dataInicio);
-
-        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
-            ->where('local_disponibilidade', $estacaoId)
-            ->where(function ($subQuery) use ($dataInicio) {
-                $subQuery->whereNull('data_hora_disponibilidade')
-                    ->orWhere('data_hora_disponibilidade', '<=', $dataInicio);
-            })
-            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicioComFolga, $dataFim, $reservaId, $dataInicio) {
-                if ($reservaId) {
-                    $subQuery->where('movimentacoes.reserva_id', '!=', $reservaId);
-                }
-
-                $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
-                    ->where('reservas.data_inicio', '<', $dataFim)
-                    ->where('reservas.data_fim', '>', $dataInicioComFolga);
-            })
-            ->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataFim) {
-                $subQuery->whereNull('data_chegada_real')
-                    ->where(function ($sub) use ($dataFim) {
-                        $sub->whereNull('data_saida')->orWhere('data_saida', '<', $dataFim);
-                    });
-
-                $cancelados = $this->getStatusMovimentacaoCanceladoIds();
-                if (!empty($cancelados)) {
-                    $subQuery->whereNotIn('status_movimentacao_id', $cancelados);
-                }
-            });
-
-        $query = $this->scopeStatusVeiculoDisponivel($query);
-
-        return (int) $query->count();
+        return (int) $this->baseQueryVeiculosDisponiveisNoPeriodo($dataInicio, $dataFim, null, null, $estacaoId, $reservaId)->count();
     }
 
     public function temVeiculoDisponivelNaEstacaoEmDataHora(
@@ -502,6 +414,28 @@ class VeiculoService extends AbstractBaseService
             return [];
         }
 
+        $query = $this->baseQueryVeiculosDisponiveisNoPeriodo($dataInicio, $dataFim, $grupoFrotaId, $modeloId, null, $reservaId);
+
+        return $query->select('local_disponibilidade')
+            ->distinct()
+            ->pluck('local_disponibilidade')
+            ->map(fn ($v) => (int) $v)
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Base única de disponibilidade por período. Os métodos públicos aplicam apenas os filtros específicos.
+     */
+    private function baseQueryVeiculosDisponiveisNoPeriodo(
+        string $dataInicio,
+        string $dataFim,
+        ?int $grupoFrotaId = null,
+        ?int $modeloId = null,
+        ?int $estacaoId = null,
+        ?int $reservaId = null
+    ) {
         $dataInicioComFolga = $this->dataInicioComFolgaPosReserva($dataInicio);
 
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
@@ -514,8 +448,13 @@ class VeiculoService extends AbstractBaseService
         if ($grupoFrotaId) {
             $query->where('grupo_frota_id', (int) $grupoFrotaId);
         }
+
         if ($modeloId) {
             $query->where('modelo_id', (int) $modeloId);
+        }
+
+        if ($estacaoId) {
+            $query->where('local_disponibilidade', (int) $estacaoId);
         }
 
         $query->whereDoesntHave('movimentacoes', function ($subQuery) use ($dataInicioComFolga, $dataFim, $reservaId) {
@@ -524,7 +463,7 @@ class VeiculoService extends AbstractBaseService
             }
 
             $subQuery->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
+                ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::NoShow->value])
                 ->where('reservas.data_inicio', '<', $dataFim)
                 ->where('reservas.data_fim', '>', $dataInicioComFolga);
         });
@@ -541,15 +480,7 @@ class VeiculoService extends AbstractBaseService
             }
         });
 
-        $query = $this->scopeStatusVeiculoDisponivel($query);
-
-        return $query->select('local_disponibilidade')
-            ->distinct()
-            ->pluck('local_disponibilidade')
-            ->map(fn ($v) => (int) $v)
-            ->filter()
-            ->values()
-            ->all();
+        return $this->scopeStatusVeiculoDisponivel($query);
     }
 
     private function getStatusMovimentacaoCanceladoIds(): array
@@ -695,7 +626,7 @@ class VeiculoService extends AbstractBaseService
             ->whereDoesntHave('movimentacoes', function ($q) use ($dataInicio, $dataFim, $reservaId) {
                 $q->where('movimentacoes.reserva_id', '!=', $reservaId)
                   ->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                  ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::Checkout->value, StatusReservaEnum::NoShow->value])
+                  ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::NoShow->value])
                   ->where('reservas.data_inicio', '<', $dataFim)
                   ->where('reservas.data_fim', '>', $dataInicio);
             })

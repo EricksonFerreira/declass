@@ -6,6 +6,7 @@
     $etapaCheckout = (bool) ($reserva->contratoCheckout ?? null);
     $etapaCheckoutAssinado = $etapaCheckout
         && (!empty($reserva->contratoCheckout->assinatura) || !empty($reserva->contratoCheckout->data_assinatura));
+    $etapaRevisaoConcluida = ($reserva->revisao_checkout_concluida ?? 'N') === 'S';
 @endphp
 
 <div class="rs-flow">
@@ -33,5 +34,15 @@
         <i class="rs-flow__icon fas {{ $etapaCheckoutAssinado ? 'fa-check-circle' : 'fa-clock' }}"></i>
         <span class="rs-flow__label">5.</span>
         <span class="rs-flow__value">Assinatura</span>
+    </div>
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaRevisaoConcluida ? 'is-done' : ($etapaCheckoutAssinado ? 'is-current' : '')) }}">
+        <i class="rs-flow__icon fas {{ $etapaRevisaoConcluida ? 'fa-check-circle' : 'fa-clock' }}"></i>
+        <span class="rs-flow__label">6.</span>
+        <span class="rs-flow__value">Revisão</span>
+    </div>
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaRevisaoConcluida ? 'is-done' : ($etapaCheckoutAssinado ? 'is-current' : '')) }}">
+        <i class="rs-flow__icon fas {{ $etapaRevisaoConcluida ? 'fa-check-circle' : 'fa-clock' }}"></i>
+        <span class="rs-flow__label">8.</span>
+        <span class="rs-flow__value">Revisão concluída</span>
     </div>
 </div>

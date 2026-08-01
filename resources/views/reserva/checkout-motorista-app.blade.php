@@ -867,6 +867,11 @@
             processData: false,
             contentType: false,
             success: function (data) {
+                try {
+                    if (window.jQuery && $.fn.modal) {
+                        $('.modal.show').modal('hide');
+                    }
+                } catch (e) {}
                 Swal.fire({
                     icon: 'success',
                     title: data.message || 'Check-out concluído!',

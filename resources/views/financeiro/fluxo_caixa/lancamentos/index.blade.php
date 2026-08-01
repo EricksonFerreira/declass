@@ -58,6 +58,24 @@
                             @endforeach
                         </select>
                     </div>
+                    <div class="col-md-2 mb-2">
+                        <label for="order_by" class="fc-label">Ordenar por</label>
+                        <select name="order_by" id="order_by" class="form-control">
+                            <option value="data_lancamento" {{ request('order_by') === 'data_lancamento' || !request()->has('order_by') ? 'selected' : '' }}>Data de Lançamento</option>
+                            <option value="data_vencimento" {{ request('order_by') === 'data_vencimento' ? 'selected' : '' }}>Data de Vencimento</option>
+                            <option value="data_pagamento" {{ request('order_by') === 'data_pagamento' ? 'selected' : '' }}>Data de Pagamento</option>
+                            <option value="valor" {{ request('order_by') === 'valor' ? 'selected' : '' }}>Valor</option>
+                            <option value="descricao" {{ request('order_by') === 'descricao' ? 'selected' : '' }}>Descrição</option>
+                            <option value="created_at" {{ request('order_by') === 'created_at' ? 'selected' : '' }}>Data de Criação</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 mb-2">
+                        <label for="order_direction" class="fc-label">Direção</label>
+                        <select name="order_direction" id="order_direction" class="form-control">
+                            <option value="desc" {{ request('order_direction') === 'desc' || !request()->has('order_direction') ? 'selected' : '' }}>Decrescente</option>
+                            <option value="asc" {{ request('order_direction') === 'asc' ? 'selected' : '' }}>Crescente</option>
+                        </select>
+                    </div>
                     <div class="col-md-3 mb-2 fc-actions">
                         <button type="submit" class="btn btn-primary fc-btn flex-grow-1"><i class="fas fa-filter"></i> Filtrar</button>
                         <a href="{{ route('financeiro.fluxo-caixa.index') }}" class="btn btn-outline-secondary fc-btn">Limpar</a>

@@ -43,6 +43,10 @@
     @forelse($options as $key => $option)
         @php
             $optionIsRecord = is_array($option) || is_object($option);
+            $isOptGroup = $optionIsRecord && is_array($option) && array_key_exists('options', $option);
+            if ($isOptGroup) {
+                $groupLabel = data_get($option, 'label', data_get($option, 'nome', $key));
+            }
             $optionValue = $optionIsRecord
                 ? data_get($option, 'id', $key)
                 : $key;
@@ -50,9 +54,28 @@
                 ? data_get($option, 'nome', data_get($option, 'name', data_get($option, 'label', $optionValue)))
                 : $option;
         @endphp
-        <option value="{{ $optionValue }}" @if($isSelected($optionValue)) selected="selected" @endif>
-            {{ $optionLabel }}
-        </option>
+        @if($isOptGroup)
+            <optgroup label="{{ $groupLabel }}">
+                @foreach(data_get($option, 'options', []) as $groupKey => $groupOption)
+                    @php
+                        $groupOptionIsRecord = is_array($groupOption) || is_object($groupOption);
+                        $groupOptionValue = $groupOptionIsRecord
+                            ? data_get($groupOption, 'id', $groupKey)
+                            : $groupKey;
+                        $groupOptionLabel = $groupOptionIsRecord
+                            ? data_get($groupOption, 'nome', data_get($groupOption, 'name', data_get($groupOption, 'label', $groupOptionValue)))
+                            : $groupOption;
+                    @endphp
+                    <option value="{{ $groupOptionValue }}" @if($isSelected($groupOptionValue)) selected="selected" @endif>
+                        {{ $groupOptionLabel }}
+                    </option>
+                @endforeach
+            </optgroup>
+        @else
+            <option value="{{ $optionValue }}" @if($isSelected($optionValue)) selected="selected" @endif>
+                {{ $optionLabel }}
+            </option>
+        @endif
     @empty
         {!! $slot !!}
     @endforelse

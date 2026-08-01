@@ -128,6 +128,11 @@
             {{-- Check-out --}}
             @php
                 $checkoutJaFeito   = $reserva->contratoCheckout()->exists();
+                $checkoutAssinado = $reserva->contratoCheckout && (
+                    !empty($reserva->contratoCheckout->assinatura)
+                    || !empty($reserva->contratoCheckout->data_assinatura)
+                    || $reserva->contratoCheckout->assinado === 'S'
+                );
                 $checkinAssinadoCo = $reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S';
                 $checkoutUrl       = route('reserva.checkout.vistoria', $reserva->codigoReserva->codigo);
                 $dataFim           = $reserva->data_fim ? \Carbon\Carbon::parse($reserva->data_fim) : null;
@@ -140,7 +145,7 @@
                     if ((float) ($calculo['valor_calculado'] ?? 0) > 0) {
                         $calcao = $reserva->calcao;
                         $calcaoOkCo = $calcao
-                            && in_array((string) $calcao->status, ['autorizado', 'capturado', 'parcialmente_capturado'], true);
+                            && in_array((string) $calcao->status, ['autorizado', 'capturado', 'parcialmente_capturado', 'cancelado'], true);
                     }
                 } catch (\Throwable $e) { $calcaoOkCo = false; }
 
@@ -149,11 +154,42 @@
                 $motivosBloqueio = [];
                 if (!($pagamentoEfetuado ?? false))   $motivosBloqueio[] = 'Pagamento não efetuado';
                 if (!$checkinAssinadoCo)              $motivosBloqueio[] = 'Check-in não realizado ou contrato não assinado';
-                if (!$calcaoOkCo)                     $motivosBloqueio[] = 'Calção pendente — realize a pré-autorização antes do check-out';
+                if (!$calcaoOkCo)                     $motivosBloqueio[] = 'Calção pendente — registre o calção antes do check-out';
             @endphp
 
             @if($checkoutJaFeito)
                 @php $jaSatisfacaoBtn = $reserva->satisfacao()->exists(); @endphp
+                @if($reserva->contratoCheckout && !$checkoutAssinado)
+                    <a href="{{ route('reserva.assinarContratoCheckout', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" 
+                        style="background:#28a745" class="btn btn-sm btn-success action-pill text-white font-weight-bold">
+                        <i class="fas fa-signature mr-1"></i> Assinar Check-out / Devolução
+                    </a>
+                @endif
+                @if($reserva->contratoCheckout)
+                    @if(! $checkoutAssinado)
+                        <a href="{{ route('reserva.checkout.vistoria', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="action-pill action-pill--warning">
+                            <i class="fas fa-edit"></i>
+                            <span>Editar check-out</span>
+                        </a>
+                    @endif
+                @php $revisaoCheckoutConcluida = ($reserva->revisao_checkout_concluida ?? 'N') === 'S'; @endphp
+
+                @if($checkoutAssinado && ! $revisaoCheckoutConcluida)
+                    <a href="{{ route('reserva.checkout.revisao', ['codigo' => $reserva->codigoReserva?->codigo ?? $reserva->id]) }}" class="action-pill action-pill--success">
+                        <i class="fas fa-clipboard-check"></i>
+                        <span>Ir para revisão</span>
+                    </a>
+                @endif
+                    @if(! $revisaoCheckoutConcluida)
+                        <button type="button"
+                                class="action-pill action-pill--danger js-excluir-contrato-checkout"
+                                data-url="{{ route('reserva.checkout.excluirContrato', $reserva->codigoReserva?->codigo ?? $reserva->id) }}"
+                                data-assinado="{{ $checkoutAssinado ? '1' : '0' }}">
+                            <i class="fas fa-trash"></i>
+                            <span>{{ $checkoutAssinado ? 'Invalidar com justificativa' : 'Excluir contrato' }}</span>
+                        </button>
+                    @endif
+                @endif
                 {{-- <button type="button" class="action-pill action-pill--success"
                         onclick="$('#modalSatisfacao').modal('show')">
                     <i class="fas fa-{{ $jaSatisfacaoBtn ? 'check-circle' : 'star' }}"></i>
@@ -176,6 +212,8 @@
                         <i class="fas fa-lock"></i>
                         <span>Check-out</span>
                     </span>
+               
+        
                 @endif
             @endif
             {{-- Sem checkin: nenhum botão de checkout exibido --}}
@@ -662,7 +700,18 @@
                     <label>Valor</label>
                     <div class="input-group">
                         <div class="input-group-prepend"><span class="input-group-text">R$</span></div>
-                        <input type="number" name="valor" id="inputValorDinheiro" class="form-control" step="0.01" min="0.01" placeholder="0,00" required>
+                        <input
+                            type="number"
+                            name="valor"
+                            id="inputValorDinheiro"
+                            class="form-control"
+                            step="0.01"
+                            min="0.01"
+                            max="{{ number_format($valorTotalReserva, 2, '.', '') }}"
+                            value="{{ number_format($valorTotalReserva, 2, '.', '') }}"
+                            placeholder="0,00"
+                            required
+                        >
                     </div>
                 </div>
                 <div id="dinheiroFeedback" class="alert d-none mb-0"></div>
@@ -680,6 +729,14 @@
     const form = document.getElementById('formPagamentoDinheiro');
     const feedback = document.getElementById('dinheiroFeedback');
     const inputValor = document.getElementById('inputValorDinheiro');
+    const valorMaximo = Number(inputValor?.getAttribute('max') || 0);
+
+    inputValor?.addEventListener('input', function () {
+        const atual = Number(this.value || 0);
+        if (valorMaximo > 0 && atual > valorMaximo) {
+            this.value = valorMaximo.toFixed(2);
+        }
+    });
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -689,6 +746,13 @@
         if (!valor || valor <= 0) {
             feedback.className = 'alert alert-danger';
             feedback.textContent = 'Informe um valor válido.';
+            feedback.classList.remove('d-none');
+            return;
+        }
+
+        if (valorMaximo > 0 && valor > valorMaximo) {
+            feedback.className = 'alert alert-danger';
+            feedback.textContent = 'O valor não pode ser maior que o total pendente.';
             feedback.classList.remove('d-none');
             return;
         }

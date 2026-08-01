@@ -220,6 +220,11 @@ class CaracteristicaFrotaController extends BaseController implements FiltroInte
 
     private function storeImagem(?UploadedFile $file, ?string $oldPath = null): ?string
     {
-        return ArquivoAnexoHelper::armazenar($file, 'caracteristicas_frota/imagens', $oldPath);
+        return ArquivoAnexoHelper::armazenarRastreado($file, 'caracteristicas_frota/imagens', [
+            'modulo' => 'caracteristica_frota',
+            'entidade' => 'CaracteristicaFrota',
+            'campo' => 'imagem',
+            'contexto' => 'caracteristica_frota.imagem',
+        ], $oldPath)['path'] ?? null;
     }
 }

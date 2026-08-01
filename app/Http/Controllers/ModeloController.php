@@ -11,10 +11,9 @@ use App\Services\MarcaService;
 use App\Services\ModeloService;
 use App\Services\SegmentoService;
 use App\Traits\AtualizaFiltrosTrait;
+use App\Support\ArquivoAnexoHelper;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use App\Traits\FiltroTrait;
 
 class ModeloController extends BaseController implements FiltroInterface, ResourceInterface
@@ -216,23 +215,11 @@ class ModeloController extends BaseController implements FiltroInterface, Resour
 
     private function storeImagem(?UploadedFile $file, ?string $oldPath = null): ?string
     {
-        if (!$file instanceof UploadedFile || !$file->isValid()) {
-            return null;
-        }
-
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
-        $fileName = Str::uuid()->toString() . '.' . $extension;
-        $path = 'modelos/imagens/' . $fileName;
-
-        $stored = Storage::disk('public')->put($path, $file->getContent());
-        if (!$stored) {
-            return null;
-        }
-
-        if (is_string($oldPath) && trim($oldPath) !== '' && Storage::disk('public')->exists($oldPath)) {
-            Storage::disk('public')->delete($oldPath);
-        }
-
-        return $path;
+        return ArquivoAnexoHelper::armazenarRastreado($file, 'modelos/imagens', [
+            'modulo' => 'modelo',
+            'entidade' => 'Modelo',
+            'campo' => 'imagem',
+            'contexto' => 'modelo.imagem',
+        ], $oldPath)['path'] ?? null;
     }
 }

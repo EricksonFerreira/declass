@@ -66,12 +66,12 @@ class VeiculoDanoMonitoramentoController extends Controller
     {
         $veiculoDano = VeiculoDanos::findOrFail($id);
 
-        if ($veiculoDano->correcao_data) {
+        if ($veiculoDano->status_reparo === VeiculoDanos::REPARO_CORRIGIDA) {
             return response()->json(['success' => false, 'message' => 'Esta avaria já possui correção registrada.'], 422);
         }
 
         $veiculoDano->update([
-            'status' => 'corrigida',
+            'status_reparo' => VeiculoDanos::REPARO_CORRIGIDA,
             'correcao_descricao' => $request->validated()['correcao_descricao'],
             'correcao_data' => now(),
             'correcao_user_id' => Auth::id(),

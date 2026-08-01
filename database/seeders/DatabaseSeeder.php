@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             TiposDanosPorCategoriaELocalizacaoSeeder::class,
             CondicoesGeraisSeeder::class,
             OsCategoriaSeeder::class,
+            ChamadosSeeder::class,
         ]);
     }
 }

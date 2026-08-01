@@ -30,8 +30,27 @@ class ReservaResolver
                 'reservaMotoristaApp' => fn ($query) => $query->withoutGlobalScopes(),
             ])
             ->when($empresaId !== null, fn ($q) => $q->where('empresa_id', $empresaId))
-            ->where('codigo', $codigoNormalizado)
+            ->where(function ($query) use ($codigoNormalizado) {
+                $query->where('codigo', $codigoNormalizado);
+
+                if (is_numeric($codigoNormalizado)) {
+                    $query->orWhere('reserva_id', (int) $codigoNormalizado);
+                }
+            })
             ->first();
+
+        if (! $referencia) {
+            if (is_numeric($codigoNormalizado)) {
+                $referencia = ReservaCodigo::withoutGlobalScopes()
+                    ->with([
+                        'reserva' => fn ($query) => $query->withoutGlobalScopes(),
+                        'reservaMotoristaApp' => fn ($query) => $query->withoutGlobalScopes(),
+                    ])
+                    ->when($empresaId !== null, fn ($q) => $q->where('empresa_id', $empresaId))
+                    ->where('reserva_id', (int) $codigoNormalizado)
+                    ->first();
+            }
+        }
 
         if (! $referencia) {
             throw new ReservaNaoEncontradaException(

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Actions\Reserva\Exibir;
+namespace App\Actions\Reserva\Renovacao\Exibir;
 
 use App\DTO\Reserva\ReservaResolvida;
 

@@ -36,6 +36,12 @@ class ExibirCheckoutReservaComumAction
                 ->with('warning', 'O check-in deve ser realizado e o contrato assinado antes do check-out.');
         }
 
+        if (! $registro->podeFazerCheckout()) {
+            return redirect()
+                ->route('reserva.show', $codigo)
+                ->with('warning', 'Esta reserva nao esta mais em status valido para check-out.');
+        }
+
         if (ContratoCheckout::where('reserva_id', (int) $registro->id)->exists()) {
             return redirect()
                 ->route('reserva.show', $codigo)
@@ -82,16 +88,15 @@ class ExibirCheckoutReservaComumAction
             return 'Para fazer o checkout e obrigatorio registrar o pagamento do calcao primeiro.';
         }
 
-        $ok = [
-            Calcao::STATUS_AUTORIZADO,
-            Calcao::STATUS_CAPTURADO,
-            Calcao::STATUS_PARCIALMENTE_CAPTURADO,
-        ];
+        $valorCapturado = (float) ($calcao->valor_capturado ?? 0);
+        $valorAutorizado = (float) ($calcao->valor_autorizado ?? 0);
+        $valorBaseLiberacao = max($valorCalculado, $valorAutorizado);
+        $valorCapturaOK = $valorCapturado + 0.01 >= $valorBaseLiberacao;
 
-        if ($calcao->data_hora_autorizacao && in_array((string) $calcao->status, $ok, true)) {
-            return null;
+        if (! $valorCapturaOK) {
+            return 'Para fazer o checkout e obrigatorio que o calção esteja totalmente pago e capturado antes. Status atual: '.(string) ($calcao->label_status ?? $calcao->status).'. Valor capturado: R$ '.number_format($valorCapturado, 2, ',', '.').'. Valor exigido: R$ '.number_format($valorBaseLiberacao, 2, ',', '.');
         }
 
-        return 'Para fazer o checkout e obrigatorio registrar o calcao antes. Status atual do calcao: '.(string) ($calcao->label_status ?? $calcao->status);
+        return null;
     }
 }

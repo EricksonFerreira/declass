@@ -6,19 +6,11 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class AssinarContratoRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         $rules = [
@@ -35,13 +27,28 @@ class AssinarContratoRequest extends FormRequest
                     $ehMotorista = true;
                 }
             } catch (\Throwable $e) {
-                // Fallback
+                // Fallback silencioso
             }
         }
 
-        if (!$ehMotorista) {
+        if (! $ehMotorista) {
             $rules['veiculo_id'] = 'required|integer|exists:veiculos,id';
             $rules['contrato_id'] = 'required|integer|exists:contrato_checkin,id';
+
+            try {
+                if ($codigo) {
+                    $reservaResolvida = app(\App\Services\Reserva\ReservaResolver::class)->resolver((string) $codigo);
+                    if ($reservaResolvida->ehComum()) {
+                        $reserva = $reservaResolvida->registro;
+                        $usuarioDaReserva = (int) ($reserva->user_id ?? $reserva->usuario_id ?? 0);
+                        if (auth()->check() && (int) auth()->id() === $usuarioDaReserva) {
+                            $rules['aceite_termo_checkin'] = 'accepted';
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                // Fallback silencioso
+            }
         }
 
         if ($this->input('modo') === 'upload') {
@@ -54,7 +61,6 @@ class AssinarContratoRequest extends FormRequest
         return $rules;
     }
 
-
     public function messages()
     {
         return [
@@ -65,6 +71,7 @@ class AssinarContratoRequest extends FormRequest
             'contrato_id.integer' => 'O contrato deve ser um número inteiro.',
             'contrato_id.exists' => 'O contrato não existe.',
             'assinatura.required' => 'A assinatura é obrigatória',
+            'aceite_termo_checkin.accepted' => 'Você precisa aceitar o termo de check-in para assinar o contrato.',
         ];
     }
 }

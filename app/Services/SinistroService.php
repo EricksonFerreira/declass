@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
+use App\Support\ArquivoAnexoHelper;
 
 class SinistroService extends AbstractBaseService
 {
@@ -137,7 +138,16 @@ class SinistroService extends AbstractBaseService
      */
     public function salvarAnexo(UploadedFile $arquivo, int $sinistroId, string $tipo = 'anexo'): string
     {
-        return $arquivo->store("sinistros/{$sinistroId}/{$tipo}", 'public');
+        return (string) (ArquivoAnexoHelper::armazenarRastreado($arquivo, "sinistros/{$sinistroId}/{$tipo}", [
+            'modulo' => 'sinistro',
+            'entidade' => Sinistro::class,
+            'entidade_id' => $sinistroId,
+            'campo' => $tipo,
+            'contexto' => 'sinistro.anexo',
+            'meta' => [
+                'tipo_anexo' => $tipo,
+            ],
+        ])['path'] ?? '');
     }
 
     /**

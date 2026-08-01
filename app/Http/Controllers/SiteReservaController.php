@@ -1864,16 +1864,18 @@ class SiteReservaController extends Controller
     {
         $email = mb_strtolower(trim((string) $validated['email']));
 
-        $query = User::query()->whereRaw('LOWER(email) = ?', [$email]);
-        if (SchemaCache::hasColumn('users', 'empresa_id')) {
-            $query->where('empresa_id', (int) $empresa->id);
-        }
+        if ($email !== '') {
+            $query = User::query()->whereRaw('LOWER(email) = ?', [$email]);
+            if (SchemaCache::hasColumn('users', 'empresa_id')) {
+                $query->where('empresa_id', (int) $empresa->id);
+            }
 
-        $existingUser = $query->first();
-        if ($existingUser instanceof User) {
-            throw ValidationException::withMessages([
-                'email' => 'Este e-mail ja possui cadastro. Faca login para continuar.',
-            ]);
+            $existingUser = $query->first();
+            if ($existingUser instanceof User) {
+                throw ValidationException::withMessages([
+                    'email' => 'Este e-mail ja possui cadastro para esta empresa.',
+                ]);
+            }
         }
 
         $roleClienteId = $this->regraService->getClienteRoleId();
@@ -1906,6 +1908,10 @@ class SiteReservaController extends Controller
             'password' => 'Tmp@' . random_int(100000, 999999),
         ];
 
+        if ($email === '') {
+            $dadosUsuario['email'] = $this->gerarEmailTemporarioReserva($empresa, $dadosUsuario);
+        }
+
         try {
             $clienteStripe = $this->clienteStripeService->criarCliente(
                 (string) $dadosUsuario['email'],
@@ -1922,10 +1928,40 @@ class SiteReservaController extends Controller
 
             return $user;
         } catch (\Throwable) {
+            $fallbackQuery = User::query()->whereRaw('LOWER(email) = ?', [$email]);
+            if (SchemaCache::hasColumn('users', 'empresa_id')) {
+                $fallbackQuery->where('empresa_id', (int) $empresa->id);
+            }
+
+            $existingFallbackUser = $fallbackQuery->first();
+            if ($existingFallbackUser instanceof User) {
+                $created = false;
+                return $existingFallbackUser;
+            }
+
             throw ValidationException::withMessages([
                 'email' => 'Nao foi possivel criar o usuario da reserva com o e-mail informado.',
             ]);
         }
+    }
+
+    private function gerarEmailTemporarioReserva(Empresa $empresa, array $dadosUsuario): string
+    {
+        $documentoBase = preg_replace('/\D+/', '', (string) ($dadosUsuario['numero_identificacao'] ?? ''));
+        $celularBase = preg_replace('/\D+/', '', (string) ($dadosUsuario['celular'] ?? ''));
+        $nomeBase = preg_replace('/\D+/', '', (string) ($dadosUsuario['nome'] ?? ''));
+        $empresaBase = (int) $empresa->id;
+
+        $partes = array_filter([
+            'reserva',
+            $empresaBase > 0 ? (string) $empresaBase : null,
+            $documentoBase !== '' ? $documentoBase : null,
+            $celularBase !== '' ? $celularBase : null,
+            $nomeBase !== '' ? substr($nomeBase, 0, 8) : null,
+            uniqid('', true),
+        ]);
+
+        return 'reserva+' . implode('-', $partes) . '@sem-email.local';
     }
 
     private function validateLikeAdminStoreRequest(array $payload, array $opcionaisReserva): void

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Reserva;
 
 use App\Actions\Reserva\Checkin\Contrato\Exibir\ExibirContratoCheckinAction;
 use App\Actions\Reserva\Checkin\Finalizar\FinalizarCheckinAction;
+use App\Actions\Reserva\Checkout\Contrato\AssinarContratoCheckoutAction;
 use App\Actions\Reserva\Pagamento\Calcao\AutorizarCalcaoAction;
 use App\Actions\Reserva\Pagamento\Calcao\CapturarCalcaoAction;
 use App\Actions\Reserva\Pagamento\Calcao\DevolverCalcaoPresencialAction;
@@ -1356,6 +1357,62 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $moduloMultas = (bool) ($empresa?->planoAtivo?->plano?->modulo_multas ?? false);
 
         return view('reserva.show-cliente', compact('reserva', 'breadcrumb', 'titulo', 'taxaColeta', 'taxaEntrega', 'moduloNfse', 'moduloMultas'));
+    }
+
+
+
+    public function verContratoCheckoutMinhaReserva($codigo, ReservaResolver $reservaResolver, \App\Actions\Reserva\Checkout\TermoDevolucao\Exibir\ExibirTermoDevolucaoAction $exibirTermoDevolucaoAction)
+    {
+        $user = Auth::user();
+
+        if (! $user) {
+            return redirect()->route('login');
+        }
+
+        try {
+            $reservaResolvida = $reservaResolver->resolver((string) $codigo);
+        } catch (\Throwable $e) {
+            return redirect()
+                ->route('reserva.minhas')
+                ->with('error', 'Reserva não encontrada.');
+        }
+
+        /** @var \App\Models\Reserva|\App\Models\ReservaMotoristaApp $reserva */
+        $reserva = $reservaResolvida->registro;
+
+        $ehTitularDaReserva = in_array((int) $user->id, [
+            (int) ($reserva->user_id ?? 0),
+            (int) ($reserva->criado_por_user_id ?? 0),
+            (int) ($reserva->usuario?->id ?? 0),
+        ], true);
+
+        if (! $ehTitularDaReserva) {
+            return redirect()
+                ->route('reserva.minhas.show', ['id' => $reserva->codigoReserva?->codigo ?? $reserva->id])
+                ->with('error', 'Você não tem permissão para visualizar este contrato.');
+        }
+
+        $pdfPath = $reservaResolvida->ehMotoristaApp()
+            ? (data_get($reserva->documentos_json, 'checkout.pdf_path') ?: ($reserva->contratoCheckout?->pdf_path ?? null))
+            : ($reserva->contratoCheckout?->pdf_path ?? null);
+
+        if ($pdfPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($pdfPath)) {
+            $fileContent = \Illuminate\Support\Facades\Storage::disk('public')->get($pdfPath);
+
+            return response($fileContent, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="contrato-checkout-'.$codigo.'.pdf"',
+            ]);
+        }
+
+        $response = $exibirTermoDevolucaoAction->handle((string) $codigo);
+        if ($response instanceof \Symfony\Component\HttpFoundation\Response) {
+            return $response;
+        }
+
+        return redirect()
+            ->route('reserva.minhas.show', ['id' => $reserva->codigoReserva?->codigo ?? $reserva->id])
+            ->with('warning', 'Não foi possível exibir o contrato de devolução agora.');
     }
 
     public function showMinhasMotoristaApp($id)
@@ -3247,7 +3304,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         try {
             DB::beginTransaction();
 
-            $dir = 'checkout/reserva_'.(int) $reserva_id;
+            $dir = 'checkout';
             $mapFotosCheckout = [
                 'foto_direita_co' => 'foto_direita_path',
                 'foto_esquerda_co' => 'foto_esquerda_path',
@@ -3268,7 +3325,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 }
             }
 
-            ContratoCheckout::create([
+            $contratoCheckout = ContratoCheckout::create([
                 'reserva_id' => (int) $reserva_id,
                 'veiculo_id' => (int) $reserva->veiculo_id,
                 'empresa_id' => $reserva->empresa_id ?? null,
@@ -3281,6 +3338,19 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 ...$dadosFotosCheckout,
             ]);
 
+            $documentos = (array) ($reserva->documentos_json ?? []);
+            data_set($documentos, 'checkout.fotos', array_merge(
+                data_get($documentos, 'checkout.fotos', []),
+                $dadosFotosCheckout
+            ));
+            data_set($documentos, 'checkout.notas_devolucao', $dados['notas_devolucao'] ?? null);
+            data_set($documentos, 'checkout.observacoes_devolucao', $dados['observacoes_devolucao'] ?? null);
+            data_set($documentos, 'checkout.registrado_em', now()->format('Y-m-d H:i:s'));
+
+            $reserva->update([
+                'documentos_json' => $documentos,
+            ]);
+
             $this->movimentacaoService->realizarCheckOut(
                 (int) $reserva->veiculo_id,
                 (int) $reserva->estacao_devolucao_id,
@@ -3288,11 +3358,11 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'Check-out com vistoria de devolução'
             );
 
-            if (!empty($reserva->estacao_devolucao_id)) {
+            if (! empty($reserva->estacao_devolucao_id)) {
                 $this->movimentacaoService->registrarChegadaNaEstacao(
                     (int) $reserva->veiculo_id,
                     (int) $reserva->estacao_devolucao_id,
-                    'Chegada real registrada no check-out da reserva ' . $reserva_id
+                    'Chegada real registrada no check-out da reserva '.$reserva_id
                 );
             }
 
@@ -3321,21 +3391,70 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         }
     }
 
-    public function salvarSatisfacao(Request $request, $reserva_id)
-    {
-        $reserva = Reserva::withoutGlobalScopes()
-            ->with('transacoes')
-            ->find($reserva_id);
-
-        if (! $reserva) {
-            return response()->json(['error' => 'Reserva nao encontrada.'], 404);
+    public function assinarContratoCheckoutMinhaReserva(
+        Request $request,
+        $codigo,
+        ReservaResolver $reservaResolver,
+        AssinarContratoCheckoutAction $action,
+    ) {
+        $user = Auth::user();
+        if (! $user) {
+            return redirect()->route('login');
         }
-        if (! $reserva) {
-            return response()->json(['message' => 'Reserva nÃƒÂ£o encontrada.'], 404);
+
+        try {
+            $reservaResolvida = $reservaResolver->resolver((string) $codigo);
+        } catch (\Throwable $e) {
+            return redirect()
+                ->route('reserva.minhas')
+                ->with('error', 'Reserva não encontrada.');
+        }
+
+        /** @var \App\Models\Reserva $reserva */
+        $reserva = $reservaResolvida->registro;
+
+        $ehTitularDaReserva = in_array((int) $user->id, [
+            (int) ($reserva->user_id ?? 0),
+            (int) ($reserva->criado_por_user_id ?? 0),
+            (int) ($reserva->usuario?->id ?? 0),
+        ], true);
+
+        if (! $ehTitularDaReserva) {
+            return redirect()
+                ->route('reserva.minhas.show', ['id' => $reserva->codigoReserva?->codigo ?? $reserva->id])
+                ->with('error', 'Você não tem permissão para assinar este contrato.');
+        }
+
+        if (! $reserva->contratoCheckout) {
+            return redirect()
+                ->route('reserva.minhas.show', ['id' => $reserva->codigoReserva?->codigo ?? $reserva->id])
+                ->with('warning', 'O contrato de devolução ainda não foi gerado.');
+        }
+
+        return $action->handle($request, (string) ($reserva->codigoReserva?->codigo ?? $reserva->id), $reservaResolver);
+    }
+
+    public function salvarSatisfacao(Request $request, $codigo, ReservaResolver $reservaResolver)
+    {
+        try {
+            $reservaResolvida = $reservaResolver->resolver((string) $codigo);
+            $reserva = $reservaResolvida->registro;
+        } catch (\Throwable $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['error' => 'Reserva não encontrada.'], 404);
+            }
+
+            return redirect()->route('reserva.minhas')->with('error', 'Reserva não encontrada.');
         }
 
         if ($reserva->satisfacao()->exists()) {
-            return response()->json(['success' => false, 'message' => 'Esta avaliação jÃƒÂ¡ foi enviada e nÃƒÂ£o pode ser alterada.'], 409);
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Esta avaliação já foi enviada e não pode ser alterada.'], 409);
+            }
+
+            return redirect()
+                ->route('reserva.minhas.show', ['id' => $codigo])
+                ->with('error', 'Esta avaliação já foi enviada e não pode ser alterada.');
         }
 
         $validated = $request->validate([
@@ -3347,7 +3466,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
 
         \App\Models\ReservaSatisfacao::create([
             'empresa_id' => session('empresa_id') ?? $reserva->empresa_id ?? null,
-            'reserva_id' => (int) $reserva_id,
+            'reserva_id' => (int) $reserva->id,
             'respondente_user_id' => Auth::id(),
             'satisfacao_geral' => (int) $validated['satisfacao_geral'],
             'facilidade_reserva' => (int) $validated['facilidade_reserva'],
@@ -3355,7 +3474,13 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             'comentario' => trim((string) ($validated['comentario'] ?? '')) ?: null,
         ]);
 
-        return response()->json(['success' => true, 'message' => 'Avaliação registrada com sucesso!']);
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => 'Avaliação registrada com sucesso!']);
+        }
+
+        return redirect()
+            ->route('reserva.minhas.show', ['id' => $codigo])
+            ->with('success', 'Avaliação registrada com sucesso!');
     }
 
     private function validarCalcaoParaCheckout(Reserva $reserva): ?string
@@ -3476,9 +3601,9 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $user = Auth::user();
         $ehDonoDaReserva = $user && (int) $reservaAntes->user_id === (int) $user->id;
         $redirectRoute = $ehDonoDaReserva ? 'reserva.minhas' : 'reserva.index';
-        
+
         $podeCancelar = $ehDonoDaReserva || $user->isAdministrador();
-    if ($user && ! $podeCancelar) {
+        if ($user && ! $podeCancelar) {
             $message = 'Sem permissao para cancelar esta reserva.';
 
             return $request->expectsJson()
@@ -3637,7 +3762,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ->get();
 
         foreach ($lancamentos as $lancamento) {
-            $chave = 'estorno_cancelamento|reserva|' . $reserva->id . '|lancamento|' . $lancamento->id;
+            $chave = 'estorno_cancelamento|reserva|'.$reserva->id.'|lancamento|'.$lancamento->id;
             $jaExiste = DB::table('lancamentos_financeiros')
                 ->where('empresa_id', $reserva->empresa_id)
                 ->where('valor', '<', 0)
@@ -3651,7 +3776,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             $payload = [
                 'empresa_id' => $reserva->empresa_id,
                 'categoria_financeira_id' => $lancamento->categoria_financeira_id,
-                'descricao' => 'Estorno do cancelamento - ' . ($lancamento->descricao ?? 'Reserva #'.$reserva->id),
+                'descricao' => 'Estorno do cancelamento - '.($lancamento->descricao ?? 'Reserva #'.$reserva->id),
                 'tipo' => $lancamento->tipo === 'receita' ? 'despesa' : 'receita',
                 'valor' => -1 * abs((float) $lancamento->valor),
                 'status' => 'pago',
@@ -3759,6 +3884,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 $transacao->info_pagamento = $info;
                 $transacao->save();
                 $this->criarTransacaoEstorno($transacao, $resultado, $reserva);
+
                 continue;
             }
 
@@ -4938,7 +5064,6 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                     $statusPendentes = [
                         StatusReservaEnum::Pendente->value,
                         StatusReservaEnum::Confirmada->value,
-                        StatusReservaEnum::Checkout->value,
                         StatusReservaEnum::NoShow->value,
                     ];
                     if (! in_array((int) $r->status_reserva_id, $statusPendentes)) {
@@ -5247,7 +5372,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ->first();
 
         try {
-            // Salva as fotos do check-in (passo 2) no storage e registra os paths no contrato.
+            // Salva as fotos do check-in e registra em arquivos_rastreados.
             $dir = 'checkin/reserva_'.(int) $reserva_id;
             $map = [
                 'foto_direita' => 'foto_direita_path',
@@ -5258,27 +5383,26 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'foto_combustivel' => 'foto_combustivel_path',
             ];
 
-            $destDir = storage_path('app/public/'.$dir);
-            if (! is_dir($destDir)) {
-                mkdir($destDir, 0775, true);
-            }
-
+            $arquivosSalvos = [];
             foreach ($map as $input => $col) {
                 if ($request->hasFile($input) && $request->file($input)->isValid()) {
-                    // Remove foto antiga se existir
                     if ($contratoExistente && ! empty($contratoExistente->$col)) {
-                        $oldPath = storage_path('app/public/'.$contratoExistente->$col);
-                        if (file_exists($oldPath)) {
-                            @unlink($oldPath);
-                        }
+                        \Illuminate\Support\Facades\Storage::disk('public')->delete($contratoExistente->$col);
                     }
-                    $file = $request->file($input);
-                    $extension = $file->getClientOriginalExtension() ?: 'jpg';
-                    $filename = \Illuminate\Support\Str::random(40).'.'.$extension;
-                    $file->move($destDir, $filename);
-                    $dados[$col] = $dir.'/'.$filename;
+                    $arquivo = \App\Support\ArquivoAnexoHelper::armazenarRastreado($request->file($input), $dir, [
+                        'empresa_id' => $reservaContexto->empresa_id ?? null,
+                        'user_id' => Auth::id(),
+                        'modulo' => 'checkin',
+                        'entidade' => 'contrato_checkin',
+                        'entidade_id' => $contratoExistente?->id,
+                        'campo' => $col,
+                        'contexto' => 'checkin',
+                    ], $contratoExistente?->$col);
+                    if ($arquivo && ! empty($arquivo['path'])) {
+                        $dados[$col] = $arquivo['path'];
+                        $arquivosSalvos[] = $arquivo['path'];
+                    }
                 } elseif ($contratoExistente) {
-                    // MantÃƒÂ©m a foto existente se nenhuma nova foi enviada
                     $dados[$col] = $contratoExistente->$col;
                 }
             }
@@ -5289,6 +5413,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             if ($contratoExistente) {
                 // Atualiza contrato existente
                 $contratoExistente->update($dados);
+                if (! empty($arquivosSalvos)) {
+                    \App\Models\ArquivoRastreado::whereIn('path', $arquivosSalvos)
+                        ->update(['entidade_id' => $contratoExistente->id]);
+                }
                 $this->sincronizarCheckinMotoristaApp($contextoCheckin, $contratoExistente->fresh(), $dados);
                 $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
                     'houve_upgrade' => $dados['houve_upgrade_categoria'] ?? false,
@@ -5305,6 +5433,10 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                     'veiculo_id' => $dados['veiculo_id'] ?? null,
                 ], 'Contrato de check-in criado', 'success');
                 $contrato = $this->contratoCheckinService->create($dados);
+                if (! empty($arquivosSalvos)) {
+                    \App\Models\ArquivoRastreado::whereIn('path', $arquivosSalvos)
+                        ->update(['entidade_id' => $contrato->id]);
+                }
                 $this->sincronizarCheckinMotoristaApp($contextoCheckin, $contrato, $dados);
 
                 // Salva danos coletados (enviados como JSON no campo "danos")
@@ -5321,15 +5453,22 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                             $fotoInput = 'danos_fotos_'.$fotoIdx;
                             if ($dano && $request->hasFile($fotoInput)) {
                                 $dir = 'danos/reserva_'.(int) $reserva_id.'/dano_'.(int) $dano->id;
-                                $path = \App\Support\ArquivoAnexoHelper::armazenar($request->file($fotoInput), $dir);
+                                $path = \App\Support\ArquivoAnexoHelper::armazenarRastreado($request->file($fotoInput), $dir, [
+                                    'empresa_id' => $reservaContexto->empresa_id ?? null,
+                                    'user_id' => Auth::id(),
+                                    'modulo' => 'checkin',
+                                    'entidade' => 'veiculo_dano',
+                                    'entidade_id' => $dano->id,
+                                    'campo' => 'imagem',
+                                    'contexto' => 'checkin-dano',
+                                ])['path'] ?? null;
                                 if ($path) {
                                     $dano->imagem()->create([
                                         'caminho_imagem' => $path,
                                         'nome_imagem' => basename($path),
                                     ]);
                                 }
-                            }
-                            $fotoIdx++;
+                            }                            $fotoIdx++;
                         }
                     }
                 }

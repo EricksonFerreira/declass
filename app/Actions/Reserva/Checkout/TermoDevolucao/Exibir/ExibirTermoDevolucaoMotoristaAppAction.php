@@ -32,14 +32,14 @@ class ExibirTermoDevolucaoMotoristaAppAction
         // Se houver um PDF de checkout anexado, exibe diretamente
         $pdfPath = data_get($checkoutDocs, 'pdf_path') ?? ($contratoCheckout?->pdf_path ?? null);
         if ($pdfPath && \Illuminate\Support\Facades\Storage::disk('public')->exists($pdfPath)) {
-            return response()->file(storage_path('app/public/' . $pdfPath), [
+            return response()->file(storage_path('app/public/'.$pdfPath), [
                 'Content-Type' => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="termo-devolucao-' . $reserva->id . '.pdf"',
+                'Content-Disposition' => 'inline; filename="termo-devolucao-'.$reserva->id.'.pdf"',
             ]);
         }
 
         $contratoCheckin = $this->obterContratoCheckin($reserva);
-        if (!$contratoCheckin) {
+        if (! $contratoCheckin) {
             throw new \RuntimeException('Contrato de check-in de motorista de aplicativo ainda nao foi gerado.');
         }
 
@@ -79,7 +79,7 @@ class ExibirTermoDevolucaoMotoristaAppAction
 
         return response($pdf, 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="termo-devolucao-motorista-app-' . $reserva->id . '.pdf"',
+            'Content-Disposition' => 'inline; filename="termo-devolucao-motorista-app-'.$reserva->id.'.pdf"',
         ]);
     }
 
@@ -158,7 +158,7 @@ class ExibirTermoDevolucaoMotoristaAppAction
 
         if ($contratoCheckout?->data_devolucao) {
             return trim(
-                \Carbon\Carbon::parse($contratoCheckout->data_devolucao)->format('d/m/Y') . ' ' .
+                \Carbon\Carbon::parse($contratoCheckout->data_devolucao)->format('d/m/Y').' '.
                 ($contratoCheckout->hora_devolucao ? substr((string) $contratoCheckout->hora_devolucao, 0, 5) : '')
             );
         }
@@ -181,7 +181,7 @@ class ExibirTermoDevolucaoMotoristaAppAction
             ->filter()
             ->map(fn ($path, $label) => [
                 'label' => $label,
-                'url' => asset('storage/' . ltrim((string) $path, '/')),
+                'url' => asset('storage/'.ltrim((string) $path, '/')),
             ])
             ->values()
             ->all();
@@ -224,6 +224,6 @@ class ExibirTermoDevolucaoMotoristaAppAction
 
     private function money(float $valor): string
     {
-        return 'R$ ' . number_format($valor, 2, ',', '.');
+        return 'R$ '.number_format($valor, 2, ',', '.');
     }
 }

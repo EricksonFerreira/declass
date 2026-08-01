@@ -361,7 +361,6 @@ class DisponibilidadeVeiculoService
                 StatusReservaEnum::Pendente->value,
                 StatusReservaEnum::Confirmada->value,
                 StatusReservaEnum::Checkin->value,
-                StatusReservaEnum::Checkout->value,
                 StatusReservaEnum::NoShow->value,
             ])
             ->where('data_inicio', '<', $fim->toDateTimeString())

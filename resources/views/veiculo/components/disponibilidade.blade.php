@@ -254,6 +254,8 @@
                 <span id="dispDayPanelPercent" class="disp-day-panel__percent">0%</span>
             </div>
 
+            <div id="dispDayAvailabilityRange" class="disp-day-panel__availability" style="display:none;"></div>
+
             <div class="disp-day-panel__section-title">Linha do tempo do dia</div>
 
             <div id="dispDayTimeline" class="disp-day-timeline"></div>
@@ -894,6 +896,27 @@
 
                 timeline.innerHTML = '';
                 schedule.innerHTML = '';
+
+                const faixaLivreEl = document.getElementById('dispDayAvailabilityRange');
+                const faixaLivre = intervalos
+                    .filter(function (item) {
+                        return (item.tipo || '') === 'ok';
+                    })
+                    .map(function (item) {
+                        return `${item.inicio || '--:--'} até ${item.fim || '--:--'}`;
+                    });
+
+                if (faixaLivreEl) {
+                    if (faixaLivre.length > 0) {
+                        faixaLivreEl.style.display = '';
+                        faixaLivreEl.textContent = faixaLivre.length === 1
+                            ? `Disponível de ${faixaLivre[0]}`
+                            : `Disponível em ${faixaLivre.join(' e ')}`;
+                    } else {
+                        faixaLivreEl.style.display = 'none';
+                        faixaLivreEl.textContent = '';
+                    }
+                }
 
                 intervalos.forEach(function (item) {
                     const itemTipo = item.tipo || 'off';

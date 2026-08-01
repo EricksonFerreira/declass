@@ -17,6 +17,19 @@ class VeiculoDanos extends Model
     const STATUS_PARCIALMENTE_CORRIGIDA = 'parcialmente_corrigida';
     const STATUS_DESCARTADA = 'descartada';
 
+    const REVISAO_PENDENTE = 'pendente';
+    const REVISAO_COBRAR_CLIENTE = 'cobrar_cliente';
+    const REVISAO_NAO_COBRAR = 'nao_cobrar';
+    const REVISAO_JA_EXISTENTE = 'ja_existente';
+    const REVISAO_DESGASTE_NORMAL = 'desgaste_normal';
+    const REVISAO_POSSIVEL_SINISTRO = 'possivel_sinistro';
+
+    const REPARO_PENDENTE = 'pendente';
+    const REPARO_EM_OS = 'em_os';
+    const REPARO_EM_CORRECAO = 'em_correcao';
+    const REPARO_CORRIGIDA = 'corrigida';
+    const REPARO_NAO_REQUER_REPARO = 'nao_requer_reparo';
+
     protected $table = 'veiculo_danos';
 
     protected $fillable = [
@@ -36,10 +49,21 @@ class VeiculoDanos extends Model
         'correcao_data',
         'correcao_user_id',
         'status',
+        'status_revisao',
+        'status_reparo',
+        'decisao_revisada_em',
+        'decisao_revisada_por',
+        'justificativa_decisao',
+        'nao_requer_reparo_em',
+        'nao_requer_reparo_por',
+        'nao_requer_reparo_justificativa',
+        'ordem_servico_id',
     ];
 
     protected $casts = [
         'correcao_data' => 'datetime',
+        'decisao_revisada_em' => 'datetime',
+        'nao_requer_reparo_em' => 'datetime',
         'custo_estimado' => 'decimal:2',
         'quilometragem_veiculo' => 'integer',
     ];
@@ -115,13 +139,29 @@ class VeiculoDanos extends Model
         );
     }
 
+    public function usuarioDecisaoRevisao(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'decisao_revisada_por');
+    }
+
+    public function usuarioNaoRequerReparo(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'nao_requer_reparo_por');
+    }
+
+    public function ordemServico(): BelongsTo
+    {
+        return $this->belongsTo(OrdemServico::class, 'ordem_servico_id');
+    }
+
     public function scopeSemCorrecao($query)
     {
-        return $query->whereIn('status', ['pendente', 'em_correcao']);
+        return $query->where('status_reparo', '!=', self::REPARO_CORRIGIDA)
+            ->where('status_reparo', '!=', self::REPARO_NAO_REQUER_REPARO);
     }
 
     public function scopeComCorrecao($query)
     {
-        return $query->whereIn('status', ['corrigida', 'parcialmente_corrigida', 'descartada']);
+        return $query->where('status_reparo', self::REPARO_CORRIGIDA);
     }
 }
