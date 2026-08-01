@@ -5,10 +5,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\EmpresaPlanoPagamento;
 use App\Models\OnboardingStep;
 use App\Models\ArquivoRastreado;
 use App\Models\Concerns\HasAuditColumns;
@@ -105,17 +108,17 @@ class Empresa extends Model
         return $this->hasMany(User::class, 'empresa_id');
     }
 
-    public function planos()
+    public function planos(): HasMany
     {
-        return $this->hasMany(EmpresaPlanoPagamento::class, 'empresa_id')
-            ->whereHas('empresaPlano')
+        return EmpresaPlanoPagamento::query()
+            ->with(['empresaPlano.plano'])
+            ->where('empresa_id', $this->id)
             ->latest('id');
     }
 
-    public function planoAtivo()
+    public function planoAtivo(): HasOne
     {
         return $this->hasOne(EmpresaPlanoPagamento::class, 'empresa_id')
-            ->whereHas('empresaPlano')
             ->whereIn('status', ['pago', 'pendente', 'vencido', 'cancelado'])
             ->latestOfMany('id');
     }

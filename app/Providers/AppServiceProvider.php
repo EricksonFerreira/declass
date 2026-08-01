@@ -149,6 +149,7 @@ class AppServiceProvider extends ServiceProvider
                 'permissions', 'roles', 'empresas', 'paises',
                 'status_reserva', 'status_movimentacao', 'tipos_movimentacao',
                 'tipo_transacoes', 'status_veiculos', 'status_item_checklist',
+                'empresa_planos',
             ], true)) {
                 continue;
             }

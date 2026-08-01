@@ -178,7 +178,7 @@
                                     class="btn btn-xs btn-warning text-dark"
                                     onclick="event.stopPropagation(); abrirEdicaoAssinatura(this)"
                                     data-assinatura-id="{{ $ass->id }}"
-                                    data-empresa-id="{{ $ass->empresa_id }}"
+                                    data-empresa-id="{{ $ass->empresa?->id }}"
                                     data-plano-id="{{ $ass->plano_id }}"
                                     data-periodicidade="{{ $ass->periodicidade }}"
                                     data-status="{{ $ass->status }}"

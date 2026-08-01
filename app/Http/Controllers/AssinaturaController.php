@@ -42,7 +42,7 @@ class AssinaturaController extends Controller
             new \App\DTO\BreadCrumbItem('Assinaturas', null),
         ]);
 
-        $query = EmpresaPlano::with(['plano', 'pagamentos.empresa'])
+        $query = EmpresaPlano::with(['plano', 'empresa'])
             ->orderByRaw("FIELD(status, 'inadimplente', 'aguardando_pagamento', 'ativo', 'trial', 'cancelado')")
             ->orderBy('data_vencimento');
 

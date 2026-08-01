@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use App\Models\Concerns\HasAuditColumns;
 
@@ -58,6 +59,18 @@ class EmpresaPlano extends Model
     public function plano(): BelongsTo
     {
         return $this->belongsTo(Plano::class, 'plano_id');
+    }
+
+    public function empresa(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Empresa::class,
+            EmpresaPlanoPagamento::class,
+            'empresa_plano_id',
+            'id',
+            'id',
+            'empresa_id'
+        );
     }
 
     public function proximoPlano(): BelongsTo
