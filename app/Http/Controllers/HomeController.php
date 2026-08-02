@@ -1308,7 +1308,53 @@ public function dashboard()
                         'valor' => \App\Models\Segmento::count()
                     ],
                 ]
-            ]
+            ],
+            auth()->user()?->isSuperAdmin() ? [
+                'grupo' => 'Configurações Gerais',
+                'backgroundIcone' => 'bg-secondary',
+                'items' => array_values(array_filter([
+                    Route::has('status_movimentacao.index') ? [
+                        'nome' => 'Status de Movimentação',
+                        'route' => 'status_movimentacao.index',
+                        'icone' => 'fas fa-toggle-on',
+                        'prefix' => null,
+                        'suffix' => null,
+                        'valor' => \App\Models\StatusMovimentacao::count(),
+                    ] : null,
+                    Route::has('tipo_movimentacao.index') ? [
+                        'nome' => 'Tipos de Movimentação',
+                        'route' => 'tipo_movimentacao.index',
+                        'icone' => 'fas fa-arrows-alt',
+                        'prefix' => null,
+                        'suffix' => null,
+                        'valor' => \App\Models\TipoMovimentacao::count(),
+                    ] : null,
+                    Route::has('tipotransacao.index') ? [
+                        'nome' => 'Tipos de Transação',
+                        'route' => 'tipotransacao.index',
+                        'icone' => 'fas fa-exchange-alt',
+                        'prefix' => null,
+                        'suffix' => null,
+                        'valor' => \App\Models\TipoTransacao::count(),
+                    ] : null,
+                    Route::has('status_veiculo.index') ? [
+                        'nome' => 'Status de Veículo',
+                        'route' => 'status_veiculo.index',
+                        'icone' => 'fas fa-car',
+                        'prefix' => null,
+                        'suffix' => null,
+                        'valor' => \App\Models\StatusVeiculo::count(),
+                    ] : null,
+                    Route::has('status_item_checklist.index') ? [
+                        'nome' => 'Status Item Checklist',
+                        'route' => 'status_item_checklist.index',
+                        'icone' => 'fas fa-check-square',
+                        'prefix' => null,
+                        'suffix' => null,
+                        'valor' => \App\Models\StatusItemChecklist::count(),
+                    ] : null,
+                ]))
+            ] : null
         ];
     }
 }

@@ -659,6 +659,43 @@ return [
                     'can' => 'acessar-superadmin',
                 ],
                 [
+                    'text' => 'Cadastros de Controle',
+                    'icon' => 'fas fa-sliders-h',
+                    'can' => 'acessar-superadmin',
+                    'submenu' => [
+                        [
+                            'text' => 'Status de Movimentação',
+                            'route' => 'status_movimentacao.index',
+                            'icon' => 'fas fa-flag-checkered',
+                            'can' => 'acessar-superadmin',
+                        ],
+                        [
+                            'text' => 'Tipos de Movimentação',
+                            'route' => 'tipo_movimentacao.index',
+                            'icon' => 'fas fa-exchange-alt',
+                            'can' => 'acessar-superadmin',
+                        ],
+                        [
+                            'text' => 'Tipos de Transação',
+                            'route' => 'tipotransacao.index',
+                            'icon' => 'fas fa-receipt',
+                            'can' => 'acessar-superadmin',
+                        ],
+                        [
+                            'text' => 'Status de Veículos',
+                            'route' => 'status_veiculo.index',
+                            'icon' => 'fas fa-car-side',
+                            'can' => 'acessar-superadmin',
+                        ],
+                        [
+                            'text' => 'Status de Checklist',
+                            'route' => 'status_item_checklist.index',
+                            'icon' => 'fas fa-clipboard-check',
+                            'can' => 'acessar-superadmin',
+                        ],
+                    ],
+                ],
+                [
                     'text' => 'Monitoramento de Pagamentos',
                     'route' => 'assinatura.monitoramento-pagamentos',
                     'icon' => 'fas fa-bell',

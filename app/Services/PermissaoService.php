@@ -90,6 +90,12 @@ class PermissaoService extends AbstractBaseService
         'subscription',
         'profile',
         'onboarding',
+        'status_movimentacao',
+        'status_veiculo',
+        'status_veiculos',
+        'status_item_checklist',
+        'tipo_movimentacao',
+        'tipotransacao',
     ];
 
     /**
@@ -101,6 +107,9 @@ class PermissaoService extends AbstractBaseService
         'status_movimentacao',
         'status_reserva',
         'status_veiculos',
+        'status_item_checklist',
+        'tipo_movimentacao',
+        'tipotransacao',
     ];
 
     public function getAllForUserContext(?User $user)
