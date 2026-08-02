@@ -462,49 +462,73 @@ return [
                     'icon' => 'fas fa-home',
                 ],
                 [
-                    'text' => 'Fluxo de Caixa',
-                    'route' => 'financeiro.fluxo-caixa.dashboard',
-                    'icon' => 'fas fa-chart-pie',
+                    'text' => 'Visão Geral',
+                    'icon' => 'fas fa-chart-line',
+                    'submenu' => [
+                        [
+                            'text' => 'Fluxo de Caixa',
+                            'route' => 'financeiro.fluxo-caixa.dashboard',
+                            'icon' => 'fas fa-chart-pie',
+                        ],
+                    ],
                 ],
                 [
-                    'text' => 'Lançamentos',
-                    'route' => 'financeiro.fluxo-caixa.index',
-                    'icon' => 'fas fa-file-invoice-dollar',
+                    'text' => 'Operação',
+                    'icon' => 'fas fa-cogs',
+                    'submenu' => [
+                        [
+                            'text' => 'Lançamentos',
+                            'route' => 'financeiro.fluxo-caixa.index',
+                            'icon' => 'fas fa-file-invoice-dollar',
+                        ],
+                        [
+                            'text' => 'Contas a Pagar',
+                            'route' => 'financeiro.contas-pagar',
+                            'icon' => 'fas fa-file-invoice',
+                        ],
+                        [
+                            'text' => 'Contas a Receber',
+                            'route' => 'financeiro.contas-receber',
+                            'icon' => 'fas fa-hand-holding-usd',
+                        ],
+                    ],
                 ],
                 [
-                    'text' => 'Faturamento por Reserva',
-                    'route' => 'financeiro.reservas',
-                    'icon' => 'fas fa-receipt',
+                    'text' => 'Relatórios',
+                    'icon' => 'fas fa-chart-bar',
+                    'submenu' => [
+                        [
+                            'text' => 'Faturamento por Reserva',
+                            'route' => 'financeiro.reservas',
+                            'icon' => 'fas fa-receipt',
+                        ],
+                        [
+                            'text' => 'Análise por Cliente',
+                            'route' => 'financeiro.analise-clientes',
+                            'icon' => 'fas fa-user-friends',
+                        ],
+                        [
+                            'text' => 'Análise por Veículo',
+                            'route' => 'financeiro.analise-veiculos',
+                            'icon' => 'fas fa-car-side',
+                        ],
+                    ],
                 ],
                 [
-                    'text' => 'Contas a Pagar',
-                    'route' => 'financeiro.contas-pagar',
-                    'icon' => 'fas fa-file-invoice-dollar',
-                ],
-                [
-                    'text' => 'Contas a Receber',
-                    'route' => 'financeiro.contas-receber',
-                    'icon' => 'fas fa-hand-holding-usd',
-                ],
-                [
-                    'text' => 'Análise por Cliente',
-                    'route' => 'financeiro.analise-clientes',
-                    'icon' => 'fas fa-user-friends',
-                ],
-                [
-                    'text' => 'Análise por Veículo',
-                    'route' => 'financeiro.analise-veiculos',
-                    'icon' => 'fas fa-car-side',
-                ],
-                [
-                    'text' => 'Notas Fiscais (NFS-e)',
-                    'route' => 'financeiro.nfse.index',
+                    'text' => 'Fiscal e Incentivos',
                     'icon' => 'fas fa-file-invoice',
-                ],
-                [
-                    'text' => 'Cupons de Desconto',
-                    'route' => 'financeiro.cupom_desconto.index',
-                    'icon' => 'fas fa-percentage',
+                    'submenu' => [
+                        [
+                            'text' => 'Notas Fiscais (NFS-e)',
+                            'route' => 'financeiro.nfse.index',
+                            'icon' => 'fas fa-file-invoice',
+                        ],
+                        [
+                            'text' => 'Cupons de Desconto',
+                            'route' => 'financeiro.cupom_desconto.index',
+                            'icon' => 'fas fa-percentage',
+                        ],
+                    ],
                 ],
             ],
         ],
@@ -939,3 +963,4 @@ return [
 
     'livewire' => false,
 ];
+

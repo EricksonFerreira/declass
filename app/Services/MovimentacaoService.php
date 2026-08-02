@@ -194,7 +194,11 @@ class MovimentacaoService extends AbstractBaseService
         $dataHoraDisponibilidade = $data['data_hora_disponibilidade'] ?? null;
         $statusMovimentacao = 1; // concluido
 
-        if (!empty($dataHoraDisponibilidade)) {
+        // Quando o veículo já nasce vinculado a uma estação, a movimentação
+        // inicial deve entrar como disponível imediatamente.
+        if (!empty($data['local_disponibilidade'])) {
+            $statusMovimentacao = 1;
+        } elseif (!empty($dataHoraDisponibilidade)) {
             try {
                 $statusMovimentacao = Carbon::parse($dataHoraDisponibilidade)->gt(Carbon::now()) ? 6 : 1;
             } catch (\Throwable $e) {
