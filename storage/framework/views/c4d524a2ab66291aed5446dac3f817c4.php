@@ -198,7 +198,7 @@
                                 </span>
                             </td>
                             <td>
-                                <?php if(in_array($mov->gera_disponibilidade, [true, 1, '1', 'S', 's'], true)): ?>
+                                <?php if(in_array($mov->gera_disponibilidade, ['S', 's', true, 1, '1'], true)): ?>
                                     <span class="badge badge-success">Sim</span>
                                 <?php else: ?>
                                     <span class="badge badge-gray">Não</span>

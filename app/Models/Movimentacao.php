@@ -46,8 +46,7 @@ class Movimentacao extends Model
         'data_registro' => 'datetime',
         'data_saida' => 'datetime',
         'data_chegada_prevista' => 'datetime',
-        'data_chegada_real' => 'datetime',
-        'gera_disponibilidade',
+        'data_chegada_real' => 'datetime'
     ];
 
     public function usuario()

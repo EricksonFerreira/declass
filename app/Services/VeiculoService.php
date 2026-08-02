@@ -71,15 +71,9 @@ class VeiculoService extends AbstractBaseService
 
         $this->atualizarCamposFinanceiros($veiculo, $data);
 
-        $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
-
         if(isset($data['local_disponibilidade'])){
-            $dataHoraDisponibilidade =  isset($data['data_hora_disponibilidade']) ? $data['data_hora_disponibilidade'] : date('Y-m-d H:i:s');
-            $this->disponibilidadeInicialVeiculoService->create([
-                'veiculo_id' => $veiculo->id,
-                'estacao_id' => $data['local_disponibilidade'],
-                'data_hora' => $dataHoraDisponibilidade,
-                ]);
+            $data['data_hora_disponibilidade'] =  isset($data['data_hora_disponibilidade']) ? $data['data_hora_disponibilidade'] : date('Y-m-d H:i:s');
+            $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
         }
 
         return $veiculo;
