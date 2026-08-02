@@ -1273,7 +1273,7 @@
             const $dataConsultaFipe = $('#data_consulta_fipe');
             const $taxaDepreciacao = $('#taxa_depreciacao_anual');
             const $fipeLookupStatus = $('#fipeLookupStatus');
-            const fipeUrl = '{{ route('veiculo.consultarFipe') }}';
+            const fipeUrl = @json(isset($veiculo) && !empty($veiculo->id) ? route('veiculo.consultarFipe', $veiculo->id) : null);
             let ultimaFalhaFipe = null;
 
             function limparStatusFipe() {
@@ -1460,10 +1460,23 @@
             atualizarEstadoBuscaModelo();
 
             function consultarFipe() {
+                if (!fipeUrl) {
+                    fireSwal({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: 'Salve o veículo primeiro para consultar a FIPE.',
+                        showConfirmButton: false,
+                        timer: 5000
+                    });
+                    return;
+                }
+
                 const marcaId = $marca.val();
                 const modeloId = $modelo.val();
-                // const anoModelo = obterAnoModeloSelecionado();
-                const chaveConsulta = [marcaId || '', modeloId || ''].join('|');
+                const anoFabricacao = parseInt($('#ano_fabricacao').val() || 0, 10);
+                const anoModelo = obterAnoModeloSelecionado();
+                const chaveConsulta = [marcaId || '', modeloId || '', anoFabricacao || anoModelo || ''].join('|');
 
                 if (!marcaId || !modeloId ) {
                     fireSwal({
@@ -1497,7 +1510,8 @@
                 $.get(fipeUrl, {
                     marca_id: marcaId,
                     modelo_id: modeloId,
-                    ano_modelo: obterAnoModeloSelecionado()
+                    ano_fabricacao: anoFabricacao > 0 ? anoFabricacao : null,
+                    ano_modelo: anoModelo > 0 ? anoModelo : null
                 }).done(function(resp) {
                     // Resposta com mensagem de erro (HTTP 200 mas sem dados)
                     if (resp.message && !resp.valor_fipe && resp.valor_fipe !== 0) {

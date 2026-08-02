@@ -311,7 +311,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\App\View\Components\FormInput::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'form-control form-control-sm','id' => 'nome_frota','icon' => '1','iconHint' => 'Caso não informe o sistema criará um nome único para identificar este veiculo na frota.','placeholder' => 'Ex.: Executive, Econômica, Premium']); ?>
+<?php $component->withAttributes(['class' => 'form-control form-control-sm','id' => 'nome_frota','icon' => '1','iconHint' => 'Caso não informe o sistema criará um nome único para identificar este veiculo na frota.','placeholder' => 'Ex.: vei1425']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal967bdc6f044358de111e8173f0c9c426)): ?>
@@ -1981,8 +1981,9 @@
             function consultarFipe() {
                 const marcaId = $marca.val();
                 const modeloId = $modelo.val();
-                // const anoModelo = obterAnoModeloSelecionado();
-                const chaveConsulta = [marcaId || '', modeloId || ''].join('|');
+                const anoFabricacao = parseInt($('#ano_fabricacao').val() || 0, 10);
+                const anoModelo = obterAnoModeloSelecionado();
+                const chaveConsulta = [marcaId || '', modeloId || '', anoFabricacao || anoModelo || ''].join('|');
 
                 if (!marcaId || !modeloId ) {
                     fireSwal({
@@ -2016,7 +2017,8 @@
                 $.get(fipeUrl, {
                     marca_id: marcaId,
                     modelo_id: modeloId,
-                    ano_modelo: obterAnoModeloSelecionado()
+                    ano_fabricacao: anoFabricacao > 0 ? anoFabricacao : null,
+                    ano_modelo: anoModelo > 0 ? anoModelo : null
                 }).done(function(resp) {
                     // Resposta com mensagem de erro (HTTP 200 mas sem dados)
                     if (resp.message && !resp.valor_fipe && resp.valor_fipe !== 0) {

@@ -69,13 +69,18 @@ class VeiculoService extends AbstractBaseService
         $veiculo->nome = 'vei'.str_pad($veiculo->id, 4, '0', STR_PAD_LEFT);
         $veiculo->save();
 
+        $this->atualizarCamposFinanceiros($veiculo, $data);
+
         $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
 
-        $this->disponibilidadeInicialVeiculoService->create([
-            'veiculo_id' => $veiculo->id,
-            'estacao_id' => $data['local_disponibilidade'] ?? null,
-            'data_hora' => $data['data_hora_disponibilidade'] ?? null,
-        ]);
+        if(isset($data['local_disponibilidade'])){
+            $dataHoraDisponibilidade =  isset($data['data_hora_disponibilidade']) ? $data['data_hora_disponibilidade'] : date('Y-m-d H:i:s');
+            $this->disponibilidadeInicialVeiculoService->create([
+                'veiculo_id' => $veiculo->id,
+                'estacao_id' => $data['local_disponibilidade'],
+                'data_hora' => $dataHoraDisponibilidade,
+                ]);
+        }
 
         return $veiculo;
     }
@@ -100,14 +105,19 @@ class VeiculoService extends AbstractBaseService
         $this->injectEmpresaId($data, true);
         $naoMovimentouInicialmente = is_null($veiculo->data_hora_disponibilidade) || is_null($veiculo->local_disponibilidade);
         $veiculo->update($data);
+        $this->atualizarCamposFinanceiros($veiculo->fresh(), $data);
 
         if ($naoMovimentouInicialmente) {
-            $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
-            $this->disponibilidadeInicialVeiculoService->create([
-                'veiculo_id' => $veiculo->id,
-                'estacao_id' => $data['local_disponibilidade'] ?? null,
-                'data_hora' => $data['data_hora_disponibilidade'] ?? null,
-            ]);
+            if(isset($data['local_disponibilidade'])){
+                $dataHoraDisponibilidade =  isset($data['data_hora_disponibilidade']) ? $data['data_hora_disponibilidade'] : date('Y-m-d H:i:s');
+
+                $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
+                $this->disponibilidadeInicialVeiculoService->create([
+                    'veiculo_id' => $veiculo->id,
+                    'estacao_id' => $data['local_disponibilidade'],
+                    'data_hora' => $dataHoraDisponibilidade,
+                ]);
+            }
         }
 
         return $veiculo;
@@ -415,6 +425,28 @@ class VeiculoService extends AbstractBaseService
         }
 
         return $data;
+    }
+
+    private function atualizarCamposFinanceiros(Veiculo $veiculo, array $data): void
+    {
+        if (! $veiculo) {
+            return;
+        }
+
+        $updates = [];
+
+        foreach (['valor_compra', 'data_compra', 'taxa_depreciacao_anual', 'valor_fipe', 'codigo_fipe', 'referencia_fipe', 'data_consulta_fipe'] as $campo) {
+            if (array_key_exists($campo, $data)) {
+                $updates[$campo] = $data[$campo];
+            }
+        }
+
+        if ($updates === []) {
+            return;
+        }
+
+        $veiculo->forceFill($updates);
+        $veiculo->save();
     }
 
     public function getVeiculosDisponiveisPorUltimaMovimentacao(?string $estacaoFiltro = null, int $perPage = 1000)

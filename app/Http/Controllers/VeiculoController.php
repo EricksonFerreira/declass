@@ -16,6 +16,7 @@ use App\Http\Requests\Veiculo\UpdateVeiculoRequest;
 use App\Models\GrupoFrota;
 use App\Models\Marca;
 use App\Models\Modelo;
+use App\Models\Veiculo;
 use App\Models\Movimentacao;
 use App\Models\Reserva;
 use App\Models\StatusVeiculo;
@@ -161,7 +162,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             return response()->json(['message' => 'Marca ou modelo não encontrado no cadastro local.'], 422);
         }
 
-        $anoModelo = (int) ($dados['ano_modelo'] ?? $dados['ano_fabricacao'] ?? 0);
+        $anoModelo = (int) ($dados['ano_fabricacao'] ?? $dados['ano_modelo'] ?? 0);
         if ($anoModelo <= 0) {
             $anoModelo = (int) ($modelo->ano_modelo ?? 0);
         }
@@ -233,17 +234,37 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 'brands/'.$codigoMarcaApi.'/models/'.$codigoModeloApi.'/years/'.$anoApi['code']
             );
 
+            $veiculo = Veiculo::query()->find((int) $request->route('veiculo'));
+            if ($veiculo) {
+                $veiculo->fill([
+                    'valor_fipe' => $this->normalizarValorFipe($detalhe['price'] ?? $detalhe['Valor'] ?? null),
+                    'codigo_fipe' => $detalhe['codeFipe'] ?? $detalhe['code'] ?? $detalhe['CodigoFipe'] ?? null,
+                    'referencia_fipe' => $detalhe['referenceMonth'] ?? $detalhe['reference'] ?? $detalhe['MesReferencia'] ?? null,
+                    'data_consulta_fipe' => now()->toDateString(),
+                ]);
+                $veiculo->save();
+                $veiculo->refresh();
+            }
+
+            $valorFipe = $veiculo?->valor_fipe !== null
+                ? (float) $veiculo->valor_fipe
+                : $this->normalizarValorFipe($detalhe['price'] ?? $detalhe['Valor'] ?? null);
+
             return response()->json([
                 'marca' => $marcaApi['name'] ?? $marcaApi['nome'] ?? $marca->nome,
                 'modelo' => $modeloApi['name'] ?? $modeloApi['nome'] ?? $modelo->nome,
                 'ano_modelo' => $anoModelo,
-                'codigo_fipe' => $detalhe['codeFipe'] ?? $detalhe['code'] ?? $detalhe['CodigoFipe'] ?? null,
-                'referencia_fipe' => $detalhe['referenceMonth'] ?? $detalhe['reference'] ?? $detalhe['MesReferencia'] ?? null,
-                'valor_fipe' => $this->normalizarValorFipe($detalhe['price'] ?? $detalhe['Valor'] ?? null),
+                'codigo_fipe' => $veiculo?->codigo_fipe ?? ($detalhe['codeFipe'] ?? $detalhe['code'] ?? $detalhe['CodigoFipe'] ?? null),
+                'referencia_fipe' => $veiculo?->referencia_fipe ?? ($detalhe['referenceMonth'] ?? $detalhe['reference'] ?? $detalhe['MesReferencia'] ?? null),
+                'valor_fipe' => $valorFipe,
                 'valor_fipe_formatado' => $detalhe['price'] ?? $detalhe['Valor'] ?? null,
                 'combustivel' => $detalhe['fuel'] ?? $detalhe['Combustivel'] ?? null,
                 'ano_fipe' => $detalhe['modelYear'] ?? $detalhe['AnoModelo'] ?? null,
-                'data_consulta_fipe' => now()->format('Y-m-d'),
+                'data_consulta_fipe' => $veiculo?->data_consulta_fipe ? $veiculo->data_consulta_fipe->format('Y-m-d') : now()->format('Y-m-d'),
+                'valor_compra' => $veiculo?->valor_compra,
+                'valor_atual_estimado' => $veiculo?->valor_atual_estimado,
+                'valor_depreciacao_acumulada' => $veiculo?->valor_depreciacao_acumulada,
+                'taxa_depreciacao_anual' => $veiculo?->taxa_depreciacao_anual,
             ]);
         } catch (\Throwable $e) {
             return response()->json([
@@ -632,9 +653,60 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function update(UpdateVeiculoRequest $request, $id)
     {
-        $success = $this->veiculoService->update($id, $request->all());
+        $veiculo = $this->veiculoService->update($id, $request->all());
+
+        if ($request->expectsJson()) {
+            if (! $veiculo) {
+                return response()->json(['message' => 'Veiculo nao encontrado.'], 404);
+            }
+
+            $veiculo->refresh();
+
+            return response()->json([
+                'message' => 'Veiculo atualizado com sucesso.',
+                'payload' => [
+                    'valor_compra' => $veiculo->valor_compra,
+                    'data_compra' => $veiculo->data_compra ? $veiculo->data_compra->format('Y-m-d') : null,
+                    'taxa_depreciacao_anual' => $veiculo->taxa_depreciacao_anual,
+                    'valor_fipe' => $veiculo->valor_fipe,
+                    'codigo_fipe' => $veiculo->codigo_fipe,
+                    'referencia_fipe' => $veiculo->referencia_fipe,
+                    'data_consulta_fipe' => $veiculo->data_consulta_fipe ? $veiculo->data_consulta_fipe->format('Y-m-d') : null,
+                    'valor_atual_estimado' => $veiculo->valor_atual_estimado,
+                    'valor_depreciacao_acumulada' => $veiculo->valor_depreciacao_acumulada,
+                ],
+            ]);
+        }
 
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
+    }
+
+    public function alterarDepreciacao(Request $request, $veiculo)
+    {
+        $dados = $request->validate([
+            'valor_compra' => ['nullable', 'numeric', 'min:0'],
+            'data_compra' => ['nullable', 'date'],
+            'taxa_depreciacao_anual' => ['nullable', 'numeric', 'min:0', 'max:100'],
+        ]);
+
+        $veiculoAtualizado = $this->veiculoService->update($veiculo, $dados);
+
+        if (! $veiculoAtualizado) {
+            return response()->json(['message' => 'Veiculo nao encontrado.'], 404);
+        }
+
+        $veiculoAtualizado->refresh();
+
+        return response()->json([
+            'message' => 'Depreciacao atualizada com sucesso.',
+            'payload' => [
+                'valor_compra' => $veiculoAtualizado->valor_compra,
+                'data_compra' => $veiculoAtualizado->data_compra ? $veiculoAtualizado->data_compra->format('Y-m-d') : null,
+                'taxa_depreciacao_anual' => $veiculoAtualizado->taxa_depreciacao_anual,
+                'valor_atual_estimado' => $veiculoAtualizado->valor_atual_estimado,
+                'valor_depreciacao_acumulada' => $veiculoAtualizado->valor_depreciacao_acumulada,
+            ],
+        ]);
     }
 
     public function destroy($id)

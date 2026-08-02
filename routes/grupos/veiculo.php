@@ -14,7 +14,8 @@ Route::prefix('veiculo')->name('veiculo.')->group(function () {
     Route::get('buscar-grupos-modal', [VeiculoController::class, 'buscarGruposModal'])->name('buscarGruposModal');
     Route::get('buscar-marcas-modal', [VeiculoController::class, 'buscarMarcasModal'])->name('buscarMarcasModal');
     Route::get('buscar-modelos-modal', [VeiculoController::class, 'buscarModelosModal'])->name('buscarModelosModal');
-    Route::get('consultar-fipe', [VeiculoController::class, 'consultarFipe'])->name('consultarFipe');
+    Route::match(['get', 'post'], '{veiculo}/consultar-fipe', [VeiculoController::class, 'consultarFipe'])->name('consultarFipe');
+    Route::match(['post', 'put'], '{veiculo}/alterardepreciacao', [VeiculoController::class, 'alterarDepreciacao'])->name('alterardepreciacao');
     Route::get('grupos-por-tipo', [VeiculoController::class, 'gruposPorTipo'])->name('gruposPorTipo');
     Route::get('modelos-por-marca', [VeiculoController::class, 'modelosPorMarca'])->name('modelosPorMarca');
     Route::post('ordenacao', [VeiculoController::class, 'setOrdenacao'])->name('setOrdenacao');
