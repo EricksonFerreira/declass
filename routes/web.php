@@ -240,7 +240,6 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'item_checklist',
         'status_item_checklist',
         'tipo_checklist',
-        'configuracao_checklist',
         'categoria_dano',
         'dano',
         'veiculo_dano_monitoramento',

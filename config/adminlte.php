@@ -628,12 +628,6 @@ return [
                     'can' => 'acessar-superadmin',
                     'submenu' => [
                         [
-                            'text' => 'Configuração de Checklist',
-                            'route' => 'configuracao-checklist.index',
-                            'icon' => 'fas fa-sliders-h',
-                            'can' => 'acessar-superadmin',
-                        ],
-                        [
                             'text' => 'Itens de Checklist',
                             'route' => 'item_checklist.index',
                             'icon' => 'fas fa-tasks',

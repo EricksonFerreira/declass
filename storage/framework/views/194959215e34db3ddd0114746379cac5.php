@@ -173,35 +173,6 @@
 <?php endif; ?>
                             </td>
                         </tr>
-
-                        <div class="modal fade" id="<?php echo e($modalId); ?>" tabindex="-1" role="dialog" aria-hidden="true">
-                            <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title">Itens do tipo: <?php echo e($tipo_checklist->nome); ?></h5>
-                                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
-                                            <span aria-hidden="true">&times;</span>
-                                        </button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <?php if($totalItens > 0): ?>
-                                            <div class="row">
-                                                <?php $__currentLoopData = $itens; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                    <div class="col-md-4 col-sm-6 mb-2">
-                                                        <div class="border rounded px-3 py-2 bg-light">
-                                                            <?php echo e($item); ?>
-
-                                                        </div>
-                                                    </div>
-                                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                            </div>
-                                        <?php else: ?>
-                                            <div class="text-muted">Nenhum item vinculado a este tipo de checklist.</div>
-                                        <?php endif; ?>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <tr>
                             <td colspan="4" class="text-center text-muted py-4">Nenhum tipo de checklist cadastrado.</td>
@@ -211,6 +182,41 @@
             </table>
         </div>
     </div>
+
+    <?php $__currentLoopData = $tipo_checklists; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tipo_checklist): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+        <?php
+            $itens = $tipo_checklist->configuracaoChecklist?->pluck('itemChecklist.nome')->filter()->values() ?? collect();
+            $modalId = 'modal-itens-tipo-' . $tipo_checklist->id;
+        ?>
+        <div class="modal fade" id="<?php echo e($modalId); ?>" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Itens do tipo: <?php echo e($tipo_checklist->nome); ?></h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <?php if($itens->isNotEmpty()): ?>
+                            <div class="row">
+                                <?php $__currentLoopData = $itens; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <div class="col-md-4 col-sm-6 mb-2">
+                                        <div class="border rounded px-3 py-2 bg-light">
+                                            <?php echo e($item); ?>
+
+                                        </div>
+                                    </div>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </div>
+                        <?php else: ?>
+                            <div class="text-muted">Nenhum item vinculado a este tipo de checklist.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('css'); ?>
