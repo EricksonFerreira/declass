@@ -575,42 +575,6 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Config. Checklist & Avarias',
-                    'icon' => 'fas fa-clipboard-check',
-                    'submenu' => [
-                        [
-                            'text' => 'Tipos de Avaria (Danos)',
-                            'route' => 'dano.index',
-                            'icon' => 'fas fa-exclamation-triangle',
-                        ],
-                        [
-                            'text' => 'Categorias de Avaria',
-                            'route' => 'categoria_dano.index',
-                            'icon' => 'fas fa-tags',
-                        ],
-                        [
-                            'text' => 'Configuração de Checklist',
-                            'route' => 'configuracao-checklist.index',
-                            'icon' => 'fas fa-sliders-h',
-                        ],
-                        [
-                            'text' => 'Itens de Checklist',
-                            'route' => 'item_checklist.index',
-                            'icon' => 'fas fa-tasks',
-                        ],
-                        [
-                            'text' => 'Tipos de Checklist',
-                            'route' => 'tipo_checklist.index',
-                            'icon' => 'fas fa-list',
-                        ],
-                        [
-                            'text' => 'Status de Itens',
-                            'route' => 'status_item_checklist.index',
-                            'icon' => 'fas fa-check-square',
-                        ],
-                    ],
-                ],
-                [
                     'text' => 'Estações',
                     'route' => 'estacao.index',
                     'icon' => 'fas fa-map-marker-alt',
@@ -659,6 +623,50 @@ return [
                     'can' => 'acessar-superadmin',
                 ],
                 [
+                    'text' => 'Config. Checklist',
+                    'icon' => 'fas fa-clipboard-check',
+                    'can' => 'acessar-superadmin',
+                    'submenu' => [
+                        [
+                            'text' => 'Configuração de Checklist',
+                            'route' => 'configuracao-checklist.index',
+                            'icon' => 'fas fa-sliders-h',
+                            'can' => 'acessar-superadmin',
+                        ],
+                        [
+                            'text' => 'Itens de Checklist',
+                            'route' => 'item_checklist.index',
+                            'icon' => 'fas fa-tasks',
+                            'can' => 'acessar-superadmin',
+                        ],
+                        [
+                            'text' => 'Tipos de Checklist',
+                            'route' => 'tipo_checklist.index',
+                            'icon' => 'fas fa-list',
+                            'can' => 'acessar-superadmin',
+                        ],
+                    ],
+                ],
+                [
+                    'text' => 'Config. Avarias',
+                    'icon' => 'fas fa-car-crash',
+                    'can' => 'acessar-superadmin',
+                    'submenu' => [
+                        [
+                            'text' => 'Tipos de Avaria (Danos)',
+                            'route' => 'dano.index',
+                            'icon' => 'fas fa-exclamation-triangle',
+                            'can' => 'acessar-superadmin',
+                        ],
+                        [
+                            'text' => 'Categorias de Avaria',
+                            'route' => 'categoria_dano.index',
+                            'icon' => 'fas fa-tags',
+                            'can' => 'acessar-superadmin',
+                        ],
+                    ],
+                ],
+                [
                     'text' => 'Cadastros de Controle',
                     'icon' => 'fas fa-sliders-h',
                     'can' => 'acessar-superadmin',
@@ -685,12 +693,6 @@ return [
                             'text' => 'Status de Veículos',
                             'route' => 'status_veiculo.index',
                             'icon' => 'fas fa-car-side',
-                            'can' => 'acessar-superadmin',
-                        ],
-                        [
-                            'text' => 'Status de Checklist',
-                            'route' => 'status_item_checklist.index',
-                            'icon' => 'fas fa-clipboard-check',
                             'can' => 'acessar-superadmin',
                         ],
                     ],

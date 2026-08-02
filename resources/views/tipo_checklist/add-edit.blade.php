@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -7,6 +7,13 @@
 @stop
 
 @section('content')
+    @php
+        $itensSelecionados = array_map('strval', old('item_checklist_id', isset($tipo_checklist) ? $tipo_checklist->configuracaoChecklist->pluck('item_checklist_id')->map(fn ($id) => (string) $id)->toArray() : []));
+        $qtdItens = is_countable($itemChecklist ?? null) ? count($itemChecklist) : 0;
+        $qtdSelecionados = count($itensSelecionados);
+        $statusAtual = old('ativo', $tipo_checklist->ativo ?? 'S');
+    @endphp
+
     @if ($errors->any())
         <div class="alert alert-danger col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12">
             <ul class="mb-0 pl-3">
@@ -17,12 +24,18 @@
         </div>
     @endif
 
-    <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
+    <div class="col-12 px-0">
         <div class="card card-tipo-checklist shadow-sm border-0">
             <div class="card-header card-header-tipo-checklist border-0">
-                <div>
-                    <h4 class="mb-1">{{ $titulo }}</h4>
-                    <p class="mb-0 text-muted">Configure os dados principais do tipo de checklist.</p>
+                <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap:1rem;">
+                    <div>
+                        <h4 class="mb-1">{{ $titulo }}</h4>
+                        <p class="mb-0 text-muted">Cadastre o tipo e selecione abaixo os itens que fazem parte dele.</p>
+                    </div>
+                    <div class="tipo-checklist-summary">
+                        <span class="badge badge-light">{{ $qtdItens }} itens cadastrados</span>
+                        <span class="badge badge-primary">{{ $qtdSelecionados }} selecionados</span>
+                    </div>
                 </div>
             </div>
 
@@ -33,27 +46,92 @@
                     @endif
                     @csrf
 
-                    <div class="tipo-checklist-section-title">Informações Básicas</div>
-                    <div class="form-row">
-                        <div class="col-lg-8 col-md-7">
-                            <div class="form-group form-group-tipo-checklist">
-                                <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
-                                    label="Nome" value="{{ old('nome', $tipo_checklist->nome ?? '') }}" required />
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <div class="tipo-checklist-section-title">Dados do tipo</div>
+                            <div class="form-row">
+                                <div class="col-md-8">
+                                    <div class="form-group form-group-tipo-checklist">
+                                        <x-form-input
+                                            type="text"
+                                            class="form-control form-control-sm"
+                                            id="nome"
+                                            name="nome"
+                                            label="Nome do tipo de checklist"
+                                            value="{{ old('nome', $tipo_checklist->nome ?? '') }}"
+                                            placeholder="Ex.: Retirada, Devolução, Manutenção"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="form-group form-group-tipo-checklist">
+                                        <x-form-select
+                                            name="ativo"
+                                            label="Status"
+                                            :options="$status"
+                                            placeholder="Selecione um valor"
+                                            :selected="$statusAtual"
+                                            class="form-control form-control-sm"
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="tipo-checklist-section-title mt-3">Itens do tipo</div>
+                            <div class="checklist-actions mb-2">
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="alterarTodosItens(true)">
+                                    <i class="fa fa-check mr-1"></i> Selecionar todos
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="alterarTodosItens(false)">
+                                    <i class="fa fa-times mr-1"></i> Limpar seleção
+                                </button>
+                            </div>
+
+                            <div class="checklist-items-grid">
+                                @forelse ($itemChecklist as $key => $value)
+                                    @php
+                                        $itemId = (string) $key;
+                                        $marcado = in_array($itemId, $itensSelecionados, true);
+                                    @endphp
+
+                                    <label class="checklist-item-card" for="item_checklist_{{ $key }}">
+                                        <input
+                                            type="checkbox"
+                                            class="checklist-item-card__checkbox"
+                                            id="item_checklist_{{ $key }}"
+                                            name="item_checklist_id[]"
+                                            value="{{ $key }}"
+                                            {{ $marcado ? 'checked' : '' }}
+                                        >
+                                        <span class="checklist-item-card__label">{{ $value }}</span>
+                                    </label>
+                                @empty
+                                    <div class="empty-items-state">
+                                        Nenhum item de checklist cadastrado ainda.
+                                    </div>
+                                @endforelse
                             </div>
                         </div>
 
-                        <div class="col-lg-4 col-md-5">
-                            <div class="form-group form-group-tipo-checklist">
-                                <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione um valor"
-                                    :selected="old('ativo', isset($tipo_checklist->ativo) && $tipo_checklist->ativo ? $tipo_checklist->ativo : null)"
-                                    class="form-control form-control-sm" required />
+                        <div class="col-lg-5 mt-4 mt-lg-0">
+                            <div class="tipo-checklist-sidecard">
+                                <div class="tipo-checklist-section-title">Resumo</div>
+                                <div class="summary-line"><span>Nome</span><strong>{{ old('nome', $tipo_checklist->nome ?? 'Novo tipo') }}</strong></div>
+                                <div class="summary-line"><span>Status</span><strong>{{ $statusAtual === 'S' ? 'Ativo' : 'Inativo' }}</strong></div>
+                                <div class="summary-line"><span>Itens selecionados</span><strong>{{ $qtdSelecionados }}</strong></div>
+                                <div class="summary-note">
+                                    Os itens marcados serão exibidos nos fluxos de checklist vinculados a este tipo.
+                                </div>
+
+                                <button type="submit" class="btn btn-primary btn-save-tipo-checklist w-100 mt-3">
+                                    Salvar tipo
+                                </button>
                             </div>
                         </div>
                     </div>
-
-                    <button type="submit" class="btn btn-primary btn-save-tipo-checklist col-12 mt-2">
-                        Salvar
-                    </button>
                 </form>
             </div>
         </div>
@@ -75,6 +153,12 @@
     .card-header-tipo-checklist h4 {
         color: #0f2740;
         font-weight: 700;
+    }
+
+    .tipo-checklist-summary {
+        display: flex;
+        gap: .5rem;
+        flex-wrap: wrap;
     }
 
     .tipo-checklist-section-title {
@@ -104,6 +188,96 @@
         box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18);
     }
 
+    .checklist-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .checklist-items-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: .65rem;
+    }
+
+    .checklist-item-card {
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: .55rem;
+        padding: .6rem .7rem;
+        border: 1px solid #d8e1ec;
+        border-radius: 10px;
+        background: #fff;
+        cursor: pointer;
+        transition: all .15s ease;
+        min-height: 48px;
+    }
+
+    .checklist-item-card:hover {
+        border-color: #4b80ff;
+        background: #f8fbff;
+    }
+
+    .checklist-item-card__checkbox {
+        width: 16px;
+        height: 16px;
+        margin: 0;
+        accent-color: #2563eb;
+        flex-shrink: 0;
+    }
+
+    .checklist-item-card__label {
+        font-size: 13px;
+        color: #1f2937;
+        line-height: 1.3;
+    }
+
+    .tipo-checklist-sidecard {
+        background: #fff;
+        border: 1px solid #e5eaf2;
+        border-radius: 14px;
+        padding: 1rem;
+        box-shadow: 0 6px 18px rgba(15, 23, 42, .05);
+        position: sticky;
+        top: 1rem;
+    }
+
+    .summary-line {
+        display: flex;
+        justify-content: space-between;
+        gap: .75rem;
+        padding: .55rem 0;
+        border-bottom: 1px dashed #edf2f7;
+        font-size: .92rem;
+    }
+
+    .summary-line span {
+        color: #64748b;
+    }
+
+    .summary-line strong {
+        color: #0f2740;
+        text-align: right;
+    }
+
+    .summary-note {
+        margin-top: .85rem;
+        font-size: .85rem;
+        color: #64748b;
+        line-height: 1.45;
+    }
+
+    .empty-items-state {
+        grid-column: 1 / -1;
+        padding: 1rem;
+        border: 1px dashed #d8e1ec;
+        border-radius: 10px;
+        text-align: center;
+        color: #64748b;
+        background: #fbfdff;
+    }
+
     .btn-save-tipo-checklist {
         border-radius: 10px;
         font-weight: 600;
@@ -118,6 +292,14 @@
 
         .card-body {
             padding: 1rem !important;
+        }
+
+        .tipo-checklist-sidecard {
+            position: static;
+        }
+
+        .checklist-items-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
         }
     }
 
@@ -150,83 +332,21 @@
             padding: .85rem !important;
         }
 
-        .form-group-tipo-checklist {
-            margin-bottom: .8rem;
+        .checklist-items-grid {
+            grid-template-columns: 1fr;
         }
 
-        .card-tipo-checklist .form-control,
-        .card-tipo-checklist .form-select {
-            min-height: 36px;
-            font-size: 13px;
+        .checklist-item-card__label {
+            font-size: 12px;
         }
     }
 </style>
 @stop
 
 @section('js')
-    <script></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.css"/>
-<link rel="stylesheet" href="/css/driver-tour.css"/>
-<script src="https://cdn.jsdelivr.net/npm/driver.js@1/dist/driver.js.iife.js"></script>
-<script>
-(function () {
-    const TOUR_ID     = 'tipo-checklist-add-edit';
-    const STATUS_URL  = '/admin/tour/status/'  + TOUR_ID;
-    const CONCLUIR_URL = '/admin/tour/concluir/' + TOUR_ID;
-    const RESETAR_URL  = '/admin/tour/resetar/'  + TOUR_ID;
-    const CSRF        = document.querySelector('meta[name="csrf-token"]')?.content ?? '';
-    const CACHE_KEY   = 'tour_feito__' + TOUR_ID;
-    const forceTour   = new URLSearchParams(window.location.search).get('tour') === '1';
-
-    const steps = [
-        { element: '.card-tipo-checklist', popover: { title: 'Cadastro de Tipo de Checklist', description: 'Aqui você cria ou edita um tipo de checklist. Os tipos categorizam as configurações de inspeção (Retirada, Devolução, Manutenção).' } },
-        { element: '#nome', popover: { title: 'Nome do tipo', description: 'Informe um nome que identifique o momento ou finalidade do checklist, como "Inspeção de Retirada" ou "Vistoria de Devolução".', side: 'bottom' } },
-        { element: '#ativo', popover: { title: 'Status', description: 'Ativo: o tipo aparece como opção ao criar configurações de checklist. Inativo: oculto das opções, mas mantém configurações existentes.', side: 'bottom' } },
-        { element: '.btn-save-tipo-checklist', popover: { title: 'Salvar', description: 'Clique para gravar o tipo de checklist. Ele ficará disponível imediatamente para uso nas configurações de checklist.', side: 'top' } },
-    ];
-
-    function marcarFeito() {
-        localStorage.setItem(CACHE_KEY, '1');
-        fetch(CONCLUIR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } });
-    }
-
-    function buildTour() {
-        var _pulou = false;
-        return window.driver.js.driver({
-            animate: true, smoothScroll: true, showProgress: true,
-            allowClose: true,
-            progressText: 'Passo @{{current}} de @{{total}}',
-            nextBtnText: 'Próximo →', prevBtnText: '← Anterior', doneBtnText: 'Entendido ✓',
-            onDestroyStarted: () => { if (!_pulou) marcarFeito(); },
-            onPopoverRender: (popover, { driver }) => {
-                if (popover.wrapper.querySelector('.drv-skip-btn')) return;
-                var btnTour = document.createElement('button');
-                btnTour.className = 'drv-skip-btn drv-skip-tour-btn'; btnTour.type = 'button'; btnTour.textContent = 'Pular tour';
-                btnTour.addEventListener('click', function () { _pulou = true; marcarFeito(); driver.destroy(); });
-                var btnStep = document.createElement('button');
-                btnStep.className = 'drv-skip-btn drv-skip-step-btn'; btnStep.type = 'button'; btnStep.textContent = 'Pular passo';
-                btnStep.addEventListener('click', function () { driver.moveNext(); });
-                var nav = popover.footer.querySelector('.driver-popover-navigation-btns');
-                if (nav) { nav.prepend(btnStep); }
-                popover.footer.prepend(btnTour);
-            },
-            steps: steps,
-        });
-    }
-
-    window.restartPageTour = function () {
-        localStorage.removeItem(CACHE_KEY);
-        fetch(RESETAR_URL, { method: 'POST', headers: { 'X-CSRF-TOKEN': CSRF, 'Accept': 'application/json' } })
-            .then(() => buildTour().drive());
-    };
-
-    if (localStorage.getItem(CACHE_KEY) && !forceTour) return;
-    fetch(STATUS_URL, { headers: { 'Accept': 'application/json' } })
-        .then(r => r.json())
-        .then(data => {
-            if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
-            setTimeout(() => buildTour().drive(), 350);
-        });
-})();
-</script>
+    <script>
+        function alterarTodosItens(checked = true) {
+            $('[name="item_checklist_id[]"]').prop('checked', checked);
+        }
+    </script>
 @stop

@@ -31,12 +31,11 @@ class ConfiguracaoChecklistService extends AbstractBaseService
     public function getAllWithFiltersAndPagination($filters = [], $perPage = 15, $with = [], $orderBy = 'id', $order = 'asc')
     {
         $resource = parent::getAllWithFiltersAndPagination($filters, $perPage, $with, $orderBy, $order);
-        // quero obter id, tipoChecklist.nome, itemChecklist.nome,
+        // Mantém a listagem resiliente quando algum relacionamento vier ausente.
         $resource->each(function ($item) {
-            $item->tipoChecklistNome = $item->tipoChecklist->nome;
-            $item->itemChecklistNome = $item->itemChecklist->nome;
+            $item->tipoChecklistNome = $item->tipoChecklist?->nome ?? '-';
+            $item->itemChecklistNome = $item->itemChecklist?->nome ?? '-';
         });
-        // dd($resource);
         return $resource;
     }
 

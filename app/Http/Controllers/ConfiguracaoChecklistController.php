@@ -95,14 +95,16 @@ class ConfiguracaoChecklistController extends BaseController implements FiltroIn
     public function edit($id)
     {
         $configuracaochecklist = $this->configuracaochecklistService->getById($id);
-        dd($configuracaochecklist);
+        if (!$configuracaochecklist) {
+            return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Configuração de checklist não encontrada.', 'error');
+        }
         $status = [
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
         $tipoChecklist = $this->tipoChecklistService->getAllForSelect();
         $itemChecklist = $this->itemChecklistService->getAllForSelect();
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('ConfiguracaoChecklists','configuracaochecklist.index',"Editar: $configuracaochecklist->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('ConfiguracaoChecklists','configuracao-checklist.index',"Editar: $configuracaochecklist->nome");
         [$metodo,$rota] = $this->getFormMethodAndRoute($configuracaochecklist);
 
         return view('configuracao_checklist.add-edit',

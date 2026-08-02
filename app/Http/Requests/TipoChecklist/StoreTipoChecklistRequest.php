@@ -26,6 +26,8 @@ class StoreTipoChecklistRequest extends FormRequest
         return [
             'nome' => ['required', 'string', 'max:255', $uniqueNome],
             'ativo' => 'required|string|max:1',
+            'item_checklist_id' => 'required|array|min:1',
+            'item_checklist_id.*' => 'integer|exists:item_checklist,id',
         ];
     }
 
@@ -37,6 +39,10 @@ class StoreTipoChecklistRequest extends FormRequest
             'nome.max' => 'O campo nome deve ter no máximo 255 caracteres.',
             'ativo.required' => 'O campo ativo é obrigatório.',
             'ativo.max' => 'O campo ativo deve ter no máximo 1 caractere.',
+            'item_checklist_id.required' => 'Selecione ao menos um item de checklist.',
+            'item_checklist_id.array' => 'Os itens de checklist devem ser enviados em lista.',
+            'item_checklist_id.min' => 'Selecione ao menos um item de checklist.',
+            'item_checklist_id.*.exists' => 'Um dos itens de checklist é inválido.',
         ];
     }
 }

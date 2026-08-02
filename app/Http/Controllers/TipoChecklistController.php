@@ -7,6 +7,7 @@ use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\TipoChecklist\StoreTipoChecklistRequest;
 use App\Http\Requests\TipoChecklist\UpdateTipoChecklistRequest;
 use App\Services\BreadcrumbService;
+use App\Services\ItemChecklistService;
 use App\Services\TipoChecklistService;
 use App\Traits\AtualizaFiltrosTrait;
 use Illuminate\Http\Request;
@@ -18,13 +19,19 @@ class TipoChecklistController extends BaseController implements FiltroInterface,
     use AtualizaFiltrosTrait;
     protected $tipo_checklistService;
     protected $breadcrumbService;
+    protected $itemChecklistService;
 
-    public function __construct(TipoChecklistService $tipo_checklistService, BreadcrumbService $breadcrumbService)
+    public function __construct(
+        TipoChecklistService $tipo_checklistService,
+        BreadcrumbService $breadcrumbService,
+        ItemChecklistService $itemChecklistService
+    )
     {
-        $this->titulo = "TipoChecklists";
+        $this->titulo = "Tipos de Checklist";
         $this->nomeFiltro = 'tipo_checklist';
         $this->tipo_checklistService = $tipo_checklistService;
         $this->breadcrumbService = $breadcrumbService;
+        $this->itemChecklistService = $itemChecklistService;
     }
 
     public function index()
@@ -34,9 +41,13 @@ class TipoChecklistController extends BaseController implements FiltroInterface,
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $tipo_checklists = $this->tipo_checklistService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
+        $tipo_checklists = $this->tipo_checklistService->getAllWithFiltersAndPagination(
+            $itensFiltered,
+            $perPage,
+            ['configuracaoChecklist.itemChecklist']
+        );
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('TipoChecklists');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Tipos de Checklist');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -61,10 +72,11 @@ class TipoChecklistController extends BaseController implements FiltroInterface,
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('TipoChecklists','tipo_checklist.index','Criar');
+        $itemChecklist = $this->itemChecklistService->getAllForSelect();
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Tipos de Checklist','tipo_checklist.index','Criar');
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('tipo_checklist.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('tipo_checklist.add-edit', compact('breadcrumb','status','metodo','rota','itemChecklist'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreTipoChecklistRequest $request)
@@ -76,15 +88,19 @@ class TipoChecklistController extends BaseController implements FiltroInterface,
 
     public function edit($id)
     {
-        $tipo_checklist = $this->tipo_checklistService->getById($id);
+        $tipo_checklist = $this->tipo_checklistService->getById($id, ['configuracaoChecklist.itemChecklist']);
+        if (!$tipo_checklist) {
+            return $this->redirecionaRotaRedirect($this->nomeFiltro, 'Tipo de checklist não encontrado.', 'error');
+        }
         $status = [
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('TipoChecklists','tipo_checklist.index',"Editar: $tipo_checklist->nome");
+        $itemChecklist = $this->itemChecklistService->getAllForSelect();
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Tipos de Checklist','tipo_checklist.index',"Editar: $tipo_checklist->nome");
         [$metodo,$rota] = $this->getFormMethodAndRoute($tipo_checklist);
 
-        return view('tipo_checklist.add-edit', compact('tipo_checklist','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('tipo_checklist.add-edit', compact('tipo_checklist','breadcrumb','status','metodo','rota','itemChecklist'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateTipoChecklistRequest $request, $id)
