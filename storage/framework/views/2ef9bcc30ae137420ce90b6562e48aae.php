@@ -1792,7 +1792,7 @@
             const $dataConsultaFipe = $('#data_consulta_fipe');
             const $taxaDepreciacao = $('#taxa_depreciacao_anual');
             const $fipeLookupStatus = $('#fipeLookupStatus');
-            const fipeUrl = '<?php echo e(route('veiculo.consultarFipe')); ?>';
+            const fipeUrl = <?php echo json_encode(isset($veiculo) && !empty($veiculo->id) ? route('veiculo.consultarFipe', $veiculo->id) : null, 512) ?>;
             let ultimaFalhaFipe = null;
 
             function limparStatusFipe() {
@@ -1979,6 +1979,18 @@
             atualizarEstadoBuscaModelo();
 
             function consultarFipe() {
+                if (!fipeUrl) {
+                    fireSwal({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'warning',
+                        title: 'Salve o veículo primeiro para consultar a FIPE.',
+                        showConfirmButton: false,
+                        timer: 5000
+                    });
+                    return;
+                }
+
                 const marcaId = $marca.val();
                 const modeloId = $modelo.val();
                 const anoFabricacao = parseInt($('#ano_fabricacao').val() || 0, 10);

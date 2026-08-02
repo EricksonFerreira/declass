@@ -341,68 +341,9 @@
                         </div>
                     </div>
 
-                    {{-- â”€â”€ STEP 3: DATAS E KM â”€â”€ --}}
+                    {{--  STEP 3: DATAS E KM  --}}
                     <div class="vc-step-pane d-none" data-pane="3" id="fipe-consulta">
-                        <div class="veiculo-section-title"><i class="fas fa-coins mr-1"></i>Financeiro do Veículo</div>
-                        <div class="veiculo-info-tip">
-                            <i class="fas fa-info-circle mr-1"></i>
-                            Consulte a tabela FIPE para preencher os dados base do veículo e acompanhar a depreciação.
-                        </div>
-                        <div class="form-row">
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="text" inputmode="decimal" autocomplete="off" data-money-field="1" class="form-control form-control-sm"
-                                        id="valor_compra" name="valor_compra" label="Valor de Compra"
-                                        value="{{ old('valor_compra', $veiculo->valor_compra ?? '') }}" />
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="text" inputmode="decimal" autocomplete="off" data-money-field="1" class="form-control form-control-sm"
-                                        id="valor_fipe" name="valor_fipe" label="Valor FIPE"
-                                        value="{{ old('valor_fipe', $veiculo->valor_fipe ?? '') }}" />
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" step="0.01" min="0" max="100" class="form-control form-control-sm"
-                                        id="taxa_depreciacao_anual" name="taxa_depreciacao_anual"
-                                        label="Taxa de Depreciacao Anual (%)"
-                                        value="{{ old('taxa_depreciacao_anual', $veiculo->taxa_depreciacao_anual ?? 15) }}" />
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6 d-flex align-items-end">
-                                <button type="button" class="btn btn-outline-primary btn-sm w-100 mb-3"
-                                    id="btnConsultarFipe">
-                                    <i class="fas fa-search-dollar mr-1"></i>Consultar FIPE
-                                </button>
-                            </div>
-                        </div>
-                        <div id="fipeLookupStatus" class="alert alert-danger d-none mt-2 mb-3" role="alert"></div>
-                        <div class="form-row">
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="text" class="form-control form-control-sm" id="codigo_fipe"
-                                        name="codigo_fipe" label="Código FIPE"
-                                        value="{{ old('codigo_fipe', $veiculo->codigo_fipe ?? '') }}" readonly />
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="text" class="form-control form-control-sm" id="referencia_fipe"
-                                        name="referencia_fipe" label="Referência FIPE"
-                                        value="{{ old('referencia_fipe', $veiculo->referencia_fipe ?? '') }}" readonly />
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="date" class="form-control form-control-sm"
-                                        id="data_consulta_fipe" name="data_consulta_fipe" label="Data da Consulta"
-                                        value="{{ old('data_consulta_fipe', isset($veiculo->data_consulta_fipe) ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('Y-m-d') : '') }}" readonly />
-                                </div>
-                            </div>
-                        </div>
-
+                        <div class="veiculo-section-title"><i class=fas fa-coins mr-1"></i>Informações Operacionais e de Aquisição</div>
                         <div class="row" id="depreciacao-config">
                             <div class="col-lg-4 col-md-6 mb-3">
                                 <div class="card card-outline card-primary h-100 mb-0">
