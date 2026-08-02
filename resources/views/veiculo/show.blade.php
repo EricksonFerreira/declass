@@ -12,39 +12,7 @@
     $pendenciasCadastro = [];
     if (empty($veiculo->local_disponibilidade)) $pendenciasCadastro[] = 'EstaÃ§Ã£o de origem';
     if (empty($veiculo->data_hora_disponibilidade)) $pendenciasCadastro[] = 'Data inicial de disponibilidade';
-    $valorDepreciacaoAcumulada = $veiculo->valor_depreciacao_acumulada;
-    $percentualDepreciacaoAcumulada = $veiculo->percentual_depreciacao_acumulada;
-    $classeDepreciacao = $valorDepreciacaoAcumulada === null
-        ? 'text-muted'
-        : ($valorDepreciacaoAcumulada > 0 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold');
-    $classePercentualDepreciacao = $percentualDepreciacaoAcumulada === null
-        ? 'text-muted'
-        : 'text-warning font-weight-bold';
-    $tooltipDepreciacao = $valorDepreciacaoAcumulada === null
-        ? 'Informe data de compra e taxa anual para calcular a depreciação.'
-        : 'Calculada com base no valor de referência e na taxa anual.';
 @endphp
-
-    $classeDepreciacao = $valorDepreciacaoAcumulada === null
-        ? 'text-muted'
-        : ($valorDepreciacaoAcumulada > 0 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold');
-    $classePercentualDepreciacao = $percentualDepreciacaoAcumulada === null
-        ? 'text-muted'
-        : 'text-warning font-weight-bold';
-    $tooltipDepreciacao = $valorDepreciacaoAcumulada === null
-        ? 'Informe data de compra e taxa anual para calcular a depreciação.'
-        : 'Calculada com base no valor de referência e na taxa anual.';
-@endphp
-    $percentualDepreciacaoAcumulada = $veiculo->percentual_depreciacao_acumulada;
-    $classeDepreciacao = $valorDepreciacaoAcumulada === null
-        ? 'text-muted'
-        : ($valorDepreciacaoAcumulada > 0 ? 'text-danger font-weight-bold' : 'text-success font-weight-bold');
-    $classePercentualDepreciacao = $percentualDepreciacaoAcumulada === null
-        ? 'text-muted'
-        : 'text-warning font-weight-bold';
-    $tooltipDepreciacao = $valorDepreciacaoAcumulada === null
-        ? 'Informe data de compra e taxa anual para calcular a depreciação.'
-        : 'Calculada com base no valor de referência e na taxa anual.';
 
     {{-- HERO COMPACTO --}}
     <div class="module-card mb-3">
@@ -195,35 +163,40 @@
                 <div class="veiculo-field"><span class="veiculo-field__label">Custos com sinistros</span><span class="veiculo-field__value {{ $finCustoSinistros > 0 ? 'text-danger' : '' }}">R$ {{ number_format($finCustoSinistros, 2, ',', '.') }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Lucro lÃ­quido</span><span class="veiculo-field__value {{ $finLucroLiquido >= 0 ? 'text-success' : 'text-danger' }}">R$ {{ number_format($finLucroLiquido, 2, ',', '.') }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Rentabilidade</span><span class="veiculo-field__value">{{ $finRentabilidade !== null ? number_format($finRentabilidade, 2, ',', '.') . '%' : 'â€”' }}</span></div>
-                    <div class="veiculo-field">
-                        <span class="veiculo-field__label">Depreciação acumulada</span>
-                        <span id="fipeResumoDepreciacao" class="veiculo-field__value {{ $classeDepreciacao }}" title="{{ $tooltipDepreciacao }}">
-                            {{ $valorDepreciacaoAcumulada !== null ? 'R$ ' . number_format((float) $valorDepreciacaoAcumulada, 2, ',', '.') : '—' }}
-                        </span>
-                    </div>
-                    <div class="veiculo-field">
-                        <span class="veiculo-field__label">Depreciação %</span>
-                        <span id="fipeResumoPercentual" class="veiculo-field__value {{ $classePercentualDepreciacao }}">
-                            {{ $percentualDepreciacaoAcumulada !== null ? number_format((float) $percentualDepreciacaoAcumulada, 2, ',', '.') . '%' : '—' }}
-                        </span>
-                    </div>
-                    <div class="veiculo-field"><span class="veiculo-field__label">Taxa anual</span><span id="fipeResumoTaxa" class="veiculo-field__value {{ $veiculo->taxa_depreciacao_anual !== null ? 'text-info font-weight-bold' : 'text-muted' }}">{{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Payback</span><span class="veiculo-field__value">{{ $finPaybackMeses !== null ? $finPaybackMeses . ' meses' : 'â€”' }}</span></div>
+            </div>
+        </div>
+
+        <div class="vehicle-tab-panel" data-vehicle-tab-panel="fipe">
+            <div class="vehicle-summary-block">
+                {{-- <div class="vehicle-summary-block__title">Resumo atual</div> --}}
+                <div class="veiculo-grid veiculo-grid--compact">
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor de compra</span><span id="fipeResumoValorCompra" class="veiculo-field__value">{{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : 'â€”' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor FIPE</span><span id="fipeResumoValor" class="veiculo-field__value">{{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : 'â€”' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor estimado atual</span><span id="fipeResumoValorAtual" class="veiculo-field__value">{{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : 'â€”' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">DepreciaÃ§Ã£o acumulada</span><span id="fipeResumoDepreciacao" class="veiculo-field__value">{{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : 'â€”' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Taxa anual</span><span id="fipeResumoTaxa" class="veiculo-field__value">{{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : 'â€”' }}</span></div>
                     <div class="veiculo-field">
                         <span class="veiculo-field__label">Ãšltima consulta</span>
                         <span id="fipeResumoData" class="veiculo-field__value">
                             {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : 'â€”' }}
                         </span>
                     </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm" id="btnExecutarConsultaFipe">
+                            <i class="fas fa-sync-alt mr-1"></i> Consultar/atualizar FIPE
+                        </button>
+                      
+                        <button type="button" class="btn btn-outline-primary  btn-sm" data-toggle="modal" data-target="#modalConfigurarDepreciacaoVeiculo">
+                            <i class="fas fa-sliders-h mr-1"></i> Configurar depreciaÃ§Ã£o
+                        </button>
+                    </div>
+                    <div>
+                    </div>
                 </div>
             </div>
 
             <div class="vehicle-summary-actions">
-                <button type="button" class="btn btn-primary btn-xs" id="btnExecutarConsultaFipe">
-                    <i class="fas fa-sync-alt mr-1"></i> Consultar/atualizar FIPE
-                </button>
-                <button type="button" class="btn btn-outline-primary  btn-xs" data-toggle="modal" data-target="#modalConfigurarDepreciacaoVeiculo">
-                    <i class="fas fa-sliders-h mr-1"></i> Configurar depreciaÃ§Ã£o
-                </button>
             </div>
         </div>
     </div>
@@ -1590,9 +1563,9 @@
 
         activateStep('disp');
 
-        var fipeDepreciacaoAtual = document.getElementById('fipeResumoDepreciacao');
-        var fipePercentualAtual = document.getElementById('fipeResumoPercentual');
-        var fipeTaxaAtual = document.getElementById('fipeResumoTaxa');
+        var fipeConsultaUrl = @json(route('veiculo.consultarFipe', $veiculo->id));
+        var veiculoMarcaId = @json((int) ($veiculo->marca_id ?? 0));
+        var veiculoModeloId = @json((int) ($veiculo->modelo_id ?? 0));
         var veiculoAnoFabricacao = @json((int) ($veiculo->ano_fabricacao ?? 0));
         var veiculoAnoModelo = @json((int) ($veiculo->modelo?->ano_modelo ?? 0));
         var fipeValorAtual = document.getElementById('fipeResumoValor');
@@ -1679,16 +1652,16 @@
                         }
                         if (result.payload?.data_consulta_fipe !== undefined && fipeDataAtual) {
                             var data = result.payload.data_consulta_fipe;
-                        if (result.payload?.valor_depreciacao_acumulada !== undefined && fipeDepreciacaoAtual) {
-                            fipeDepreciacaoAtual.textContent = result.payload.valor_depreciacao_acumulada !== null ? formatarMoedaBR(result.payload.valor_depreciacao_acumulada) : '—';
-                            fipeDepreciacaoAtual.classList.toggle('text-danger', result.payload.valor_depreciacao_acumulada !== null && Number(result.payload.valor_depreciacao_acumulada) > 0);
-                            fipeDepreciacaoAtual.classList.toggle('text-success', result.payload.valor_depreciacao_acumulada !== null && Number(result.payload.valor_depreciacao_acumulada) <= 0);
-                            fipeDepreciacaoAtual.classList.toggle('text-muted', result.payload.valor_depreciacao_acumulada === null);
+                            if (data) {
+                                var parts = String(data).split('-');
+                                fipeDataAtual.textContent = parts.length === 3 ? (parts[2] + '/' + parts[1] + '/' + parts[0]) : data;
+                            }
                         }
-                        if (result.payload?.percentual_depreciacao_acumulada !== undefined && fipePercentualAtual) {
-                            fipePercentualAtual.textContent = result.payload.percentual_depreciacao_acumulada !== null ? Number(result.payload.percentual_depreciacao_acumulada).toFixed(2).replace('.', ',') + '%' : '—';
-                            fipePercentualAtual.classList.toggle('text-warning', result.payload.percentual_depreciacao_acumulada !== null);
-                            fipePercentualAtual.classList.toggle('text-muted', result.payload.percentual_depreciacao_acumulada === null);
+                        if (result.payload?.valor_atual_estimado !== undefined && fipeValorEstimadoAtual) {
+                            fipeValorEstimadoAtual.textContent = result.payload.valor_atual_estimado !== null ? formatarMoedaBR(result.payload.valor_atual_estimado) : 'â€”';
+                        }
+                        if (result.payload?.valor_compra !== undefined && fipeValorCompraAtual) {
+                            fipeValorCompraAtual.textContent = result.payload.valor_compra !== null ? formatarMoedaBR(result.payload.valor_compra) : 'â€”';
                         }
                         if (result.payload?.valor_depreciacao_acumulada !== undefined && fipeDepreciacaoAtual) {
                             fipeDepreciacaoAtual.textContent = result.payload.valor_depreciacao_acumulada !== null ? formatarMoedaBR(result.payload.valor_depreciacao_acumulada) : 'â€”';
@@ -2123,4 +2096,3 @@
     }());
 </script>
 @stop
-

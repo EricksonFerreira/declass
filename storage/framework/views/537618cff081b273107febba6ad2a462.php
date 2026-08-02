@@ -203,16 +203,21 @@
 
                         </span>
                     </div>
+                    <div>
+                        <button type="button" class="btn btn-primary btn-sm" id="btnExecutarConsultaFipe">
+                            <i class="fas fa-sync-alt mr-1"></i> Consultar/atualizar FIPE
+                        </button>
+                      
+                        <button type="button" class="btn btn-outline-primary  btn-sm" data-toggle="modal" data-target="#modalConfigurarDepreciacaoVeiculo">
+                            <i class="fas fa-sliders-h mr-1"></i> Configurar depreciação
+                        </button>
+                    </div>
+                    <div>
+                    </div>
                 </div>
             </div>
 
             <div class="vehicle-summary-actions">
-                <button type="button" class="btn btn-primary btn-xs" id="btnExecutarConsultaFipe">
-                    <i class="fas fa-sync-alt mr-1"></i> Consultar/atualizar FIPE
-                </button>
-                <button type="button" class="btn btn-outline-primary  btn-xs" data-toggle="modal" data-target="#modalConfigurarDepreciacaoVeiculo">
-                    <i class="fas fa-sliders-h mr-1"></i> Configurar depreciação
-                </button>
             </div>
         </div>
     </div>

@@ -197,7 +197,7 @@
                                 </span>
                             </td>
                             <td>
-                                @if(in_array($mov->gera_disponibilidade, [true, 1, '1', 'S', 's'], true))
+                                @if(in_array($mov->gera_disponibilidade, ['S', 's', true, 1, '1'], true))
                                     <span class="badge badge-success">Sim</span>
                                 @else
                                     <span class="badge badge-gray">Não</span>

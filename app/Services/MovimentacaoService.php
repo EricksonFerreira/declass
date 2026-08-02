@@ -71,7 +71,7 @@ class MovimentacaoService extends AbstractBaseService
         if (!SchemaCache::hasColumn('movimentacoes', 'gera_disponibilidade')) {
             unset($data['gera_disponibilidade']);
         } elseif (!array_key_exists('gera_disponibilidade', $data)) {
-            $data['gera_disponibilidade'] = false;
+            $data['gera_disponibilidade'] = 'N';
         }
 
         $movimentacao = parent::create($data);
@@ -220,7 +220,7 @@ class MovimentacaoService extends AbstractBaseService
             'tipo_movimentacao_id' => 1, // adicao de veiculo
             'status_movimentacao_id' => $statusMovimentacao,
             'local_destino_id' => $data['local_disponibilidade'] ?? null,
-            'gera_disponibilidade' => true,
+            'gera_disponibilidade' => 'S',
             'data_registro' => Carbon::now(),
             'data_saida' => null,
             'data_chegada_prevista' => $dataHoraCarbon ?? Carbon::now(),
@@ -474,7 +474,7 @@ class MovimentacaoService extends AbstractBaseService
             }
         }
 
-        if (!empty($movimentacao->gera_disponibilidade)) {
+        if (in_array($movimentacao->gera_disponibilidade, ['S', 's', 1, '1', true], true)) {
             $updates['data_hora_disponibilidade'] = $movimentacao->data_chegada_real ?? now();
         }
 
@@ -655,7 +655,7 @@ class MovimentacaoService extends AbstractBaseService
                 'realizarCheckOut',
                 'registrarChegadaNaEstacao',
                 'registrarRetornoDaOficina',
-            ], true);
+            ], true) ? 'S' : 'N';
         }
 
         if ($dataChegadaPrevista !== null) {
@@ -676,4 +676,3 @@ class MovimentacaoService extends AbstractBaseService
         return $this->mapaMovimentacoes[$nomeFuncao] ?? throw new TipoEStatusMovimentacaoException("Função desconhecida: $nomeFuncao", 404);
     }
 }
-

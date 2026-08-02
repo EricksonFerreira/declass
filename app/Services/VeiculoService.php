@@ -468,7 +468,7 @@ class VeiculoService extends AbstractBaseService
                         ->from('movimentacoes as m2')
                         ->whereColumn('m2.veiculo_id', 'veiculos.id');
                 })
-                ->where('m.gera_disponibilidade', true);
+                ->where('m.gera_disponibilidade', 'S');
         });
 
         if ($estacaoFiltro === 'sem_estacao') {

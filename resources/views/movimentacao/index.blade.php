@@ -143,7 +143,7 @@
                             $isConcluido =
                                 strtolower($mov->statusMovimentacao?->nome ?? '') === 'concluído' ||
                                 strtolower($mov->statusMovimentacao?->nome ?? '') === 'concluido';
-                            $geraDisponibilidade = in_array($mov->gera_disponibilidade, [true, 1, '1', 'S', 's'], true);
+                            $geraDisponibilidade = in_array($mov->gera_disponibilidade, ['S', 's', true, 1, '1'], true);
                             $veiculoLabel = null;
                             if ($mov->veiculo) {
                                 $veiculoLabel = $mov->veiculo->nome ?? 'Veículo #' . $mov->veiculo->id;
