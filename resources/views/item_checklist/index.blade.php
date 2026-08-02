@@ -41,7 +41,7 @@
                         <div class="item-checklist-card__top">
                             <div>
                                 <div class="item-checklist-card__title">{{ $item_checklist->nome }}</div>
-                                <div class="item-checklist-card__meta">ID {{ $item_checklist->id }}</div>
+                                <div class="item-checklist-card__meta">#{{ $item_checklist->id }}</div>
                             </div>
                             <span class="badge badge-xs bg-{{ $item_checklist->ativo == 'S' ? 'success' : 'danger' }}">
                                 {{ $item_checklist->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
@@ -55,9 +55,9 @@
                         </div>
 
                         <div class="item-checklist-card__actions">
-                            <button type="button" class="btn btn-xs btn-warning btn-edit-item-checklist">
+                            {{-- <button type="button" class="btn btn-xs btn-warning btn-edit-item-checklist">
                                 <i class="fa fa-edit"></i> Editar
-                            </button>
+                            </button> --}}
                             <x-delete-button
                                 :action="route('item_checklist.destroy', $item_checklist->id)"
                                 titulo="Excluir"
@@ -172,7 +172,7 @@
         }
 
         .item-checklist-card__title {
-            font-size: .98rem;
+            font-size: .88rem;
             font-weight: 700;
             color: #0f2740;
             line-height: 1.25;
@@ -191,7 +191,7 @@
         }
 
         .item-checklist-card__hint {
-            font-size: .85rem;
+            font-size: .65rem;
             color: #64748b;
             line-height: 1.35;
         }

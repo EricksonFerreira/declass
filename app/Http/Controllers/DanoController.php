@@ -44,6 +44,7 @@ class DanoController extends BaseController implements FiltroInterface, Resource
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
         $danos = $this->danoService->getAllWithFiltersAndPagination($itensFiltered, $perPage,['categoria']);
+        $categorias = $this->categoriaDanoService->getAllForSelect();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Danos');
         $filters = $this->obterFiltrosPrincipais();
@@ -61,7 +62,8 @@ class DanoController extends BaseController implements FiltroInterface, Resource
             'itensFiltered',
             'additionalFilters',
             'perPages',
-            'perPage'
+            'perPage',
+            'categorias'
         ))->with('titulo', $this->titulo);
     }
 
@@ -142,6 +144,12 @@ class DanoController extends BaseController implements FiltroInterface, Resource
     {
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
+            ['name' => 'categoria_id', 'label' => 'Categoria', 'type' => 'select', 'typeWhere' => 'where', 'options' => $this->categoriaDanoService->getAllForSelect()],
+            ['name' => 'localizacao', 'label' => 'Localização', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
+                ['value' => '', 'label' => 'Selecione a localização', 'selected' => false],
+                ['value' => 'interior', 'label' => 'Interior', 'selected' => false],
+                ['value' => 'exterior', 'label' => 'Exterior', 'selected' => false],
+            ]],
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'S', 'label' => 'Ativo', 'selected' => false],

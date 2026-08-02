@@ -14,6 +14,7 @@ class Dano extends Model
         'nome',
         'ativo',
         'categoria_id',
+        'localizacao',
     ];
 
     public function veiculoDanos()

@@ -116,7 +116,7 @@
                         <div class="item-checklist-card__top">
                             <div>
                                 <div class="item-checklist-card__title"><?php echo e($item_checklist->nome); ?></div>
-                                <div class="item-checklist-card__meta">ID <?php echo e($item_checklist->id); ?></div>
+                                <div class="item-checklist-card__meta">#<?php echo e($item_checklist->id); ?></div>
                             </div>
                             <span class="badge badge-xs bg-<?php echo e($item_checklist->ativo == 'S' ? 'success' : 'danger'); ?>">
                                 <?php echo e($item_checklist->ativo == 'S' ? 'ATIVO' : 'INATIVO'); ?>
@@ -131,9 +131,7 @@
                         </div>
 
                         <div class="item-checklist-card__actions">
-                            <button type="button" class="btn btn-xs btn-warning btn-edit-item-checklist">
-                                <i class="fa fa-edit"></i> Editar
-                            </button>
+                            
                             <?php if (isset($component)) { $__componentOriginal2550ac35d7599d92e03b1bde3934d26a = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal2550ac35d7599d92e03b1bde3934d26a = $attributes; } ?>
 <?php $component = App\View\Components\DeleteButton::resolve(['action' => route('item_checklist.destroy', $item_checklist->id),'titulo' => 'Excluir','tituloMensagem' => 'Excluir item de checklist?','mensagem' => 'Tem certeza que deseja excluir este item?','textoConfirmacao' => 'Sim, excluir','btnClass' => 'btn btn-xs btn-danger'] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -281,7 +279,7 @@
         }
 
         .item-checklist-card__title {
-            font-size: .98rem;
+            font-size: .88rem;
             font-weight: 700;
             color: #0f2740;
             line-height: 1.25;
@@ -300,7 +298,7 @@
         }
 
         .item-checklist-card__hint {
-            font-size: .85rem;
+            font-size: .65rem;
             color: #64748b;
             line-height: 1.35;
         }

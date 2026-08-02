@@ -4,7 +4,7 @@
 
 @section('content_header')
     <x-breadcrumb :breadcrumbs="$breadcrumb" />
-    <x-page-title :title="$titulo" />
+    {{-- <x-page-title :title="$titulo" /> --}}
 @stop
 
 @section('content')
@@ -22,14 +22,15 @@
         .fp-hero__title { margin:.35rem 0 .25rem; font-size:1.7rem; font-weight:900; letter-spacing:-.02em; }
         .fp-hero__text { margin:0; max-width:62rem; color:rgba(255,255,255,.86); line-height:1.6; }
         .fp-grid { display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap:20px; }
-        @media (min-width: 1200px) { .fp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+        @media (min-width: 1200px) { .fp-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+        @media (min-width: 992px) and (max-width: 1199.98px) { .fp-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
         @media (max-width: 767px) { .fp-grid { grid-template-columns: 1fr; } }
         .fp-card {
             border:1px solid #dbe4f0; border-radius:18px; background:#fff; box-shadow:0 14px 36px rgba(15,23,42,.06);
             overflow:hidden; transition: transform .18s ease, box-shadow .18s ease;
         }
         .fp-card:hover { transform: translateY(-3px); box-shadow:0 18px 44px rgba(15,23,42,.1); }
-        .fp-card__body { padding:20px; display:flex; flex-direction:column; gap:14px; min-height: 220px; }
+        .fp-card__body { padding:20px; display:flex; flex-direction:column; gap:14px; min-height: 240px; }
         .fp-card__icon {
             width:60px; height:60px; border-radius:18px; display:flex; align-items:center; justify-content:center;
             font-size:1.5rem;
@@ -39,6 +40,7 @@
         .fp-card__action {
             margin-top:auto; display:inline-flex; align-items:center; justify-content:center;
             border-radius:12px; font-weight:800; min-height:42px;
+            width: 100%;
         }
         .bg-primary-light { background-color:#eff6ff; }
         .bg-success-light { background-color:#ecfdf5; }
@@ -46,6 +48,10 @@
         .bg-danger-light { background-color:#fef2f2; }
         .bg-warning-light { background-color:#fffbeb; }
         .bg-slate-light { background-color:#f1f5f9; }
+        .bg-violet-light { background-color:#f5f3ff; }
+        .bg-emerald-light { background-color:#ecfdf5; }
+        .bg-rose-light { background-color:#fff1f2; }
+        .bg-sky-light { background-color:#f0f9ff; }
     </style>
 
     <div class="fp-page">
@@ -59,6 +65,17 @@
         </section>
 
         <div class="fp-grid">
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-sky-light text-info"><i class="fas fa-wallet"></i></div>
+                    <div>
+                        <h4 class="fp-card__title">Portal Financeiro</h4>
+                        <p class="fp-card__text">Visão rápida com atalhos, indicadores e acesso organizado às principais rotinas financeiras.</p>
+                    </div>
+                    <a href="{{ route('financeiro.index') }}" class="btn btn-info text-white fp-card__action">Abrir portal</a>
+                </div>
+            </div>
+
             <div class="fp-card">
                 <div class="fp-card__body">
                     <div class="fp-card__icon bg-success-light text-success"><i class="fas fa-receipt"></i></div>
@@ -83,6 +100,17 @@
 
             <div class="fp-card">
                 <div class="fp-card__body">
+                    <div class="fp-card__icon bg-violet-light text-primary"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div>
+                        <h4 class="fp-card__title">Lançamentos</h4>
+                        <p class="fp-card__text">Acompanhe entradas e saídas registradas no fluxo de caixa com acesso direto à listagem operacional.</p>
+                    </div>
+                    <a href="{{ route('financeiro.fluxo-caixa.index') }}" class="btn btn-primary fp-card__action">Ver lançamentos</a>
+                </div>
+            </div>
+
+            <div class="fp-card">
+                <div class="fp-card__body">
                     <div class="fp-card__icon bg-danger-light text-danger"><i class="fas fa-file-invoice"></i></div>
                     <div>
                         <h4 class="fp-card__title">Notas Fiscais (NFS-e)</h4>
@@ -100,6 +128,28 @@
                         <p class="fp-card__text">Monitore pendências, reservas próximas e cobranças pessoais com justificativa.</p>
                     </div>
                     <a href="{{ route('financeiro.analise-clientes') }}" class="btn btn-primary fp-card__action">Abrir análise</a>
+                </div>
+            </div>
+
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-emerald-light text-success"><i class="fas fa-file-invoice-dollar"></i></div>
+                    <div>
+                        <h4 class="fp-card__title">Contas a Pagar</h4>
+                        <p class="fp-card__text">Concentre despesas, vencimentos e pendências em uma tela de controle financeiro operacional.</p>
+                    </div>
+                    <a href="{{ route('financeiro.contas-pagar') }}" class="btn btn-success fp-card__action">Abrir contas a pagar</a>
+                </div>
+            </div>
+
+            <div class="fp-card">
+                <div class="fp-card__body">
+                    <div class="fp-card__icon bg-emerald-light text-success"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div>
+                        <h4 class="fp-card__title">Contas a Receber</h4>
+                        <p class="fp-card__text">Acompanhe cobranças, recebimentos e valores em aberto com leitura rápida da carteira.</p>
+                    </div>
+                    <a href="{{ route('financeiro.contas-receber') }}" class="btn btn-success fp-card__action">Abrir contas a receber</a>
                 </div>
             </div>
 

@@ -9,19 +9,21 @@ use App\Http\Requests\ItemChecklist\UpdateItemChecklistRequest;
 use App\Services\BreadcrumbService;
 use App\Services\ItemChecklistService;
 use App\Traits\AtualizaFiltrosTrait;
-use Illuminate\Http\Request;
 use App\Traits\FiltroTrait;
+use Illuminate\Http\Request;
 
 class ItemChecklistController extends BaseController implements FiltroInterface, ResourceInterface
 {
-    use FiltroTrait;
     use AtualizaFiltrosTrait;
+    use FiltroTrait;
+
     protected $item_checklistService;
+
     protected $breadcrumbService;
 
     public function __construct(ItemChecklistService $item_checklistService, BreadcrumbService $breadcrumbService)
     {
-        $this->titulo = "ItemChecklists";
+        $this->titulo = 'Itens de Checklist';
         $this->nomeFiltro = 'item_checklist';
         $this->item_checklistService = $item_checklistService;
         $this->breadcrumbService = $breadcrumbService;
@@ -36,7 +38,7 @@ class ItemChecklistController extends BaseController implements FiltroInterface,
 
         $item_checklists = $this->item_checklistService->getAllWithFiltersAndPagination($itensFiltered, $perPage);
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('ItemChecklists');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Itens de Checklist');
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -56,15 +58,17 @@ class ItemChecklistController extends BaseController implements FiltroInterface,
         ))->with('titulo', $this->titulo);
     }
 
-    public function create(){
+    public function create()
+    {
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('ItemChecklists','item_checklist.index','Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('ItemChecklists', 'item_checklist.index', 'Criar');
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('item_checklist.add-edit', compact('breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+
+        return view('item_checklist.add-edit', compact('breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreItemChecklistRequest $request)
@@ -79,29 +83,32 @@ class ItemChecklistController extends BaseController implements FiltroInterface,
         $item_checklist = $this->item_checklistService->getById($id);
         $status = [
             'S' => 'Ativo',
-            'N' => 'Inativo'
+            'N' => 'Inativo',
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('ItemChecklists','item_checklist.index',"Editar: $item_checklist->nome");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('ItemChecklists', 'item_checklist.index', "Editar: $item_checklist->nome");
         [$metodo,$rota] = $this->getFormMethodAndRoute($item_checklist);
 
-        return view('item_checklist.add-edit', compact('item_checklist','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('item_checklist.add-edit', compact('item_checklist', 'breadcrumb', 'status', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateItemChecklistRequest $request, $id)
     {
-        $success = $this->item_checklistService->update($id,$request->all());
+        $success = $this->item_checklistService->update($id, $request->all());
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function destroy($id)
     {
         $success = $this->item_checklistService->delete($id);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function filtro(Request $request)
     {
         $this->criarFiltros($request, $this->nomeFiltro);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -109,6 +116,7 @@ class ItemChecklistController extends BaseController implements FiltroInterface,
     {
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -134,8 +142,8 @@ class ItemChecklistController extends BaseController implements FiltroInterface,
             ['name' => 'ativo', 'label' => 'Status', 'type' => 'select', 'typeWhere' => 'where', 'options' => [
                 ['value' => '', 'label' => 'Selecione o status', 'selected' => false],
                 ['value' => 'S', 'label' => 'Ativo', 'selected' => false],
-                ['value' => 'N', 'label' => 'Inativo', 'selected' => false]
-            ]]
+                ['value' => 'N', 'label' => 'Inativo', 'selected' => false],
+            ]],
         ];
     }
 

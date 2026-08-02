@@ -462,14 +462,19 @@ return [
                     'icon' => 'fas fa-home',
                 ],
                 [
-                    'text' => 'Faturamento por Reserva',
-                    'route' => 'financeiro.reservas',
-                    'icon' => 'fas fa-receipt',
-                ],
-                [
                     'text' => 'Fluxo de Caixa',
                     'route' => 'financeiro.fluxo-caixa.dashboard',
                     'icon' => 'fas fa-chart-pie',
+                ],
+                [
+                    'text' => 'Lançamentos',
+                    'route' => 'financeiro.fluxo-caixa.index',
+                    'icon' => 'fas fa-file-invoice-dollar',
+                ],
+                [
+                    'text' => 'Faturamento por Reserva',
+                    'route' => 'financeiro.reservas',
+                    'icon' => 'fas fa-receipt',
                 ],
                 [
                     'text' => 'Contas a Pagar',
@@ -482,17 +487,12 @@ return [
                     'icon' => 'fas fa-hand-holding-usd',
                 ],
                 [
-                    'text' => 'AnÃ¡lise por Cliente',
+                    'text' => 'Análise por Cliente',
                     'route' => 'financeiro.analise-clientes',
                     'icon' => 'fas fa-user-friends',
                 ],
                 [
-                    'text' => 'LanÃ§amentos',
-                    'route' => 'financeiro.fluxo-caixa.index',
-                    'icon' => 'fas fa-file-invoice-dollar',
-                ],
-                [
-                    'text' => 'AnÃ¡lise por VeÃ­culo',
+                    'text' => 'Análise por Veículo',
                     'route' => 'financeiro.analise-veiculos',
                     'icon' => 'fas fa-car-side',
                 ],
