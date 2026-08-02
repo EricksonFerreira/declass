@@ -43,7 +43,7 @@ trait ReservaHelpersTrait
         if (!empty($reserva->estacao_retirada_id) && !empty($veiculo->local_disponibilidade)) {
             if ((int) $veiculo->local_disponibilidade !== (int) $reserva->estacao_retirada_id) {
                 throw ValidationException::withMessages([
-                    'veiculo_id' => 'Veiculo selecionado nao esta disponivel na estacao de retirada desta reserva.',
+                    'veiculo_id' => 'Veículo selecionado não esta disponível na estacão de retirada desta reserva.',
                 ]);
             }
         }

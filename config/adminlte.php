@@ -113,7 +113,7 @@ return [
         'enabled' => true,
         'mode' => 'cwrapper',
         'img' => [
-            'path' => 'public/assets/imgs/logo-sem-texto.png',
+            'path' => 'assets/imgs/logo-sem-texto.png',
             'alt' => 'Imagem de Pré-carregamento DECARS',
             'effect' => 'animation__shake',
             'width' => 160,

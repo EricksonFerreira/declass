@@ -9,12 +9,36 @@ use Illuminate\Validation\Rule;
 
 class StoreVeiculoRequest extends FormRequest
 {
+    private const PLACA_BR_REGEX = '/^(?:[A-Z]{3}\d[A-Z0-9]\d{2}|[A-Z]{3}\d{4})$/';
+
     /**
      * Determine if the user is authorized to make this request.
      */
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('cor')) {
+            $this->merge([
+                'cor' => strtoupper(trim((string) $this->input('cor'))),
+            ]);
+        }
+
+        if ($this->has('placa_licenca')) {
+            $this->merge([
+                'placa_licenca' => strtoupper(trim((string) $this->input('placa_licenca'))),
+            ]);
+        }
+
+        $dataHora = trim((string) $this->input('data_hora_disponibilidade', ''));
+        if ($dataHora !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataHora)) {
+            $this->merge([
+                'data_hora_disponibilidade' => $dataHora . ' 00:00',
+            ]);
+        }
     }
 
     /**
@@ -28,21 +52,24 @@ class StoreVeiculoRequest extends FormRequest
 
         $marcaExists = Rule::exists('marcas', 'id');
         $modeloExists = Rule::exists('modelos', 'id');
+        $nomeFrotaUnique = Rule::unique('grupos_frota', 'nome');
 
         if ($empresaId !== null) {
             $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
             $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $nomeFrotaUnique = $nomeFrotaUnique->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
         }
 
         return [
             'status_veiculo_id' => 'required|string|max:2',
             'tipo_frota_id' => 'required|integer|exists:tipo_frota,id',
-            'grupo_frota_id' => 'required|integer|exists:grupos_frota,id',
+            'grupo_frota_id' => 'nullable|integer|exists:grupos_frota,id|required_without:nome_frota',
+            'nome_frota' => ['nullable', 'string', 'max:255', 'required_without:grupo_frota_id', $nomeFrotaUnique],
             'marca_id' => ['required', 'integer', $marcaExists],
             'modelo_id' => ['required', 'integer', $modeloExists],
             'data_vendido' => 'nullable|date',
             'ano_fabricacao' => 'required|integer|min:1900|max:' . date('Y'),
-            'placa_licenca' => 'required|string|max:10',
+            'placa_licenca' => ['required', 'string', 'max:7', 'regex:' . self::PLACA_BR_REGEX],
             'chassi' => 'nullable|string|max:17',
             'cor' => 'required|string|max:50',
             'numero_motor' => 'nullable|string|max:50',
@@ -61,8 +88,8 @@ class StoreVeiculoRequest extends FormRequest
             'limite_kms' => 'nullable|integer|min:0',
             'proxima_revisao_kms' => 'nullable|integer|min:0',
             'proxima_manutencao_kms' => 'nullable|integer|min:0',
-            'local_disponibilidade' => 'nullable|string|max:11',
-            'data_hora_disponibilidade' => 'nullable|date',
+            'local_disponibilidade' => 'nullable|string|max:11|required_with:data_hora_disponibilidade',
+            'data_hora_disponibilidade' => 'nullable|date|required_with:local_disponibilidade',
         ];
     }
 
@@ -74,9 +101,11 @@ class StoreVeiculoRequest extends FormRequest
             'tipo_frota_id.required' => 'O campo tipo de frota é obrigatório',
             'tipo_frota_id.integer' => 'O campo tipo de frota deve ser um número inteiro',
             'tipo_frota_id.exists' => 'O campo tipo de frota deve existir na tabela tipo_frotas',
-            'grupo_frota_id.required' => 'O campo grupo de frota é obrigatório',
+            'grupo_frota_id.required' => 'Selecione um grupo de frota ou informe um novo nome de frota',
             'grupo_frota_id.integer' => 'O campo grupo de frota deve ser um número inteiro',
             'grupo_frota_id.exists' => 'O campo grupo de frota deve existir na tabela grupo_frotas',
+            'nome_frota.max' => 'O nome da frota deve ter no máximo 255 caracteres',
+            'nome_frota.unique' => 'Já existe uma frota com este nome para esta empresa',
             'marca_id.required' => 'O campo marca é obrigatório',
             'marca_id.integer' => 'O campo marca deve ser um número inteiro',
             'marca_id.exists' => 'O campo marca deve existir na tabela marcas',
@@ -89,7 +118,8 @@ class StoreVeiculoRequest extends FormRequest
             'ano_fabricacao.min' => 'O campo ano de fabricação deve ser no mínimo 1900',
             'ano_fabricacao.max' => 'O campo ano de fabricação deve ser no máximo o ano atual',
             'placa_licenca.required' => 'O campo placa é obrigatório',
-            'placa_licenca.max' => 'O campo placa deve ter no máximo 10 caracteres',
+            'placa_licenca.max' => 'O campo placa deve ter no máximo 7 caracteres',
+            'placa_licenca.regex' => 'O campo placa deve estar no formato brasileiro válido: ABC1234 ou ABC1D23',
             'chassi.required' => 'O campo chassi é obrigatório',
             'chassi.max' => 'O campo chassi deve ter no máximo 17 caracteres',
             'cor.required' => 'O campo cor é obrigatório',
@@ -124,7 +154,9 @@ class StoreVeiculoRequest extends FormRequest
             'proxima_manutencao_kms.min' => 'O campo quilometragem da próxima manutenção deve ser no mínimo 0',
             'proxima_manutencao_kms.gte' => 'A quilometragem da próxima manutenção não pode ser menor que a quilometragem atual',
                         'local_disponibilidade.max' => 'O campo local de disponibilidade deve ter no máximo 11 caracteres',
+                        'local_disponibilidade.required_with' => 'Se informar a data e hora de disponibilidade, selecione a estação de origem',
                         'data_hora_disponibilidade.date' => 'O campo data e hora de disponibilidade deve ser uma data válida',
+                        'data_hora_disponibilidade.required_with' => 'Se informar a estação de origem, informe a data e hora de disponibilidade',
         ];
 
             // 'status_veiculo_id.required' => 'O campo status é obrigatório',

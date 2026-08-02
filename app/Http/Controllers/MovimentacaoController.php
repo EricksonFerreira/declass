@@ -62,7 +62,7 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'reserva',
         ], 'id', 'desc');
 
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Movimentações');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex("Movimentações");
         $filters = $this->obterFiltrosPrincipais();
         $additionalFilters = $this->obterFiltrosSecundarios();
 
@@ -72,8 +72,8 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $perPages = [5, 10, 15, 25, 50, 100];
         $empresaId = $this->empresaIdParaConsulta();
         $statusList = \App\Models\StatusMovimentacao::query()
-            ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
-            ->orderBy('nome')->get(['id', 'nome', 'cor']);
+            ->orderBy('nome')
+            ->get(['id', 'nome', 'cor']);
 
         return view('movimentacao.index', compact(
             'movimentacaos',
@@ -90,7 +90,7 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
     public function create()
     {
         $status = ['S' => 'Ativo', 'N' => 'Inativo'];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Movimentações', 'movimentacao.index', 'Criar');
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate("Movimentações", 'movimentacao.index', 'Criar');
 
         $prefill = [
             'veiculo_id' => (int) request()->query('veiculo_id', 0) ?: null,
@@ -113,12 +113,17 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         }
 
         $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
-        $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $statusMovimentacao = \App\Models\StatusMovimentacao::query()
+            ->orderBy('nome')
+            ->get()
+            ->mapWithKeys(fn ($status) => [$status->id => $status->nome])
+            ->toArray();
         $empresaId = $this->empresaIdParaConsulta();
         $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::query()
             ->orderBy('nome')->get();
         $statusMovimentacaoObj = \App\Models\StatusMovimentacao::query()
-            ->orderBy('nome')->get();
+            ->orderBy('nome')
+            ->get();
         $usuariosObj = \App\Models\User::query()
             ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
             ->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
@@ -170,15 +175,20 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Movimentações', 'movimentacao.index', "Editar: #{$movimentacao->id}");
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit("Movimentações", 'movimentacao.index', "Editar: #{$movimentacao->id}");
 
         $tiposMovimentacao = $this->tipoMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
-        $statusMovimentacao = $this->statusMovimentacaoService->getAllFormatSelect('id', 'nome', 'nome', 'asc');
+        $statusMovimentacao = \App\Models\StatusMovimentacao::query()
+            ->orderBy('nome')
+            ->get()
+            ->mapWithKeys(fn ($status) => [$status->id => $status->nome])
+            ->toArray();
         $empresaId = $this->empresaIdParaConsulta();
         $tiposMovimentacaoObj = \App\Models\TipoMovimentacao::query()
             ->orderBy('nome')->get();
         $statusMovimentacaoObj = \App\Models\StatusMovimentacao::query()
-            ->orderBy('nome')->get();
+            ->orderBy('nome')
+            ->get();
         $usuariosObj = \App\Models\User::query()
             ->when($empresaId !== null, fn ($query) => $query->where('empresa_id', $empresaId))
             ->orderBy('nome')->get(['id', 'nome', 'email', 'numero_identificacao']);
@@ -260,11 +270,11 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
         return response()->json($query->get()->map(fn($r) => [
             'id'      => $r->id,
-            'cliente' => $r->usuario?->nome ?? '—',
-            'grupo'   => $r->grupoFrota?->nome ?? '—',
-            'status'  => $r->statusReserva?->nome ?? '—',
-            'inicio'  => $r->data_inicio ? \Carbon\Carbon::parse($r->data_inicio)->format('d/m/Y') : '—',
-            'fim'     => $r->data_fim    ? \Carbon\Carbon::parse($r->data_fim)->format('d/m/Y')    : '—',
+            'cliente' => $r->usuario?->nome ?? 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+            'grupo'   => $r->grupoFrota?->nome ?? 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+            'status'  => $r->statusReserva?->nome ?? 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+            'inicio'  => $r->data_inicio ? \Carbon\Carbon::parse($r->data_inicio)->format('d/m/Y') : 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+            'fim'     => $r->data_fim    ? \Carbon\Carbon::parse($r->data_fim)->format('d/m/Y')    : 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
         ]));
     }
 
@@ -281,8 +291,8 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         return response()->json($query->get()->map(fn($os) => [
             'id'     => $os->id,
             'numero' => $os->numero ?? ('#' . $os->id),
-            'status' => $os->status ?? '—',
-            'data'   => $os->created_at?->format('d/m/Y') ?? '—',
+            'status' => $os->status ?? 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
+            'data'   => $os->created_at?->format('d/m/Y') ?? 'ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â',
         ]));
     }
 
@@ -315,10 +325,10 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
 
     public function setPerPage(Request $request)
     {
-        // Salva o valor de paginação na sessão
+        // Salva o valor de paginaÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â§ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o na sessÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â£o
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
-        // Redireciona de volta para a página de listagem
+        // Redireciona de volta para a pÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¡gina de listagem
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -339,18 +349,38 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         $statusMovimentacao = $this->statusMovimentacaoService->getAllAtivos('id','nome','nome','asc');
         $dadosStatusMovimentacao = FiltroTrait::formatOptions($statusMovimentacao, 'Selecione o status da Movimentação');
 
+        $estacoes = $this->estacaoService->listarAtivasParaModal();
+        $dadosEstacoes = FiltroTrait::formatOptions($estacoes->pluck('nome', 'id')->toArray(), 'Selecione a estação');
+
+        $veiculos = $this->veiculoService->listarAtivosParaOrdemServico(200);
+        $dadosVeiculos = FiltroTrait::formatOptions(
+            $veiculos->mapWithKeys(function ($veiculo) {
+                $label = (string) ($veiculo->nome ?? ('Veículo #' . (int) $veiculo->id));
+                if (!empty($veiculo->placa_licenca)) {
+                    $label .= ' - ' . $veiculo->placa_licenca;
+                }
+                return [(int) $veiculo->id => $label];
+            })->toArray(),
+            'Selecione o veículo'
+        );
+
         return [
             ['name' => 'tipo_movimentacao_id', 'label'=> 'Tipos de Movimentações','type'=>'select','typeWhere' => 'where','options'=> $dadosTipoMovimentacao],
             ['name' => 'user_id', 'label'=> 'Usuários','type'=>'select','typeWhere' => 'where','options'=> $dadosUsuario],
             ['name' => 'status_movimentacao_id', 'label'=> 'Status das Movimentações','type'=>'select','typeWhere' => 'where','options'=> $dadosStatusMovimentacao],
+            ['name' => 'local_origem_id', 'label'=> 'Estação','type'=>'select','typeWhere' => 'where','options'=> $dadosEstacoes],
+            ['name' => 'veiculo_id', 'label'=> 'Veículo','type'=>'select','typeWhere' => 'where','options'=> $dadosVeiculos],
+            ['name' => 'gera_disponibilidade', 'label'=> 'Gerou disponibilidade','type'=>'select','typeWhere' => 'where','options'=> [
+                '' => 'Todas',
+                '1' => 'S',
+                '0' => 'N',
+            ]],
         ];
     }
 
     public function obterFiltrosSecundarios()
     {
-        return [
-            // Adicione filtros secundários aqui, se necessário
-        ];
+        return [];
     }
 
     /**
@@ -374,3 +404,4 @@ class MovimentacaoController extends BaseController implements FiltroInterface, 
         ];
     }
 }
+

@@ -2,6 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Veiculo\CreateVeiculoAction;
+use App\Actions\Veiculo\EditVeiculoAction;
+use App\Actions\Veiculo\FiltroVeiculoAction;
+use App\Actions\Veiculo\IndexVeiculoAction;
+use App\Actions\Veiculo\StoreVeiculoAction;
 use App\DTO\BreadCrumbItem;
 use App\Enums\StatusReservaEnum;
 use App\Http\Controllers\Interfaces\FiltroInterface;
@@ -65,6 +70,16 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     protected $fipeCatalogService;
 
+    protected $indexVeiculoAction;
+
+    protected $createVeiculoAction;
+
+    protected $storeVeiculoAction;
+
+    protected $editVeiculoAction;
+
+    protected $filtroVeiculoAction;
+
     public function __construct(
         VeiculoService $veiculoService,
         BreadcrumbService $breadcrumbService,
@@ -76,7 +91,12 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         StatusVeiculoService $statusVeiculoService,
         EstacaoService $estacaoService,
         DisponibilidadeVeiculoService $disponibilidadeVeiculoService,
-        FipeCatalogService $fipeCatalogService
+        FipeCatalogService $fipeCatalogService,
+        IndexVeiculoAction $indexVeiculoAction,
+        CreateVeiculoAction $createVeiculoAction,
+        StoreVeiculoAction $storeVeiculoAction,
+        EditVeiculoAction $editVeiculoAction,
+        FiltroVeiculoAction $filtroVeiculoAction
     ) {
         $this->titulo = 'Veiculos';
         $this->nomeFiltro = 'veiculo';
@@ -91,142 +111,28 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->estacaoService = $estacaoService;
         $this->disponibilidadeVeiculoService = $disponibilidadeVeiculoService;
         $this->fipeCatalogService = $fipeCatalogService;
+        $this->indexVeiculoAction = $indexVeiculoAction;
+        $this->createVeiculoAction = $createVeiculoAction;
+        $this->storeVeiculoAction = $storeVeiculoAction;
+        $this->editVeiculoAction = $editVeiculoAction;
+        $this->filtroVeiculoAction = $filtroVeiculoAction;
     }
 
     public function index()
     {
-        $this->configurarSessao();
-
-        $itensFiltered = session("$this->nomeFiltro.filtro", []);
-        $perPage = session()->get("$this->nomeFiltro.perPage", 10);
-        $orderBy = session()->get("$this->nomeFiltro.orderBy", 'id');
-        $orderDir = session()->get("$this->nomeFiltro.orderDir", 'asc');
-
-        $allowedOrderBy = [
-            'id',
-            'nome',
-            'placa_licenca',
-            'renavam',
-            'ano_fabricacao',
-            'kms',
-            'created_at',
-        ];
-
-        if (! in_array($orderBy, $allowedOrderBy, true)) {
-            $orderBy = 'id';
-        }
-
-        $veiculos = $this->veiculoService->getAllWithFiltersAndPagination(
-            $itensFiltered,
-            $perPage,
-            [],
-            $orderBy,
-            $orderDir
-        );
-
-        /*
-     * Correção:
-     * A listagem agora usa a mesma regra da tela de disponibilidade.
-     * Não considera apenas data_hora_disponibilidade.
-     */
-        $dispAnoIndex = (int) request()->query('disp_ano', date('Y'));
-        $dispMesIndex = (int) request()->query('disp_mes', date('n'));
-
-        if ($dispMesIndex < 1 || $dispMesIndex > 12) {
-            $dispMesIndex = (int) date('n');
-        }
-
-        if ($dispAnoIndex < 2024 || $dispAnoIndex > ((int) date('Y') + 1)) {
-            $dispAnoIndex = (int) date('Y');
-        }
-
-        $veiculosCollection = method_exists($veiculos, 'getCollection')
-            ? $veiculos->getCollection()
-            : collect($veiculos);
-
-        $resultadoDisponibilidadeIndex = $this->disponibilidadeVeiculoService->montarGradeMensal(
-            $veiculosCollection,
-            $dispAnoIndex,
-            $dispMesIndex
-        );
-
-        $resumoVeiculosIndex = $resultadoDisponibilidadeIndex['resumoVeiculos'] ?? [];
-        $gradeVeiculosIndex = $resultadoDisponibilidadeIndex['grade'] ?? [];
-
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbIndex('Veiculos');
-        $filters = $this->obterFiltrosPrincipais();
-        $additionalFilters = $this->obterFiltrosSecundarios();
-
-        $this->atualizarFiltros($itensFiltered, $filters);
-        $this->atualizarFiltros($itensFiltered, $additionalFilters);
-
-        $perPages = [5, 10, 15, 25, 50, 100];
-
-        return view('veiculo.index', compact(
-            'veiculos',
-            'breadcrumb',
-            'filters',
-            'itensFiltered',
-            'additionalFilters',
-            'perPages',
-            'perPage',
-            'orderBy',
-            'orderDir',
-            'resumoVeiculosIndex',
-            'gradeVeiculosIndex',
-            'dispAnoIndex',
-            'dispMesIndex'
-        ))->with('titulo', $this->titulo);
+        return view('veiculo.index', $this->indexVeiculoAction->handle($this))
+            ->with('titulo', $this->titulo);
     }
 
     public function create()
     {
-        $status = [
-            'S' => 'Ativo',
-            'N' => 'Inativo',
-        ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Veiculos', 'veiculo.index', 'Criar');
-
-        $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
-        $grupoFrotas = $this->grupoFrotaService->getAllAtivos();
-        $marcas = $this->marcaService->getAllAtivos();
-        $modelosDetalhados = $this->modeloService->getModel()->newQuery()
-            ->where('ativo', 'S')
-            ->orderBy('nome')
-            ->get(['id', 'nome', 'ano_modelo']);
-        $modelos = $modelosDetalhados->pluck('nome', 'id')->all();
-        $modelosAno = $modelosDetalhados->pluck('ano_modelo', 'id')->all();
-        $segmentos = $this->segmentoService->getAllAtivos();
-        $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
-        $estacoes = $this->estacaoService->getAllAtivos();
-        $defaultStatusId = $this->statusVeiculoService->getModel()->newQuery()
-            ->whereRaw('LOWER(nome) = ?', ['ativo'])
-            ->value('id');
-
-        [$metodo, $rota] = $this->getFormMethodAndRoute();
-
-        return view('veiculo.add-edit', compact(
-            'tipoFrotas',
-            'grupoFrotas',
-            'marcas',
-            'modelos',
-            'modelosAno',
-            'estacoes',
-            'segmentos',
-            'statusVeiculos',
-            'defaultStatusId',
-            'breadcrumb',
-            'status',
-            'metodo',
-            'rota'
-        ))->with('titulo', $this->titulo);
+        return view('veiculo.add-edit', $this->createVeiculoAction->handle($this))
+            ->with('titulo', $this->titulo);
     }
 
     public function store(StoreVeiculoRequest $request)
     {
-        $this->veiculoService->create($request->all());
-
-        return $this->redirecionaRotaRedirect($this->nomeFiltro);
+        return $this->storeVeiculoAction->handle($request, $this->nomeFiltro);
     }
 
     public function consultarFipe(Request $request): JsonResponse
@@ -244,18 +150,24 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $dados = $request->validate([
             'marca_id' => ['required', 'integer', $marcaExists],
             'modelo_id' => ['required', 'integer', $modeloExists],
+            'ano_modelo' => ['nullable', 'integer', 'min:1900', 'max:'.(now()->year + 2)],
+            'ano_fabricacao' => ['nullable', 'integer', 'min:1900', 'max:'.(now()->year + 2)],
         ]);
 
         $marca = Marca::query()->find($dados['marca_id']);
         $modelo = Modelo::query()->find($dados['modelo_id']);
 
         if (! $marca || ! $modelo) {
-            return response()->json(['message' => 'Marca ou modelo nao encontrado no cadastro local.'], 422);
+            return response()->json(['message' => 'Marca ou modelo não encontrado no cadastro local.'], 422);
         }
 
-        $anoModelo = (int) ($modelo->ano_modelo ?? 0);
+        $anoModelo = (int) ($dados['ano_modelo'] ?? $dados['ano_fabricacao'] ?? 0);
         if ($anoModelo <= 0) {
-            return response()->json(['message' => 'O modelo selecionado nao possui ano modelo cadastrado.'], 422);
+            $anoModelo = (int) ($modelo->ano_modelo ?? 0);
+        }
+
+        if ($anoModelo <= 0) {
+            return response()->json(['message' => 'Informe o ano do veiculo para consultar a FIPE.'], 422);
         }
 
         $vehicleType = (string) ($modelo->vehicle_type ?? $marca->vehicle_type ?? config('services.fipe.vehicle_type', 'cars'));
@@ -308,7 +220,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             );
 
             $anoApi = collect($anosResponse)->first(function (array $item) use ($anoModelo) {
-                return Str::contains((string) ($item['name'] ?? $item['nome'] ?? ''), (string) $anoModelo);
+                $descricaoAno = (string) ($item['name'] ?? $item['nome'] ?? '');
+
+                return Str::contains($descricaoAno, (string) $anoModelo);
             });
 
             if (! $anoApi) {
@@ -432,7 +346,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $dispFirstDow = (int) Carbon::create($dispAno, $dispMes, 1)->dayOfWeekIso;
 
         /*
- * Correção:
+ * CorreÃƒÂ§ÃƒÂ£o:
  * A tela show agora usa o mesmo service da grade mensal.
  * Assim, index, show e disponibilidade seguem a mesma regra.
  */
@@ -557,7 +471,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $finValorProtegidoDepreciacao = $veiculo->valor_protegido_depreciacao !== null ? (float) $veiculo->valor_protegido_depreciacao : null;
         $finRentabilidade = ($finValorCompra > 0) ? ($finLucroLiquido / $finValorCompra * 100) : null;
 
-        // Payback: meses desde a compra e receita líquida média mensal
+        // Payback: meses desde a compra e receita lÃƒÂ­quida mÃƒÂ©dia mensal
         $finPaybackMeses = null;
         if ($finValorCompra > 0 && ! empty($veiculo->data_compra)) {
             $mesesUso = (int) Carbon::parse($veiculo->data_compra)->diffInMonths(Carbon::now());
@@ -657,7 +571,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'status' => 'pendente',
         ]);
 
-        return back()->with('success', 'Manutenção marcada como concluída.');
+        return back()->with('success', 'ManutenÃƒÂ§ÃƒÂ£o marcada como concluÃƒÂ­da.');
     }
 
     private function garantirRegistroInicialManutencaoPreventiva(\App\Models\Veiculo $veiculo): void
@@ -712,44 +626,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function edit($id)
     {
-        $veiculo = $this->veiculoService->getById($id);
-        $status = [
-            'S' => 'Ativo',
-            'N' => 'Inativo',
-        ];
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Veiculos', 'veiculo.index', "Editar: $veiculo->nome");
-        [$metodo, $rota] = $this->getFormMethodAndRoute($veiculo);
-
-        $tipoFrotas = $this->tipoFrotaService->getAllAtivos();
-        $grupoFrotas = $this->grupoFrotaService->getAllAtivos();
-        $marcas = $this->marcaService->getAllAtivos();
-        $modelosDetalhados = $this->modeloService->getModel()->newQuery()
-            ->where('ativo', 'S')
-            ->orderBy('nome')
-            ->get(['id', 'nome', 'ano_modelo']);
-        $modelos = $modelosDetalhados->pluck('nome', 'id')->all();
-        $modelosAno = $modelosDetalhados->pluck('ano_modelo', 'id')->all();
-        $segmentos = $this->segmentoService->getAllAtivos();
-        $statusVeiculos = $this->statusVeiculoService->getAllAtivos();
-        $estacoes = $this->estacaoService->getAllAtivos();
-        $defaultStatusId = $veiculo->status_veiculo_id;
-
-        return view('veiculo.add-edit', compact(
-            'veiculo',
-            'tipoFrotas',
-            'grupoFrotas',
-            'marcas',
-            'estacoes',
-            'modelos',
-            'modelosAno',
-            'segmentos',
-            'statusVeiculos',
-            'defaultStatusId',
-            'breadcrumb',
-            'status',
-            'metodo',
-            'rota'
-        ))->with('titulo', $this->titulo);
+        return view('veiculo.add-edit', $this->editVeiculoAction->handle($this, $id))
+            ->with('titulo', $this->titulo);
     }
 
     public function update(UpdateVeiculoRequest $request, $id)
@@ -794,7 +672,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 ->route('veiculo.index')
                 ->with(
                     'error',
-                    'O veículo não pode ser arquivado porque possui reservas futuras ou em andamento: '.$codigos.'. Troque o veículo ou finalize/cancele essas reservas primeiro.'
+                    'O veiculo não pode ser arquivado porque possui reservas futuras ou em andamento: '.$codigos.'. Troque o veiculo ou finalize/cancele essas reservas primeiro.'
                 );
         }
 
@@ -842,11 +720,11 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 ];
 
                 if (SchemaCache::hasColumn('movimentacoes', 'nome')) {
-                    $movimentacao['nome'] = 'Arquivamento do veículo';
+                    $movimentacao['nome'] = 'Arquivamento do veiculo';
                 }
 
                 if (SchemaCache::hasColumn('movimentacoes', 'observacoes')) {
-                    $movimentacao['observacoes'] = 'Veículo arquivado e retirado da operação pelo usuário '.(Auth::user()?->nome ?? Auth::id() ?? 'não identificado').'.';
+                    $movimentacao['observacoes'] = 'Veículo arquivado e retirado da operaÃƒÂ§ÃƒÂ£o pelo usuÃƒÂ¡rio '.(Auth::user()?->nome ?? Auth::id() ?? 'não identificado').'.';
                 }
 
                 if (SchemaCache::hasColumn('movimentacoes', 'user_id')) {
@@ -871,7 +749,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         return redirect()
             ->route('veiculo.index')
-            ->with('success', 'Veículo arquivado com sucesso. Todo o histórico foi preservado.');
+            ->with('success', 'Veículo arquivado com sucesso. Todo o histÃƒÂ³rico foi preservado.');
     }
 
     public function gruposPorTipo(Request $request)
@@ -1183,7 +1061,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'ano_mod' => $v->modelo?->ano_modelo ?? '',
             'cor' => $v->cor ?? '',
             'kms' => $v->kms !== null ? number_format((float) $v->kms, 0, ',', '.') : '',
-            'ativo' => $v->ativo ? 'Sim' : 'Não',
+            'ativo' => $v->ativo ? 'Sim' : 'não',
             'estacao' => $v->localDisponibilidade?->nome ?? '',
         ]);
 
@@ -1200,7 +1078,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $meses = [
             1 => 'Janeiro',
             2 => 'Fevereiro',
-            3 => 'Março',
+            3 => 'MarÃƒÂ§o',
             4 => 'Abril',
             5 => 'Maio',
             6 => 'Junho',
@@ -1225,7 +1103,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
         $estacaoFiltro = $request->input('estacao_id');
 
-        $veiculos = $this->veiculoService->getVeiculosDisponibilidade($estacaoFiltro, 1000);
+        $veiculos = $this->veiculoService->getVeiculosDisponiveisPorUltimaMovimentacao($estacaoFiltro, 1000);
 
         $veiculosCollection = method_exists($veiculos, 'getCollection')
             ? $veiculos->getCollection()
@@ -1279,9 +1157,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $itens = [
             ['titulo' => 'Documento do veículo', 'descricao' => 'Cadastro principal com placa, RENAVAM, chassi, motor e datas de validade.'],
             ['titulo' => 'Licenciamento', 'descricao' => 'Controle da placa/licença e sua validade.'],
-            ['titulo' => 'Seguro', 'descricao' => 'Cadastro de apólice, vigência e status.'],
-            ['titulo' => 'IPVA', 'descricao' => 'Controle de vencimento e situação do imposto.'],
-            ['titulo' => 'Pendências', 'descricao' => 'Sinalização de qualquer documento vencido ou ausente.'],
+            ['titulo' => 'Seguro', 'descricao' => 'Cadastro de apÃƒÂ³lice, vigÃƒÂªncia e status.'],
+            ['titulo' => 'IPVA', 'descricao' => 'Controle de vencimento e situaÃƒÂ§ÃƒÂ£o do imposto.'],
+            ['titulo' => 'PendÃƒÂªncias', 'descricao' => 'SinalizaÃƒÂ§ÃƒÂ£o de qualquer documento vencido ou ausente.'],
         ];
 
         return view('veiculo.documentacao', compact('titulo', 'breadcrumb', 'itens'));
@@ -1304,10 +1182,10 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     public function setPerPage(Request $request)
     {
-        // Salva o valor de paginação na sessão
+        // Salva o valor de paginaÃƒÂ§ÃƒÂ£o na sessÃƒÂ£o
         $request->session()->put("$this->nomeFiltro.perPage", $request->input('perPage'));
 
-        // Redireciona de volta para a página de listagem
+        // Redireciona de volta para a pÃƒÂ¡gina de listagem
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -1315,6 +1193,16 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     {
         session()->put("$this->nomeFiltro.urlPadrao", 'veiculo');
         session()->put("$this->nomeFiltro.rotaRedirect", 'veiculo.index');
+    }
+
+    public function getNomeFiltro(): string
+    {
+        return $this->nomeFiltro;
+    }
+
+    public function getTitulo(): string
+    {
+        return $this->titulo;
     }
 
     public function obterFiltrosPrincipais()
@@ -1340,7 +1228,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     public function obterFiltrosSecundarios()
     {
         return [
-            // Adicione filtros secundários aqui, se necessário
+            // Adicione filtros secundÃƒÂ¡rios aqui, se necessÃƒÂ¡rio
         ];
     }
 
@@ -1376,12 +1264,12 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
     }
 
     /**
-     * Função para obter o método e a rota para o formulário.
+     * FunÃƒÂ§ÃƒÂ£o para obter o mÃƒÂ©todo e a rota para o formulÃƒÂ¡rio.
      *
      * @param  Veiculo|null  $veiculo
      * @return array
      */
-    private function getFormMethodAndRoute($veiculo = null)
+    public function getFormMethodAndRoute($veiculo = null)
     {
         if ($veiculo) {
             return [

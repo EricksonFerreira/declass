@@ -116,10 +116,10 @@
                     </div>
 
                     <div class="vt-panel-actions">
-                        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
+                        <a target="_blank" href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
                             <i class="fas fa-plus mr-1"></i>Cadastrar multa
                         </a>
-                        <a href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
+                        <a target="_blank" href="{{ route('multa.index', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
                             <i class="fas fa-list mr-1"></i>Ver todas
                         </a>
                     </div>

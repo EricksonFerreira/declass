@@ -121,7 +121,7 @@
     </div>
 
     <div class="vt-panel-actions">
-        <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="btn-xp btn-xp--sm">
+        <a target="_blank" href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="btn-xp btn-xp--sm">
             <i class="fas fa-route mr-1"></i>Transferir entre estações
         </a>
     </div>
@@ -139,6 +139,7 @@
                         <th>#</th>
                         <th>Tipo</th>
                         <th>Status</th>
+                        <th>Gerou disp.</th>
                         <th>Origem</th>
                         <th>Destino</th>
                         <th>Saída</th>
@@ -194,6 +195,13 @@
                                 <span class="status-badge badge badge-xs {{ $statusBadgeClass }}">
                                     {{ optional($mov->statusMovimentacao)->nome ?? '—' }}
                                 </span>
+                            </td>
+                            <td>
+                                @if(in_array($mov->gera_disponibilidade, [true, 1, '1', 'S', 's'], true))
+                                    <span class="badge badge-success">Sim</span>
+                                @else
+                                    <span class="badge badge-gray">Não</span>
+                                @endif
                             </td>
                             <td>{{ optional($mov->localOrigem)->nome ?? '—' }}</td>
                             <td>{{ optional($mov->localDestino)->nome ?? '—' }}</td>

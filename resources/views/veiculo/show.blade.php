@@ -93,22 +93,22 @@
 
     {{-- AÇÕES RÁPIDAS EM UMA LINHA --}}
     <div class="vehicle-action-bar mb-3">
-        <a href="{{ route('veiculo.edit', $veiculo->id) }}" class="vehicle-action vehicle-action--primary">
+        <a target="_blank" href="{{ route('veiculo.edit', $veiculo->id) }}" class="vehicle-action vehicle-action--primary">
             <i class="fas fa-pen"></i><span>Editar veículo</span>
         </a>
-        <a href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="vehicle-action">
+        <a target="_blank" href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="vehicle-action">
             <i class="fas fa-route"></i><span>Transferir estação</span>
         </a>
-        <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action">
+        <a target="_blank" href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action">
             <i class="fas fa-tools"></i><span>Abrir OS</span>
         </a>
-        <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action vehicle-action--danger">
+        <a target="_blank" href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action vehicle-action--danger">
             <i class="fas fa-car-crash"></i><span>Registrar sinistro</span>
         </a>
-        <a href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action">
+        <a target="_blank" href="{{ route('multa.create', ['veiculo_id' => $veiculo->id]) }}" class="vehicle-action">
             <i class="fas fa-exclamation-triangle"></i><span>Cadastrar multa</span>
         </a>
-        <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="vehicle-action">
+        <a target="_blank" href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="vehicle-action">
             <i class="fas fa-shield-alt"></i><span>Ver avarias</span>
         </a>
     </div>
@@ -168,13 +168,123 @@
         </div>
 
         <div class="vehicle-tab-panel" data-vehicle-tab-panel="fipe">
-            <div class="veiculo-grid veiculo-grid--compact">
-                <div class="veiculo-field"><span class="veiculo-field__label">Valor de compra</span><span class="veiculo-field__value">{{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Valor FIPE</span><span class="veiculo-field__value">{{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Valor estimado atual</span><span class="veiculo-field__value">{{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Depreciação acumulada</span><span class="veiculo-field__value">{{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Taxa anual</span><span class="veiculo-field__value">{{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Código FIPE</span><span class="veiculo-field__value">{{ $veiculo->codigo_fipe ?? '—' }}</span></div>
+            <div class="vehicle-summary-block">
+                <div class="vehicle-summary-block__title">Resumo atual</div>
+                <div class="veiculo-grid veiculo-grid--compact">
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor de compra</span><span class="veiculo-field__value">{{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : '—' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor FIPE</span><span class="veiculo-field__value">{{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : '—' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor estimado atual</span><span class="veiculo-field__value">{{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : '—' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Depreciação acumulada</span><span class="veiculo-field__value">{{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : '—' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Taxa anual</span><span class="veiculo-field__value">{{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '—' }}</span></div>
+                    <div class="veiculo-field">
+                        <span class="veiculo-field__label">Última consulta</span>
+                        <span class="veiculo-field__value">
+                            {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="vehicle-summary-actions">
+                <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#modalConsultarFipeVeiculo">
+                    <i class="fas fa-sync-alt mr-1"></i> Consultar/atualizar FIPE
+                </button>
+                <button type="button" class="btn btn-outline-primary" data-toggle="modal" data-target="#modalConfigurarDepreciacaoVeiculo">
+                    <i class="fas fa-sliders-h mr-1"></i> Configurar depreciação
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConsultarFipeVeiculo" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title mb-1">Consultar e atualizar FIPE</h5>
+                        <small class="text-muted">Busca os dados atuais da tabela FIPE e atualiza o resumo do veículo.</small>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info mb-3">
+                        <strong>Atual</strong><br>
+                        Marca: {{ optional($veiculo->marca)->nome ?? '—' }}<br>
+                        Modelo: {{ optional($veiculo->modelo)->nome ?? '—' }}<br>
+                        Ano modelo: {{ $veiculo->modelo?->ano_modelo ?? '—' }}
+                    </div>
+
+                    <div id="fipeModalAlert" class="alert d-none" role="alert"></div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="veiculo-field mb-3">
+                                <span class="veiculo-field__label">Valor FIPE</span>
+                                <div id="fipeModalValor" class="veiculo-field__value">—</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="veiculo-field mb-3">
+                                <span class="veiculo-field__label">Código FIPE</span>
+                                <div id="fipeModalCodigo" class="veiculo-field__value">{{ $veiculo->codigo_fipe ?? '—' }}</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="veiculo-field mb-3">
+                                <span class="veiculo-field__label">Última consulta</span>
+                                <div id="fipeModalData" class="veiculo-field__value">{{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer d-flex justify-content-between">
+                    <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btnExecutarConsultaFipe">
+                        <i class="fas fa-sync-alt mr-1"></i> Consultar agora
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConfigurarDepreciacaoVeiculo" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <form id="formDepreciacaoVeiculo" method="POST" action="{{ route('veiculo.update', $veiculo->id) }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title mb-1">Configurar depreciação</h5>
+                            <small class="text-muted">Ajuste os dados que alimentam o cálculo do valor estimado.</small>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="depr_valor_compra">Valor de compra</label>
+                            <input type="text" class="form-control" id="depr_valor_compra" name="valor_compra" value="{{ old('valor_compra', $veiculo->valor_compra) }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="depr_data_compra">Data de compra</label>
+                            <input type="date" class="form-control" id="depr_data_compra" name="data_compra" value="{{ old('data_compra', $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('Y-m-d') : '') }}">
+                        </div>
+                        <div class="form-group mb-0">
+                            <label for="depr_taxa">Taxa anual de depreciação (%)</label>
+                            <input type="number" step="0.01" min="0" max="100" class="form-control" id="depr_taxa" name="taxa_depreciacao_anual" value="{{ old('taxa_depreciacao_anual', $veiculo->taxa_depreciacao_anual ?? 15) }}">
+                        </div>
+                    </div>
+                    <div class="modal-footer d-flex justify-content-between">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save mr-1"></i> Salvar configuração
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -1447,6 +1557,95 @@
         });
 
         activateStep('disp');
+
+        var fipeConsultaUrl = @json(route('veiculo.consultarFipe'));
+        var veiculoMarcaId = @json((int) ($veiculo->marca_id ?? 0));
+        var veiculoModeloId = @json((int) ($veiculo->modelo_id ?? 0));
+        var fipeValorAtual = document.getElementById('fipeModalValor');
+        var fipeCodigoAtual = document.getElementById('fipeModalCodigo');
+        var fipeDataAtual = document.getElementById('fipeModalData');
+        var fipeAlert = document.getElementById('fipeModalAlert');
+        var btnExecutarConsultaFipe = document.getElementById('btnExecutarConsultaFipe');
+
+        function formatarMoedaBR(valor) {
+            var numero = Number(valor || 0);
+            return numero.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        function mostrarFipeAlert(tipo, texto) {
+            if (!fipeAlert) return;
+            fipeAlert.className = 'alert alert-' + tipo;
+            fipeAlert.textContent = texto;
+            fipeAlert.classList.remove('d-none');
+        }
+
+        function ocultarFipeAlert() {
+            if (!fipeAlert) return;
+            fipeAlert.className = 'alert d-none';
+            fipeAlert.textContent = '';
+        }
+
+        if (btnExecutarConsultaFipe) {
+            btnExecutarConsultaFipe.addEventListener('click', function () {
+                if (!veiculoMarcaId || !veiculoModeloId) {
+                    mostrarFipeAlert('warning', 'Não foi possível consultar a FIPE porque a marca ou o modelo estão ausentes.');
+                    return;
+                }
+
+                var original = btnExecutarConsultaFipe.innerHTML;
+                btnExecutarConsultaFipe.disabled = true;
+                btnExecutarConsultaFipe.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Consultando...';
+                ocultarFipeAlert();
+
+                fetch(fipeConsultaUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: JSON.stringify({
+                        marca_id: veiculoMarcaId,
+                        modelo_id: veiculoModeloId
+                    })
+                })
+                    .then(function (response) {
+                        return response.json().then(function (payload) {
+                            return { ok: response.ok, status: response.status, payload: payload };
+                        });
+                    })
+                    .then(function (result) {
+                        if (!result.ok) {
+                            throw new Error(result.payload?.message || 'Falha ao consultar a FIPE.');
+                        }
+
+                        if (result.payload?.valor_fipe !== undefined && fipeValorAtual) {
+                            fipeValorAtual.textContent = formatarMoedaBR(result.payload.valor_fipe);
+                        }
+                        if (result.payload?.codigo_fipe !== undefined && fipeCodigoAtual) {
+                            fipeCodigoAtual.textContent = result.payload.codigo_fipe || '—';
+                        }
+                        if (result.payload?.data_consulta_fipe !== undefined && fipeDataAtual) {
+                            var data = result.payload.data_consulta_fipe;
+                            if (data) {
+                                var parts = String(data).split('-');
+                                fipeDataAtual.textContent = parts.length === 3 ? (parts[2] + '/' + parts[1] + '/' + parts[0]) : data;
+                            }
+                        }
+
+                        mostrarFipeAlert('success', 'Consulta concluída com sucesso. Os dados foram atualizados no resumo.');
+                    })
+                    .catch(function (error) {
+                        mostrarFipeAlert('danger', error.message || 'Falha ao consultar a FIPE.');
+                    })
+                    .finally(function () {
+                        btnExecutarConsultaFipe.disabled = false;
+                        btnExecutarConsultaFipe.innerHTML = original;
+                    });
+            });
+        }
 
         var fipeCanvas = document.getElementById('fipeValueChart');
         if (fipeCanvas && window.Chart) {

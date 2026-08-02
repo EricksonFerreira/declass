@@ -123,22 +123,34 @@
             <div class="card-body p-2" id="itensContainer">
                 @php $itensExistentes = old('itens', isset($plano) ? $plano->itens->toArray() : []); @endphp
                 @foreach ($itensExistentes as $i => $item)
-                    <div class="item-row input-group input-group-sm mb-1" data-index="{{ $i }}">
+                    @php
+                        $itemValor = old("itens.$i.valor", $item['valor'] ?? '');
+                    @endphp
+                    <div class="item-row mb-2" data-index="{{ $i }}">
                         <input type="hidden" name="itens[{{ $i }}][id]" value="{{ $item['id'] ?? '' }}">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text px-1">
-                                <input type="checkbox" name="itens[{{ $i }}][incluso]" value="1"
-                                       class="incluso-check"
-                                       {{ (bool)($item['incluso'] ?? true) ? 'checked' : '' }}
-                                       title="Incluso">
-                            </span>
-                        </div>
-                        <input type="text" name="itens[{{ $i }}][descricao]"
-                               class="form-control form-control-sm"
-                               value="{{ $item['descricao'] ?? '' }}"
-                               placeholder="Ex.: Gestão da frota" required>
-                        <div class="input-group-append">
-                            <button type="button" class="btn btn-sm btn-outline-danger remove-item" title="Remover">
+                        <div class="d-flex align-items-start" style="gap:8px;">
+                            <div class="pt-2">
+                                <div class="custom-control custom-checkbox">
+                                    <input type="checkbox" name="itens[{{ $i }}][incluso]" value="1"
+                                           class="custom-control-input incluso-check"
+                                           id="item_incluso_{{ $i }}"
+                                           {{ (bool)($item['incluso'] ?? true) ? 'checked' : '' }}>
+                                    <label class="custom-control-label" for="item_incluso_{{ $i }}" title="Incluso"></label>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1">
+                                <input type="text" name="itens[{{ $i }}][descricao]"
+                                       class="form-control form-control-sm mb-1"
+                                       value="{{ $item['descricao'] ?? '' }}"
+                                       placeholder="Nome do item" required>
+                                <input type="number" name="itens[{{ $i }}][valor]"
+                                       class="form-control form-control-sm"
+                                       value="{{ $itemValor }}"
+                                       placeholder="Preço (R$)"
+                                       step="0.01"
+                                       min="0">
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-danger remove-item mt-1" title="Remover">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
@@ -146,7 +158,7 @@
                 @endforeach
             </div>
             <div class="card-footer py-1">
-                <small class="text-muted"><i class="fas fa-info-circle mr-1"></i> Marque o checkbox para indicar que o item está incluso no plano.</small>
+                <small class="text-muted"><i class="fas fa-info-circle mr-1"></i> Informe o nome e o preço do item. Marque o checkbox para indicar que ele está incluso no plano.</small>
             </div>
         </div>
     </div>
@@ -159,22 +171,29 @@ let itemIndex = {{ count($itensExistentes ?? []) }};
 document.getElementById('addItem').addEventListener('click', function () {
     const container = document.getElementById('itensContainer');
     const div = document.createElement('div');
-    div.className = 'item-row input-group input-group-sm mb-1';
+    div.className = 'item-row mb-2';
     div.dataset.index = itemIndex;
     div.innerHTML = `
         <input type="hidden" name="itens[${itemIndex}][id]" value="">
-        <div class="input-group-prepend">
-            <span class="input-group-text px-1">
-                <input type="checkbox" name="itens[${itemIndex}][incluso]" value="1" checked title="Incluso">
-            </span>
-        </div>
-        <input type="text" name="itens[${itemIndex}][descricao]"
-               class="form-control form-control-sm" placeholder="Descrição do item" required>
-        <div class="input-group-append">
-            <button type="button" class="btn btn-sm btn-outline-danger remove-item" title="Remover">
+        <div class="d-flex align-items-start" style="gap:8px;">
+            <div class="pt-2">
+                <div class="custom-control custom-checkbox">
+                    <input type="checkbox" name="itens[${itemIndex}][incluso]" value="1" checked
+                           class="custom-control-input incluso-check" id="item_incluso_${itemIndex}">
+                    <label class="custom-control-label" for="item_incluso_${itemIndex}" title="Incluso"></label>
+                </div>
+            </div>
+            <div class="flex-grow-1">
+                <input type="text" name="itens[${itemIndex}][descricao]"
+                       class="form-control form-control-sm mb-1" placeholder="Nome do item" required>
+                <input type="number" name="itens[${itemIndex}][valor]"
+                       class="form-control form-control-sm" placeholder="Preço (R$)" step="0.01" min="0">
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-danger remove-item mt-1" title="Remover">
                 <i class="fas fa-times"></i>
             </button>
-        </div>`;
+        </div>
+        `;
     container.appendChild(div);
     div.querySelector('input[type=text]').focus();
     itemIndex++;

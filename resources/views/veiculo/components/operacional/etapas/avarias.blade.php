@@ -23,10 +23,10 @@
     </div>
 
     <div class="vt-panel-actions">
-        <a href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="btn-xp btn-xp--sm">
+        <a target="_blank" href="{{ route('veiculo-dano.monitoramento', ['filtro' => 'pendentes']) }}" class="btn-xp btn-xp--sm">
             <i class="fas fa-shield-alt mr-1"></i>Ver monitoramento
         </a>
-        <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
+        <a target="_blank" href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--outline">
             <i class="fas fa-plus mr-1"></i>Registrar sinistro
         </a>
     </div>

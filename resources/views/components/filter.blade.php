@@ -1,11 +1,46 @@
-@props(['additionalFilters' => [], 'filters' => [], 'itensFiltered' => [], 'nomeFiltro' => null])
+@props(['additionalFilters' => [], 'filters' => [], 'itensFiltered' => [], 'nomeFiltro' => null, 'statusList' => []])
 
 @php
     $filtroUrl      = $nomeFiltro ? route($nomeFiltro . '.filtro')         : (url()->current() . '/filtro');
     $removerTudoUrl = $nomeFiltro ? route($nomeFiltro . '.removerFiltro')  : (url()->current() . '/removerfiltro');
     $usesSelect2 = false;
+    $filters = is_iterable($filters) ? $filters : [];
+    $additionalFilters = is_iterable($additionalFilters) ? $additionalFilters : [];
+    $itensFiltered = is_iterable($itensFiltered) ? $itensFiltered : [];
+    $statusList = is_iterable($statusList) ? $statusList : [];
+    $statusLabels = collect($statusList ?? [])->mapWithKeys(function ($status) {
+        return [(string) data_get($status, 'id') => (string) data_get($status, 'nome')];
+    })->all();
+
+    $normalizeFilterOptions = function ($options): array {
+        if (!is_iterable($options)) {
+            return [];
+        }
+
+        $normalized = [];
+
+        foreach ($options as $key => $option) {
+            if (is_array($option)) {
+                $normalized[] = [
+                    'value' => $option['value'] ?? $option['id'] ?? $key,
+                    'label' => $option['label'] ?? $option['nome'] ?? $option['name'] ?? (string) ($option['value'] ?? $option['id'] ?? $key),
+                    'selected' => (bool) ($option['selected'] ?? false),
+                ];
+                continue;
+            }
+
+            $normalized[] = [
+                'value' => is_int($key) ? $option : $key,
+                'label' => (string) $option,
+                'selected' => false,
+            ];
+        }
+
+        return $normalized;
+    };
+
     foreach (array_merge($filters, $additionalFilters) as $f) {
-        if (isset($f['options']) && (isset($f['multiple']) && $f['multiple'])) {
+        if (isset($f['options'])) {
             $usesSelect2 = true;
             break;
         }
@@ -20,31 +55,41 @@
         <form method="GET" action="{{ $filtroUrl }}">
             <div class="row align-items-end">
                 @foreach ($filters as $filter)
+                    @php
+                        $hasOptions = isset($filter['options']);
+                        $isMultiple = !empty($filter['multiple']);
+                        $filterName = $filter['name'] ?? '';
+                        $filterLabel = $filter['label'] ?? '';
+                        $filterWhere = $filter['typeWhere'] ?? 'where';
+                        $filterType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text';
+                    @endphp
                     <div class="col-auto flex-grow-1">
-                        <label class="text-xs mb-0" for="{{ $filter['name'] }}">{{ $filter['label'] }}</label>
-                        @if (isset($filter['options']))
-                            <select 
-                                id="{{ $filter['name'] }}"
-                                @if(isset($filter['multiple']) && $filter['multiple'])
-                                   class="filter-select2" data-placeholder="{{ $filter['placeholder'] ?? $filter['label'] }}" name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}[]" multiple
+                        <label class="text-xs mb-0" for="{{ $filterName }}">{{ $filterLabel }}</label>
+                        @if ($hasOptions)
+                            <select
+                                id="{{ $filterName }}"
+                                class="filter-select2 form-control form-control-sm"
+                                @if ($isMultiple)
+                                    data-placeholder="{{ $filter['placeholder'] ?? $filterLabel }}"
+                                    name="{{ $filterName }}_{{ $filterWhere }}[]"
+                                    multiple
                                 @else
-                                 class="form-control form-control-sm" name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}"
+                                    name="{{ $filterName }}_{{ $filterWhere }}"
                                 @endif
-                                >
-                                @foreach ($filter['options'] as $option)
+                            >
+                                @foreach ($normalizeFilterOptions($filter['options'] ?? []) as $option)
                                     <option value="{{ $option['value'] }}"
-                                        {{ ($option['selected'] ?? false) ? 'selected' : '' }}>
+                                        {{ $option['selected'] ? 'selected' : '' }}>
                                         {{ $option['label'] }}
                                     </option>
                                 @endforeach
                             </select>
                         @else
-                            @php($inputType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text')
-                            <input type="{{ $inputType }}"
+                            <input type="{{ $filterType }}"
                                 class="form-control form-control-sm"
-                                id="{{ $filter['name'] }}"
-                                name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}"
-                                placeholder="{{ $filter['label'] }}"
+                                id="{{ $filterName }}"
+                                name="{{ $filterName }}_{{ $filterWhere }}"
+                                placeholder="{{ $filterLabel }}"
                                 value="{{ $filter['valor'] ?? '' }}">
                         @endif
                     </div>
@@ -68,30 +113,41 @@
                 <div id="additional-filters" class="row mt-2 border rounded p-2" style="display:none;">
                     <p class="col-12 mb-1 text-xs text-secondary text-bold">Filtros adicionais:</p>
                     @foreach ($additionalFilters as $filter)
+                        @php
+                            $hasOptions = isset($filter['options']);
+                            $isMultiple = !empty($filter['multiple']);
+                            $filterName = $filter['name'] ?? '';
+                            $filterLabel = $filter['label'] ?? '';
+                            $filterWhere = $filter['typeWhere'] ?? 'where';
+                            $filterType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text';
+                        @endphp
                         <div class="col-auto flex-grow-1">
-                            <label class="text-xs mb-0" for="{{ $filter['name'] }}">{{ $filter['label'] }}</label>
-                                @if (isset($filter['options']))
-                                <select id="{{ $filter['name'] }}"
-                                    @if(isset($filter['multiple']) && $filter['multiple'])
-                                        class="filter-select2" data-placeholder="{{ $filter['placeholder'] ?? $filter['label'] }}" name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}[]" multiple
+                            <label class="text-xs mb-0" for="{{ $filterName }}">{{ $filterLabel }}</label>
+                            @if ($hasOptions)
+                                <select
+                                    id="{{ $filterName }}"
+                                    class="filter-select2 form-control form-control-sm"
+                                    @if ($isMultiple)
+                                        data-placeholder="{{ $filter['placeholder'] ?? $filterLabel }}"
+                                        name="{{ $filterName }}_{{ $filterWhere }}[]"
+                                        multiple
                                     @else
-                                        class="form-control form-control-sm"  name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}"
+                                        name="{{ $filterName }}_{{ $filterWhere }}"
                                     @endif
-                                    >
-                                    @foreach ($filter['options'] as $option)
+                                >
+                                    @foreach ($normalizeFilterOptions($filter['options'] ?? []) as $option)
                                         <option value="{{ $option['value'] }}"
-                                            {{ ($option['selected'] ?? false) ? 'selected' : '' }}>
+                                            {{ $option['selected'] ? 'selected' : '' }}>
                                             {{ $option['label'] }}
                                         </option>
                                     @endforeach
                                 </select>
                             @else
-                                @php($inputType = in_array($filter['type'] ?? 'text', ['text', 'date', 'number']) ? ($filter['type'] ?? 'text') : 'text')
-                                <input type="{{ $inputType }}"
+                                <input type="{{ $filterType }}"
                                     class="form-control form-control-sm"
-                                    id="{{ $filter['name'] }}"
-                                    name="{{ $filter['name'] }}_{{ $filter['typeWhere'] ?? 'where' }}"
-                                    placeholder="{{ $filter['label'] }}"
+                                    id="{{ $filterName }}"
+                                    name="{{ $filterName }}_{{ $filterWhere }}"
+                                    placeholder="{{ $filterLabel }}"
                                     value="{{ $filter['valor'] ?? '' }}">
                             @endif
                         </div>
@@ -106,12 +162,18 @@
                 <span class="text-xs text-secondary text-bold">Aplicados:</span>
                 @foreach ($itensFiltered as $filter)
                     @if ($filter['valor'])
+                        @php
+                            $valorExibido = $filter['valor'];
+                            if (($filter['name'] ?? '') === 'status_movimentacao_id') {
+                                $valorExibido = $statusLabels[(string) $filter['valor']] ?? $filter['valor'];
+                            }
+                        @endphp
                         <form action="{{ $removerTudoUrl }}" method="GET" class="d-inline">
                             <input type="hidden" name="atributo" value="{{ isset($filter['name']) ? $filter['name'] : '' }}">
                             <button type="submit" class="badge badge-secondary border-0 font-weight-normal"
                                 style="cursor:pointer;">
                                 <i class="fa fa-times mr-1"></i>{{  isset($filter['nomeExibir']) ? $filter['nomeExibir'] : '' }}:
-                                <b>{{ $filter['valor'] }}</b>
+                                <b>{{ $valorExibido }}</b>
                             </button>
                         </form>
                     @endif
@@ -166,8 +228,7 @@
 </script>
 
 @if($usesSelect2)
-    @once('css')
-        @push('css')
+    @push('css')
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap4-theme/1.5.2/select2-bootstrap4.min.css" rel="stylesheet" />
         <style>
@@ -177,11 +238,8 @@
                 font-size: .78rem;
             }
         </style>
-        @endpush
-    @endonce
-
-    @once('js')
-        @push('js')
+    @endpush
+    @push('js')
         <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
         <script>
         (function initFilterSelect2() {
@@ -205,6 +263,5 @@
             $(document).ready(applySelect2);
         })();
         </script>
-        @endpush
-    @endonce
+    @endpush
 @endif

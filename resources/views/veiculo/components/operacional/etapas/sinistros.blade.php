@@ -105,7 +105,7 @@
     </div>
 
     <div class="vt-panel-actions">
-        <a href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--danger">
+        <a target="_blank" href="{{ route('sinistro.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm btn-xp--danger">
             <i class="fas fa-plus mr-1"></i>Novo sinistro
         </a>
     </div>

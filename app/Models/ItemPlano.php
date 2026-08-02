@@ -12,11 +12,13 @@ class ItemPlano extends Model
     protected $fillable = [
         'plano_id',
         'descricao',
+        'valor',
         'incluso',
         'ordem',
     ];
 
     protected $casts = [
+        'valor' => 'decimal:2',
         'incluso' => 'boolean',
     ];
 

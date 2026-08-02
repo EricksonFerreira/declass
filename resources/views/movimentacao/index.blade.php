@@ -12,8 +12,13 @@
         $filtroStatusAtivo = session('movimentacao.filtro.status_movimentacao_id') ?? null;
     @endphp
 
-    @if (isset($filters) && is_array($filters) && count($filters) > 0)
-        <x-filter :additionalFilters="$additionalFilters" :filters="$filters" :itensFiltered="$itensFiltered" />
+    @if (!empty($filters))
+        <x-filter
+            :additional-filters="$additionalFilters ?? []"
+            :filters="$filters"
+            :itens-filtered="$itensFiltered ?? []"
+            :status-list="$statusList ?? []"
+        />
     @endif
 
     <div class="mv-idx-page">
@@ -32,7 +37,7 @@
             @endphp
 
             <div class="mv-idx-statusbar__chips">
-                <a href="{{ route('movimentacao.index') }}"
+                <a href="{{ route('movimentacao.removerFiltro', ['atributo' => 'status_movimentacao_id']) }}"
                     class="mv-status-chip {{ empty($filtroStatusAtivo) ? 'is-active' : '' }}"
                     onclick="limparFiltroStatus(event, this)">
                     <i class="fas fa-list"></i> Todas
@@ -83,40 +88,47 @@
             </div>
         </div>
 
-        {{-- ── Toggle table / cards ── --}}
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <div class="d-flex align-items-center" style="gap:8px">
-                <span class="text-muted small">
-                    REGISTROS <span class="badge badge-success">{{ $movimentacaos->total() }}</span>
-                </span>
-            </div>
-            <div class="d-flex align-items-center" style="gap:8px">
-                <form action="{{ route('movimentacao.setPerPage') }}" method="POST" class="d-flex align-items-center"
-                    style="gap:4px">
-                    @csrf
-                    <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
-                </form>
-                <div class="btn-group btn-group-sm" role="group">
-                    <button type="button" class="btn btn-outline-secondary active" id="btnViewTable"
-                        title="Ver como tabela">
-                        <i class="fas fa-list"></i>
-                    </button>
-                    <button type="button" class="btn btn-outline-secondary" id="btnViewCards" title="Ver como cards">
-                        <i class="fas fa-th"></i>
-                    </button>
-                </div>
-                {{ $movimentacaos->links() }}
-            </div>
-        </div>
+        <div class="card mv-registros-card border-0 shadow-sm">
+            <div class="card-header bg-white px-3 py-2">
+                <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap:10px">
+                    <h3 class="card-title text-sm text-bold mb-0">
+                        REGISTROS <span class="badge badge-success">{{ $movimentacaos->total() }}</span>
+                    </h3>
 
-        {{-- ════ TABELA ════ --}}
-        <div id="viewTable" class="card border-0 shadow-sm">
-            <div class="card-body p-0 table-responsive">
+                    <div class="d-flex align-items-center flex-wrap" style="gap:8px">
+                        <form action="{{ route('movimentacao.setPerPage') }}" method="POST"
+                            class="d-flex align-items-center" style="gap:4px">
+                            @csrf
+                            <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
+                        </form>
+
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Modo de visualização">
+                            <button type="button" class="btn btn-outline-secondary active" id="btnViewTable"
+                                title="Ver como tabela">
+                                <i class="fas fa-list mr-1"></i>Tabela
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="btnViewCards"
+                                title="Ver como cards">
+                                <i class="fas fa-th mr-1"></i>Cards
+                            </button>
+                        </div>
+
+                        <div class="d-flex align-items-center mv-registros-pagination">
+                            {{ $movimentacaos->links() }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                {{-- ════ TABELA ════ --}}
+                <div id="viewTable" class="table-responsive">
                 <table class="table table-hover table-sm mb-0">
                     <thead style="background:#f8fafd;border-bottom:2px solid #e2e9f4">
                         <tr>
                             <th class="pl-3" style="width:50px">#</th>
                             <th>Tipo / Status</th>
+                            <th class="text-center" style="width:140px">Gerou disponibilidade</th>
                             <th>Usuário</th>
                             <th>Veículo</th>
                             <th>Origem → Destino</th>
@@ -127,15 +139,16 @@
                     <tbody>
                         @forelse ($movimentacaos as $mov)
                             @php
-                                $cor = $mov->statusMovimentacao?->cor ?? 'secondary';
-                                $isConcluido =
-                                    strtolower($mov->statusMovimentacao?->nome ?? '') === 'concluído' ||
-                                    strtolower($mov->statusMovimentacao?->nome ?? '') === 'concluido';
-                                $veiculoLabel = null;
-                                if ($mov->veiculo) {
-                                    $veiculoLabel = $mov->veiculo->nome ?? 'Veículo #' . $mov->veiculo->id;
-                                    if (!empty($mov->veiculo->placa_licenca)) {
-                                        $veiculoLabel .= ' · ' . $mov->veiculo->placa_licenca;
+                            $cor = $mov->statusMovimentacao?->cor ?? 'secondary';
+                            $isConcluido =
+                                strtolower($mov->statusMovimentacao?->nome ?? '') === 'concluído' ||
+                                strtolower($mov->statusMovimentacao?->nome ?? '') === 'concluido';
+                            $geraDisponibilidade = in_array($mov->gera_disponibilidade, [true, 1, '1', 'S', 's'], true);
+                            $veiculoLabel = null;
+                            if ($mov->veiculo) {
+                                $veiculoLabel = $mov->veiculo->nome ?? 'Veículo #' . $mov->veiculo->id;
+                                if (!empty($mov->veiculo->placa_licenca)) {
+                                    $veiculoLabel .= ' · ' . $mov->veiculo->placa_licenca;
                                     }
                                 }
                             @endphp
@@ -143,12 +156,17 @@
                                 data-status-nome="{{ strtolower($mov->statusMovimentacao?->nome ?? '') }}"
                                 data-concluir-url="{{ route('movimentacao.concluir', $mov->id) }}">
                                 <td class="pl-3">
-                                    <span class="badge badge-secondary">#{{ $mov->id }}</span>
+                                    #{{ $mov->id }}
                                 </td>
                                 <td>
                                     <div class="font-weight-bold small">{{ $mov->tipoMovimentacao?->nome ?? '—' }}</div>
                                     <span
                                         class="badge badge-{{ $cor }} mt-1">{{ $mov->statusMovimentacao?->nome ?? '—' }}</span>
+                                </td>
+                                <td class="text-center align-middle">
+                                    <span class="badge badge-{{ $geraDisponibilidade ? 'success' : 'secondary' }}">
+                                        {{ $geraDisponibilidade ? 'S' : 'N' }} 
+                                    </span>
                                 </td>
                                 <td class="small">{{ $mov->usuario?->nome ?? '—' }}</td>
                                 <td class="small">
@@ -206,11 +224,10 @@
                         @endforelse
                     </tbody>
                 </table>
-            </div>
-        </div>
+                </div>
 
-        {{-- ════ CARDS ════ --}}
-        <div id="viewCards" style="display:none">
+                {{-- ════ CARDS ════ --}}
+                <div id="viewCards" class="p-3" style="display:none">
             @forelse($movimentacaos as $mov)
                 @php
                     $cor = $mov->statusMovimentacao?->cor ?? 'secondary';
@@ -244,6 +261,9 @@
                                 <span class="badge badge-secondary">#{{ $mov->id }}</span>
                                 <span
                                     class="badge badge-{{ $cor }}">{{ $mov->statusMovimentacao?->nome ?? '—' }}</span>
+                                <span class="badge badge-{{ $geraDisponibilidade ? 'success' : 'secondary' }}">
+                                    {{ $geraDisponibilidade ? 'S' : 'N' }}
+                                </span>
                             </div>
                             <div class="mv-card__actions">
                                 <a href="{{ route('movimentacao.edit', $mov->id) }}" class="btn btn-xs btn-outline-primary"
@@ -322,7 +342,9 @@
                     <i class="fas fa-route fa-2x mb-2 d-block"></i>
                     Nenhuma movimentação encontrada.
                 </div>
-            @endforelse
+                    @endforelse
+                </div>
+            </div>
         </div>
 
     </div>
@@ -397,6 +419,43 @@
             height: 7px;
             border-radius: 50%;
             display: inline-block;
+        }
+
+        .mv-registros-card {
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .mv-registros-card .card-header {
+            border-bottom: 1px solid #e2e9f4;
+        }
+
+        .mv-registros-pagination .pagination {
+            margin-bottom: 0;
+        }
+
+        #viewTable {
+            max-height: calc(100vh - 330px);
+            overflow: auto;
+        }
+
+        #viewTable thead th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #f8fafd;
+        }
+
+        @media (max-width: 767.98px) {
+            .mv-registros-card .card-header > div {
+                align-items: flex-start !important;
+                flex-direction: column;
+            }
+
+            .mv-registros-pagination {
+                width: 100%;
+                overflow-x: auto;
+            }
         }
 
         /* ── Cards ── */
@@ -535,7 +594,8 @@
             };
 
             window.limparFiltroStatus = function(e, el) {
-                // Navegação normal para limpar filtro de status
+                e.preventDefault();
+                window.location.href = el.href;
             };
 
             // ── Concluir movimentação ─────────────────────────────────

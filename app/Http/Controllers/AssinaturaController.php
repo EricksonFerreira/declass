@@ -385,6 +385,15 @@ class AssinaturaController extends Controller
         $empresas = Empresa::with(['planoAtivo.plano'])
             ->orderBy('nome')
             ->get();
+
+        $empresas->transform(function (Empresa $empresa) {
+            $empresa->setAttribute('qtd_veiculos_ativos', \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count());
+            $empresa->setAttribute('qtd_estacoes', \App\Models\Estacao::where('empresa_id', $empresa->id)->count());
+            $empresa->setAttribute('armazenamento_usado_mb', (float) round(($empresa->storage_used_bytes ?? 0) / 1048576, 2));
+
+            return $empresa;
+        });
+
         $planos = Plano::ativos()->get();
         $stripePublicKey = config('services.stripe.key');
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([

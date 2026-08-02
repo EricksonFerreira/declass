@@ -172,14 +172,14 @@
                                 <div class="col-lg-4 col-md-6">
                                     <div class="form-group form-group-veiculo">
                                         <x-form-input type="text" class="form-control form-control-sm" id="nome"
-                                            name="nome" label="Nome" value="{{ old('nome', $veiculo->nome ?? '') }}"
+                                            name="nome" label="Nome" icon="1" iconHint="Nome interno do veículo. Em geral é preenchido automaticamente após salvar." value="{{ old('nome', $veiculo->nome ?? '') }}"
                                             disabled readonly />
                                     </div>
                                 </div>
                             @endisset
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <x-form-select name="tipo_frota_id" label="Tipo de Frota" :options="$tipoFrotas"
+                                    <x-form-select name="tipo_frota_id" label="Tipo de Frota" icon="1" iconHint="Classificação principal do veículo, usada para regras, filtros e disponibilidade." :options="$tipoFrotas"
                                         placeholder="Selecione um valor" :selected="old('tipo_frota_id', $veiculo->tipo_frota_id ?? null)"
                                         class="form-control form-control-sm" required />
                                 </div>
@@ -187,6 +187,7 @@
                             <div class="col-lg-5 col-md-12">
                                 <div class="form-group form-group-veiculo">
                                     <label for="grupo_frota_display">Grupo de Frota <span style="color: red;">*</span></label>
+                                    <i class="fas fa-circle-info text-muted ml-1 vc-tooltip-icon" data-toggle="tooltip" data-placement="top" title="Grupo comercial/operacional do veículo. Você pode escolher um grupo existente ou criar um novo nome na criação."></i>
                                     <div class="input-group input-group-sm vc-search-lookup-group">
                                         <input type="text" id="grupo_frota_display" class="form-control form-control-sm vc-lookup-display" value="{{ $grupoFrotaSelecionadoNome }}" placeholder="Clique na lupa para pesquisar o grupo" readonly>
                                         <div class="input-group-append">
@@ -203,12 +204,22 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="veiculo-lookup-help">Clique na lupa para abrir a pesquisa avançada de grupos.</small>
                                 </div>
                             </div>
+                            @if (!isset($veiculo))
+                                <div class="col-lg-4 col-md-6">
+                                    <div class="form-group form-group-veiculo">
+                                        <x-form-input type="text" class="form-control form-control-sm" id="nome_frota"
+                                            name="nome_frota" label="Nome da frota" icon="1" iconHint="Caso não informe o sistema criará um nome único para identificar este veiculo na frota."
+                                            value="{{ old('nome_frota') }}"
+                                            placeholder="Ex.: vei1425" />
+                                    </div>
+                                </div>
+                            @endif
                             <div class="col-lg-4 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <label for="marca_display">Marca <span style="color: red;">*</span></label>
+                                    <i class="fas fa-circle-info text-muted ml-1 vc-tooltip-icon" data-toggle="tooltip" data-placement="top" title="Marca do veículo. Ela também influencia a busca do modelo e a consulta FIPE."></i>
                                     <div class="input-group input-group-sm vc-search-lookup-group">
                                         <input type="text" id="marca_display" class="form-control form-control-sm vc-lookup-display" value="{{ $marcaSelecionadaNome }}" placeholder="Clique na lupa para pesquisar a marca" readonly>
                                         <div class="input-group-append">
@@ -225,12 +236,12 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="veiculo-lookup-help">Abra a lupa para localizar a marca com mais rapidez.</small>
                                 </div>
                             </div>
                             <div class="col-lg-5 col-md-6">
                                 <div class="form-group form-group-veiculo">
                                     <label for="modelo_display">Modelo <span style="color: red;">*</span></label>
+                                    <i class="fas fa-circle-info text-muted ml-1 vc-tooltip-icon" data-toggle="tooltip" data-placement="top" title="Modelo do veículo. O filtro e a consulta FIPE usam a marca selecionada como referência."></i>
                                     <div class="input-group input-group-sm vc-search-lookup-group">
                                         <input type="text" id="modelo_display" class="form-control form-control-sm vc-lookup-display" value="{{ $modeloSelecionadoNome }}" placeholder="Clique na lupa para pesquisar o modelo" readonly>
                                         <div class="input-group-append">
@@ -247,12 +258,11 @@
                                             </option>
                                         @endforeach
                                     </select>
-                                    <small class="veiculo-lookup-help">Use a lupa para encontrar o modelo por nome ou marca. O ano modelo será usado automaticamente na consulta FIPE.</small>
                                 </div>
                             </div>
                             <div class="col-lg-3 col-md-6">
                                 <div class="form-group form-group-veiculo">
-                                    <x-form-select id="status_veiculo_id" name="status_veiculo_id" label="Status"
+                                    <x-form-select id="status_veiculo_id" name="status_veiculo_id" label="Status" icon="1" iconHint="Define a situação atual do veículo no sistema."
                                         :options="$statusVeiculos" placeholder="Selecione um valor" :selected="old(
                                             'status_veiculo_id',
                                             isset($veiculo->status_veiculo_id) && $veiculo->status_veiculo_id
@@ -265,7 +275,7 @@
                             <div class="col-lg-3 col-md-6 d-none" id="div_data_vendido">
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="date" class="form-control form-control-sm" id="data_vendido"
-                                        name="data_vendido" label="Data de Venda"
+                                        name="data_vendido" label="Data de Venda" icon="1" iconHint="Preencha apenas quando o veículo já estiver vendido."
                                         value="{{ old('data_vendido', $veiculo->data_vendido ?? '') }}" />
                                 </div>
                             </div>
@@ -288,6 +298,9 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="cor"
                                         name="cor" label="Cor" value="{{ old('cor', $veiculo->cor ?? '') }}"
+                                        style="text-transform:uppercase;"
+                                        oninput="this.value = this.value.toUpperCase()"
+                                        maxlength="50"
                                         required />
                                 </div>
                             </div>
@@ -295,7 +308,13 @@
                                 <div class="form-group form-group-veiculo">
                                     <x-form-input type="text" class="form-control form-control-sm" id="placa_licenca"
                                         name="placa_licenca" label="Placa"
-                                        value="{{ old('placa_licenca', $veiculo->placa_licenca ?? '') }}" required />
+                                        value="{{ old('placa_licenca', $veiculo->placa_licenca ?? '') }}"
+                                        maxlength="7"
+                                        pattern="[A-Z]{3}[0-9][A-Z0-9][0-9]{2}|[A-Z]{3}[0-9]{4}"
+                                        title="Informe uma placa brasileira válida, por exemplo ABC1234 ou ABC1D23"
+                                        style="text-transform:uppercase;"
+                                        oninput="this.value = this.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 7)"
+                                        required />
                                 </div>
                             </div>
                             <div class="col-lg-4 col-md-6">
@@ -323,7 +342,7 @@
                     </div>
 
                     {{-- â”€â”€ STEP 3: DATAS E KM â”€â”€ --}}
-                    <div class="vc-step-pane d-none" data-pane="3">
+                    <div class="vc-step-pane d-none" data-pane="3" id="fipe-consulta">
                         <div class="veiculo-section-title"><i class="fas fa-coins mr-1"></i>Financeiro do Veículo</div>
                         <div class="veiculo-info-tip">
                             <i class="fas fa-info-circle mr-1"></i>
@@ -384,63 +403,78 @@
                             </div>
                         </div>
 
-                        <div class="veiculo-section-title"><i class="fas fa-calendar-alt mr-1"></i>Datas Importantes</div>
-                        <div class="form-row">
-                            <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="date" class="form-control form-control-sm"
-                                        id="data_placa_licenca" name="data_placa_licenca"
-                                        label="Emissão da Placa/Licença"
-                                        hint="Deve ser menor ou igual à Validade da Documentação/Licença."
-                                        value="{{ old('data_placa_licenca', $veiculo->data_placa_licenca ?? '') }}"
-                                        required />
+                        <div class="row" id="depreciacao-config">
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="card card-outline card-primary h-100 mb-0">
+                                    <div class="card-header py-2">
+                                        <strong>Aquisição</strong>
+                                    </div>
+                                    <div class="card-body py-3">
+                                        <div class="form-group form-group-veiculo">
+                                            <x-form-input type="text" inputmode="decimal" autocomplete="off" data-money-field="1" class="form-control form-control-sm"
+                                                id="valor_compra" name="valor_compra" label="Valor de compra"
+                                                value="{{ old('valor_compra', $veiculo->valor_compra ?? '') }}" />
+                                        </div>
+                                        <div class="form-group form-group-veiculo mb-0">
+                                            <x-form-input type="date" class="form-control form-control-sm" id="data_compra"
+                                                name="data_compra" label="Data de compra"
+                                                value="{{ old('data_compra', $veiculo->data_compra ?? '') }}" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="date" class="form-control form-control-sm" id="data_compra"
-                                        name="data_compra" label="Data de Compra"
-                                        value="{{ old('data_compra', $veiculo->data_compra ?? '') }}"  />
-                                </div>
-                            </div>
-                            <div class="col-lg-4 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="date" class="form-control form-control-sm" id="data_validade"
-                                        name="data_validade" label="Validade da Documentação/Licença"
-                                        hint="Deve ser maior ou igual à Emissão da Placa/Licença."
-                                        value="{{ old('data_validade', $veiculo->data_validade ?? '') }}" required />
-                                </div>
-                            </div>
-                        </div>
 
-                        <div class="veiculo-section-title"><i class="fas fa-tachometer-alt mr-1"></i>Métricas e Limites de
-                            Km</div>
-                        <div class="form-row">
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" class="form-control form-control-sm" id="kms"
-                                        name="kms" label="Km Atual"
-                                        hint="Base usada para validar os limites abaixo."
-                                        value="{{ old('kms', $veiculo->kms ?? '') }}"
-                                        min="0"  />
+                            <div class="col-lg-4 col-md-6 mb-3">
+                                <div class="card card-outline card-info h-100 mb-0">
+                                    <div class="card-header py-2">
+                                        <strong>Documentação</strong>
+                                    </div>
+                                    <div class="card-body py-3">
+                                        <div class="form-group form-group-veiculo">
+                                            <x-form-input type="date" class="form-control form-control-sm"
+                                                id="data_placa_licenca" name="data_placa_licenca"
+                                                label="Emissão da placa/licença"
+                                                hint="Deve ser menor ou igual à validade da documentação/licença."
+                                                value="{{ old('data_placa_licenca', $veiculo->data_placa_licenca ?? '') }}"
+                                                required />
+                                        </div>
+                                        <div class="form-group form-group-veiculo mb-0">
+                                            <x-form-input type="date" class="form-control form-control-sm" id="data_validade"
+                                                name="data_validade" label="Validade da documentação/licença"
+                                                hint="Deve ser maior ou igual à emissão da placa/licença."
+                                                value="{{ old('data_validade', $veiculo->data_validade ?? '') }}" required />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" class="form-control form-control-sm" id="limite_kms"
-                                        name="limite_kms" label="Limite de Km por Aluguel"
-                                        hint="Não pode ser menor que o Km Atual."
-                                        value="{{ old('limite_kms', $veiculo->limite_kms ?? '') }}" min="0"
-                                         />
-                                </div>
-                            </div>
-                            <div class="col-lg-3 col-md-6">
-                                <div class="form-group form-group-veiculo">
-                                    <x-form-input type="number" class="form-control form-control-sm"
-                                        id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da Próxima Revisão"
-                                        hint="Não pode ser menor que o Km Atual."
-                                        value="{{ old('proxima_revisao_kms', $veiculo->proxima_revisao_kms ?? '') }}"
-                                        min="0"  />
+
+                            <div class="col-lg-4 col-md-12 mb-3">
+                                <div class="card card-outline card-success h-100 mb-0">
+                                    <div class="card-header py-2">
+                                        <strong>Quilometragem</strong>
+                                    </div>
+                                    <div class="card-body py-3">
+                                        <div class="form-group form-group-veiculo">
+                                            <x-form-input type="number" class="form-control form-control-sm" id="kms"
+                                                name="kms" label="Km atual"
+                                                hint="Base usada para validar os limites abaixo."
+                                                value="{{ old('kms', $veiculo->kms ?? '') }}"
+                                                min="0" />
+                                        </div>
+                                        <div class="form-group form-group-veiculo mb-0">
+                                            <x-form-input type="number" class="form-control form-control-sm" id="limite_kms"
+                                                name="limite_kms" label="Limite de km por aluguel"
+                                                hint="Não pode ser menor que o Km atual."
+                                                value="{{ old('limite_kms', $veiculo->limite_kms ?? '') }}" min="0" />
+                                        </div>
+                                        <div class="form-group form-group-veiculo mt-3 mb-0">
+                                            <x-form-input type="number" class="form-control form-control-sm"
+                                                id="proxima_revisao_kms" name="proxima_revisao_kms" label="Km da próxima revisão"
+                                                hint="Não pode ser menor que o Km atual."
+                                                value="{{ old('proxima_revisao_kms', $veiculo->proxima_revisao_kms ?? '') }}"
+                                                min="0" />
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -543,6 +577,7 @@
                         ['name' => 'grupo_frota_id', 'selector' => '#grupo_frota_id'],
                         ['name' => 'marca_id', 'selector' => '#marca_id']
                     ]"
+                    :show-marca-column="true"
                     after-select="veiculoModeloSelecionadoFromModal" />
             </div>
         </div>
@@ -566,11 +601,28 @@
             border-bottom-right-radius: 0;
         }
 
-        .veiculo-lookup-help {
-            display: block;
-            margin-top: .35rem;
-            font-size: .75rem;
-            color: #6b7280;
+        .vc-tooltip-icon {
+            cursor: help;
+            font-size: .8rem;
+            opacity: .9;
+        }
+
+        .vc-tooltip-icon:hover {
+            opacity: 1;
+        }
+
+        .veiculo-section-title {
+            margin-bottom: .75rem;
+        }
+
+        .form-group-veiculo {
+            margin-bottom: .8rem;
+        }
+
+        .form-group-veiculo .form-control-sm {
+            min-height: 36px;
+            padding-top: .35rem;
+            padding-bottom: .35rem;
         }
 
         .card-veiculo {
@@ -832,9 +884,17 @@
     </style>
 @stop
 
-@section('js')
+    @section('js')
     <script>
         $(function() {
+            if (typeof $.fn.tooltip === 'function') {
+                $('.vc-tooltip-icon, [data-toggle="tooltip"]').tooltip({
+                    trigger: 'hover focus',
+                    container: 'body',
+                    boundary: 'window',
+                    placement: 'top'
+                });
+            }
 
             // ── Wizard Steps ──────────────────────────────────────────────────
             const $panes   = $('.vc-step-pane');
@@ -1165,7 +1225,12 @@
             function obterAnoModeloSelecionado() {
                 const option = $('#modelo_id option:selected');
                 const anoOption = parseInt(option.data('ano-modelo') || option.data('anoModelo') || 0, 10);
-                return Number.isNaN(anoOption) ? null : anoOption;
+                if (!Number.isNaN(anoOption) && anoOption > 0) {
+                    return anoOption;
+                }
+
+                const anoFabricacao = parseInt($('#ano_fabricacao').val() || 0, 10);
+                return Number.isNaN(anoFabricacao) || anoFabricacao <= 0 ? null : anoFabricacao;
             }
 
             $(document).on('focus', '[data-money-field="1"]', function() {
@@ -1238,13 +1303,13 @@
             }
 
             function atualizarEstadoBuscaModelo() {
-                const temMarca = String($marca.val() || '').trim() !== '';
+                const temGrupo = String($('#grupo_frota_id').val() || '').trim() !== '';
                 const $btnBuscarModelo = $('#btnBuscarModelo');
 
-                $btnBuscarModelo.prop('disabled', !temMarca);
+                $btnBuscarModelo.prop('disabled', !temGrupo);
                 $btnBuscarModelo.attr(
                     'title',
-                    temMarca ? 'Pesquisa avançada' : 'Selecione uma marca antes de pesquisar o modelo'
+                    temGrupo ? 'Pesquisa avançada' : 'Selecione um grupo de frota antes de pesquisar o modelo'
                 );
             }
 
@@ -1351,6 +1416,7 @@
                 syncLookupDisplay('#grupo_frota_id', '#grupo_frota_display');
                 limparCacheFalhaFipe();
                 limparMarcaEmModeloDependente();
+                atualizarEstadoBuscaModelo();
             });
 
             $('#marca_id').on('change', function() {
@@ -1390,8 +1456,8 @@
                 window.carregarModelosVeiculo(marcaInicial, modeloInicial || null, $('#modelo_display').val() || null);
             } else {
                 limparModeloSelecionado();
-                atualizarEstadoBuscaModelo();
             }
+            atualizarEstadoBuscaModelo();
 
             function consultarFipe() {
                 const marcaId = $marca.val();
@@ -1430,7 +1496,8 @@
 
                 $.get(fipeUrl, {
                     marca_id: marcaId,
-                    modelo_id: modeloId
+                    modelo_id: modeloId,
+                    ano_modelo: obterAnoModeloSelecionado()
                 }).done(function(resp) {
                     // Resposta com mensagem de erro (HTTP 200 mas sem dados)
                     if (resp.message && !resp.valor_fipe && resp.valor_fipe !== 0) {

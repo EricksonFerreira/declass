@@ -9,6 +9,7 @@ class Filter extends Component
     public $filters;
     public $additionalFilters;
     public $itensFiltered;
+    public $statusList;
 
     public $nomeFiltro;
     public $urlPadrao;
@@ -17,11 +18,13 @@ class Filter extends Component
     public function __construct(
         $filters,
         $additionalFilters = [],
-        $itensFiltered = []
+        $itensFiltered = [],
+        $statusList = []
     ) {
         $this->filters = $filters;
         $this->additionalFilters = $additionalFilters;
         $this->itensFiltered = $itensFiltered;
+        $this->statusList = $statusList;
     }
 
     public function render()

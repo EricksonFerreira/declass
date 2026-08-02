@@ -1,3 +1,5 @@
+@props(['hint' => null, 'icon' => null, 'iconHint' => null, 'iconClass' => 'fas fa-info-circle text-muted'])
+
 @if($floating)
     <div class="form-floating">
 @endif
@@ -25,6 +27,10 @@
         :label="$label"
         :for="$selectId"
         :required="$attributes->has('required')"
+        :hint="$hint"
+        :icon="$icon"
+        :iconHint="$iconHint"
+        :iconClass="$iconClass"
     />
 @endif
 
@@ -82,7 +88,14 @@
 </select>
 
 @if($floating)
-    <x-form-label :label="$label" :for="$selectId" />
+    <x-form-label
+        :label="$label"
+        :for="$selectId"
+        :hint="$hint"
+        :icon="$icon"
+        :iconHint="$iconHint"
+        :iconClass="$iconClass"
+    />
 @endif
 
 @if($floating)

@@ -1,4 +1,4 @@
-@props(['hint' => null])
+@props(['hint' => null, 'icon' => null, 'iconHint' => null, 'iconClass' => 'fas fa-info-circle text-muted'])
 
 @if(isset($type) && $type === 'hidden') <div class="d-none"> @endif
     @if(isset($floating) && $floating) <div class="form-floating"> @endif
@@ -8,7 +8,15 @@
         @endphp
 
         @if(!isset($floating) || !$floating)
-            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" :hint="$hint" />
+            <x-form-label
+                :label="$label"
+                :for="$resolvedId"
+                :required="$attributes->has('required')"
+                :hint="$hint"
+                :icon="$icon"
+                :iconHint="$iconHint"
+                :iconClass="$iconClass"
+            />
         @endif
 
         <input
@@ -35,7 +43,15 @@
         />
 
         @if(isset($floating) && $floating)
-            <x-form-label :label="$label" :for="$resolvedId" :required="$attributes->has('required')" :hint="$hint" />
+            <x-form-label
+                :label="$label"
+                :for="$resolvedId"
+                :required="$attributes->has('required')"
+                :hint="$hint"
+                :icon="$icon"
+                :iconHint="$iconHint"
+                :iconClass="$iconClass"
+            />
         @endif
 
     @if(isset($floating) && $floating) </div> @endif

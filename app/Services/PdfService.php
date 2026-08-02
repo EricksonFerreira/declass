@@ -2,11 +2,17 @@
 
 namespace App\Services;
 
+use App\Support\EmpresaBranding;
 use Dompdf\Dompdf;
 use Dompdf\Options;
 
 class PdfService
 {
+    public function __construct(
+        private EmpresaBranding $empresaBranding,
+    ) {
+    }
+
     public function gerarConteudo(
         string $view,
         array $data,
@@ -80,6 +86,15 @@ class PdfService
 
     private function normalizarDados(array $data): array
     {
+        $empresaAtual = data_get($data, 'documento.empresa');
+        if (is_array($empresaAtual) && empty($empresaAtual['logo_url'] ?? null)) {
+            $empresa = $this->empresaBranding->empresaAtual();
+            if ($empresa) {
+                $data['documento']['empresa']['logo_url'] = $this->empresaBranding->logoDataUri($empresa)
+                    ?? $this->empresaBranding->logoUrl($empresa);
+            }
+        }
+
         array_walk_recursive($data, function (&$value): void {
             if (
                 $value === '<br>'

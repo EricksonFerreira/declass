@@ -197,15 +197,39 @@
             aria-labelledby="modalDetalhesGrupoFrotaLabel{{ $grupo_frota->id }}" aria-hidden="true">
             <div class="modal-dialog modal-lg modal-dialog-scrollable" role="document">
                 <div class="modal-content modal-grupo-frota-detalhes">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalDetalhesGrupoFrotaLabel{{ $grupo_frota->id }}">
-                            Detalhes do Grupo: {{ $grupo_frota->nome }}
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <div class="modal-header grupo-frota-modal__header">
+                        <div class="grupo-frota-modal__header-left">
+                            <div class="grupo-frota-modal__header-icon">
+                                <i class="fas fa-layer-group"></i>
+                            </div>
+                            <div>
+                                <div class="grupo-frota-modal__eyebrow">Detalhes do grupo</div>
+                                <h5 class="modal-title grupo-frota-modal__title"
+                                    id="modalDetalhesGrupoFrotaLabel{{ $grupo_frota->id }}">
+                                    {{ $grupo_frota->nome }}
+                                </h5>
+                            </div>
+                        </div>
+                        <button type="button" class="grupo-frota-modal__close" data-dismiss="modal" aria-label="Fechar">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body grupo-frota-modal__body">
+                        <div class="detalhes-area-card detalhes-area-card--hero">
+                            <div class="detalhes-area-hero">
+                                <div>
+                                    <div class="detalhes-area-hero__label">Grupo</div>
+                                    <div class="detalhes-area-hero__value">{{ $grupo_frota->nome }}</div>
+                                </div>
+                                <div class="detalhes-area-hero__meta">
+                                    <span class="badge badge-light border">ID #{{ $grupo_frota->id }}</span>
+                                    <span class="badge badge-{{ $grupo_frota->ativo == 'S' ? 'success' : 'danger' }}">
+                                        {{ $grupo_frota->ativo == 'S' ? 'Ativo' : 'Inativo' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="detalhes-area-card">
                             <div class="detalhes-area-title">
                                 <i class="fa fa-tasks mr-1"></i> Caracteristicas
@@ -289,6 +313,11 @@
                             @endif
                         </div>
                     </div>
+                    <div class="modal-footer grupo-frota-modal__footer">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">
+                            <i class="fas fa-times mr-1"></i> Fechar
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -354,37 +383,147 @@
         }
 
         .modal-grupo-frota-detalhes {
-            border-radius: 12px;
+            border-radius: 18px;
             overflow: hidden;
-            border: 1px solid #dbe4f0;
+            border: 1px solid #d6dfeb;
+            box-shadow: 0 24px 60px rgba(15, 23, 42, .20);
         }
 
-        .modal-grupo-frota-detalhes .modal-header {
-            background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 100%);
-            border-bottom: 1px solid #d8e2ef;
+        .grupo-frota-modal__header {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 55%, #334155 100%);
+            border: 0;
+            padding: 18px 22px;
+            color: #fff;
+            align-items: flex-start;
+        }
+
+        .grupo-frota-modal__header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .grupo-frota-modal__header-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, .12);
+            color: #fff;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .grupo-frota-modal__eyebrow {
+            font-size: .68rem;
+            letter-spacing: .08em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, .68);
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .grupo-frota-modal__title {
+            font-size: 1.15rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin: 0;
+            color: #fff;
+        }
+
+        .grupo-frota-modal__close {
+            appearance: none;
+            border: 0;
+            background: rgba(255, 255, 255, .1);
+            color: #fff;
+            width: 36px;
+            height: 36px;
+            border-radius: 999px;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background .15s ease, transform .15s ease;
+        }
+
+        .grupo-frota-modal__close:hover {
+            background: rgba(255, 255, 255, .18);
+            transform: scale(1.03);
+        }
+
+        .grupo-frota-modal__body {
+            background: linear-gradient(180deg, #f8fbff 0%, #f4f7fb 100%);
+            padding: 20px;
+        }
+
+        .grupo-frota-modal__footer {
+            background: #f8fbff;
+            border-top: 1px solid #d8e2ef;
+            padding: 14px 18px;
         }
 
         .detalhes-area-card {
-            border: 1px solid #dbe6f3;
-            border-radius: 10px;
-            padding: 10px 12px;
+            border: 1px solid #d9e5f1;
+            border-radius: 16px;
+            padding: 16px 18px;
             background: #fff;
-            margin-bottom: 10px;
+            margin-bottom: 14px;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, .05);
+        }
+
+        .detalhes-area-card--hero {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            border-color: #cfe0f2;
         }
 
         .detalhes-area-title {
             display: flex;
             align-items: center;
+            gap: 8px;
             font-weight: 700;
             color: #22334a;
-            margin-bottom: 8px;
-            font-size: .9rem;
+            margin-bottom: 10px;
+            font-size: .92rem;
+        }
+
+        .detalhes-area-hero {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .detalhes-area-hero__label {
+            font-size: .72rem;
+            text-transform: uppercase;
+            letter-spacing: .08em;
+            color: #64748b;
+            margin-bottom: 4px;
+            font-weight: 700;
+        }
+
+        .detalhes-area-hero__value {
+            font-size: 1.2rem;
+            font-weight: 800;
+            color: #0f172a;
+            line-height: 1.2;
+        }
+
+        .detalhes-area-hero__meta {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .detalhes-subtitulo {
             font-weight: 600;
             color: #334155;
-            margin: 8px 0 4px;
+            margin: 10px 0 6px;
             font-size: .82rem;
         }
 
@@ -394,13 +533,19 @@
         }
 
         .detalhes-lista li {
-            font-size: .84rem;
+            font-size: .86rem;
             color: #1f2937;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
+            line-height: 1.45;
         }
 
         .detalhes-lista--compacta {
             margin-bottom: 6px;
+        }
+
+        .detalhes-subtitulo + .detalhes-lista,
+        .detalhes-area-title + .detalhes-lista {
+            margin-top: 6px;
         }
 
         .grupo-frota-imagens-extra {

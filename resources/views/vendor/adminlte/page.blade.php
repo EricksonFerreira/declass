@@ -3,6 +3,16 @@
 @inject('layoutHelper', 'JeroenNoten\LaravelAdminLte\Helpers\LayoutHelper')
 @inject('preloaderHelper', 'JeroenNoten\LaravelAdminLte\Helpers\PreloaderHelper')
 
+@php
+    $empresaBranding = app(\App\Support\EmpresaBranding::class);
+    $faviconUrl = $empresaBranding->logoUrl();
+@endphp
+
+@section('meta_tags')
+    @parent
+    <link rel="shortcut icon" href="{{ $faviconUrl }}" />
+@stop
+
 @section('adminlte_css')
     @stack('css')
     @yield('css')

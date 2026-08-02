@@ -3,23 +3,25 @@
 namespace App\Services;
 
 use App\Enums\StatusReservaEnum;
-use App\Models\DisponibilidadeInicialVeiculo;
 use App\Models\Movimentacao;
 use App\Models\Veiculo;
+use App\Support\SchemaCache;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
-use App\Services\AbstractBaseService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 
 class VeiculoService extends AbstractBaseService
 {
     protected Model $model;
+
     public MovimentacaoService $movimentacaoService;
+
     public DisponibilidadeInicialVeiculoService $disponibilidadeInicialVeiculoService;
+
     private ?array $statusVeiculoDisponivelIds = null;
+
     private ?int $reservaBloqueioPosReservaHoras = null;
+
     private ?array $statusMovimentacaoCanceladoIds = null;
 
     public function __construct(Veiculo $veiculo, DisponibilidadeInicialVeiculoService $disponibilidadeInicialVeiculoService)
@@ -30,17 +32,14 @@ class VeiculoService extends AbstractBaseService
 
     public function setModel(Model $model): void
     {
-        if (!$model instanceof Veiculo) {
-            throw new \InvalidArgumentException("Modelo esperado App\\Models\\Veiculo");
+        if (! $model instanceof Veiculo) {
+            throw new \InvalidArgumentException('Modelo esperado App\\Models\\Veiculo');
         }
         $this->model = $model;
     }
 
-
     /**
      * Define o serviço de movimentação.
-     *
-     * @param MovimentacaoService $movimentacaoService
      */
     public function setMovimentacaoService(MovimentacaoService $movimentacaoService): void
     {
@@ -57,40 +56,44 @@ class VeiculoService extends AbstractBaseService
     /**
      * Summary of create
 
-     * @param array $data
+     *
      * @override
+     *
      * @return Model
      */
     public function create(array $data)
     {
+        $data = $this->normalizarDadosDisponibilidadeInicial($data);
         $this->injectEmpresaId($data, true);
         $veiculo = $this->model->create($data);
-        $veiculo->nome = 'vei' . str_pad($veiculo->id, 4, '0', STR_PAD_LEFT);
+        $veiculo->nome = 'vei'.str_pad($veiculo->id, 4, '0', STR_PAD_LEFT);
         $veiculo->save();
 
         $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
 
         $this->disponibilidadeInicialVeiculoService->create([
             'veiculo_id' => $veiculo->id,
-            'estacao_id' => $data['local_disponibilidade'],
-            'data_hora' => $data['data_hora_disponibilidade'],
+            'estacao_id' => $data['local_disponibilidade'] ?? null,
+            'data_hora' => $data['data_hora_disponibilidade'] ?? null,
         ]);
 
         return $veiculo;
     }
 
-
     /**
      * Summary of update
-     * @param mixed $id
-     * @param array $data
+     *
+     * @param  mixed  $id
+     *
      * @override
+     *
      * @return Model
      */
     public function update($id, array $data)
     {
+        $data = $this->normalizarDadosDisponibilidadeInicial($data);
         $veiculo = $this->applyEmpresaScope($this->model->newQuery())->find($id);
-        if (!$veiculo) {
+        if (! $veiculo) {
             return null;
         }
 
@@ -102,8 +105,8 @@ class VeiculoService extends AbstractBaseService
             $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
             $this->disponibilidadeInicialVeiculoService->create([
                 'veiculo_id' => $veiculo->id,
-                'estacao_id' => $data['local_disponibilidade'],
-                'data_hora' => $data['data_hora_disponibilidade'],
+                'estacao_id' => $data['local_disponibilidade'] ?? null,
+                'data_hora' => $data['data_hora_disponibilidade'] ?? null,
             ]);
         }
 
@@ -139,7 +142,7 @@ class VeiculoService extends AbstractBaseService
             'grupoFrota',
             'modelo',
             'localDisponibilidade',
-            'statusVeiculo'
+            'statusVeiculo',
         ]);
 
         if ($estacaoFiltro === 'sem_estacao') {
@@ -154,8 +157,8 @@ class VeiculoService extends AbstractBaseService
     /**
      * Obtém veículos disponíveis por modelo e estação específica.
      *
-     * @param int $modeloId O ID do modelo do veículo.
-     * @param int $estacaoId O ID da estação onde o veículo está disponível.
+     * @param  int  $modeloId  O ID do modelo do veículo.
+     * @param  int  $estacaoId  O ID da estação onde o veículo está disponível.
      * @return \Illuminate\Database\Eloquent\Collection A coleção de veículos disponíveis.
      */
     public function getVeiculosDisponiveisPorModeloEEstacaoEspecifica($modeloId, $estacaoId)
@@ -173,8 +176,8 @@ class VeiculoService extends AbstractBaseService
     /**
      * Obtém veículos disponíveis por modelo, exceto em uma estação específica.
      *
-     * @param int $modeloId O ID do modelo do veículo.
-     * @param int $estacaoId O ID da estação que deve ser excluída.
+     * @param  int  $modeloId  O ID do modelo do veículo.
+     * @param  int  $estacaoId  O ID da estação que deve ser excluída.
      * @return \Illuminate\Database\Eloquent\Collection A coleção de veículos disponíveis.
      */
     public function getVeiculosDisponiveisPorModeloExcetoEstacao($modeloId, $estacaoId)
@@ -207,14 +210,14 @@ class VeiculoService extends AbstractBaseService
     /**
      * Obtém veículos disponíveis por modelo, estação e intervalo de datas.
      *
-     * @param int $modeloId O ID do modelo do veículo.
-     * @param int $estacaoId O ID da estação onde o veículo está disponível.
-     * @param string $data_inicio A data de início do intervalo.
-     * @param string $data_fim A data de fim do intervalo.
-     * @param int $reservaId O ID da reserva.
+     * @param  int  $modeloId  O ID do modelo do veículo.
+     * @param  int  $estacaoId  O ID da estação onde o veículo está disponível.
+     * @param  string  $data_inicio  A data de início do intervalo.
+     * @param  string  $data_fim  A data de fim do intervalo.
+     * @param  int  $reservaId  O ID da reserva.
      * @return \Illuminate\Database\Eloquent\Collection A coleção de veículos disponíveis.
      */
-    public function getVeiculosDisponiveisPorModeloEEstacaoEIntervaloDatas(int $modeloId, int $estacaoId, string $data_inicio, string $data_fim, int $reservaId = null)
+    public function getVeiculosDisponiveisPorModeloEEstacaoEIntervaloDatas(int $modeloId, int $estacaoId, string $data_inicio, string $data_fim, ?int $reservaId = null)
     {
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
             ->where('modelo_id', $modeloId)
@@ -242,7 +245,7 @@ class VeiculoService extends AbstractBaseService
                     });
 
                 $cancelados = $this->getStatusMovimentacaoCanceladoIds();
-                if (!empty($cancelados)) {
+                if (! empty($cancelados)) {
                     $query->whereNotIn('status_movimentacao_id', $cancelados);
                 }
             });
@@ -255,8 +258,8 @@ class VeiculoService extends AbstractBaseService
     /**
      * Obtém veículos ativos que não terão movimentações no período especificado.
      *
-     * @param string $data_inicio A data de início do intervalo.
-     * @param string $data_fim A data de fim do intervalo.
+     * @param  string  $data_inicio  A data de início do intervalo.
+     * @param  string  $data_fim  A data de fim do intervalo.
      * @return \Illuminate\Database\Eloquent\Collection A coleção de veículos ativos sem movimentações no período.
      */
     public function getVeiculosAtivosSemMovimentacoesNoPeriodo(string $data_inicio, string $data_fim)
@@ -284,10 +287,10 @@ class VeiculoService extends AbstractBaseService
     /**
      * Obtém modelos pelo grupo de frotas que têm veículos disponíveis no período específico e no local informado.
      *
-     * @param int $idGrupoFrota O ID do grupo de frotas.
-     * @param int $idLocal O ID do local.
-     * @param string $data_inicio A data de início do intervalo.
-     * @param string $data_fim A data de fim do intervalo.
+     * @param  int  $idGrupoFrota  O ID do grupo de frotas.
+     * @param  int  $idLocal  O ID do local.
+     * @param  string  $data_inicio  A data de início do intervalo.
+     * @param  string  $data_fim  A data de fim do intervalo.
      * @return \Illuminate\Database\Eloquent\Collection A coleção de modelos com veículos disponíveis.
      */
     public function getModelosComVeiculosDisponiveis(int $idGrupoFrota, int $idLocal, string $data_inicio, string $data_fim)
@@ -324,7 +327,7 @@ class VeiculoService extends AbstractBaseService
     /**
      * Retorna o total de veiculos ativos por estacao.
      *
-     * @param array<int, int|string> $estacoesIds
+     * @param  array<int, int|string>  $estacoesIds
      * @return array<int, int>
      */
     public function getQuantidadeVeiculosAtivosPorEstacao(array $estacoesIds = [], array $grupoFrotaIds = []): array
@@ -334,11 +337,11 @@ class VeiculoService extends AbstractBaseService
 
         $query = $this->scopeStatusVeiculoDisponivel($query);
 
-        if (!empty($estacoesIds)) {
+        if (! empty($estacoesIds)) {
             $query->whereIn('local_disponibilidade', array_map('intval', $estacoesIds));
         }
 
-        if (!empty($grupoFrotaIds)) {
+        if (! empty($grupoFrotaIds)) {
             $query->whereIn('grupo_frota_id', array_map('intval', $grupoFrotaIds));
         }
 
@@ -349,7 +352,7 @@ class VeiculoService extends AbstractBaseService
             ->toArray();
 
         $resultado = [];
-        if (!empty($estacoesIds)) {
+        if (! empty($estacoesIds)) {
             foreach ($estacoesIds as $estacaoId) {
                 $id = (int) $estacaoId;
                 $resultado[$id] = (int) ($agrupados[$id] ?? 0);
@@ -395,6 +398,54 @@ class VeiculoService extends AbstractBaseService
             $dataFim,
             $reservaId
         ) > 0;
+    }
+
+    private function normalizarDadosDisponibilidadeInicial(array $data): array
+    {
+        $estacao = trim((string) ($data['local_disponibilidade'] ?? ''));
+        $dataHora = trim((string) ($data['data_hora_disponibilidade'] ?? ''));
+
+        if ($estacao === '' && $dataHora === '') {
+            unset($data['local_disponibilidade'], $data['data_hora_disponibilidade']);
+            return $data;
+        }
+
+        if ($dataHora !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $dataHora)) {
+            $data['data_hora_disponibilidade'] = $dataHora . ' 00:00';
+        }
+
+        return $data;
+    }
+
+    public function getVeiculosDisponiveisPorUltimaMovimentacao(?string $estacaoFiltro = null, int $perPage = 1000)
+    {
+        $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()))
+            ->with([
+                'grupoFrota',
+                'modelo',
+                'localDisponibilidade',
+                'statusVeiculo',
+            ]);
+
+        $query->whereExists(function ($sub) {
+            $sub->selectRaw('1')
+                ->from('movimentacoes as m')
+                ->whereColumn('m.veiculo_id', 'veiculos.id')
+                ->whereColumn('m.id', function ($latest) {
+                    $latest->selectRaw('MAX(m2.id)')
+                        ->from('movimentacoes as m2')
+                        ->whereColumn('m2.veiculo_id', 'veiculos.id');
+                })
+                ->where('m.gera_disponibilidade', true);
+        });
+
+        if ($estacaoFiltro === 'sem_estacao') {
+            $query->whereNull('local_disponibilidade');
+        } elseif (is_numeric($estacaoFiltro) && (int) $estacaoFiltro > 0) {
+            $query->where('local_disponibilidade', (int) $estacaoFiltro);
+        }
+
+        return $query->orderBy('id', 'asc')->paginate($perPage);
     }
 
     /**
@@ -475,7 +526,7 @@ class VeiculoService extends AbstractBaseService
                 });
 
             $cancelados = $this->getStatusMovimentacaoCanceladoIds();
-            if (!empty($cancelados)) {
+            if (! empty($cancelados)) {
                 $subQuery->whereNotIn('status_movimentacao_id', $cancelados);
             }
         });
@@ -504,13 +555,13 @@ class VeiculoService extends AbstractBaseService
                     ->select('id')
                     ->whereRaw('LOWER(nome) LIKE ?', ['%cancel%'])
                     ->pluck('id')
-                    ->map(fn($v) => (int) $v)
+                    ->map(fn ($v) => (int) $v)
                     ->filter()
                     ->unique()
                     ->values()
                     ->all();
 
-                if (!empty($ids)) {
+                if (! empty($ids)) {
                     $this->statusMovimentacaoCanceladoIds = $ids;
                 }
             } catch (\Throwable $e) {
@@ -537,14 +588,16 @@ class VeiculoService extends AbstractBaseService
             return $this->reservaBloqueioPosReservaHoras;
         }
 
-        if (!SchemaCache::hasTable('empresas') || !SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
+        if (! SchemaCache::hasTable('empresas') || ! SchemaCache::hasColumn('empresas', 'reserva_bloqueio_pos_reserva_horas')) {
             $this->reservaBloqueioPosReservaHoras = 0;
+
             return 0;
         }
 
         $empresaId = $this->currentEmpresaId();
         if ($empresaId === null) {
             $this->reservaBloqueioPosReservaHoras = 0;
+
             return 0;
         }
 
@@ -568,6 +621,7 @@ class VeiculoService extends AbstractBaseService
     {
         $query = $this->applyEstacaoScope($this->applyEmpresaScope($this->model->newQuery()));
         $query = $this->scopeStatusVeiculoDisponivel($query);
+
         return (int) $query->count();
     }
 
@@ -595,7 +649,7 @@ class VeiculoService extends AbstractBaseService
             ->whereNotNull('modelo_id')
             ->distinct()
             ->pluck('modelo_id')
-            ->map(static fn($id) => (int) $id)
+            ->map(static fn ($id) => (int) $id)
             ->unique()
             ->values()
             ->toArray();
@@ -605,11 +659,8 @@ class VeiculoService extends AbstractBaseService
      * Busca veículos disponíveis para o período de uma reserva na estação da reserva,
      * aplicando filtros de texto opcionais (placa, nome, chassi, cor, modelo, etc.).
      *
-     * @param int   $estacaoId
-     * @param string $dataInicio
-     * @param string $dataFim
-     * @param int   $reservaId  excluir movimentações desta reserva
-     * @param array $filtros    placa|nome|chassi|cor|modelo|marca_id|grupo_frota_id|tipo_frota_id|ativo|ano_de|ano_ate|kms_ate
+     * @param  int  $reservaId  excluir movimentações desta reserva
+     * @param  array  $filtros  placa|nome|chassi|cor|modelo|marca_id|grupo_frota_id|tipo_frota_id|ativo|ano_de|ano_ate|kms_ate
      * @return \Illuminate\Database\Eloquent\Collection
      */
     public function buscarDisponiveisCheckin(int $estacaoId, string $dataInicio, string $dataFim, int $reservaId, array $filtros = [])
@@ -621,22 +672,22 @@ class VeiculoService extends AbstractBaseService
                 $agora = now()->format('Y-m-d H:i:s');
                 $limite = $dataInicio > $agora ? $dataInicio : $agora;
                 $q->whereNull('data_hora_disponibilidade')
-                  ->orWhere('data_hora_disponibilidade', '<=', $limite);
+                    ->orWhere('data_hora_disponibilidade', '<=', $limite);
             })
             ->whereDoesntHave('movimentacoes', function ($q) use ($dataInicio, $dataFim, $reservaId) {
                 $q->where('movimentacoes.reserva_id', '!=', $reservaId)
-                  ->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
-                  ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::NoShow->value])
-                  ->where('reservas.data_inicio', '<', $dataFim)
-                  ->where('reservas.data_fim', '>', $dataInicio);
+                    ->join('reservas', 'reservas.id', '=', 'movimentacoes.reserva_id')
+                    ->whereIn('reservas.status_reserva_id', [StatusReservaEnum::Pendente->value, StatusReservaEnum::Confirmada->value, StatusReservaEnum::NoShow->value])
+                    ->where('reservas.data_inicio', '<', $dataFim)
+                    ->where('reservas.data_fim', '>', $dataInicio);
             })
             ->whereDoesntHave('movimentacoes', function ($q) use ($dataFim) {
                 $q->whereNull('data_chegada_real')
-                  ->where(function ($s) use ($dataFim) {
-                      $s->whereNull('data_saida')->orWhere('data_saida', '<', $dataFim);
-                  });
+                    ->where(function ($s) use ($dataFim) {
+                        $s->whereNull('data_saida')->orWhere('data_saida', '<', $dataFim);
+                    });
                 $cancelados = $this->getStatusMovimentacaoCanceladoIds();
-                if (!empty($cancelados)) {
+                if (! empty($cancelados)) {
                     $q->whereNotIn('status_movimentacao_id', $cancelados);
                 }
             });
@@ -644,50 +695,50 @@ class VeiculoService extends AbstractBaseService
         $query = $this->scopeStatusVeiculoDisponivel($query);
 
         // Filtros de texto/seleção
-        if (!empty($filtros['grupo_frota_ids'])) {
+        if (! empty($filtros['grupo_frota_ids'])) {
             $query->whereIn('grupo_frota_id', (array) $filtros['grupo_frota_ids']);
         }
-        if (!empty($filtros['placa'])) {
-            $query->where('placa_licenca', 'like', '%' . $filtros['placa'] . '%');
+        if (! empty($filtros['placa'])) {
+            $query->where('placa_licenca', 'like', '%'.$filtros['placa'].'%');
         }
-        if (!empty($filtros['nome'])) {
-            $query->where('nome', 'like', '%' . $filtros['nome'] . '%');
+        if (! empty($filtros['nome'])) {
+            $query->where('nome', 'like', '%'.$filtros['nome'].'%');
         }
-        if (!empty($filtros['chassi'])) {
-            $query->where('chassi', 'like', '%' . $filtros['chassi'] . '%');
+        if (! empty($filtros['chassi'])) {
+            $query->where('chassi', 'like', '%'.$filtros['chassi'].'%');
         }
-        if (!empty($filtros['cor'])) {
-            $query->where('cor', 'like', '%' . $filtros['cor'] . '%');
+        if (! empty($filtros['cor'])) {
+            $query->where('cor', 'like', '%'.$filtros['cor'].'%');
         }
-        if (!empty($filtros['modelo_id_exato'])) {
+        if (! empty($filtros['modelo_id_exato'])) {
             $query->where('modelo_id', (int) $filtros['modelo_id_exato']);
-        } elseif (!empty($filtros['modelo_ids']) && is_array($filtros['modelo_ids'])) {
+        } elseif (! empty($filtros['modelo_ids']) && is_array($filtros['modelo_ids'])) {
             $modeloIds = array_values(array_filter(array_map('intval', $filtros['modelo_ids'])));
-            if (!empty($modeloIds)) {
+            if (! empty($modeloIds)) {
                 $query->whereIn('modelo_id', $modeloIds);
             }
-        } elseif (!empty($filtros['modelo'])) {
-            $query->whereHas('modelo', fn($q) => $q->where('nome', 'like', '%' . $filtros['modelo'] . '%'));
+        } elseif (! empty($filtros['modelo'])) {
+            $query->whereHas('modelo', fn ($q) => $q->where('nome', 'like', '%'.$filtros['modelo'].'%'));
         }
-        if (!empty($filtros['marca_id'])) {
+        if (! empty($filtros['marca_id'])) {
             $query->where('marca_id', (int) $filtros['marca_id']);
         }
-        if (!empty($filtros['grupo_frota_id'])) {
+        if (! empty($filtros['grupo_frota_id'])) {
             $query->where('grupo_frota_id', (int) $filtros['grupo_frota_id']);
         }
-        if (!empty($filtros['tipo_frota_id'])) {
+        if (! empty($filtros['tipo_frota_id'])) {
             $query->where('tipo_frota_id', (int) $filtros['tipo_frota_id']);
         }
         if (isset($filtros['ativo']) && $filtros['ativo'] !== '') {
             $query->where('ativo', $filtros['ativo'] === '1' ? 'S' : 'N');
         }
-        if (!empty($filtros['ano_de'])) {
-            $query->whereHas('modelo', fn($modelo) => $modelo->where('ano_modelo', '>=', (int) $filtros['ano_de']));
+        if (! empty($filtros['ano_de'])) {
+            $query->whereHas('modelo', fn ($modelo) => $modelo->where('ano_modelo', '>=', (int) $filtros['ano_de']));
         }
-        if (!empty($filtros['ano_ate'])) {
-            $query->whereHas('modelo', fn($modelo) => $modelo->where('ano_modelo', '<=', (int) $filtros['ano_ate']));
+        if (! empty($filtros['ano_ate'])) {
+            $query->whereHas('modelo', fn ($modelo) => $modelo->where('ano_modelo', '<=', (int) $filtros['ano_ate']));
         }
-        if (!empty($filtros['kms_ate'])) {
+        if (! empty($filtros['kms_ate'])) {
             $query->where('kms', '<=', (int) $filtros['kms_ate']);
         }
 
@@ -755,7 +806,7 @@ class VeiculoService extends AbstractBaseService
             $ids = $fallback
                 ->where('id', 1)
                 ->pluck('id')
-                ->map(static fn($id) => (int) $id)
+                ->map(static fn ($id) => (int) $id)
                 ->toArray();
         }
 

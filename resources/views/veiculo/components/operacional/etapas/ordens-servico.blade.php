@@ -106,7 +106,7 @@
     </div>
 
     <div class="vt-panel-actions">
-        <a href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
+        <a target="_blank" href="{{ route('ordem-servico.create', ['veiculo_id' => $veiculo->id]) }}" class="btn-xp btn-xp--sm">
             <i class="fas fa-plus mr-1"></i>Nova OS para este veículo
         </a>
     </div>

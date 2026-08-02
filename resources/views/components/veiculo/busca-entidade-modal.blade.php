@@ -9,6 +9,7 @@
     'placeholder' => 'Digite para pesquisar...',
     'extraParams' => [],
     'afterSelect' => null,
+    'showMarcaColumn' => false,
 ])
 
 <div class="modal fade vc-entity-search-modal" id="{{ $modalId }}" tabindex="-1" role="dialog" aria-labelledby="{{ $modalId }}Label" aria-hidden="true">
@@ -22,6 +23,7 @@
                     <span aria-hidden="true">&times;</span>
                 </button>
             </div>
+
             <div class="modal-body">
                 <div class="card card-outline card-secondary mb-3">
                     <div class="card-header py-2">
@@ -62,13 +64,16 @@
                             <tr>
                                 <th style="width: 90px;">ID</th>
                                 <th>Nome</th>
+                                @if($showMarcaColumn)
+                                    <th>Marca</th>
+                                @endif
                                 <th>Detalhes</th>
                                 <th style="width: 120px;" class="text-right">Ação</th>
                             </tr>
                         </thead>
                         <tbody id="{{ $modalId }}_lista">
                             <tr>
-                                <td colspan="4" class="text-muted text-center py-4">
+                                <td colspan="{{ $showMarcaColumn ? 5 : 4 }}" class="text-muted text-center py-4">
                                     Use a busca para encontrar um registro.
                                 </td>
                             </tr>
@@ -146,11 +151,13 @@
 
                 tbody.innerHTML = config.items.map(function (item, index) {
                     const extra = item.extra ? escapeHtml(item.extra) : '<span class="text-muted">—</span>';
+                    const marca = item.marca_nome ? escapeHtml(item.marca_nome) : '<span class="text-muted">—</span>';
 
                     return `
                         <tr>
                             <td class="align-middle">${escapeHtml(item.id)}</td>
                             <td class="align-middle font-weight-semibold">${escapeHtml(item.nome)}</td>
+                            ${config.showMarcaColumn ? `<td class="align-middle">${marca}</td>` : ''}
                             <td class="align-middle">${extra}</td>
                             <td class="align-middle text-right">
                                 <button type="button" class="btn btn-primary btn-sm btn-selecionar-entidade" data-index="${index}">
@@ -291,6 +298,7 @@
                 placeholder: @json($placeholder),
                 extraParams: @json($extraParams),
                 afterSelect: @json($afterSelect),
+                showMarcaColumn: @json($showMarcaColumn),
             });
         });
     </script>

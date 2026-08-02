@@ -68,6 +68,12 @@ class MovimentacaoService extends AbstractBaseService
 
     public function create(array $data)
     {
+        if (!SchemaCache::hasColumn('movimentacoes', 'gera_disponibilidade')) {
+            unset($data['gera_disponibilidade']);
+        } elseif (!array_key_exists('gera_disponibilidade', $data)) {
+            $data['gera_disponibilidade'] = false;
+        }
+
         $movimentacao = parent::create($data);
 
         if ($movimentacao instanceof Movimentacao) {
@@ -210,6 +216,7 @@ class MovimentacaoService extends AbstractBaseService
             'tipo_movimentacao_id' => 1, // adicao de veiculo
             'status_movimentacao_id' => $statusMovimentacao,
             'local_destino_id' => $data['local_disponibilidade'] ?? null,
+            'gera_disponibilidade' => true,
             'data_registro' => Carbon::now(),
             'data_saida' => null,
             'data_chegada_prevista' => $dataHoraCarbon ?? Carbon::now(),
@@ -388,7 +395,7 @@ class MovimentacaoService extends AbstractBaseService
 
     // Chegada à Estação
     public function registrarChegadaNaEstacao($veiculo_id, $estacao_id, $observacao = 'Veículo chegou à estação'){
-        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, null, $observacao, __FUNCTION__);
+        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, null, $observacao, __FUNCTION__, null, null, null, true);
     }
 
     // Veículo Indisponível
@@ -461,6 +468,10 @@ class MovimentacaoService extends AbstractBaseService
             if (!empty($statusDisponivelIds)) {
                 $updates['status_veiculo_id'] = (int) reset($statusDisponivelIds);
             }
+        }
+
+        if (!empty($movimentacao->gera_disponibilidade)) {
+            $updates['data_hora_disponibilidade'] = $movimentacao->data_chegada_real ?? now();
         }
 
         if (!empty($updates)) {
@@ -632,6 +643,17 @@ class MovimentacaoService extends AbstractBaseService
             $valor['km_chegada'] = $kmChegada;
         }
 
+        if (!SchemaCache::hasColumn('movimentacoes', 'gera_disponibilidade')) {
+            unset($valor['gera_disponibilidade']);
+        } else {
+            $valor['gera_disponibilidade'] = in_array($funcao, [
+                'adicionarAoEstoque',
+                'realizarCheckOut',
+                'registrarChegadaNaEstacao',
+                'registrarRetornoDaOficina',
+            ], true);
+        }
+
         if ($dataChegadaPrevista !== null) {
             $valor['data_chegada_prevista'] = Carbon::parse($dataChegadaPrevista)->toDateTimeString();
         } elseif ($validReservaId) {
@@ -650,3 +672,4 @@ class MovimentacaoService extends AbstractBaseService
         return $this->mapaMovimentacoes[$nomeFuncao] ?? throw new TipoEStatusMovimentacaoException("Função desconhecida: $nomeFuncao", 404);
     }
 }
+

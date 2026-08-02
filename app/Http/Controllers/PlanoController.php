@@ -79,6 +79,7 @@ class PlanoController extends Controller
             'ordem'           => 'integer|min:0',
             'itens'           => 'nullable|array',
             'itens.*.descricao' => 'required_with:itens|string|max:200',
+            'itens.*.valor'    => 'nullable|numeric|min:0',
             'itens.*.incluso'   => 'boolean',
         ]);
 
@@ -190,6 +191,7 @@ class PlanoController extends Controller
             'itens'           => 'nullable|array',
             'itens.*.id'        => 'nullable|integer',
             'itens.*.descricao' => 'required_with:itens|string|max:200',
+            'itens.*.valor'    => 'nullable|numeric|min:0',
             'itens.*.incluso'   => 'boolean',
         ]);
 
@@ -231,6 +233,7 @@ class PlanoController extends Controller
             $payload = [
                 'plano_id'  => $plano->id,
                 'descricao' => $itemData['descricao'],
+                'valor'     => $itemData['valor'] ?? null,
                 'incluso'   => (bool) ($itemData['incluso'] ?? true),
                 'ordem'     => $index + 1,
             ];

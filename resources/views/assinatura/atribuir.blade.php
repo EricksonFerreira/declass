@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', 'Atribuir Plano')
 
@@ -71,6 +71,9 @@
                                                     value="{{ $emp->id }}"
                                                     data-vinculada="{{ $vinculada ? '1' : '0' }}"
                                                     data-plano-atual="{{ $planoAtualNome ?? '' }}"
+                                                    data-veiculos="{{ $emp->qtd_veiculos_ativos ?? 0 }}"
+                                                    data-estacoes="{{ $emp->qtd_estacoes ?? 0 }}"
+                                                    data-storage="{{ $emp->armazenamento_usado_mb ?? 0 }}"
                                                     {{ request('empresa_id') == $emp->id ? 'selected' : '' }}
                                                 >
                                                     {{ $emp->nome }}{{ $vinculada ? ' - Vinculada: ' . $planoAtualNome : ' - Sem plano' }}
@@ -130,6 +133,47 @@
                                     <div class="col-md-4 mb-3">
                                         <label class="mb-1">Armazenamento do plano</label>
                                         <input type="text" class="form-control form-control-sm" id="planoStorage" readonly placeholder="Selecione um plano...">
+                                    </div>
+
+                                    <div class="col-12 mb-3">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-bordered mb-0" id="tabelaAdicionais">
+                                                <thead class="thead-light">
+                                                    <tr>
+                                                        <th>Adicional</th>
+                                                        <th class="text-right" style="width: 140px;">Valor unitário</th>
+                                                        <th class="text-center" style="width: 90px;">Qtd.</th>
+                                                        <th class="text-right" style="width: 140px;">Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>Veículo adicional</td>
+                                                        <td class="text-right" id="veiculoUnit">R$ 3,00</td>
+                                                        <td class="text-center" id="veiculoQtd">0</td>
+                                                        <td class="text-right" id="veiculoTotal">R$ 0,00</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Filial adicional</td>
+                                                        <td class="text-right" id="filialUnit">R$ 29,00</td>
+                                                        <td class="text-center" id="filialQtd">0</td>
+                                                        <td class="text-right" id="filialTotal">R$ 0,00</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Armazenamento adicional</td>
+                                                        <td class="text-right" id="storageUnit">R$ 5,00 por 5 GB</td>
+                                                        <td class="text-center" id="storageQtd">0</td>
+                                                        <td class="text-right" id="storageTotal">R$ 0,00</td>
+                                                    </tr>
+                                                </tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <th colspan="3" class="text-right">Total geral</th>
+                                                        <th class="text-right" id="totalGeral">R$ 0,00</th>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                        </div>
                                     </div>
 
                                     <div class="col-12 mb-2">
@@ -298,10 +342,23 @@
             });
 
             function atualizarPreview() {
+                const empresa = document.getElementById('empresa_id').selectedOptions[0];
                 const plano = document.getElementById('plano_id').selectedOptions[0];
                 const periodicidade = document.getElementById('periodicidade').value;
                 const valorEl = document.getElementById('valorExibido');
                 const storageEl = document.getElementById('planoStorage');
+                const veiculoUnit = 3;
+                const filialUnit = 29;
+                const storageUnit = 5;
+                const storageBlockGb = 5;
+
+                const empresaVeiculos = empresa ? parseInt(empresa.dataset.veiculos || 0, 10) : 0;
+                const empresaEstacoes = empresa ? parseInt(empresa.dataset.estacoes || 0, 10) : 0;
+                const empresaStorage = empresa ? parseFloat(empresa.dataset.storage || 0) : 0;
+
+                const planoVeiculos = plano ? parseInt(plano.dataset.veiculos || 0, 10) : 0;
+                const planoEstacoes = plano ? parseInt(plano.dataset.estacoes || 0, 10) : 0;
+                const planoStorageMb = plano ? parseFloat(plano.dataset.storage || 0) : 0;
 
                 if (plano && plano.value) {
                     const valor = periodicidade === 'anual'
@@ -314,10 +371,35 @@
                     valorEl.value = '';
                     storageEl.value = '';
                 }
+
+                const veiculosExcedentes = Math.max(0, empresaVeiculos - planoVeiculos);
+                const filiaisExcedentes = Math.max(0, empresaEstacoes - planoEstacoes);
+                const storageExcedenteMb = Math.max(0, empresaStorage - planoStorageMb);
+                const storageQtd = storageExcedenteMb > 0 ? Math.ceil(storageExcedenteMb / (storageBlockGb * 1024)) : 0;
+
+                const veiculoTotal = veiculosExcedentes * veiculoUnit;
+                const filialTotal = filiaisExcedentes * filialUnit;
+                const storageTotal = storageQtd * storageUnit;
+                const totalGeral = veiculoTotal + filialTotal + storageTotal;
+
+                document.getElementById('veiculoUnit').textContent = 'R$ ' + veiculoUnit.toFixed(2).replace('.', ',');
+                document.getElementById('veiculoQtd').textContent = String(veiculosExcedentes);
+                document.getElementById('veiculoTotal').textContent = 'R$ ' + veiculoTotal.toFixed(2).replace('.', ',');
+
+                document.getElementById('filialUnit').textContent = 'R$ ' + filialUnit.toFixed(2).replace('.', ',');
+                document.getElementById('filialQtd').textContent = String(filiaisExcedentes);
+                document.getElementById('filialTotal').textContent = 'R$ ' + filialTotal.toFixed(2).replace('.', ',');
+
+                document.getElementById('storageUnit').textContent = 'R$ ' + storageUnit.toFixed(2).replace('.', ',') + ' por 5 GB';
+                document.getElementById('storageQtd').textContent = String(storageQtd);
+                document.getElementById('storageTotal').textContent = 'R$ ' + storageTotal.toFixed(2).replace('.', ',');
+
+                document.getElementById('totalGeral').textContent = 'R$ ' + totalGeral.toFixed(2).replace('.', ',');
             }
 
             document.getElementById('plano_id').addEventListener('change', atualizarPreview);
             document.getElementById('periodicidade').addEventListener('change', atualizarPreview);
+            document.getElementById('empresa_id').addEventListener('change', atualizarPreview);
             atualizarPreview();
 
             form.addEventListener('submit', function() {
@@ -327,3 +409,4 @@
         })();
     </script>
 @stop
+

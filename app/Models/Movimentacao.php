@@ -27,6 +27,7 @@ class Movimentacao extends Model
         'km_saida',
         'data_chegada_prevista',
         'data_chegada_real',
+        'gera_disponibilidade',
         'km_chegada',
         'observacoes',
         'user_id',
@@ -46,6 +47,7 @@ class Movimentacao extends Model
         'data_saida' => 'datetime',
         'data_chegada_prevista' => 'datetime',
         'data_chegada_real' => 'datetime',
+        'gera_disponibilidade' => 'boolean',
     ];
 
     public function usuario()
