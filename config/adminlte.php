@@ -462,7 +462,7 @@ return [
                     'icon' => 'fas fa-home',
                 ],
                 [
-                    'text' => 'Visão Geral',
+                    'text' => 'VisÃ£o Geral',
                     'icon' => 'fas fa-chart-line',
                     'submenu' => [
                         [
@@ -473,11 +473,11 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Operação',
+                    'text' => 'OperaÃ§Ã£o',
                     'icon' => 'fas fa-cogs',
                     'submenu' => [
                         [
-                            'text' => 'Lançamentos',
+                            'text' => 'LanÃ§amentos',
                             'route' => 'financeiro.fluxo-caixa.index',
                             'icon' => 'fas fa-file-invoice-dollar',
                         ],
@@ -494,7 +494,7 @@ return [
                     ],
                 ],
                 [
-                    'text' => 'Relatórios',
+                    'text' => 'RelatÃ³rios',
                     'icon' => 'fas fa-chart-bar',
                     'submenu' => [
                         [
@@ -503,12 +503,12 @@ return [
                             'icon' => 'fas fa-receipt',
                         ],
                         [
-                            'text' => 'Análise por Cliente',
+                            'text' => 'AnÃ¡lise por Cliente',
                             'route' => 'financeiro.analise-clientes',
                             'icon' => 'fas fa-user-friends',
                         ],
                         [
-                            'text' => 'Análise por Veículo',
+                            'text' => 'AnÃ¡lise por VeÃ­culo',
                             'route' => 'financeiro.analise-veiculos',
                             'icon' => 'fas fa-car-side',
                         ],
