@@ -41,7 +41,12 @@
                             <div class="col-md-8">
                                 <div class="form-group mb-0">
                                     <label for="cidades">Cidades</label>
-                                    <select id="cidades" name="cidades[]" class="form-control select2-cidades" multiple required></select>
+                                    <select id="cidades" name="cidades[]" class="form-control selectpicker" multiple
+                                        data-live-search="true"
+                                        data-actions-box="true"
+                                        data-selected-text-format="count > 2"
+                                        data-none-selected-text="Selecione as cidades"
+                                        required></select>
                                     <small class="text-muted d-block mt-1">Selecione uma ou mais cidades. As categorias de locação são pesquisadas automaticamente.</small>
                                 </div>
                             </div>
@@ -94,12 +99,11 @@
 @endsection
 
 @section('css')
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap4-theme/1.5.2/select2-bootstrap4.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.18/dist/css/bootstrap-select.min.css">
 @endsection
 
 @section('js')
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.13.18/dist/js/bootstrap-select.min.js"></script>
     <script>
         (function () {
             const estadoSelect = document.getElementById('estado');
@@ -112,16 +116,32 @@
             const cidadesUrl = @json(route('prospeccao.cidades', ['uf' => '__UF__']));
             const buscaUrl = @json(route('prospeccao.index'));
 
+            if (window.jQuery && jQuery.fn.selectpicker && jQuery.fn.selectpicker.Constructor) {
+                jQuery.fn.selectpicker.Constructor.BootstrapVersion = '4';
+            }
+
             function escapar(valor) {
                 const div = document.createElement('div');
                 div.textContent = valor == null ? '' : String(valor);
                 return div.innerHTML;
             }
 
-            function iniciarSelect2() {
+            function iniciarSelectPicker() {
                 const select = window.jQuery(cidadesSelect);
-                if (select.hasClass('select2-hidden-accessible')) select.select2('destroy');
-                select.select2({theme: 'bootstrap4', width: '100%', placeholder: 'Selecione as cidades', closeOnSelect: false});
+                if (!select.length || !window.jQuery.fn.selectpicker) return;
+
+                if (select.parent().hasClass('bootstrap-select')) {
+                    select.selectpicker('destroy');
+                }
+
+                select.selectpicker({
+                    liveSearch: true,
+                    actionsBox: true,
+                    noneSelectedText: 'Selecione as cidades',
+                    selectedTextFormat: 'count > 2',
+                    width: '100%',
+                    size: 8,
+                });
             }
 
             async function carregarCidades(uf, selecionadas = []) {
@@ -131,7 +151,7 @@
                 if (!uf) {
                     cidadesSelect.innerHTML = '';
                     cidadesSelect.disabled = false;
-                    iniciarSelect2();
+                    iniciarSelectPicker();
                     return;
                 }
 
@@ -145,7 +165,7 @@
                     cidadesSelect.innerHTML = `<option>${escapar(erro.message)}</option>`;
                 } finally {
                     cidadesSelect.disabled = false;
-                    iniciarSelect2();
+                    iniciarSelectPicker();
                 }
             }
 
@@ -170,7 +190,7 @@
 
             form.addEventListener('submit', async function (evento) {
                 evento.preventDefault();
-                const cidades = Array.from(cidadesSelect.selectedOptions).map(option => option.value).filter(Boolean);
+                const cidades = window.jQuery(cidadesSelect).val() || [];
                 if (!cidades.length) {
                     corpo.innerHTML = '<tr><td colspan="8" class="text-center text-danger py-4">Selecione pelo menos uma cidade.</td></tr>';
                     return;
