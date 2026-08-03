@@ -46,7 +46,7 @@
                             <div class="col-md-8">
                                 <div class="form-group">
                                     <label for="cidades">Cidades</label>
-                                    <select id="cidades" name="cidades[]" class="form-control" multiple size="8"></select>
+                                    <select id="cidades" name="cidades[]" class="form-control select2-cidades" multiple></select>
                                     <small class="text-muted d-block mt-1">Selecione uma ou mais cidades do estado escolhido.</small>
                                 </div>
                             </div>
@@ -138,7 +138,27 @@
     </div>
 @endsection
 
+@section('css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap4-theme/1.5.2/select2-bootstrap4.min.css">
+    <style>
+        .select2-container--bootstrap4 .select2-selection {
+            border-radius: .25rem;
+            min-height: calc(1.5em + .75rem + 2px);
+        }
+
+        .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__rendered {
+            padding: .2rem .35rem;
+        }
+
+        .select2-container--bootstrap4 .select2-selection--multiple .select2-selection__choice {
+            margin-top: .2rem;
+        }
+    </style>
+@endsection
+
 @section('js')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
     <script>
         (function () {
             const estadoSelect = document.getElementById('estado');
@@ -150,6 +170,17 @@
             const cidadesSelecionadas = @json($cidadesSelecionadas);
             const cidadesUrlBase = @json(route('prospeccao.cidades', ['uf' => '__UF__']));
             const buscaUrl = @json(route('prospeccao.index'));
+
+            function inicializarSelect2Cidades() {
+                if (window.jQuery && typeof window.jQuery.fn.select2 === 'function') {
+                    window.jQuery('.select2-cidades').select2({
+                        theme: 'bootstrap4',
+                        width: '100%',
+                        placeholder: 'Selecione as cidades',
+                        closeOnSelect: false,
+                    });
+                }
+            }
 
             async function carregarCidades(uf) {
                 cidadesSelect.innerHTML = '<option value="">Carregando...</option>';
@@ -178,6 +209,8 @@
                         }
                         cidadesSelect.appendChild(option);
                     });
+
+                    inicializarSelect2Cidades();
                 } catch (error) {
                     cidadesSelect.innerHTML = '<option value="">Erro ao carregar cidades</option>';
                 } finally {
