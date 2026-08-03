@@ -13,7 +13,7 @@
 
 @section('content')
     @php
-        $cidadesInput = old('cidades', implode("\n", $listaCidades ?? ['Recife', 'Olinda', 'Jaboatão dos Guararapes', 'Paulista']));
+        $cidadesSelecionadas = old('cidades', $listaCidades ?? []);
         $termosInput = old('termos', implode("\n", $listaTermos ?? ['locadora de veículos', 'aluguel de carros', 'locação de veículos', 'aluguel de vans']));
         $estados = $estados ?? [];
     @endphp
@@ -54,7 +54,7 @@
                                 <div class="form-group mb-0">
                                     <label for="termos">Expressões de busca</label>
                                     <textarea id="termos" name="termos" class="form-control" rows="4" placeholder="Uma expressão por linha">{{ $termosInput }}</textarea>
-                                    <small class="text-muted d-block mt-1">Cada cidade será consultada com cada expressão, para ampliar a chance de encontrar empresas em categorias diferentes.</small>
+                                    <small class="text-muted d-block mt-1">Cada cidade será consultada com cada expressão.</small>
                                 </div>
                             </div>
                         </div>
@@ -87,7 +87,7 @@
     <div class="card card-outline card-secondary">
         <div class="card-header d-flex justify-content-between align-items-center flex-wrap" style="gap:.75rem;">
             <h3 class="card-title mb-0">Resultados</h3>
-            <div class="text-muted small">{{ count($resultados ?? []) }} resultado(s)</div>
+            <div class="text-muted small" id="resultado-contador">{{ count($resultados ?? []) }} resultado(s)</div>
         </div>
         <div class="card-body p-0 table-responsive">
             <table class="table table-striped table-bordered mb-0">
@@ -100,12 +100,12 @@
                         <th>Avaliação</th>
                         <th>Situação</th>
                         <th>Endereço</th>
-                        <th>Google Maps</th>
+                        <th>Mapa</th>
                         <th>Qtd. avaliações</th>
                         <th>Localizada em</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="resultado-corpo">
                     @forelse ($resultados ?? [] as $resultado)
                         <tr>
                             <td>{{ $resultado['nome'] ?? '-' }}</td>
@@ -143,16 +143,21 @@
         (function () {
             const estadoSelect = document.getElementById('estado');
             const cidadesSelect = document.getElementById('cidades');
-            let cidadesSelecionadas = @json(old('cidades', $listaCidades ?? []));
+            const form = document.getElementById('form-prospeccao');
+            const resultadoCorpo = document.getElementById('resultado-corpo');
+            const resultadoContador = document.getElementById('resultado-contador');
+            const btnBuscar = form?.querySelector('button[type="submit"]');
+            const cidadesSelecionadas = @json($cidadesSelecionadas);
             const cidadesUrlBase = @json(route('prospeccao.cidades', ['uf' => '__UF__']));
+            const buscaUrl = @json(route('prospeccao.index'));
 
             async function carregarCidades(uf) {
                 cidadesSelect.innerHTML = '<option value="">Carregando...</option>';
                 cidadesSelect.disabled = true;
 
                 if (!uf) {
- cidadesSelect.innerHTML = '';
-    cidadesSelect.disabled = false;
+                    cidadesSelect.innerHTML = '';
+                    cidadesSelect.disabled = false;
                     return;
                 }
 
@@ -180,12 +185,106 @@
                 }
             }
 
+            function renderResultados(resultados) {
+                resultadoCorpo.innerHTML = '';
+                resultadoContador.textContent = `${Array.isArray(resultados) ? resultados.length : 0} resultado(s)`;
+
+                if (!Array.isArray(resultados) || resultados.length === 0) {
+                    resultadoCorpo.innerHTML = `
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">
+                                Nenhuma locadora encontrada para os filtros informados.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+
+                resultados.forEach(function (resultado) {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${resultado.nome ?? '-'}</td>
+                        <td>${resultado.cidade ?? '-'}</td>
+                        <td>${resultado.telefone ?? 'Não informado'}</td>
+                        <td>${resultado.site ?? 'Não informado'}</td>
+                        <td>${resultado.avaliacao ?? 'Não disponível'}</td>
+                        <td><span class="badge badge-info">${resultado.status_prospeccao ?? 'Nova'}</span></td>
+                        <td>${resultado.endereco ?? '—'}</td>
+                        <td>${resultado.google_maps_url ? `<a href="${resultado.google_maps_url}" target="_blank" rel="noopener">Abrir</a>` : '-'}</td>
+                        <td>${resultado.quantidade_avaliacoes ?? 'Não disponível'}</td>
+                        <td>${resultado.consultado_google_em ? new Date(resultado.consultado_google_em).toLocaleString('pt-BR') : '—'}</td>
+                    `;
+                    resultadoCorpo.appendChild(tr);
+                });
+            }
+
             if (estadoSelect) {
                 estadoSelect.addEventListener('change', function () {
-                    cidadesSelecionadas = [];
                     carregarCidades(this.value);
                 });
                 carregarCidades(estadoSelect.value);
+            }
+
+            if (form) {
+                form.addEventListener('submit', async function (event) {
+                    event.preventDefault();
+
+                    const cidadesSelecionadasAtuais = Array.from(cidadesSelect.selectedOptions)
+                        .map(option => option.value)
+                        .filter(Boolean);
+
+                    if (cidadesSelecionadasAtuais.length === 0) {
+                        renderResultados([]);
+                        resultadoCorpo.innerHTML = `
+                            <tr>
+                                <td colspan="10" class="text-center text-muted py-4">
+                                    Selecione pelo menos uma cidade para buscar.
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+
+                    const formData = new FormData(form);
+                    formData.delete('cidades[]');
+                    cidadesSelecionadasAtuais.forEach(cidade => formData.append('cidades[]', cidade));
+                    formData.set('buscar', '1');
+
+                    if (btnBuscar) {
+                        btnBuscar.disabled = true;
+                        btnBuscar.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Buscando...';
+                    }
+
+                    try {
+                        const response = await fetch(buscaUrl + '?' + new URLSearchParams(formData).toString(), {
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                            },
+                        });
+
+                        const data = await response.json();
+
+                        if (!response.ok) {
+                            throw new Error(data.message || 'Falha ao buscar locadoras.');
+                        }
+
+                        renderResultados(data.resultados || []);
+                    } catch (error) {
+                        resultadoCorpo.innerHTML = `
+                            <tr>
+                                <td colspan="10" class="text-center text-danger py-4">
+                                    ${error.message || 'Erro ao executar a busca.'}
+                                </td>
+                            </tr>
+                        `;
+                    } finally {
+                        if (btnBuscar) {
+                            btnBuscar.disabled = false;
+                            btnBuscar.innerHTML = '<i class="fas fa-search mr-1"></i> Buscar locadoras';
+                        }
+                    }
+                });
             }
         })();
     </script>

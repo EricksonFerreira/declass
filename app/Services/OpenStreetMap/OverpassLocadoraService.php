@@ -2,47 +2,35 @@
 
 namespace App\Services\OpenStreetMap;
 
-use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
 class OverpassLocadoraService
 {
-    private const OVERPASS_ENDPOINTS = [
+    private const ENDPOINTS = [
         'https://overpass-api.de/api/interpreter',
         'https://overpass.kumi.systems/api/interpreter',
     ];
 
     public function searchLocadoras(
-        string $estado,
+        string $uf,
         array $cidades,
         array $termos = []
     ): array {
         $resultados = [];
-        $identificadoresEncontrados = [];
+        $encontrados = [];
         $erros = [];
+
+        $uf = strtoupper(trim($uf));
 
         foreach ($cidades as $cidade) {
             try {
-                $bbox = $this->resolverBoundingBox($cidade, $estado);
-
-                if ($bbox === null) {
-                    $erros[] = "Não foi possível localizar os limites de {$cidade}/{$estado}.";
-
-                    continue;
-                }
-
-                /*
-                 * A busca é feita uma vez por cidade.
-                 * Os termos não são necessários para encontrar os locais
-                 * corretamente cadastrados como car_rental no OpenStreetMap.
-                 */
-                $elementos = $this->consultarOverpass($bbox);
+                $elementos = $this->buscarCidade($cidade, $uf);
 
                 foreach ($elementos as $elemento) {
                     $placeId = $this->buildPlaceId($elemento);
 
-                    if ($placeId === '' || isset($identificadoresEncontrados[$placeId])) {
+                    if ($placeId === '' || isset($encontrados[$placeId])) {
                         continue;
                     }
 
@@ -60,7 +48,7 @@ class OverpassLocadoraService
                         data_get($elemento, 'center.lon')
                     );
 
-                    $identificadoresEncontrados[$placeId] = true;
+                    $encontrados[$placeId] = true;
 
                     $resultados[] = [
                         'google_place_id' => $placeId,
@@ -70,7 +58,7 @@ class OverpassLocadoraService
                             ?? $tags['addr:municipality']
                             ?? $cidade
                         ),
-                        'estado' => $estado,
+                        'estado' => $uf,
                         'endereco' => $this->montarEndereco($tags),
                         'telefone' => (string) (
                             $tags['contact:phone']
@@ -104,34 +92,29 @@ class OverpassLocadoraService
 
         if ($resultados === [] && $erros !== []) {
             throw new RuntimeException(
-                'A busca não pôde ser concluída. '.implode(' | ', $erros)
+                'Nenhuma busca foi concluída. '.implode(' | ', $erros)
             );
         }
 
         return $resultados;
     }
 
-    private function consultarOverpass(array $bbox): array
+    private function buscarCidade(string $cidade, string $uf): array
     {
-        $query = $this->montarQueryOverpass($bbox);
+        $query = $this->montarQueryOverpass($cidade, $uf);
         $ultimoErro = null;
 
-        foreach (self::OVERPASS_ENDPOINTS as $endpoint) {
+        foreach (self::ENDPOINTS as $endpoint) {
             try {
-                /*
-                 * IMPORTANTE:
-                 * asForm() envia application/x-www-form-urlencoded.
-                 * A Overpass espera o código da consulta no parâmetro "data".
-                 */
                 $response = Http::asForm()
                     ->acceptJson()
-                    ->withUserAgent(config(
-                        'app.openstreetmap_user_agent',
-                        config('app.name').' contato@decars.com.br'
-                    ))
+                    ->withUserAgent(
+                        config('app.name', 'DeCars')
+                        .'/1.0 contato@seudominio.com.br'
+                    )
                     ->connectTimeout(15)
                     ->timeout(90)
-                    ->retry(2, 1500)
+                    ->retry(2, 1500, throw: false)
                     ->post($endpoint, [
                         'data' => $query,
                     ]);
@@ -144,85 +127,58 @@ class OverpassLocadoraService
                     );
                 }
 
-                $ultimoErro = "HTTP {$response->status()} em {$endpoint}";
-            } catch (RequestException|\Throwable $exception) {
+                $ultimoErro = "HTTP {$response->status()}";
+            } catch (\Throwable $exception) {
                 $ultimoErro = $exception->getMessage();
             }
         }
 
         throw new RuntimeException(
-            'A Overpass API não respondeu corretamente'
+            'A Overpass API não respondeu'
             .($ultimoErro ? ": {$ultimoErro}" : '.')
         );
     }
 
-    private function montarQueryOverpass(array $bbox): string
-    {
-        [$south, $west, $north, $east] = $bbox;
+    private function montarQueryOverpass(
+        string $cidade,
+        string $uf
+    ): string {
+        $cidade = $this->escapeOverpass($cidade);
+        $codigoEstado = 'BR-'.$this->escapeOverpass($uf);
 
         return <<<OVERPASS
 [out:json][timeout:60];
+
+area
+  ["ISO3166-2"="$codigoEstado"]
+  ["boundary"="administrative"]
+  ["admin_level"="4"]
+  ->.estado;
+
+area(area.estado)
+  ["name"="$cidade"]
+  ["boundary"="administrative"]
+  ["admin_level"="8"]
+  ->.cidade;
+
 (
-  nwr["amenity"="car_rental"]($south,$west,$north,$east);
-  nwr["office"="car_rental"]($south,$west,$north,$east);
-  nwr["shop"="car_rental"]($south,$west,$north,$east);
-  nwr["rental"="car"]($south,$west,$north,$east);
+  nwr["amenity"="car_rental"](area.cidade);
+  nwr["office"="car_rental"](area.cidade);
+  nwr["shop"="car_rental"](area.cidade);
+  nwr["rental"="car"](area.cidade);
 );
+
 out center tags;
 OVERPASS;
     }
 
-    private function resolverBoundingBox(
-        string $cidade,
-        string $estado
-    ): ?array {
-        $response = Http::acceptJson()
-            ->withUserAgent(config(
-                'app.openstreetmap_user_agent',
-                config('app.name').' contato@example.com'
-            ))
-            ->connectTimeout(10)
-            ->timeout(30)
-            ->retry(2, 1000)
-            ->get('https://nominatim.openstreetmap.org/search', [
-                'format' => 'jsonv2',
-                'countrycodes' => 'br',
-                'limit' => 1,
-                'addressdetails' => 1,
-                'q' => "{$cidade}, {$estado}, Brasil",
-            ]);
-
-        if (! $response->successful()) {
-            throw new RuntimeException(
-                "O Nominatim retornou HTTP {$response->status()}."
-            );
-        }
-
-        $item = $response->json()[0] ?? null;
-
-        if (! is_array($item)) {
-            return null;
-        }
-
-        $bbox = $item['boundingbox'] ?? null;
-
-        /*
-         * O Nominatim retorna:
-         * [south, north, west, east]
-         *
-         * A Overpass utiliza:
-         * south, west, north, east
-         */
-        if (! is_array($bbox) || count($bbox) < 4) {
-            return null;
-        }
-
-        return [
-            (float) $bbox[0],
-            (float) $bbox[2],
-            (float) $bbox[1],
-            (float) $bbox[3],
-        ];
+    private function escapeOverpass(string $value): string
+    {
+        return str_replace(
+            ['\\', '"'],
+            ['\\\\', '\\"'],
+            trim($value)
+        );
     }
 
     private function obterNome(array $tags): string
@@ -237,12 +193,10 @@ OVERPASS;
 
     private function montarEndereco(array $tags): string
     {
-        $logradouro = trim(
-            implode(' ', array_filter([
-                $tags['addr:street'] ?? null,
-                $tags['addr:housenumber'] ?? null,
-            ]))
-        );
+        $logradouro = trim(implode(' ', array_filter([
+            $tags['addr:street'] ?? null,
+            $tags['addr:housenumber'] ?? null,
+        ])));
 
         $endereco = implode(', ', array_filter([
             $logradouro ?: null,
@@ -255,7 +209,9 @@ OVERPASS;
             $tags['addr:postcode'] ?? null,
         ]));
 
-        return $endereco !== '' ? $endereco : 'Não informado';
+        return $endereco !== ''
+            ? $endereco
+            : 'Não informado';
     }
 
     private function montarUrlMapa(
@@ -275,13 +231,13 @@ OVERPASS;
         );
     }
 
-    private function buildPlaceId(array $element): string
+    private function buildPlaceId(array $elemento): string
     {
-        $type = (string) data_get($element, 'type', '');
-        $id = (string) data_get($element, 'id', '');
+        $tipo = (string) data_get($elemento, 'type', '');
+        $id = (string) data_get($elemento, 'id', '');
 
-        return $type !== '' && $id !== ''
-            ? "osm:{$type}:{$id}"
+        return $tipo !== '' && $id !== ''
+            ? "osm:{$tipo}:{$id}"
             : '';
     }
 }

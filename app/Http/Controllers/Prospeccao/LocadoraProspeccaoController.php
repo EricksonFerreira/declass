@@ -41,6 +41,24 @@ class LocadoraProspeccaoController extends Controller
             }
         }
 
+        $payload = [
+            'estados' => $estados,
+            'estado' => $estado,
+            'estadoSelecionado' => $estadoSelecionado,
+            'listaCidades' => $listaCidades,
+            'listaTermos' => $listaTermos,
+            'resultados' => $resultados,
+            'erroBusca' => $erroBusca,
+        ];
+
+        if ($request->ajax() || $request->expectsJson()) {
+            return response()->json([
+                'ok' => $erroBusca === null,
+                'message' => $erroBusca,
+                'resultados' => $resultados,
+            ], $erroBusca === null ? 200 : 422);
+        }
+
         return view('prospeccao.index', compact(
             'estados',
             'estado',
