@@ -4,6 +4,7 @@
     $etapaCheckin = (bool) $reserva->contratoCheckin;
     $etapaCheckinAssinado = $etapaCheckin && ($reserva->contratoCheckin->assinado ?? '') === 'S';
     $calcao = $reserva->calcao ?? null;
+    $calcaoConfiguradoEmpresa = (bool) ($calcaoConfiguradoEmpresa ?? false);
     $etapaCalcao = (bool) $calcao;
     $etapaCalcaoRegistrado = $etapaCalcao && in_array((string) ($calcao->status ?? ''), [
         \App\Models\Calcao::STATUS_AUTORIZADO,
@@ -11,6 +12,7 @@
         \App\Models\Calcao::STATUS_PARCIALMENTE_CAPTURADO,
         \App\Models\Calcao::STATUS_CANCELADO,
     ], true);
+    $etapaCalcaoDispensado = ! $calcaoConfiguradoEmpresa;
     $etapaCheckout = (bool) ($reserva->contratoCheckout ?? null);
     $etapaCheckoutAssinado = $etapaCheckout
         && (! empty($reserva->contratoCheckout->assinatura) || ! empty($reserva->contratoCheckout->data_assinatura));
@@ -78,12 +80,12 @@
         <span class="rs-flow__label">4.</span>
         <span class="rs-flow__value">Assinatura</span>
     </div>
-    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCalcaoRegistrado ? 'is-done' : ($etapaCheckinAssinado ? 'is-current' : '')) }}">
-        <i class="rs-flow__icon fas {{ $etapaCalcaoRegistrado ? 'fa-check-circle' : 'fa-clock' }}"></i>
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : (($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'is-done' : ($etapaCheckinAssinado ? 'is-current' : '')) }}">
+        <i class="rs-flow__icon fas {{ ($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'fa-check-circle' : 'fa-clock' }}"></i>
         <span class="rs-flow__label">5.</span>
-        <span class="rs-flow__value">Calção</span>
+        <span class="rs-flow__value">{{ $etapaCalcaoDispensado ? 'Sem caução' : 'Calção' }}</span>
     </div>
-    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckout ? 'is-done' : ($etapaCalcaoRegistrado ? 'is-current' : '')) }}">
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckout ? 'is-done' : (($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'is-current' : '')) }}">
         <i class="rs-flow__icon fas {{ $etapaCheckout ? 'fa-check-circle' : 'fa-clock' }}"></i>
         <span class="rs-flow__label">6.</span>
         <span class="rs-flow__value">Check-out</span>

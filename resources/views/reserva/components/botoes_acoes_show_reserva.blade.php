@@ -24,6 +24,8 @@
     $codigoPagamentoReserva = $reserva->codigoReserva?->codigo ?? ('RES-' . $reserva->id);
     $codigoCheckinReserva = $reserva->codigoReserva?->codigo ?? $reserva->id;
     $reservaCancelada = in_array(strtolower((string) ($reserva->statusReserva->nome ?? '')), ['cancelada', 'cancelado'], true);
+    $calcaoConfiguradoEmpresa = (bool) ($calcaoConfiguradoEmpresa ?? false);
+    $calcaoMensagemBloqueio = 'A empresa nao tem calcao habilitado.';
 @endphp
 
 <section class="reservation-actions-card">
@@ -94,10 +96,17 @@
             @if($reserva->contratoCheckin && $reserva->contratoCheckin->assinado === 'S')
                 @can('calcao.autorizar')
                 @php $calcaoAtual = $reserva->calcao ?? null; @endphp
-                @if(!$calcaoAtual || $calcaoAtual->status === 'falhou')
+                @if(!$calcaoConfiguradoEmpresa)
+                <span class="action-pill action-pill--disabled"
+                      data-toggle="tooltip"
+                      title="{{ $calcaoMensagemBloqueio }}">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Calção no cartão</span>
+                </span>
+                @elseif(!$calcaoAtual || $calcaoAtual->status === 'falhou')
                 <a href="{{ route('reserva.calcao', $reserva->codigoReserva->codigo) }}" class="action-pill" style="background:linear-gradient(135deg,#6f42c1,#9061f9)">
                     <i class="fas fa-shield-alt"></i>
-                    <span>CalÃ§Ã£o no cartÃ£o</span>
+                    <span>Calção no cartão</span>
                 </a>
                 @endif
                 @endcan
@@ -791,3 +800,5 @@
     });
 })();
 </script>
+
+

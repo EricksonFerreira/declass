@@ -28,19 +28,20 @@
             </div>
         </div>
         <div class="card-body px-0 pt-0 pb-1 table-responsive">
-
             <table class="table table-striped table-bordered table-sm">
                 <thead>
                     <tr>
                         <th>Nome</th>
+                        <th>Filial</th>
                         <th>Status</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($horarios_diarios as $horario_diario)
+                    @forelse ($horarios_diarios as $horario_diario)
                         <tr>
                             <td>{{ $horario_diario->nome }}</td>
+                            <td>{{ $horario_diario->filiais_label }}</td>
                             <td>
                                 <span class="badge badge-xs bg-{{ $horario_diario->ativo == 'S' ? 'success' : 'danger' }}">
                                     {{ $horario_diario->ativo == 'S' ? 'ATIVO' : 'INATIVO' }}
@@ -52,7 +53,11 @@
                                 <x-delete-button :action="route('horario_diario.destroy', $horario_diario->id)" />
                             </td>
                         </tr>
-                    @endforeach
+                    @empty
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Nenhum horário diário encontrado.</td>
+                        </tr>
+                    @endforelse
                 </tbody>
             </table>
         </div>

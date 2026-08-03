@@ -4,6 +4,7 @@ namespace App\Actions\Reserva\Exibir;
 
 use App\DTO\BreadCrumbItem;
 use App\DTO\Reserva\ReservaResolvida;
+use App\Models\ConfiguracaoCalcao;
 use App\Models\Reserva;
 use App\Services\BreadcrumbService;
 use Carbon\Carbon;
@@ -18,7 +19,7 @@ class ExibirReservaComumAction
     {
         $registro = $reserva->registro;
         $registro->load([
-            'criadoPor', 'nfseAtual', 'estacaoRetirada', 'estacaoDevolucao',
+            'empresa', 'criadoPor', 'nfseAtual', 'estacaoRetirada', 'estacaoDevolucao',
             'grupoFrota', 'cupomDesconto', 'opcionais',
             'transacoes' => fn ($q) => $q->with(['user', 'pagoPor'])->orderByDesc('id'),
             'contratoCheckin.grupoFrotaOriginal', 'contratoCheckin.veiculo.marca',
@@ -27,6 +28,16 @@ class ExibirReservaComumAction
             'avariaCobrancas' => fn ($q) => $q->orderByDesc('id')->take(10),
             'multas' => fn ($q) => $q->orderByDesc('id')->take(5),
         ]);
+
+        $calcaoConfiguradoEmpresa = false;
+        if ($registro->empresa_id) {
+            $calcaoConfiguradoEmpresa = ConfiguracaoCalcao::query()
+                ->where('empresa_id', $registro->empresa_id)
+                ->whereNull('grupo_frota_id')
+                ->whereNull('modelo_id')
+                ->where('ativo', true)
+                ->exists();
+        }
 
         $dados = $this->montarDadosDaVisao($registro);
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
@@ -40,6 +51,7 @@ class ExibirReservaComumAction
             'codigo' => $reserva->codigo,
             'breadcrumb' => $breadcrumb,
             'titulo' => 'Detalhes da Reserva',
+            'calcaoConfiguradoEmpresa' => $calcaoConfiguradoEmpresa,
             ...$dados,
         ]);
     }

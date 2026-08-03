@@ -756,6 +756,12 @@ return [
                     ],
                 ],
                 [
+                    'text' => 'Prospecção',
+                    'route' => 'prospeccao.index',
+                    'icon' => 'fas fa-search-location',
+                    'can' => 'acessar-superadmin',
+                ],
+                [
                     'text' => 'Sincronizar catálogo FIPE',
                     'route' => 'fipe.catalogo.run',
                     'icon' => 'fas fa-car',

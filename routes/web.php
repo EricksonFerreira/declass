@@ -12,6 +12,7 @@ use App\Http\Controllers\PagamentoController;
 use App\Http\Controllers\PaisController;
 use App\Http\Controllers\PowerBIController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Prospeccao\LocadoraProspeccaoController;
 use App\Http\Controllers\Reserva\ReservaController;
 use App\Http\Controllers\SiteApresentacaoController;
 use App\Http\Controllers\SiteReservaController;
@@ -123,6 +124,9 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     Route::get('home/chart-data', [HomeController::class, 'chartData'])->middleware(['auth'])->name('home.chart-data');
     Route::get('indicadores', [IndicadoresController::class, 'index'])->middleware(['auth'])->name('indicadores.index');
     Route::get('indicadores/{slug}', [IndicadoresController::class, 'show'])->middleware(['auth'])->name('indicadores.show');
+    Route::get('prospeccao', [LocadoraProspeccaoController::class, 'index'])->middleware(['auth', 'can:acessar-superadmin'])->name('prospeccao.index');
+    Route::get('prospeccao/estados', [LocadoraProspeccaoController::class, 'estados'])->middleware(['auth', 'can:acessar-superadmin'])->name('prospeccao.estados');
+    Route::get('prospeccao/cidades/{uf}', [LocadoraProspeccaoController::class, 'cidades'])->middleware(['auth', 'can:acessar-superadmin'])->name('prospeccao.cidades');
     Route::get('/dashboard', function () {
         return redirect()->route('reserva.minhas');
     })->middleware('auth')->name('dashboard');

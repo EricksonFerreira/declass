@@ -18,7 +18,16 @@ class HorarioDiario extends Model
 
     public function estacoes()
     {
-        return $this->belongsToMany(Estacao::class);
+        return $this->belongsToMany(Estacao::class, 'horarios', 'horario_diario_id', 'estacao_id');
+    }
+
+    public function getFiliaisLabelAttribute(): string
+    {
+        if ($this->relationLoaded('estacoes') && $this->estacoes->isNotEmpty()) {
+            return $this->estacoes->pluck('nome')->implode(', ');
+        }
+
+        return 'Sem filial';
     }
 
 }
