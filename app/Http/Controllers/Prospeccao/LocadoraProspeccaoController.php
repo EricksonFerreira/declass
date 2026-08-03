@@ -13,50 +13,35 @@ class LocadoraProspeccaoController extends Controller
 {
     public function index(Request $request, OverpassLocadoraService $locadoraService)
     {
-        $estado = (string) $request->input('estado', 'PE');
+        $estado = strtoupper((string) $request->input('estado', 'PE'));
         $cidades = $this->normalizarListaCidades($request->input('cidades', []));
-        $termos = $this->normalizarListaTexto((string) $request->input('termos', ''));
-
         $estados = $this->listaEstados();
-        $estadoSelecionado = $estados[$estado] ?? 'Pernambuco';
+        $estadoSelecionado = $estados[$estado] ?? null;
         $listaCidades = $cidades;
-        $listaTermos = $termos;
         $resultados = [];
         $erroBusca = null;
 
         if ($request->filled('buscar')) {
-            if ($listaCidades === []) {
+            if ($estadoSelecionado === null) {
+                $erroBusca = 'Selecione um estado válido.';
+            } elseif ($listaCidades === []) {
                 $erroBusca = 'Selecione pelo menos uma cidade.';
             } else {
                 try {
-                    $resultados = $locadoraService->searchLocadoras(
-                        $estadoSelecionado,
-                        $listaCidades,
-                        $listaTermos
-                    );
-                } catch (\Throwable $e) {
-                    report($e);
-                    $erroBusca = $e->getMessage();
+                    $resultados = $locadoraService->searchLocadoras($estado, $listaCidades);
+                } catch (\Throwable $exception) {
+                    report($exception);
+                    $erroBusca = $exception->getMessage();
                 }
             }
         }
 
-        $payload = [
-            'estados' => $estados,
-            'estado' => $estado,
-            'estadoSelecionado' => $estadoSelecionado,
-            'listaCidades' => $listaCidades,
-            'listaTermos' => $listaTermos,
-            'resultados' => $resultados,
-            'erroBusca' => $erroBusca,
-        ];
+        if ($request->expectsJson()) {
+            if ($erroBusca !== null) {
+                return response()->json(['message' => $erroBusca], 422);
+            }
 
-        if ($request->ajax() || $request->expectsJson()) {
-            return response()->json([
-                'ok' => $erroBusca === null,
-                'message' => $erroBusca,
-                'resultados' => $resultados,
-            ], $erroBusca === null ? 200 : 422);
+            return response()->json(['resultados' => $resultados]);
         }
 
         return view('prospeccao.index', compact(
@@ -64,7 +49,6 @@ class LocadoraProspeccaoController extends Controller
             'estado',
             'estadoSelecionado',
             'listaCidades',
-            'listaTermos',
             'resultados',
             'erroBusca'
         ));
@@ -78,29 +62,26 @@ class LocadoraProspeccaoController extends Controller
     public function cidades(string $uf): JsonResponse
     {
         $uf = strtoupper(trim($uf));
+        $estados = $this->listaEstados();
 
-        if (! array_key_exists($uf, $this->listaEstados())) {
+        if (! array_key_exists($uf, $estados)) {
             return response()->json(['message' => 'Estado inválido.'], 422);
         }
 
-        $cacheKey = "prospeccao.cidades.$uf";
+        $codigos = [
+            'AC' => 12, 'AL' => 27, 'AP' => 16, 'AM' => 13, 'BA' => 29, 'CE' => 23,
+            'DF' => 53, 'ES' => 32, 'GO' => 52, 'MA' => 21, 'MT' => 51, 'MS' => 50,
+            'MG' => 31, 'PA' => 15, 'PB' => 25, 'PR' => 41, 'PE' => 26, 'PI' => 22,
+            'RJ' => 33, 'RN' => 24, 'RS' => 43, 'RO' => 11, 'RR' => 14, 'SC' => 42,
+            'SP' => 35, 'SE' => 28, 'TO' => 17,
+        ];
 
-        $cidades = Cache::remember($cacheKey, now()->addDay(), function () use ($uf): array {
-            $codigos = [
-                'AC' => 12, 'AL' => 27, 'AP' => 16, 'AM' => 13, 'BA' => 29, 'CE' => 23,
-                'DF' => 53, 'ES' => 32, 'GO' => 52, 'MA' => 21, 'MT' => 51, 'MS' => 50,
-                'MG' => 31, 'PA' => 15, 'PB' => 25, 'PR' => 41, 'PE' => 26, 'PI' => 22,
-                'RJ' => 33, 'RN' => 24, 'RS' => 43, 'RO' => 11, 'RR' => 14, 'SC' => 42,
-                'SP' => 35, 'SE' => 28, 'TO' => 17,
-            ];
-
-            $codigo = $codigos[$uf] ?? null;
-            if ($codigo === null) {
-                return [];
-            }
-
+        $cidades = Cache::remember("prospeccao.cidades.{$uf}", now()->addDay(), function () use ($codigos, $uf): array {
             try {
-                $response = Http::timeout(15)->get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/{$codigo}/municipios");
+                $response = Http::acceptJson()
+                    ->timeout(20)
+                    ->get("https://servicodados.ibge.gov.br/api/v1/localidades/estados/{$codigos[$uf]}/municipios");
+
                 if (! $response->successful()) {
                     return [];
                 }
@@ -114,7 +95,9 @@ class LocadoraProspeccaoController extends Controller
                     ->sortBy('nome')
                     ->values()
                     ->all();
-            } catch (\Throwable $e) {
+            } catch (\Throwable $exception) {
+                report($exception);
+
                 return [];
             }
         });
@@ -125,55 +108,27 @@ class LocadoraProspeccaoController extends Controller
     private function listaEstados(): array
     {
         return [
-            'AC' => 'Acre',
-            'AL' => 'Alagoas',
-            'AP' => 'Amapá',
-            'AM' => 'Amazonas',
-            'BA' => 'Bahia',
-            'CE' => 'Ceará',
-            'DF' => 'Distrito Federal',
-            'ES' => 'Espírito Santo',
-            'GO' => 'Goiás',
-            'MA' => 'Maranhão',
-            'MT' => 'Mato Grosso',
-            'MS' => 'Mato Grosso do Sul',
-            'MG' => 'Minas Gerais',
-            'PA' => 'Pará',
-            'PB' => 'Paraíba',
-            'PR' => 'Paraná',
-            'PE' => 'Pernambuco',
-            'PI' => 'Piauí',
-            'RJ' => 'Rio de Janeiro',
-            'RN' => 'Rio Grande do Norte',
-            'RS' => 'Rio Grande do Sul',
-            'RO' => 'Rondônia',
-            'RR' => 'Roraima',
-            'SC' => 'Santa Catarina',
-            'SP' => 'São Paulo',
-            'SE' => 'Sergipe',
+            'AC' => 'Acre', 'AL' => 'Alagoas', 'AP' => 'Amapá', 'AM' => 'Amazonas',
+            'BA' => 'Bahia', 'CE' => 'Ceará', 'DF' => 'Distrito Federal',
+            'ES' => 'Espírito Santo', 'GO' => 'Goiás', 'MA' => 'Maranhão',
+            'MT' => 'Mato Grosso', 'MS' => 'Mato Grosso do Sul', 'MG' => 'Minas Gerais',
+            'PA' => 'Pará', 'PB' => 'Paraíba', 'PR' => 'Paraná', 'PE' => 'Pernambuco',
+            'PI' => 'Piauí', 'RJ' => 'Rio de Janeiro', 'RN' => 'Rio Grande do Norte',
+            'RS' => 'Rio Grande do Sul', 'RO' => 'Rondônia', 'RR' => 'Roraima',
+            'SC' => 'Santa Catarina', 'SP' => 'São Paulo', 'SE' => 'Sergipe',
             'TO' => 'Tocantins',
         ];
     }
 
-    private function normalizarListaTexto(string $texto): array
-    {
-        return collect(preg_split('/\r\n|\r|\n/', $texto))
-            ->map(fn ($item) => trim((string) $item))
-            ->filter()
-            ->values()
-            ->all();
-    }
-
     private function normalizarListaCidades(mixed $valor): array
     {
-        if (is_array($valor)) {
-            return collect($valor)
-                ->map(fn ($item) => trim((string) $item))
-                ->filter()
-                ->values()
-                ->all();
-        }
+        $itens = is_array($valor) ? $valor : preg_split('/\r\n|\r|\n/', (string) $valor);
 
-        return $this->normalizarListaTexto((string) $valor);
+        return collect($itens)
+            ->map(fn ($item) => trim((string) $item))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }
