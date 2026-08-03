@@ -25,10 +25,19 @@ class LocadoraProspeccaoController extends Controller
         $erroBusca = null;
 
         if ($request->filled('buscar')) {
-            try {
-                $resultados = $locadoraService->searchLocadoras($estadoSelecionado, $listaCidades, $listaTermos);
-            } catch (\Throwable $e) {
-                $erroBusca = $e->getMessage();
+            if ($listaCidades === []) {
+                $erroBusca = 'Selecione pelo menos uma cidade.';
+            } else {
+                try {
+                    $resultados = $locadoraService->searchLocadoras(
+                        $estadoSelecionado,
+                        $listaCidades,
+                        $listaTermos
+                    );
+                } catch (\Throwable $e) {
+                    report($e);
+                    $erroBusca = $e->getMessage();
+                }
             }
         }
 

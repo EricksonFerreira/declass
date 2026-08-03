@@ -143,7 +143,7 @@
         (function () {
             const estadoSelect = document.getElementById('estado');
             const cidadesSelect = document.getElementById('cidades');
-            const cidadesSelecionadas = @json(old('cidades', $listaCidades ?? []));
+            let cidadesSelecionadas = @json(old('cidades', $listaCidades ?? []));
             const cidadesUrlBase = @json(route('prospeccao.cidades', ['uf' => '__UF__']));
 
             async function carregarCidades(uf) {
@@ -151,7 +151,8 @@
                 cidadesSelect.disabled = true;
 
                 if (!uf) {
-                    cidadesSelect.innerHTML = '';
+ cidadesSelect.innerHTML = '';
+    cidadesSelect.disabled = false;
                     return;
                 }
 
@@ -181,9 +182,9 @@
 
             if (estadoSelect) {
                 estadoSelect.addEventListener('change', function () {
+                    cidadesSelecionadas = [];
                     carregarCidades(this.value);
                 });
-
                 carregarCidades(estadoSelect.value);
             }
         })();
