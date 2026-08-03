@@ -53,11 +53,13 @@ class StoreVeiculoRequest extends FormRequest
         $marcaExists = Rule::exists('marcas', 'id');
         $modeloExists = Rule::exists('modelos', 'id');
         $nomeFrotaUnique = Rule::unique('grupos_frota', 'nome');
+        $placaUnique = Rule::unique('veiculos', 'placa_licenca');
 
         if ($empresaId !== null) {
             $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
             $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
             $nomeFrotaUnique = $nomeFrotaUnique->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $placaUnique = $placaUnique->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
         }
 
         return [
@@ -69,7 +71,7 @@ class StoreVeiculoRequest extends FormRequest
             'modelo_id' => ['required', 'integer', $modeloExists],
             'data_vendido' => 'nullable|date',
             'ano_fabricacao' => 'required|integer|min:1900|max:' . date('Y'),
-            'placa_licenca' => ['required', 'string', 'max:7', 'regex:' . self::PLACA_BR_REGEX],
+            'placa_licenca' => ['required', 'string', 'max:7', 'regex:' . self::PLACA_BR_REGEX, $placaUnique],
             'chassi' => 'nullable|string|max:17',
             'cor' => 'required|string|max:50',
             'numero_motor' => 'nullable|string|max:50',
@@ -120,6 +122,7 @@ class StoreVeiculoRequest extends FormRequest
             'placa_licenca.required' => 'O campo placa é obrigatório',
             'placa_licenca.max' => 'O campo placa deve ter no máximo 7 caracteres',
             'placa_licenca.regex' => 'O campo placa deve estar no formato brasileiro válido: ABC1234 ou ABC1D23',
+            'placa_licenca.unique' => 'Já existe um veículo cadastrado com esta placa',
             'chassi.required' => 'O campo chassi é obrigatório',
             'chassi.max' => 'O campo chassi deve ter no máximo 17 caracteres',
             'cor.required' => 'O campo cor é obrigatório',
@@ -205,4 +208,5 @@ class StoreVeiculoRequest extends FormRequest
             // 'vendido.in' => 'O campo status de venda deve ser "N" (Não Vendido) ou "S" (Vendido)',
     }
 }
+
 

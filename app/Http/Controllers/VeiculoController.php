@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Veiculo\CreateVeiculoAction;
+use App\Actions\Veiculo\AdicionarDisponibilidadeVeiculoAction;
 use App\Actions\Veiculo\EditVeiculoAction;
 use App\Actions\Veiculo\FiltroVeiculoAction;
 use App\Actions\Veiculo\IndexVeiculoAction;
@@ -12,6 +13,7 @@ use App\Enums\StatusReservaEnum;
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Veiculo\StoreVeiculoRequest;
+use App\Http\Requests\Veiculo\AdicionarDisponibilidadeVeiculoRequest;
 use App\Http\Requests\Veiculo\UpdateVeiculoRequest;
 use App\Models\GrupoFrota;
 use App\Models\Marca;
@@ -77,6 +79,8 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
 
     protected $storeVeiculoAction;
 
+    protected $adicionarDisponibilidadeVeiculoAction;
+
     protected $editVeiculoAction;
 
     protected $filtroVeiculoAction;
@@ -96,6 +100,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         IndexVeiculoAction $indexVeiculoAction,
         CreateVeiculoAction $createVeiculoAction,
         StoreVeiculoAction $storeVeiculoAction,
+        AdicionarDisponibilidadeVeiculoAction $adicionarDisponibilidadeVeiculoAction,
         EditVeiculoAction $editVeiculoAction,
         FiltroVeiculoAction $filtroVeiculoAction
     ) {
@@ -115,6 +120,7 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
         $this->indexVeiculoAction = $indexVeiculoAction;
         $this->createVeiculoAction = $createVeiculoAction;
         $this->storeVeiculoAction = $storeVeiculoAction;
+        $this->adicionarDisponibilidadeVeiculoAction = $adicionarDisponibilidadeVeiculoAction;
         $this->editVeiculoAction = $editVeiculoAction;
         $this->filtroVeiculoAction = $filtroVeiculoAction;
     }
@@ -707,6 +713,16 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
                 'valor_depreciacao_acumulada' => $veiculoAtualizado->valor_depreciacao_acumulada,
             ],
         ]);
+    }
+
+    public function adicionarDisponibilidade(AdicionarDisponibilidadeVeiculoRequest $request, $veiculo): JsonResponse
+    {
+        $resultado = $this->adicionarDisponibilidadeVeiculoAction->handle((int) $veiculo, $request->validated());
+
+        return response()->json([
+            'message' => $resultado['message'],
+            'payload' => $resultado['payload'] ?? [],
+        ], $resultado['status'] ?? 200);
     }
 
     public function destroy($id)

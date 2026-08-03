@@ -41,7 +41,6 @@ class UpdateVeiculoRequest extends FormRequest
         }
     }
 
-
     /**
      * Get the validation rules that apply to the request.
      *
@@ -53,18 +52,24 @@ class UpdateVeiculoRequest extends FormRequest
 
         $marcaExists = Rule::exists('marcas', 'id');
         $modeloExists = Rule::exists('modelos', 'id');
+        $placaUnique = Rule::unique('veiculos', 'placa_licenca');
 
         if ($empresaId !== null) {
             $marcaExists = $marcaExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
             $modeloExists = $modeloExists->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+            $placaUnique = $placaUnique->where(fn ($query) => $query->where('empresa_id', (int) $empresaId));
+        }
+
+        $veiculoRoute = $this->route('veiculo') ?? $this->route('id');
+        if (is_object($veiculoRoute) && method_exists($veiculoRoute, 'getKey')) {
+            $veiculoRoute = $veiculoRoute->getKey();
         }
 
         return [
             'status_veiculo_id' => 'required|string|max:2',
             'marca_id' => ['required', 'integer', $marcaExists],
             'modelo_id' => ['required', 'integer', $modeloExists],
-            'ano_fabricacao' => 'required|integer|min:1900|max:' . date('Y'),
-            'placa_licenca' => ['required', 'string', 'max:7', 'regex:' . self::PLACA_BR_REGEX],
+            'placa_licenca' => ['required', 'string', 'max:7', 'regex:' . self::PLACA_BR_REGEX, $placaUnique->ignore($veiculoRoute)],
             'chassi' => 'nullable|string|max:17',
             // 'renavam' => 'required|string|max:11',
             'cor' => 'required|string|max:50',
@@ -95,18 +100,13 @@ class UpdateVeiculoRequest extends FormRequest
     {
         return [
             'status_veiculo_id.required' => 'O campo status é obrigatório',
-            'status_veiculo_id.max' => 'O campo status deve ter no máximo 1 caractere',
-            'ano_fabricacao.required' => 'O campo ano de fabricação é obrigatório',
-            'ano_fabricacao.integer' => 'O campo ano de fabricação deve ser um número inteiro',
-            'ano_fabricacao.min' => 'O campo ano de fabricação deve ser no mínimo 1900',
-            'ano_fabricacao.max' => 'O campo ano de fabricação deve ser no máximo o ano atual',
+            'status_veiculo_id.max' => 'O campo status deve ter no máximo 2 caracteres',
             'placa_licenca.required' => 'O campo placa é obrigatório',
             'placa_licenca.max' => 'O campo placa deve ter no máximo 7 caracteres',
             'placa_licenca.regex' => 'O campo placa deve estar no formato brasileiro válido: ABC1234 ou ABC1D23',
+            'placa_licenca.unique' => 'Já existe um veículo cadastrado com esta placa',
             'chassi.required' => 'O campo chassi é obrigatório',
             'chassi.max' => 'O campo chassi deve ter no máximo 17 caracteres',
-            'renavam.required' => 'O campo RENAVAM é obrigatório',
-            'renavam.max' => 'O campo RENAVAM deve ter no máximo 11 caracteres',
             'cor.required' => 'O campo cor é obrigatório',
             'cor.max' => 'O campo cor deve ter no máximo 50 caracteres',
             'numero_motor.required' => 'O campo número do motor é obrigatório',
@@ -134,6 +134,7 @@ class UpdateVeiculoRequest extends FormRequest
             'proxima_revisao_kms.integer' => 'O campo quilometragem da próxima revisão deve ser um número inteiro',
             'proxima_revisao_kms.min' => 'O campo quilometragem da próxima revisão deve ser no mínimo 0',
             'proxima_revisao_kms.gte' => 'A quilometragem da próxima revisão não pode ser menor que a quilometragem atual',
+            'proxima_manutencao_kms.required' => 'O campo quilometragem da próxima manutenção é obrigatório',
             'proxima_manutencao_kms.integer' => 'O campo quilometragem da próxima manutenção deve ser um número inteiro',
             'proxima_manutencao_kms.min' => 'O campo quilometragem da próxima manutenção deve ser no mínimo 0',
             'proxima_manutencao_kms.gte' => 'A quilometragem da próxima manutenção não pode ser menor que a quilometragem atual',

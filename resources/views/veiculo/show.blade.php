@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -14,6 +14,10 @@
     if (empty($veiculo->data_hora_disponibilidade)) $pendenciasCadastro[] = 'Data inicial de disponibilidade';
 @endphp
 
+@php
+    $temPendenciaDisponibilidade = empty($veiculo->local_disponibilidade) || empty($veiculo->data_hora_disponibilidade);
+@endphp
+
     {{-- HERO COMPACTO --}}
     <div class="module-card mb-3">
         <div class="module-card-header vehicle-hero-compact">
@@ -22,13 +26,13 @@
                     <i class="fas fa-car"></i>
                 </div>
                 <div>
-                    <div class="module-header-eyebrow">Frota &bull; Detalhes do veículo</div>
+                    <div class="module-header-eyebrow">Frota &bull; Detalhes do veÃ­culo</div>
                     <h1 class="module-header-title">{{ $veiculo->nome }}</h1>
                     <p class="module-header-sub">
-                        <strong>{{ $veiculo->placa_licenca ?? '—' }}</strong>
-                        &bull; {{ optional($veiculo->marca)->nome ?? '—' }}
-                        {{ optional($veiculo->modelo)->nome ?? '—' }}
-                        &bull; {{ $veiculo->ano_fabricacao ?? '—' }}/{{ $veiculo->modelo?->ano_modelo ?? '—' }}
+                        <strong>{{ $veiculo->placa_licenca ?? '-' }}</strong>
+                        &bull; {{ optional($veiculo->marca)->nome ?? '-' }}
+                        {{ optional($veiculo->modelo)->nome ?? '-' }}
+                        &bull; {{ $veiculo->ano_fabricacao ?? '-' }}/{{ $veiculo->modelo?->ano_modelo ?? '-' }}
                     </p>
                 </div>
             </div>
@@ -51,7 +55,7 @@
     <div class="vehicle-status-strip mb-3">
         <div class="vehicle-status-item">
             <span>Status</span>
-            <strong>{{ optional($veiculo->statusVeiculo)->nome ?? 'Não informado' }}</strong>
+            <strong>{{ optional($veiculo->statusVeiculo)->nome ?? 'NÃ£o informado' }}</strong>
         </div>
         <div class="vehicle-status-item">
             <span>Disponibilidade</span>
@@ -72,7 +76,7 @@
             <span>Próxima manutenção</span>
             <strong>{{ $veiculo->data_proxima_manutencao ? \Carbon\Carbon::parse($veiculo->data_proxima_manutencao)->format('d/m/Y') : 'Não informada' }}</strong>
         </div>
-        <div class="vehicle-status-item vehicle-status-item--alerts">
+        {{-- <div class="vehicle-status-item vehicle-status-item--alerts">
             <span>Pendências</span>
             <strong>
                 {{
@@ -82,19 +86,25 @@
                     + $veiculo->multas->whereIn('status_multa', ['pendente','em_analise'])->count()
                 }}
             </strong>
-        </div>
+        </div> --}}
         @if($pendenciasCadastro)
         <div class="vehicle-status-item vehicle-status-item--alerts">
-            <span>Cadastro inicial</span>
-            <strong class="text-warning"><i class="fas fa-exclamation-triangle mr-1"></i>{{ count($pendenciasCadastro) }} pendência(s)</strong>
+            <span>Pendências de cadastro</span>
+            @if(count($pendenciasCadastro) > 0 )
+            <button type="button" id="btnAbrirModalDisponibilidadeVeiculo" class="btn-xp btn-xp--warning btn-xp--sm btn-pendencias-cadastro">
+                <i class="fas fa-map-marked-alt"></i>
+                <span class="text-white">Regularizar cadastro</span>
+                {{-- <span class="btn-pendencias-cadastro__count">{{ count($pendenciasCadastro) }}</span> --}}
+            </button>
+            @endif
         </div>
         @endif
     </div>
 
-    {{-- AÇÕES RÁPIDAS EM UMA LINHA --}}
+    {{-- AÃ‡Ã•ES RÃPIDAS EM UMA LINHA --}}
     <div class="vehicle-action-bar mb-3">
         <a target="_blank" href="{{ route('veiculo.edit', $veiculo->id) }}" class="vehicle-action vehicle-action--primary">
-            <i class="fas fa-pen"></i><span>Editar veículo</span>
+            <i class="fas fa-pen"></i><span>Editar veículos</span>
         </a>
         <a target="_blank" href="{{ route('movimentacao.create', ['veiculo_id' => $veiculo->id, 'tipo_movimentacao_id' => 10]) }}" class="vehicle-action">
             <i class="fas fa-route"></i><span>Transferir estação</span>
@@ -113,11 +123,67 @@
         </a>
     </div>
 
+
+    @if($temPendenciaDisponibilidade)
+    <div class="modal fade" id="modalDisponibilidadeVeiculo" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content vehicle-modal vehicle-modal--alert">
+                <div class="modal-header vehicle-modal__header border-bottom-0">
+                    <div class="d-flex align-items-start">
+                        <div class="vehicle-modal__icon mr-3">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <div class="vehicle-modal__eyebrow">Pendências de cadastro</div>
+                            <h5 class="modal-title mb-1 vehicle-modal__title">Informar local e data de disponibilidade</h5>
+                            <small class="vehicle-modal__subtitle">Complete os campos abaixo para liberar o fluxo do veículo com segurança.</small>
+                        </div>
+                    </div>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form id="formDisponibilidadeVeiculo" method="POST" action="{{ route('veiculo.adicionarDisponibilidade', $veiculo->id) }}">
+                    @csrf
+                    <div class="modal-body vehicle-modal__body p-4">
+                        <div id="disponibilidadeModalAlert" class="alert d-none mb-3" role="alert"></div>
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="form-group">
+                                    <label for="modal_local_disponibilidade" class="vehicle-modal__label">Estação de origem</label>
+                                    <select id="modal_local_disponibilidade" name="local_disponibilidade" class="form-control vehicle-modal__control" required>
+                                        <option value="">Selecione</option>
+                                        @foreach(($dispEstacoes ?? []) as $estacaoId => $estacaoNome)
+                                            <option value="{{ $estacaoId }}">{{ $estacaoNome }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group">
+                                    <label for="modal_data_hora_disponibilidade" class="vehicle-modal__label">Data inicial</label>
+                                    <input type="datetime-local" id="modal_data_hora_disponibilidade" name="data_hora_disponibilidade" class="form-control vehicle-modal__control" required>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer vehicle-modal__footer border-top-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-xp btn-xp--ghost btn-xp--sm" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-xp btn-xp--sm" id="btnSalvarDisponibilidadeVeiculo">
+                            <i class="fas fa-save"></i> <span>Salvar disponibilidade</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    @endif
+
     {{-- DADOS COMPLEMENTARES EM ABAS --}}
     <div class="config-card vehicle-info-tabs mb-3">
         <div class="vehicle-tabs-nav" role="tablist">
             <button class="vehicle-tab-button is-active" type="button" data-vehicle-tab="overview">
-                <i class="fas fa-eye"></i> Visão geral
+                <i class="fas fa-eye"></i> VisÃ£o geral
             </button>
             <button class="vehicle-tab-button" type="button" data-vehicle-tab="registration">
                 <i class="fas fa-id-card"></i> Cadastro
@@ -132,26 +198,26 @@
 
         <div class="vehicle-tab-panel is-active" data-vehicle-tab-panel="overview">
             <div class="veiculo-grid veiculo-grid--compact">
-                <div class="veiculo-field"><span class="veiculo-field__label">Placa</span><span class="veiculo-field__value">{{ $veiculo->placa_licenca ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Marca / Modelo</span><span class="veiculo-field__value">{{ optional($veiculo->marca)->nome ?? '—' }} / {{ optional($veiculo->modelo)->nome ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Ano</span><span class="veiculo-field__value">{{ $veiculo->ano_fabricacao ?? '—' }}/{{ $veiculo->modelo?->ano_modelo ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Cor</span><span class="veiculo-field__value">{{ $veiculo->cor ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Tipo de frota</span><span class="veiculo-field__value">{{ optional($veiculo->tipoFrota)->nome ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Grupo de frota</span><span class="veiculo-field__value">{{ optional($veiculo->grupoFrota)->nome ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Próxima revisão</span><span class="veiculo-field__value">{{ $veiculo->proxima_revisao_kms ? number_format($veiculo->proxima_revisao_kms, 0, ',', '.') . ' km' : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Disponível a partir de</span><span class="veiculo-field__value">{{ $veiculo->data_hora_disponibilidade ? \Carbon\Carbon::parse($veiculo->data_hora_disponibilidade)->format('d/m/Y H:i') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Placa</span><span class="veiculo-field__value">{{ $veiculo->placa_licenca ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Marca / Modelo</span><span class="veiculo-field__value">{{ optional($veiculo->marca)->nome ?? '-' }} / {{ optional($veiculo->modelo)->nome ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Ano</span><span class="veiculo-field__value">{{ $veiculo->ano_fabricacao ?? '-' }}/{{ $veiculo->modelo?->ano_modelo ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Cor</span><span class="veiculo-field__value">{{ $veiculo->cor ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Tipo de frota</span><span class="veiculo-field__value">{{ optional($veiculo->tipoFrota)->nome ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Grupo de frota</span><span class="veiculo-field__value">{{ optional($veiculo->grupoFrota)->nome ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Próxima revisão</span><span class="veiculo-field__value">{{ $veiculo->proxima_revisao_kms ? number_format($veiculo->proxima_revisao_kms, 0, ',', '.') . ' km' : '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Disponí   vel a partir de</span><span class="veiculo-field__value">{{ $veiculo->data_hora_disponibilidade ? \Carbon\Carbon::parse($veiculo->data_hora_disponibilidade)->format('d/m/Y H:i') : '-' }}</span></div>
             </div>
         </div>
 
         <div class="vehicle-tab-panel" data-vehicle-tab-panel="registration">
             <div class="veiculo-grid veiculo-grid--compact">
-                <div class="veiculo-field"><span class="veiculo-field__label">Nome</span><span class="veiculo-field__value">{{ $veiculo->nome ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Chassi</span><span class="veiculo-field__value">{{ $veiculo->chassi ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">RENAVAM</span><span class="veiculo-field__value">{{ $veiculo->renavam ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Nº do motor</span><span class="veiculo-field__value">{{ $veiculo->numero_motor ?? '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Data de compra</span><span id="fipeResumoDataCompra" class="veiculo-field__value">{{ $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('d/m/Y') : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Validade da placa</span><span class="veiculo-field__value">{{ $veiculo->data_placa_licenca ? \Carbon\Carbon::parse($veiculo->data_placa_licenca)->format('d/m/Y') : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Próxima inspeção</span><span class="veiculo-field__value">{{ $veiculo->data_proxima_inspecao ? \Carbon\Carbon::parse($veiculo->data_proxima_inspecao)->format('d/m/Y') : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Nome</span><span class="veiculo-field__value">{{ $veiculo->nome ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Chassi</span><span class="veiculo-field__value">{{ $veiculo->chassi ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">RENAVAM</span><span class="veiculo-field__value">{{ $veiculo->renavam ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">NÂº do motor</span><span class="veiculo-field__value">{{ $veiculo->numero_motor ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Data de compra</span><span id="fipeResumoDataCompra" class="veiculo-field__value">{{ $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('d/m/Y') : '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Validade da placa</span><span class="veiculo-field__value">{{ $veiculo->data_placa_licenca ? \Carbon\Carbon::parse($veiculo->data_placa_licenca)->format('d/m/Y') : '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Próxima inspeção</span><span class="veiculo-field__value">{{ $veiculo->data_proxima_inspecao ? \Carbon\Carbon::parse($veiculo->data_proxima_inspecao)->format('d/m/Y') : '-' }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Situação na frota</span><span class="veiculo-field__value">{{ $veiculo->vendido ? 'Vendido' : 'Em frota' }}</span></div>
             </div>
         </div>
@@ -162,8 +228,8 @@
                 <div class="veiculo-field"><span class="veiculo-field__label">Custos com multas</span><span class="veiculo-field__value {{ $finCustoMultas > 0 ? 'text-danger' : '' }}">R$ {{ number_format($finCustoMultas, 2, ',', '.') }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Custos com sinistros</span><span class="veiculo-field__value {{ $finCustoSinistros > 0 ? 'text-danger' : '' }}">R$ {{ number_format($finCustoSinistros, 2, ',', '.') }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Lucro líquido</span><span class="veiculo-field__value {{ $finLucroLiquido >= 0 ? 'text-success' : 'text-danger' }}">R$ {{ number_format($finLucroLiquido, 2, ',', '.') }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Rentabilidade</span><span class="veiculo-field__value">{{ $finRentabilidade !== null ? number_format($finRentabilidade, 2, ',', '.') . '%' : '—' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">Payback</span><span class="veiculo-field__value">{{ $finPaybackMeses !== null ? $finPaybackMeses . ' meses' : '—' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Rentabilidade</span><span class="veiculo-field__value">{{ $finRentabilidade !== null ? number_format($finRentabilidade, 2, ',', '.') . '%' : '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Payback</span><span class="veiculo-field__value">{{ $finPaybackMeses !== null ? $finPaybackMeses . ' meses' : '-' }}</span></div>
             </div>
         </div>
 
@@ -171,15 +237,15 @@
             <div class="vehicle-summary-block">
                 {{-- <div class="vehicle-summary-block__title">Resumo atual</div> --}}
                 <div class="veiculo-grid veiculo-grid--compact">
-                    <div class="veiculo-field"><span class="veiculo-field__label">Valor de compra</span><span id="fipeResumoValorCompra" class="veiculo-field__value">{{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : '—' }}</span></div>
-                    <div class="veiculo-field"><span class="veiculo-field__label">Valor FIPE</span><span id="fipeResumoValor" class="veiculo-field__value">{{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : '—' }}</span></div>
-                    <div class="veiculo-field"><span class="veiculo-field__label">Valor estimado atual</span><span id="fipeResumoValorAtual" class="veiculo-field__value">{{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : '—' }}</span></div>
-                    <div class="veiculo-field"><span class="veiculo-field__label">Depreciação acumulada</span><span id="fipeResumoDepreciacao" class="veiculo-field__value">{{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : '—' }}</span></div>
-                    <div class="veiculo-field"><span class="veiculo-field__label">Taxa anual</span><span id="fipeResumoTaxa" class="veiculo-field__value">{{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '—' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor de compra</span><span id="fipeResumoValorCompra" class="veiculo-field__value">{{ $veiculo->valor_compra !== null ? 'R$ ' . number_format((float) $veiculo->valor_compra, 2, ',', '.') : '-' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor FIPE</span><span id="fipeResumoValor" class="veiculo-field__value">{{ $veiculo->valor_fipe !== null ? 'R$ ' . number_format((float) $veiculo->valor_fipe, 2, ',', '.') : '-' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Valor estimado atual</span><span id="fipeResumoValorAtual" class="veiculo-field__value">{{ $veiculo->valor_atual_estimado !== null ? 'R$ ' . number_format((float) $veiculo->valor_atual_estimado, 2, ',', '.') : '-' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Depreciação acumulada</span><span id="fipeResumoDepreciacao" class="veiculo-field__value">{{ $veiculo->valor_depreciacao_acumulada !== null ? 'R$ ' . number_format((float) $veiculo->valor_depreciacao_acumulada, 2, ',', '.') : '-' }}</span></div>
+                    <div class="veiculo-field"><span class="veiculo-field__label">Taxa anual</span><span id="fipeResumoTaxa" class="veiculo-field__value">{{ $veiculo->taxa_depreciacao_anual !== null ? number_format((float) $veiculo->taxa_depreciacao_anual, 2, ',', '.') . '% a.a.' : '-' }}</span></div>
                     <div class="veiculo-field">
                         <span class="veiculo-field__label">Última consulta</span>
                         <span id="fipeResumoData" class="veiculo-field__value">
-                            {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}
+                            {{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '-' }}
                         </span>
                     </div>
                     <div>
@@ -204,10 +270,10 @@
     <div class="modal fade" id="modalConsultarFipeVeiculo" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
             <div class="modal-content">
-                <div class="modal-header">
+                <div class="modal-header bg-light border-bottom-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
                     <div>
                         <h5 class="modal-title mb-1">Consultar e atualizar FIPE</h5>
-                        <small class="text-muted">Busca os dados atuais da tabela FIPE e atualiza o resumo do veículo.</small>
+                        <small class="text-muted">Busca os dados atuais da tabela FIPE e atualiza o resumo do veÃ­culo.</small>
                     </div>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                         <span aria-hidden="true">&times;</span>
@@ -216,9 +282,9 @@
                 <div class="modal-body">
                     <div class="alert alert-info mb-3">
                         <strong>Atual</strong><br>
-                        Marca: {{ optional($veiculo->marca)->nome ?? '—' }}<br>
-                        Modelo: {{ optional($veiculo->modelo)->nome ?? '—' }}<br>
-                        Ano modelo: {{ $veiculo->modelo?->ano_modelo ?? '—' }}
+                        Marca: {{ optional($veiculo->marca)->nome ?? '-' }}<br>
+                        Modelo: {{ optional($veiculo->modelo)->nome ?? '-' }}<br>
+                        Ano modelo: {{ $veiculo->modelo?->ano_modelo ?? '-' }}
                     </div>
 
                     <div id="fipeModalAlert" class="alert d-none" role="alert"></div>
@@ -227,19 +293,19 @@
                         <div class="col-md-4">
                             <div class="veiculo-field mb-3">
                                 <span class="veiculo-field__label">Valor FIPE</span>
-                                <div id="fipeModalValor" class="veiculo-field__value">—</div>
+                                <div id="fipeModalValor" class="veiculo-field__value">-</div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="veiculo-field mb-3">
                                 <span class="veiculo-field__label">Código FIPE</span>
-                                <div id="fipeModalCodigo" class="veiculo-field__value">{{ $veiculo->codigo_fipe ?? '—' }}</div>
+                                <div id="fipeModalCodigo" class="veiculo-field__value">{{ $veiculo->codigo_fipe ?? '-' }}</div>
                             </div>
                         </div>
                         <div class="col-md-4">
                             <div class="veiculo-field mb-3">
                                 <span class="veiculo-field__label">Última consulta</span>
-                                <div id="fipeModalData" class="veiculo-field__value">{{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '—' }}</div>
+                                <div id="fipeModalData" class="veiculo-field__value">{{ $veiculo->data_consulta_fipe ? \Carbon\Carbon::parse($veiculo->data_consulta_fipe)->format('d/m/Y') : '-' }}</div>
                             </div>
                         </div>
                     </div>
@@ -260,7 +326,7 @@
                 <form id="formDepreciacaoVeiculo" method="POST" action="{{ route('veiculo.alterardepreciacao', $veiculo->id) }}">
                     @csrf
                     @method('PUT')
-                    <div class="modal-header">
+                    <div class="modal-header bg-light border-bottom-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
                         <div>
                             <h5 class="modal-title mb-1">Configurar depreciação</h5>
                             <small class="text-muted">Ajuste os dados que alimentam o cálculo do valor estimado.</small>
@@ -283,7 +349,7 @@
                             <input type="number" step="0.01" min="0" max="100" class="form-control" id="depr_taxa" name="taxa_depreciacao_anual" value="{{ old('taxa_depreciacao_anual', $veiculo->taxa_depreciacao_anual ?? 15) }}">
                         </div>
                     </div>
-                    <div class="modal-footer d-flex justify-content-between">
+                    <div class="modal-footer bg-light border-top-0 d-flex justify-content-between" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
                         <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save mr-1"></i> Salvar configuração
@@ -294,7 +360,7 @@
         </div>
     </div>
 
-        {{-- OPERAÇÃO E HISTÓRICO EM COMPONENTES --}}
+        {{-- OPERAÃ‡ÃƒO E HISTÃ“RICO EM COMPONENTES --}}
     @include('veiculo.components.operacional.index')
 </div>
 @stop
@@ -314,7 +380,7 @@
         --c-bg:     #f2f5fb;
     }
 
-    /* ── Hero ── */
+    /* â”€â”€ Hero â”€â”€ */
     .module-card {
         border-radius: 20px;
         overflow: hidden;
@@ -375,7 +441,7 @@
     }
     .module-header-right { position: relative; z-index: 1; display: flex; gap: 8px; }
 
-    /* ── Config cards & blocks ── */
+    /* â”€â”€ Config cards & blocks â”€â”€ */
     .config-card {
         background: #fff;
         border: 1px solid var(--c-border);
@@ -403,7 +469,7 @@
     .config-block-label strong { display: block; color: #0c1428; font-size: .86rem; font-weight: 700; }
     .config-block-label span   { color: #64748b; font-size: .73rem; display: block; margin-top: 1px; }
 
-    /* ── Veiculo grid ── */
+    /* â”€â”€ Veiculo grid â”€â”€ */
     .veiculo-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -431,7 +497,7 @@
         color: #0c1428;
     }
 
-    /* ── Summary ── */
+    /* â”€â”€ Summary â”€â”€ */
     .veiculo-summary { display: flex; flex-direction: column; gap: 8px; }
     .veiculo-summary__row {
         display: flex;
@@ -445,7 +511,7 @@
     .veiculo-summary__row span { color: #475569; }
     .veiculo-summary__row strong { font-size: 1rem; }
 
-    /* ── Ações rápidas grid ── */
+    /* â”€â”€ AÃ§Ãµes rápidas grid â”€â”€ */
     .veiculo-acoes-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -489,7 +555,7 @@
     .veiculo-acao--danger i { color: #ef4444; }
     .veiculo-acao--danger:hover { background: #fee2e2; }
 
-    /* ── Sinistro items ── */
+    /* â”€â”€ Sinistro items â”€â”€ */
     .veiculo-sinistro-item {
         padding: .5rem 0;
         border-bottom: 1px dashed #e5eaf3;
@@ -499,7 +565,7 @@
     .veiculo-sinistro-item__body { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .veiculo-sinistro-item__tipo { font-size: .8rem; font-weight: 600; color: #333; }
 
-    /* ── Reserva items ── */
+    /* â”€â”€ Reserva items â”€â”€ */
     .veiculo-reserva-item {
         display: flex;
         align-items: center;
@@ -513,7 +579,7 @@
     .veiculo-reserva-item__info span { display: block; font-size: .82rem; font-weight: 600; color: #0c1428; }
     .veiculo-reserva-item__info small { color: #64748b; font-size: .72rem; }
 
-    /* ── Buttons ── */
+    /* â”€â”€ Buttons â”€â”€ */
     .btn-xp {
         display: inline-flex; align-items: center; gap: 6px;
         background: linear-gradient(135deg, var(--c-indigo), #6366f1);
@@ -539,9 +605,152 @@
         box-shadow: none;
     }
     .btn-xp--outline-light:hover { background: rgba(255,255,255,.2); color: #fff; }
+    .btn-xp--warning {
+        background: linear-gradient(135deg, #f59e0b, #f97316);
+        box-shadow: 0 10px 20px rgba(245, 158, 11, .22);
+    }
+    .btn-xp--warning:hover { color: #fff; background: linear-gradient(135deg, #d97706, #ea580c); }
+    .btn-xp--ghost {
+        background: #fff;
+        color: var(--c-slate);
+        border: 1px solid var(--c-border);
+        box-shadow: none;
+    }
+    .btn-xp--ghost:hover { background: #f8fafc; color: var(--c-ink); }
+    .btn-pendencias-cadastro {
+        padding-left: 14px;
+        padding-right: 14px;
+        gap: 8px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+    }
+    .btn-pendencias-cadastro__count {
+        min-width: 22px;
+        height: 22px;
+        padding: 0 6px;
+        border-radius: 999px;
+        background: rgba(255,255,255,.18);
+        color: #fff;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .72rem;
+        font-weight: 800;
+    }
+    .vehicle-modal {
+        border: 0;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 18px 50px rgba(12,20,40,.18);
+    }
+    .vehicle-modal--alert .vehicle-modal__header {
+        background: linear-gradient(135deg, #0c1428 0%, #1a2848 60%, #2e4080 100%);
+        color: #fff;
+        padding: 20px 22px;
+        position: relative;
+    }
+    .vehicle-modal--alert .vehicle-modal__header::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        top: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #f59e0b, #f97316, #10b981);
+    }
+    .vehicle-modal__icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.16);
+        color: #fbbf24;
+        flex-shrink: 0;
+    }
+    .vehicle-modal__eyebrow {
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: rgba(226,232,240,.78);
+        margin-bottom: 4px;
+    }
+    .vehicle-modal__title {
+        color: #fff;
+        font-weight: 800;
+        letter-spacing: -.02em;
+    }
+    .vehicle-modal__subtitle {
+        color: rgba(226,232,240,.82);
+    }
+    .vehicle-modal__body {
+        background: #fff;
+        padding-top: 20px !important;
+    }
+    .vehicle-modal__footer {
+        background: #f8fafc;
+        padding: 14px 22px;
+    }
+    .vehicle-modal__label {
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #475569;
+        margin-bottom: 8px;
+    }
+    .vehicle-modal__control {
+        min-height: 46px;
+        border-radius: 12px;
+        border-color: #dbe4f0;
+        box-shadow: none;
+    }
+    .vehicle-modal__control:focus {
+        border-color: rgba(67,56,202,.45);
+        box-shadow: 0 0 0 .2rem rgba(67,56,202,.10);
+    }
+    .vehicle-pending-summary {
+        background: linear-gradient(180deg, #fff8eb 0%, #fff 100%);
+        border: 1px solid #fde3b0;
+        border-radius: 16px;
+        padding: 14px 16px;
+    }
+    .vehicle-pending-summary__label {
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #92400e;
+        margin-bottom: 10px;
+    }
+    .vehicle-pending-summary__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .vehicle-pending-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #fff;
+        border: 1px solid #f8cc7c;
+        color: #7c2d12;
+        border-radius: 999px;
+        padding: 7px 11px;
+        font-size: .8rem;
+        font-weight: 700;
+    }
+    .vehicle-pending-chip i {
+        font-size: .45rem;
+        color: #f59e0b;
+    }
     .w-100 { width: 100%; justify-content: center; }
 
-    /* ── Status badges ── */
+    /* â”€â”€ Status badges â”€â”€ */
     .status-badge {
         display: inline-flex; align-items: center;
         padding: 3px 10px; border-radius: 999px;
@@ -556,7 +765,7 @@
     .status-badge--purple { background: #ede9fe; color: #6d28d9; }
     .status-badge--teal   { background: #ccfbf1; color: #115e59; }
 
-    /* ── Table ── */
+    /* â”€â”€ Table â”€â”€ */
     .xp-table { font-size: .82rem; }
     .xp-table thead th {
         background: #f0f4ff;
@@ -574,7 +783,7 @@
     .xp-link:hover { color: #3730a3; text-decoration: underline; }
     .obs-cell { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    /* ── Empty state ── */
+    /* â”€â”€ Empty state â”€â”€ */
     .empty-state {
         text-align: center; padding: 28px 16px;
         color: #94a3b8;
@@ -582,7 +791,7 @@
     .empty-state i { font-size: 2rem; display: block; margin-bottom: 8px; }
     .empty-state p { margin: 0; font-size: .85rem; }
 
-    /* —— Disponibilidade (show veiculo) —— */
+    /* -- Disponibilidade (show veiculo) -- */
     .vd__filters { margin-top: 8px; }
     .vd__filters-row {
         display: flex;
@@ -737,7 +946,7 @@
         user-select: none;
     }
 
-    /* ── Steps operacionais ── */
+    /* â”€â”€ Steps operacionais â”€â”€ */
     .vs-shell {
         background: linear-gradient(180deg, #ffffff 0%, #fbfcff 100%);
         border: 1px solid var(--c-border);
@@ -1271,7 +1480,7 @@
 
 
 
-    /* ===== Layout compacto da página do veículo ===== */
+    /* ===== Layout compacto da página do veÃ­culo ===== */
     .vehicle-show-page { padding-bottom: 20px; }
     .vehicle-hero-compact { padding: 17px 22px; }
     .vehicle-hero-compact .module-header-icon { width: 44px; height: 44px; border-radius: 12px; }
@@ -1358,7 +1567,7 @@
 
 
 
-    /* Operação compacta: reduz a sensação de duas navegações concorrentes */
+    /* Operação compacta: reduz a sensação de duas navegaÃ§Ãµes concorrentes */
     .vs-shell--compact {
         padding: 0;
         overflow: hidden;
@@ -1579,6 +1788,11 @@
         var btnExecutarConsultaFipe = document.getElementById('btnExecutarConsultaFipe');
         var formDepreciacaoVeiculo = document.getElementById('formDepreciacaoVeiculo');
         var btnSalvarDepreciacao = formDepreciacaoVeiculo ? formDepreciacaoVeiculo.querySelector('button[type="submit"]') : null;
+        var modalDisponibilidadeVeiculo = document.getElementById('modalDisponibilidadeVeiculo');
+        var formDisponibilidadeVeiculo = document.getElementById('formDisponibilidadeVeiculo');
+        var btnSalvarDisponibilidadeVeiculo = document.getElementById('btnSalvarDisponibilidadeVeiculo');
+        var btnAbrirModalDisponibilidadeVeiculo = document.getElementById('btnAbrirModalDisponibilidadeVeiculo');
+        var disponibilidadeModalAlert = document.getElementById('disponibilidadeModalAlert');
 
         function formatarMoedaBR(valor) {
             var numero = Number(valor || 0);
@@ -1601,10 +1815,95 @@
             fipeAlert.textContent = '';
         }
 
+        function mostrarDisponibilidadeAlert(tipo, texto) {
+            if (!disponibilidadeModalAlert) return;
+            disponibilidadeModalAlert.className = 'alert alert-' + tipo;
+            disponibilidadeModalAlert.textContent = texto;
+            disponibilidadeModalAlert.classList.remove('d-none');
+        }
+
+        function ocultarDisponibilidadeAlert() {
+            if (!disponibilidadeModalAlert) return;
+            disponibilidadeModalAlert.className = 'alert d-none';
+            disponibilidadeModalAlert.textContent = '';
+        }
+
+        if (btnAbrirModalDisponibilidadeVeiculo) {
+            btnAbrirModalDisponibilidadeVeiculo.addEventListener('click', function () {
+                ocultarDisponibilidadeAlert();
+                if (window.jQuery && $('#modalDisponibilidadeVeiculo').modal) {
+                    $('#modalDisponibilidadeVeiculo').modal('show');
+                }
+            });
+        }
+
+        if (formDisponibilidadeVeiculo) {
+            formDisponibilidadeVeiculo.addEventListener('submit', function (event) {
+                event.preventDefault();
+
+                if (!btnSalvarDisponibilidadeVeiculo) {
+                    return;
+                }
+
+                var original = btnSalvarDisponibilidadeVeiculo.innerHTML;
+                btnSalvarDisponibilidadeVeiculo.disabled = true;
+                btnSalvarDisponibilidadeVeiculo.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Salvando...';
+                ocultarDisponibilidadeAlert();
+
+                fetch(formDisponibilidadeVeiculo.action, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: new FormData(formDisponibilidadeVeiculo)
+                })
+                    .then(function (response) {
+                        return response.json().then(function (payload) {
+                            return { ok: response.ok, payload: payload };
+                        });
+                    })
+                    .then(function (result) {
+                        if (!result.ok) {
+                            throw new Error(result.payload?.message || 'Falha ao salvar a disponibilidade.');
+                        }
+
+                        var payload = result.payload?.payload || {};
+                        var localDisponibilidadeEl = document.querySelector('[data-veiculo-local-disponibilidade]');
+                        var dataDisponibilidadeEl = document.querySelector('[data-veiculo-data-disponibilidade]');
+
+                        if (localDisponibilidadeEl) {
+                            localDisponibilidadeEl.textContent = payload.local_disponibilidade_nome || 'ï¿½';
+                        }
+                        if (dataDisponibilidadeEl && payload.data_hora_disponibilidade) {
+                            var partes = String(payload.data_hora_disponibilidade).split(' ');
+                            var dataPartes = String(partes[0] || '').split('-');
+                            dataDisponibilidadeEl.textContent = dataPartes.length === 3
+                                ? (dataPartes[2] + '/' + dataPartes[1] + '/' + dataPartes[0] + (partes[1] ? ' ' + partes[1].substring(0, 5) : ''))
+                                : payload.data_hora_disponibilidade;
+                        }
+
+                        if (window.jQuery && $('#modalDisponibilidadeVeiculo').modal) {
+                            $('#modalDisponibilidadeVeiculo').modal('hide');
+                        }
+
+                        mostrarFipeAlert('success', result.payload?.message || 'Disponibilidade cadastrada com sucesso.');
+                    })
+                    .catch(function (error) {
+                        mostrarDisponibilidadeAlert('danger', error.message || 'Falha ao salvar a disponibilidade.');
+                    })
+                    .finally(function () {
+                        btnSalvarDisponibilidadeVeiculo.disabled = false;
+                        btnSalvarDisponibilidadeVeiculo.innerHTML = original;
+                    });
+            });
+        }
+
         if (btnExecutarConsultaFipe) {
             btnExecutarConsultaFipe.addEventListener('click', function () {
                 if (!veiculoMarcaId || !veiculoModeloId) {
-                    mostrarFipeAlert('warning', 'Não foi possível consultar a FIPE porque a marca ou o modelo estão ausentes.');
+                    mostrarFipeAlert('warning', 'NÃ£o foi possÃ­vel consultar a FIPE porque a marca ou o modelo estÃ£o ausentes.');
                     return;
                 }
 
@@ -1631,7 +1930,7 @@
                         var contentType = response.headers.get('content-type') || '';
                         if (!contentType.includes('application/json')) {
                             return response.text().then(function () {
-                                throw new Error('A consulta de FIPE retornou uma resposta inválida. Verifique o ano do veículo ou tente novamente.');
+                                throw new Error('A consulta de FIPE retornou uma resposta inválida. Verifique o ano do veÃ­culo ou tente novamente.');
                             });
                         }
 
@@ -1648,7 +1947,7 @@
                             fipeValorAtual.textContent = formatarMoedaBR(result.payload.valor_fipe);
                         }
                         if (result.payload?.codigo_fipe !== undefined && fipeCodigoAtual) {
-                            fipeCodigoAtual.textContent = result.payload.codigo_fipe || '—';
+                            fipeCodigoAtual.textContent = result.payload.codigo_fipe || '-';
                         }
                         if (result.payload?.data_consulta_fipe !== undefined && fipeDataAtual) {
                             var data = result.payload.data_consulta_fipe;
@@ -1658,19 +1957,19 @@
                             }
                         }
                         if (result.payload?.valor_atual_estimado !== undefined && fipeValorEstimadoAtual) {
-                            fipeValorEstimadoAtual.textContent = result.payload.valor_atual_estimado !== null ? formatarMoedaBR(result.payload.valor_atual_estimado) : '—';
+                            fipeValorEstimadoAtual.textContent = result.payload.valor_atual_estimado !== null ? formatarMoedaBR(result.payload.valor_atual_estimado) : '-';
                         }
                         if (result.payload?.valor_compra !== undefined && fipeValorCompraAtual) {
-                            fipeValorCompraAtual.textContent = result.payload.valor_compra !== null ? formatarMoedaBR(result.payload.valor_compra) : '—';
+                            fipeValorCompraAtual.textContent = result.payload.valor_compra !== null ? formatarMoedaBR(result.payload.valor_compra) : '-';
                         }
                         if (result.payload?.valor_depreciacao_acumulada !== undefined && fipeDepreciacaoAtual) {
-                            fipeDepreciacaoAtual.textContent = result.payload.valor_depreciacao_acumulada !== null ? formatarMoedaBR(result.payload.valor_depreciacao_acumulada) : '—';
+                            fipeDepreciacaoAtual.textContent = result.payload.valor_depreciacao_acumulada !== null ? formatarMoedaBR(result.payload.valor_depreciacao_acumulada) : '-';
                         }
                         if (result.payload?.taxa_depreciacao_anual !== undefined && fipeTaxaAtual) {
-                            fipeTaxaAtual.textContent = result.payload.taxa_depreciacao_anual !== null ? Number(result.payload.taxa_depreciacao_anual).toFixed(2).replace('.', ',') + '% a.a.' : '—';
+                            fipeTaxaAtual.textContent = result.payload.taxa_depreciacao_anual !== null ? Number(result.payload.taxa_depreciacao_anual).toFixed(2).replace('.', ',') + '% a.a.' : '-';
                         }
 
-                        mostrarFipeAlert('success', 'Consulta concluída com sucesso. Os dados foram atualizados no resumo.');
+                        mostrarFipeAlert('success', 'Consulta concluÃ­da com sucesso. Os dados foram atualizados no resumo.');
                     })
                     .catch(function (error) {
                         mostrarFipeAlert('danger', error.message || 'Falha ao consultar a FIPE.');
@@ -1716,7 +2015,7 @@
                         var payload = result.payload?.payload || {};
 
                         if (payload.valor_compra !== undefined && fipeValorCompraAtual) {
-                            fipeValorCompraAtual.textContent = payload.valor_compra !== null ? formatarMoedaBR(payload.valor_compra) : '—';
+                            fipeValorCompraAtual.textContent = payload.valor_compra !== null ? formatarMoedaBR(payload.valor_compra) : '-';
                         }
                         if (payload.data_compra !== undefined) {
                             var dataCompraEl = document.querySelector('[data-depr-data-compra-resumo]') || document.getElementById('fipeResumoDataCompra');
@@ -1725,18 +2024,18 @@
                                     var partsCompra = String(payload.data_compra).split('-');
                                     dataCompraEl.textContent = partsCompra.length === 3 ? (partsCompra[2] + '/' + partsCompra[1] + '/' + partsCompra[0]) : payload.data_compra;
                                 } else {
-                                    dataCompraEl.textContent = '—';
+                                    dataCompraEl.textContent = '-';
                                 }
                             }
                         }
                         if (payload.taxa_depreciacao_anual !== undefined && fipeTaxaAtual) {
-                            fipeTaxaAtual.textContent = payload.taxa_depreciacao_anual !== null ? Number(payload.taxa_depreciacao_anual).toFixed(2).replace('.', ',') + '% a.a.' : '—';
+                            fipeTaxaAtual.textContent = payload.taxa_depreciacao_anual !== null ? Number(payload.taxa_depreciacao_anual).toFixed(2).replace('.', ',') + '% a.a.' : '-';
                         }
                         if (payload.valor_atual_estimado !== undefined && fipeValorEstimadoAtual) {
-                            fipeValorEstimadoAtual.textContent = payload.valor_atual_estimado !== null ? formatarMoedaBR(payload.valor_atual_estimado) : '—';
+                            fipeValorEstimadoAtual.textContent = payload.valor_atual_estimado !== null ? formatarMoedaBR(payload.valor_atual_estimado) : '-';
                         }
                         if (payload.valor_depreciacao_acumulada !== undefined && fipeDepreciacaoAtual) {
-                            fipeDepreciacaoAtual.textContent = payload.valor_depreciacao_acumulada !== null ? formatarMoedaBR(payload.valor_depreciacao_acumulada) : '—';
+                            fipeDepreciacaoAtual.textContent = payload.valor_depreciacao_acumulada !== null ? formatarMoedaBR(payload.valor_depreciacao_acumulada) : '-';
                         }
                         if (window.jQuery && $('#modalConfigurarDepreciacaoVeiculo').modal) {
                             $('#modalConfigurarDepreciacaoVeiculo').modal('hide');
@@ -2061,7 +2360,7 @@
             filtrarMt();
         };
 
-        // Disponibilidade: mantém o filtro por legenda do calendário
+        // Disponibilidade: mantÃ©m o filtro por legenda do calendário
         var buttons = Array.prototype.slice.call(document.querySelectorAll('[data-vd-filter]'));
         var calendar = q('vdCalendar');
         if (buttons.length && calendar) {
@@ -2096,3 +2395,17 @@
     }());
 </script>
 @stop
+
+
+
+
+
+
+
+
+
+
+
+
+
+
