@@ -8,6 +8,7 @@ Route::prefix('veiculo')->name('veiculo.')->group(function () {
     Route::get('documentacao', [DocumentacaoVeiculoController::class, 'index'])->name('documentacao');
     Route::get('documentacao/create', [DocumentacaoVeiculoController::class, 'create'])->name('documentacao.create');
     Route::get('documentacao/{documentacao}/edit', [DocumentacaoVeiculoController::class, 'edit'])->name('documentacao.edit');
+    Route::post('documentacao/parcela/{parcela}/pagar', [DocumentacaoVeiculoController::class, 'pagarParcela'])->name('documentacao.parcela.pagar');
     Route::post('documentacao', [DocumentacaoVeiculoController::class, 'store'])->name('documentacao.store');
     Route::put('documentacao/{documentacao}', [DocumentacaoVeiculoController::class, 'update'])->name('documentacao.update');
     Route::post('{veiculo}/manutencao/concluir', [VeiculoController::class, 'concluirManutencaoPreventiva'])->name('manutencao.concluir');

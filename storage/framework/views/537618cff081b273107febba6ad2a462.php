@@ -196,7 +196,7 @@
     <div class="config-card vehicle-info-tabs mb-3">
         <div class="vehicle-tabs-nav" role="tablist">
             <button class="vehicle-tab-button is-active" type="button" data-vehicle-tab="overview">
-                <i class="fas fa-eye"></i> VisÃ£o geral
+                <i class="fas fa-eye"></i> Visão geral
             </button>
             <button class="vehicle-tab-button" type="button" data-vehicle-tab="registration">
                 <i class="fas fa-id-card"></i> Cadastro
@@ -337,36 +337,48 @@
 
     <div class="modal fade" id="modalConfigurarDepreciacaoVeiculo" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
+            <div class="modal-content vehicle-modal vehicle-modal--alert">
                 <form id="formDepreciacaoVeiculo" method="POST" action="<?php echo e(route('veiculo.alterardepreciacao', $veiculo->id)); ?>">
                     <?php echo csrf_field(); ?>
                     <?php echo method_field('PUT'); ?>
-                    <div class="modal-header bg-light border-bottom-0" style="border-top-left-radius: 1rem; border-top-right-radius: 1rem;">
-                        <div>
-                            <h5 class="modal-title mb-1">Configurar depreciação</h5>
-                            <small class="text-muted">Ajuste os dados que alimentam o cálculo do valor estimado.</small>
+                    <div class="modal-header vehicle-modal__header border-bottom-0">
+                        <div class="d-flex align-items-start">
+                            <div class="vehicle-modal__icon mr-3">
+                                <i class="fas fa-coins"></i>
+                            </div>
+                            <div>
+                                <div class="vehicle-modal__eyebrow">FIPE e depreciação</div>
+                                <h5 class="modal-title mb-1 vehicle-modal__title">Configurar depreciação</h5>
+                                <small class="vehicle-modal__subtitle">Ajuste os dados que alimentam o cálculo do valor estimado.</small>
+                            </div>
                         </div>
                         <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label for="depr_valor_compra">Valor de compra</label>
-                            <input type="text" class="form-control" id="depr_valor_compra" name="valor_compra" value="<?php echo e(old('valor_compra', $veiculo->valor_compra)); ?>">
-                        </div>
-                        <div class="form-group">
-                            <label for="depr_data_compra">Data de compra</label>
-                            <input type="date" class="form-control" id="depr_data_compra" name="data_compra" value="<?php echo e(old('data_compra', $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('Y-m-d') : '')); ?>">
+                    <div class="modal-body vehicle-modal__body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="depr_valor_compra" class="vehicle-modal__label">Valor de compra</label>
+                                    <input type="text" class="form-control vehicle-modal__control" id="depr_valor_compra" name="valor_compra" value="<?php echo e(old('valor_compra', $veiculo->valor_compra)); ?>">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="depr_data_compra" class="vehicle-modal__label">Data de compra</label>
+                                    <input type="date" class="form-control vehicle-modal__control" id="depr_data_compra" name="data_compra" value="<?php echo e(old('data_compra', $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('Y-m-d') : '')); ?>">
+                                </div>
+                            </div>
                         </div>
                         <div class="form-group mb-0">
-                            <label for="depr_taxa">Taxa anual de depreciação (%)</label>
-                            <input type="number" step="0.01" min="0" max="100" class="form-control" id="depr_taxa" name="taxa_depreciacao_anual" value="<?php echo e(old('taxa_depreciacao_anual', $veiculo->taxa_depreciacao_anual ?? 15)); ?>">
+                            <label for="depr_taxa" class="vehicle-modal__label">Taxa anual de depreciação (%)</label>
+                            <input type="number" step="0.01" min="0" max="100" class="form-control vehicle-modal__control" id="depr_taxa" name="taxa_depreciacao_anual" value="<?php echo e(old('taxa_depreciacao_anual', $veiculo->taxa_depreciacao_anual ?? 15)); ?>">
                         </div>
                     </div>
-                    <div class="modal-footer bg-light border-top-0 d-flex justify-content-between" style="border-bottom-left-radius: 1rem; border-bottom-right-radius: 1rem;">
-                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">
+                    <div class="modal-footer vehicle-modal__footer border-top-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-xp btn-xp--ghost btn-xp--sm" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-xp btn-xp--sm">
                             <i class="fas fa-save mr-1"></i> Salvar configuração
                         </button>
                     </div>
@@ -1884,26 +1896,27 @@
                             throw new Error(result.payload?.message || 'Falha ao salvar a disponibilidade.');
                         }
 
-                        var payload = result.payload?.payload || {};
-                        var localDisponibilidadeEl = document.querySelector('[data-veiculo-local-disponibilidade]');
-                        var dataDisponibilidadeEl = document.querySelector('[data-veiculo-data-disponibilidade]');
-
-                        if (localDisponibilidadeEl) {
-                            localDisponibilidadeEl.textContent = payload.local_disponibilidade_nome || 'ï¿½';
-                        }
-                        if (dataDisponibilidadeEl && payload.data_hora_disponibilidade) {
-                            var partes = String(payload.data_hora_disponibilidade).split(' ');
-                            var dataPartes = String(partes[0] || '').split('-');
-                            dataDisponibilidadeEl.textContent = dataPartes.length === 3
-                                ? (dataPartes[2] + '/' + dataPartes[1] + '/' + dataPartes[0] + (partes[1] ? ' ' + partes[1].substring(0, 5) : ''))
-                                : payload.data_hora_disponibilidade;
-                        }
-
                         if (window.jQuery && $('#modalDisponibilidadeVeiculo').modal) {
                             $('#modalDisponibilidadeVeiculo').modal('hide');
                         }
 
-                        mostrarFipeAlert('success', result.payload?.message || 'Disponibilidade cadastrada com sucesso.');
+                        var mensagemSucesso = result.payload?.message || 'Disponibilidade cadastrada com sucesso.';
+
+                        if (window.Swal && typeof window.Swal.fire === 'function') {
+                            window.Swal.fire({
+                                icon: 'success',
+                                title: 'Sucesso',
+                                text: mensagemSucesso,
+                                confirmButtonText: 'Recarregar página',
+                                allowOutsideClick: false
+                            }).then(function () {
+                                window.location.reload();
+                            });
+                            return;
+                        }
+
+                        mostrarDisponibilidadeAlert('success', mensagemSucesso);
+                        window.location.reload();
                     })
                     .catch(function (error) {
                         mostrarDisponibilidadeAlert('danger', error.message || 'Falha ao salvar a disponibilidade.');
@@ -2410,8 +2423,6 @@
     }());
 </script>
 <?php $__env->stopSection(); ?>
-
-
 
 
 

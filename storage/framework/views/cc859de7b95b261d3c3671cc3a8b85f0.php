@@ -472,7 +472,7 @@
     </div>
 </div>
 
-<?php if (! $__env->hasRenderedOnce('85f76135-bcd2-41ed-b41f-81601b52f5fd')): $__env->markAsRenderedOnce('85f76135-bcd2-41ed-b41f-81601b52f5fd'); ?>
+<?php if (! $__env->hasRenderedOnce('428e5b7a-cff8-46aa-9356-67a07bdda7be')): $__env->markAsRenderedOnce('428e5b7a-cff8-46aa-9356-67a07bdda7be'); ?>
     <style>
         .vd-box__head {
             margin-bottom: 14px;

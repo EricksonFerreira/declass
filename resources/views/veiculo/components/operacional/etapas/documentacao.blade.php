@@ -39,72 +39,424 @@
         $documentacoesPorTipo = $veiculo->documentacoesVeiculo->groupBy('tipo');
     @endphp
 
-    <div class="table-responsive">
-        <table class="table table-hover xp-table">
-            <thead>
-                <tr>
-                    <th>Tipo</th>
-                    <th>Itens</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($tipos as $tipo => $rotulo)
-                    @php $documentos = $documentacoesPorTipo->get($tipo, collect()); @endphp
-                    <tr>
-                        <td class="align-top font-weight-bold">{{ $rotulo }}</td>
-                        <td>
-                            @forelse($documentos as $doc)
-                                <div class="mb-3 border rounded p-2">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <div>
-                                            <div class="font-weight-bold">{{ $doc->descricao ?: $rotulo }}</div>
-                                            <div class="text-muted text-xs">
-                                                {{ $doc->parcelas_total }} parcela(s) | Valor da parcela: R$ {{ number_format((float) $doc->valor_parcela, 2, ',', '.') }}
-                                            </div>
-                                        </div>
-                                        <span class="badge badge-{{ $doc->status === 'ativo' ? 'success' : 'secondary' }}">{{ ucfirst($doc->status) }}</span>
+    <div class="doc-accordion">
+        @foreach($tipos as $tipo => $rotulo)
+            @php
+                $documentos = $documentacoesPorTipo->get($tipo, collect());
+            @endphp
+
+            <div class="doc-group">
+                <div class="doc-group__head">
+                    <div>
+                        <strong>{{ $rotulo }}</strong>
+                        <span>{{ $documentos->count() }} documento(s) cadastrados</span>
+                    </div>
+
+                    @if($documentos->isNotEmpty())
+                        <span class="badge badge-success">Ativo</span>
+                    @else
+                        <span class="badge badge-secondary">Sem itens</span>
+                    @endif
+                </div>
+
+                <div class="doc-group__body">
+                    @forelse($documentos as $doc)
+                        @php
+                            $collapseId = 'doc-op-' . $tipo . '-' . $doc->id;
+                            $statusCount = $doc->parcelas->countBy('status');
+                        @endphp
+
+                        <div class="doc-card">
+                            <button class="doc-card__trigger" type="button" data-toggle="collapse" data-target="#{{ $collapseId }}" aria-expanded="false" aria-controls="{{ $collapseId }}">
+                                <div class="doc-card__main">
+                                    <div class="doc-card__title">{{ $doc->descricao ?: $rotulo }}</div>
+                                    <div class="doc-card__meta">
+                                        {{ $doc->parcelas_total }} parcela(s) | Valor da parcela: R$ {{ number_format((float) $doc->valor_parcela, 2, ',', '.') }}
+                                    </div>
+                                </div>
+
+                                <div class="doc-card__side">
+                                    <span class="badge badge-{{ $doc->status === 'ativo' ? 'success' : 'secondary' }}">
+                                        {{ ucfirst($doc->status) }}
+                                    </span>
+                                    <i class="fas fa-chevron-down doc-card__icon"></i>
+                                </div>
+                            </button>
+
+                            <div class="collapse" id="{{ $collapseId }}">
+                                <div class="doc-card__collapse">
+                                    <div class="doc-card__summary">
+                                        <span class="doc-pill">
+                                            <i class="fas fa-calendar-alt mr-1"></i>
+                                            {{ $statusCount->get('pendente', 0) }} pendente(s)
+                                        </span>
+                                        <span class="doc-pill">
+                                            <i class="fas fa-check-circle mr-1"></i>
+                                            {{ $statusCount->get('pago', 0) }} paga(s)
+                                        </span>
+                                        <span class="doc-pill">
+                                            <i class="fas fa-exclamation-triangle mr-1"></i>
+                                            {{ $statusCount->get('atrasado', 0) }} atrasada(s)
+                                        </span>
                                     </div>
 
                                     <div class="table-responsive">
-                                        <table class="table table-sm table-bordered mb-0">
+                                        <table class="table table-sm table-hover mb-0 vehicle-subtable">
                                             <thead>
                                                 <tr>
+                                                    <th>Parcela</th>
                                                     <th>Mês</th>
                                                     <th>Vencimento</th>
+                                                    <th>Pagamento</th>
                                                     <th>Status</th>
+                                                    <th class="text-right">Ação</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
-                                                @foreach($doc->parcelas as $parcela)
+                                                @forelse($doc->parcelas as $parcela)
+                                                    @php
+                                                        $parcelaStatusClass = [
+                                                            'pago' => 'status-badge--green',
+                                                            'atrasado' => 'status-badge--red',
+                                                            'pendente' => 'status-badge--amber',
+                                                        ][(string) $parcela->status] ?? 'status-badge--gray';
+                                                    @endphp
                                                     <tr>
+                                                        <td class="font-weight-bold">{{ $parcela->numero_parcela }}/{{ $doc->parcelas_total }}</td>
                                                         <td>{{ optional($parcela->data_vencimento)->format('m/Y') ?? '-' }}</td>
                                                         <td>{{ optional($parcela->data_vencimento)->format('d/m/Y') ?? '-' }}</td>
+                                                        <td>{{ $parcela->data_pagamento ? $parcela->data_pagamento->format('d/m/Y') : '-' }}</td>
                                                         <td>
-                                                            <span class="badge badge-{{ $parcela->status === 'pago' ? 'success' : ($parcela->status === 'atrasado' ? 'danger' : 'warning') }}">
-                                                                {{ ucfirst($parcela->status) }}
+                                                            <span class="status-badge {{ $parcelaStatusClass }}">
+                                                                {{ ucfirst((string) $parcela->status) }}
                                                             </span>
                                                         </td>
+                                                        <td class="text-right">
+                                                            @if($parcela->status !== 'pago')
+                                                                <button
+                                                                    type="button"
+                                                                    class="btn btn-xs btn-xp btn-xp--sm btn-pagar-parcela-documentacao"
+                                                                    data-toggle="modal"
+                                                                    data-target="#modalPagarParcelaDocumentacao"
+                                                                    data-action="{{ route('veiculo.documentacao.parcela.pagar', $parcela->id) }}"
+                                                                    data-parcela-label="{{ $doc->descricao ?: $rotulo }} - Parcela {{ $parcela->numero_parcela }}/{{ $doc->parcelas_total }}"
+                                                                >
+                                                                    <i class="fas fa-credit-card mr-1"></i>Pagar
+                                                                </button>
+                                                            @else
+                                                                <span class="text-muted small">Pago</span>
+                                                            @endif
+                                                        </td>
                                                     </tr>
-                                                @endforeach
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="6" class="text-center text-muted py-4">Nenhuma parcela gerada.</td>
+                                                    </tr>
+                                                @endforelse
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
-                            @empty
-                                <span class="text-muted">Nenhum item cadastrado.</span>
-                            @endforelse
-                        </td>
-                        <td class="align-top">
-                            @if($documentos->isNotEmpty())
-                                <span class="badge badge-success">Ativo</span>
-                            @else
-                                <span class="badge badge-secondary">Sem itens</span>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="text-muted py-2">Nenhum item cadastrado.</div>
+                    @endforelse
+                </div>
+            </div>
+        @endforeach
     </div>
+
+    @once
+        <style>
+            .doc-accordion {
+                display: grid;
+                gap: 12px;
+            }
+
+            .doc-group {
+                border: 1px solid #e2e9f4;
+                border-radius: 16px;
+                overflow: hidden;
+                background: #fff;
+                box-shadow: 0 2px 12px rgba(12, 20, 40, .05);
+            }
+
+            .doc-group__head {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                gap: 16px;
+                padding: 14px 16px;
+                background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+                border-bottom: 1px solid #e7edf6;
+            }
+
+            .doc-group__head strong {
+                display: block;
+                color: #0c1428;
+                font-size: .92rem;
+                font-weight: 800;
+            }
+
+            .doc-group__head span {
+                display: block;
+                color: #64748b;
+                font-size: .76rem;
+                margin-top: 2px;
+            }
+
+            .doc-group__body {
+                padding: 12px;
+            }
+
+            .doc-card {
+                border: 1px solid #e2e8f0;
+                border-radius: 14px;
+                overflow: hidden;
+                background: #fff;
+                margin-bottom: 10px;
+            }
+
+            .doc-card:last-child {
+                margin-bottom: 0;
+            }
+
+            .doc-card__trigger {
+                width: 100%;
+                border: 0;
+                background: #fff;
+                padding: 14px 16px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 16px;
+                text-align: left;
+            }
+
+            .doc-card__main {
+                min-width: 0;
+            }
+
+            .doc-card__title {
+                font-weight: 800;
+                color: #0f172a;
+                font-size: .94rem;
+            }
+
+            .doc-card__meta {
+                color: #64748b;
+                font-size: .78rem;
+                margin-top: 3px;
+            }
+
+            .doc-card__side {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-shrink: 0;
+            }
+
+            .doc-card__icon {
+                color: #64748b;
+                transition: transform .18s ease;
+            }
+
+            .doc-card__trigger[aria-expanded="true"] .doc-card__icon {
+                transform: rotate(180deg);
+            }
+
+            .doc-card__collapse {
+                padding: 0 16px 16px;
+                border-top: 1px solid #eef2f7;
+                background: #f8fafc;
+            }
+
+            .doc-card__summary {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 8px;
+                padding: 14px 0 12px;
+            }
+
+            .doc-pill {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 7px 11px;
+                border-radius: 999px;
+                background: #fff;
+                border: 1px solid #dbe4f0;
+                color: #1e293b;
+                font-size: .76rem;
+                font-weight: 700;
+            }
+
+            .vehicle-subtable thead th {
+                font-size: .72rem;
+                text-transform: uppercase;
+                letter-spacing: .06em;
+                color: #475569;
+                background: #fff;
+            }
+
+            .status-badge {
+                display: inline-flex;
+                align-items: center;
+                padding: 4px 10px;
+                border-radius: 999px;
+                font-size: .73rem;
+                font-weight: 700;
+                letter-spacing: .02em;
+            }
+
+            .status-badge--green { background: #dcfce7; color: #166534; }
+            .status-badge--amber { background: #fef3c7; color: #92400e; }
+            .status-badge--red { background: #fee2e2; color: #991b1b; }
+            .status-badge--gray { background: #f1f5f9; color: #475569; }
+        </style>
+    @endonce
+
+    <div class="modal fade" id="modalPagarParcelaDocumentacao" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content vehicle-modal vehicle-modal--alert">
+                <form id="formPagarParcelaDocumentacao" method="POST" action="">
+                    @csrf
+                    <div class="modal-header vehicle-modal__header border-bottom-0">
+                        <div class="d-flex align-items-start">
+                            <div class="vehicle-modal__icon mr-3">
+                                <i class="fas fa-credit-card"></i>
+                            </div>
+                            <div>
+                                <div class="vehicle-modal__eyebrow">Documentação do veículo</div>
+                                <h5 class="modal-title mb-1 vehicle-modal__title">Registrar pagamento</h5>
+                                <small class="vehicle-modal__subtitle" id="modalPagarParcelaDocumentacaoLabel">Confirme a data do pagamento da parcela.</small>
+                            </div>
+                        </div>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body vehicle-modal__body">
+                        <div class="form-group mb-0">
+                            <label for="modal_data_pagamento_documentacao" class="vehicle-modal__label">Data do pagamento</label>
+                            <input type="date" class="form-control vehicle-modal__control" id="modal_data_pagamento_documentacao" name="data_pagamento" value="{{ now()->toDateString() }}" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer vehicle-modal__footer border-top-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-xp btn-xp--ghost btn-xp--sm" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-xp btn-xp--sm">
+                            <i class="fas fa-check mr-1"></i> Confirmar pagamento
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    @once
+        <script>
+            (function () {
+                function bindPagamentoDocumentacaoModal() {
+                    var form = document.getElementById('formPagarParcelaDocumentacao');
+                    var inputData = document.getElementById('modal_data_pagamento_documentacao');
+                    var label = document.getElementById('modalPagarParcelaDocumentacaoLabel');
+                    var modal = document.getElementById('modalPagarParcelaDocumentacao');
+
+                    if (!form || !inputData || !label) {
+                        return;
+                    }
+
+                    document.querySelectorAll('.btn-pagar-parcela-documentacao').forEach(function (button) {
+                        button.addEventListener('click', function () {
+                            var action = button.getAttribute('data-action');
+                            var parcelaLabel = button.getAttribute('data-parcela-label') || 'Parcela';
+
+                            if (action) {
+                                form.setAttribute('action', action);
+                            }
+
+                            inputData.value = new Date().toISOString().slice(0, 10);
+                            label.textContent = parcelaLabel + '. Informe a data do pagamento.';
+                        });
+                    });
+
+                    form.addEventListener('submit', function (event) {
+                        event.preventDefault();
+
+                        var submitButton = form.querySelector('button[type="submit"]');
+                        var originalHtml = submitButton ? submitButton.innerHTML : '';
+
+                        if (submitButton) {
+                            submitButton.disabled = true;
+                            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
+                        }
+
+                        fetch(form.getAttribute('action'), {
+                            method: 'POST',
+                            headers: {
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                            },
+                            body: new FormData(form)
+                        })
+                            .then(function (response) {
+                                return response.json().then(function (payload) {
+                                    return { ok: response.ok, payload: payload };
+                                });
+                            })
+                            .then(function (result) {
+                                if (!result.ok || !result.payload || !result.payload.success) {
+                                    throw new Error(result.payload?.message || 'Não foi possível registrar o pagamento.');
+                                }
+
+                                if (window.jQuery && modal && $('#modalPagarParcelaDocumentacao').modal) {
+                                    $('#modalPagarParcelaDocumentacao').modal('hide');
+                                }
+
+                                var message = result.payload.message || 'Pagamento registrado com sucesso.';
+
+                                if (window.Swal && typeof window.Swal.fire === 'function') {
+                                    window.Swal.fire({
+                                        icon: 'success',
+                                        title: 'Sucesso',
+                                        text: message,
+                                        confirmButtonText: 'Recarregar página',
+                                        allowOutsideClick: false
+                                    }).then(function () {
+                                        window.location.reload();
+                                    });
+                                } else {
+                                    window.location.reload();
+                                }
+                            })
+                            .catch(function (error) {
+                                if (window.Swal && typeof window.Swal.fire === 'function') {
+                                    window.Swal.fire({
+                                        icon: 'error',
+                                        title: 'Erro',
+                                        text: error.message || 'Falha ao registrar o pagamento.'
+                                    });
+                                } else {
+                                    alert(error.message || 'Falha ao registrar o pagamento.');
+                                }
+                            })
+                            .finally(function () {
+                                if (submitButton) {
+                                    submitButton.disabled = false;
+                                    submitButton.innerHTML = originalHtml;
+                                }
+                            });
+                    });
+                }
+
+                if (document.readyState === 'loading') {
+                    document.addEventListener('DOMContentLoaded', bindPagamentoDocumentacaoModal);
+                } else {
+                    bindPagamentoDocumentacaoModal();
+                }
+            })();
+        </script>
+    @endonce
 </div>

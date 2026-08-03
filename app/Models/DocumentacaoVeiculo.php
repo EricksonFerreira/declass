@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class DocumentacaoVeiculo extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'documentacoes_veiculo';
 
@@ -21,6 +22,15 @@ class DocumentacaoVeiculo extends Model
         'valor_parcela',
         'status',
         'categoria_financeira_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
+    ];
+
+    protected $casts = [
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function veiculo()

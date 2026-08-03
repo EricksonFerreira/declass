@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class LancamentoFinanceiro extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'lancamentos_financeiros';
 
@@ -32,6 +33,10 @@ class LancamentoFinanceiro extends Model
         'parcelas_totais',
         'parcela_atual',
         'grupo_recorrencia_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -39,6 +44,8 @@ class LancamentoFinanceiro extends Model
         'data_lancamento' => 'datetime',
         'data_vencimento' => 'date:Y-m-d',
         'data_pagamento' => 'date:Y-m-d',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function empresa()

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Actions\Veiculo\PagarParcelaDocumentacaoVeiculoAction;
 use App\Models\CategoriaFinanceira;
 use App\Models\DocumentacaoVeiculo;
 use App\Models\DocumentacaoVeiculoParcela;
 use App\Models\LancamentoFinanceiro;
 use App\Models\Veiculo;
+use App\Http\Requests\DocumentacaoVeiculo\AtualizarPagamentoParcelaDocumentacaoVeiculoRequest;
 use App\Support\EmpresaContext;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -65,6 +67,7 @@ class DocumentacaoVeiculoController extends Controller
             'data_primeiro_vencimento' => ['required', 'date'],
             'parcelas' => ['nullable', 'array'],
             'parcelas.*.data_vencimento' => ['nullable', 'date'],
+            'parcelas.*.data_pagamento' => ['nullable', 'date'],
             'parcelas.*.status' => ['nullable', 'in:pendente,pago'],
         ]);
 
@@ -99,6 +102,9 @@ class DocumentacaoVeiculoController extends Controller
                 ? Carbon::parse($parcelaInformada['data_vencimento'])->toDateString()
                 : $primeiroVencimento->copy()->addMonthsNoOverflow($parcela - 1)->toDateString();
             $statusParcela = $parcelaInformada['status'] ?? 'pendente';
+            $dataPagamentoParcela = !empty($parcelaInformada['data_pagamento'])
+                ? Carbon::parse($parcelaInformada['data_pagamento'])->toDateString()
+                : ($statusParcela === 'pago' ? $dataVencimento : null);
 
             LancamentoFinanceiro::create([
                 'empresa_id' => $empresaId,
@@ -123,7 +129,7 @@ class DocumentacaoVeiculoController extends Controller
                 'documentacao_veiculo_id' => $documentacao->id,
                 'numero_parcela' => $parcela,
                 'data_vencimento' => $dataVencimento,
-                'data_pagamento' => $statusParcela === 'pago' ? $dataVencimento : null,
+                'data_pagamento' => $dataPagamentoParcela,
                 'valor' => $data['valor_parcela'],
                 'status' => $statusParcela,
             ]);
@@ -146,6 +152,7 @@ class DocumentacaoVeiculoController extends Controller
             'data_primeiro_vencimento' => ['required', 'date'],
             'parcelas' => ['nullable', 'array'],
             'parcelas.*.data_vencimento' => ['nullable', 'date'],
+            'parcelas.*.data_pagamento' => ['nullable', 'date'],
             'parcelas.*.status' => ['nullable', 'in:pendente,pago'],
         ]);
 
@@ -163,5 +170,38 @@ class DocumentacaoVeiculoController extends Controller
         return redirect()
             ->route('veiculo.documentacao')
             ->with('success', 'Documentacao atualizada.');
+    }
+
+    public function pagarParcela(
+        AtualizarPagamentoParcelaDocumentacaoVeiculoRequest $request,
+        DocumentacaoVeiculoParcela $parcela,
+        PagarParcelaDocumentacaoVeiculoAction $action
+    ) {
+        $empresaId = $this->getEmpresaId();
+        $parcela->loadMissing('documentacaoVeiculo.veiculo');
+
+        abort_unless(
+            $parcela->documentacaoVeiculo
+                && (int) $parcela->documentacaoVeiculo->empresa_id === (int) $empresaId,
+            403
+        );
+
+        $parcela = $action->handle($parcela, $request->validated()['data_pagamento']);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Pagamento registrado com sucesso.',
+                'parcela' => [
+                    'id' => $parcela->id,
+                    'status' => $parcela->status,
+                    'data_pagamento' => optional($parcela->data_pagamento)->format('d/m/Y'),
+                ],
+            ]);
+        }
+
+        return redirect()
+            ->back()
+            ->with('success', 'Pagamento registrado com sucesso.');
     }
 }

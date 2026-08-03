@@ -457,11 +457,11 @@ class VeiculoService extends AbstractBaseService
             $sub->selectRaw('1')
                 ->from('movimentacoes as m')
                 ->whereColumn('m.veiculo_id', 'veiculos.id')
-                ->whereColumn('m.id', function ($latest) {
-                    $latest->selectRaw('MAX(m2.id)')
-                        ->from('movimentacoes as m2')
-                        ->whereColumn('m2.veiculo_id', 'veiculos.id');
-                })
+                ->whereRaw('m.id = (
+                    select max(m2.id)
+                    from movimentacoes as m2
+                    where m2.veiculo_id = veiculos.id
+                )')
                 ->where('m.gera_disponibilidade', 'S');
         });
 
