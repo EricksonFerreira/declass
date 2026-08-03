@@ -2,12 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OrdemServico extends Model
 {
+    use HasAuditColumns;
+
     protected $table = 'ordens_servico';
 
     public const STATUS_ABERTA = 'aberta';
@@ -32,6 +35,10 @@ class OrdemServico extends Model
         'valor_mao_obra',
         'valor_total',
         'data_conclusao',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -39,6 +46,8 @@ class OrdemServico extends Model
         'valor_pecas' => 'decimal:2',
         'valor_mao_obra' => 'decimal:2',
         'valor_total' => 'decimal:2',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function veiculo(): BelongsTo

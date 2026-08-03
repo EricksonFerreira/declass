@@ -707,7 +707,9 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             'message' => 'Depreciacao atualizada com sucesso.',
             'payload' => [
                 'valor_compra' => $veiculoAtualizado->valor_compra,
-                'data_compra' => $veiculoAtualizado->data_compra ? $veiculoAtualizado->data_compra->format('Y-m-d') : null,
+                'data_compra' => $veiculoAtualizado->data_compra
+                    ? Carbon::parse($veiculoAtualizado->data_compra)->format('Y-m-d')
+                    : null,
                 'taxa_depreciacao_anual' => $veiculoAtualizado->taxa_depreciacao_anual,
                 'valor_atual_estimado' => $veiculoAtualizado->valor_atual_estimado,
                 'valor_depreciacao_acumulada' => $veiculoAtualizado->valor_depreciacao_acumulada,

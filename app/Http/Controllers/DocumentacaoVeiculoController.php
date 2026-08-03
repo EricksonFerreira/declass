@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Actions\Veiculo\PagarParcelaDocumentacaoVeiculoAction;
+use App\Actions\Veiculo\SincronizarDocumentacaoVeiculoAction;
 use App\Models\CategoriaFinanceira;
 use App\Models\DocumentacaoVeiculo;
 use App\Models\DocumentacaoVeiculoParcela;
@@ -24,13 +24,71 @@ class DocumentacaoVeiculoController extends Controller
     public function index()
     {
         $empresaId = $this->getEmpresaId();
+        $filtroTipo = request()->string('tipo')->toString();
+        $filtroStatus = request()->string('status')->toString();
+        $filtroBusca = trim((string) request()->query('q', ''));
+        $filtroVeiculo = trim((string) request()->query('veiculo', ''));
+        $filtroPlaca = trim((string) request()->query('placa', ''));
+        $filtroSomenteVencidas = request()->boolean('somente_vencidas');
+        $filtroValorMin = request()->query('valor_min');
+        $filtroValorMax = request()->query('valor_max');
+
         $documentacoes = DocumentacaoVeiculo::query()
             ->with(['veiculo', 'categoriaFinanceira', 'parcelas'])
             ->where('empresa_id', $empresaId)
+            ->when(in_array($filtroTipo, ['ipva', 'licenciamento', 'seguro'], true), function ($query) use ($filtroTipo) {
+                $query->where('tipo', $filtroTipo);
+            })
+            ->when(in_array($filtroStatus, ['ativo', 'inativo'], true), function ($query) use ($filtroStatus) {
+                $query->where('status', $filtroStatus);
+            })
+            ->when($filtroBusca !== '', function ($query) use ($filtroBusca) {
+                $query->where(function ($subQuery) use ($filtroBusca) {
+                    $subQuery->where('descricao', 'like', '%' . $filtroBusca . '%')
+                        ->orWhere('nome', 'like', '%' . $filtroBusca . '%')
+                        ->orWhereHas('veiculo', function ($veiculoQuery) use ($filtroBusca) {
+                            $veiculoQuery->where('nome', 'like', '%' . $filtroBusca . '%')
+                                ->orWhere('placa_licenca', 'like', '%' . $filtroBusca . '%');
+                        });
+                });
+            })
+            ->when($filtroVeiculo !== '', function ($query) use ($filtroVeiculo) {
+                $query->whereHas('veiculo', function ($veiculoQuery) use ($filtroVeiculo) {
+                    $veiculoQuery->where('nome', 'like', '%' . $filtroVeiculo . '%');
+                });
+            })
+            ->when($filtroPlaca !== '', function ($query) use ($filtroPlaca) {
+                $query->whereHas('veiculo', function ($veiculoQuery) use ($filtroPlaca) {
+                    $veiculoQuery->where('placa_licenca', 'like', '%' . $filtroPlaca . '%');
+                });
+            })
+            ->when($filtroValorMin !== null && $filtroValorMin !== '', function ($query) use ($filtroValorMin) {
+                $query->where('valor_parcela', '>=', (float) str_replace(',', '.', (string) $filtroValorMin));
+            })
+            ->when($filtroValorMax !== null && $filtroValorMax !== '', function ($query) use ($filtroValorMax) {
+                $query->where('valor_parcela', '<=', (float) str_replace(',', '.', (string) $filtroValorMax));
+            })
+            ->when($filtroSomenteVencidas, function ($query) {
+                $query->whereHas('parcelas', function ($parcelaQuery) {
+                    $parcelaQuery->whereIn('status', ['pendente', 'atrasado'])
+                        ->whereDate('data_vencimento', '<', now()->toDateString());
+                });
+            })
             ->orderByDesc('id')
-            ->paginate(15);
+            ->paginate(15)
+            ->appends(request()->query());
 
-        return view('veiculo.documentacao', compact('documentacoes'))
+        return view('veiculo.documentacao', compact(
+            'documentacoes',
+            'filtroTipo',
+            'filtroStatus',
+            'filtroBusca',
+            'filtroVeiculo',
+            'filtroPlaca',
+            'filtroSomenteVencidas',
+            'filtroValorMin',
+            'filtroValorMax'
+        ))
             ->with('titulo', 'Documentacao de Veiculos');
     }
 
@@ -71,15 +129,15 @@ class DocumentacaoVeiculoController extends Controller
             'parcelas.*.status' => ['nullable', 'in:pendente,pago'],
         ]);
 
-        $categoria = CategoriaFinanceira::firstOrCreate(
-            ['empresa_id' => $empresaId, 'nome' => 'Documentacao do veiculo', 'tipo' => 'despesa'],
-            [
-                'codigo' => CategoriaFinanceira::sugerirCodigo($empresaId, 'despesa', null),
-                'status' => 'ativo',
-                'permite_lancamento' => true,
-                'origem' => 'manual',
-            ]
-        );
+        foreach (($data['parcelas'] ?? []) as $indice => $parcelaValidada) {
+            if (($parcelaValidada['status'] ?? 'pendente') === 'pago' && empty($parcelaValidada['data_pagamento'])) {
+                return back()
+                    ->withErrors([
+                        "parcelas.$indice.data_pagamento" => 'A data de pagamento é obrigatória quando o status estiver como pago.',
+                    ])
+                    ->withInput();
+            }
+        }
 
         $documentacao = DocumentacaoVeiculo::create([
             'empresa_id' => $empresaId,
@@ -90,50 +148,14 @@ class DocumentacaoVeiculoController extends Controller
             'parcelas_total' => $data['parcelas_total'],
             'valor_parcela' => $data['valor_parcela'],
             'status' => 'ativo',
-            'categoria_financeira_id' => $categoria->id,
+            'categoria_financeira_id' => null,
         ]);
 
-        $primeiroVencimento = Carbon::parse($data['data_primeiro_vencimento'])->startOfDay();
-        $parcelasInformadas = collect($data['parcelas'] ?? [])->values();
-
-        for ($parcela = 1; $parcela <= (int) $data['parcelas_total']; $parcela++) {
-            $parcelaInformada = $parcelasInformadas->get($parcela - 1, []);
-            $dataVencimento = !empty($parcelaInformada['data_vencimento'])
-                ? Carbon::parse($parcelaInformada['data_vencimento'])->toDateString()
-                : $primeiroVencimento->copy()->addMonthsNoOverflow($parcela - 1)->toDateString();
-            $statusParcela = $parcelaInformada['status'] ?? 'pendente';
-            $dataPagamentoParcela = !empty($parcelaInformada['data_pagamento'])
-                ? Carbon::parse($parcelaInformada['data_pagamento'])->toDateString()
-                : ($statusParcela === 'pago' ? $dataVencimento : null);
-
-            LancamentoFinanceiro::create([
-                'empresa_id' => $empresaId,
-                'descricao' => strtoupper($data['tipo']) . ' - Parcela ' . $parcela . '/' . $data['parcelas_total'],
-                'valor' => $data['valor_parcela'],
-                'tipo' => 'despesa',
-                'categoria_financeira_id' => $categoria->id,
-                'data_vencimento' => $dataVencimento,
-                'status' => $statusParcela,
-                'veiculo_id' => $data['veiculo_id'],
-                'documentacao_veiculo_id' => $documentacao->id,
-                'observacoes' => 'Lancamento automatico da documentacao do veiculo.',
-                'recorrente' => false,
-                'recorrencia' => null,
-                'parcelas_totais' => $data['parcelas_total'],
-                'parcela_atual' => $parcela,
-                'grupo_recorrencia_id' => null,
-                'user_id' => Auth::id(),
-            ]);
-
-            DocumentacaoVeiculoParcela::create([
-                'documentacao_veiculo_id' => $documentacao->id,
-                'numero_parcela' => $parcela,
-                'data_vencimento' => $dataVencimento,
-                'data_pagamento' => $dataPagamentoParcela,
-                'valor' => $data['valor_parcela'],
-                'status' => $statusParcela,
-            ]);
-        }
+        app(SincronizarDocumentacaoVeiculoAction::class)->handle(
+            $documentacao,
+            $data['parcelas'] ?? [],
+            $data['data_primeiro_vencimento']
+        );
 
         return redirect()
             ->route('veiculo.documentacao')
@@ -156,6 +178,16 @@ class DocumentacaoVeiculoController extends Controller
             'parcelas.*.status' => ['nullable', 'in:pendente,pago'],
         ]);
 
+        foreach (($data['parcelas'] ?? []) as $indice => $parcelaValidada) {
+            if (($parcelaValidada['status'] ?? 'pendente') === 'pago' && empty($parcelaValidada['data_pagamento'])) {
+                return back()
+                    ->withErrors([
+                        "parcelas.$indice.data_pagamento" => 'A data de pagamento é obrigatória quando o status estiver como pago.',
+                    ])
+                    ->withInput();
+            }
+        }
+
         $documentacao->update([
             'empresa_id' => $empresaId,
             'veiculo_id' => $data['veiculo_id'],
@@ -167,6 +199,12 @@ class DocumentacaoVeiculoController extends Controller
             'status' => 'ativo',
         ]);
 
+        app(SincronizarDocumentacaoVeiculoAction::class)->handle(
+            $documentacao,
+            $data['parcelas'] ?? [],
+            $data['data_primeiro_vencimento']
+        );
+
         return redirect()
             ->route('veiculo.documentacao')
             ->with('success', 'Documentacao atualizada.');
@@ -175,7 +213,7 @@ class DocumentacaoVeiculoController extends Controller
     public function pagarParcela(
         AtualizarPagamentoParcelaDocumentacaoVeiculoRequest $request,
         DocumentacaoVeiculoParcela $parcela,
-        PagarParcelaDocumentacaoVeiculoAction $action
+        SincronizarDocumentacaoVeiculoAction $action
     ) {
         $empresaId = $this->getEmpresaId();
         $parcela->loadMissing('documentacaoVeiculo.veiculo');
@@ -186,7 +224,7 @@ class DocumentacaoVeiculoController extends Controller
             403
         );
 
-        $parcela = $action->handle($parcela, $request->validated()['data_pagamento']);
+        $parcela = $action->pagarParcela($parcela, $request->validated()['data_pagamento']);
 
         if ($request->expectsJson()) {
             return response()->json([

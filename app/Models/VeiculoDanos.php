@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -9,7 +10,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VeiculoDanos extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     const STATUS_PENDENTE = 'pendente';
     const STATUS_EM_CORRECAO = 'em_correcao';
@@ -58,6 +59,10 @@ class VeiculoDanos extends Model
         'nao_requer_reparo_por',
         'nao_requer_reparo_justificativa',
         'ordem_servico_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -66,6 +71,8 @@ class VeiculoDanos extends Model
         'nao_requer_reparo_em' => 'datetime',
         'custo_estimado' => 'decimal:2',
         'quilometragem_veiculo' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function dano(): BelongsTo

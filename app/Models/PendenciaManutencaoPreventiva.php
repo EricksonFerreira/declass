@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PendenciaManutencaoPreventiva extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'pendencias_manutencao_preventiva';
 
@@ -18,6 +19,17 @@ class PendenciaManutencaoPreventiva extends Model
         'data_prevista',
         'km_previsto',
         'status', // pendente, atrasado
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
+    ];
+
+    protected $casts = [
+        'data_prevista' => 'datetime',
+        'km_previsto' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function empresa()

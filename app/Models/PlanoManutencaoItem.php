@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PlanoManutencaoItem extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'plano_manutencao_itens';
 
@@ -16,6 +17,17 @@ class PlanoManutencaoItem extends Model
         'item_id',
         'frequencia_meses',
         'frequencia_km',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
+    ];
+
+    protected $casts = [
+        'frequencia_meses' => 'integer',
+        'frequencia_km' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function plano()

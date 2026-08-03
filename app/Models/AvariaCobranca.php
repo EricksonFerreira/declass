@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AvariaCobranca extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'avaria_cobrancas';
 
@@ -36,6 +37,10 @@ class AvariaCobranca extends Model
 
         'usuario_responsavel_id',
         'cobrado_em',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -47,6 +52,8 @@ class AvariaCobranca extends Model
         'dano_veiculo_ids' => 'array',
         'gateway_response' => 'array',
         'cobrado_em' => 'datetime',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public const STATUS_PENDENTE = 'pendente';

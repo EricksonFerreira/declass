@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ItemManutencaoPreventiva extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'itens_manutencao_preventiva';
 
@@ -15,6 +16,15 @@ class ItemManutencaoPreventiva extends Model
         'empresa_id',
         'nome',
         'descricao',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
+    ];
+
+    protected $casts = [
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function empresa()

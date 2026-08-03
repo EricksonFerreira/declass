@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class EmpresaAlerta extends Model
 {
+    use HasAuditColumns;
+
     protected $table = 'empresa_alertas';
 
     protected $fillable = [
@@ -19,12 +22,18 @@ class EmpresaAlerta extends Model
         'resolvido',
         'resolvido_em',
         'resolvido_por_user_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
         'metadados'    => 'array',
         'resolvido'    => 'boolean',
         'resolvido_em' => 'datetime',
+        'datainc'      => 'datetime',
+        'datatu'       => 'datetime',
     ];
 
     public function empresa(): BelongsTo

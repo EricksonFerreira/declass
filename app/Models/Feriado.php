@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Feriado extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'feriados';
 
@@ -17,10 +18,17 @@ class Feriado extends Model
         'data',
         'nome',
         'ativo',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
         'data' => 'date',
+        'ativo' => 'boolean',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function estacao()

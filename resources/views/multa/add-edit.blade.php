@@ -18,19 +18,47 @@
         </div>
     @endif
 
-    <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
+    <div class="container-fluid px-0 multa-page">
+        <div class="module-card mb-3">
+            <div class="module-card-header multa-hero-compact">
+                <div class="module-header-left">
+                    <div class="module-header-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div>
+                        <div class="module-header-eyebrow">Financeiro · Multas</div>
+                        <h1 class="module-header-title">{{ $titulo }}</h1>
+                        <p class="module-header-sub">Preencha os dados da infração, valores, vínculo com reserva e anexos.</p>
+                    </div>
+                </div>
 
-        <div class="card shadow-sm border-0">
-            <div class="card-header border-0 pb-0">
-                <div>
-                    <h4 class="mb-1">
-                        <i class="fas fa-exclamation-triangle text-danger mr-2"></i>{{ $titulo }}
-                    </h4>
-                    <p class="mb-0 text-muted small">Preencha os dados da infração, valores e anexos.</p>
+                <div class="module-header-right">
+                    <a href="{{ route('multa.index') }}" class="btn-xp btn-xp--outline-light btn-xp--sm">
+                        <i class="fas fa-list"></i> Lista
+                    </a>
+                    <a href="{{ route('veiculo.index') }}" class="btn-xp btn-xp--outline-light btn-xp--sm">
+                        <i class="fas fa-car"></i> Veículos
+                    </a>
                 </div>
             </div>
+        </div>
 
-            <div class="card-body p-4">
+        <div class="row">
+            <div class="col-xl-9 mb-3">
+                <div class="config-card shadow-sm border-0">
+                    <div class="vs-panel-head border-bottom">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Cadastro operacional</span>
+                            <h4 class="vs-panel-head__title mb-1">{{ isset($multa) ? 'Editar multa' : 'Nova multa' }}</h4>
+                            <p class="vs-panel-head__sub mb-0">Use o assistente em etapas para registrar a infração sem perder o vínculo financeiro.</p>
+                        </div>
+                        <span class="vs-badge-soft is-warning">
+                            <i class="fas fa-clipboard-list"></i>
+                            Etapas guiadas
+                        </span>
+                    </div>
+
+                    <div class="card-body p-4">
                 <form id="formMulta" method="POST" action="{{ $rota }}" enctype="multipart/form-data">
                     @csrf
                     @if($metodo === 'PUT') @method('PUT') @endif
@@ -331,6 +359,40 @@
                     </div>
 
                 </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-xl-3 mb-3">
+                <div class="config-card shadow-sm border-0 h-100">
+                    <div class="vs-panel-head border-bottom">
+                        <div>
+                            <span class="vs-panel-head__eyebrow">Resumo rápido</span>
+                            <h4 class="vs-panel-head__title mb-1">Identidade da multa</h4>
+                            <p class="vs-panel-head__sub mb-0">Os dados principais ajudam a manter o fluxo financeiro coerente.</p>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-4">
+                        <div class="vehicle-summary-stack">
+                            <div class="vehicle-summary-card">
+                                <span>Veículo</span>
+                                <strong>{{ $veiculo?->nome ?? 'Não selecionado' }}</strong>
+                                <small>{{ $veiculo?->placa_licenca ?? 'Use a busca para vincular o veículo' }}</small>
+                            </div>
+                            <div class="vehicle-summary-card">
+                                <span>Reserva</span>
+                                <strong>{{ $reserva?->id ? '#' . $reserva->id : 'Não vinculada' }}</strong>
+                                <small>{{ $reserva?->codigoReserva?->codigo ?? 'Pode ser preenchida automaticamente' }}</small>
+                            </div>
+                            <div class="vehicle-summary-card">
+                                <span>Status</span>
+                                <strong>{{ old('status_multa', $multa->status_multa ?? 'pendente') }}</strong>
+                                <small>O status financeiro é refletido no fluxo de cobrança.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -353,6 +415,236 @@
 
 @section('css')
 <style>
+.multa-page {
+    padding-bottom: 8px;
+}
+
+.module-card {
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 4px 24px rgba(12, 20, 40, .10);
+    background: #fff;
+}
+
+.module-card-header {
+    background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
+    padding: 24px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+    overflow: hidden;
+}
+
+.module-card-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+    background-size: 20px 20px;
+    pointer-events: none;
+}
+
+.module-card-header::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #4338ca, #0ea5e9, #10b981);
+}
+
+.module-header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+}
+
+.module-header-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: #60a5fa;
+    flex-shrink: 0;
+    backdrop-filter: blur(8px);
+}
+
+.module-header-eyebrow {
+    font-size: .62rem;
+    font-weight: 700;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: rgba(148, 163, 184, .8);
+    display: block;
+    margin-bottom: 3px;
+}
+
+.module-header-title {
+    font-size: 1.45rem;
+    font-weight: 800;
+    color: #fff;
+    margin: 0 0 3px;
+    letter-spacing: -.02em;
+}
+
+.module-header-sub {
+    margin: 0;
+    font-size: .82rem;
+    color: rgba(148, 163, 184, .9);
+}
+
+.module-header-right {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.config-card {
+    background: #fff;
+    border: 1px solid #e2e9f4;
+    border-radius: 18px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(12, 20, 40, .06);
+}
+
+.btn-xp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #4338ca, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .18s;
+    letter-spacing: -.01em;
+    box-shadow: 0 4px 12px rgba(67, 56, 202, .25);
+}
+
+.btn-xp:hover {
+    opacity: .88;
+    transform: translateY(-1px);
+    color: #fff;
+    text-decoration: none;
+}
+
+.btn-xp--sm {
+    padding: 6px 12px;
+    font-size: .78rem;
+    border-radius: 8px;
+}
+
+.btn-xp--outline-light {
+    background: rgba(255, 255, 255, .12);
+    border: 1px solid rgba(255, 255, 255, .25);
+    color: rgba(255, 255, 255, .9);
+    box-shadow: none;
+}
+
+.btn-xp--outline-light:hover {
+    background: rgba(255, 255, 255, .2);
+    color: #fff;
+}
+
+.vs-panel-head {
+    padding: 18px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    background: #fff;
+}
+
+.vs-panel-head__eyebrow {
+    display: inline-block;
+    margin-bottom: 6px;
+    font-size: .62rem;
+    font-weight: 800;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: #64748b;
+}
+
+.vs-panel-head__title {
+    margin: 0 0 6px;
+    font-size: 1.08rem;
+    font-weight: 800;
+    color: #0c1428;
+}
+
+.vs-panel-head__sub {
+    margin: 0;
+    color: #64748b;
+    font-size: .84rem;
+    max-width: 680px;
+}
+
+.vs-badge-soft {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: #eef2ff;
+    color: #3730a3;
+    border: 1px solid #c7d2fe;
+    border-radius: 999px;
+    font-size: .76rem;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.vehicle-summary-stack {
+    display: grid;
+    gap: 12px;
+}
+
+.vehicle-summary-card {
+    background: #f8fafc;
+    border: 1px solid #e9f0fa;
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+.vehicle-summary-card span {
+    display: block;
+    font-size: .68rem;
+    font-weight: 800;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: #64748b;
+    margin-bottom: 4px;
+}
+
+.vehicle-summary-card strong {
+    display: block;
+    font-size: .98rem;
+    color: #0c1428;
+    font-weight: 800;
+}
+
+.vehicle-summary-card small {
+    display: block;
+    color: #64748b;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+
 .multa-section-title {
     font-size: .7rem;
     font-weight: 700;

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class Multa extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $table = 'multas';
 
@@ -42,6 +43,10 @@ class Multa extends Model
         'referencia_pagamento',
         'anexo_comprovante_path',
         'anexo_pdf_path',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     const DESTINO_COBRANCA = [
@@ -65,6 +70,8 @@ class Multa extends Model
         'valor_desconto'       => 'decimal:2',
         'valor_final'          => 'decimal:2',
         'pago_em'              => 'datetime',
+        'datainc'              => 'datetime',
+        'datatu'               => 'datetime',
     ];
 
     const STATUS_MULTA = [

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ExecucaoManutencaoPreventiva extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'execucoes_manutencao_preventiva';
 
@@ -18,6 +19,17 @@ class ExecucaoManutencaoPreventiva extends Model
         'ordem_servico_id',
         'data_execucao',
         'km_execucao',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
+    ];
+
+    protected $casts = [
+        'data_execucao' => 'datetime',
+        'km_execucao' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function empresa()

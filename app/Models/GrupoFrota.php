@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class GrupoFrota extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'grupos_frota';
     protected $fillable = [
@@ -20,10 +21,16 @@ class GrupoFrota extends Model
         'imagens',
         'ativo',
         'ordem',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
         'imagens' => 'array',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function getImagemUrlAttribute(): ?string

@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class CategoriaFinanceira extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'categorias_financeiras';
 
@@ -21,10 +22,16 @@ class CategoriaFinanceira extends Model
         'status',
         'permite_lancamento',
         'origem',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
         'permite_lancamento' => 'boolean',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function empresa()

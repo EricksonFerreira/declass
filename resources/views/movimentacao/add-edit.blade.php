@@ -185,6 +185,14 @@
                                 <option value="N" {{ old('ativo', $isEdit ? $movimentacao->ativo : 'S') === 'N' ? 'selected' : '' }}>Inativo</option>
                             </select>
                         </div>
+                        <div class="col-lg-2 form-group">
+                            <label class="mv-label">Gera disponibilidade</label>
+                            <select name="gera_disponibilidade" class="form-control form-control-sm">
+                                <option value="N" {{ old('gera_disponibilidade', $isEdit ? $movimentacao->gera_disponibilidade : 'N') === 'N' ? 'selected' : '' }}>Não</option>
+                                <option value="S" {{ old('gera_disponibilidade', $isEdit ? $movimentacao->gera_disponibilidade : 'N') === 'S' ? 'selected' : '' }}>Sim</option>
+                            </select>
+                            <small class="text-muted d-block mt-1">Use S para liberar a disponibilidade do veículo ao concluir a movimentação.</small>
+                        </div>
                         <div class="col-lg-6 form-group">
                             <label class="mv-label">Nome / Descrição (opcional)</label>
                             <input type="text" name="nome" class="form-control form-control-sm"

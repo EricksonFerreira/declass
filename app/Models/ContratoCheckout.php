@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ContratoCheckout extends Model
 {
+    use HasAuditColumns;
     protected $table = 'contrato_checkout';
 
     protected $fillable = [
@@ -32,6 +34,10 @@ class ContratoCheckout extends Model
         'data_assinatura',
         'pdf_path',
         'assinado',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     public function reserva(): BelongsTo

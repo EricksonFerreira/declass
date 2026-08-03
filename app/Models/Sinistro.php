@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,7 +10,7 @@ use Illuminate\Support\Facades\Storage;
 
 class Sinistro extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasAuditColumns, HasFactory, SoftDeletes;
 
     protected $table = 'sinistros';
 
@@ -57,6 +58,10 @@ class Sinistro extends Model
         'anexo_foto2_path',
         'anexo_foto3_path',
         'anexo_laudo_path',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -70,6 +75,8 @@ class Sinistro extends Model
         'valor_custo_empresa'            => 'decimal:2',
         'pago_empresa_em'                => 'datetime',
         'pago_cliente_em'                => 'datetime',
+        'datainc'                        => 'datetime',
+        'datatu'                         => 'datetime',
     ];
 
     const FORMAS_PAGAMENTO = [

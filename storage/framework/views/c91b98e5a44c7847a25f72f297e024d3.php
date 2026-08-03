@@ -39,6 +39,7 @@
             ? $documentacao->parcelas->map(function ($parcela) {
                 return [
                     'data_vencimento' => optional($parcela->data_vencimento)->format('Y-m-d') ?? '',
+                    'data_pagamento' => optional($parcela->data_pagamento)->format('Y-m-d') ?? '',
                     'status' => (string) ($parcela->status ?? 'pendente'),
                 ];
             })->values()->all()
@@ -214,13 +215,14 @@
                                             <tr>
                                                 <th>#</th>
                                                 <th>Vencimento</th>
+                                                <th>Data pagamento</th>
                                                 <th>Valor</th>
                                                 <th>Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
-                                                <td colspan="4" class="text-center text-muted py-4">Informe a data inicial e a quantidade de parcelas.</td>
+                                                <td colspan="5" class="text-center text-muted py-4">Informe a data inicial e a quantidade de parcelas.</td>
                                             </tr>
                                         </tbody>
                                     </table>
@@ -716,8 +718,11 @@
                 if (parcelasExistentes.length) {
                     const existingRows = parcelasExistentes.map(function (parcela, index) {
                         const vencimento = parcela.data_vencimento || '-';
+                        const dataPagamento = parcela.data_pagamento || '';
                         const status = parcela.status || 'pendente';
                         const statusClass = status === 'pago' ? 'status-badge--green' : (status === 'atrasado' ? 'status-badge--red' : 'status-badge--amber');
+                        const pagamentoDisabled = status !== 'pago' ? 'disabled' : '';
+                        const pagamentoRequired = status === 'pago' ? 'required' : '';
 
                         return `
                             <tr>
@@ -726,10 +731,13 @@
                                     <input type="date" name="parcelas[${index}][data_vencimento]" class="form-control form-control-sm" value="${vencimento}">
                                 </td>
                                 <td>
+                                    <input type="date" name="parcelas[${index}][data_pagamento]" class="form-control form-control-sm parcela-data-pagamento" value="${dataPagamento}" ${pagamentoDisabled} ${pagamentoRequired}>
+                                </td>
+                                <td>
                                     <input type="text" class="form-control form-control-sm" value="R$ ${valor.toFixed(2).replace('.', ',')}" readonly>
                                 </td>
                                 <td>
-                                    <select name="parcelas[${index}][status]" class="form-control form-control-sm">
+                                    <select name="parcelas[${index}][status]" class="form-control form-control-sm parcela-status">
                                         <option value="pendente" ${status === 'pendente' ? 'selected' : ''}>Pendente</option>
                                         <option value="pago" ${status === 'pago' ? 'selected' : ''}>Pago</option>
                                     </select>
@@ -742,7 +750,7 @@
                     return;
                 }
 
-                preview.innerHTML = '<tr><td colspan="4" class="text-center text-muted py-4">Informe a data inicial e a quantidade de parcelas.</td></tr>';
+                preview.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-4">Informe a data inicial e a quantidade de parcelas.</td></tr>';
                 return;
             }
 
@@ -751,6 +759,9 @@
                 const vencimento = addMonths(dataBase, i);
                 const parcelaExistente = parcelasExistentes[i] || {};
                 const statusAtual = parcelaExistente.status || 'pendente';
+                const pagamentoAtual = parcelaExistente.data_pagamento || '';
+                const pagamentoDisabled = statusAtual !== 'pago' ? 'disabled' : '';
+                const pagamentoRequired = statusAtual === 'pago' ? 'required' : '';
                 rows.push(`
                     <tr>
                         <td>${i + 1}/${total}</td>
@@ -758,10 +769,13 @@
                             <input type="date" name="parcelas[${i}][data_vencimento]" class="form-control form-control-sm" value="${parcelaExistente.data_vencimento || toInputDate(vencimento)}">
                         </td>
                         <td>
+                            <input type="date" name="parcelas[${i}][data_pagamento]" class="form-control form-control-sm parcela-data-pagamento" value="${pagamentoAtual}" ${pagamentoDisabled} ${pagamentoRequired}>
+                        </td>
+                        <td>
                             <input type="text" class="form-control form-control-sm" value="R$ ${valor.toFixed(2).replace('.', ',')}" readonly>
                         </td>
                         <td>
-                            <select name="parcelas[${i}][status]" class="form-control form-control-sm">
+                            <select name="parcelas[${i}][status]" class="form-control form-control-sm parcela-status">
                                 <option value="pendente" ${statusAtual === 'pendente' ? 'selected' : ''}>Pendente</option>
                                 <option value="pago" ${statusAtual === 'pago' ? 'selected' : ''}>Pago</option>
                             </select>
@@ -777,6 +791,30 @@
         parcelasInput.addEventListener('input', renderPreview);
         dataInput.addEventListener('change', renderPreview);
         valorInput.addEventListener('input', renderPreview);
+        preview.addEventListener('change', function (event) {
+            if (!event.target.classList.contains('parcela-status')) {
+                return;
+            }
+
+            const row = event.target.closest('tr');
+            const pagamentoInput = row ? row.querySelector('.parcela-data-pagamento') : null;
+
+            if (!pagamentoInput) {
+                return;
+            }
+
+            if (event.target.value === 'pago') {
+                pagamentoInput.disabled = false;
+                pagamentoInput.required = true;
+                if (!pagamentoInput.value) {
+                    pagamentoInput.value = toInputDate(new Date());
+                }
+            } else {
+                pagamentoInput.required = false;
+                pagamentoInput.disabled = true;
+                pagamentoInput.value = '';
+            }
+        });
         renderPreview();
     })();
 </script>

@@ -59,7 +59,7 @@
         'sinistros' => 'Quantidade de sinistros ainda não encerrados.',
         'multas' => 'Quantidade total de multas cadastradas para este veículo.',
         'manutencao' => 'Quantidade de manutenções preventivas vencidas.',
-        'documentacao' => 'Quantidade total de documentos cadastrados para este veículo.',
+        'documentacao' => 'Quantidade de parcelas vencidas dentro dos documentos cadastrados para este veículo.',
     ];
 
     $badgeColor = function (int $count, int $alertCount = 0, string $alertType = 'red') {
@@ -150,7 +150,7 @@
             <span class="vs-step__icon"><i class="fas fa-file-alt"></i></span>
             <span class="vs-step__content"><strong>Documentação</strong></span>
             <span class="vs-step__count <?php echo e($documentosVencidos > 0 ? 'vs-step__count--alert' : 'vs-step__count--muted'); ?>" title="<?php echo e($countTooltips['documentacao']); ?>" data-toggle="tooltip">
-                <?php echo e($documentosCadastrados); ?>
+                <?php echo e($documentosVencidos); ?>
 
             </span>
         </button>

@@ -26,6 +26,7 @@ class StoreMovimentacaoRequest extends FormRequest
         return [
             'nome' => ['nullable', 'string', 'max:255'],
             'ativo' => ['required', Rule::in(['S', 'N'])],
+            'gera_disponibilidade' => ['nullable', Rule::in(['S', 'N', 1, 0, true, false])],
 
             'veiculo_id' => ['nullable', 'integer', 'exists:veiculos,id'],
             'modelo_id' => ['nullable', 'integer', 'exists:modelos,id'],
@@ -54,6 +55,7 @@ class StoreMovimentacaoRequest extends FormRequest
         return [
             'ativo.required' => 'O campo status do registro é obrigatório.',
             'ativo.in' => 'O campo status do registro deve ser Ativo ou Inativo.',
+            'gera_disponibilidade.in' => 'O campo gera disponibilidade deve ser Sim ou Não.',
             'tipo_movimentacao_id.required' => 'O tipo de movimentação é obrigatório.',
             'status_movimentacao_id.required' => 'O status da movimentação é obrigatório.',
             'user_id.required' => 'O usuário é obrigatório.',

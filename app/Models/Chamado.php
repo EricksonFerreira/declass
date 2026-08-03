@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Model;
 
 class Chamado extends Model
 {
+    use HasAuditColumns;
+
     public const STATUS_ABERTO = 'aguardando_analise';
     public const STATUS_ATENDIMENTO = 'em_atendimento';
     public const STATUS_AGUARDANDO_SOLICITANTE = 'aguardando_solicitante';
@@ -16,6 +19,7 @@ class Chamado extends Model
         'empresa_id','user_id','criado_por_user_id','chamado_categoria_id','chamado_subcategoria_id','chamado_status_id',
         'descricao','solucao','prazo_atendimento_em','aberto_em','em_atendimento_em','concluido_em','cancelado_em','aguardando_solicitante_em',
         'responsavel_user_id','cancelamento_justificativa',
+        'usuinc','datainc','usuatu','datatu',
     ];
 
     protected $casts = [
@@ -25,6 +29,8 @@ class Chamado extends Model
         'concluido_em' => 'datetime',
         'cancelado_em' => 'datetime',
         'aguardando_solicitante_em' => 'datetime',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function categoria() { return $this->belongsTo(ChamadoCategoria::class, 'chamado_categoria_id'); }

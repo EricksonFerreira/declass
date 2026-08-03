@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class TermoConsentimento extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'termo_consentimento';
     protected $fillable = [
@@ -18,6 +19,16 @@ class TermoConsentimento extends Model
         'ordem',
         'titulo',
         'tipo',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
+    ];
+
+    protected $casts = [
+        'ordem' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function empresa()

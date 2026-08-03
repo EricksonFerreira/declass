@@ -2058,7 +2058,7 @@
         }
 
         function atualizarUsuariosSelectReserva() {
-            // mantido por compatibilidade â€” nao ha mais select de usuarios
+            // mantido por compatibilidade - nao ha mais select de usuarios
             return $.Deferred().resolve().promise();
         }
 
@@ -2481,12 +2481,12 @@
                         data.usuarios.forEach(u => {
                             html += `<tr>
                                 <td><strong>${u.nome}</strong></td>
-                                <td>${u.email || 'â€”'}</td>
-                                <td>${u.documento || 'â€”'}</td>
-                                <td>${u.telefone || 'â€”'}</td>
-                                <td><span class="badge badge-info">${u.perfil || 'â€”'}</span></td>
-                                <td>${u.nascimento || 'â€”'}</td>
-                                <td>${u.cadastro || 'â€”'}</td>
+                                <td>${u.email || '-'}</td>
+                                <td>${u.documento || '-'}</td>
+                                <td>${u.telefone || '-'}</td>
+                                <td><span class="badge badge-info">${u.perfil || '-'}</span></td>
+                                <td>${u.nascimento || '-'}</td>
+                                <td>${u.cadastro || '-'}</td>
                                 <td class="text-center">
                                     <button type="button" class="btn btn-sm btn-success btn-selecionar-usuario"
                                         data-id="${u.id}" data-nome="${u.nome.replace(/"/g,'&quot;')}">

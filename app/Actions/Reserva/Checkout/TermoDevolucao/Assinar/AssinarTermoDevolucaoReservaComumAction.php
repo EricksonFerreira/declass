@@ -91,7 +91,7 @@ class AssinarTermoDevolucaoReservaComumAction
                 'data_assinatura' => optional($checkout->data_assinatura)->toDateTimeString(),
                 'signatario_nome' => $checkout->signatario_nome,
             ],
-            'Termo de devolução assinado',
+            'Termo de devoluçãhttp://xpandcars.test/admin/assinatura/35o assinado',
             'success'
         );
 
@@ -99,11 +99,11 @@ class AssinarTermoDevolucaoReservaComumAction
             (int) $reserva->id,
             (int) auth()->id(),
             [
-                'acao' => 'Checkout colocado em conferÃªncia',
+                'acao' => 'Checkout colocado em conferência',
                 'contrato_checkout_id' => $checkout->id,
-                'status_operacional' => 'Em conferÃªncia',
+                'status_operacional' => 'Em conferência',
             ],
-            'Checkout em conferÃªncia',
+            'Checkout em conferência',
             'info'
         );
     }

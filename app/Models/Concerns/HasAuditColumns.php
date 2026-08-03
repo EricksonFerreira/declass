@@ -20,8 +20,13 @@ trait HasAuditColumns
                 $model->usuinc = $userId;
             }
 
-            $model->datatu = $model->datainc;
-            $model->usuatu = $model->usuinc;
+            if (empty($model->datatu)) {
+                $model->datatu = $now;
+            }
+
+            if (empty($model->usuatu)) {
+                $model->usuatu = $userId;
+            }
         });
 
         static::updating(function ($model): void {

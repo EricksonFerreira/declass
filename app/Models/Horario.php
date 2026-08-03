@@ -1,10 +1,14 @@
 <?php
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
+
 use Illuminate\Database\Eloquent\Model;
 
 class Horario extends Model
 {
+    use HasAuditColumns;
+
     protected $table = 'horarios';
 
     protected $fillable = [
@@ -19,6 +23,18 @@ class Horario extends Model
         'funciona_24h',
         'funciona',
         'tem_intervalo_almoco',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
+    ];
+
+    protected $casts = [
+        'funciona_24h' => 'boolean',
+        'funciona' => 'boolean',
+        'tem_intervalo_almoco' => 'boolean',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     // Relacionamento com Estacao

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ReservaMotoristaApp extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'reservas_motorista_app';
 
@@ -47,6 +48,10 @@ class ReservaMotoristaApp extends Model
         'dados_json',
         'documentos_json',
         'observacoes',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -69,6 +74,8 @@ class ReservaMotoristaApp extends Model
         'opcionais_json' => 'array',
         'dados_json' => 'array',
         'documentos_json' => 'array',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function empresa(): BelongsTo

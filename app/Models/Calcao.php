@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Calcao extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'calcoes';
 
@@ -33,6 +34,10 @@ class Calcao extends Model
         'observacao',
         'justificativa_captura',
         'stripe_response',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -43,6 +48,8 @@ class Calcao extends Model
         'data_hora_captura'        => 'datetime',
         'data_hora_cancelamento'   => 'datetime',
         'stripe_response'          => 'array',
+        'datainc'                  => 'datetime',
+        'datatu'                   => 'datetime',
     ];
 
     const STATUS_PENDENTE              = 'pendente';

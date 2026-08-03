@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Nfse extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'nfse';
 
@@ -26,6 +27,10 @@ class Nfse extends Model
         'cancelamento_response',
         'cancelada_em',
         'ultima_consulta_em',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -34,6 +39,8 @@ class Nfse extends Model
         'cancelamento_response' => 'array',
         'cancelada_em' => 'datetime',
         'ultima_consulta_em' => 'datetime',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function reserva()

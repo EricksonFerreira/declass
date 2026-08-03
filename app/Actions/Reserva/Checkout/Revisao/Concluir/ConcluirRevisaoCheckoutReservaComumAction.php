@@ -326,7 +326,8 @@ class ConcluirRevisaoCheckoutReservaComumAction
         $this->movimentacaoService->registrarChegadaNaEstacao(
             (int) $reserva->veiculo_id,
             (int) $reserva->estacao_devolucao_id,
-            'Veículo liberado após conclusão da revisão do checkout da reserva ' . $this->codigoReserva($reserva)
+            'Veículo liberado após conclusão da revisão do checkout da reserva ' . $this->codigoReserva($reserva),
+            true
         );
     }
 

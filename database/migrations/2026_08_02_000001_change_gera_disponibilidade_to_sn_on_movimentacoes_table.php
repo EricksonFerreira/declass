@@ -13,17 +13,20 @@ return new class extends Migration
             return;
         }
 
-        DB::table('movimentacoes')
-            ->whereIn('gera_disponibilidade', [1, '1', true, 'true', 'T', 't'])
-            ->update(['gera_disponibilidade' => 'S']);
-
-        DB::table('movimentacoes')
-            ->whereIn('gera_disponibilidade', [0, '0', false, 'false', null, '', 'N', 'n'])
-            ->update(['gera_disponibilidade' => 'N']);
-
         Schema::table('movimentacoes', function (Blueprint $table) {
             $table->char('gera_disponibilidade', 1)->default('N')->change();
         });
+
+        DB::table('movimentacoes')
+            ->where('gera_disponibilidade', 1)
+            ->update(['gera_disponibilidade' => 'S']);
+
+        DB::table('movimentacoes')
+            ->where(function ($query) {
+                $query->where('gera_disponibilidade', 0)
+                    ->orWhereNull('gera_disponibilidade');
+            })
+            ->update(['gera_disponibilidade' => 'N']);
     }
 
     public function down(): void
@@ -32,6 +35,10 @@ return new class extends Migration
             return;
         }
 
+        Schema::table('movimentacoes', function (Blueprint $table) {
+            $table->boolean('gera_disponibilidade')->default(false)->change();
+        });
+
         DB::table('movimentacoes')
             ->where('gera_disponibilidade', 'S')
             ->update(['gera_disponibilidade' => 1]);
@@ -39,9 +46,5 @@ return new class extends Migration
         DB::table('movimentacoes')
             ->where('gera_disponibilidade', 'N')
             ->update(['gera_disponibilidade' => 0]);
-
-        Schema::table('movimentacoes', function (Blueprint $table) {
-            $table->boolean('gera_disponibilidade')->default(false)->change();
-        });
     }
 };

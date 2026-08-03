@@ -2,13 +2,14 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ReservaMotoristaAppPagamento extends Model
 {
-    use HasFactory;
+    use HasAuditColumns, HasFactory;
 
     protected $table = 'reserva_motorista_app_pagamentos';
 
@@ -28,6 +29,10 @@ class ReservaMotoristaAppPagamento extends Model
         'referencia_pagamento',
         'observacoes',
         'metadados',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -38,6 +43,8 @@ class ReservaMotoristaAppPagamento extends Model
         'data_fim_prevista' => 'datetime',
         'pago_em' => 'datetime',
         'metadados' => 'array',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function reservaMotoristaApp(): BelongsTo

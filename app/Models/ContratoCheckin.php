@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ContratoCheckin extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'contrato_checkin';
     protected $fillable = [
@@ -45,11 +46,17 @@ class ContratoCheckin extends Model
         'motivo_upgrade',
         'usuario_upgrade_id',
         'data_hora_upgrade',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
         'houve_upgrade_categoria' => 'boolean',
         'data_hora_upgrade'       => 'datetime',
+        'datainc'                 => 'datetime',
+        'datatu'                  => 'datetime',
     ];
     public $timestamps = true;
 

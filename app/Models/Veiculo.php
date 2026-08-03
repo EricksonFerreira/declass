@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use App\Support\SchemaCache;
 
 class Veiculo extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'veiculos';
     protected $fillable = [
@@ -49,6 +50,10 @@ class Veiculo extends Model
         'referencia_fipe',
         'data_consulta_fipe',
         'taxa_depreciacao_anual',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -56,6 +61,8 @@ class Veiculo extends Model
         'valor_fipe' => 'decimal:2',
         'data_consulta_fipe' => 'date',
         'taxa_depreciacao_anual' => 'decimal:2',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function movimentacoes()

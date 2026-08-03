@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Movimentacao extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'movimentacoes';
 
@@ -31,6 +32,10 @@ class Movimentacao extends Model
         'km_chegada',
         'observacoes',
         'user_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -46,7 +51,9 @@ class Movimentacao extends Model
         'data_registro' => 'datetime',
         'data_saida' => 'datetime',
         'data_chegada_prevista' => 'datetime',
-        'data_chegada_real' => 'datetime'
+        'data_chegada_real' => 'datetime',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function usuario()

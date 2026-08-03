@@ -128,6 +128,84 @@
                 </span>
             </div>
 
+            <div class="doc-filters">
+                <form method="GET" action="<?php echo e(route('veiculo.documentacao')); ?>" class="doc-filters__form">
+                    <div class="row">
+                        <div class="col-lg-5 col-md-6 mb-2">
+                            <label class="doc-filter-label" for="filter_q">Buscar</label>
+                            <input type="text" id="filter_q" name="q" class="form-control doc-filter-control" value="<?php echo e($filtroBusca ?? ''); ?>" placeholder="Documento, descrição, veículo ou placa">
+                        </div>
+                        <div class="col-lg-3 col-md-3 mb-2">
+                            <label class="doc-filter-label" for="filter_tipo">Tipo</label>
+                            <select id="filter_tipo" name="tipo" class="form-control doc-filter-control">
+                                <option value="">Todos</option>
+                                <option value="ipva" <?php echo e(($filtroTipo ?? '') === 'ipva' ? 'selected' : ''); ?>>IPVA</option>
+                                <option value="licenciamento" <?php echo e(($filtroTipo ?? '') === 'licenciamento' ? 'selected' : ''); ?>>Licenciamento</option>
+                                <option value="seguro" <?php echo e(($filtroTipo ?? '') === 'seguro' ? 'selected' : ''); ?>>Seguro</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-3 mb-2">
+                            <label class="doc-filter-label" for="filter_status">Status</label>
+                            <select id="filter_status" name="status" class="form-control doc-filter-control">
+                                <option value="">Todos</option>
+                                <option value="ativo" <?php echo e(($filtroStatus ?? '') === 'ativo' ? 'selected' : ''); ?>>Ativo</option>
+                                <option value="inativo" <?php echo e(($filtroStatus ?? '') === 'inativo' ? 'selected' : ''); ?>>Inativo</option>
+                            </select>
+                        </div>
+                        <div class="col-lg-2 col-md-12 mb-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-xp btn-xp--sm w-100 mr-2">
+                                <i class="fas fa-filter mr-1"></i> Filtrar
+                            </button>
+                            <a href="<?php echo e(route('veiculo.documentacao')); ?>" class="btn btn-light btn-sm w-100">
+                                Limpar
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="doc-filters__advanced-toggle">
+                        <button
+                            class="btn btn-link p-0 doc-filters__advanced-button"
+                            type="button"
+                            data-toggle="collapse"
+                            data-target="#docFiltersAdvanced"
+                            aria-expanded="<?php echo e(request()->filled('veiculo') || request()->filled('placa') || request()->filled('valor_min') || request()->filled('valor_max') || request()->boolean('somente_vencidas') ? 'true' : 'false'); ?>"
+                            aria-controls="docFiltersAdvanced"
+                        >
+                            <i class="fas fa-sliders-h mr-1"></i> Filtro avançado
+                        </button>
+                    </div>
+
+                    <div class="collapse <?php echo e(request()->filled('veiculo') || request()->filled('placa') || request()->filled('valor_min') || request()->filled('valor_max') || request()->boolean('somente_vencidas') ? 'show' : ''); ?>" id="docFiltersAdvanced">
+                        <div class="doc-filters__advanced mt-3">
+                            <div class="row">
+                                <div class="col-lg-4 col-md-6 mb-2">
+                                    <label class="doc-filter-label" for="filter_veiculo">Veículo</label>
+                                    <input type="text" id="filter_veiculo" name="veiculo" class="form-control doc-filter-control" value="<?php echo e($filtroVeiculo ?? ''); ?>" placeholder="Nome do veículo">
+                                </div>
+                                <div class="col-lg-3 col-md-6 mb-2">
+                                    <label class="doc-filter-label" for="filter_placa">Placa</label>
+                                    <input type="text" id="filter_placa" name="placa" class="form-control doc-filter-control" value="<?php echo e($filtroPlaca ?? ''); ?>" placeholder="Ex.: ABC1D23">
+                                </div>
+                                <div class="col-lg-2 col-md-6 mb-2">
+                                    <label class="doc-filter-label" for="filter_valor_min">Valor mín.</label>
+                                    <input type="text" id="filter_valor_min" name="valor_min" class="form-control doc-filter-control" value="<?php echo e($filtroValorMin ?? ''); ?>" placeholder="0,00">
+                                </div>
+                                <div class="col-lg-2 col-md-6 mb-2">
+                                    <label class="doc-filter-label" for="filter_valor_max">Valor máx.</label>
+                                    <input type="text" id="filter_valor_max" name="valor_max" class="form-control doc-filter-control" value="<?php echo e($filtroValorMax ?? ''); ?>" placeholder="0,00">
+                                </div>
+                                <div class="col-lg-1 col-md-12 mb-2 d-flex align-items-end justify-content-lg-end">
+                                    <div class="custom-control custom-switch mb-2">
+                                        <input type="checkbox" class="custom-control-input" id="filter_somente_vencidas" name="somente_vencidas" value="1" <?php echo e(!empty($filtroSomenteVencidas) ? 'checked' : ''); ?>>
+                                        <label class="custom-control-label doc-filter-switch" for="filter_somente_vencidas">Só vencidas</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
             <div class="card-body p-0">
                 <div class="table-responsive vehicle-table-wrap">
                     <table class="table table-hover mb-0 vehicle-list-table">
@@ -209,6 +287,7 @@
                                                             <th>Vencimento</th>
                                                             <th>Pagamento</th>
                                                             <th>Status</th>
+                                                            <th class="text-right">Ação</th>
                                                         </tr>
                                                     </thead>
                                                     <tbody>
@@ -231,10 +310,26 @@
 
                                                                     </span>
                                                                 </td>
+                                                                <td class="text-right">
+                                                                    <?php if($parcela->status !== 'pago'): ?>
+                                                                        <button
+                                                                            type="button"
+                                                                            class="btn btn-xs btn-xp btn-xp--sm btn-pagar-parcela-documentacao"
+                                                                            data-toggle="modal"
+                                                                            data-target="#modalPagarParcelaDocumentacao"
+                                                                            data-action="<?php echo e(route('veiculo.documentacao.parcela.pagar', $parcela->id)); ?>"
+                                                                            data-parcela-label="<?php echo e($doc->descricao ?: ($tipos[$doc->tipo] ?? strtoupper((string) $doc->tipo))); ?> - Parcela <?php echo e($parcela->numero_parcela); ?>/<?php echo e($doc->parcelas_total); ?>"
+                                                                        >
+                                                                            <i class="fas fa-credit-card mr-1"></i>Pagar
+                                                                        </button>
+                                                                    <?php else: ?>
+                                                                        <span class="text-muted small">Pago</span>
+                                                                    <?php endif; ?>
+                                                                </td>
                                                             </tr>
                                                         <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_2): ?>
                                                             <tr>
-                                                                <td colspan="5" class="text-center text-muted py-4">Nenhuma parcela gerada.</td>
+                                                                <td colspan="6" class="text-center text-muted py-4">Nenhuma parcela gerada.</td>
                                                             </tr>
                                                         <?php endif; ?>
                                                     </tbody>
@@ -256,6 +351,8 @@
             </div>
         </div>
     </div>
+
+    <?php echo $__env->make('veiculo.documentacao-pagamento-modal', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?>
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('css'); ?>
@@ -511,6 +608,64 @@
         white-space: nowrap;
     }
 
+    .doc-filters {
+        padding: 16px 20px 6px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+    }
+
+    .doc-filter-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        color: #475569;
+    }
+
+    .doc-filter-control {
+        min-height: 42px;
+        border-radius: 10px;
+        border-color: #dbe4f0;
+        box-shadow: none;
+    }
+
+    .doc-filter-control:focus {
+        border-color: rgba(67, 56, 202, .45);
+        box-shadow: 0 0 0 .2rem rgba(67, 56, 202, .10);
+    }
+
+    .doc-filters__advanced-toggle {
+        margin-top: 8px;
+    }
+
+    .doc-filters__advanced-button {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #4338ca;
+        text-decoration: none;
+    }
+
+    .doc-filters__advanced-button:hover {
+        color: #312e81;
+        text-decoration: none;
+    }
+
+    .doc-filters__advanced {
+        padding: 14px 14px 6px;
+        border-radius: 14px;
+        background: #fff;
+        border: 1px solid #e2e8f0;
+    }
+
+    .doc-filter-switch {
+        font-size: .76rem;
+        font-weight: 700;
+        color: #475569;
+        padding-top: 2px;
+    }
+
     .vehicle-table-wrap {
         border-top: 1px solid #edf2f7;
         max-height: 74vh;
@@ -660,6 +815,103 @@
         }
     }
 </style>
+<?php $__env->stopSection(); ?>
+
+<?php $__env->startSection('js'); ?>
+<script>
+    (function () {
+        var form = document.getElementById('formPagarParcelaDocumentacao');
+        var inputData = document.getElementById('modal_data_pagamento_documentacao');
+        var label = document.getElementById('modalPagarParcelaDocumentacaoLabel');
+
+        if (!form || !inputData || !label) {
+            return;
+        }
+
+        document.querySelectorAll('.btn-pagar-parcela-documentacao').forEach(function (button) {
+            button.addEventListener('click', function () {
+                var action = button.getAttribute('data-action');
+                var parcelaLabel = button.getAttribute('data-parcela-label') || 'Parcela';
+
+                if (action) {
+                    form.setAttribute('action', action);
+                }
+
+                inputData.value = new Date().toISOString().slice(0, 10);
+                label.textContent = parcelaLabel + '. Informe a data do pagamento.';
+            });
+        });
+
+        form.addEventListener('submit', function (event) {
+            event.preventDefault();
+
+            var submitButton = form.querySelector('button[type="submit"]');
+            var originalHtml = submitButton ? submitButton.innerHTML : '';
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
+            }
+
+            fetch(form.getAttribute('action'), {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                },
+                body: new FormData(form)
+            })
+                .then(function (response) {
+                    return response.json().then(function (payload) {
+                        return { ok: response.ok, payload: payload };
+                    });
+                })
+                .then(function (result) {
+                    if (!result.ok || !result.payload || !result.payload.success) {
+                        throw new Error(result.payload?.message || 'Não foi possível registrar o pagamento.');
+                    }
+
+                    if (window.jQuery && $('#modalPagarParcelaDocumentacao').modal) {
+                        $('#modalPagarParcelaDocumentacao').modal('hide');
+                    }
+
+                    var message = result.payload.message || 'Pagamento registrado com sucesso.';
+
+                    if (window.Swal && typeof window.Swal.fire === 'function') {
+                        window.Swal.fire({
+                            icon: 'success',
+                            title: 'Sucesso',
+                            text: message,
+                            confirmButtonText: 'Recarregar página',
+                            allowOutsideClick: false
+                        }).then(function () {
+                            window.location.reload();
+                        });
+                    } else {
+                        window.location.reload();
+                    }
+                })
+                .catch(function (error) {
+                    if (window.Swal && typeof window.Swal.fire === 'function') {
+                        window.Swal.fire({
+                            icon: 'error',
+                            title: 'Erro',
+                            text: error.message || 'Falha ao registrar o pagamento.'
+                        });
+                    } else {
+                        alert(error.message || 'Falha ao registrar o pagamento.');
+                    }
+                })
+                .finally(function () {
+                    if (submitButton) {
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = originalHtml;
+                    }
+                });
+        });
+    })();
+</script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Erickson\Dev\laragon\www\xpandCars\resources\views/veiculo/documentacao.blade.php ENDPATH**/ ?>

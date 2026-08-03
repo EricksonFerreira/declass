@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\StatusReservaEnum;
+use App\Models\Concerns\HasAuditColumns;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Reserva extends Model
 {
+    use HasAuditColumns;
+
     protected $table = 'reservas';
 
     protected $fillable = [
@@ -41,6 +44,10 @@ class Reserva extends Model
         'cobranca_efetuada_pessoalmente_por_user_id',
         'cobranca_efetuada_pessoalmente_justificativa',
         'revisao_checkout_concluida',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -54,6 +61,8 @@ class Reserva extends Model
         'modelo_id' => 'integer',
         'estacao_retirada_id' => 'integer',
         'estacao_devolucao_id' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function podeEditar(): bool

@@ -202,8 +202,9 @@
                         }
 
                         var badge = '<span class="badge badge-secondary mb-2">' + data.veiculos.length + ' resultado(s)</span>';
-                        var html = badge + '<div class="table-responsive"><table class="table table-sm table-hover table-bordered" style="font-size:.82rem">';
-                        html += '<thead class="thead-light"><tr>' +
+                        var html = badge + '<div class="table-responsive veiculo-busca-modal__table-scroll">';
+                        html += '<table class="table table-sm table-hover table-bordered mb-0 veiculo-busca-modal__table" style="font-size:.82rem">';
+                        html += '<thead class="thead-light veiculo-busca-modal__thead"><tr>' +
                             '<th>Placa</th><th>Nome</th><th>Marca</th><th>Modelo</th>' +
                             '<th>Grupo</th><th>Tipo</th><th>Status</th>' +
                             '<th>Ano Fab.</th><th>Ano Mod.</th><th>Cor</th>' +

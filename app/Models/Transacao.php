@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Transacao extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'transacoes';
 
@@ -25,10 +26,16 @@ class Transacao extends Model
         'info_pagamento',
         'confirmado_em',
         'confirmado_por_user_id',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
         'info_pagamento' => 'array',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function reserva()

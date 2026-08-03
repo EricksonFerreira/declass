@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Model;
 
 class ReservaSatisfacao extends Model
 {
+    use HasAuditColumns;
+
     protected $table = 'reserva_satisfacoes';
 
     protected $fillable = [
@@ -16,12 +19,18 @@ class ReservaSatisfacao extends Model
         'facilidade_reserva',
         'nps_nota',
         'comentario',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
         'satisfacao_geral' => 'integer',
         'facilidade_reserva' => 'integer',
         'nps_nota' => 'integer',
+        'datainc' => 'datetime',
+        'datatu' => 'datetime',
     ];
 
     public function reserva()

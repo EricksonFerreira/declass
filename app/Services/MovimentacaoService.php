@@ -347,21 +347,21 @@ class MovimentacaoService extends AbstractBaseService
 
 // ------------------------------------------------------------------------------
     // Adição de Veículo
-    public function adicionarAoEstoque($veiculo_id, $estacao_id, $observacao = null)
+    public function adicionarAoEstoque($veiculo_id, $estacao_id, $observacao = null, $geraDisponibilidade = true)
     {
-        $this->registrarMovimentacao($veiculo_id, $estacao_id, null,null,null, $observacao, __FUNCTION__);
+        $this->registrarMovimentacao($veiculo_id, $estacao_id, null,null,null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Retirada de Veículo (Check-in)
-    public function realizarCheckIn($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?string $dataChegadaPrevista = null, ?int $kmSaida = null)
+    public function realizarCheckIn($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?string $dataChegadaPrevista = null, ?int $kmSaida = null, $geraDisponibilidade = false)
     {
-        $this->registrarMovimentacao($veiculo_id, $estacao_id, null, null, $reserva_id, $observacao, __FUNCTION__, $dataChegadaPrevista, $kmSaida, null);
+        $this->registrarMovimentacao($veiculo_id, $estacao_id, null, null, $reserva_id, $observacao, __FUNCTION__, $dataChegadaPrevista, $kmSaida, null, $geraDisponibilidade);
     }
 
     // Devolução de Veículo (Check-out)
-    public function realizarCheckOut($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?int $kmChegada = null)
+    public function realizarCheckOut($veiculo_id, $estacao_id, $reserva_id, $observacao = null, ?int $kmChegada = null,  $geraDisponibilidade = false)
     {
-        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, $reserva_id, $observacao, __FUNCTION__, null, null, $kmChegada);
+        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, $reserva_id, $observacao, __FUNCTION__, null, null, $kmChegada, $geraDisponibilidade);
 
         if ($reserva_id) {
             $tipoCheckIn = \App\Models\TipoMovimentacao::where('nome', 'like', '%Check-in%')->value('id') ?? 2;
@@ -377,49 +377,49 @@ class MovimentacaoService extends AbstractBaseService
     }
 
     // Problema Mecânico
-    public function registrarProblemaMecanico($veiculo_id, $observacao = 'Problema mecânico relatado')
+    public function registrarProblemaMecanico($veiculo_id, $observacao = 'Problema mecânico relatado', $geraDisponibilidade = false)
     {
-        $this->registrarMovimentacao($veiculo_id, null, null,null, null, $observacao, __FUNCTION__);
+        $this->registrarMovimentacao($veiculo_id, null, null,null, null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Transporte para Oficina
-    public function transportarParaOficina($veiculo_id, $observacao = 'Veículo transportado para oficina'){
-        $this->registrarMovimentacao($veiculo_id, null, null,null,null, $observacao, __FUNCTION__);
+    public function transportarParaOficina($veiculo_id, $observacao = 'Veículo transportado para oficina', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id, null, null,null,null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Chegada à Oficina
-    public function registrarChegadaNaOficina($veiculo_id, $observacao = 'Veículo chegou à oficina'){
-        $this->registrarMovimentacao($veiculo_id, null, null,null,null, $observacao, __FUNCTION__);
+    public function registrarChegadaNaOficina($veiculo_id, $observacao = 'Veículo chegou à oficina', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id, null, null,null,null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Retorno da Oficina
-    public function registrarRetornoDaOficina($veiculo_id,$estacao_id, $observacao = 'Veículo retornou da oficina'){
-        $this->registrarMovimentacao($veiculo_id, null,null,$estacao_id, null, $observacao, __FUNCTION__);
+    public function registrarRetornoDaOficina($veiculo_id,$estacao_id, $observacao = 'Veículo retornou da oficina', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id, null,null,$estacao_id, null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Chegada à Estação
-    public function registrarChegadaNaEstacao($veiculo_id, $estacao_id, $observacao = 'Veículo chegou à estação'){
-        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, null, $observacao, __FUNCTION__, null, null, null, true);
+    public function registrarChegadaNaEstacao($veiculo_id, $estacao_id, $observacao = 'Veículo chegou à estação', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id, null, null, $estacao_id, null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Veículo Indisponível
-    public function marcarVeiculoIndisponivel($veiculo_id, $observacao = 'Veículo marcado como indisponível'){
-        $this->registrarMovimentacao($veiculo_id,null,null, null, null, $observacao, __FUNCTION__);
+    public function marcarVeiculoIndisponivel($veiculo_id, $observacao = 'Veículo marcado como indisponível', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id,null,null, null, null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Transferência Entre Estações
-    public function transferirEntreEstacoes($veiculo_id,$estacao_origem_id, $estacao_destino_id, $observacao = 'Veículo transferido entre estações'){
-        $this->registrarMovimentacao($veiculo_id,null,$estacao_origem_id, $estacao_destino_id, null, $observacao, __FUNCTION__);
+    public function transferirEntreEstacoes($veiculo_id,$estacao_origem_id, $estacao_destino_id, $observacao = 'Veículo transferido entre estações', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id,null,$estacao_origem_id, $estacao_destino_id, null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Fora de Serviço
-    public function marcarForaDeServico($veiculo_id, $observacao = 'Veículo marcado como fora de serviço'){
-        $this->registrarMovimentacao($veiculo_id,null,null, null, null, $observacao, __FUNCTION__);
+    public function marcarForaDeServico($veiculo_id, $observacao = 'Veículo marcado como fora de serviço', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id,null,null, null, null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
     // Venda de Veículo
-    public function registrarVendaDeVeiculo($veiculo_id, $observacao = 'Veículo vendido'){
-        $this->registrarMovimentacao($veiculo_id,null,null, null, null, $observacao, __FUNCTION__);
+    public function registrarVendaDeVeiculo($veiculo_id, $observacao = 'Veículo vendido', $geraDisponibilidade = false){
+        $this->registrarMovimentacao($veiculo_id,null,null, null, null, $observacao, __FUNCTION__, null, null, null, $geraDisponibilidade);
     }
 
 
@@ -599,7 +599,8 @@ class MovimentacaoService extends AbstractBaseService
         ?string $funcao = null,
         ?string $dataChegadaPrevista = null,
         ?int $kmSaida = null,
-        ?int $kmChegada = null
+        ?int $kmChegada = null,
+        bool $geraDisponibilidade = false
     )
     {
         if (!$funcao) {
@@ -637,6 +638,7 @@ class MovimentacaoService extends AbstractBaseService
             'reserva_id' => $validReservaId,
             'observacoes' => $observacao,
             'user_id' => Auth::id() ?? self::USUARIO_PADRAO,
+            'gera_disponibilidade' => $geraDisponibilidade ? 'S' : 'N',
         ];
 
         if ($kmSaida !== null) {

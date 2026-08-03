@@ -2,13 +2,16 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Model;
 
 class ChamadoCategoria extends Model
 {
-    protected $fillable = ['empresa_id', 'nome', 'descricao', 'ativo'];
+    use HasAuditColumns;
 
-    protected $casts = ['ativo' => 'boolean'];
+    protected $fillable = ['empresa_id', 'nome', 'descricao', 'ativo', 'usuinc', 'datainc', 'usuatu', 'datatu'];
+
+    protected $casts = ['ativo' => 'boolean', 'datainc' => 'datetime', 'datatu' => 'datetime'];
 
     public function subcategorias()
     {

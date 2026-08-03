@@ -15,13 +15,13 @@ class ObterDanosExistentesReservaComumAction
                   ->orWhereNull('reserva_codigo_id');
             });
 
-        if (!$query->exists()) {
-            $reservaId = \App\Models\ReservaCodigo::where('id', $reservaCodigoId)->value('reserva_id');
-            if ($reservaId) {
-                $query = VeiculoDanos::where('veiculo_id', $veiculoId)
-                    ->where('reserva_id', $reservaId);
-            }
-        }
+        // if (!$query->exists()) {
+        //     $reservaId = \App\Models\ReservaCodigo::where('id', $reservaCodigoId)->value('reserva_id');
+        //     if ($reservaId) {
+        //         $query = VeiculoDanos::where('veiculo_id', $veiculoId)
+        //             ->where('reserva_id', $reservaId);
+        //     }
+        // }
 
         $danos = $query->with(['imagem', 'dano.categoria', 'usuarioCorrecao'])
             ->orderBy('id')

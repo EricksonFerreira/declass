@@ -71,8 +71,10 @@ class VeiculoService extends AbstractBaseService
 
         $this->atualizarCamposFinanceiros($veiculo, $data);
 
-        if(isset($data['local_disponibilidade'])){
-            $data['data_hora_disponibilidade'] =  isset($data['data_hora_disponibilidade']) ? $data['data_hora_disponibilidade'] : date('Y-m-d H:i:s');
+        if (isset($data['local_disponibilidade']) || isset($data['data_hora_disponibilidade'])) {
+            $data['data_hora_disponibilidade'] = isset($data['data_hora_disponibilidade'])
+                ? $data['data_hora_disponibilidade']
+                : date('Y-m-d H:i:s');
             $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
         }
 
@@ -102,15 +104,25 @@ class VeiculoService extends AbstractBaseService
         $this->atualizarCamposFinanceiros($veiculo->fresh(), $data);
 
         if ($naoMovimentouInicialmente) {
-            if(isset($data['local_disponibilidade'])){
-                $dataHoraDisponibilidade =  isset($data['data_hora_disponibilidade']) ? $data['data_hora_disponibilidade'] : date('Y-m-d H:i:s');
+            if (isset($data['local_disponibilidade']) || isset($data['data_hora_disponibilidade'])) {
+                $dataHoraDisponibilidade = isset($data['data_hora_disponibilidade'])
+                    ? $data['data_hora_disponibilidade']
+                    : date('Y-m-d H:i:s');
 
-                $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
-                $this->disponibilidadeInicialVeiculoService->create([
-                    'veiculo_id' => $veiculo->id,
-                    'estacao_id' => $data['local_disponibilidade'],
-                    'data_hora' => $dataHoraDisponibilidade,
-                ]);
+                if (isset($data['local_disponibilidade'])) {
+                    $this->movimentacaoService->registraMovimentacaoCadastroVeiculo($data, $veiculo->id);
+                    $this->disponibilidadeInicialVeiculoService->create([
+                        'veiculo_id' => $veiculo->id,
+                        'estacao_id' => $data['local_disponibilidade'],
+                        'data_hora' => $dataHoraDisponibilidade,
+                    ]);
+                } elseif (isset($data['data_hora_disponibilidade']) && !empty($veiculo->local_disponibilidade)) {
+                    $this->movimentacaoService->registraMovimentacaoCadastroVeiculo([
+                        'local_disponibilidade' => $veiculo->local_disponibilidade,
+                        'data_hora_disponibilidade' => $dataHoraDisponibilidade,
+                        'observacoes' => $data['observacoes'] ?? 'Cadastro inicial do veiculo',
+                    ], $veiculo->id);
+                }
             }
         }
 

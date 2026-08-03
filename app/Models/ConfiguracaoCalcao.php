@@ -2,12 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ConfiguracaoCalcao extends Model
 {
-    use HasFactory;
+    use HasFactory, HasAuditColumns;
 
     protected $table = 'configuracoes_calcao';
 
@@ -20,6 +21,10 @@ class ConfiguracaoCalcao extends Model
         'valor_minimo',
         'valor_maximo',
         'ativo',
+        'usuinc',
+        'datainc',
+        'usuatu',
+        'datatu',
     ];
 
     protected $casts = [
@@ -27,6 +32,8 @@ class ConfiguracaoCalcao extends Model
         'valor_minimo' => 'decimal:2',
         'valor_maximo' => 'decimal:2',
         'ativo'        => 'boolean',
+        'datainc'      => 'datetime',
+        'datatu'       => 'datetime',
     ];
 
     const TIPO_FIXO       = 'fixo';
