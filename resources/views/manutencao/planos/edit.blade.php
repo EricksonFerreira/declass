@@ -7,113 +7,129 @@
 @stop
 
 @section('content')
-    <div class="col-xl-10 col-lg-11 col-md-12 col-sm-12 col-xs-12 px-0">
-        <div class="card card-opcional shadow-sm border-0">
-            <div class="card-header card-header-opcional border-0">
-                <div>
-                    <h4 class="mb-1">Editar Plano de Manutenção</h4>
-                    <p class="mb-0 text-muted">Vincule o plano a um veículo ou use como modelo para um grupo de frota.</p>
-                </div>
-            </div>
-
-            <div class="card-body p-4">
-                <form method="POST" action="{{ route('manutencao.planos.update', $plano->id) }}">
-                    @csrf
-                    @method('PUT')
-
-                    <div class="opcional-section-title">Informações Básicas</div>
-                    <div class="form-row">
-                        <div class="col-lg-6">
-                            <div class="form-group form-group-opcional">
-                                <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
-                                    label="Nome do Plano" value="{{ old('nome', $plano->nome) }}" required />
-                            </div>
-                        </div>
-                        <div class="col-lg-6">
-                            <div class="form-group form-group-opcional">
-                                <x-form-select name="grupo_frota_id" label="Grupo de Frota" :options="$grupos->pluck('nome', 'id')"
-                                    placeholder="Opcional" :selected="old('grupo_frota_id', $plano->grupo_frota_id)" class="form-control form-control-sm" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-row">
-                        <div class="col-lg-12">
-                            <div class="form-group form-group-opcional">
-                                <label class="small text-muted font-weight-bold">Veículo vinculado</label>
-                                <div class="input-group">
-                                    <input type="hidden" name="veiculo_id" id="veiculo_id" value="{{ old('veiculo_id', $plano->veiculo_id) }}">
-                                    <input type="text" id="veiculo_display" class="form-control form-control-sm" placeholder="Nenhum veículo selecionado" value="{{ old('veiculo_display', $plano->veiculo?->codigo ?? $plano->veiculo?->placa ?? '') }}" readonly>
-                                    <div class="input-group-append">
-                                        <button type="button" class="btn btn-outline-primary btn-sm" id="btnBuscarVeiculoPlano">
-                                            <i class="fas fa-search"></i>
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary btn-sm" id="btnLimparVeiculoPlano">
-                                            <i class="fas fa-times"></i>
-                                        </button>
-                                    </div>
-                                </div>
-                                <small class="text-muted d-block mt-1">Opcional. Quando preenchido, o plano fica ligado a um único veículo.</small>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-group form-group-opcional mt-3">
-                        <label for="descricao" class="small text-muted font-weight-bold">Descrição</label>
-                        <textarea name="descricao" id="descricao" class="form-control" rows="3">{{ old('descricao', $plano->descricao) }}</textarea>
-                    </div>
-
-                    <div class="opcional-section-title mt-4 d-flex justify-content-between align-items-center">
-                        <span>Itens de Manutenção Preventiva</span>
+    <div class="row justify-content-center">
+        <div class="col-12 col-xxl-11">
+            <div class="card manutencao-card shadow-sm border-0">
+                <div class="card-header manutencao-card__header border-0">
+                    <div class="d-flex align-items-start justify-content-between flex-wrap" style="gap:.75rem;">
                         <div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="btnNovoItemManutencao">
-                                <i class="fas fa-plus mr-1"></i>Novo item
-                            </button>
-                            <button type="button" class="btn btn-sm btn-outline-primary" id="btnBuscarItemManutencao">
-                                <i class="fas fa-search mr-1"></i>Adicionar item
-                            </button>
+                            <div class="manutencao-card__eyebrow">Planos de manutenção preventiva</div>
+                            <h4 class="mb-1">Editar plano</h4>
+                            <p class="mb-0 text-muted">Atualize o escopo do plano, veículo vinculado e os itens periódicos.</p>
+                        </div>
+                        <div class="manutencao-card__badge">
+                            <i class="fas fa-pen mr-1"></i> ID {{ $plano->id }}
                         </div>
                     </div>
+                </div>
 
-                    <div class="table-responsive">
-                        <table class="table table-striped table-bordered table-sm" id="tabelaItensPlano">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th width="160">Frequência (Meses)</th>
-                                    <th width="160">Frequência (KM)</th>
-                                    <th width="90"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($plano->itens as $index => $planoItem)
-                                    <tr data-item-row="1" data-item-id="{{ $planoItem->item_id }}">
-                                        <td class="align-middle font-weight-bold">
-                                            <input type="hidden" name="itens[{{ $index }}][id]" value="{{ $planoItem->item_id }}">
-                                            <div>{{ $planoItem->item?->nome ?? ('Item #'.$planoItem->item_id) }}</div>
-                                            <small class="text-muted d-block">{{ $planoItem->item?->descricao ?? '' }}</small>
-                                        </td>
-                                        <td>
-                                            <input type="number" name="itens[{{ $index }}][meses]" class="form-control form-control-sm" value="{{ old('itens.'.$index.'.meses', $planoItem->frequencia_meses) }}" placeholder="Ex: 6">
-                                        </td>
-                                        <td>
-                                            <input type="number" name="itens[{{ $index }}][km]" class="form-control form-control-sm" value="{{ old('itens.'.$index.'.km', $planoItem->frequencia_km) }}" placeholder="Ex: 10000">
-                                        </td>
-                                        <td class="text-center align-middle">
-                                            <button type="button" class="btn btn-sm btn-outline-danger js-remover-item">
-                                                <i class="fas fa-trash"></i>
+                <div class="card-body p-0">
+                    <form method="POST" action="{{ route('manutencao.planos.update', $plano->id) }}" class="p-3 p-md-4">
+                        @csrf
+                        @method('PUT')
+
+                        <div class="row">
+                            <div class="col-12 col-lg-7">
+                                <div class="form-group form-group-opcional">
+                                    <x-form-input type="text" class="form-control form-control-lg" id="nome" name="nome"
+                                        label="Nome do Plano" value="{{ old('nome', $plano->nome) }}" required />
+                                </div>
+                            </div>
+                            <div class="col-12 col-lg-5">
+                                <div class="form-group form-group-opcional">
+                                    <x-form-select name="grupo_frota_id" label="Grupo de Frota" :options="$grupos->pluck('nome', 'id')"
+                                        placeholder="Opcional" :selected="old('grupo_frota_id', $plano->grupo_frota_id)" class="form-control form-control-lg" />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="manutencao-card__tip mb-3">
+                                    <strong>Vínculo do plano</strong>
+                                    <span>Se houver um veículo específico, ele será priorizado no acompanhamento da manutenção.</span>
+                                </div>
+                                <div class="form-group form-group-opcional">
+                                    <label class="small text-muted font-weight-bold">Veículo vinculado</label>
+                                    <div class="input-group input-group-lg">
+                                        <input type="hidden" name="veiculo_id" id="veiculo_id" value="{{ old('veiculo_id', $plano->veiculo_id) }}">
+                                        <input type="text" id="veiculo_display" class="form-control" placeholder="Nenhum veículo selecionado" value="{{ old('veiculo_display', $plano->veiculo?->codigo ?? $plano->veiculo?->placa ?? '') }}" readonly>
+                                        <div class="input-group-append">
+                                            <button type="button" class="btn btn-outline-primary" id="btnBuscarVeiculoPlano">
+                                                <i class="fas fa-search"></i>
                                             </button>
-                                        </td>
-                                    </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+                                            <button type="button" class="btn btn-outline-secondary" id="btnLimparVeiculoPlano">
+                                                <i class="fas fa-times"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">Opcional. Quando preenchido, o plano fica ligado a um único veículo.</small>
+                                </div>
+                            </div>
+                        </div>
 
-                    <button type="submit" class="btn btn-primary btn-save-opcional col-12 mt-4">
-                        Salvar Plano
-                    </button>
-                </form>
+                        <div class="form-group form-group-opcional mt-2">
+                            <label for="descricao" class="small text-muted font-weight-bold">Descrição</label>
+                            <textarea name="descricao" id="descricao" class="form-control" rows="4">{{ old('descricao', $plano->descricao) }}</textarea>
+                        </div>
+
+                        <div class="manutencao-section mt-4">
+                            <div class="manutencao-section__header d-flex justify-content-between align-items-center flex-wrap" style="gap:.75rem;">
+                                <div>
+                                    <div class="manutencao-section__eyebrow">Itens do plano</div>
+                                    <h5 class="mb-0">Manutenção preventiva</h5>
+                                </div>
+                                <div class="d-flex flex-wrap" style="gap:.5rem;">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btnNovoItemManutencao">
+                                        <i class="fas fa-plus mr-1"></i>Novo item
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="btnBuscarItemManutencao">
+                                        <i class="fas fa-search mr-1"></i>Adicionar item
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="table-responsive manutencao-table-wrap">
+                                <table class="table table-striped table-bordered table-sm mb-0" id="tabelaItensPlano">
+                                    <thead>
+                                        <tr>
+                                            <th>Item</th>
+                                            <th style="width: 160px;">Frequência (Meses)</th>
+                                            <th style="width: 160px;">Frequência (KM)</th>
+                                            <th style="width: 90px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($plano->itens as $index => $planoItem)
+                                            <tr data-item-row="1" data-item-id="{{ $planoItem->item_id }}">
+                                                <td class="align-middle font-weight-bold">
+                                                    <input type="hidden" name="itens[{{ $index }}][id]" value="{{ $planoItem->item_id }}">
+                                                    <div>{{ $planoItem->item?->nome ?? ('Item #'.$planoItem->item_id) }}</div>
+                                                    <small class="text-muted d-block">{{ $planoItem->item?->descricao ?? '' }}</small>
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="itens[{{ $index }}][meses]" class="form-control form-control-sm" value="{{ old('itens.'.$index.'.meses', $planoItem->frequencia_meses) }}" placeholder="Ex: 6">
+                                                </td>
+                                                <td>
+                                                    <input type="number" name="itens[{{ $index }}][km]" class="form-control form-control-sm" value="{{ old('itens.'.$index.'.km', $planoItem->frequencia_km) }}" placeholder="Ex: 10000">
+                                                </td>
+                                                <td class="text-center align-middle">
+                                                    <button type="button" class="btn btn-sm btn-outline-danger js-remover-item">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="d-flex flex-column flex-md-row justify-content-end mt-4" style="gap:.75rem;">
+                            <a href="{{ route('manutencao.planos.index') }}" class="btn btn-outline-secondary px-4">Cancelar</a>
+                            <button type="submit" class="btn btn-primary px-4">Salvar plano</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -190,14 +206,73 @@
 
 @section('css')
 <style>
-    .card-opcional { border-radius: 14px; overflow: hidden; }
-    .card-header-opcional { background: linear-gradient(120deg, #f6f9ff 0%, #edf2ff 50%, #f7fbff 100%); padding: 1.1rem 1.5rem; }
-    .card-header-opcional h4 { color: #0f2740; font-weight: 700; }
-    .opcional-section-title { font-size: .96rem; font-weight: 700; color: #21364f; letter-spacing: .02em; padding-bottom: 8px; border-bottom: 1px solid #e5eaf2; margin-bottom: 15px; }
+    .manutencao-card { border-radius: 16px; overflow: hidden; }
+    .manutencao-card__header {
+        padding: 1.25rem 1.5rem;
+        background: linear-gradient(135deg, #f7fafc 0%, #eef4ff 55%, #f7fbff 100%);
+        border-bottom: 1px solid #e8edf5;
+    }
+    .manutencao-card__eyebrow,
+    .manutencao-section__eyebrow {
+        font-size: .76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        color: #5b6b7f;
+        margin-bottom: .25rem;
+    }
+    .manutencao-card__header h4,
+    .manutencao-section__header h5 { font-weight: 800; color: #12263a; }
+    .manutencao-card__badge,
+    .manutencao-card__tip {
+        border-radius: 14px;
+        padding: .8rem .95rem;
+        background: #fff;
+        border: 1px solid #dfe7f1;
+        box-shadow: 0 6px 20px rgba(18, 38, 58, .04);
+    }
+    .manutencao-card__badge { font-size: .9rem; font-weight: 700; color: #355070; white-space: nowrap; }
+    .manutencao-card__tip {
+        display: flex;
+        flex-direction: column;
+        gap: .25rem;
+        color: #52657a;
+        min-height: 100%;
+    }
     .form-group-opcional { margin-bottom: 1rem; }
-    .card-opcional .form-control, .card-opcional .form-select { border-radius: 10px; border-color: #d8e1ec; min-height: 38px; }
-    .card-opcional .form-control:focus, .card-opcional .form-select:focus { border-color: #4b80ff; box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .18); }
-    .btn-save-opcional { border-radius: 10px; font-weight: 600; padding-top: .58rem; padding-bottom: .58rem; }
+    .manutencao-card .form-control,
+    .manutencao-card .form-select {
+        border-radius: 12px;
+        border-color: #d8e1ec;
+        min-height: 42px;
+    }
+    .manutencao-card .input-group-lg > .form-control,
+    .manutencao-card .input-group-lg > .input-group-append > .btn {
+        min-height: 46px;
+    }
+    .manutencao-card .form-control:focus,
+    .manutencao-card .form-select:focus {
+        border-color: #4b80ff;
+        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .15);
+    }
+    .manutencao-section {
+        border: 1px solid #e5eaf2;
+        border-radius: 16px;
+        background: #fff;
+        padding: 1rem;
+    }
+    .manutencao-section__header {
+        padding-bottom: .85rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid #edf2f7;
+    }
+    .manutencao-table-wrap {
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .manutencao-table-wrap .table {
+        min-width: 640px;
+    }
 </style>
 @stop
 
