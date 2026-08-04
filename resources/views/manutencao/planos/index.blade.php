@@ -7,54 +7,76 @@
 @stop
 
 @section('content')
-    @if(isset($filters) && is_array($filters) && count($filters) > 0)
-        <x-filter :additionalFilters="$additionalFilters ?? []" :filters="$filters" :itensFiltered="$itensFiltered ?? false" />
-    @endif
+    @php
+        $totalPlanos = $planos instanceof \Illuminate\Pagination\LengthAwarePaginator ? $planos->total() : count($planos);
+        $comVeiculo = $planos->whereNotNull('veiculo_id')->count();
+        $comGrupo = $planos->whereNotNull('grupo_frota_id')->count();
+        $totalItens = $planos->sum(fn ($plano) => $plano->itens->count());
+    @endphp
 
     <div class="container-fluid px-0 vehicle-show-page manutencao-preventiva-shell">
-        <div class="vs-panel shadow-sm border-0 mb-3">
-            <div class="vs-panel-head">
-                <div>
-                    <span class="vs-panel-head__eyebrow">Veículos · Manutenção preventiva</span>
-                    <h4 class="vs-panel-head__title mb-1">Planos de manutenção</h4>
-                    <p class="vs-panel-head__sub mb-0">Configure, revise e compare planos com vínculo por veículo ou por grupo de frota.</p>
+        <div class="module-card mb-3">
+            <div class="module-card-header manutencao-hero-compact">
+                <div class="module-header-left">
+                    <div class="module-header-icon">
+                        <i class="fas fa-clipboard-list"></i>
+                    </div>
+                    <div>
+                        <div class="module-header-eyebrow">Veículos · Manutenção preventiva</div>
+                        <h1 class="module-header-title">Planos de manutenção</h1>
+                        <p class="module-header-sub">Configure, revise e compare planos com vínculo por veículo ou por grupo de frota.</p>
+                    </div>
                 </div>
-                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
+
+                <div class="module-header-right">
                     <a href="{{ route('manutencao.planos.create') }}" class="btn-xp btn-xp--sm">
-                        <i class="fas fa-plus mr-1"></i> Novo plano
+                        <i class="fas fa-plus"></i> Novo plano
+                    </a>
+                    <a href="{{ route('manutencao.preventivas.index') }}" class="btn-xp btn-xp--outline-light btn-xp--sm">
+                        <i class="fas fa-arrow-left"></i> Voltar
                     </a>
                 </div>
             </div>
         </div>
 
         <div class="row mb-3">
-            <div class="col-12 col-md-4 mb-2">
+            <div class="col-xl-3 col-md-6 mb-2">
                 <div class="kpi-card kpi-total">
                     <div class="kpi-icon"><i class="fas fa-layer-group"></i></div>
                     <div class="kpi-meta">
                         <span class="kpi-label">Planos</span>
-                        <strong class="kpi-value">{{ $planos instanceof \Illuminate\Pagination\LengthAwarePaginator ? $planos->total() : count($planos) }}</strong>
+                        <strong class="kpi-value">{{ $totalPlanos }}</strong>
                         <small class="kpi-subtitle">Cadastros ativos e históricos</small>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-4 mb-2">
+            <div class="col-xl-3 col-md-6 mb-2">
                 <div class="kpi-card kpi-available">
                     <div class="kpi-icon"><i class="fas fa-car"></i></div>
                     <div class="kpi-meta">
                         <span class="kpi-label">Com veículo</span>
-                        <strong class="kpi-value">{{ $planos->whereNotNull('veiculo_id')->count() }}</strong>
+                        <strong class="kpi-value">{{ $comVeiculo }}</strong>
                         <small class="kpi-subtitle">Planos amarrados a uma unidade</small>
                     </div>
                 </div>
             </div>
-            <div class="col-12 col-md-4 mb-2">
+            <div class="col-xl-3 col-md-6 mb-2">
                 <div class="kpi-card kpi-partial">
                     <div class="kpi-icon"><i class="fas fa-sitemap"></i></div>
                     <div class="kpi-meta">
                         <span class="kpi-label">Com grupo</span>
-                        <strong class="kpi-value">{{ $planos->whereNotNull('grupo_frota_id')->count() }}</strong>
+                        <strong class="kpi-value">{{ $comGrupo }}</strong>
                         <small class="kpi-subtitle">Planos por modelo de frota</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-xl-3 col-md-6 mb-2">
+                <div class="kpi-card kpi-unavailable">
+                    <div class="kpi-icon"><i class="fas fa-list-check"></i></div>
+                    <div class="kpi-meta">
+                        <span class="kpi-label">Itens</span>
+                        <strong class="kpi-value">{{ $totalItens }}</strong>
+                        <small class="kpi-subtitle">Itens vinculados aos planos</small>
                     </div>
                 </div>
             </div>
@@ -72,8 +94,18 @@
                         @csrf
                         <x-per-page-selector :perPages="$perPages ?? [15, 30, 50, 100]" :selectedPerPage="$perPage ?? 15" />
                     </form>
+                    <span class="vs-badge-soft">
+                        <i class="fas fa-list"></i>
+                        {{ $totalPlanos }} registro(s)
+                    </span>
                 </div>
             </div>
+
+            @if(isset($filters) && is_array($filters) && count($filters) > 0)
+                <div class="planos-filters-shell">
+                    <x-filter :additionalFilters="$additionalFilters ?? []" :filters="$filters" :itensFiltered="$itensFiltered ?? []" />
+                </div>
+            @endif
 
             <div class="card-body p-0">
                 <div class="table-responsive vehicle-table-wrap">
@@ -82,10 +114,9 @@
                             <tr>
                                 <th>ID</th>
                                 <th>Nome</th>
-                                <th>Grupo de Frota</th>
+                                <th>Vínculo</th>
                                 <th>Itens</th>
-                                <th class="d-none d-lg-table-cell">Criado por</th>
-                                <th class="d-none d-lg-table-cell">Atualizado por</th>
+                                <th class="d-none d-lg-table-cell">Responsáveis</th>
                                 <th class="text-center">Ações</th>
                             </tr>
                         </thead>
@@ -93,18 +124,35 @@
                             @forelse($planos as $plano)
                                 @php
                                     $collapseId = 'plano-itens-'.$plano->id;
+                                    $vinculoLabel = $plano->veiculo?->nome
+                                        ? 'Veículo: '.$plano->veiculo->nome
+                                        : ($plano->grupoFrota->nome ?? '-');
                                 @endphp
                                 <tr>
                                     <td>{{ $plano->id }}</td>
-                                    <td class="font-weight-bold">{{ $plano->nome }}</td>
-                                    <td>{{ $plano->grupoFrota->nome ?? '-' }}</td>
+                                    <td>
+                                        <div class="table-value-stack">
+                                            <span>{{ $plano->nome }}</span>
+                                            <small>{{ $plano->descricao ?: 'Sem descrição' }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="table-value-stack">
+                                            <span>{{ $vinculoLabel }}</span>
+                                            <small>{{ $plano->veiculo?->placa_licenca ?? 'Grupo de frota' }}</small>
+                                        </div>
+                                    </td>
                                     <td>
                                         <button type="button" class="btn btn-xs btn-outline-primary" data-toggle="collapse" data-target="#{{ $collapseId }}" aria-expanded="false">
                                             <i class="fas fa-list mr-1"></i>{{ $plano->itens->count() }} item(ns)
                                         </button>
                                     </td>
-                                    <td class="d-none d-lg-table-cell">{{ $plano->usuarioInclusao?->nome ?? '-' }}</td>
-                                    <td class="d-none d-lg-table-cell">{{ $plano->usuarioAtualizacao?->nome ?? '-' }}</td>
+                                    <td class="d-none d-lg-table-cell">
+                                        <div class="table-value-stack">
+                                            <span>{{ $plano->usuarioInclusao?->nome ?? '-' }}</span>
+                                            <small>{{ $plano->usuarioAtualizacao?->nome ?? '-' }}</small>
+                                        </div>
+                                    </td>
                                     <td class="text-center">
                                         <div class="d-flex flex-wrap justify-content-center" style="gap:.35rem;">
                                             <a href="{{ route('manutencao.planos.edit', $plano->id) }}" class="btn btn-xs btn-warning">
@@ -115,24 +163,27 @@
                                     </td>
                                 </tr>
                                 <tr class="collapse bg-light" id="{{ $collapseId }}">
-                                    <td colspan="7">
+                                    <td colspan="6">
                                         <div class="p-2">
                                             @if($plano->itens->isNotEmpty())
                                                 <div class="table-responsive">
-                                                    <table class="table table-sm table-bordered mb-0 bg-white">
+                                                    <table class="table table-sm table-bordered mb-0 bg-white vehicle-subtable">
                                                         <thead class="thead-light">
                                                             <tr>
                                                                 <th>Item</th>
-                                                                <th>Meses</th>
-                                                                <th>KM</th>
+                                                                <th>Valores</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
                                                             @foreach($plano->itens as $itemPlano)
                                                                 <tr>
                                                                     <td>{{ $itemPlano->item?->nome ?? ('Item #'.$itemPlano->item_id) }}</td>
-                                                                    <td>{{ $itemPlano->frequencia_meses ? $itemPlano->frequencia_meses . ' meses' : '-' }}</td>
-                                                                    <td>{{ $itemPlano->frequencia_km ? number_format((float) $itemPlano->frequencia_km, 0, ',', '.') . ' km' : '-' }}</td>
+                                                                    <td>
+                                                                        <div class="table-value-stack">
+                                                                            <span>{{ $itemPlano->frequencia_meses ? $itemPlano->frequencia_meses . ' meses' : '-' }}</span>
+                                                                            <small>{{ $itemPlano->frequencia_km ? number_format((float) $itemPlano->frequencia_km, 0, ',', '.') . ' km' : '-' }}</small>
+                                                                        </div>
+                                                                    </td>
                                                                 </tr>
                                                             @endforeach
                                                         </tbody>
@@ -146,7 +197,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="7" class="text-center py-4 text-muted">Nenhum plano cadastrado.</td>
+                                    <td colspan="6" class="text-center py-4 text-muted">Nenhum plano cadastrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -166,52 +217,257 @@
 @section('css')
 <style>
     .manutencao-preventiva-shell { padding-bottom: 8px; }
+    .module-card {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 4px 24px rgba(12, 20, 40, .10);
+        background: #fff;
+    }
+    .module-card-header {
+        background: linear-gradient(135deg, #0c1428 0%, #1a2848 55%, #1e3461 100%);
+        padding: 24px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        position: relative;
+        overflow: hidden;
+    }
+    .module-card-header::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(circle, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+        background-size: 20px 20px;
+        pointer-events: none;
+    }
+    .module-card-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #4338ca, #0ea5e9, #10b981);
+    }
+    .module-header-left {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        position: relative;
+        z-index: 1;
+    }
+    .module-header-icon {
+        width: 52px;
+        height: 52px;
+        border-radius: 14px;
+        background: rgba(255, 255, 255, .12);
+        border: 1px solid rgba(255, 255, 255, .18);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #60a5fa;
+        flex-shrink: 0;
+        backdrop-filter: blur(8px);
+    }
+    .module-header-eyebrow {
+        font-size: .62rem;
+        font-weight: 700;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: rgba(148, 163, 184, .8);
+        display: block;
+        margin-bottom: 3px;
+    }
+    .module-header-title {
+        font-size: 1.45rem;
+        font-weight: 800;
+        color: #fff;
+        margin: 0 0 3px;
+        letter-spacing: -.02em;
+    }
+    .module-header-sub {
+        margin: 0;
+        font-size: .82rem;
+        color: rgba(148, 163, 184, .9);
+    }
+    .module-header-right {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
     .config-card {
-        border-radius: 16px;
+        border-radius: 18px;
         overflow: hidden;
         background: #fff;
+        border: 1px solid #e2e9f4;
+        box-shadow: 0 2px 12px rgba(12, 20, 40, .06);
     }
     .vs-panel-head {
-        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
-        padding: 14px 16px;
+        background: #fff;
+        padding: 18px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 16px;
         border-bottom: 1px solid #e7edf6;
     }
+    .vs-panel-head__eyebrow {
+        display: inline-block;
+        margin-bottom: 6px;
+        font-size: .62rem;
+        font-weight: 800;
+        letter-spacing: .18em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+    .vs-panel-head__title {
+        margin: 0 0 6px;
+        font-size: 1.08rem;
+        font-weight: 800;
+        color: #0c1428;
+    }
+    .vs-panel-head__sub {
+        margin: 0;
+        color: #64748b;
+        font-size: .84rem;
+        max-width: 680px;
+    }
+    .vs-badge-soft {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 12px;
+        background: #eef2ff;
+        color: #3730a3;
+        border: 1px solid #c7d2fe;
+        border-radius: 999px;
+        font-size: .76rem;
+        font-weight: 700;
+        white-space: nowrap;
+    }
     .vehicle-table-wrap {
-        max-height: none;
+        border-top: 1px solid #edf2f7;
+        max-height: 74vh;
         overflow: auto;
     }
-    .vehicle-list-table {
-        min-width: 940px;
+    .planos-filters-shell {
+        padding: 14px 16px 4px;
+        background: #f8fafc;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .planos-filters-shell .card {
         margin-bottom: 0;
+        border: 1px solid #e2e8f0;
+        box-shadow: none;
+    }
+    .vehicle-list-table {
+        border-collapse: separate;
+        border-spacing: 0;
     }
     .vehicle-list-table thead th {
-        white-space: nowrap;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        background: #f8fafc;
+        border-bottom: 1px solid #cbd5e1;
+        font-size: 11px;
+        text-transform: uppercase;
+        color: #334155;
+        letter-spacing: .02em;
+        vertical-align: middle;
+    }
+    .vehicle-list-table tbody td {
+        vertical-align: middle;
         background: #fff;
-        font-weight: 800;
-        color: #475569;
-        border-bottom: 1px solid #e2e8f0;
-        text-transform: uppercase;
-        font-size: .72rem;
-        letter-spacing: .06em;
+        border-top: 1px solid #edf2f7;
     }
-    .vehicle-list-table tbody td { vertical-align: middle; }
-    .vehicle-list-table tbody tr:hover { background: #f8fafc; }
+    .vehicle-list-table tbody tr:hover td {
+        background: #f8fafc;
+    }
     .kpi-card {
-        border-radius: 18px;
-        padding: 1rem 1.1rem;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+        width: 100%;
+        border: 0;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px;
+        color: #0f172a;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .08);
+        min-height: 96px;
+        background: #fff;
     }
-    .kpi-label {
+    .kpi-card .kpi-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        flex: 0 0 auto;
+        color: #fff;
+    }
+    .kpi-meta .kpi-label {
+        display: block;
+        font-size: 12px;
         text-transform: uppercase;
-        letter-spacing: .08em;
-        font-weight: 800;
-        font-size: .72rem;
+        letter-spacing: .03em;
+        opacity: .9;
+        font-weight: 700;
     }
-    .kpi-value { font-size: 1.5rem; line-height: 1.1; }
-    .kpi-subtitle { color: #64748b; font-size: .78rem; }
+    .kpi-meta .kpi-value {
+        display: block;
+        font-size: 28px;
+        line-height: 1.05;
+        margin-top: 2px;
+    }
+    .kpi-subtitle {
+        display: block;
+        color: #475569;
+        margin-top: 2px;
+    }
+    .kpi-total { background: linear-gradient(135deg, #e2e8f0, #cbd5e1); }
+    .kpi-total .kpi-icon { background: #94a3b8; }
+    .kpi-available { background: linear-gradient(135deg, #dcfce7, #bbf7d0); }
+    .kpi-available .kpi-icon { background: #16a34a; }
+    .kpi-partial { background: linear-gradient(135deg, #fef3c7, #fde68a); }
+    .kpi-partial .kpi-icon { background: #f59e0b; }
+    .kpi-unavailable { background: linear-gradient(135deg, #fee2e2, #fecaca); }
+    .kpi-unavailable .kpi-icon { background: #dc2626; }
+    .table-value-stack {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .table-value-stack span {
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .table-value-stack small {
+        color: #64748b;
+        font-size: .76rem;
+    }
     @media (max-width: 991.98px) {
-        .vs-panel-head,
-        .doc-filters { padding-left: 14px; padding-right: 14px; }
+        .module-card-header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+        .module-header-right {
+            width: 100%;
+        }
+        .module-header-right .btn-xp {
+            flex: 1 1 auto;
+            justify-content: center;
+        }
+        .vs-panel-head {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
         .vehicle-list-table thead th,
         .vehicle-list-table tbody td { font-size: .86rem; }
     }

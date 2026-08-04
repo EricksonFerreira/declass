@@ -10,6 +10,7 @@ use App\Http\Requests\Empresa\UpdateEmpresaSiteApresentacaoRequest;
 use App\Models\ArquivoRastreado;
 use App\Models\ConfiguracaoCalcao;
 use App\Models\Empresa;
+use App\Models\EmpresaContrato;
 use App\Models\GrupoFrota;
 use App\Support\ArquivoAnexoHelper;
 use App\Services\BreadcrumbService;
@@ -23,6 +24,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use App\Support\SchemaCache;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class EmpresaController extends BaseController implements FiltroInterface, ResourceInterface
 {
@@ -329,7 +331,9 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresa', 'assinatura.meu-plano', $empresa->nome);
 
-        return view('empresa.show', compact('empresa', 'breadcrumb'));
+        $contratos = $empresa->contratos()->latest('id')->take(10)->get();
+
+        return view('empresa.show', compact('empresa', 'breadcrumb', 'contratos'));
     }
 
     public function show($id)
@@ -340,8 +344,38 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
         }
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Empresas', 'empresa.index', $empresa->nome);
+        $contratos = $empresa->contratos()->latest('id')->take(10)->get();
 
-        return view('empresa.show', compact('empresa', 'breadcrumb'));
+        return view('empresa.show', compact('empresa', 'breadcrumb', 'contratos'));
+    }
+
+    public function gerarContrato(Request $request, Empresa $empresa)
+    {
+        if (! auth()->user()?->can('acessar-superadmin')) {
+            abort(403);
+        }
+
+        $numero = 'EMP-' . $empresa->id . '-' . now()->format('YmdHis');
+        $titulo = 'Contrato da empresa ' . $empresa->nome;
+
+        $conteudoHtml = view('pdf.contratos.empresa-modelo', [
+            'empresa' => $empresa,
+            'numero' => $numero,
+            'geradoEm' => now(),
+        ])->render();
+
+        EmpresaContrato::create([
+            'empresa_id' => $empresa->id,
+            'numero' => $numero,
+            'titulo' => $titulo,
+            'status' => 'gerado',
+            'conteudo_html' => $conteudoHtml,
+            'gerado_em' => now(),
+            'gerado_por' => auth()->id(),
+        ]);
+
+        return redirect()->route('empresa.show', $empresa->id)
+            ->with('success', 'Contrato gerado com sucesso.');
     }
 
     public function armazenamento(Request $request, $id)

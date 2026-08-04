@@ -230,7 +230,7 @@
 @if($usesSelect2)
     @push('css')
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap4-theme/1.5.2/select2-bootstrap4.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
         <style>
             .select2-container { min-width: 120px; }
             .select2-container .select2-selection--multiple { min-height: 31px; }
@@ -240,7 +240,7 @@
         </style>
     @endpush
     @push('js')
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+        <script src="{{ asset('js/select2.min.js') }}"></script>
         <script>
         (function initFilterSelect2() {
             function applySelect2() {

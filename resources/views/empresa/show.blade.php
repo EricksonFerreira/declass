@@ -65,6 +65,42 @@
         </div>
     </div>
 
+    <div class="rs-card">
+        <div class="rs-card__header">
+            <i class="fas fa-file-signature rs-card__icon"></i>
+            <h2>Contratos da Empresa</h2>
+            <span class="rs-badge-count">{{ $contratos->count() }}</span>
+            <form action="{{ route('empresa.contratos.gerar', $empresa->id) }}" method="POST" class="ml-auto mb-0">
+                @csrf
+                <button type="submit" class="rs-btn rs-btn--primary">
+                    <i class="fas fa-file-contract"></i> Gerar contrato
+                </button>
+            </form>
+        </div>
+
+        @if($contratos->isEmpty())
+            <div class="p-3">
+                <div class="rs-empty">
+                    <i class="fas fa-file-alt"></i>
+                    <span>Nenhum contrato registrado para esta empresa.</span>
+                </div>
+            </div>
+        @else
+            <div class="rs-info-grid">
+                @foreach($contratos as $contrato)
+                    <div class="rs-info-card">
+                        <span class="rs-info-card__label"><i class="fas fa-hashtag"></i> {{ $contrato->numero }}</span>
+                        <strong class="rs-info-card__value">{{ $contrato->titulo }}</strong>
+                        <div class="text-muted" style="font-size:.75rem;margin-top:4px;">Gerado em {{ $contrato->gerado_em?->format('d/m/Y H:i') ?? '-' }}</div>
+                        <div class="mt-2">
+                            <span class="badge badge-{{ $contrato->status === 'gerado' ? 'info' : 'secondary' }}">{{ ucfirst($contrato->status) }}</span>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
     {{-- BOTOES DE ACAO --}}
     {{-- <div style="display:flex;gap:10px;flex-wrap:wrap;">
         <a href="{{ route('empresa.editar') }}" class="rs-btn rs-btn--primary">

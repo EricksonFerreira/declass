@@ -11,7 +11,6 @@ class TipoFrota extends Model
 
     protected $table = 'tipo_frota';
     protected $fillable = [
-        'codigo',
         'nome',
         'ativo',
     ];

@@ -260,7 +260,7 @@ unset($__defined_vars); ?>
 <?php if($usesSelect2): ?>
     <?php $__env->startPush('css'); ?>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/select2-bootstrap4-theme/1.5.2/select2-bootstrap4.min.css" rel="stylesheet" />
+        <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@1.5.2/dist/select2-bootstrap4.min.css" rel="stylesheet" />
         <style>
             .select2-container { min-width: 120px; }
             .select2-container .select2-selection--multiple { min-height: 31px; }
@@ -270,7 +270,7 @@ unset($__defined_vars); ?>
         </style>
     <?php $__env->stopPush(); ?>
     <?php $__env->startPush('js'); ?>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.full.min.js"></script>
+        <script src="<?php echo e(asset('js/select2.min.js')); ?>"></script>
         <script>
         (function initFilterSelect2() {
             function applySelect2() {

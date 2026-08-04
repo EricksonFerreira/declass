@@ -8,6 +8,7 @@ Route::middleware('can:acessar-superadmin')->prefix('empresa')->name('empresa.')
     Route::get('removerfiltro', [EmpresaController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [EmpresaController::class, 'filtro'])->name('filtro');
     Route::get('{empresa}/armazenamento', [EmpresaController::class, 'armazenamento'])->name('armazenamento');
+    Route::post('{empresa}/contratos/gerar', [EmpresaController::class, 'gerarContrato'])->name('contratos.gerar');
     Route::get('{empresa}/site-apresentacao', [EmpresaController::class, 'editSiteApresentacao'])->name('site-apresentacao.edit');
     Route::put('{empresa}/site-apresentacao', [EmpresaController::class, 'updateSiteApresentacao'])->name('site-apresentacao.update');
     Route::get('{empresa}/site-editor', [EmpresaController::class, 'editSiteEditor'])->name('site-editor.edit');

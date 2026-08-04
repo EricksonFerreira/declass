@@ -32,24 +32,17 @@
                         <div class="tipo-frota-section-title">Informações Básicas</div>
                     </div>
 
-                    <div class="col-lg-3 col-md-4">
-                        <div class="form-group form-group-tipo-frota">
-                            <x-form-input type="text" class="form-control form-control-sm" id="codigo" name="codigo"
-                                label="Codigo" value="{{ old('codigo', $tipo_frota->codigo ?? '') }}" required />
-                        </div>
-                    </div>
-
-                    <div class="col-lg-6 col-md-5">
+                    <div class="col-lg-9 col-md-8">
                         <div class="form-group form-group-tipo-frota">
                             <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
                                 label="Nome" value="{{ old('nome', $tipo_frota->nome ?? '') }}" required />
                         </div>
                     </div>
 
-                    <div class="col-lg-3 col-md-3">
+                    <div class="col-lg-3 col-md-4">
                         <div class="form-group form-group-tipo-frota">
                             <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione um valor"
-                                :selected="old('ativo', isset($tipo_frota->ativo) && $tipo_frota->ativo ? $tipo_frota->ativo : null)"
+                                :selected="old('ativo', $tipo_frota->ativo ?? 'S')"
                                 class="form-control form-control-sm" required />
                         </div>
                     </div>
@@ -236,7 +229,6 @@
 
     const steps = [
         { element: '.card-header-tipo-frota', popover: { title: 'Cadastro de tipo de frota', description: 'Aqui você cria ou edita um tipo de frota. O tipo classifica grupos de veículos como Hatch, Sedan, SUV e pode ter características padrão vinculadas.', side: 'bottom' } },
-        { element: '#codigo', popover: { title: 'Código', description: 'Informe um código curto e único para identificar o tipo, como HB para Hatchback ou SU para SUV. Usado em relatórios e integrações.', side: 'bottom' } },
         { element: '#nome', popover: { title: 'Nome do tipo', description: 'Nome completo do tipo de frota exibido nas listagens e configurações de grupo, como "Hatchback" ou "SUV de Grande Porte".', side: 'bottom' } },
         { element: 'select[name="ativo"]', popover: { title: 'Status', description: 'Defina se este tipo de frota estará ativo e disponível para ser vinculado a grupos de veículos.', side: 'bottom' } },
         { element: '.tipo-frota-caracteristicas-wrap', popover: { title: 'Características padrão', description: 'Marque as características que todos os grupos deste tipo normalmente possuem. Servem como sugestão ao criar novos grupos de frota.', side: 'top' } },
