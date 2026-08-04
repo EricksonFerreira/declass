@@ -20,7 +20,7 @@ class StoreSinistroRequest extends FormRequest
             'cliente_id'                     => 'nullable|integer|exists:users,id',
             'condutor_id'                    => 'nullable|integer|exists:users,id',
             'tipo_sinistro'                  => 'required|string|in:' . implode(',', array_keys(Sinistro::TIPOS)),
-            'data_hora_ocorrido'             => 'required|date',
+            'data_hora_ocorrido'             => 'required|date|before_or_equal:now',
             'local_ocorrido'                 => 'nullable|string|max:255',
             'descricao'                      => 'nullable|string',
             'placa_momento'                  => 'nullable|string|max:20',
@@ -53,6 +53,7 @@ class StoreSinistroRequest extends FormRequest
         return [
             'tipo_sinistro.required'      => 'O tipo de sinistro é obrigatório.',
             'data_hora_ocorrido.required' => 'A data e hora do ocorrido são obrigatórias.',
+            'data_hora_ocorrido.before_or_equal' => 'A data e hora do ocorrido não pode ser maior do que agora.',
             'status.required'             => 'O status é obrigatório.',
         ];
     }

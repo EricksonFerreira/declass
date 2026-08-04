@@ -184,7 +184,15 @@
 
 @section('css')
 <style>
-    .manutencao-card { border-radius: 16px; overflow: hidden; }
+    .manutencao-page {
+        padding-bottom: 8px;
+    }
+    .manutencao-card {
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fff;
+        box-shadow: 0 16px 44px rgba(15, 23, 42, .08);
+    }
     .manutencao-card__header {
         padding: 1.25rem 1.5rem;
         background: linear-gradient(135deg, #f7fafc 0%, #eef4ff 55%, #f7fbff 100%);
@@ -235,9 +243,10 @@
     }
     .manutencao-section {
         border: 1px solid #e5eaf2;
-        border-radius: 16px;
+        border-radius: 18px;
         background: #fff;
         padding: 1rem;
+        box-shadow: 0 10px 26px rgba(15, 23, 42, .04);
     }
     .manutencao-section__header {
         padding-bottom: .85rem;
@@ -247,9 +256,66 @@
     .manutencao-table-wrap {
         border-radius: 12px;
         overflow: hidden;
+        border: 1px solid #e2e8f0;
     }
     .manutencao-table-wrap .table {
         min-width: 640px;
+    }
+    .manutencao-table-wrap thead th {
+        background: #f8fafc;
+        font-weight: 800;
+        color: #334155;
+        white-space: nowrap;
+    }
+    .manutencao-table-wrap tbody tr:hover {
+        background: #f8fbff;
+    }
+    .manutencao-card .btn {
+        border-radius: 12px;
+        font-weight: 700;
+    }
+    .modal-content {
+        border-radius: 18px;
+        overflow: hidden;
+    }
+    .modal-header {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%);
+    }
+    .modal-title {
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .modal-body .form-control {
+        border-radius: 12px;
+        border-color: #dbe4ef;
+    }
+    .modal-body .form-control:focus {
+        border-color: #4b80ff;
+        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .15);
+    }
+    @media (max-width: 767.98px) {
+        .manutencao-card__header,
+        .manutencao-card .card-body {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+        .manutencao-section {
+            padding: .85rem;
+        }
+        .manutencao-section__header {
+            flex-direction: column;
+            align-items: flex-start !important;
+        }
+        .manutencao-section__header .d-flex {
+            width: 100%;
+        }
+        .manutencao-section__header .btn {
+            flex: 1 1 100%;
+        }
+        .manutencao-card__badge {
+            width: 100%;
+            text-align: center;
+        }
     }
 </style>
 @stop

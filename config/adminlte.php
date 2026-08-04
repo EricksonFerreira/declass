@@ -414,6 +414,7 @@ return [
                     'route' => 'sinistro.index',
                     'icon' => 'fas fa-car-crash',
                     'can' => 'sinistro.index',
+                    'active' => ['sinistro.index', 'sinistro.create', 'sinistro.edit', 'sinistro.show'],
                 ],
             ],
         ],
@@ -591,15 +592,10 @@ return [
                             'icon' => 'fas fa-list',
                         ],
 
-                        [
-                            'text' => 'Planos de Manut. Preventiva',
-                            'route' => 'manutencao.planos.index',
-                            'icon' => 'fas fa-clipboard-list',
                         ],
-                    ],
-                ],
-                [
-                    'text' => 'Estações',
+                        ],
+                        [
+                            'text' => 'Estações',
                     'route' => 'estacao.index',
                     'icon' => 'fas fa-map-marker-alt',
                 ],
@@ -615,11 +611,16 @@ return [
                     'can' => 'gerenciar-empresa',
                 ],
                 [
-                    'text' => 'Termo de Consentimento',
+                    'text' => 'Termo/Contratos',
                     'route' => 'termo_consentimento.index',
                     'icon' => 'fas fa-file-contract',
                     'can' => 'termo_consentimento.index',
-                ],
+                    ],
+                    [
+                        'text' => 'Planos de Manut. Preventiva',
+                        'route' => 'manutencao.planos.index',
+                        'icon' => 'fas fa-clipboard-list',
+                    ],
 
             ],
         ],

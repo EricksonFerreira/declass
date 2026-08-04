@@ -113,9 +113,128 @@
         box-shadow: 0 1px 0 rgba(0,0,0,.04);
     }
 
+    .veiculo-busca-modal__results {
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+    }
+
+    .veiculo-busca-modal__cards {
+        display: grid;
+        gap: .75rem;
+    }
+
+    .veiculo-busca-modal__card {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 10px 28px rgba(15, 23, 42, 0.06);
+        padding: .9rem;
+    }
+
+    .veiculo-busca-modal__card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: .75rem;
+        margin-bottom: .75rem;
+    }
+
+    .veiculo-busca-modal__card-plate {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 1.5rem;
+        padding: .15rem .5rem;
+        border-radius: 999px;
+        background: #e0f2fe;
+        color: #0369a1;
+        font-size: .72rem;
+        font-weight: 800;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+        margin-bottom: .35rem;
+    }
+
+    .veiculo-busca-modal__card-title {
+        margin: 0;
+        font-size: .98rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.2;
+    }
+
+    .veiculo-busca-modal__card-sub {
+        color: #64748b;
+        font-size: .8rem;
+        margin-top: .2rem;
+    }
+
+    .veiculo-busca-modal__card-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: .6rem .75rem;
+    }
+
+    .veiculo-busca-modal__meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: .1rem;
+        padding: .55rem .6rem;
+        border-radius: 12px;
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        min-width: 0;
+    }
+
+    .veiculo-busca-modal__meta-label {
+        font-size: .68rem;
+        font-weight: 800;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #64748b;
+    }
+
+    .veiculo-busca-modal__meta-value {
+        font-size: .82rem;
+        font-weight: 700;
+        color: #0f172a;
+        line-height: 1.2;
+        word-break: break-word;
+    }
+
+    .veiculo-busca-modal__card .btn {
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
     .veiculo-busca-modal__toolbar .btn {
         border-radius: 10px;
         font-weight: 700;
+    }
+
+    @media (max-width: 767.98px) {
+        .veiculo-busca-modal__body {
+            padding: .75rem;
+        }
+
+        .veiculo-busca-modal__panel-header,
+        .veiculo-busca-modal__panel .card-body {
+            padding-left: .85rem;
+            padding-right: .85rem;
+        }
+
+        .veiculo-busca-modal__card-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .veiculo-busca-modal__card-head {
+            flex-direction: column;
+        }
+
+        .veiculo-busca-modal__card .btn {
+            width: 100%;
+        }
     }
 </style>
 

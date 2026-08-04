@@ -124,8 +124,9 @@
                                 </div>
                                 <div class="col-lg-4 form-group">
                                     <label class="form-label-sm">Data e Hora do Ocorrido <span class="text-danger">*</span></label>
-                                    <input type="datetime-local" name="data_hora_ocorrido" class="form-control form-control-sm" required
-                                           value="{{ old('data_hora_ocorrido', $sinistro?->data_hora_ocorrido?->format('Y-m-d\TH:i') ?? '') }}">
+                                      <input type="datetime-local" name="data_hora_ocorrido" class="form-control form-control-sm" required
+                                             max="{{ now()->format('Y-m-d\TH:i') }}"
+                                             value="{{ old('data_hora_ocorrido', $sinistro?->data_hora_ocorrido?->format('Y-m-d\TH:i') ?? '') }}">
                                 </div>
                                 <div class="col-lg-4 form-group">
                                     <label class="form-label-sm">Placa no Momento</label>

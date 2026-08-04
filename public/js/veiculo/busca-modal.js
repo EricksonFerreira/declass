@@ -95,6 +95,18 @@
         return nome || '-';
     }
 
+    function displayValue(value) {
+        var text = safeText(value);
+        return text ? text : '-';
+    }
+
+    function buildMeta(label, value) {
+        return '<div class="veiculo-busca-modal__meta-item">' +
+            '<span class="veiculo-busca-modal__meta-label">' + label + '</span>' +
+            '<strong class="veiculo-busca-modal__meta-value">' + displayValue(value) + '</strong>' +
+            '</div>';
+    }
+
     window.VeiculoBuscaModal = {
         init: function (config) {
             var prefix = config.prefix || 'veiculo';
@@ -202,7 +214,39 @@
                         }
 
                         var badge = '<span class="badge badge-secondary mb-2">' + data.veiculos.length + ' resultado(s)</span>';
-                        var html = badge + '<div class="table-responsive veiculo-busca-modal__table-scroll">';
+                        var html = badge + '<div class="veiculo-busca-modal__results">';
+                        html += '<div class="veiculo-busca-modal__cards d-md-none">';
+
+                        data.veiculos.forEach(function (v) {
+                            var label = buildLabel(v);
+                            html += '<article class="veiculo-busca-modal__card">';
+                            html += '<div class="veiculo-busca-modal__card-head">';
+                            html += '<div>';
+                            html += '<span class="veiculo-busca-modal__card-plate">' + displayValue(v.placa) + '</span>';
+                            html += '<h6 class="veiculo-busca-modal__card-title">' + displayValue(v.nome) + '</h6>';
+                            html += '<div class="veiculo-busca-modal__card-sub">' + displayValue(v.marca) + ' | ' + displayValue(v.modelo) + '</div>';
+                            html += '</div>';
+                            html += '<button type="button" class="btn btn-sm btn-success js-selecionar-veiculo" ' +
+                                'data-id="' + escapeAttr(v.id) + '" data-label="' + escapeAttr(label) + '" data-placa="' + escapeAttr(v.placa || '') + '" data-kms="' + escapeAttr(v.kms || '') + '" data-nivel="' + escapeAttr(v.nivel_combustivel || '') + '">' +
+                                '<i class="fas fa-check mr-1"></i> Selecionar' +
+                                '</button>';
+                            html += '</div>';
+                            html += '<div class="veiculo-busca-modal__card-grid">';
+                            html += buildMeta('Grupo', v.grupo);
+                            html += buildMeta('Tipo', v.tipo);
+                            html += buildMeta('Status', v.status);
+                            html += buildMeta('Ano fab.', v.ano_fab);
+                            html += buildMeta('Ano mod.', v.ano_mod);
+                            html += buildMeta('Cor', v.cor);
+                            html += buildMeta('KMs', v.kms);
+                            html += buildMeta('Ativo', v.ativo);
+                            html += buildMeta('Estação', v.estacao);
+                            html += '</div>';
+                            html += '</article>';
+                        });
+
+                        html += '</div>';
+                        html += '<div class="table-responsive veiculo-busca-modal__table-scroll d-none d-md-block">';
                         html += '<table class="table table-sm table-hover table-bordered mb-0 veiculo-busca-modal__table" style="font-size:.82rem">';
                         html += '<thead class="thead-light veiculo-busca-modal__thead"><tr>' +
                             '<th>Placa</th><th>Nome</th><th>Marca</th><th>Modelo</th>' +
@@ -215,19 +259,19 @@
                         data.veiculos.forEach(function (v) {
                             var label = buildLabel(v);
                             html += '<tr>' +
-                                '<td><strong>' + (escapeAttr(v.placa) || '—') + '</strong></td>' +
-                                '<td>' + escapeAttr(v.nome) + '</td>' +
-                                '<td>' + (escapeAttr(v.marca) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.modelo) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.grupo) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.tipo) || '—') + '</td>' +
-                                '<td><span class="badge badge-info">' + (escapeAttr(v.status) || '—') + '</span></td>' +
-                                '<td>' + (escapeAttr(v.ano_fab) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.ano_mod) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.cor) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.kms) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.ativo) || '—') + '</td>' +
-                                '<td>' + (escapeAttr(v.estacao) || '—') + '</td>' +
+                                '<td><strong>' + displayValue(v.placa) + '</strong></td>' +
+                                '<td>' + displayValue(v.nome) + '</td>' +
+                                '<td>' + displayValue(v.marca) + '</td>' +
+                                '<td>' + displayValue(v.modelo) + '</td>' +
+                                '<td>' + displayValue(v.grupo) + '</td>' +
+                                '<td>' + displayValue(v.tipo) + '</td>' +
+                                '<td><span class="badge badge-info">' + displayValue(v.status) + '</span></td>' +
+                                '<td>' + displayValue(v.ano_fab) + '</td>' +
+                                '<td>' + displayValue(v.ano_mod) + '</td>' +
+                                '<td>' + displayValue(v.cor) + '</td>' +
+                                '<td>' + displayValue(v.kms) + '</td>' +
+                                '<td>' + displayValue(v.ativo) + '</td>' +
+                                '<td>' + displayValue(v.estacao) + '</td>' +
                                 '<td class="text-center">' +
                                 '<button type="button" class="btn btn-sm btn-success js-selecionar-veiculo" ' +
                                 'data-id="' + escapeAttr(v.id) + '" data-label="' + escapeAttr(label) + '" data-placa="' + escapeAttr(v.placa || '') + '" data-kms="' + escapeAttr(v.kms || '') + '" data-nivel="' + escapeAttr(v.nivel_combustivel || '') + '">' +
@@ -237,7 +281,7 @@
                                 '</tr>';
                         });
 
-                        html += '</tbody></table></div>';
+                        html += '</tbody></table></div></div>';
                         resultados.innerHTML = html;
 
                         resultados.querySelectorAll('.js-selecionar-veiculo').forEach(function (btn) {
