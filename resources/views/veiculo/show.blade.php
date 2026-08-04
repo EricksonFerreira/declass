@@ -523,7 +523,7 @@
     .veiculo-summary__row span { color: #475569; }
     .veiculo-summary__row strong { font-size: 1rem; }
 
-    /* â”€â”€ AÃ§Ãµes rápidas grid â”€â”€ */
+    /* â”€â”€ ações rápidas grid â”€â”€ */
     .veiculo-acoes-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -1579,7 +1579,7 @@
 
 
 
-    /* Operação compacta: reduz a sensação de duas navegaÃ§Ãµes concorrentes */
+    /* Operação compacta: reduz a sensação de duas navegações concorrentes */
     .vs-shell--compact {
         padding: 0;
         overflow: hidden;

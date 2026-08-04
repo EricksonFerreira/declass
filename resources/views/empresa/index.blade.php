@@ -69,7 +69,7 @@
                         <th>Armazenamento</th>
                         <th>Cores</th>
                         <th>Status</th>
-                        <th class="text-center" style="width:260px;">AÃ§Ãµes</th>
+                        <th class="text-center" style="width:290px;">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -218,6 +218,9 @@
                             </td>
                             <td class="text-center align-middle">
                                 <div class="d-flex flex-wrap justify-content-center empresa-actions-group">
+                                    <a href="{{ route('empresa.show', $empresa->id) }}" class="btn btn-xs btn-success">
+                                        <i class="fa fa-eye"></i> Show
+                                    </a>
                                     <a href="{{ route('empresa.site-editor.edit', $empresa->id) }}" class="btn btn-xs btn-info" style="background:#0ea5e9;border-color:#0ea5e9;">
                                         <i class="fa fa-paint-brush"></i> Editor Site
                                     </a>

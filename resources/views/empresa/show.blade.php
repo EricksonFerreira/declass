@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $empresa->nome)
 
@@ -15,7 +15,134 @@
     $totalVeiculos = \App\Models\Veiculo::where('empresa_id', $empresa->id)->where('ativo', true)->where('vendido', false)->count();
     $logoUrl = $empresa->logo_url;
     $iniciais = collect(preg_split('/\s+/', trim($empresa->nome)))->filter()->take(2)->map(fn($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('') ?: 'EM';
+    $planosContrato = $planos ?? collect();
+    $representantePadrao = auth()->user()?->nome ?? $empresa->users()->orderBy('id')->value('nome') ?? $empresa->nome;
+    $razaoSocialPadrao = $empresa->nome;
+    $cnpjPadrao = $empresa->cnpj ?? '';
+    $enderecoPadrao = trim((string) ($empresa->dominio ?? ''));
+    $emailPadrao = $empresa->email ?? auth()->user()?->email ?? '';
+    $telefonePadrao = $empresa->telefone ?? '';
+    $quantidadeVeiculosPadrao = (int) ($planoAtivo?->plano?->limite_veiculos ?? 15);
+    $valorPadrao = $planoAtivo?->valor_cobrado ?? $plano?->valor_mensal ?? $plano?->valor_anual ?? '';
 @endphp
+
+@push('css')
+<style>
+    .rs-page {
+        padding: 0 !important;
+    }
+
+    .rs-page .rs-card,
+    .rs-page .rs-hero {
+        margin-bottom: 10px !important;
+    }
+
+    .rs-page .card,
+    .rs-page .rs-card {
+        border-radius: 12px;
+    }
+
+    .rs-page .rs-card__header {
+        padding: 10px 14px;
+    }
+
+    .rs-page .rs-info-grid {
+        gap: 10px;
+        padding: 10px 12px 12px;
+    }
+
+    .rs-page .rs-info-card {
+        padding: 12px;
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+    }
+
+    .rs-page .rs-hero__body {
+        padding: 16px 18px;
+    }
+
+    .rs-page .rs-tabs-wrapper {
+        margin-top: 0;
+    }
+
+    .rs-page .modal-body {
+        padding: 16px;
+    }
+
+    .rs-page .modal-header,
+    .rs-page .modal-footer {
+        padding: 12px 16px;
+    }
+
+    .rs-contratos-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .rs-contrato-card {
+        border: 1px solid #e5e7eb;
+        border-radius: 14px;
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        padding: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+    }
+
+    .rs-contrato-top {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: flex-start;
+        margin-bottom: 10px;
+    }
+
+    .rs-contrato-numero {
+        font-size: .78rem;
+        color: #64748b;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .rs-contrato-titulo {
+        font-size: .98rem;
+        font-weight: 800;
+        line-height: 1.25;
+        margin-top: 3px;
+    }
+
+    .rs-contrato-meta {
+        font-size: .78rem;
+        color: #64748b;
+    }
+
+    .rs-contrato-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .rs-contrato-actions .btn,
+    .rs-contrato-actions form {
+        margin: 0;
+    }
+
+    .rs-modal-mini .modal-dialog {
+        max-width: 760px;
+    }
+
+    .rs-modal-mini .modal-body {
+        padding: 16px 18px 10px;
+    }
+
+    .rs-modal-mini .modal-footer {
+        padding: 12px 18px 18px;
+    }
+</style>
+@endpush
 
 <div class="rs-page">
 
@@ -70,12 +197,9 @@
             <i class="fas fa-file-signature rs-card__icon"></i>
             <h2>Contratos da Empresa</h2>
             <span class="rs-badge-count">{{ $contratos->count() }}</span>
-            <form action="{{ route('empresa.contratos.gerar', $empresa->id) }}" method="POST" class="ml-auto mb-0">
-                @csrf
-                <button type="submit" class="rs-btn rs-btn--primary">
-                    <i class="fas fa-file-contract"></i> Gerar contrato
-                </button>
-            </form>
+            <button type="button" class="rs-btn rs-btn--primary ml-auto" data-toggle="modal" data-target="#modalGerarContratoEmpresa">
+                <i class="fas fa-file-contract"></i> Gerar contrato
+            </button>
         </div>
 
         @if($contratos->isEmpty())
@@ -88,17 +212,148 @@
         @else
             <div class="rs-info-grid">
                 @foreach($contratos as $contrato)
+                    @php
+                        $contratoAssinado = strtolower((string) $contrato->status) === 'assinado' || !empty($contrato->assinado_em);
+                    @endphp
                     <div class="rs-info-card">
                         <span class="rs-info-card__label"><i class="fas fa-hashtag"></i> {{ $contrato->numero }}</span>
                         <strong class="rs-info-card__value">{{ $contrato->titulo }}</strong>
                         <div class="text-muted" style="font-size:.75rem;margin-top:4px;">Gerado em {{ $contrato->gerado_em?->format('d/m/Y H:i') ?? '-' }}</div>
                         <div class="mt-2">
-                            <span class="badge badge-{{ $contrato->status === 'gerado' ? 'info' : 'secondary' }}">{{ ucfirst($contrato->status) }}</span>
+                            <span class="badge badge-{{ $contratoAssinado ? 'success' : 'info' }}">{{ $contratoAssinado ? 'Assinado' : ucfirst($contrato->status) }}</span>
+                        </div>
+                        <div class="mt-3 d-flex flex-wrap" style="gap:8px;">
+                            @if($contrato->arquivo_pdf_path)
+                                <a href="{{ route('empresa.contratos.download', ['empresa' => $empresa->id, 'contrato' => $contrato->id]) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-download mr-1"></i> Baixar
+                                </a>
+                            @endif
+                            <button type="button" class="btn btn-sm btn-outline-success" data-toggle="modal" data-target="#modalAssinarContrato{{ $contrato->id }}">
+                                <i class="fas fa-file-upload mr-1"></i> Inserir PDF assinado
+                            </button>
+                            @if(! $contratoAssinado)
+                                <form action="{{ route('empresa.contratos.remover', ['empresa' => $empresa->id, 'contrato' => $contrato->id]) }}" method="POST" onsubmit="return confirm('Deseja remover este contrato?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash mr-1"></i> Remover
+                                    </button>
+                                </form>
+                            @else
+                                <span class="small text-muted align-self-center">Remoção bloqueada após assinatura.</span>
+                            @endif
                         </div>
                     </div>
                 @endforeach
             </div>
         @endif
+    </div>
+
+    @foreach($contratos as $contrato)
+        <div class="modal fade" id="modalAssinarContrato{{ $contrato->id }}" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <form action="{{ route('empresa.contratos.assinar', ['empresa' => $empresa->id, 'contrato' => $contrato->id]) }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+                        <div class="modal-header">
+                            <h5 class="modal-title mb-0"><i class="fas fa-file-signature mr-2"></i>Inserir PDF assinado</h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <p class="text-muted mb-3">Contrato {{ $contrato->numero }}</p>
+                            <div class="form-group">
+                                <label>Arquivo PDF assinado</label>
+                                <input type="file" name="pdf_assinado" class="form-control" accept="application/pdf" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-upload mr-1"></i> Enviar PDF
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <div class="modal fade" id="modalGerarContratoEmpresa" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable" role="document">
+            <div class="modal-content">
+                <form action="{{ route('empresa.contratos.gerar', $empresa->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-header">
+                        <div>
+                            <h5 class="modal-title mb-0"><i class="fas fa-file-contract mr-2"></i>Gerar contrato</h5>
+                            <small class="text-muted">Preencha os dados do cliente e selecione o plano.</small>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Fechar">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-8 form-group">
+                                <label>Razão social</label>
+                                <input type="text" name="razao_social" class="form-control" value="{{ old('razao_social', $razaoSocialPadrao) }}" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label>CNPJ do cliente</label>
+                                <input type="text" name="cnpj_cliente" class="form-control" value="{{ old('cnpj_cliente', $cnpjPadrao) }}" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label>E-mail</label>
+                                <input type="email" name="email_cliente" class="form-control" value="{{ old('email_cliente', $emailPadrao) }}">
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label>Telefone</label>
+                                <input type="text" name="telefone_cliente" id="telefoneClienteContrato" class="form-control" value="{{ old('telefone_cliente', $telefonePadrao) }}">
+                           
+                            </div>
+                            <div class="col-md-8 form-group">
+                                <label>Endereço</label>
+                                <input type="text" name="endereco_cliente" class="form-control" value="{{ old('endereco_cliente', $enderecoPadrao) }}" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label>Nome do representante</label>
+                                <input type="text" name="representante_nome" class="form-control" value="{{ old('representante_nome', $representantePadrao) }}" required>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label>Plano</label>
+                                <select name="plano_id" id="empresaContratoPlano" class="form-control" required>
+                                    <option value="">Selecione um plano</option>
+                                    @foreach($planosContrato as $pl)
+                                        <option value="{{ $pl->id }}" data-valor="{{ $pl->valor_mensal ?: $pl->valor_anual }}" data-nome="{{ $pl->nome }}" data-veiculos="{{ $pl->limite_veiculos ?? 20 }}">
+                                            {{ $pl->nome }} - R$ {{ number_format((float) ($pl->valor_mensal ?: $pl->valor_anual), 2, ',', '.') }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4 form-group">
+                                <label>Valor</label>
+                                <input type="number" step="0.01" min="0" name="valor" id="empresaContratoValor" class="form-control" value="{{ old('valor', $valorPadrao) }}" required>
+                            </div>
+                             <div class="col-md-4 form-group">
+                                <label>Quantidade de veículos</label>
+                                <input type="number" min="1" step="1" name="quantidade_veiculos" id="quantidadeVeiculosContrato" class="form-control" value="{{ old('quantidade_veiculos', $quantidadeVeiculosPadrao) }}" required>
+                            </div>
+                        </div>
+                        <div class="alert alert-light border mb-0">
+                            O valor pode ser ajustado manualmente antes de gerar o PDF.
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" id="btnGerarContratoEmpresa" class="btn btn-primary">
+                            <i class="fas fa-file-pdf mr-1"></i> Gerar PDF
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     {{-- BOTOES DE ACAO --}}
@@ -567,6 +822,12 @@
 .rs-grid { display:grid; grid-template-columns:1fr 320px; gap:20px; align-items:start; }
 .rs-sidebar .rs-card { margin-bottom:16px; }
 
+.modal-content { border-radius: 18px; overflow: hidden; border: 0; box-shadow: 0 24px 70px rgba(15, 23, 42, .22); }
+.modal-header { background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 100%); border-bottom: 1px solid #e2e8f0; }
+.modal-title { font-weight: 800; color: #0f172a; }
+.modal-body .form-control { border-radius: 12px; border-color: #dbe4ef; }
+.modal-body .form-control:focus { border-color: #4b80ff; box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .15); }
+
 @media(max-width:768px){
     .rs-grid { grid-template-columns:1fr; }
     .rs-hero__body { flex-direction:column; align-items:flex-start; }
@@ -574,3 +835,49 @@
 }
 </style>
 @endsection
+
+@section('js')
+<script>
+    (function () {
+        var planoSelect = document.getElementById('empresaContratoPlano');
+        var valorInput = document.getElementById('empresaContratoValor');
+        var form = document.querySelector('#modalGerarContratoEmpresa form');
+        var submitBtn = document.getElementById('btnGerarContratoEmpresa');
+        if (!planoSelect || !valorInput || !form || !submitBtn) return;
+
+        function syncValor() {
+            var option = planoSelect.options[planoSelect.selectedIndex];
+            if (!option || !option.dataset.valor) return;
+            valorInput.value = option.dataset.valor;
+        }
+
+        function maskTelefone(value) {
+            var digits = String(value || '').replace(/\D/g, '').slice(0, 11);
+            if (digits.length <= 10) {
+                return digits.replace(/^(\d{2})(\d{4})(\d{0,4})$/, function (_, ddd, first, last) {
+                    return last ? '(' + ddd + ') ' + first + '-' + last : '(' + ddd + ') ' + first;
+                });
+            }
+            return digits.replace(/^(\d{2})(\d{5})(\d{0,4})$/, function (_, ddd, first, last) {
+                return last ? '(' + ddd + ') ' + first + '-' + last : '(' + ddd + ') ' + first;
+            });
+        }
+
+        planoSelect.addEventListener('change', syncValor);
+        syncValor();
+
+        var telefoneInput = document.getElementById('telefoneClienteContrato');
+        if (telefoneInput) {
+            telefoneInput.addEventListener('input', function (event) {
+                event.target.value = maskTelefone(event.target.value);
+            });
+        }
+
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Processando...';
+        });
+    }());
+</script>
+@endsection
+

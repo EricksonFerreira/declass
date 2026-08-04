@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Plano;
 
 class EmpresaContrato extends Model
 {
@@ -17,21 +18,25 @@ class EmpresaContrato extends Model
         'numero',
         'titulo',
         'status',
+        'snapshot',
         'conteudo_html',
         'arquivo_pdf_path',
         'gerado_em',
-        'assinado_em',
         'gerado_por',
-        'assinado_por',
     ];
 
     protected $casts = [
+        'snapshot' => 'array',
         'gerado_em' => 'datetime',
-        'assinado_em' => 'datetime',
     ];
 
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class, 'empresa_id');
+    }
+
+    public function plano(): BelongsTo
+    {
+        return $this->belongsTo(Plano::class, 'plano_id');
     }
 }

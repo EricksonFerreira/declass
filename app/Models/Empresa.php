@@ -208,29 +208,88 @@ class Empresa extends Model
 
     protected function stripeSecret(): Attribute
     {
-        return $this->encryptedStringAttribute('stripe_secret');
+        return Attribute::make(
+            get: function ($value) {
+                $raw = $this->getRawOriginal('stripe_secret');
+
+                if ($raw === null || $raw === '') {
+                    return null;
+                }
+
+                try {
+                    return Crypt::decryptString($raw);
+                } catch (DecryptException $e) {
+                    return $raw;
+                }
+            },
+            set: function ($value) {
+                if ($value === null || $value === '') {
+                    return null;
+                }
+
+                return Crypt::encryptString((string) $value);
+            }
+        );
     }
 
     protected function mercadoLivreAccessToken(): Attribute
     {
-        return $this->encryptedStringAttribute('mercado_livre_access_token');
+        return Attribute::make(
+            get: function ($value) {
+                $raw = $this->getRawOriginal('mercado_livre_access_token');
+
+                if ($raw === null || $raw === '') {
+                    return null;
+                }
+
+                try {
+                    return Crypt::decryptString($raw);
+                } catch (DecryptException $e) {
+                    return $raw;
+                }
+            },
+            set: function ($value) {
+                if ($value === null || $value === '') {
+                    return null;
+                }
+
+                return Crypt::encryptString((string) $value);
+            }
+        );
     }
 
     protected function paypalClientSecret(): Attribute
     {
-        return $this->encryptedStringAttribute('paypal_client_secret');
+        return Attribute::make(
+            get: function ($value) {
+                $raw = $this->getRawOriginal('paypal_client_secret');
+
+                if ($raw === null || $raw === '') {
+                    return null;
+                }
+
+                try {
+                    return Crypt::decryptString($raw);
+                } catch (DecryptException $e) {
+                    return $raw;
+                }
+            },
+            set: function ($value) {
+                if ($value === null || $value === '') {
+                    return null;
+                }
+
+                return Crypt::encryptString((string) $value);
+            }
+        );
     }
 
     protected function nfseClientSecret(): Attribute
     {
-        return $this->encryptedStringAttribute('nfse_client_secret');
-    }
-
-    private function encryptedStringAttribute(string $column): Attribute
-    {
         return Attribute::make(
-            get: function ($value) use ($column) {
-                $raw = $this->getRawOriginal($column);
+            get: function ($value) {
+                $raw = $this->getRawOriginal('nfse_client_secret');
+
                 if ($raw === null || $raw === '') {
                     return null;
                 }
