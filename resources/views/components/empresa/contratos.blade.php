@@ -126,7 +126,7 @@
                             <label>CNPJ do cliente</label>
                             <input type="text" name="cnpj_cliente" class="form-control" value="{{ old('cnpj_cliente', $cnpjPadrao) }}" required>
                         </div>
-                        <div class="col-md-4 form-group">
+                        <div class="col-md-8 form-group">
                             <label>E-mail</label>
                             <input type="email" name="email_cliente" class="form-control" value="{{ old('email_cliente', $emailPadrao) }}">
                         </div>
@@ -134,10 +134,7 @@
                             <label>Telefone</label>
                             <input type="text" name="telefone_cliente" id="telefoneClienteContrato" class="form-control" value="{{ old('telefone_cliente', $telefonePadrao) }}">
                         </div>
-                        <div class="col-md-4 form-group">
-                            <label>Quantidade de veículos</label>
-                            <input type="number" min="1" step="1" name="quantidade_veiculos" id="quantidadeVeiculosContrato" class="form-control" value="{{ old('quantidade_veiculos', $quantidadeVeiculosPadrao) }}" required>
-                        </div>
+                        
                         <div class="col-md-8 form-group">
                             <label>Endereço</label>
                             <input type="text" name="endereco_cliente" class="form-control" value="{{ old('endereco_cliente', $enderecoPadrao) }}" required>
@@ -146,7 +143,7 @@
                             <label>Nome do representante</label>
                             <input type="text" name="representante_nome" class="form-control" value="{{ old('representante_nome', $representantePadrao) }}" required>
                         </div>
-                        <div class="col-md-8 form-group">
+                        <div class="col-md-4 form-group">
                             <label>Plano</label>
                             <select name="plano_id" id="empresaContratoPlano" class="form-control" required>
                                 <option value="">Selecione um plano</option>
@@ -160,6 +157,10 @@
                         <div class="col-md-4 form-group">
                             <label>Valor</label>
                             <input type="number" step="0.01" min="0" name="valor" id="empresaContratoValor" class="form-control" value="{{ old('valor', $valorPadrao) }}" required>
+                        </div>
+                        <div class="col-md-4 form-group">
+                            <label>Quantidade de veículos</label>
+                            <input type="number" min="1" step="1" name="quantidade_veiculos" id="quantidadeVeiculosContrato" class="form-control" value="{{ old('quantidade_veiculos', $quantidadeVeiculosPadrao) }}" required>
                         </div>
                     </div>
                     <div class="alert alert-light border mb-0">

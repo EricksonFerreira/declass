@@ -240,7 +240,7 @@
                     <span>Pagamentos</span>
                 </a>
             </li>
-            <li class="nav-item" style="display:flex;justify-content:space-between;align-items:center;flex:1;">
+            <li class="nav-item">
                 <a class="nav-link" id="tab-contratos" data-toggle="tab" href="#pane-contratos" role="tab">
                     <i class="fas fa-file-signature"></i>
                     <span>Contratos</span>
