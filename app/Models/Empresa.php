@@ -33,6 +33,8 @@ class Empresa extends Model
         'cnpj',
         'email',
         'telefone',
+        'representante',
+        'endereco',
         'dominio',
         'site_apresentacao_ativo',
         'site_apresentacao_modelo',

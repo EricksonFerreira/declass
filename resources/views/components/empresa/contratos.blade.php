@@ -71,6 +71,56 @@
     @endif
 </div>
 
+@push('js')
+    <script>
+        (function () {
+            function onlyDigits(value) {
+                return (value || '').replace(/\D+/g, '').slice(0, 11);
+            }
+
+            function formatPhone(value) {
+                var digits = onlyDigits(value);
+
+                if (!digits) {
+                    return '';
+                }
+
+                if (digits.length <= 2) {
+                    return '(' + digits;
+                }
+
+                if (digits.length <= 10) {
+                    return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 6) + (digits.length > 6 ? '-' + digits.slice(6, 10) : '');
+                }
+
+                return '(' + digits.slice(0, 2) + ') ' + digits.slice(2, 7) + '-' + digits.slice(7, 11);
+            }
+
+            function bindPhoneMask() {
+                var input = document.getElementById('telefoneClienteContrato');
+
+                if (!input) {
+                    return;
+                }
+
+                var applyMask = function () {
+                    input.value = formatPhone(input.value);
+                };
+
+                applyMask();
+                input.addEventListener('input', applyMask);
+                input.addEventListener('blur', applyMask);
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', bindPhoneMask);
+            } else {
+                bindPhoneMask();
+            }
+        })();
+    </script>
+@endpush
+
 @foreach($contratos as $contrato)
     <div class="modal fade" id="modalAssinarContrato{{ $contrato->id }}" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">

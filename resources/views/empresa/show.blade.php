@@ -19,7 +19,7 @@
     $representantePadrao = auth()->user()?->nome ?? $empresa->users()->orderBy('id')->value('nome') ?? $empresa->nome;
     $razaoSocialPadrao = $empresa->nome;
     $cnpjPadrao = $empresa->cnpj ?? '';
-    $enderecoPadrao = trim((string) ($empresa->dominio ?? ''));
+    $enderecoPadrao = trim((string) ($empresa->endereco ?? ''));
     $emailPadrao = $empresa->email ?? auth()->user()?->email ?? '';
     $telefonePadrao = $empresa->telefone ?? '';
     $quantidadeVeiculosPadrao = (int) ($planoAtivo?->plano?->limite_veiculos ?? 15);

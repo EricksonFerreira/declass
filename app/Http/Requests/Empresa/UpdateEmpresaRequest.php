@@ -81,6 +81,8 @@ class UpdateEmpresaRequest extends FormRequest
             'cnpj' => ['nullable', 'digits:14'],
             'email' => ['nullable', 'email:rfc', 'max:255'],
             'telefone' => ['nullable', 'digits_between:10,11'],
+            'representante' => ['nullable', 'string', 'max:255'],
+            'endereco' => ['nullable', 'string', 'max:255'],
             'dominio' => ['nullable', 'string', 'max:255'],
             'logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,svg', 'max:2048'],
             'cor_primaria' => ['nullable', 'regex:/^#[A-F0-9]{6}$/'],
