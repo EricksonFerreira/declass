@@ -1,9 +1,9 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
 @section('content_header')
-    <x-breadcrumb :breadcrumbs="[[ 'name' => 'Veículos', 'url' => route('veiculo.index') ], [ 'name' => 'Sinistros' ]]" />
+    <x-breadcrumb :breadcrumbs="[[ 'name' => 'VeÃ­culos', 'url' => route('veiculo.index') ], [ 'name' => 'Sinistros' ]]" />
 @stop
 
 @section('content')
@@ -18,9 +18,9 @@
         <div class="vs-panel shadow-sm border-0 mb-3">
             <div class="vs-panel-head">
                 <div>
-                    <span class="vs-panel-head__eyebrow">Veículos · Sinistros</span>
+                    <span class="vs-panel-head__eyebrow">VeÃ­culos Â· Sinistros</span>
                     <h4 class="vs-panel-head__title mb-1">Sinistros registrados</h4>
-                    <p class="vs-panel-head__sub mb-0">Acompanhe ocorrências, responsáveis, valores estimados e o andamento de cada caso.</p>
+                    <p class="vs-panel-head__sub mb-0">Acompanhe ocorrÃªncias, responsÃ¡veis, valores estimados e o andamento de cada caso.</p>
                 </div>
                 <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
                     @can('sinistro.export')
@@ -42,7 +42,7 @@
                     <div class="kpi-meta">
                         <span class="kpi-label">Registros</span>
                         <strong class="kpi-value">{{ $totalSinistros }}</strong>
-                        <small class="kpi-subtitle">Sinistros no período filtrado</small>
+                        <small class="kpi-subtitle">Sinistros no perÃ­odo filtrado</small>
                     </div>
                 </div>
             </div>
@@ -52,7 +52,7 @@
                     <div class="kpi-meta">
                         <span class="kpi-label">Abertos</span>
                         <strong class="kpi-value">{{ $qtdAbertos }}</strong>
-                        <small class="kpi-subtitle">Aguardando análise ou documentos</small>
+                        <small class="kpi-subtitle">Aguardando anÃ¡lise ou documentos</small>
                     </div>
                 </div>
             </div>
@@ -73,18 +73,18 @@
                 <div>
                     <span class="vs-panel-head__eyebrow">Filtros operacionais</span>
                     <h4 class="vs-panel-head__title mb-1">Refinar listagem</h4>
-                    <p class="vs-panel-head__sub mb-0">Filtre por período, placa, tipo e status para localizar o sinistro certo com mais agilidade.</p>
+                    <p class="vs-panel-head__sub mb-0">Filtre por perÃ­odo, placa, tipo e status para localizar o sinistro certo com mais agilidade.</p>
                 </div>
                 <span class="vs-badge-soft is-warning">
                     <i class="fas fa-filter"></i>
-                    Filtro rápido
+                    Filtro rÃ¡pido
                 </span>
             </div>
             <div class="doc-filters">
                 <form method="GET" action="{{ route('sinistro.index') }}" class="doc-filters__form" id="formFiltrosSinistro">
                     <div class="row">
                         <div class="col-lg-3 col-md-6 mb-2">
-                            <label class="doc-filter-label">Data início</label>
+                            <label class="doc-filter-label">Data inÃ­cio</label>
                             <input type="date" name="data_inicio" class="form-control doc-filter-control" value="{{ $filtros['data_inicio'] ?? '' }}">
                         </div>
                         <div class="col-lg-3 col-md-6 mb-2">
@@ -131,7 +131,7 @@
                 <div>
                     <span class="vs-panel-head__eyebrow">Lista operacional</span>
                     <h4 class="vs-panel-head__title mb-1">Sinistros cadastrados</h4>
-                    <p class="vs-panel-head__sub mb-0">Clique em uma linha para ver detalhes, editar ou avançar no fluxo de tratamento do caso.</p>
+                    <p class="vs-panel-head__sub mb-0">Clique em uma linha para ver detalhes, editar ou avanÃ§ar no fluxo de tratamento do caso.</p>
                 </div>
                 <span class="vs-badge-soft is-warning">
                     <i class="fas fa-list"></i>
@@ -145,12 +145,12 @@
                         <thead>
                             <tr>
                                 <th>Sinistro</th>
-                                <th>Veículo / Cliente</th>
+                                <th>VeÃ­culo / Cliente</th>
                                 <th>Ocorrido</th>
                                 <th>Local / Seguradora</th>
-                                <th>Prejuízo</th>
+                                <th>PrejuÃ­zo</th>
                                 <th>Status</th>
-                                <th class="text-center">Ações</th>
+                                <th class="text-center">AÃ§Ãµes</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -168,7 +168,7 @@
                                 @endphp
                                 <tr onclick="window.location='{{ route('sinistro.show', $sinistro->id) }}';" style="cursor:pointer;">
                                     <td>
-                                        <div class="font-weight-bold">#{{ $sinistro->id }} · {{ $sinistro->placa_momento ?? '-' }}</div>
+                                        <div class="font-weight-bold">#{{ $sinistro->id }} Â· {{ $sinistro->placa_momento ?? '-' }}</div>
                                         <small class="text-muted">{{ $sinistro->label_tipo }}</small>
                                         <br>
                                         <small class="text-muted">{{ $codigoReserva ? 'Reserva #' . $codigoReserva : 'Sem reserva' }}</small>
@@ -225,90 +225,5 @@
 @stop
 
 @section('css')
-<style>
-    .sinistro-show-page { padding-bottom: 8px; }
-    .config-card {
-        border-radius: 18px;
-        overflow: hidden;
-        background: #fff;
-    }
-    .vs-panel-head {
-        background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 50%, #f8fbff 100%);
-    }
-    .vs-panel-head {
-        padding: 1.25rem 1.4rem;
-        border-bottom: 1px solid rgba(148, 163, 184, .18);
-    }
-    .vehicle-table-wrap {
-        max-height: none;
-        overflow: auto;
-    }
-    .vehicle-list-table { min-width: 1020px; margin-bottom: 0; }
-    .vehicle-list-table thead th {
-        white-space: nowrap;
-        background: #f8fafc;
-        font-weight: 800;
-        color: #334155;
-        border-bottom: 1px solid #e2e8f0;
-    }
-    .vehicle-list-table tbody td { vertical-align: middle; }
-    .vehicle-list-table tbody tr:hover { background: #f8fbff; }
-    .doc-filters { padding: 1rem; background: #fff; }
-    .doc-filters__form .form-control,
-    .doc-filters__form select {
-        background: #fff;
-    }
-    .doc-filter-label {
-        display: block;
-        font-size: .75rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: .06em;
-        color: #475569;
-        margin-bottom: .35rem;
-    }
-    .doc-filter-control {
-        border-radius: 12px;
-        border-color: #dbe4ef;
-        min-height: 42px;
-    }
-    .doc-filter-control:focus {
-        border-color: #4b80ff;
-        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .15);
-    }
-    .kpi-card {
-        border-radius: 18px;
-        padding: 1rem 1.1rem;
-        box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
-    }
-    .kpi-label {
-        text-transform: uppercase;
-        letter-spacing: .08em;
-        font-weight: 800;
-        font-size: .72rem;
-    }
-    .kpi-value { font-size: 1.5rem; line-height: 1.1; }
-    .kpi-subtitle { color: #64748b; font-size: .78rem; }
-    .status-badge {
-        display: inline-flex;
-        align-items: center;
-        padding: 4px 10px;
-        border-radius: 999px;
-        font-size: .73rem;
-        font-weight: 700;
-        letter-spacing: .02em;
-    }
-    .status-badge--green { background: #dcfce7; color: #166534; }
-    .status-badge--amber { background: #fef3c7; color: #92400e; }
-    .status-badge--red { background: #fee2e2; color: #991b1b; }
-    .status-badge--gray { background: #f1f5f9; color: #475569; }
-    .status-badge--blue { background: #dbeafe; color: #1d4ed8; }
-    @media (max-width: 991.98px) {
-        .vs-panel-head { padding: 1rem; }
-        .vs-panel-head, .doc-filters { padding-left: 14px; padding-right: 14px; }
-        .vehicle-list-table thead th,
-        .vehicle-list-table tbody td { font-size: .86rem; }
-        .doc-filters { padding-top: .9rem; padding-bottom: .9rem; }
-    }
-</style>
+@include('partials.visual.documentacao-pattern')
 @endsection
