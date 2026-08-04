@@ -46,4 +46,14 @@ class PendenciaManutencaoPreventiva extends Model
     {
         return $this->belongsTo(ItemManutencaoPreventiva::class, 'item_id');
     }
+
+    public function usuarioInclusao()
+    {
+        return $this->belongsTo(User::class, 'usuinc')->withoutGlobalScopes();
+    }
+
+    public function usuarioAtualizacao()
+    {
+        return $this->belongsTo(User::class, 'usuatu')->withoutGlobalScopes();
+    }
 }

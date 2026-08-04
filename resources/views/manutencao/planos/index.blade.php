@@ -39,6 +39,8 @@
                         <th>Nome</th>
                         <th>Grupo de Frota</th>
                         <th>Itens</th>
+                        <th>Criado por</th>
+                        <th>Atualizado por</th>
                         <th style="width: 180px;">Ações</th>
                     </tr>
                 </thead>
@@ -56,6 +58,8 @@
                                     <i class="fas fa-list mr-1"></i>{{ $plano->itens->count() }} item(ns)
                                 </button>
                             </td>
+                            <td>{{ $plano->usuarioInclusao?->nome ?? '-' }}</td>
+                            <td>{{ $plano->usuarioAtualizacao?->nome ?? '-' }}</td>
                             <td>
                                 <div class="d-flex flex-wrap" style="gap:.35rem;">
                                     <a href="{{ route('manutencao.planos.edit', $plano->id) }}" class="btn btn-xs btn-warning">
@@ -66,7 +70,7 @@
                             </td>
                         </tr>
                         <tr class="collapse bg-light" id="{{ $collapseId }}">
-                            <td colspan="5">
+                            <td colspan="7">
                                 <div class="p-2">
                                     @if($plano->itens->isNotEmpty())
                                         <div class="table-responsive">
@@ -97,7 +101,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center py-4">Nenhum plano cadastrado.</td>
+                            <td colspan="7" class="text-center py-4">Nenhum plano cadastrado.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -133,7 +137,7 @@
         margin-bottom: .25rem;
     }
     .manutencao-table-wrap .table {
-        min-width: 860px;
+        min-width: 1040px;
     }
 </style>
 @stop

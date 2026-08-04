@@ -21,7 +21,7 @@ class ManutencaoPreventivaController extends Controller
         $empresaId = $this->getEmpresaId();
 
         $pendenciasQuery = PendenciaManutencaoPreventiva::query()
-            ->with(['veiculo', 'item'])
+            ->with(['veiculo', 'item', 'usuarioInclusao', 'usuarioAtualizacao'])
             ->where('empresa_id', $empresaId);
 
         if ($request->filled('veiculo_id')) {
@@ -43,7 +43,7 @@ class ManutencaoPreventivaController extends Controller
             ->withQueryString();
 
         $execucoesQuery = ExecucaoManutencaoPreventiva::query()
-            ->with(['veiculo', 'item', 'ordemServico'])
+            ->with(['veiculo', 'item', 'ordemServico', 'usuarioInclusao', 'usuarioAtualizacao'])
             ->where('empresa_id', $empresaId);
 
         if ($request->filled('veiculo_id')) {

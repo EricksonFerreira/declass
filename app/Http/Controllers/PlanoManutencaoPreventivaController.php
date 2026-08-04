@@ -24,7 +24,7 @@ class PlanoManutencaoPreventivaController extends Controller
         $itensFiltered = session("$this->nomeFiltro.filtro", []);
         $perPage = session()->get("$this->nomeFiltro.perPage", 10);
 
-        $query = PlanoManutencaoPreventiva::query()->with(['grupoFrota', 'veiculo', 'itens.item']);
+        $query = PlanoManutencaoPreventiva::query()->with(['grupoFrota', 'veiculo', 'itens.item', 'usuarioInclusao', 'usuarioAtualizacao']);
         if (!empty($itensFiltered)) {
             foreach ($itensFiltered as $filter) {
                 if ($filter['typeWhere'] === 'like') {

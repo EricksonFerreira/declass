@@ -51,4 +51,14 @@ class ExecucaoManutencaoPreventiva extends Model
     {
         return $this->belongsTo(OrdemServico::class, 'ordem_servico_id');
     }
+
+    public function usuarioInclusao()
+    {
+        return $this->belongsTo(User::class, 'usuinc')->withoutGlobalScopes();
+    }
+
+    public function usuarioAtualizacao()
+    {
+        return $this->belongsTo(User::class, 'usuatu')->withoutGlobalScopes();
+    }
 }
