@@ -88,7 +88,8 @@ unset($__defined_vars); ?>
                     <div class="rs-contrato-actions">
                         <?php if($contrato->arquivo_pdf_path): ?>
                             <a href="<?php echo e(route('empresa.contratos.download', ['empresa' => $empresa->id, 'contrato' => $contrato->id])); ?>" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-download mr-1"></i> Baixar contrato assinado
+                                <i class="fas fa-download mr-1"></i> <?php echo e($contratoAssinado ? 'Baixar contrato assinado' : 'Baixar contrato'); ?>
+
                             </a>
                         <?php endif; ?>
                         <?php if(! $contratoAssinado): ?>
