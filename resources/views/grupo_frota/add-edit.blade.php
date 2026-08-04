@@ -167,19 +167,32 @@
                                             required data-field-label="Nome" data-field-step="1" />
                                     </div>
                                 </div>
-                                <div class="col-lg-2">
-                                    <div class="form-group form-group-grupo-frota">
-                                        <x-form-input type="text" class="form-control form-control-sm" id="codigo"
-                                            name="codigo" label="Codigo"
-                                            value="{{ old('codigo', $grupoFrota->codigo ?? '') }}" required
-                                            data-field-label="Codigo" data-field-step="1" />
+                                @unless ($isEdit)
+                                    <div class="col-lg-2">
+                                        <div class="form-group form-group-grupo-frota">
+                                            <x-form-input type="text" class="form-control form-control-sm" id="codigo"
+                                                name="codigo" label="Codigo"
+                                                value="{{ old('codigo', $grupoFrota->codigo ?? '') }}" required
+                                                data-field-label="Codigo" data-field-step="1" />
+                                        </div>
                                     </div>
-                                </div>
+                                @endunless
                                 <div class="col-lg-2">
                                     <div class="form-group form-group-grupo-frota">
+                                        <label for="codigo_sipp" class="d-flex align-items-center" style="gap:6px;">
+                                            <span>Codigo SIPP</span>
+                                            <button type="button"
+                                                class="btn btn-xs btn-light border rounded-circle d-inline-flex align-items-center justify-content-center"
+                                                style="width:20px;height:20px;padding:0;line-height:1;"
+                                                data-toggle="tooltip"
+                                                data-placement="top"
+                                                title="Código usado para identificar o grupo no padrão SIPP. Ele ajuda em integrações e padronização, mas não é obrigatório.">
+                                                <i class="fas fa-info" style="font-size:10px;"></i>
+                                            </button>
+                                        </label>
                                         <x-form-input type="text" class="form-control form-control-sm" id="codigo_sipp"
-                                            name="codigo_sipp" label="Codigo SIPP"
-                                            value="{{ old('codigo_sipp', $grupoFrota->codigo_sipp ?? '') }}" required
+                                            name="codigo_sipp"
+                                            value="{{ old('codigo_sipp', $grupoFrota->codigo_sipp ?? '') }}"
                                             data-field-label="Codigo SIPP" data-field-step="1" />
                                     </div>
                                 </div>
@@ -1445,6 +1458,11 @@
             if (data.feito && !forceTour) { localStorage.setItem(CACHE_KEY, '1'); return; }
             setTimeout(() => buildTour().drive(), 350);
         });
-})();
+    })();
+</script>
+<script>
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
 </script>
 @stop

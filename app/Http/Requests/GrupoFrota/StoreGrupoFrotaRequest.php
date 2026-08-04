@@ -25,7 +25,7 @@ class StoreGrupoFrotaRequest extends FormRequest
         return [
             'codigo' => 'required|string|max:50',
             'nome' => 'required|string|max:255',
-            'codigo_sipp' => 'required|string|max:50',
+            'codigo_sipp' => 'nullable|string|max:50',
             'tipo_frota_id' => 'required|integer|exists:tipo_frota,id',
             'valor_diario' => 'required|string',
             'ativo' => 'required|string|max:1',
@@ -43,7 +43,6 @@ class StoreGrupoFrotaRequest extends FormRequest
             'codigo.max' => 'O campo código deve ter no máximo 50 caracteres',
             'nome.required' => 'O campo nome é obrigatório',
             'nome.max' => 'O campo nome deve ter no máximo 255 caracteres',
-            'codigo_sipp.required' => 'O campo código SIPP é obrigatório',
             'codigo_sipp.string' => 'O campo código SIPP deve ser uma string.',
             'codigo_sipp.max' => 'O campo código SIPP deve ter no máximo 50 caracteres',
             'tipo_frota_id.required' => 'O campo tipo de frota é obrigatório',

@@ -125,6 +125,12 @@
                             label="Telefone" value="{{ $empresa->telefone ?? '' }}" />
                     </div>
                 </div>
+                <div class="col-lg-6" data-empresa-step="2">
+                    <div class="form-group form-group-empresa">
+                        <x-form-input type="text" class="form-control form-control-sm" id="representante" name="representante"
+                            label="Representante" value="{{ old('representante', $empresa->representante ?? '') }}" />
+                    </div>
+                </div>
 
                 <div class="col-12 mt-2" data-empresa-step="3">
                     <div class="empresa-section-title" id="sec-dominio">Domínio e Reserva</div>

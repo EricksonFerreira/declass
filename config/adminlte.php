@@ -441,6 +441,11 @@ return [
                     'icon' => 'fas fa-layer-group',
                 ],
                 [
+                    'text' => 'Tipos de Opcionais',
+                    'route' => 'tipo_opcional.index',
+                    'icon' => 'fas fa-puzzle-piece',
+                ],
+                [
                     'text' => 'Tipos de Frota',
                     'route' => 'tipo_frota.index',
                     'icon' => 'fas fa-list',
