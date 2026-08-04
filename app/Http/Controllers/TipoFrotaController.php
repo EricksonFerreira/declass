@@ -62,11 +62,12 @@ class TipoFrotaController extends BaseController implements FiltroInterface, Res
             'S' => 'Ativo',
             'N' => 'Inativo'
         ];
+        $tipo_frota = (object) ['ativo' => 'S'];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Tipos de Frotas','tipo_frota.index','Criar');
         $caracteristicas = $this->caracteristicaFrotaService->getAll();
 
         [$metodo,$rota] = $this->getFormMethodAndRoute();
-        return view('tipo_frota.add-edit', compact('caracteristicas','breadcrumb','status','metodo','rota'))->with('titulo', $this->titulo);
+        return view('tipo_frota.add-edit', compact('caracteristicas','breadcrumb','status','metodo','rota','tipo_frota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreTipoFrotaRequest $request)

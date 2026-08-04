@@ -498,12 +498,36 @@ class EmpresaController extends BaseController implements FiltroInterface, Resou
             'pdf_assinado' => ['required', 'file', 'mimes:pdf', 'max:10240'],
         ]);
 
-        $arquivo = $data['pdf_assinado'];
+        $arquivo = $request->file('pdf_assinado');
+        if (! $arquivo || ! $arquivo->isValid()) {
+            return back()->with('error', 'Nao foi possivel ler o arquivo enviado.');
+        }
+
         $diretorio = 'contratos/empresa/' . $empresa->id;
-        $nomeArquivo = $contrato->numero . '-assinado.pdf';
+        $numeroBase = trim((string) ($contrato->numero ?: ('EMP-' . $empresa->id . '-' . $contrato->id)));
+        $numeroBase = preg_replace('/[^A-Za-z0-9\-_]/', '-', $numeroBase) ?: ('EMP-' . $empresa->id . '-' . $contrato->id);
+        $nomeArquivo = $numeroBase . '-assinado.pdf';
         $caminho = $diretorio . '/' . $nomeArquivo;
 
-        Storage::disk('public')->putFileAs($diretorio, $arquivo, $nomeArquivo);
+        if ($diretorio === '' || $nomeArquivo === '') {
+            return back()->with('error', 'Nao foi possivel montar o caminho do arquivo.');
+        }
+
+        $pathName = $arquivo->getPathname();
+        if ($pathName === '' || ! is_string($pathName)) {
+            return back()->with('error', 'Nao foi possivel localizar o arquivo enviado.');
+        }
+
+        $stream = @fopen($pathName, 'rb');
+        if (! $stream) {
+            return back()->with('error', 'Nao foi possivel salvar o PDF assinado.');
+        }
+
+        Storage::disk('public')->put($caminho, $stream);
+
+        if (is_resource($stream)) {
+            fclose($stream);
+        }
 
         $contrato->arquivo_pdf_path = $caminho;
         if (Schema::hasColumn('empresa_contratos', 'status')) {
