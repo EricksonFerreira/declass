@@ -12,21 +12,16 @@
     @endif
 
     <div class="container-fluid px-0 vehicle-show-page manutencao-preventiva-shell">
-        <div class="module-card mb-3">
-            <div class="module-card-header vehicle-hero-compact">
-                <div class="module-header-left">
-                    <div class="module-header-icon">
-                        <i class="fas fa-clipboard-list"></i>
-                    </div>
-                    <div>
-                        <div class="module-header-eyebrow">Veículos · Manutenção preventiva</div>
-                        <h1 class="module-header-title">Planos de manutenção</h1>
-                        <p class="module-header-sub">Configure, revise e compare planos com vínculo por veículo ou por grupo de frota.</p>
-                    </div>
+        <div class="vs-panel shadow-sm border-0 mb-3">
+            <div class="vs-panel-head">
+                <div>
+                    <span class="vs-panel-head__eyebrow">Veículos · Manutenção preventiva</span>
+                    <h4 class="vs-panel-head__title mb-1">Planos de manutenção</h4>
+                    <p class="vs-panel-head__sub mb-0">Configure, revise e compare planos com vínculo por veículo ou por grupo de frota.</p>
                 </div>
-                <div class="module-header-right">
+                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
                     <a href="{{ route('manutencao.planos.create') }}" class="btn-xp btn-xp--sm">
-                        <i class="fas fa-plus"></i> Novo plano
+                        <i class="fas fa-plus mr-1"></i> Novo plano
                     </a>
                 </div>
             </div>
@@ -89,8 +84,8 @@
                                 <th>Nome</th>
                                 <th>Grupo de Frota</th>
                                 <th>Itens</th>
-                        <th class="d-none d-lg-table-cell">Criado por</th>
-                        <th class="d-none d-lg-table-cell">Atualizado por</th>
+                                <th class="d-none d-lg-table-cell">Criado por</th>
+                                <th class="d-none d-lg-table-cell">Atualizado por</th>
                                 <th class="text-center">Ações</th>
                             </tr>
                         </thead>
@@ -168,43 +163,39 @@
     </div>
 @stop
 
-@section('js')
-    <script></script>
-@stop
-
 @section('css')
 <style>
     .manutencao-preventiva-shell { padding-bottom: 8px; }
-    .module-card,
     .config-card {
-        border-radius: 18px;
+        border-radius: 16px;
         overflow: hidden;
         background: #fff;
     }
-    .module-card {
-        box-shadow: 0 16px 44px rgba(15, 23, 42, .08);
-    }
-    .module-card-header,
     .vs-panel-head {
-        background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 50%, #f8fbff 100%);
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        padding: 14px 16px;
+        border-bottom: 1px solid #e7edf6;
     }
     .vehicle-table-wrap {
         max-height: none;
         overflow: auto;
     }
     .vehicle-list-table {
-        min-width: 900px;
+        min-width: 940px;
         margin-bottom: 0;
     }
     .vehicle-list-table thead th {
         white-space: nowrap;
-        background: #f8fafc;
+        background: #fff;
         font-weight: 800;
-        color: #334155;
+        color: #475569;
         border-bottom: 1px solid #e2e8f0;
+        text-transform: uppercase;
+        font-size: .72rem;
+        letter-spacing: .06em;
     }
     .vehicle-list-table tbody td { vertical-align: middle; }
-    .vehicle-list-table tbody tr:hover { background: #f8fbff; }
+    .vehicle-list-table tbody tr:hover { background: #f8fafc; }
     .kpi-card {
         border-radius: 18px;
         padding: 1rem 1.1rem;
@@ -218,74 +209,11 @@
     }
     .kpi-value { font-size: 1.5rem; line-height: 1.1; }
     .kpi-subtitle { color: #64748b; font-size: .78rem; }
-    .manutencao-card {
-        border-radius: 18px;
-        overflow: hidden;
-        background: #fff;
-        box-shadow: 0 16px 44px rgba(15, 23, 42, .08);
-    }
-    .manutencao-card__header {
-        background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 50%, #f8fbff 100%);
-    }
-    .manutencao-card__badge,
-    .manutencao-card__tip {
-        border-radius: 14px;
-    }
-    .manutencao-card .form-control,
-    .manutencao-card .form-select {
-        border-radius: 12px;
-        border-color: #dbe4ef;
-        min-height: 42px;
-    }
-    .manutencao-card .form-control:focus,
-    .manutencao-card .form-select:focus {
-        border-color: #4b80ff;
-        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .15);
-    }
-    .manutencao-section {
-        border-radius: 18px;
-        border: 1px solid #e5eaf2;
-        box-shadow: 0 10px 26px rgba(15, 23, 42, .04);
-    }
-    .manutencao-table-wrap {
-        border-radius: 12px;
-        overflow: hidden;
-    }
-    .manutencao-table-wrap .table {
-        min-width: 640px;
-    }
     @media (max-width: 991.98px) {
-        .module-card-header {
-            padding: 1rem;
-        }
-        .module-header-left {
-            align-items: flex-start;
-        }
-        .module-header-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            font-size: 1.15rem;
-        }
-        .module-header-title {
-            font-size: 1.15rem;
-        }
-        .module-header-sub {
-            font-size: .8rem;
-        }
-        .vs-panel-head {
-            padding-left: 14px;
-            padding-right: 14px;
-        }
+        .vs-panel-head,
+        .doc-filters { padding-left: 14px; padding-right: 14px; }
         .vehicle-list-table thead th,
-        .vehicle-list-table tbody td {
-            font-size: .86rem;
-        }
-        .manutencao-card__header,
-        .manutencao-card .card-body {
-            padding-left: 14px;
-            padding-right: 14px;
-        }
+        .vehicle-list-table tbody td { font-size: .86rem; }
     }
 </style>
 @endsection

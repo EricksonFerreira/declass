@@ -48,7 +48,9 @@
     <?php endif; ?>
 
     <div class="container-fluid px-0 vehicle-show-page manutencao-preventiva-shell">
-        <div class="module-card mb-3">
+        <div class="module-hero-shell mb-3">
+            <div class="module-hero-backdrop"></div>
+            <div class="module-card mb-0">
             <div class="module-card-header vehicle-hero-compact">
                 <div class="module-header-left">
                     <div class="module-header-icon">
@@ -65,6 +67,7 @@
                         <i class="fas fa-plus"></i> Novo plano
                     </a>
                 </div>
+            </div>
             </div>
         </div>
 
@@ -250,6 +253,19 @@
 <?php $__env->startSection('css'); ?>
 <style>
     .manutencao-preventiva-shell { padding-bottom: 8px; }
+    .module-hero-shell {
+        position: relative;
+        overflow: hidden;
+        border-radius: 18px;
+    }
+    .module-hero-backdrop {
+        position: absolute;
+        inset: 0;
+        background:
+            radial-gradient(circle at top right, rgba(75, 128, 255, .14), transparent 38%),
+            radial-gradient(circle at left center, rgba(14, 165, 233, .10), transparent 28%);
+        pointer-events: none;
+    }
     .module-card,
     .config-card {
         border-radius: 18px;
@@ -263,12 +279,16 @@
     .vs-panel-head {
         background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 50%, #f8fbff 100%);
     }
+    .module-card-header {
+        padding: 1.25rem 1.4rem;
+        border-bottom: 1px solid rgba(148, 163, 184, .18);
+    }
     .vehicle-table-wrap {
         max-height: none;
         overflow: auto;
     }
     .vehicle-list-table {
-        min-width: 900px;
+        min-width: 940px;
         margin-bottom: 0;
     }
     .vehicle-list-table thead th {
@@ -329,10 +349,12 @@
     .manutencao-table-wrap .table {
         min-width: 640px;
     }
+    .doc-filters__form .form-control,
+    .doc-filters__form select {
+        background: #fff;
+    }
     @media (max-width: 991.98px) {
-        .module-card-header {
-            padding: 1rem;
-        }
+        .module-card-header { padding: 1rem; }
         .module-header-left {
             align-items: flex-start;
         }
@@ -348,18 +370,12 @@
         .module-header-sub {
             font-size: .8rem;
         }
-        .vs-panel-head {
-            padding-left: 14px;
-            padding-right: 14px;
-        }
+        .vs-panel-head,
+        .doc-filters { padding-left: 14px; padding-right: 14px; }
+        .doc-filters { padding-top: .9rem; padding-bottom: .9rem; }
         .vehicle-list-table thead th,
         .vehicle-list-table tbody td {
             font-size: .86rem;
-        }
-        .manutencao-card__header,
-        .manutencao-card .card-body {
-            padding-left: 14px;
-            padding-right: 14px;
         }
     }
 </style>

@@ -8,21 +8,16 @@
 
 @section('content')
     <div class="container-fluid px-0 vehicle-show-page manutencao-preventiva-shell">
-        <div class="module-card mb-3">
-            <div class="module-card-header vehicle-hero-compact">
-                <div class="module-header-left">
-                    <div class="module-header-icon">
-                        <i class="fas fa-tools"></i>
-                    </div>
-                    <div>
-                        <div class="module-header-eyebrow">Veículos · Manutenção preventiva</div>
-                        <h1 class="module-header-title">Manutenções preventivas</h1>
-                        <p class="module-header-sub">Monitore pendências, priorize atrasos e acompanhe o histórico recente de execução.</p>
-                    </div>
+        <div class="vs-panel shadow-sm border-0 mb-3">
+            <div class="vs-panel-head">
+                <div>
+                    <span class="vs-panel-head__eyebrow">Veículos · Manutenção preventiva</span>
+                    <h4 class="vs-panel-head__title mb-1">Manutenções preventivas</h4>
+                    <p class="vs-panel-head__sub mb-0">Monitore pendências, priorize atrasos e acompanhe o histórico recente de execução.</p>
                 </div>
-                <div class="module-header-right">
-                    <a href="{{ route('manutencao.planos.index') }}" class="btn-xp btn-xp--sm">
-                        <i class="fas fa-clipboard-list"></i> Planos
+                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
+                    <a href="{{ route('manutencao.planos.index') }}" class="btn-xp btn-xp--sm btn-xp--outline">
+                        <i class="fas fa-clipboard-list mr-1"></i> Planos
                     </a>
                 </div>
             </div>
@@ -244,18 +239,15 @@
 @section('css')
 <style>
     .manutencao-preventiva-shell { padding-bottom: 8px; }
-    .module-card,
     .config-card {
-        border-radius: 18px;
+        border-radius: 16px;
         overflow: hidden;
         background: #fff;
     }
-    .module-card {
-        box-shadow: 0 16px 44px rgba(15, 23, 42, .08);
-    }
-    .module-card-header,
     .vs-panel-head {
-        background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 50%, #f8fbff 100%);
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        padding: 14px 16px;
+        border-bottom: 1px solid #e7edf6;
     }
     .vehicle-table-wrap {
         max-height: none;
@@ -267,15 +259,18 @@
     }
     .vehicle-list-table thead th {
         white-space: nowrap;
-        background: #f8fafc;
+        background: #fff;
         font-weight: 800;
-        color: #334155;
+        color: #475569;
         border-bottom: 1px solid #e2e8f0;
+        text-transform: uppercase;
+        font-size: .72rem;
+        letter-spacing: .06em;
     }
     .vehicle-list-table tbody td { vertical-align: middle; }
-    .vehicle-list-table tbody tr:hover { background: #f8fbff; }
+    .vehicle-list-table tbody tr:hover { background: #f8fafc; }
     .doc-filters {
-        padding: 1rem;
+        padding: 12px 16px 16px;
         background: #fff;
     }
     .doc-filter-label {
@@ -309,39 +304,25 @@
     }
     .kpi-value { font-size: 1.5rem; line-height: 1.1; }
     .kpi-subtitle { color: #64748b; font-size: .78rem; }
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 4px 10px;
+        border-radius: 999px;
+        font-size: .73rem;
+        font-weight: 700;
+        letter-spacing: .02em;
+    }
+    .status-badge--green { background: #dcfce7; color: #166534; }
     .status-badge--amber { background: #fef3c7; color: #92400e; }
     .status-badge--red { background: #fee2e2; color: #991b1b; }
-    .status-badge--green { background: #dcfce7; color: #166534; }
     .status-badge--gray { background: #f1f5f9; color: #475569; }
     @media (max-width: 991.98px) {
-        .module-card-header {
-            padding: 1rem;
-        }
-        .module-header-left {
-            align-items: flex-start;
-        }
-        .module-header-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            font-size: 1.15rem;
-        }
-        .module-header-title {
-            font-size: 1.15rem;
-        }
-        .module-header-sub {
-            font-size: .8rem;
-        }
         .vs-panel-head,
-        .doc-filters {
-            padding-left: 14px;
-            padding-right: 14px;
-        }
+        .doc-filters { padding-left: 14px; padding-right: 14px; }
         .doc-filters { padding-top: .9rem; padding-bottom: .9rem; }
         .vehicle-list-table thead th,
-        .vehicle-list-table tbody td {
-            font-size: .86rem;
-        }
+        .vehicle-list-table tbody td { font-size: .86rem; }
     }
 </style>
 @endsection

@@ -360,11 +360,7 @@ return [
                             'route' => 'veiculo.index',
                             'icon' => 'fas fa-list',
                         ],
-                        [
-                            'text' => 'Manut. Preventiva',
-                            'route' => 'manutencao.preventivas.index',
-                            'icon' => 'fas fa-tools',
-                        ],
+                       
                         [
                             'text' => 'Documentação',
                             'route' => 'veiculo.documentacao',
@@ -375,6 +371,16 @@ return [
                             'route' => 'veiculo.disponibilidade',
                             'icon' => 'fas fa-calendar-check',
                         ],
+                         [
+                            'text' => 'Manut. Preventiva',
+                            'route' => 'manutencao.preventivas.index',
+                            'icon' => 'fas fa-tools',
+                        ],
+                         [
+                        'text' => 'Planos de Manut. Preventiva',
+                        'route' => 'manutencao.planos.index',
+                        'icon' => 'fas fa-clipboard-list',
+                    ],
                     ],
                 ],
                 [
@@ -616,11 +622,7 @@ return [
                     'icon' => 'fas fa-file-contract',
                     'can' => 'termo_consentimento.index',
                     ],
-                    [
-                        'text' => 'Planos de Manut. Preventiva',
-                        'route' => 'manutencao.planos.index',
-                        'icon' => 'fas fa-clipboard-list',
-                    ],
+                   
 
             ],
         ],

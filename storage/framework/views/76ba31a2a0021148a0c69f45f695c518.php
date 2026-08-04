@@ -32,26 +32,21 @@
     ?>
 
     <div class="container-fluid px-0 vehicle-show-page multa-show-page">
-        <div class="module-card mb-3">
-            <div class="module-card-header vehicle-hero-compact">
-                <div class="module-header-left">
-                    <div class="module-header-icon">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                    </div>
-                    <div>
-                        <div class="module-header-eyebrow">Financeiro · Multas</div>
-                        <h1 class="module-header-title">Multas registradas</h1>
-                        <p class="module-header-sub">Acompanhe infrações, cobrança, vencimentos e status financeiro em uma leitura rápida.</p>
-                    </div>
+        <div class="vs-panel shadow-sm border-0 mb-3">
+            <div class="vs-panel-head">
+                <div>
+                    <span class="vs-panel-head__eyebrow">Financeiro · Multas</span>
+                    <h4 class="vs-panel-head__title mb-1">Multas registradas</h4>
+                    <p class="vs-panel-head__sub mb-0">Acompanhe infrações, cobrança, vencimentos e status financeiro em uma leitura rápida.</p>
                 </div>
-                <div class="module-header-right">
+                <div class="d-flex align-items-center flex-wrap" style="gap:.5rem;">
                     <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('multa.export')): ?>
-                        <a href="<?php echo e(route('multa.export', request()->query())); ?>" class="btn-xp btn-xp--outline-light btn-xp--sm">
-                            <i class="fas fa-file-csv"></i> CSV
+                        <a href="<?php echo e(route('multa.export', request()->query())); ?>" class="btn-xp btn-xp--sm btn-xp--outline">
+                            <i class="fas fa-file-csv mr-1"></i> CSV
                         </a>
                     <?php endif; ?>
                     <a href="<?php echo e(route('multa.create')); ?>" class="btn-xp btn-xp--sm">
-                        <i class="fas fa-plus"></i> Nova multa
+                        <i class="fas fa-plus mr-1"></i> Nova multa
                     </a>
                 </div>
             </div>
@@ -277,9 +272,68 @@
 <?php $__env->startSection('css'); ?>
 <style>
     .multa-show-page { padding-bottom: 8px; }
-    .vehicle-table-wrap { max-height: none; }
-    .vehicle-list-table thead th { white-space: nowrap; }
+    .config-card {
+        border-radius: 18px;
+        overflow: hidden;
+        background: #fff;
+    }
+    .vs-panel-head {
+        background: linear-gradient(135deg, #f8fafc 0%, #eef4ff 50%, #f8fbff 100%);
+    }
+    .vs-panel-head {
+        padding: 1.25rem 1.4rem;
+        border-bottom: 1px solid rgba(148, 163, 184, .18);
+    }
+    .vehicle-table-wrap {
+        max-height: none;
+        overflow: auto;
+    }
+    .vehicle-list-table { min-width: 1040px; margin-bottom: 0; }
+    .vehicle-list-table thead th {
+        white-space: nowrap;
+        background: #f8fafc;
+        font-weight: 800;
+        color: #334155;
+        border-bottom: 1px solid #e2e8f0;
+    }
     .vehicle-list-table tbody td { vertical-align: middle; }
+    .vehicle-list-table tbody tr:hover { background: #f8fbff; }
+    .doc-filters { padding: 1rem; background: #fff; }
+    .doc-filters__form .form-control,
+    .doc-filters__form select {
+        background: #fff;
+    }
+    .doc-filter-label {
+        display: block;
+        font-size: .75rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: #475569;
+        margin-bottom: .35rem;
+    }
+    .doc-filter-control {
+        border-radius: 12px;
+        border-color: #dbe4ef;
+        min-height: 42px;
+    }
+    .doc-filter-control:focus {
+        border-color: #4b80ff;
+        box-shadow: 0 0 0 .15rem rgba(75, 128, 255, .15);
+    }
+    .kpi-card {
+        border-radius: 18px;
+        padding: 1rem 1.1rem;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, .06);
+    }
+    .kpi-label {
+        text-transform: uppercase;
+        letter-spacing: .08em;
+        font-weight: 800;
+        font-size: .72rem;
+    }
+    .kpi-value { font-size: 1.5rem; line-height: 1.1; }
+    .kpi-subtitle { color: #64748b; font-size: .78rem; }
     .status-badge {
         display: inline-flex;
         align-items: center;
@@ -295,14 +349,9 @@
     .status-badge--gray { background: #f1f5f9; color: #475569; }
     .status-badge--blue { background: #dbeafe; color: #1d4ed8; }
     @media (max-width: 991.98px) {
-        .module-card-header { padding: 1rem; }
-        .module-header-left { align-items: flex-start; }
-        .module-header-icon {
-            width: 44px; height: 44px; border-radius: 12px; font-size: 1.15rem;
-        }
-        .module-header-title { font-size: 1.15rem; }
-        .module-header-sub { font-size: .8rem; }
+        .vs-panel-head { padding: 1rem; }
         .vs-panel-head, .doc-filters { padding-left: 14px; padding-right: 14px; }
+        .doc-filters { padding-top: .9rem; padding-bottom: .9rem; }
         .vehicle-list-table thead th,
         .vehicle-list-table tbody td { font-size: .86rem; }
     }
