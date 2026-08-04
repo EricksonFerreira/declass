@@ -16,7 +16,7 @@
     $logoUrl = $empresa->logo_url;
     $iniciais = collect(preg_split('/\s+/', trim($empresa->nome)))->filter()->take(2)->map(fn($p) => mb_strtoupper(mb_substr($p, 0, 1)))->implode('') ?: 'EM';
     $planosContrato = $planos ?? collect();
-    $representantePadrao = auth()->user()?->nome ?? $empresa->users()->orderBy('id')->value('nome') ?? $empresa->nome;
+    $representantePadrao = $empresa->representante ?? auth()->user()?->nome ?? $empresa->users()->orderBy('id')->value('nome') ?? $empresa->nome;
     $razaoSocialPadrao = $empresa->nome;
     $cnpjPadrao = $empresa->cnpj ?? '';
     $enderecoPadrao = trim((string) ($empresa->endereco ?? ''));
