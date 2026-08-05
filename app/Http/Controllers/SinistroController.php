@@ -302,14 +302,14 @@ class SinistroController extends BaseController
                             ->where('checkout_realizado_em', '>=', $dataHora);
                     })
                     ->orWhere(function ($q) use ($dataHora) {
-                        $q->whereNotNull('data_retirada_real')
+                        $q->whereNotNull('data_inicio')
                             ->whereNotNull('data_fim')
-                            ->where('data_retirada_real', '<=', $dataHora)
+                            ->where('data_inicio', '<=', $dataHora)
                             ->where('data_fim', '>=', $dataHora);
                     });
             })
             ->orderByDesc('checkin_realizado_em')
-            ->orderByDesc('data_retirada_real')
+            ->orderByDesc('data_inicio')
             ->first();
 
         if (! $reserva) {

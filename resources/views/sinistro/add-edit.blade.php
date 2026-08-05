@@ -759,6 +759,34 @@
     document.getElementById('sn_aprovado')?.addEventListener('input', snAtualizarCustos);
     document.addEventListener('DOMContentLoaded', snAtualizarCustos);
 
+    (function initSinistroBotaoSubmit() {
+        const form = document.getElementById('formSinistro');
+        const submitBtn = document.getElementById('btnSalvarSinistro');
+        if (!form || !submitBtn) {
+            return;
+        }
+
+        const textoOriginal = submitBtn.innerHTML;
+
+        function restaurarBotao() {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = textoOriginal;
+        }
+
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Salvando...';
+        });
+
+        window.addEventListener('pageshow', function (event) {
+            if (event.persisted) {
+                restaurarBotao();
+            }
+        });
+
+        window.addEventListener('load', restaurarBotao);
+    })();
+
     // Wizard
     (function initSnWizard() {
         const maxStep = 4;

@@ -94,14 +94,14 @@ class SinistroService extends AbstractBaseService
                             ->where('checkout_realizado_em', '>=', $dt);
                     })
                     ->orWhere(function ($q) use ($dt) {
-                        $q->whereNotNull('data_retirada_real')
+                        $q->whereNotNull('data_inicio')
                             ->whereNotNull('data_fim')
-                            ->where('data_retirada_real', '<=', $dt)
+                            ->where('data_inicio', '<=', $dt)
                             ->where('data_fim', '>=', $dt);
                     });
             })
             ->orderByDesc('checkin_realizado_em')
-            ->orderByDesc('data_retirada_real')
+            ->orderByDesc('data_inicio')
             ->first();
 
         if (! $reserva) {
