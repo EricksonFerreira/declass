@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\Financeiro\RegistrarLancamentoMultaAction;
+use App\Actions\Financeiro\RegistrarLancamentoSinistroAction;
 use App\DTO\BreadCrumbItem;
 use App\Http\Requests\Multa\StoreMultaRequest;
 use App\Http\Requests\Multa\UpdateMultaRequest;
@@ -40,6 +41,7 @@ class MultaController extends BaseController
     public function __construct(
         private readonly MultaService      $multaService,
         private readonly RegistrarLancamentoMultaAction $registrarLancamentoMultaAction,
+        private readonly RegistrarLancamentoSinistroAction $registrarLancamentoSinistroAction,
         private readonly BreadcrumbService $breadcrumbService,
         private readonly ReservaService    $reservaService,
         private readonly UsuarioService    $usuarioService,
@@ -531,24 +533,16 @@ class MultaController extends BaseController
         ]);
 
         if ($destinoCliente) {
-            $this->registrarLancamentoMultaAction->lancamentoReceitaCliente($multa, $multa->pago_em);
+            $lancamento = $this->registrarLancamentoMultaAction->lancamentoReceitaCliente($multa, $multa->pago_em);
         } else {
-            $this->registrarLancamentoMultaAction->lancamentoDespesaEmpresa($multa);
-            $empresaId = (int) ($multa->empresa_id ?? $multa->reserva?->empresa_id ?? 0);
-            if ($empresaId > 0 && SchemaCache::hasTable('lancamentos_financeiros')) {
-                $lancamento = \App\Models\LancamentoFinanceiro::query()
-                    ->where('empresa_id', $empresaId)
-                    ->where('tipo', 'despesa')
-                    ->where('descricao', 'like', '%#'.$multa->id)
-                    ->latest('id')
-                    ->first();
-                if ($lancamento && $lancamento->status !== 'pago') {
-                    $lancamento->update([
-                        'status' => 'pago',
-                        'data_pagamento' => now()->toDateString(),
-                    ]);
-                }
-            }
+            $lancamento = $this->registrarLancamentoMultaAction->lancamentoDespesaEmpresa($multa);
+        }
+
+        if ($lancamento && $lancamento->status !== 'pago') {
+            $lancamento->update([
+                'status' => 'pago',
+                'data_pagamento' => now()->toDateString(),
+            ]);
         }
 
         if (!empty($multa->reserva_id)) {

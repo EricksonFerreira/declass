@@ -20,9 +20,9 @@ class RegistrarLancamentoMultaAction
             $multa,
             $empresaId,
             'despesa',
-            'Multa da empresa',
+            'Multa paga pela empresa',
             'Despesa gerada automaticamente para multas assumidas pela empresa.',
-            'Lançamento de multa da empresa',
+            'Lancamento de multa paga pela empresa',
             'pendente'
         );
     }
@@ -54,7 +54,7 @@ class RegistrarLancamentoMultaAction
             return null;
         }
 
-        $categoria = $this->categoria($empresaId, 'receita', 'Multa do cliente', 'Receitas geradas ao cobrar multas atribuídas ao cliente.');
+        $categoria = $this->categoria($empresaId, 'receita', 'Multa paga pelo cliente', 'Receitas geradas ao cobrar multas atribuídas ao cliente.');
         $pagoEm ??= now();
         $valor = round((float) ($multa->valor_final ?? $multa->valor_original ?? 0), 2);
         if ($valor <= 0) {
@@ -75,7 +75,7 @@ class RegistrarLancamentoMultaAction
         return LancamentoFinanceiro::create([
             'empresa_id' => $empresaId,
             'categoria_financeira_id' => $categoria->id,
-            'descricao' => 'Pagamento da multa #'.$multa->id,
+            'descricao' => 'Pagamento da multa pelo cliente #'.$multa->id,
             'valor' => $valor,
             'tipo' => 'receita',
             'status' => 'pago',

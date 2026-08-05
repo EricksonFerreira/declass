@@ -4,10 +4,12 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Sinistro\StoreSinistroRequest;
 use App\Http\Requests\Sinistro\UpdateSinistroRequest;
+use App\Actions\Financeiro\RegistrarLancamentoSinistroAction;
 use App\Models\GrupoFrota;
 use App\Models\Marca;
 use App\Models\Reserva;
 use App\Models\Sinistro;
+use App\Models\SinistroHistorico;
 use App\Models\StatusVeiculo;
 use App\Models\TipoFrota;
 use App\Models\Transacao;
@@ -39,6 +41,7 @@ class SinistroController extends BaseController
         private readonly GatewayEmpresaConfigService $gatewayEmpresaConfigService,
         private readonly GerenciadorDePagamentos $gerenciadorDePagamentos,
         private readonly ClienteStripeService $clienteStripeService,
+        private readonly RegistrarLancamentoSinistroAction $registrarLancamentoSinistroAction,
     ) {
         $this->titulo = 'Sinistros';
     }
@@ -341,6 +344,21 @@ class SinistroController extends BaseController
             'pago_empresa_por_user_id'      => Auth::id(),
         ]);
 
+        $lancamentoFinanceiro = $this->registrarLancamentoSinistroAction->lancamentoDespesaEmpresa($sinistro, $sinistro->pago_empresa_em);
+        if ($lancamentoFinanceiro && $lancamentoFinanceiro->status !== 'pago') {
+            $lancamentoFinanceiro->update([
+                'status' => 'pago',
+                'data_pagamento' => now()->toDateString(),
+            ]);
+        }
+
+        $this->registrarHistoricoPagamento($sinistro->id, 'Pagamento da empresa registrado', [
+            'forma_pagamento' => $request->input('forma_pagamento'),
+            'referencia' => $request->input('referencia_pagamento'),
+            'pago_em' => now()->format('d/m/Y H:i'),
+            'pago_por' => Auth::user()->nome ?? Auth::user()->name,
+        ]);
+
         return response()->json([
             'success'  => true,
             'message'  => 'Pagamento (empresa) confirmado com sucesso.',
@@ -467,6 +485,21 @@ class SinistroController extends BaseController
             'pago_cliente_por_user_id'     => Auth::id(),
         ]);
 
+        $lancamentoFinanceiro = $this->registrarLancamentoSinistroAction->lancamentoReceitaCliente($sinistro, $sinistro->pago_cliente_em);
+        if ($lancamentoFinanceiro && $lancamentoFinanceiro->status !== 'pago') {
+            $lancamentoFinanceiro->update([
+                'status' => 'pago',
+                'data_pagamento' => now()->toDateString(),
+            ]);
+        }
+
+        $this->registrarHistoricoPagamento($sinistro->id, 'Pagamento do cliente registrado', [
+            'forma_pagamento' => $forma,
+            'referencia' => $referencia,
+            'pago_em' => now()->format('d/m/Y H:i'),
+            'pago_por' => Auth::user()->nome ?? Auth::user()->name,
+        ]);
+
         if (!empty($sinistro->reserva_id)) {
             $this->reservaService->adicionaLog((int) $sinistro->reserva_id, Auth::id(), json_encode([
                 'acao' => 'Pagamento de sinistro (cliente) confirmado',
@@ -482,6 +515,18 @@ class SinistroController extends BaseController
             'message'  => 'Pagamento (cliente) confirmado com sucesso.',
             'pago_em'  => now()->format('d/m/Y H:i'),
             'pago_por' => Auth::user()->nome ?? Auth::user()->name,
+        ]);
+    }
+
+    private function registrarHistoricoPagamento(int $sinistroId, string $descricao, array $dados): void
+    {
+        SinistroHistorico::create([
+            'sinistro_id' => $sinistroId,
+            'user_id' => Auth::id(),
+            'campo_alterado' => 'pagamento',
+            'valor_anterior' => null,
+            'valor_novo' => json_encode($dados, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES),
+            'descricao' => $descricao,
         ]);
     }
 
