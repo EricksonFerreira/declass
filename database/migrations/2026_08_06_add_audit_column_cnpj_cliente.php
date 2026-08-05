@@ -12,12 +12,12 @@ return new class extends Migration
             return;
         }
 
-        if (! Schema::hasColumn('empresa_contratos', 'cnpj_cliente' ) {
+        if (! Schema::hasColumn('empresa_contratos', 'cnpj_cliente')) {
             return;
         }
 
         Schema::table('empresa_contratos', function (Blueprint $table) {
-            $table->string('cnpj_cliente', 255)
+            $table->string('cnpj_cliente', 20)
                 ->nullable()
                 ->change();
         });
@@ -34,7 +34,7 @@ return new class extends Migration
         }
 
         Schema::table('empresa_contratos', function (Blueprint $table) {
-            $table->string('cnpj_cliente', 255)
+            $table->string('cnpj_cliente', 20)
                 ->nullable(false)
                 ->change();
         });
