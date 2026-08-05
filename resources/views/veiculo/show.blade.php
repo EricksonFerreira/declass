@@ -214,7 +214,7 @@
                 <div class="veiculo-field"><span class="veiculo-field__label">Nome</span><span class="veiculo-field__value">{{ $veiculo->nome ?? '-' }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Chassi</span><span class="veiculo-field__value">{{ $veiculo->chassi ?? '-' }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">RENAVAM</span><span class="veiculo-field__value">{{ $veiculo->renavam ?? '-' }}</span></div>
-                <div class="veiculo-field"><span class="veiculo-field__label">NÂº do motor</span><span class="veiculo-field__value">{{ $veiculo->numero_motor ?? '-' }}</span></div>
+                <div class="veiculo-field"><span class="veiculo-field__label">Nº do motor</span><span class="veiculo-field__value">{{ $veiculo->numero_motor ?? '-' }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Data de compra</span><span id="fipeResumoDataCompra" class="veiculo-field__value">{{ $veiculo->data_compra ? \Carbon\Carbon::parse($veiculo->data_compra)->format('d/m/Y') : '-' }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Validade da placa</span><span class="veiculo-field__value">{{ $veiculo->data_placa_licenca ? \Carbon\Carbon::parse($veiculo->data_placa_licenca)->format('d/m/Y') : '-' }}</span></div>
                 <div class="veiculo-field"><span class="veiculo-field__label">Próxima inspeção</span><span class="veiculo-field__value">{{ $veiculo->data_proxima_inspecao ? \Carbon\Carbon::parse($veiculo->data_proxima_inspecao)->format('d/m/Y') : '-' }}</span></div>

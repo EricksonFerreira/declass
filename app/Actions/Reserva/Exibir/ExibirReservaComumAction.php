@@ -62,7 +62,7 @@ class ExibirReservaComumAction
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
-            new BreadCrumbItem('Detalhes da Reserva NÂº' . $reserva->codigo),
+            new BreadCrumbItem('Detalhes da Reserva Nº' . $reserva->codigo),
         ]);
 
         return view('reserva.show', [

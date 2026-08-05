@@ -2254,6 +2254,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $reserva->update([
             'contrato_snapshot_json' => $snapshot,
             'contrato_pdf_path' => $arquivoContrato,
+            'checkin_assinado_em' => now(),
             'status' => 'ativa',
         ]);
 
@@ -3257,7 +3258,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
-            new BreadCrumbItem('Detalhes da Reserva NÂº'.$reserva_id, route('reserva.show', $reserva_id)),
+            new BreadCrumbItem('Detalhes da Reserva Nº'.$reserva_id, route('reserva.show', $reserva_id)),
             new BreadCrumbItem('Check-out / Vistoria'),
         ]);
 
@@ -4828,7 +4829,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
             new BreadCrumbItem('Reservas', route('reserva.index')),
-            new BreadCrumbItem('Detalhes da Reserva NÂº'.$codigoBreadcrumb, route('reserva.show', $codigoBreadcrumb)),
+            new BreadCrumbItem('Detalhes da Reserva Nº'.$codigoBreadcrumb, route('reserva.show', $codigoBreadcrumb)),
             new BreadCrumbItem($contratoExistente ? 'Editar Check-in' : 'Check-in'),
         ]);
 
@@ -4848,7 +4849,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 'grupoCheckinLabel'
             )
         )
-            ->with('titulo', ($contratoExistente ? 'Editar Check-in' : 'Check-in').' da reserva NÂº '.$codigoBreadcrumb);
+            ->with('titulo', ($contratoExistente ? 'Editar Check-in' : 'Check-in').' da reserva Nº '.$codigoBreadcrumb);
     }
 
     /**
@@ -5326,7 +5327,7 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
             ? route('reserva.show', $retorno)
             : route('reserva.show', $reserva->codigoReserva?->codigo ?? $reserva->id);
 
-        return view('reserva.assinar-contrato-checkin', compact('reserva', 'breadcrumb', 'redirectAfterSignUrl', 'contextoAssinatura'))->with('titulo', 'Assinar contrato de check-in da reserva NÂº '.$reserva->id);
+        return view('reserva.assinar-contrato-checkin', compact('reserva', 'breadcrumb', 'redirectAfterSignUrl', 'contextoAssinatura'))->with('titulo', 'Assinar contrato de check-in da reserva Nº '.$reserva->id);
     }
 
     public function salvarAssinarContratoCheckIn(
