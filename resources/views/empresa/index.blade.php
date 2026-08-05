@@ -128,7 +128,7 @@
                                     </div>
                                     <div class="text-muted" style="font-size:10px;">
                                         {{ $planoAtivo->periodicidade_texto }}
-                                        {{ $planoAtivo->data_vencimento ? 'Â· atÃ© ' . $planoAtivo->data_vencimento->format('d/m/Y') : '' }}
+                                        {{ $planoAtivo->data_vencimento ? ' até ' . $planoAtivo->data_vencimento->format('d/m/Y') : '' }}
                                     </div>
                                 @else
                                     <div class="d-flex flex-column" style="gap:4px;">

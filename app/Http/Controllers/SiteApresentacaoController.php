@@ -1068,8 +1068,8 @@ class SiteApresentacaoController extends Controller
     private function frotaDestaques(array $textos, array $imagens, array $imagensConfig): array
     {
         $defaults = [
-            1 => ['titulo' => 'EconÃ´micos Urbanos', 'descricao' => 'Carros compactos com baixo consumo para o dia a dia e viagens curtas.'],
-            2 => ['titulo' => 'SUV e FamÃ­lia', 'descricao' => 'Mais espaÃ§o, conforto e seguranÃ§a para viagens com bagagens e famÃ­lia.'],
+            1 => ['titulo' => 'Econômicos Urbanos', 'descricao' => 'Carros compactos com baixo consumo para o dia a dia e viagens curtas.'],
+            2 => ['titulo' => 'SUV e Família', 'descricao' => 'Mais espaço, conforto e segurança para viagens com bagagens e família.'],
             3 => ['titulo' => 'Executivo e Premium', 'descricao' => 'Modelos com acabamento superior para compromissos corporativos e eventos.'],
         ];
         $cards = [];
@@ -1119,9 +1119,9 @@ class SiteApresentacaoController extends Controller
     private function beneficios(array $textos): array
     {
         $defaults = [
-            'Retirada Ã¡gil com prÃ©-cadastro online',
-            'ProteÃ§Ãµes e adicionais sob medida',
-            'Atendimento para pessoa fÃ­sica e empresas',
+            'Retirada ágil com pré-cadastro online',
+            'Proteções e adicionais sob medida',
+            'Atendimento para pessoa física e empresas',
             'Frota revisada e higienizada regularmente',
         ];
         $items = [];
@@ -1140,7 +1140,7 @@ class SiteApresentacaoController extends Controller
         return [
             [
                 'titulo' => $this->textValue($textos, 'etapa_1_titulo', 'Escolha local e datas'),
-                'descricao' => $this->textValue($textos, 'etapa_1_descricao', 'Informe onde deseja retirar e devolver o veÃ­culo no formulÃ¡rio de reserva.'),
+                'descricao' => $this->textValue($textos, 'etapa_1_descricao', 'Informe onde deseja retirar e devolver o veículo no formulá  rio de reserva.'),
             ],
             [
                 'titulo' => $this->textValue($textos, 'etapa_2_titulo', 'Selecione o grupo ideal'),
