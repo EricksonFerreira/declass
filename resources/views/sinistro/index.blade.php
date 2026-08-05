@@ -30,9 +30,9 @@
 
                 <div class="module-header-right">
                     @can('sinistro.export')
-                        <a href="{{ route('sinistro.export', request()->query()) }}" class="btn-xp btn-xp--sm btn-xp--outline-light">
+                        {{-- <a href="{{ route('sinistro.export', request()->query()) }}" class="btn-xp btn-xp--sm btn-xp--outline-light">
                             <i class="fas fa-file-csv"></i> CSV
-                        </a>
+                        </a> --}}
                     @endcan
                     <a href="{{ route('sinistro.create') }}" class="btn-xp btn-xp--sm">
                         <i class="fas fa-plus"></i> Novo sinistro

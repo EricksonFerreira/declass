@@ -30,9 +30,9 @@
 
                 <div class="module-header-right">
                     @can('multa.export')
-                        <a href="{{ route('multa.export', request()->query()) }}" class="btn-xp btn-xp--sm btn-xp--outline-light">
+                        {{-- <a href="{{ route('multa.export', request()->query()) }}" class="btn-xp btn-xp--sm btn-xp--outline-light">
                             <i class="fas fa-file-csv"></i> CSV
-                        </a>
+                        </a> --}}
                     @endcan
                     <a href="{{ route('multa.create') }}" class="btn-xp btn-xp--sm">
                         <i class="fas fa-plus"></i> Nova multa
