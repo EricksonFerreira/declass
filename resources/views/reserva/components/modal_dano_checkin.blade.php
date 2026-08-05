@@ -609,9 +609,26 @@
 <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
 <script>
     function extrairDanoIdSelecionado() {
-        const rawValue = document.getElementById('danos')?.value ?? '';
-        const parsedValue = Number.parseInt(rawValue, 10);
-        return Number.isInteger(parsedValue) && parsedValue > 0 ? parsedValue : null;
+        const select = document.getElementById('danos');
+        if (!select) {
+            return null;
+        }
+
+        const candidatos = [
+            select.value,
+            $(select).find('option:selected').val(),
+            $(select).val(),
+            $(select).select2?.('data')?.[0]?.id ?? null,
+        ];
+
+        for (const candidato of candidatos) {
+            const parsedValue = Number.parseInt(String(candidato ?? '').trim(), 10);
+            if (Number.isInteger(parsedValue) && parsedValue > 0) {
+                return parsedValue;
+            }
+        }
+
+        return null;
     }
     const formDano = document.getElementById('form_dano');
 
@@ -670,7 +687,9 @@ if (formDano) {
         const formData = new FormData();
         formData.append('categoria_id', dano.categoria);
         formData.append('localizacao_problema', dano.localizacao_problema);
-        if (dano.dano) formData.append('dano_id', dano.dano);
+        if (dano.dano) {
+            formData.append('dano_id', dano.dano);
+        }
         formData.append('tipo_dano', dano.tipo);
         if (dano.local_dano) formData.append('local_dano', dano.local_dano);
         formData.append('custo_estimado', dano.custo_estimado);

@@ -8,6 +8,7 @@ use App\Support\ArquivoAnexoHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdicionarDanoMotoristaAppAction
 {
@@ -17,6 +18,12 @@ class AdicionarDanoMotoristaAppAction
 
     public function handle(array $dados, $reservaCodigoId, Request $request): mixed
     {
+        if (empty($dados['dano_id'])) {
+            throw ValidationException::withMessages([
+                'dano_id' => 'Selecione um dano valido antes de salvar.',
+            ]);
+        }
+
         $dados['reserva_codigo_id'] = $reservaCodigoId;
         $fotos = $request->file('fotos', []);
         unset($dados['fotos']);

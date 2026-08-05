@@ -4513,7 +4513,7 @@
                 const qtdTexto = $item.find(`#valueopcional${id}`).text();
                 const quantidade = Number(quantidadeInput.val() || qtdTexto || 0) || 0;
 
-                if (!($item.hasClass('activated') && quantidade > 0)) {
+                if (quantidade <= 0) {
                     return;
                 }
 

@@ -8,6 +8,7 @@ use App\Support\ArquivoAnexoHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class AdicionarDanoReservaComumAction
 {
@@ -17,6 +18,12 @@ class AdicionarDanoReservaComumAction
 
     public function handle(array $dados, int $reservaId, int $reservaCodigoId, Request $request): mixed
     {
+        if (empty($dados['dano_id'])) {
+            throw ValidationException::withMessages([
+                'dano_id' => 'Selecione um dano valido antes de salvar.',
+            ]);
+        }
+
         $dados['reserva_id'] = $reservaId;
         $dados['reserva_codigo_id'] = $reservaCodigoId;
         $dados['status_revisao'] = $dados['status_revisao'] ?? \App\Models\VeiculoDanos::REVISAO_PENDENTE;

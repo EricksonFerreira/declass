@@ -2319,6 +2319,10 @@
                             }
                         });
                     }
+
+                    if (typeof window.atualizarResumoOpcionaisReserva === 'function') {
+                        window.atualizarResumoOpcionaisReserva();
+                    }
                 },
                 error: function(error) {
                     console.error('Error fetching data:', error);
