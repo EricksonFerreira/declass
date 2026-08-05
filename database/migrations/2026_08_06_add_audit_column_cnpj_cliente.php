@@ -12,7 +12,7 @@ return new class extends Migration
             return;
         }
 
-        if (! Schema::hasColumn('empresa_contratos', 'cnpj_cliente) {
+        if (! Schema::hasColumn('empresa_contratos', 'cnpj_cliente' ) {
             return;
         }
 
