@@ -89,14 +89,17 @@ class RealizarCheckinReservaComumAction
             $this->resolverDadosUpgrade($dados, $reserva_id, $registro);
 
             if ($contratoExistente) {
-                $contratoExistente->update($dados);
-                if (! empty($arquivosSalvos)) {
-                    \App\Models\ArquivoRastreado::whereIn('path', $arquivosSalvos)
-                        ->update(['entidade_id' => $contratoExistente->id]);
-                }
-                $this->sincronizarCheckinMotoristaApp($reserva, $contratoExistente->fresh(), $dados);
-                $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
-                    'houve_upgrade' => $dados['houve_upgrade_categoria'] ?? false,
+            $contratoExistente->update($dados);
+            if (! empty($arquivosSalvos)) {
+                \App\Models\ArquivoRastreado::whereIn('path', $arquivosSalvos)
+                    ->update(['entidade_id' => $contratoExistente->id]);
+            }
+            $registro->forceFill([
+                'checkin_realizado_em' => $registro->checkin_realizado_em ?: now(),
+            ])->save();
+            $this->sincronizarCheckinMotoristaApp($reserva, $contratoExistente->fresh(), $dados);
+            $this->reservaService->adicionaLog($reserva_id, Auth::id(), [
+                'houve_upgrade' => $dados['houve_upgrade_categoria'] ?? false,
                     'motivo_upgrade' => $dados['motivo_upgrade'] ?? null,
                     'veiculo_id' => $dados['veiculo_id'] ?? null,
                 ], 'Contrato de check-in editado', 'info');
@@ -163,6 +166,9 @@ class RealizarCheckinReservaComumAction
                     \App\Models\ArquivoRastreado::whereIn('path', $arquivosSalvos)
                         ->update(['entidade_id' => $contrato->id]);
                 }
+                $registro->forceFill([
+                    'checkin_realizado_em' => $registro->checkin_realizado_em ?: now(),
+                ])->save();
                 $this->sincronizarCheckinMotoristaApp($reserva, $contrato, $dados);
 
                 // Salva danos coletados (enviados como JSON no campo "danos")

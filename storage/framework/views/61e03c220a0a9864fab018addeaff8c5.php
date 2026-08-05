@@ -101,12 +101,12 @@
                       data-toggle="tooltip"
                       title="<?php echo e($calcaoMensagemBloqueio); ?>">
                     <i class="fas fa-shield-alt"></i>
-                    <span>Calção no cartão</span>
+                    <span>Calï¿½ï¿½o no cartï¿½o</span>
                 </span>
                 <?php elseif(!$calcaoAtual || $calcaoAtual->status === 'falhou'): ?>
                 <a href="<?php echo e(route('reserva.calcao', $reserva->codigoReserva->codigo)); ?>" class="action-pill" style="background:linear-gradient(135deg,#6f42c1,#9061f9)">
                     <i class="fas fa-shield-alt"></i>
-                    <span>Calção no cartão</span>
+                    <span>CauÃ§Ã£o no cartÃ£o</span>
                 </a>
                 <?php endif; ?>
                 <?php endif; ?>

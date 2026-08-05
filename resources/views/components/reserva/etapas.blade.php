@@ -5,6 +5,7 @@
     $etapaCheckinAssinado = $etapaCheckin && ($reserva->contratoCheckin->assinado ?? '') === 'S';
     $calcao = $reserva->calcao ?? null;
     $calcaoConfiguradoEmpresa = (bool) ($calcaoConfiguradoEmpresa ?? false);
+    $calcaoAplicavel = (bool) ($calcaoAplicavel ?? $calcaoConfiguradoEmpresa);
     $etapaCalcao = (bool) $calcao;
     $etapaCalcaoRegistrado = $etapaCalcao && in_array((string) ($calcao->status ?? ''), [
         \App\Models\Calcao::STATUS_AUTORIZADO,
@@ -12,20 +13,22 @@
         \App\Models\Calcao::STATUS_PARCIALMENTE_CAPTURADO,
         \App\Models\Calcao::STATUS_CANCELADO,
     ], true);
-    $etapaCalcaoDispensado = ! $calcaoConfiguradoEmpresa;
+    $etapaCalcaoDispensado = ! $calcaoAplicavel;
     $etapaCheckout = (bool) ($reserva->contratoCheckout ?? null);
     $etapaCheckoutAssinado = $etapaCheckout
         && (! empty($reserva->contratoCheckout->assinatura) || ! empty($reserva->contratoCheckout->data_assinatura));
     $etapaRevisaoConcluida = ($reserva->revisao_checkout_concluida ?? 'N') === 'S';
+    $checkoutPodeSerAtivo = (bool) ($reserva->checkout_realizado_em ?? null) || $etapaCheckout || $etapaCheckoutAssinado || $etapaRevisaoConcluida;
 @endphp
 
 <style>
     .rs-flow {
         display: grid;
-        grid-template-columns: repeat(10, minmax(0, 1fr));
+        grid-template-columns: repeat(8, minmax(0, 1fr));
         gap: 6px;
         margin-bottom: 14px;
     }
+
     .rs-flow__step {
         display: flex;
         flex-direction: column;
@@ -34,24 +37,67 @@
         justify-content: center;
         text-align: center;
         min-height: 62px;
-        border-radius: 11px;
-        border: 1px solid #dbe4ee;
-        background: #fff;
+        border-radius: 12px;
+        border: 1px solid #111827;
+        background: #000;
         padding: 7px 4px;
+        box-shadow: 0 8px 20px rgba(15, 23, 42, .08);
     }
-    .rs-flow__step.is-done { border-color: #bbf7d0; background: #f0fdf4; }
-    .rs-flow__step.is-current { border-color: #fde68a; background: #fffbeb; }
-    .rs-flow__step.is-cancelled { border-color: #fecaca; background: #fef2f2; }
-    .rs-flow__icon { font-size: .76rem; }
-    .rs-flow__step.is-done .rs-flow__icon { color: #16a34a; }
-    .rs-flow__step.is-current .rs-flow__icon { color: #d97706; }
-    .rs-flow__step.is-cancelled .rs-flow__icon { color: #dc2626; }
-    .rs-flow__step:not(.is-done):not(.is-current) .rs-flow__icon { color: #94a3b8; }
-    .rs-flow__label { font-weight: 800; color: #64748b; font-size: .64rem; line-height: 1; }
-    .rs-flow__value { font-weight: 700; color: #0f172a; font-size: .72rem; line-height: 1.05; }
+
+    .rs-flow__step.is-done {
+        border-color: #111827;
+        background: #111827;
+    }
+
+    .rs-flow__step.is-current {
+        border-color: #f59e0b;
+        background: #f59e0b;
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, .08), 0 8px 20px rgba(15, 23, 42, .08);
+    }
+
+    .rs-flow__step.is-calcao {
+        border-color: #111827;
+        background: #111827;
+    }
+
+    .rs-flow__step.is-calcao .rs-flow__icon,
+    .rs-flow__step.is-calcao .rs-flow__label,
+    .rs-flow__step.is-calcao .rs-flow__value {
+        color: #fff;
+    }
+
+    .rs-flow__step.is-cancelled {
+        border-color: #7f1d1d;
+        background: #111827;
+    }
+
+    .rs-flow__icon,
+    .rs-flow__label,
+    .rs-flow__value {
+        color: #fff;
+    }
+
+    .rs-flow__icon {
+        font-size: .76rem;
+    }
+
+    .rs-flow__label {
+        font-weight: 800;
+        font-size: .64rem;
+        line-height: 1;
+        letter-spacing: .08em;
+    }
+
+    .rs-flow__value {
+        font-weight: 700;
+        font-size: .72rem;
+        line-height: 1.05;
+    }
+
     @media (max-width: 992px) {
         .rs-flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
+
     @media (max-width: 576px) {
         .rs-flow { grid-template-columns: 1fr; }
         .rs-flow__step { min-height: 52px; padding: 6px 5px; }
@@ -62,42 +108,49 @@
 <div class="rs-flow">
     <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaPagamento ? 'is-done' : 'is-current') }}">
         <i class="rs-flow__icon fas {{ $etapaPagamento ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">1.</span>
+        <span class="rs-flow__label">- 1 -</span>
         <span class="rs-flow__value">{{ $reservaCancelada ? 'Cancelada' : ($etapaPagamento ? 'Pagamento' : 'Pgto pendente') }}</span>
     </div>
+
     <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckin ? 'is-done' : ($etapaPagamento ? 'is-current' : '')) }}">
         <i class="rs-flow__icon fas {{ $etapaCheckin ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">2.</span>
+        <span class="rs-flow__label">- 2 -</span>
         <span class="rs-flow__value">Check-in</span>
     </div>
+
     <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckinAssinado ? 'is-done' : ($etapaCheckin ? 'is-current' : '')) }}">
         <i class="rs-flow__icon fas {{ $etapaCheckinAssinado ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">3.</span>
+        <span class="rs-flow__label">- 3 -</span>
         <span class="rs-flow__value">Contrato</span>
     </div>
+
     <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckinAssinado ? 'is-done' : ($etapaCheckin ? 'is-current' : '')) }}">
         <i class="rs-flow__icon fas {{ $etapaCheckinAssinado ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">4.</span>
+        <span class="rs-flow__label">- 4 -</span>
         <span class="rs-flow__value">Assinatura</span>
     </div>
-    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : (($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'is-done' : ($etapaCheckinAssinado ? 'is-current' : '')) }}">
+
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : (($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'is-calcao' : ($etapaCheckinAssinado ? 'is-current' : '')) }} {{ ! $reservaCancelada && !($etapaCalcaoRegistrado || $etapaCalcaoDispensado) && $etapaCheckinAssinado ? 'is-calcao' : '' }}">
         <i class="rs-flow__icon fas {{ ($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">5.</span>
-        <span class="rs-flow__value">{{ $etapaCalcaoDispensado ? 'Sem caução' : 'Calção' }}</span>
+        <span class="rs-flow__label">- 5 -</span>
+        <span class="rs-flow__value">Calção</span>
     </div>
-    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckout ? 'is-done' : (($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'is-current' : '')) }}">
+
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckout ? 'is-done' : '') }}">
         <i class="rs-flow__icon fas {{ $etapaCheckout ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">6.</span>
+        <span class="rs-flow__label">- 6 -</span>
         <span class="rs-flow__value">Check-out</span>
     </div>
-    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckoutAssinado ? 'is-done' : ($etapaCheckout ? 'is-current' : '')) }}">
+
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaCheckoutAssinado ? 'is-done' : ($checkoutPodeSerAtivo ? 'is-current' : '')) }}">
         <i class="rs-flow__icon fas {{ $etapaCheckoutAssinado ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">7.</span>
+        <span class="rs-flow__label">- 7 -</span>
         <span class="rs-flow__value">Assinatura</span>
     </div>
+
     <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : ($etapaRevisaoConcluida ? 'is-done' : ($etapaCheckoutAssinado ? 'is-current' : '')) }}">
         <i class="rs-flow__icon fas {{ $etapaRevisaoConcluida ? 'fa-check-circle' : 'fa-clock' }}"></i>
-        <span class="rs-flow__label">8.</span>
+        <span class="rs-flow__label">- 8 -</span>
         <span class="rs-flow__value">Revisão</span>
     </div>
 </div>

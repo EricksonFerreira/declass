@@ -149,7 +149,7 @@
                     <span>Pago pela reserva</span>
                 </div>
             </div>
-            @if(!empty($calcao))
+            @if(!empty($calcao) && ($calcaoConfiguradoEmpresa ?? false))
                 <div class="rs-fkpi rs-fkpi--amber">
                     <i class="fas fa-shield-alt"></i>
                     <div>
@@ -257,7 +257,7 @@
     </div>
 </div>
 
-@if(!empty($calcao))
+@if(!empty($calcao) && ($calcaoConfiguradoEmpresa ?? false))
 <div class="rs-card mt-4">
     <div class="rs-card__header rs-card__header--between">
         <div class="rs-card__header-left">

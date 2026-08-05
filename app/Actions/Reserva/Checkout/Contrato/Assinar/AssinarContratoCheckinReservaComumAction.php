@@ -28,6 +28,10 @@ class AssinarContratoCheckinReservaComumAction
         $contrato->assinado = 'S';
         $contrato->save();
 
+        $reserva->forceFill([
+            'checkin_assinado_em' => now(),
+        ])->save();
+
         if (preg_match('/^data:image\/png;base64,/', $assinaturaBase64)) {
             $base64 = substr($assinaturaBase64, strpos($assinaturaBase64, ',') + 1);
             $assinaturaBinaria = base64_decode($base64, true);

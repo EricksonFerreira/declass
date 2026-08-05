@@ -108,13 +108,14 @@ class RealizarCheckoutReservaComumAction
                 (int) $dados['quilometragem_devolucao']
             );
 
-            // if (! empty($reserva->estacao_devolucao_id)) {
-            //     $this->movimentacaoService->registrarChegadaNaEstacao(
-            //         (int) $reserva->veiculo_id,
-            //         (int) $reserva->estacao_devolucao_id,
-            //         'Chegada real registrada no check-out da reserva '.$reserva->id
-            //     );
-            // }
+            if (! empty($reserva->estacao_devolucao_id)) {
+                $this->movimentacaoService->registrarChegadaNaEstacao(
+                    (int) $reserva->veiculo_id,
+                    (int) $reserva->estacao_devolucao_id,
+                    'Chegada real registrada no check-out da reserva '.$reserva->id,
+                    true
+                );
+            }
 
             $this->reservaService->checkOutRealizado(
                 (int) $reserva->id

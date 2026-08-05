@@ -1140,12 +1140,15 @@ class ReservaService extends AbstractBaseService
         }
     }
 
-    public function checkInRealizado($reserva_id,$veiculo_id)
+        public function checkInRealizado($reserva_id, $veiculo_id)
     {
         $reserva = $this->model->find($reserva_id);
         if ($reserva) {
             $reserva->status_reserva_id = 4; // Em uso
             $reserva->veiculo_id = $veiculo_id;
+            if (SchemaCache::hasColumn($this->model->getTable(), 'checkin_realizado_em')) {
+                $reserva->checkin_realizado_em = $reserva->checkin_realizado_em ?: now();
+            }
             $reserva->save();
         }
     }
@@ -1154,10 +1157,14 @@ class ReservaService extends AbstractBaseService
     {
         $reserva = $this->model->find($reserva_id);
         if ($reserva) {
-            $reserva->status_reserva_id = \App\Enums\StatusReservaEnum::Checkout->value; // 5 = ConcluÃ­da
+            $reserva->status_reserva_id = \App\Enums\StatusReservaEnum::Checkout->value; // 5 = Concluída
+            if (SchemaCache::hasColumn($this->model->getTable(), 'checkout_realizado_em')) {
+                $reserva->checkout_realizado_em = $reserva->checkout_realizado_em ?: now();
+            }
             $reserva->save();
         }
     }
 }
+
 
 

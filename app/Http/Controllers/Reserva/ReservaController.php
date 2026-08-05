@@ -3366,7 +3366,8 @@ class ReservaController extends BaseController implements FiltroInterface, Resou
                 $this->movimentacaoService->registrarChegadaNaEstacao(
                     (int) $reserva->veiculo_id,
                     (int) $reserva->estacao_devolucao_id,
-                    'Chegada real registrada no check-out da reserva '.$reserva_id
+                    'Chegada real registrada no check-out da reserva '.$reserva_id,
+                    true
                 );
             }
 

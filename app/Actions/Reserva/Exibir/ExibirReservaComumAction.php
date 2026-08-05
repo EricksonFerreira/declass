@@ -39,6 +39,25 @@ class ExibirReservaComumAction
                 ->exists();
         }
 
+        $calcaoAplicavel = false;
+        if ($registro->empresa_id) {
+            $calcaoAplicavel = ConfiguracaoCalcao::query()
+                ->where('empresa_id', $registro->empresa_id)
+                ->where('ativo', true)
+                ->where(function ($query) use ($registro) {
+                    $query->whereNull('modelo_id');
+
+                    if ($registro->modelo_id) {
+                        $query->orWhere('modelo_id', $registro->modelo_id);
+                    }
+
+                    if ($registro->grupo_frota_id) {
+                        $query->orWhere('grupo_frota_id', $registro->grupo_frota_id);
+                    }
+                })
+                ->exists();
+        }
+
         $dados = $this->montarDadosDaVisao($registro);
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new BreadCrumbItem('Home', route('home')),
@@ -52,6 +71,7 @@ class ExibirReservaComumAction
             'breadcrumb' => $breadcrumb,
             'titulo' => 'Detalhes da Reserva',
             'calcaoConfiguradoEmpresa' => $calcaoConfiguradoEmpresa,
+            'calcaoAplicavel' => $calcaoAplicavel,
             ...$dados,
         ]);
     }
