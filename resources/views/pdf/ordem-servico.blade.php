@@ -39,12 +39,19 @@
             border-bottom: 3px solid #1e3a8a;
             padding-bottom: 10px;
             margin-bottom: 12px;
+            table-layout: fixed;
         }
 
-        .doc-header__logo { display: table-cell; width: 38%; vertical-align: middle; }
-        .doc-header__logo img { max-height: 64px; max-width: 200px; }
+        .doc-header__logo { display: table-cell; width: 34%; vertical-align: middle; }
+        .doc-header__logo img {
+            display: block;
+            max-height: 72px;
+            max-width: 210px;
+            width: auto;
+            object-fit: contain;
+        }
         .doc-header__logo .sistema-logo { max-height: 48px; }
-        .doc-header__info { display: table-cell; width: 62%; vertical-align: middle; text-align: right; }
+        .doc-header__info { display: table-cell; width: 66%; vertical-align: middle; text-align: right; }
 
         .doc-header__title {
             font-size: 14px;
@@ -147,6 +154,23 @@
 
         .muted { color: #64748b; font-style: italic; }
 
+        .status-chip {
+            display: inline-block;
+            margin-top: 4px;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 7.5px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: #e2e8f0;
+            color: #334155;
+        }
+        .status-chip--success { background: #dcfce7; color: #166534; }
+        .status-chip--warning { background: #fef3c7; color: #92400e; }
+        .status-chip--danger { background: #fee2e2; color: #991b1b; }
+        .status-chip--info { background: #dbeafe; color: #1d4ed8; }
+
         .doc-footer {
             margin-top: 14px;
             text-align: center;
@@ -232,6 +256,24 @@
         </div>
     @endif
 
+    <div class="section-title">Valores</div>
+    <table class="info-grid">
+        <tr>
+            <td style="width:33.33%">
+                <div class="field-label">Peças</div>
+                <div class="field-value">R$ {{ number_format((float) ($data['os']['valor_pecas'] ?? 0), 2, ',', '.') }}</div>
+            </td>
+            <td style="width:33.33%">
+                <div class="field-label">Mão de obra</div>
+                <div class="field-value">R$ {{ number_format((float) ($data['os']['valor_mao_obra'] ?? 0), 2, ',', '.') }}</div>
+            </td>
+            <td style="width:33.33%">
+                <div class="field-label">Total</div>
+                <div class="field-value">R$ {{ number_format((float) ($data['os']['valor_total'] ?? 0), 2, ',', '.') }}</div>
+            </td>
+        </tr>
+    </table>
+
     <div class="section-title">Itens do Servico</div>
     @if(!empty($data['itens']) && is_array($data['itens']))
         <table class="items-table">
@@ -258,6 +300,26 @@
                         <td>
                             @if(is_array($item['dano']))
                                 <div><strong>{{ strtoupper((string) ($item['dano']['local'] ?? '')) }}</strong> {{ $item['dano']['tipo'] ?? '' }}</div>
+                                @php
+                                    $statusCorrecao = strtolower((string) ($item['dano']['status'] ?? 'pendente'));
+                                    $statusLabel = match ($statusCorrecao) {
+                                        'corrigida' => 'Corrigida',
+                                        'parcialmente_corrigida' => 'Parcialmente corrigida',
+                                        'descartada' => 'Descartada',
+                                        'em_correcao' => 'Em correção',
+                                        'nao_requer_reparo' => 'Não requer reparo',
+                                        default => 'Pendente',
+                                    };
+                                    $statusClass = match ($statusCorrecao) {
+                                        'corrigida' => 'status-chip--success',
+                                        'parcialmente_corrigida' => 'status-chip--warning',
+                                        'descartada' => 'status-chip--danger',
+                                        'em_correcao' => 'status-chip--info',
+                                        'nao_requer_reparo' => 'status-chip--info',
+                                        default => 'status-chip',
+                                    };
+                                @endphp
+                                <div class="status-chip {{ $statusClass }}">{{ $statusLabel }}</div>
                                 @if(!empty($item['dano']['observacoes']) && $item['dano']['observacoes'] !== '-')
                                     <div>{{ $item['dano']['observacoes'] }}</div>
                                 @endif
@@ -298,6 +360,26 @@
                         <td>{{ $d['tipo'] ?? '-' }}</td>
                         <td>{{ $d['observacoes'] ?? '-' }}</td>
                         <td>
+                            @php
+                                $statusCorrecao = strtolower((string) ($d['status'] ?? 'pendente'));
+                                $statusLabel = match ($statusCorrecao) {
+                                    'corrigida' => 'Corrigida',
+                                    'parcialmente_corrigida' => 'Parcialmente corrigida',
+                                    'descartada' => 'Descartada',
+                                    'em_correcao' => 'Em correção',
+                                    'nao_requer_reparo' => 'Não requer reparo',
+                                    default => 'Pendente',
+                                };
+                                $statusClass = match ($statusCorrecao) {
+                                    'corrigida' => 'status-chip--success',
+                                    'parcialmente_corrigida' => 'status-chip--warning',
+                                    'descartada' => 'status-chip--danger',
+                                    'em_correcao' => 'status-chip--info',
+                                    'nao_requer_reparo' => 'status-chip--info',
+                                    default => 'status-chip',
+                                };
+                            @endphp
+                            <div class="status-chip {{ $statusClass }}">{{ $statusLabel }}</div>
                             @if(!empty($d['correcao']) || !empty($d['correcao_data']))
                                 {{ $d['correcao'] ?? '' }}{{ !empty($d['correcao_data']) ? (' - ' . $d['correcao_data']) : '' }}
                             @else
@@ -316,4 +398,3 @@
 </div>
 </body>
 </html>
-

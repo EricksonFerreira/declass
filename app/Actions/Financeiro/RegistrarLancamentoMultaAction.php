@@ -54,7 +54,7 @@ class RegistrarLancamentoMultaAction
             return null;
         }
 
-        $categoria = $this->categoria($empresaId, 'receita', 'Multa paga pelo cliente', 'Receitas geradas ao cobrar multas atribuídas ao cliente.');
+        $categoria = $this->categoria($empresaId, 'receita', 'Multa paga pelo usuário', 'Receitas geradas ao cobrar multas atribuídas ao usuário.');
         $pagoEm ??= now();
         $valor = round((float) ($multa->valor_final ?? $multa->valor_original ?? 0), 2);
         if ($valor <= 0) {
@@ -75,7 +75,7 @@ class RegistrarLancamentoMultaAction
         return LancamentoFinanceiro::create([
             'empresa_id' => $empresaId,
             'categoria_financeira_id' => $categoria->id,
-            'descricao' => 'Pagamento da multa pelo cliente #'.$multa->id,
+            'descricao' => 'Pagamento da multa pelo usuário #'.$multa->id,
             'valor' => $valor,
             'tipo' => 'receita',
             'status' => 'pago',
@@ -84,7 +84,7 @@ class RegistrarLancamentoMultaAction
             'veiculo_id' => $multa->veiculo_id,
             'reserva_id' => $multa->reserva_id,
             'user_id' => $multa->cliente_id ?: ($multa->reserva?->user_id ?? null),
-            'observacoes' => 'Lancamento gerado automaticamente ao confirmar pagamento da multa do cliente. Chave: '.$chave,
+            'observacoes' => 'Lancamento gerado automaticamente ao confirmar pagamento da multa do usuario. Chave: '.$chave,
         ]);
     }
 

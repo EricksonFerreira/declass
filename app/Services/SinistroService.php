@@ -179,14 +179,22 @@ class SinistroService extends AbstractBaseService
         $this->aplicarFiltros($query, $filtros);
 
         $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => 'attachment; filename="sinistros_' . now()->format('Ymd_His') . '.csv"',
         ];
 
         $colunas = [
-            'ID', 'Tipo', 'Placa', 'Veículo', 'Cliente', 'Reserva',
-            'Data Ocorrido', 'Local', 'BO', 'Seguradora', 'Nº Sinistro Seguradora',
-            'Prejuízo Estimado', 'Aprovado Seguradora', 'Resp. Cliente', 'Status',
+            'ID',
+            'Tipo',
+            'Placa',
+            'Veiculo',
+            'Cliente',
+            'Reserva',
+            'Data Ocorrido',
+            'Local',
+            'Valor Cliente',
+            'Valor Empresa',
+            'Status',
         ];
 
         return response()->stream(function () use ($query, $colunas) {
@@ -205,12 +213,8 @@ class SinistroService extends AbstractBaseService
                         $s->reserva_id ?? '',
                         $s->data_hora_ocorrido?->format('d/m/Y H:i') ?? '',
                         $s->local_ocorrido ?? '',
-                        $s->numero_bo ?? '',
-                        $s->seguradora ?? '',
-                        $s->numero_sinistro_seguradora ?? '',
-                        $s->valor_prejuizo_estimado !== null ? number_format((float)$s->valor_prejuizo_estimado, 2, ',', '.') : '',
-                        $s->valor_aprovado_seguradora !== null ? number_format((float)$s->valor_aprovado_seguradora, 2, ',', '.') : '',
-                        $s->valor_responsabilidade_cliente !== null ? number_format((float)$s->valor_responsabilidade_cliente, 2, ',', '.') : '',
+                        $s->valor_responsabilidade_cliente !== null ? number_format((float) $s->valor_responsabilidade_cliente, 2, ',', '.') : '',
+                        $s->valor_custo_empresa !== null ? number_format((float) $s->valor_custo_empresa, 2, ',', '.') : '',
                         $s->label_status,
                     ], ';');
                 }
@@ -262,3 +266,4 @@ class SinistroService extends AbstractBaseService
         ]);
     }
 }
+

@@ -171,9 +171,8 @@ class MultaService extends AbstractBaseService
         ];
 
         $colunas = [
-            'ID', 'Reserva', 'Placa', 'Cliente', 'Orgao Autuador', 'Numero Auto',
-            'Data Infracao', 'Vencimento', 'Valor Original', 'Valor Desconto',
-            'Valor Final', 'Pontos', 'Status Multa', 'Status Desconto',
+            'ID', 'Reserva', 'Placa', 'Cliente', 'Data Infracao',
+            'Vencimento', 'Valor Final', 'Status', 'Destino Cobrança',
         ];
 
         return response()->stream(function () use ($query, $colunas) {
@@ -189,16 +188,11 @@ class MultaService extends AbstractBaseService
                         $multa->reserva_id ?? '',
                         $multa->placa_momento ?? '',
                         $multa->cliente->nome ?? '',
-                        $multa->orgao_autuador ?? '',
-                        $multa->numero_auto ?? '',
                         $multa->data_hora_infracao?->format('d/m/Y H:i') ?? '',
                         $multa->data_vencimento?->format('d/m/Y') ?? '',
-                        number_format((float) $multa->valor_original, 2, ',', '.'),
-                        $multa->valor_desconto !== null ? number_format((float) $multa->valor_desconto, 2, ',', '.') : '',
                         number_format((float) $multa->valor_final, 2, ',', '.'),
-                        $multa->pontos ?? '',
                         $multa->label_status_multa,
-                        $multa->label_status_desconto,
+                        $multa->destino_cobranca === 'cliente' ? 'Cliente' : 'Empresa',
                     ], ';');
                 }
             });

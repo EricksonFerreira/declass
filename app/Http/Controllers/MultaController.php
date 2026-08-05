@@ -507,7 +507,9 @@ class MultaController extends BaseController
             }
         }
 
-        $destinoCliente = $multa->destino_cobranca === 'cliente' || $multa->status_multa === 'aguardando_pagamento_cliente';
+        $temReservaVinculada = !empty($multa->reserva_id);
+        $destinoCliente = $temReservaVinculada
+            && ($multa->destino_cobranca === 'cliente' || $multa->status_multa === 'aguardando_pagamento_cliente');
 
         $multa->update([
             'forma_pagamento'      => $forma,

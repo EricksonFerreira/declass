@@ -18,6 +18,8 @@ use App\Services\BreadcrumbService;
 use App\Services\OrdemServicoService;
 use App\Services\PdfService;
 use App\Services\VeiculoService;
+use App\Support\ArquivoAnexoHelper;
+use App\Support\EmpresaBranding;
 use App\Support\EmpresaContext;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -197,6 +199,7 @@ class OrdemServicoController extends Controller
             $empresaId = (int) (app(EmpresaContext::class)->empresaId() ?? Auth::user()->empresa_id ?? 0);
         }
         $empresa = $empresaId > 0 ? Empresa::find($empresaId) : null;
+        $branding = app(EmpresaBranding::class);
 
         $itens = $ordem_servico->itens->map(function ($item) {
             $dano = $item->veiculoDano;
@@ -209,6 +212,7 @@ class OrdemServicoController extends Controller
                     'local' => (string) ($dano->local_dano ?? ''),
                     'tipo' => (string) ($dano->tipo_dano ?? ''),
                     'observacoes' => (string) ($dano->observacoes ?? ''),
+                    'status' => (string) ($dano->status ?? ''),
                     'correcao' => (string) ($dano->correcao_descricao ?? ''),
                     'correcao_data' => $dano->correcao_data ? $dano->correcao_data->format('d/m/Y H:i') : null,
                 ] : null,
@@ -227,7 +231,7 @@ class OrdemServicoController extends Controller
                 'data_emissao' => now()->format('d/m/Y H:i'),
                 'empresa' => [
                     'nome' => $empresa?->nome ?? config('app.name'),
-                    'logo_url' => $empresa?->logo_url ?? null,
+                    'logo_url' => $branding->logoDataUri($empresa) ?? $branding->logoUrl($empresa),
                 ],
             ],
             'os' => [
@@ -239,6 +243,10 @@ class OrdemServicoController extends Controller
                 'concluida_por' => $ordem_servico->usuarioEncerramento?->name ?? null,
                 'observacoes' => (string) ($ordem_servico->observacoes ?? ''),
                 'relatorio_conclusao' => (string) ($ordem_servico->relatorio_conclusao ?? ''),
+                'valor_pecas' => (float) ($ordem_servico->valor_pecas ?? 0),
+                'valor_mao_obra' => (float) ($ordem_servico->valor_mao_obra ?? 0),
+                'valor_total' => (float) ($ordem_servico->valor_total ?? 0),
+                'itens_concluidos' => $ordem_servico->itens->whereNotNull('resultado')->count(),
             ],
             'veiculo' => [
                 'nome' => $ordem_servico->veiculo?->nome ?? null,
@@ -357,7 +365,22 @@ class OrdemServicoController extends Controller
                 if (! $file) {
                     continue;
                 }
-                $path = $file->storePublicly($dir, 'public');
+                $armazenado = ArquivoAnexoHelper::armazenarRastreado($file, $dir, [
+                    'empresa_id' => (int) ($ordem_servico->empresa_id ?? $request->session()->get('empresa_context_id', 0) ?? 0),
+                    'user_id' => Auth::id(),
+                    'modulo' => 'ordem_servico',
+                    'entidade' => OrdemServico::class,
+                    'entidade_id' => $ordem_servico->id,
+                    'campo' => 'anexo',
+                    'contexto' => 'ordem-servico.conclusao',
+                    'meta' => [
+                        'tipo_anexo' => 'conclusao',
+                    ],
+                ]);
+                $path = $armazenado['path'] ?? null;
+                if (! $path) {
+                    continue;
+                }
                 $anexosMeta[] = [
                     'path' => $path,
                     'original_name' => $file->getClientOriginalName(),
