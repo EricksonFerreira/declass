@@ -320,6 +320,7 @@
                                     };
                                 @endphp
                                 <div class="status-chip {{ $statusClass }}">{{ $statusLabel }}</div>
+                                <div class="muted">Situação da correção: {{ $statusLabel }}</div>
                                 @if(!empty($item['dano']['observacoes']) && $item['dano']['observacoes'] !== '-')
                                     <div>{{ $item['dano']['observacoes'] }}</div>
                                 @endif
@@ -380,6 +381,7 @@
                                 };
                             @endphp
                             <div class="status-chip {{ $statusClass }}">{{ $statusLabel }}</div>
+                            <div class="muted">Situação da correção: {{ $statusLabel }}</div>
                             @if(!empty($d['correcao']) || !empty($d['correcao_data']))
                                 {{ $d['correcao'] ?? '' }}{{ !empty($d['correcao_data']) ? (' - ' . $d['correcao_data']) : '' }}
                             @else

@@ -324,6 +324,7 @@
                                     };
                                 ?>
                                 <div class="status-chip <?php echo e($statusClass); ?>"><?php echo e($statusLabel); ?></div>
+                                <div class="muted">Situação da correção: <?php echo e($statusLabel); ?></div>
                                 <?php if(!empty($item['dano']['observacoes']) && $item['dano']['observacoes'] !== '-'): ?>
                                     <div><?php echo e($item['dano']['observacoes']); ?></div>
                                 <?php endif; ?>
@@ -385,6 +386,7 @@
                                 };
                             ?>
                             <div class="status-chip <?php echo e($statusClass); ?>"><?php echo e($statusLabel); ?></div>
+                            <div class="muted">Situação da correção: <?php echo e($statusLabel); ?></div>
                             <?php if(!empty($d['correcao']) || !empty($d['correcao_data'])): ?>
                                 <?php echo e($d['correcao'] ?? ''); ?><?php echo e(!empty($d['correcao_data']) ? (' - ' . $d['correcao_data']) : ''); ?>
 
