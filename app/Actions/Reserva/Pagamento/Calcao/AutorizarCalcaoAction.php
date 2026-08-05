@@ -116,6 +116,10 @@ class AutorizarCalcaoAction
             ]
         );
 
+        $reserva->forceFill([
+            'calcao_registrado_em' => now(),
+        ])->save();
+
         if ($status === Calcao::STATUS_FALHOU) {
             throw new \RuntimeException('Pre-autorizacao criada mas nao confirmada pelo Stripe. Status: ' . $intent->status);
         }

@@ -20,9 +20,9 @@ class RegistrarLancamentoMultaAction
             $multa,
             $empresaId,
             'despesa',
-            'Multa - Empresa',
-            'Despesa gerada automaticamente ao cadastrar multa.',
-            'Multa cadastrada para a empresa',
+            'Multa da empresa',
+            'Despesa gerada automaticamente para multas assumidas pela empresa.',
+            'Lançamento de multa da empresa',
             'pendente'
         );
     }
@@ -54,7 +54,7 @@ class RegistrarLancamentoMultaAction
             return null;
         }
 
-        $categoria = $this->categoria($empresaId, 'receita', 'Pagamento de multa pelo cliente', 'Receitas geradas ao cobrar multas atribuídas ao cliente.');
+        $categoria = $this->categoria($empresaId, 'receita', 'Multa do cliente', 'Receitas geradas ao cobrar multas atribuídas ao cliente.');
         $pagoEm ??= now();
         $valor = round((float) ($multa->valor_final ?? $multa->valor_original ?? 0), 2);
         if ($valor <= 0) {
@@ -84,7 +84,7 @@ class RegistrarLancamentoMultaAction
             'veiculo_id' => $multa->veiculo_id,
             'reserva_id' => $multa->reserva_id,
             'user_id' => $multa->cliente_id ?: ($multa->reserva?->user_id ?? null),
-            'observacoes' => 'Lancamento gerado automaticamente ao confirmar pagamento da multa. Chave: '.$chave,
+            'observacoes' => 'Lancamento gerado automaticamente ao confirmar pagamento da multa do cliente. Chave: '.$chave,
         ]);
     }
 
@@ -125,7 +125,7 @@ class RegistrarLancamentoMultaAction
             'veiculo_id' => $multa->veiculo_id,
             'reserva_id' => $multa->reserva_id,
             'user_id' => $multa->cliente_id ?: ($multa->reserva?->user_id ?? null),
-            'observacoes' => 'Lancamento gerado automaticamente ao cadastrar multa. Chave: '.$chave,
+            'observacoes' => 'Lancamento gerado automaticamente ao registrar multa. Chave: '.$chave,
         ]);
     }
 

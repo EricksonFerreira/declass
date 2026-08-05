@@ -551,7 +551,7 @@
 }
 
 .btn-xp--outline-light {
-    background: rgba(255, 255, 255, .12);
+    background: rgba(255, 255, 255, .12); !important;
     border: 1px solid rgba(255, 255, 255, .25);
     color: rgba(255, 255, 255, .9);
     box-shadow: none;

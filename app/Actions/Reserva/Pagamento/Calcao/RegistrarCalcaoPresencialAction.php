@@ -61,6 +61,10 @@ class RegistrarCalcaoPresencialAction
                 ],
             ]);
 
+            $reserva->forceFill([
+                'calcao_registrado_em' => now(),
+            ])->save();
+
             $transacaoPayload = [
                 'user_id' => $reserva->user_id,
                 'pago_por_user_id' => Auth::id(),

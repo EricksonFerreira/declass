@@ -8,8 +8,10 @@ use App\Http\Requests\Multa\StoreMultaRequest;
 use App\Http\Requests\Multa\UpdateMultaRequest;
 use App\Models\Marca;
 use App\Models\Multa;
+use App\Models\MultaHistorico;
 use App\Models\GrupoFrota;
 use App\Models\Reserva;
+use App\Models\ArquivoRastreado;
 use App\Models\Transacao;
 use App\Models\TipoFrota;
 use App\Models\StatusVeiculo;
@@ -224,12 +226,24 @@ class MultaController extends BaseController
         }
 
         if ($request->hasFile('anexo_comprovante')) {
-            $path = $this->multaService->salvarAnexo($request->file('anexo_comprovante'), $multa->id);
+            $empresaId = (int) ($multa->empresa_id ?? Auth::user()?->empresa_id ?? 0);
+            $path = $this->multaService->salvarAnexo(
+                $request->file('anexo_comprovante'),
+                $multa->id,
+                'anexo_comprovante',
+                $empresaId > 0 ? $empresaId : null
+            );
             $multa->update(['anexo_comprovante_path' => $path]);
         }
 
         if ($request->hasFile('anexo_pdf')) {
-            $path = $this->multaService->salvarAnexo($request->file('anexo_pdf'), $multa->id);
+            $empresaId = (int) ($multa->empresa_id ?? Auth::user()?->empresa_id ?? 0);
+            $path = $this->multaService->salvarAnexo(
+                $request->file('anexo_pdf'),
+                $multa->id,
+                'anexo_pdf',
+                $empresaId > 0 ? $empresaId : null
+            );
             $multa->update(['anexo_pdf_path' => $path]);
         }
 
@@ -245,6 +259,12 @@ class MultaController extends BaseController
             'reserva.usuario', 'veiculo', 'cliente', 'condutor',
             'responsavelLancamento', 'pagoPor', 'historico.usuario',
         ])->findOrFail($id);
+        $arquivosRastreados = ArquivoRastreado::query()
+            ->where('modulo', 'multa')
+            ->where('entidade', Multa::class)
+            ->where('entidade_id', $multa->id)
+            ->orderByDesc('id')
+            ->get();
 
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbShow('Multas', 'multa.index', 'Detalhes');
 
@@ -263,7 +283,7 @@ class MultaController extends BaseController
             }
         }
 
-        return view('multa.show', compact('multa', 'breadcrumb', 'metodosPagamento'))
+        return view('multa.show', compact('multa', 'breadcrumb', 'metodosPagamento', 'arquivosRastreados'))
             ->with('titulo', 'Multa #' . $multa->id);
     }
 
@@ -346,12 +366,24 @@ class MultaController extends BaseController
         }
 
         if ($request->hasFile('anexo_comprovante')) {
-            $path = $this->multaService->salvarAnexo($request->file('anexo_comprovante'), $multa->id);
+            $empresaId = (int) ($multa->empresa_id ?? Auth::user()?->empresa_id ?? 0);
+            $path = $this->multaService->salvarAnexo(
+                $request->file('anexo_comprovante'),
+                $multa->id,
+                'anexo_comprovante',
+                $empresaId > 0 ? $empresaId : null
+            );
             $multa->update(['anexo_comprovante_path' => $path]);
         }
 
         if ($request->hasFile('anexo_pdf')) {
-            $path = $this->multaService->salvarAnexo($request->file('anexo_pdf'), $multa->id);
+            $empresaId = (int) ($multa->empresa_id ?? Auth::user()?->empresa_id ?? 0);
+            $path = $this->multaService->salvarAnexo(
+                $request->file('anexo_pdf'),
+                $multa->id,
+                'anexo_pdf',
+                $empresaId > 0 ? $empresaId : null
+            );
             $multa->update(['anexo_pdf_path' => $path]);
         }
 
@@ -483,9 +515,25 @@ class MultaController extends BaseController
             'status_multa'         => 'paga',
         ]);
 
+        MultaHistorico::create([
+            'multa_id' => $multa->id,
+            'user_id' => Auth::id(),
+            'campo_alterado' => 'pagamento',
+            'valor_anterior' => 'pendente',
+            'valor_novo' => $forma,
+            'descricao' => sprintf(
+                'Pagamento da multa registrado em %s. Forma: %s%s%s',
+                now()->format('d/m/Y H:i'),
+                $forma,
+                $referencia ? ' | Referência: ' . $referencia : '',
+                $destinoCliente ? ' | Cobrança ao cliente' : ' | Cobrança à empresa'
+            ),
+        ]);
+
         if ($destinoCliente) {
             $this->registrarLancamentoMultaAction->lancamentoReceitaCliente($multa, $multa->pago_em);
         } else {
+            $this->registrarLancamentoMultaAction->lancamentoDespesaEmpresa($multa);
             $empresaId = (int) ($multa->empresa_id ?? $multa->reserva?->empresa_id ?? 0);
             if ($empresaId > 0 && SchemaCache::hasTable('lancamentos_financeiros')) {
                 $lancamento = \App\Models\LancamentoFinanceiro::query()

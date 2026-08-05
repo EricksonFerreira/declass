@@ -316,24 +316,97 @@
             </div>
 
             {{-- Documentos --}}
-            @if($multa->anexo_comprovante_path || $multa->anexo_pdf_path)
+            @php
+                $anexosComprovante = collect($arquivosRastreados ?? [])->filter(fn ($arquivo) => $arquivo->campo === 'anexo_comprovante');
+                $anexosPdf = collect($arquivosRastreados ?? [])->filter(fn ($arquivo) => $arquivo->campo === 'anexo_pdf');
+                $temAnexosMulta = $anexosComprovante->isNotEmpty() || $anexosPdf->isNotEmpty() || $multa->anexo_comprovante_path || $multa->anexo_pdf_path;
+            @endphp
+            @if($temAnexosMulta)
             <div class="config-card mb-4">
                 <div class="config-block">
                     <div class="config-block-label">
                         <i class="fas fa-paperclip"></i>
                         <div><strong>Documentos Anexados</strong></div>
                     </div>
-                    <div class="d-flex flex-column" style="gap:.5rem">
+                    <div class="multa-doc-grid">
+                        @forelse($anexosComprovante as $arquivo)
+                        @php
+                            $urlArquivo = \Illuminate\Support\Facades\Storage::disk($arquivo->disk ?: 'public')->url($arquivo->path);
+                            $extensao = strtolower(pathinfo((string) $arquivo->original_name, PATHINFO_EXTENSION));
+                            $badgeClasse = in_array($extensao, ['jpg', 'jpeg', 'png', 'webp'], true) ? 'info' : 'secondary';
+                        @endphp
+                        <div class="multa-doc-card multa-doc-card--image">
+                            <div class="multa-doc-icon">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            <div class="multa-doc-body">
+                                <div class="multa-doc-title">{{ $arquivo->original_name ?: 'Comprovante' }}</div>
+                                <div class="multa-doc-meta">
+                                    <span class="badge badge-{{ $badgeClasse }}">Comprovante</span>
+                                    <span>{{ $arquivo->mime_type ?: 'arquivo' }}</span>
+                                </div>
+                            </div>
+                            <a href="{{ $urlArquivo }}" target="_blank" class="multa-doc-action">
+                                <i class="fas fa-eye mr-1"></i>Abrir
+                            </a>
+                        </div>
+                        @empty
                         @if($multa->anexo_comprovante_path)
-                        <a href="{{ $multa->anexo_comprovante_url }}" target="_blank" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-image mr-1"></i>Comprovante
-                        </a>
+                        <div class="multa-doc-card multa-doc-card--image">
+                            <div class="multa-doc-icon">
+                                <i class="fas fa-image"></i>
+                            </div>
+                            <div class="multa-doc-body">
+                                <div class="multa-doc-title">Comprovante</div>
+                                <div class="multa-doc-meta">
+                                    <span class="badge badge-info">Comprovante</span>
+                                    <span>arquivo legado</span>
+                                </div>
+                            </div>
+                            <a href="{{ $multa->anexo_comprovante_url }}" target="_blank" class="multa-doc-action">
+                                <i class="fas fa-eye mr-1"></i>Abrir
+                            </a>
+                        </div>
                         @endif
+                        @endforelse
+                        @forelse($anexosPdf as $arquivo)
+                        @php
+                            $urlArquivo = \Illuminate\Support\Facades\Storage::disk($arquivo->disk ?: 'public')->url($arquivo->path);
+                        @endphp
+                        <div class="multa-doc-card multa-doc-card--pdf">
+                            <div class="multa-doc-icon multa-doc-icon--pdf">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="multa-doc-body">
+                                <div class="multa-doc-title">{{ $arquivo->original_name ?: 'PDF do Auto de Infração' }}</div>
+                                <div class="multa-doc-meta">
+                                    <span class="badge badge-danger">PDF</span>
+                                    <span>{{ $arquivo->mime_type ?: 'application/pdf' }}</span>
+                                </div>
+                            </div>
+                            <a href="{{ $urlArquivo }}" target="_blank" class="multa-doc-action">
+                                <i class="fas fa-eye mr-1"></i>Abrir
+                            </a>
+                        </div>
+                        @empty
                         @if($multa->anexo_pdf_path)
-                        <a href="{{ $multa->anexo_pdf_url }}" target="_blank" class="btn-xp btn-xp--sm">
-                            <i class="fas fa-file-pdf mr-1"></i>PDF do Auto de Infração
-                        </a>
+                        <div class="multa-doc-card multa-doc-card--pdf">
+                            <div class="multa-doc-icon multa-doc-icon--pdf">
+                                <i class="fas fa-file-pdf"></i>
+                            </div>
+                            <div class="multa-doc-body">
+                                <div class="multa-doc-title">PDF do Auto de Infração</div>
+                                <div class="multa-doc-meta">
+                                    <span class="badge badge-danger">PDF</span>
+                                    <span>arquivo legado</span>
+                                </div>
+                            </div>
+                            <a href="{{ $multa->anexo_pdf_url }}" target="_blank" class="multa-doc-action">
+                                <i class="fas fa-eye mr-1"></i>Abrir
+                            </a>
+                        </div>
                         @endif
+                        @endforelse
                     </div>
                 </div>
             </div>
@@ -351,13 +424,17 @@
                         <a href="{{ route('multa.edit', $multa->id) }}" class="veiculo-acao veiculo-acao--primary">
                             <i class="fas fa-pen"></i><span>Editar multa</span>
                         </a>
-                        @if(in_array($multa->status_multa, ['pendente', 'em_analise'], true) && $multa->data_hora_infracao && $multa->veiculo_id)
+                        @if($multa->reserva_id && in_array($multa->status_multa, ['pendente', 'em_analise'], true) && $multa->data_hora_infracao && $multa->veiculo_id)
                         <form action="{{ route('multa.atribuirAoCliente', $multa->id) }}" method="POST" class="veiculo-acao-form">
                             @csrf
                             <button type="submit" class="veiculo-acao">
                                 <i class="fas fa-user-check"></i><span>Atribuir multa ao cliente</span>
                             </button>
                         </form>
+                        @else
+                        <button type="button" class="veiculo-acao" disabled title="A multa precisa estar vinculada a uma reserva para ser atribuída ao cliente.">
+                            <i class="fas fa-user-check"></i><span>Atribuir multa ao cliente</span>
+                        </button>
                         @endif
                         @endcan
                         @if($codigoReserva)
@@ -532,6 +609,21 @@
 .status-badge--amber { background:#fef3c7;color:#92400e; }
 .xp-link { color:#2563eb;font-weight:600; }
 .xp-link:hover { color:#1d4ed8; }
+.multa-doc-grid { display:grid;grid-template-columns:1fr;gap:.75rem; }
+.multa-doc-card { display:flex;align-items:center;gap:.9rem;padding:.9rem 1rem;border:1px solid #e2e8f0;border-radius:14px;background:linear-gradient(180deg,#ffffff 0%,#f8fafc 100%);box-shadow:0 1px 2px rgba(15,23,42,.04); }
+.multa-doc-card--image { border-left:4px solid #3b82f6; }
+.multa-doc-card--pdf { border-left:4px solid #ef4444; }
+.multa-doc-icon { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:#dbeafe;color:#1d4ed8;font-size:1.1rem;flex-shrink:0; }
+.multa-doc-icon--pdf { background:#fee2e2;color:#b91c1c; }
+.multa-doc-body { min-width:0;flex:1; }
+.multa-doc-title { font-size:.9rem;font-weight:800;color:#0f172a;line-height:1.2;word-break:break-word; }
+.multa-doc-meta { display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;margin-top:.25rem;font-size:.75rem;color:#64748b; }
+.multa-doc-action { display:inline-flex;align-items:center;gap:.35rem;padding:.45rem .8rem;border-radius:999px;background:#0f172a;color:#fff;font-size:.76rem;font-weight:700;text-decoration:none;white-space:nowrap;transition:transform .15s,background .15s; }
+.multa-doc-action:hover { background:#1d4ed8;color:#fff;text-decoration:none;transform:translateY(-1px); }
+@media (max-width: 575.98px) {
+    .multa-doc-card { align-items:flex-start;flex-direction:column; }
+    .multa-doc-action { width:100%;justify-content:center; }
+}
 </style>
 @stop
 

@@ -9,6 +9,7 @@ use App\Models\Veiculo;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use App\Support\ArquivoAnexoHelper;
 
@@ -134,16 +135,21 @@ class MultaService extends AbstractBaseService
     /**
      * Salva anexo e retorna o path armazenado.
      */
-    public function salvarAnexo(\Illuminate\Http\UploadedFile $arquivo, int $multaId): string
+    public function salvarAnexo(UploadedFile $arquivo, int $multaId, string $tipoAnexo = 'anexo', ?int $empresaId = null): string
     {
+        $tipoAnexo = trim($tipoAnexo) !== '' ? trim($tipoAnexo) : 'anexo';
+
         return (string) (ArquivoAnexoHelper::armazenarRastreado($arquivo, "multas/{$multaId}/anexos", [
+            'empresa_id' => $empresaId,
+            'user_id' => Auth::id(),
             'modulo' => 'multa',
             'entidade' => Multa::class,
             'entidade_id' => $multaId,
-            'campo' => 'anexo',
-            'contexto' => 'multa.anexo',
+            'campo' => $tipoAnexo,
+            'contexto' => 'multa.' . $tipoAnexo,
             'meta' => [
                 'tipo_registro' => 'multa',
+                'tipo_anexo' => $tipoAnexo,
             ],
         ])['path'] ?? '');
     }

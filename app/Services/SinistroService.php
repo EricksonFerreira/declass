@@ -76,22 +76,39 @@ class SinistroService extends AbstractBaseService
      */
     private function detectarReserva(int $veiculoId, string $dataHora): ?Reserva
     {
-        $veiculo = Veiculo::find($veiculoId);
-        if (!$veiculo || !$veiculo->modelo_id) {
-            return null;
-        }
-
         try {
             $dt = Carbon::parse($dataHora);
         } catch (\Throwable) {
             return null;
         }
 
-        return Reserva::where('modelo_id', $veiculo->modelo_id)
-            ->where('data_inicio', '<=', $dt->toDateTimeString())
-            ->where('data_fim', '>=', $dt->toDateString())
-            ->orderByDesc('data_inicio')
+        $reserva = Reserva::query()
+            ->with(['usuario', 'veiculo', 'codigoReserva'])
+            ->where('veiculo_id', $veiculoId)
+            ->where(function ($query) use ($dt) {
+                $query
+                    ->where(function ($q) use ($dt) {
+                        $q->whereNotNull('checkin_realizado_em')
+                            ->whereNotNull('checkout_realizado_em')
+                            ->where('checkin_realizado_em', '<=', $dt)
+                            ->where('checkout_realizado_em', '>=', $dt);
+                    })
+                    ->orWhere(function ($q) use ($dt) {
+                        $q->whereNotNull('data_retirada_real')
+                            ->whereNotNull('data_fim')
+                            ->where('data_retirada_real', '<=', $dt)
+                            ->where('data_fim', '>=', $dt);
+                    });
+            })
+            ->orderByDesc('checkin_realizado_em')
+            ->orderByDesc('data_retirada_real')
             ->first();
+
+        if (! $reserva) {
+            return null;
+        }
+
+        return $reserva;
     }
 
     /**

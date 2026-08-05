@@ -1,4 +1,4 @@
-@extends('adminlte::page')
+﻿@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -457,6 +457,34 @@
         opacity: .9;
         font-weight: 700;
     }
+    .btn-xp--outline-light {
+    background: rgba(255, 255, 255, .12) !important;
+    border: 1px solid rgba(255, 255, 255, .25);
+    color: rgba(255, 255, 255, .9);
+    box-shadow: none;
+}
+.btn-xp--sm {
+    padding: 6px 12px;
+    font-size: .78rem;
+    border-radius: 8px;
+}
+.btn-xp {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: linear-gradient(135deg, #4338ca, #6366f1);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    padding: 9px 16px;
+    font-size: .82rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .18s;
+    letter-spacing: -.01em;
+    box-shadow: 0 4px 12px rgba(67, 56, 202, .25);
+}
     .kpi-meta .kpi-value {
         display: block;
         font-size: 28px;

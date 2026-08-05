@@ -314,6 +314,7 @@ class ConcluirRevisaoCheckoutReservaComumAction
     {
         $reserva->update([
             'revisao_checkout_concluida' => 'S',
+            'revisao_checkout_concluida_em' => now(),
         ]);
     }
 

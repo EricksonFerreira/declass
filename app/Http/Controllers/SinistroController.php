@@ -290,31 +290,33 @@ class SinistroController extends BaseController
 
     private function buscarReservaContratualPorVeiculoData(int $veiculoId, Carbon $dataHora): ?Reserva
     {
-        $dataHoraSql = $dataHora->format('Y-m-d H:i:s');
-        $inicioContratoSql = "TIMESTAMP(ci.data_saida, COALESCE(NULLIF(TRIM(ci.hora_saida), ''), '00:00:00'))";
-        $fimContratoSql = "TIMESTAMP(co.data_devolucao, COALESCE(NULLIF(TRIM(co.hora_devolucao), ''), '23:59:59'))";
-
-        $reservaId = \Illuminate\Support\Facades\DB::table('contrato_checkin as ci')
-            ->join('reservas as r', 'r.id', '=', 'ci.reserva_id')
-            ->leftJoin('contrato_checkout as co', 'co.reserva_id', '=', 'r.id')
-            ->where('ci.veiculo_id', $veiculoId)
-            ->whereRaw("$inicioContratoSql <= ?", [$dataHoraSql])
-            ->where(function ($query) use ($dataHoraSql, $fimContratoSql) {
+        $reserva = Reserva::query()
+            ->with(['usuario', 'veiculo', 'codigoReserva'])
+            ->where('veiculo_id', $veiculoId)
+            ->where(function ($query) use ($dataHora) {
                 $query
-                    ->whereNull('co.id')
-                    ->orWhereNull('co.data_devolucao')
-                    ->orWhereRaw("$fimContratoSql >= ?", [$dataHoraSql]);
+                    ->where(function ($q) use ($dataHora) {
+                        $q->whereNotNull('checkin_realizado_em')
+                            ->whereNotNull('checkout_realizado_em')
+                            ->where('checkin_realizado_em', '<=', $dataHora)
+                            ->where('checkout_realizado_em', '>=', $dataHora);
+                    })
+                    ->orWhere(function ($q) use ($dataHora) {
+                        $q->whereNotNull('data_retirada_real')
+                            ->whereNotNull('data_fim')
+                            ->where('data_retirada_real', '<=', $dataHora)
+                            ->where('data_fim', '>=', $dataHora);
+                    });
             })
-            ->orderByRaw("$inicioContratoSql DESC")
-            ->value('r.id');
+            ->orderByDesc('checkin_realizado_em')
+            ->orderByDesc('data_retirada_real')
+            ->first();
 
-        if (! $reservaId) {
+        if (! $reserva) {
             return null;
         }
 
-        return Reserva::query()
-            ->with(['usuario', 'veiculo', 'codigoReserva'])
-            ->find((int) $reservaId);
+        return $reserva;
     }
 
     public function confirmarPagamentoEmpresa(Request $request, int $id): \Illuminate\Http\JsonResponse
