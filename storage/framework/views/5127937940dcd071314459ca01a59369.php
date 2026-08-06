@@ -157,6 +157,129 @@ unset($__errorArgs, $__bag); ?>
                 </div>
 
                 <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Valor veículo adicional (R$)</label>
+                            <input type="number" name="valor_veiculo_adicional" step="0.01" min="0"
+                                   class="form-control <?php $__errorArgs = ['valor_veiculo_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   value="<?php echo e(old('valor_veiculo_adicional', $plano->valor_veiculo_adicional ?? '')); ?>"
+                                   placeholder="Ex.: 3,00">
+                            <?php $__errorArgs = ['valor_veiculo_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantidade de filiais</label>
+                            <input type="number" name="quantidade_filiais" step="1" min="0"
+                                   class="form-control <?php $__errorArgs = ['quantidade_filiais'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   value="<?php echo e(old('quantidade_filiais', $plano->quantidade_filiais ?? '')); ?>"
+                                   placeholder="Ex.: 1">
+                            <?php $__errorArgs = ['quantidade_filiais'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Valor filial adicional (R$)</label>
+                            <input type="number" name="valor_filial_adicional" step="0.01" min="0"
+                                   class="form-control <?php $__errorArgs = ['valor_filial_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   value="<?php echo e(old('valor_filial_adicional', $plano->valor_filial_adicional ?? '')); ?>"
+                                   placeholder="Ex.: 29,00">
+                            <?php $__errorArgs = ['valor_filial_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Valor armazenamento adicional (R$)</label>
+                            <input type="number" name="valor_armazenamento_adicional" step="0.01" min="0"
+                                   class="form-control <?php $__errorArgs = ['valor_armazenamento_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   value="<?php echo e(old('valor_armazenamento_adicional', $plano->valor_armazenamento_adicional ?? '')); ?>"
+                                   placeholder="Ex.: 5,00">
+                            <?php $__errorArgs = ['valor_armazenamento_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantidade do armazenamento adicional</label>
+                            <input type="number" name="quantidade_armazenamento_adicional" step="1" min="0"
+                                   class="form-control <?php $__errorArgs = ['quantidade_armazenamento_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>"
+                                   value="<?php echo e(old('quantidade_armazenamento_adicional', $plano->quantidade_armazenamento_adicional ?? '')); ?>"
+                                   placeholder="Ex.: 5">
+                            <?php $__errorArgs = ['quantidade_armazenamento_adicional'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?><div class="invalid-feedback"><?php echo e($message); ?></div><?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <?php $__currentLoopData = [
                         ['site_vendas',   'globe',        'Site de Vendas Online'],
                         ['modulo_multas', 'file-invoice', 'Módulo de Multas'],

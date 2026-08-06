@@ -409,6 +409,9 @@
         }
 
         atualizarMinhaReserva();
+        if (typeof window.atualizarResumoOpcionaisReserva === 'function') {
+            window.atualizarResumoOpcionaisReserva();
+        }
     }
 
     function increment(id) {
@@ -434,6 +437,9 @@
         const idOpcional = id.replace('opcional', '');
         addOpcionalReserva(idOpcional, novoValor);
         atualizarMinhaReserva();
+        if (typeof window.atualizarResumoOpcionaisReserva === 'function') {
+            window.atualizarResumoOpcionaisReserva();
+        }
     }
 
     function decrement(id) {
@@ -459,6 +465,9 @@
         const idOpcional = id.replace('opcional', '');
         removeOpcionalReserva(idOpcional);
         atualizarMinhaReserva();
+        if (typeof window.atualizarResumoOpcionaisReserva === 'function') {
+            window.atualizarResumoOpcionaisReserva();
+        }
     }
 </script>
 <?php /**PATH C:\Users\Erickson\Dev\laragon\www\xpandCars\resources\views/reserva/components/opcionais.blade.php ENDPATH**/ ?>
