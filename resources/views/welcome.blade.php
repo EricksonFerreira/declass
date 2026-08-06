@@ -31,11 +31,11 @@
     <title>DeCars | Software para Locadoras com Site de Reservas Online</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicons/favicon.ico') }}">
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <link rel="manifest" href="{{ route('site.manifest') }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="DeCars">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/icon-192.svg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicons/favicon.ico') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">

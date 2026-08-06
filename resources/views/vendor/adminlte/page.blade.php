@@ -6,17 +6,19 @@
 @php
     $empresaBranding = app(\App\Support\EmpresaBranding::class);
     $faviconUrl = $empresaBranding->logoUrl();
+    $empresaAtual = $empresaBranding->empresaAtual();
+    $appName = $empresaAtual?->nome ?: config('app.name', 'DeCars');
 @endphp
 
 @section('meta_tags')
     @parent
     <link rel="shortcut icon" href="{{ $faviconUrl }}" />
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    <meta name="theme-color" content="#0a1628">
+    <link rel="manifest" href="{{ route('site.manifest') }}">
+    <meta name="theme-color" content="{{ $empresaAtual?->cor_primaria ?: '#0a1628' }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DeCars">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/icon-192.svg') }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $appName }}">
+    <link rel="apple-touch-icon" href="{{ $faviconUrl }}">
 @stop
 
 @section('adminlte_css')

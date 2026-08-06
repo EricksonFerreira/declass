@@ -45,6 +45,39 @@ class SiteApresentacaoController extends Controller
         ]);
     }
 
+    public function manifest(Request $request)
+    {
+        $host = DomainNormalizer::normalize($request->getHost());
+        $empresa = $this->resolveEmpresaByHost($host);
+
+        $appName = $empresa?->nome ?: config('app.name', 'DeCars');
+        $shortName = mb_strimwidth($appName, 0, 12, '', 'UTF-8');
+        $themeColor = $empresa?->cor_primaria ?: '#0a1628';
+        $iconUrl = $empresa?->logo_url ?: asset('favicons/favicon.ico');
+        $startUrl = $empresa?->site_apresentacao_ativo === 'S' ? route('site.apresentacao') : url('/');
+
+        return response()->json([
+            'name' => $appName,
+            'short_name' => $shortName,
+            'description' => $empresa?->site_apresentacao_descricao
+                ?: 'Sistema para locadoras com gestão completa, check-in digital e reservas online.',
+            'start_url' => $startUrl,
+            'scope' => '/',
+            'display' => 'standalone',
+            'background_color' => $themeColor,
+            'theme_color' => $themeColor,
+            'orientation' => 'portrait-primary',
+            'icons' => [
+                [
+                    'src' => $iconUrl,
+                    'sizes' => 'any',
+                    'type' => 'image/x-icon',
+                    'purpose' => 'any maskable',
+                ],
+            ],
+        ])->header('Content-Type', 'application/manifest+json');
+    }
+
     public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response
     {
         $host = DomainNormalizer::normalize($request->getHost());

@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acesso administrativo | {{ $empresa->nome }}</title>
-    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
-    <meta name="theme-color" content="#0a1628">
+    <link rel="manifest" href="{{ route('site.manifest') }}">
+    <meta name="theme-color" content="{{ $empresa->cor_primaria ?: '#0a1628' }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DeCars">
-    <link rel="apple-touch-icon" href="{{ asset('pwa/icon-192.svg') }}">
+    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome }}">
+    <link rel="apple-touch-icon" href="{{ $empresa->logo_url ?: asset('favicons/favicon.ico') }}">
     <script>
         if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
             window.addEventListener('load', function () {
