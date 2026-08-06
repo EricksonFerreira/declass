@@ -18,7 +18,7 @@ Route::middleware('can:acessar-superadmin')->group(function () {
     Route::get('plano/{plano}/acessos', [PlanoController::class, 'acessos'])->name('plano.acessos');
     Route::put('plano/{plano}/acessos', [PlanoController::class, 'salvarAcessos'])->name('plano.acessos.update');
     Route::resource('plano', PlanoController::class)
-        ->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+        ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 });
 
 // ── Gestão de Assinaturas (visão global) — superadmin / gerenciar-planos ────

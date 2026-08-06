@@ -33,12 +33,12 @@ class PlanoController extends Controller
 
     public function index(): View
     {
-        $titulo = 'Catalogo de Planos';
-        $subtitulo = 'Gerencie os planos disponiveis para locadoras';
+        $titulo = 'Planos';
+        $subtitulo = 'Lista visual dos planos com acesso rapido ao detalhe';
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
-            new \App\DTO\BreadCrumbItem('Catalogo', null),
+            new \App\DTO\BreadCrumbItem('Lista', null),
         ]);
 
         $planos = Plano::withCount('assinaturas')->orderBy('ordem')->get();
@@ -115,6 +115,22 @@ class PlanoController extends Controller
         $plano->load('itens');
 
         return view('plano.edit', compact('plano', 'breadcrumb', 'titulo', 'subtitulo'));
+    }
+
+    public function show(Plano $plano): View
+    {
+        $plano->load(['itens', 'assinaturas.empresa']);
+
+        $titulo = $plano->nome;
+        $subtitulo = 'Detalhes completos do plano e seus recursos';
+        $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
+            new \App\DTO\BreadCrumbItem('Home', route('home')),
+            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
+            new \App\DTO\BreadCrumbItem('Lista', route('plano.index')),
+            new \App\DTO\BreadCrumbItem($plano->nome, null),
+        ]);
+
+        return view('plano.show', compact('plano', 'breadcrumb', 'titulo', 'subtitulo'));
     }
 
     public function acessos(Plano $plano): View

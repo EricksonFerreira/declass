@@ -380,7 +380,7 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('js'); ?>
-    <script src="<?php echo e(asset('js/select2.min.js')); ?>"></script>
+    <script src="/js/select2.min.js"></script>
     <script>
         (function() {
             const form = document.getElementById('formAtribuir');

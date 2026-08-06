@@ -397,13 +397,18 @@ class AssinaturaController extends Controller
         $planos = Plano::ativos()->get();
         $stripePublicKey = config('services.stripe.key');
         $empresaSelecionadaId = $empresa?->id ?? $request->integer('empresa_id') ?: null;
+        $empresaSelecionadaNome = $empresa?->nome;
+        if (! $empresaSelecionadaNome && $empresaSelecionadaId) {
+            $empresaSelecionadaNome = optional($empresas->firstWhere('id', (int) $empresaSelecionadaId))->nome;
+        }
+        $empresaSelecionada = $empresaSelecionadaId ? $empresas->firstWhere('id', (int) $empresaSelecionadaId) : null;
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Assinaturas', route('assinatura.index')),
             new \App\DTO\BreadCrumbItem('Atribuir Plano'),
         ]);
 
-        return view('assinatura.atribuir', compact('empresas', 'planos', 'stripePublicKey', 'breadcrumb', 'empresaSelecionadaId'))
+        return view('assinatura.atribuir', compact('empresas', 'planos', 'stripePublicKey', 'breadcrumb', 'empresaSelecionadaId', 'empresaSelecionadaNome', 'empresaSelecionada'))
             ->with('titulo', 'Atribuir Plano');
     }
 

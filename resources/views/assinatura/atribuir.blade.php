@@ -59,29 +59,15 @@
                                 <div class="form-row">
                                     <div class="col-md-12 mb-3">
                                         <label class="mb-1">Empresa <span class="text-danger">*</span></label>
-                                        <select name="empresa_id" id="empresa_id" class="form-control form-control-sm" required>
-                                            <option value="">Selecione a empresa...</option>
-                                            @foreach ($empresas as $emp)
-                                                @php
-                                                    $assinaturaAtual = $emp->planoAtivo;
-                                                    $planoAtualNome = $assinaturaAtual?->plano?->nome;
-                                                    $vinculada = (bool) $assinaturaAtual;
-                                                @endphp
-                                                <option
-                                                    value="{{ $emp->id }}"
-                                                    data-vinculada="{{ $vinculada ? '1' : '0' }}"
-                                                    data-plano-atual="{{ $planoAtualNome ?? '' }}"
-                                                    data-veiculos="{{ $emp->qtd_veiculos_ativos ?? 0 }}"
-                                                    data-estacoes="{{ $emp->qtd_estacoes ?? 0 }}"
-                                                    data-storage="{{ $emp->armazenamento_usado_mb ?? 0 }}"
-                                                    {{ (int) ($empresaSelecionadaId ?? request('empresa_id')) === (int) $emp->id ? 'selected' : '' }}
-                                                >
-                                                    {{ $emp->nome }}{{ $vinculada ? ' - Vinculada: ' . $planoAtualNome : ' - Sem plano' }}
-                                                </option>
-                                            @endforeach
-                                        </select>
+                                        <input type="hidden" name="empresa_id" id="empresa_id" value="{{ $empresaSelecionadaId }}">
+                                        <input
+                                            type="text"
+                                            class="form-control form-control-sm"
+                                            value="{{ $empresaSelecionadaNome ?? 'Empresa não informada' }}"
+                                            readonly
+                                        >
                                         <small class="veiculo-lookup-help">
-                                            Escolha a empresa. Se ela já tiver assinatura ativa, você verá a indicação ao lado.
+                                            A empresa foi definida pela URL e não pode ser alterada nesta tela.
                                         </small>
                                     </div>
 
@@ -348,20 +334,12 @@
             const form = document.getElementById('formAtribuir');
             const btnSubmit = document.getElementById('btnSubmit');
             const btnText = document.getElementById('btnText');
-            const empresaSelect = $('#empresa_id');
-
-            empresaSelect.select2({
-                theme: 'bootstrap4',
-                width: 'resolve',
-                placeholder: 'Selecione a empresa...',
-                allowClear: true,
-                minimumResultsForSearch: 0,
-                dropdownAutoWidth: true,
-                dropdownParent: $(document.body),
-            });
-
             function atualizarPreview() {
-                const empresa = document.getElementById('empresa_id').selectedOptions[0];
+                const empresa = @json([
+                    'veiculos' => (int) ($empresaSelecionada->qtd_veiculos_ativos ?? 0),
+                    'estacoes' => (int) ($empresaSelecionada->qtd_estacoes ?? 0),
+                    'storage' => (float) ($empresaSelecionada->armazenamento_usado_mb ?? 0),
+                ]);
                 const plano = document.getElementById('plano_id').selectedOptions[0];
                 const periodicidade = document.getElementById('periodicidade').value;
                 const valorEl = document.getElementById('valorExibido');
@@ -371,8 +349,8 @@
                 const storageUnit = document.getElementById('storageUnit');
                 const storageBlock = document.getElementById('storageBlock');
 
-                const empresaVeiculos = empresa ? parseInt(empresa.dataset.veiculos || 0, 10) : 0;
-                const empresaEstacoes = empresa ? parseInt(empresa.dataset.estacoes || 0, 10) : 0;
+                const empresaVeiculos = parseInt(empresa.veiculos || 0, 10);
+                const empresaEstacoes = parseInt(empresa.estacoes || 0, 10);
 
                 if (plano && plano.value) {
                     const valor = periodicidade === 'anual'
@@ -430,7 +408,6 @@
 
             document.getElementById('plano_id').addEventListener('change', atualizarPreview);
             document.getElementById('periodicidade').addEventListener('change', atualizarPreview);
-            document.getElementById('empresa_id').addEventListener('change', atualizarPreview);
             document.getElementById('valorExibido').addEventListener('input', atualizarPreview);
             document.getElementById('planoStorage').addEventListener('input', atualizarPreview);
             document.getElementById('veiculoUnit').addEventListener('input', atualizarPreview);
