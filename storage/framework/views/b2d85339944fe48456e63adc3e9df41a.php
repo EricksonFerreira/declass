@@ -686,18 +686,24 @@
 
         clearTimeout(snReservaTimer);
         snReservaTimer = setTimeout(() => {
-            const url = `${URL_BUSCAR_RESERVA}?veiculo_id=${veiculoId}&data_hora=${encodeURIComponent(dataHora)}`;
+            const params = new URLSearchParams();
+            params.set('veiculo_id', veiculoId);
+            params.set('data_hora', dataHora);
+
+            const url = `${URL_BUSCAR_RESERVA}?${params.toString()}`;
             fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(r => r.json())
                 .then(data => {
                     if (iconEl) iconEl.innerHTML = '<i class="fas fa-link text-muted"></i>';
                     if (data.reserva) {
                         const r = data.reserva;
-                        if (reservaEl && !reservaEl.value) reservaEl.value = r.id;
+                        if (reservaEl) reservaEl.value = r.id;
                         if (btnLimpar) btnLimpar.classList.remove('d-none');
                         if (infoEl) infoEl.innerHTML =
                             `<span class="text-success"><i class="fas fa-check-circle mr-1"></i>Reserva <strong>#${r.id}</strong> — ${r.cliente} (${r.data_inicio} → ${r.data_fim})</span>`;
                     } else {
+                        if (reservaEl) reservaEl.value = '';
+                        if (btnLimpar) btnLimpar.classList.add('d-none');
                         if (infoEl) infoEl.innerHTML =
                             '<span class="text-warning"><i class="fas fa-exclamation-circle mr-1"></i>Nenhuma reserva encontrada para este veículo nesta data.</span>';
                     }
@@ -731,6 +737,7 @@
 
         reservaInput?.addEventListener('input', function () {
             btnLimparReserva?.classList.toggle('d-none', !this.value.trim());
+            snBuscarReserva();
         });
 
         // Polling para detectar mudança no hidden do veículo (o modal altera via JS)
@@ -750,6 +757,7 @@
         }
         if (dataHoraInput) {
             dataHoraInput.addEventListener('change', snBuscarReserva);
+            dataHoraInput.addEventListener('input', snBuscarReserva);
         }
 
         // Se já tem veículo e data pré-preenchidos (edição), dispara imediatamente

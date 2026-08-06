@@ -112,8 +112,7 @@
                 <div class="ma-info">
                     <div class="ma-info__label">Data/Hora da Saída</div>
                     <div class="ma-info__value font-weight-bold">
-                        {{ $contratoCheckinOperacional->data_saida ? \Carbon\Carbon::parse($contratoCheckinOperacional->data_saida)->format('d/m/Y') : '-' }}
-                        {{ $contratoCheckinOperacional->hora_saida ? \Carbon\Carbon::parse($contratoCheckinOperacional->hora_saida)->format('H:i') : '' }}
+                        {{ $reserva->checkin_realizado_em ? \Carbon\Carbon::parse($reserva->checkin_realizado_em)->format('d/m/Y H:i') : '-' }}
                     </div>
                 </div>
                 <div class="ma-info">

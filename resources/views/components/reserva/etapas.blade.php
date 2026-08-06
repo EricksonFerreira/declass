@@ -8,6 +8,7 @@
     $calcaoConfiguradoEmpresa = (bool) ($calcaoConfiguradoEmpresa ?? false);
     $calcaoAplicavel = (bool) ($calcaoAplicavel ?? $calcaoConfiguradoEmpresa);
     $etapaCalcao = (bool) $calcao;
+    $etapaCalcaoRegistradoEm = (bool) ($reserva->calcao_registrado_em ?? null);
     $etapaCalcaoRegistrado = $etapaCalcao && in_array((string) ($calcao->status ?? ''), [
         \App\Models\Calcao::STATUS_AUTORIZADO,
         \App\Models\Calcao::STATUS_CAPTURADO,
@@ -148,8 +149,8 @@
         <span class="rs-flow__value">Assinatura</span>
     </div>
 
-    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : (($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'is-calcao' : ($etapaCheckinAssinado ? 'is-current' : '')) }} {{ ! $reservaCancelada && !($etapaCalcaoRegistrado || $etapaCalcaoDispensado) && $etapaCheckinAssinado ? 'is-calcao' : '' }}">
-        <i class="rs-flow__icon fas {{ ($etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'fa-check-circle' : 'fa-clock' }}"></i>
+    <div class="rs-flow__step {{ $reservaCancelada ? 'is-cancelled' : (($etapaCalcaoRegistradoEm || $etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'is-done' : ($etapaCheckinAssinado ? 'is-current' : '')) }} {{ ! $reservaCancelada && !($etapaCalcaoRegistradoEm || $etapaCalcaoRegistrado || $etapaCalcaoDispensado) && $etapaCheckinAssinado ? 'is-calcao' : '' }}">
+        <i class="rs-flow__icon fas {{ ($etapaCalcaoRegistradoEm || $etapaCalcaoRegistrado || $etapaCalcaoDispensado) ? 'fa-check-circle' : 'fa-clock' }}"></i>
         <span class="rs-flow__label">- 5 -</span>
         <span class="rs-flow__value">Calção</span>
     </div>

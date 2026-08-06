@@ -293,33 +293,38 @@ class SinistroController extends BaseController
 
     private function buscarReservaContratualPorVeiculoData(int $veiculoId, Carbon $dataHora): ?Reserva
     {
-        $reserva = Reserva::query()
+        $dataHoraSql = $dataHora->format('Y-m-d H:i:s');
+        $reservasBase = Reserva::query()
             ->with(['usuario', 'veiculo', 'codigoReserva'])
-            ->where('veiculo_id', $veiculoId)
-            ->where(function ($query) use ($dataHora) {
+            ->where('veiculo_id', $veiculoId);
+
+        $reservaReal = (clone $reservasBase)
+            ->whereNotNull('checkin_realizado_em')
+            ->where('checkin_realizado_em', '<=', $dataHoraSql)
+            ->where(function ($query) use ($dataHoraSql): void {
                 $query
-                    ->where(function ($q) use ($dataHora) {
-                        $q->whereNotNull('checkin_realizado_em')
-                            ->whereNotNull('checkout_realizado_em')
-                            ->where('checkin_realizado_em', '<=', $dataHora)
-                            ->where('checkout_realizado_em', '>=', $dataHora);
-                    })
-                    ->orWhere(function ($q) use ($dataHora) {
-                        $q->whereNotNull('data_inicio')
-                            ->whereNotNull('data_fim')
-                            ->where('data_inicio', '<=', $dataHora)
-                            ->where('data_fim', '>=', $dataHora);
-                    });
+                    ->whereNull('checkout_realizado_em')
+                    ->orWhere('checkout_realizado_em', '>=', $dataHoraSql);
             })
             ->orderByDesc('checkin_realizado_em')
-            ->orderByDesc('data_inicio')
+            ->orderByDesc('id')
             ->first();
 
-        if (! $reserva) {
-            return null;
+        if ($reservaReal) {
+            return $reservaReal;
         }
 
-        return $reserva;
+        return (clone $reservasBase)
+            ->where(function ($query) use ($dataHoraSql): void {
+                $query
+                    ->whereNull('checkin_realizado_em')
+                    ->orWhereNull('checkout_realizado_em');
+            })
+            ->where('data_inicio', '<=', $dataHoraSql)
+            ->where('data_fim', '>=', $dataHoraSql)
+            ->orderByDesc('data_inicio')
+            ->orderByDesc('id')
+            ->first();
     }
 
     public function confirmarPagamentoEmpresa(Request $request, int $id): \Illuminate\Http\JsonResponse

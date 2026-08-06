@@ -935,8 +935,9 @@
         const veiculoDisplay = document.getElementById('veiculo_display');
         const placaInput = document.querySelector('[name=placa_momento]');
 
-        const byReserva = !!reservaId && (modo === 'auto' || modo === 'reservation' || modo === 'force');
-        const byVeiculoData = !!veiculoId && !!dataHora && (modo === 'auto' || modo === 'vehicle' || modo === 'force');
+        const hasVeiculoData = !!veiculoId && !!dataHora;
+        const byReserva = !!reservaId && (modo === 'auto' || modo === 'reservation' || modo === 'force' || hasVeiculoData);
+        const byVeiculoData = hasVeiculoData && (modo === 'auto' || modo === 'vehicle' || modo === 'force' || !!reservaId);
 
         if (!byReserva && !byVeiculoData) {
             if (modo === 'force') {
@@ -951,7 +952,11 @@
         clearTimeout(multaReservaTimer);
         multaReservaTimer = setTimeout(() => {
             const params = new URLSearchParams();
-            if (byReserva) {
+            if (byReserva && hasVeiculoData) {
+                params.set('reserva_id', reservaId);
+                params.set('veiculo_id', veiculoId);
+                params.set('data_hora', dataHora);
+            } else if (byReserva) {
                 params.set('reserva_id', reservaId);
             } else {
                 params.set('veiculo_id', veiculoId);
@@ -974,6 +979,24 @@
                         `</span>`;
                     multaSetAutoStatus(`Reserva #${r.codigo || r.codigo_reserva || r.id} vinculada automaticamente.`, 'success');
                 } else {
+                    const reservaEl = document.getElementById('multa_reserva_id_input');
+                    const veiculoHidden = document.getElementById('veiculo_id_input');
+                    const veiculoDisplay = document.getElementById('veiculo_display');
+                    const placaInput = document.querySelector('[name=placa_momento]');
+
+                    if (modo === 'auto' || modo === 'vehicle') {
+                        if (reservaEl) reservaEl.value = '';
+                        if (veiculoHidden?.value && !data.reserva) {
+                            veiculoHidden.value = '';
+                        }
+                        if (veiculoDisplay && !reservaId) {
+                            veiculoDisplay.value = '';
+                        }
+                        if (placaInput && !reservaId) {
+                            placaInput.value = '';
+                        }
+                        document.getElementById('btnLimparReserva')?.classList.add('d-none');
+                    }
                     if (infoEl) infoEl.innerHTML =
                         `<span class="text-warning"><i class="fas fa-exclamation-circle mr-1"></i>` +
                         `Nenhuma reserva encontrada para esta combinação. Você pode preencher manualmente.</span>`;
@@ -1009,20 +1032,27 @@
         document.getElementById('btnLimparReserva')?.classList.add('d-none');
     });
 
-    document.getElementById('multa_reserva_id_input')?.addEventListener('input', function () {
-        document.getElementById('btnLimparReserva')?.classList.toggle('d-none', !this.value.trim());
-        clearTimeout(multaReservaTimer);
-        multaReservaTimer = setTimeout(() => multaBuscarReserva('reservation'), 300);
-    });
-
-    document.querySelector('[name=data_hora_infracao]')?.addEventListener('input', function () {
-        multaBuscarReserva('auto');
-    });
-
-    // Dispara quando muda o veículo (polling no hidden input) ou a data da infração
     (function () {
         const veiculoHidden  = document.getElementById('veiculo_id_input');
         const dataHoraInput  = document.querySelector('[name=data_hora_infracao]');
+        const reservaInput = document.getElementById('multa_reserva_id_input');
+        const btnLimparReserva = document.getElementById('btnLimparReserva');
+
+        const triggerBuscaAuto = function () {
+            clearTimeout(multaReservaTimer);
+            multaReservaTimer = setTimeout(() => multaBuscarReserva('auto'), 250);
+        };
+
+        reservaInput?.addEventListener('input', function () {
+            btnLimparReserva?.classList.toggle('d-none', !this.value.trim());
+            triggerBuscaAuto();
+        });
+        reservaInput?.addEventListener('change', triggerBuscaAuto);
+
+        dataHoraInput?.addEventListener('input', triggerBuscaAuto);
+        dataHoraInput?.addEventListener('change', triggerBuscaAuto);
+
+        veiculoHidden?.addEventListener('change', triggerBuscaAuto);
 
         if (veiculoHidden) {
             let _prevVal = veiculoHidden.value;
@@ -1030,18 +1060,17 @@
                 if (veiculoHidden.value !== _prevVal) {
                     _prevVal = veiculoHidden.value;
                     multaResetReservaInfo('');
-                    multaBuscarReserva('auto');
+                    triggerBuscaAuto();
                 }
             }, 400);
         }
-        dataHoraInput?.addEventListener('change', () => multaBuscarReserva('auto'));
 
         // Se já tem veículo na edição mas não tem reserva, tenta buscar
-        if (veiculoHidden?.value && !document.getElementById('multa_reserva_id_input')?.value) {
-            multaBuscarReserva('auto');
+        if (veiculoHidden?.value && !reservaInput?.value) {
+            triggerBuscaAuto();
         }
 
-        document.getElementById('btnLimparReserva')?.classList.toggle('d-none', !document.getElementById('multa_reserva_id_input')?.value?.trim());
+        btnLimparReserva?.classList.toggle('d-none', !reservaInput?.value?.trim());
     })();
 
     // Preenche valor_final automaticamente

@@ -164,7 +164,26 @@ class MultaController extends BaseController
 
         $reserva = null;
 
-        if ($reservaId) {
+        if ($reservaId && $veiculoId && $dataHora) {
+            try {
+                $dt = Carbon::parse($dataHora);
+            } catch (\Throwable) {
+                return response()->json(['reserva' => null]);
+            }
+
+            $reserva = Reserva::query()
+                ->with(['usuario', 'veiculo'])
+                ->find((int) $reservaId);
+
+            if (! $reserva || (int) $reserva->veiculo_id !== (int) $veiculoId) {
+                return response()->json(['reserva' => null]);
+            }
+
+            $reservaValida = $this->buscarReservaContratualPorVeiculoData((int) $veiculoId, $dt);
+            if (! $reservaValida || (int) $reservaValida->id !== (int) $reservaId) {
+                return response()->json(['reserva' => null]);
+            }
+        } elseif ($reservaId) {
             $reserva = Reserva::query()
                 ->with(['usuario', 'veiculo'])
                 ->find((int) $reservaId);
@@ -605,30 +624,37 @@ class MultaController extends BaseController
     private function buscarReservaContratualPorVeiculoData(int $veiculoId, Carbon $dataHora): ?Reserva
     {
         $dataHoraSql = $dataHora->format('Y-m-d H:i:s');
-        $inicioContratoSql = "TIMESTAMP(ci.data_saida, COALESCE(NULLIF(TRIM(ci.hora_saida), ''), '00:00:00'))";
-        $fimContratoSql = "TIMESTAMP(co.data_devolucao, COALESCE(NULLIF(TRIM(co.hora_devolucao), ''), '23:59:59'))";
+        $reservasBase = Reserva::query()
+            ->with(['usuario', 'veiculo', 'codigoReserva'])
+            ->where('veiculo_id', $veiculoId);
 
-        $reservaId = DB::table('contrato_checkin as ci')
-            ->join('reservas as r', 'r.id', '=', 'ci.reserva_id')
-            ->leftJoin('contrato_checkout as co', 'co.reserva_id', '=', 'r.id')
-            ->where('ci.veiculo_id', $veiculoId)
-            ->whereRaw("$inicioContratoSql <= ?", [$dataHoraSql])
-            ->where(function ($query) use ($dataHoraSql, $fimContratoSql) {
+        $reservaReal = (clone $reservasBase)
+            ->whereNotNull('checkin_realizado_em')
+            ->where('checkin_realizado_em', '<=', $dataHoraSql)
+            ->where(function ($query) use ($dataHoraSql): void {
                 $query
-                    ->whereNull('co.id')
-                    ->orWhereNull('co.data_devolucao')
-                    ->orWhereRaw("$fimContratoSql >= ?", [$dataHoraSql]);
+                    ->whereNull('checkout_realizado_em')
+                    ->orWhere('checkout_realizado_em', '>=', $dataHoraSql);
             })
-            ->orderByRaw("$inicioContratoSql DESC")
-            ->value('r.id');
+            ->orderByDesc('checkin_realizado_em')
+            ->orderByDesc('id')
+            ->first();
 
-        if (! $reservaId) {
-            return null;
+        if ($reservaReal) {
+            return $reservaReal;
         }
 
-        return Reserva::query()
-            ->with(['usuario', 'veiculo', 'codigoReserva'])
-            ->find((int) $reservaId);
+        return (clone $reservasBase)
+            ->where(function ($query) use ($dataHoraSql): void {
+                $query
+                    ->whereNull('checkin_realizado_em')
+                    ->orWhereNull('checkout_realizado_em');
+            })
+            ->where('data_inicio', '<=', $dataHoraSql)
+            ->where('data_fim', '>=', $dataHoraSql)
+            ->orderByDesc('data_inicio')
+            ->orderByDesc('id')
+            ->first();
     }
 
     private function validarReservaPeriodoVeiculo(array $dados): ?string

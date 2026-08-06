@@ -10,6 +10,7 @@
     $coBadgeClr = $coAssinado ? '#047857' : '#b45309';
     $coBadgeTxt = $coAssinado ? 'Contrato Assinado' : 'Aguardando Assinatura';
     $coBadgeIcon = $coAssinado ? 'fa-check-circle' : 'fa-clock';
+    $checkoutRealizadoEm = $reserva->checkout_realizado_em ?? null;
 
     $fotosCheckoutPaths = [
         'Direita' => $co->foto_direita_path ?? null,
@@ -51,8 +52,7 @@
             <div class="rs-ci-detail">
                 <span><i class="fas fa-calendar mr-1"></i>Devolução</span>
                 <strong>
-                    {{ $co->data_devolucao ? \Carbon\Carbon::parse($co->data_devolucao)->format('d/m/Y') : '—' }}
-                    {{ $co->hora_devolucao ? substr($co->hora_devolucao, 0, 5) : '' }}
+                    {{ $checkoutRealizadoEm ? \Carbon\Carbon::parse($checkoutRealizadoEm)->format('d/m/Y H:i') : '—' }}
                 </strong>
             </div>
             @if($coAssinado && $co->data_assinatura)

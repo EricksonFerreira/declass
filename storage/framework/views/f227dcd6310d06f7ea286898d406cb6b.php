@@ -49,9 +49,7 @@
 
                 <div class="module-header-right">
                     <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('sinistro.export')): ?>
-                        <a href="<?php echo e(route('sinistro.export', request()->query())); ?>" class="btn-xp btn-xp--sm btn-xp--outline-light">
-                            <i class="fas fa-file-csv"></i> CSV
-                        </a>
+                        
                     <?php endif; ?>
                     <a href="<?php echo e(route('sinistro.create')); ?>" class="btn-xp btn-xp--sm">
                         <i class="fas fa-plus"></i> Novo sinistro

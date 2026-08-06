@@ -6,17 +6,18 @@
     $faviconUrl = $empresaBranding->logoUrl();
     $empresaAtual = $empresaBranding->empresaAtual();
     $appName = $empresaAtual?->nome ?: config('app.name', 'DeCars');
+    $manifestVersion = rawurlencode((string) ($empresaAtual?->id ?? '0')).'-'.substr(sha1(($empresaAtual?->nome ?? '').'|'.($empresaAtual?->logo_path ?? '').'|'.($empresaAtual?->cor_primaria ?? '')), 0, 12);
 ?>
 
 <?php $__env->startSection('meta_tags'); ?>
     <?php echo \Illuminate\View\Factory::parentPlaceholder('meta_tags'); ?>
     <link rel="shortcut icon" href="<?php echo e($faviconUrl); ?>" />
-    <link rel="manifest" href="<?php echo e(route('site.manifest')); ?>">
+    <link rel="manifest" href="<?php echo e(route('site.manifest', ['v' => $manifestVersion])); ?>">
     <meta name="theme-color" content="<?php echo e($empresaAtual?->cor_primaria ?: '#0a1628'); ?>">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="<?php echo e($appName); ?>">
-    <link rel="apple-touch-icon" href="<?php echo e($faviconUrl); ?>">
+    <link rel="apple-touch-icon" href="<?php echo e(route('site.manifest.icon')); ?>">
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('adminlte_css'); ?>

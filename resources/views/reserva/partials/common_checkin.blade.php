@@ -11,6 +11,7 @@
     $ciBadgeClr  = $ciAssinado ? '#047857' : '#b45309';
     $ciBadgeTxt  = $ciAssinado ? 'Contrato Assinado' : 'Aguardando Assinatura';
     $ciBadgeIcon = $ciAssinado ? 'fa-check-circle' : 'fa-clock';
+    $checkinRealizadoEm = $reserva->checkin_realizado_em ?? null;
 
     $fotosPaths = [
         'Direita'      => $ci->foto_direita_path ?? null,
@@ -54,8 +55,7 @@
             <div class="rs-ci-detail">
                 <span><i class="fas fa-calendar mr-1"></i>Saída</span>
                 <strong>
-                    {{ $ci->data_saida ? \Carbon\Carbon::parse($ci->data_saida)->format('d/m/Y') : '—' }}
-                    {{ $ci->hora_saida ? substr($ci->hora_saida, 0, 5) : '' }}
+                    {{ $checkinRealizadoEm ? \Carbon\Carbon::parse($checkinRealizadoEm)->format('d/m/Y H:i') : '—' }}
                 </strong>
             </div>
             @if($ciAssinado && $ci->data_assinatura)

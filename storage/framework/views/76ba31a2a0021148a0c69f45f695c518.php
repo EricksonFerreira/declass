@@ -49,9 +49,7 @@
 
                 <div class="module-header-right">
                     <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('multa.export')): ?>
-                        <a href="<?php echo e(route('multa.export', request()->query())); ?>" class="btn-xp btn-xp--sm btn-xp--outline-light">
-                            <i class="fas fa-file-csv"></i> CSV
-                        </a>
+                        
                     <?php endif; ?>
                     <a href="<?php echo e(route('multa.create')); ?>" class="btn-xp btn-xp--sm">
                         <i class="fas fa-plus"></i> Nova multa
