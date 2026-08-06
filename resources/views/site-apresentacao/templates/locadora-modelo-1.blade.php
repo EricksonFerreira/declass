@@ -6,8 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $titulo }} | {{ $empresa->nome }}</title>
     <meta name="description" content="{{ $descricao }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
     <link rel="icon" href="{{ $empresa->logo_url ?: asset('assets/imgs/logo.png') }}">
     <link rel="apple-touch-icon" href="{{ $empresa->logo_url ?: asset('assets/imgs/logo.png') }}">
+    <meta name="theme-color" content="{{ $corPrimaria }}">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -16,6 +21,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '/' }).catch(function (error) {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
+    </script>
     <style>
         /* ------------------------------------------
            TOKENS
@@ -4064,5 +4078,4 @@
 </body>
 
 </html>
-
 

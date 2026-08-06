@@ -1070,15 +1070,24 @@
     #diagRoot > .d-flex {
         gap: 8px;
     }
+    #diagRoot .diag-lista {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+    }
     #diagRoot .diag-card {
-        width: calc(25% - 9px);
-        flex: 0 0 calc(25% - 9px);
+        min-width: 0;
+    }
+    #diagRoot .diag-card__shell {
+        height: 100%;
         box-sizing: border-box;
         border-radius: 16px;
         overflow: hidden;
         transition: box-shadow .2s, transform .2s;
         background: #fff;
-        border: 1px solid #e2e8f0;
+        border: 1px solid var(--diag-border, #e2e8f0);
+        display: flex;
+        flex-direction: column;
     }
     #diagRoot .diag-card:hover {
         box-shadow: 0 10px 24px rgba(15, 23, 42, .08);
@@ -1099,9 +1108,173 @@
     #diagRoot .collapse .card-body {
         border-top: 1px solid #e5e7eb;
     }
+    #diagRoot .diag-card__head {
+        display: flex;
+        align-items: flex-start;
+        gap: 11px;
+        padding: 14px 16px 12px;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    #diagRoot .diag-card__avatar {
+        width: 44px;
+        height: 44px;
+        border-radius: 10px;
+        background: linear-gradient(135deg,#3b82f6,#6366f1);
+        color: #fff;
+        font-size: .82rem;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    #diagRoot .diag-card__identity {
+        flex: 1;
+        min-width: 0;
+    }
+    #diagRoot .diag-card__eyebrow {
+        font-size: .72rem;
+        font-weight: 600;
+        letter-spacing: .08em;
+        text-transform: uppercase;
+        color: #94a3b8;
+        margin-bottom: 2px;
+    }
+    #diagRoot .diag-card__title {
+        font-size: .97rem;
+        font-weight: 700;
+        color: #0f2740;
+    }
+    #diagRoot .diag-card__subtitle {
+        font-size: .78rem;
+        color: #64748b;
+    }
+    #diagRoot .diag-card__status {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    #diagRoot .diag-pill {
+        padding: 2px 10px;
+        border-radius: 20px;
+        font-size: .7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    #diagRoot .diag-pill--score {
+        font-size: .65rem;
+        font-weight: 600;
+    }
+    #diagRoot .diag-card__rules {
+        padding: 10px 16px 14px;
+        font-size: .78rem;
+    }
+    #diagRoot .diag-rule {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 4px 0;
+    }
+    #diagRoot .diag-rule i {
+        font-size: .85rem;
+        margin-top: 2px;
+        flex-shrink: 0;
+        width: 16px;
+    }
+    #diagRoot .diag-rule__content {
+        flex: 1;
+        min-width: 0;
+    }
+    #diagRoot .diag-rule__solution {
+        font-size: .75rem;
+        color: #dc2626;
+        margin-top: 2px;
+        padding: 3px 6px;
+        background: #fef2f2;
+        border-radius: 4px;
+        border: 1px solid #fca5a5;
+    }
+    #diagRoot .diag-rule__links {
+        margin-top: 3px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    #diagRoot .diag-rule__links a {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 10px;
+        font-size: .72rem;
+        font-weight: 600;
+        border-radius: 20px;
+        border: 1px solid #3b82f6;
+        color: #2563eb;
+        text-decoration: none;
+    }
+    #diagRoot .diag-card__footer {
+        display: flex;
+        gap: 6px;
+        padding: 10px 16px;
+        background: #fafbfc;
+        border-top: 1px solid #f1f5f9;
+        flex-wrap: wrap;
+    }
     #diagFiltro:focus {
         border-color: #3b82f6;
         box-shadow: 0 0 0 2px rgba(59,130,246,.15);
+    }
+
+    @media (max-width: 1199.98px) {
+        #diagRoot .diag-lista {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 767.98px) {
+        .diag-modal-dialog {
+            max-width: calc(100vw - 12px);
+            margin: 6px auto;
+        }
+
+        .diag-modal__header,
+        .diag-modal__body {
+            padding-left: 14px;
+            padding-right: 14px;
+        }
+
+        .diag-modal__header {
+            align-items: flex-start;
+            flex-direction: column;
+        }
+
+        .diag-modal__title-wrap {
+            width: 100%;
+        }
+
+        .diag-modal__close {
+            margin-left: auto;
+        }
+
+        .diag-modal__intro {
+            align-items: flex-start;
+        }
+
+        #diagRoot .diag-lista {
+            grid-template-columns: 1fr;
+        }
+
+        #diagRoot .diag-card__head {
+            flex-wrap: wrap;
+        }
+
+        #diagRoot .diag-card__status {
+            align-items: flex-start;
+            width: 100%;
+            flex-direction: row;
+        }
     }
 </style>
 <?php $__env->stopSection(); ?>

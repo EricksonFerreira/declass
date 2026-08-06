@@ -87,10 +87,18 @@ class ClienteSalvarAssinarContratoCheckoutAction
                     'data_assinatura' => now(),
                 ]);
 
+                $reserva->forceFill([
+                    'checkout_assinado_em' => now(),
+                ])->save();
+
                 return response()->json(['success' => true]);
             }
 
             $this->assinarTermoDevolucaoAction->handle($codigo, $request->input('assinatura'));
+
+            $reserva->forceFill([
+                'checkout_assinado_em' => now(),
+            ])->save();
 
             return response()->json(['success' => true]);
         } catch (\Throwable $e) {

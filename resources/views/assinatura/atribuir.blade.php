@@ -7,6 +7,13 @@
 @stop
 
 @section('content')
+@php
+    $empresaSelecionadaData = [
+        'veiculos' => (int) ($empresaSelecionada->qtd_veiculos_ativos ?? 0),
+        'estacoes' => (int) ($empresaSelecionada->qtd_estacoes ?? 0),
+        'storage' => (float) ($empresaSelecionada->armazenamento_usado_mb ?? 0),
+    ];
+@endphp
     @if (session('success'))
         <div class="alert alert-success alert-dismissible fade show">
             <i class="fas fa-check-circle mr-1"></i> {{ session('success') }}
@@ -335,11 +342,7 @@
             const btnSubmit = document.getElementById('btnSubmit');
             const btnText = document.getElementById('btnText');
             function atualizarPreview() {
-                const empresa = @json([
-                    'veiculos' => (int) ($empresaSelecionada->qtd_veiculos_ativos ?? 0),
-                    'estacoes' => (int) ($empresaSelecionada->qtd_estacoes ?? 0),
-                    'storage' => (float) ($empresaSelecionada->armazenamento_usado_mb ?? 0),
-                ]);
+                const empresa = @json($empresaSelecionadaData);
                 const plano = document.getElementById('plano_id').selectedOptions[0];
                 const periodicidade = document.getElementById('periodicidade').value;
                 const valorEl = document.getElementById('valorExibido');

@@ -75,6 +75,7 @@
         || !empty($reserva->contratoCheckout->data_assinatura)
         || (($reserva->contratoCheckout->assinado ?? 'N') === 'S')
     );
+    $checkoutPrecisaAssinar = $checkoutExiste && ! $checkoutAssinado;
     $souDonoDaReserva = auth()->check() && (int) auth()->id() === (int) ($reserva->user_id ?? $reserva->usuario_id ?? 0);
     $precisaAssinarCheckin = $checkinExiste && ! $checkinAssinado;
     $totalMultas = $reserva->multas?->count() ?? 0;
@@ -198,6 +199,7 @@
         padding:10px 16px; font-weight:800; text-decoration:none; border:1px solid var(--line);
     }
     .rs-btn--primary { background: var(--p); color:#fff; border-color: var(--p); }
+    .rs-btn--success { background: #047857; color:#fff; border-color: var(--p); }
     .rs-btn--light { background:#fff; color:var(--ink); }
     .rs-note {
         border:1px solid #dbeafe; background:#f8fbff; color:#334155;
@@ -245,6 +247,7 @@
         border-radius: 18px;
         box-shadow: 0 10px 24px rgba(15,23,42,.05);
         overflow: hidden;
+        min-width: 0;
     }
     .rs-nav-tabs.nav-tabs {
         border-bottom: 1px solid #e5eef8;
@@ -268,6 +271,7 @@
         padding: 14px 16px;
         white-space: nowrap;
         border-radius: 0;
+        flex: 0 0 auto;
     }
     .rs-nav-tabs .nav-link.active {
         color: var(--p);
@@ -299,6 +303,20 @@
     .rs-nps--darkgreen { background:#166534 !important; color:#fff !important; border-color:#14532D !important; }
     @media (max-width: 992px) {
         .rs-client-grid { grid-template-columns: 1fr; }
+        .rs-client-hero__top { padding: 20px 18px 18px; }
+        .rs-client-hero__title { font-size: 1.45rem; }
+        .rs-client-hero .rs-chip { width: 100%; justify-content: center; }
+        .rs-tabs-wrapper { border-radius: 16px; }
+        .rs-nav-tabs.nav-tabs {
+            padding: 0 8px;
+            -webkit-overflow-scrolling: touch;
+            scroll-snap-type: x proximity;
+        }
+        .rs-nav-tabs .nav-link {
+            scroll-snap-align: start;
+            padding: 12px 12px;
+        }
+        .rs-card__body { padding: 16px; }
     }
     @media (max-width: 768px) {
         .rs-summary { grid-template-columns: 1fr; }
@@ -307,6 +325,41 @@
         .rs-stop--right { flex-direction:row; text-align:left; }
         .rs-vehicle { grid-template-columns: 1fr; }
         .rs-price { grid-template-columns: 1fr; }
+        .rs-client-hero__top { padding: 18px 16px 16px; }
+        .rs-client-hero__title { font-size: 1.28rem; line-height: 1.15; }
+        .rs-client-hero__sub { font-size: .92rem; }
+        .rs-chip { width: 100%; justify-content: center; }
+        .rs-card__head { padding: 12px 14px; align-items:flex-start; }
+        .rs-card__icon { width:36px; height:36px; border-radius:10px; }
+        .rs-card__body { padding: 14px; }
+        .rs-info__value, .rs-list__value { word-break: break-word; }
+        .rs-vehicle__img { min-height: 180px; }
+        .rs-price__value { font-size: .98rem; }
+        .rs-nav-tabs .nav-link span { font-size: .84rem; }
+        .rs-tab-badge { font-size: .66rem; padding: 3px 8px; }
+    }
+    @media (max-width: 576px) {
+        .rs-client-page { padding-left: 0; padding-right: 0; }
+        .rs-client-hero { border-radius: 16px; }
+        .rs-client-grid { gap: 12px; }
+        .rs-card, .rs-tabs-wrapper { border-radius: 14px; }
+        .rs-nav-tabs.nav-tabs { gap: 4px; }
+        .rs-nav-tabs .nav-link {
+            min-height: 48px;
+            padding: 10px 10px;
+        }
+        .rs-nav-tabs .nav-link i { font-size: .92rem; }
+        .rs-nav-tabs .nav-link span { font-size: .8rem; }
+        .rs-summary,
+        .rs-price,
+        .rs-vehicle {
+            gap: 10px;
+        }
+        .rs-actions { flex-direction: column; }
+        .rs-btn {
+            width: 100%;
+            justify-content: center;
+        }
     }
 
     /* Checkin/checkout single column layout */
@@ -688,9 +741,32 @@
                     O check-in já foi criado. Para seguir com a reserva, o contrato precisa ser assinado e, se você for o titular, o aceite do termo será exigido na tela de assinatura.
                 </div>
                 <div class="rs-actions">
-                    <a href="{{ route('reserva.minhas.assinar-checkin', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="rs-btn rs-btn--primary">
+                    <a href="{{ route('reserva.minhas.assinar-checkin', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="rs-btn rs-btn--success">
                         <i class="fas fa-signature"></i>
                         <span>Assinar check-in</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    @if($checkoutPrecisaAssinar)
+        <div class="rs-card mb-3" style="border-left:4px solid #1d4ed8;">
+            <div class="rs-card__head">
+                <div class="rs-card__icon"><i class="fas fa-file-signature"></i></div>
+                <div>
+                    <div class="rs-card__title">Check-out precisa de assinatura</div>
+                    <div class="rs-card__sub">O check-out já foi gerado, mas ainda não foi assinado.</div>
+                </div>
+            </div>
+            <div class="rs-card__body">
+                <div class="rs-note">
+                    Assim que a assinatura do check-out for concluída, a etapa será marcada como assinada e o fluxo seguirá normalmente.
+                </div>
+                  <div class="rs-actions">
+                    <a href="{{ route('reserva.minhas.assinar-checkout', $reserva->codigoReserva?->codigo ?? $reserva->id) }}" class="rs-btn rs-btn--success">
+                        <i class="fas fa-signature"></i>
+                        <span>Assinar check-out</span>
                     </a>
                 </div>
             </div>
@@ -726,7 +802,7 @@
                             <span>Check-out</span>
                             @if($checkoutExiste)
                                 <span class="rs-tab-badge {{ $checkoutAssinado ? 'rs-tab-badge--green' : 'rs-tab-badge--amber' }}">
-                                    {{ $checkoutAssinado ? 'Assinado' : 'Pendente' }}
+                                    {{ $checkoutAssinado ? 'Assinado' : 'Precisa assinar' }}
                                 </span>
                             @else
                                 <span class="rs-tab-badge rs-tab-badge--amber">Pendente</span>

@@ -188,14 +188,14 @@
                     @endif
                     </div>
                 </div>
-                <div class="d-flex flex-wrap" style="gap:8px;">
+                {{-- <div class="d-flex flex-wrap" style="gap:8px;">
                     <a href="{{ route('empresa.atribuir-assinatura', $empresa->id) }}" class="rs-btn rs-btn--primary rs-btn--sm">
                         <i class="fas fa-link mr-1"></i> Atribuir assinatura
                     </a>
                     <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--sm">
                         <i class="fas fa-credit-card mr-1"></i> Ver assinaturas
                     </a>
-                </div>
+                </div> --}}
             </div>
         </div>
     </div>

@@ -26,6 +26,13 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('content'); ?>
+<?php
+    $empresaSelecionadaData = [
+        'veiculos' => (int) ($empresaSelecionada->qtd_veiculos_ativos ?? 0),
+        'estacoes' => (int) ($empresaSelecionada->qtd_estacoes ?? 0),
+        'storage' => (float) ($empresaSelecionada->armazenamento_usado_mb ?? 0),
+    ];
+?>
     <?php if(session('success')): ?>
         <div class="alert alert-success alert-dismissible fade show">
             <i class="fas fa-check-circle mr-1"></i> <?php echo e(session('success')); ?>
@@ -95,31 +102,15 @@
                                 <div class="form-row">
                                     <div class="col-md-12 mb-3">
                                         <label class="mb-1">Empresa <span class="text-danger">*</span></label>
-                                        <select name="empresa_id" id="empresa_id" class="form-control form-control-sm" required>
-                                            <option value="">Selecione a empresa...</option>
-                                            <?php $__currentLoopData = $empresas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $emp): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                                <?php
-                                                    $assinaturaAtual = $emp->planoAtivo;
-                                                    $planoAtualNome = $assinaturaAtual?->plano?->nome;
-                                                    $vinculada = (bool) $assinaturaAtual;
-                                                ?>
-                                                <option
-                                                    value="<?php echo e($emp->id); ?>"
-                                                    data-vinculada="<?php echo e($vinculada ? '1' : '0'); ?>"
-                                                    data-plano-atual="<?php echo e($planoAtualNome ?? ''); ?>"
-                                                    data-veiculos="<?php echo e($emp->qtd_veiculos_ativos ?? 0); ?>"
-                                                    data-estacoes="<?php echo e($emp->qtd_estacoes ?? 0); ?>"
-                                                    data-storage="<?php echo e($emp->armazenamento_usado_mb ?? 0); ?>"
-                                                    <?php echo e((int) ($empresaSelecionadaId ?? request('empresa_id')) === (int) $emp->id ? 'selected' : ''); ?>
-
-                                                >
-                                                    <?php echo e($emp->nome); ?><?php echo e($vinculada ? ' - Vinculada: ' . $planoAtualNome : ' - Sem plano'); ?>
-
-                                                </option>
-                                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                        </select>
+                                        <input type="hidden" name="empresa_id" id="empresa_id" value="<?php echo e($empresaSelecionadaId); ?>">
+                                        <input
+                                            type="text"
+                                            class="form-control form-control-sm"
+                                            value="<?php echo e($empresaSelecionadaNome ?? 'Empresa não informada'); ?>"
+                                            readonly
+                                        >
                                         <small class="veiculo-lookup-help">
-                                            Escolha a empresa. Se ela já tiver assinatura ativa, você verá a indicação ao lado.
+                                            A empresa foi definida pela URL e não pode ser alterada nesta tela.
                                         </small>
                                     </div>
 
@@ -386,20 +377,8 @@
             const form = document.getElementById('formAtribuir');
             const btnSubmit = document.getElementById('btnSubmit');
             const btnText = document.getElementById('btnText');
-            const empresaSelect = $('#empresa_id');
-
-            empresaSelect.select2({
-                theme: 'bootstrap4',
-                width: 'resolve',
-                placeholder: 'Selecione a empresa...',
-                allowClear: true,
-                minimumResultsForSearch: 0,
-                dropdownAutoWidth: true,
-                dropdownParent: $(document.body),
-            });
-
             function atualizarPreview() {
-                const empresa = document.getElementById('empresa_id').selectedOptions[0];
+                const empresa = <?php echo json_encode($empresaSelecionadaData, 15, 512) ?>;
                 const plano = document.getElementById('plano_id').selectedOptions[0];
                 const periodicidade = document.getElementById('periodicidade').value;
                 const valorEl = document.getElementById('valorExibido');
@@ -409,8 +388,8 @@
                 const storageUnit = document.getElementById('storageUnit');
                 const storageBlock = document.getElementById('storageBlock');
 
-                const empresaVeiculos = empresa ? parseInt(empresa.dataset.veiculos || 0, 10) : 0;
-                const empresaEstacoes = empresa ? parseInt(empresa.dataset.estacoes || 0, 10) : 0;
+                const empresaVeiculos = parseInt(empresa.veiculos || 0, 10);
+                const empresaEstacoes = parseInt(empresa.estacoes || 0, 10);
 
                 if (plano && plano.value) {
                     const valor = periodicidade === 'anual'
@@ -468,7 +447,6 @@
 
             document.getElementById('plano_id').addEventListener('change', atualizarPreview);
             document.getElementById('periodicidade').addEventListener('change', atualizarPreview);
-            document.getElementById('empresa_id').addEventListener('change', atualizarPreview);
             document.getElementById('valorExibido').addEventListener('input', atualizarPreview);
             document.getElementById('planoStorage').addEventListener('input', atualizarPreview);
             document.getElementById('veiculoUnit').addEventListener('input', atualizarPreview);

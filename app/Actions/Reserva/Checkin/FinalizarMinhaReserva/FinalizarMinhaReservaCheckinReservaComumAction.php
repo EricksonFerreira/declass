@@ -13,6 +13,7 @@ use App\Services\MovimentacaoService;
 use App\Services\ReservaService;
 use App\Services\UpgradeVeiculoService;
 use App\Services\VeiculoService;
+use App\Support\SchemaCache;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -160,6 +161,12 @@ class FinalizarMinhaReservaCheckinReservaComumAction
             ])->save();
 
             $contrato->refresh();
+
+            if (SchemaCache::hasColumn($registro->getTable(), 'checkin_assinado_em')) {
+                $registro->forceFill([
+                    'checkin_assinado_em' => $contrato->data_assinatura ?? now(),
+                ])->save();
+            }
 
             $this->reservaService->checkInRealizado(
                 (int) $registro->id,

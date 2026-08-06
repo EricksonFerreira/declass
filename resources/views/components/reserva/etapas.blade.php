@@ -1,8 +1,9 @@
 @php
     $reservaCancelada = in_array(strtolower((string) ($reserva->statusReserva->nome ?? '')), ['cancelada', 'cancelado'], true);
     $etapaPagamento = (bool) ($reserva->isPagamentoEfetuado() ?? false);
-    $etapaCheckin = (bool) $reserva->contratoCheckin;
-    $etapaCheckinAssinado = $etapaCheckin && ($reserva->contratoCheckin->assinado ?? '') === 'S';
+    $etapaCheckin = (bool) ($reserva->checkin_realizado_em ?? null) || (bool) $reserva->contratoCheckin;
+    $etapaCheckinAssinado = (bool) ($reserva->checkin_assinado_em ?? null)
+        || ($etapaCheckin && ($reserva->contratoCheckin->assinado ?? '') === 'S');
     $calcao = $reserva->calcao ?? null;
     $calcaoConfiguradoEmpresa = (bool) ($calcaoConfiguradoEmpresa ?? false);
     $calcaoAplicavel = (bool) ($calcaoAplicavel ?? $calcaoConfiguradoEmpresa);
@@ -14,9 +15,13 @@
         \App\Models\Calcao::STATUS_CANCELADO,
     ], true);
     $etapaCalcaoDispensado = ! $calcaoAplicavel;
-    $etapaCheckout = (bool) ($reserva->contratoCheckout ?? null);
+    $etapaCheckout = (bool) ($reserva->checkout_realizado_em ?? null) || (bool) ($reserva->contratoCheckout ?? null);
     $etapaCheckoutAssinado = $etapaCheckout
-        && (! empty($reserva->contratoCheckout->assinatura) || ! empty($reserva->contratoCheckout->data_assinatura));
+        && (
+            ! empty($reserva->checkout_assinado_em)
+            || ! empty($reserva->contratoCheckout->assinatura)
+            || ! empty($reserva->contratoCheckout->data_assinatura)
+        );
     $etapaRevisaoConcluida = ($reserva->revisao_checkout_concluida ?? 'N') === 'S';
     $checkoutPodeSerAtivo = (bool) ($reserva->checkout_realizado_em ?? null) || $etapaCheckout || $etapaCheckoutAssinado || $etapaRevisaoConcluida;
 @endphp
@@ -45,19 +50,20 @@
     }
 
     .rs-flow__step.is-done {
-        border-color: #111827;
-        background: #111827;
+        border-color: #16a34a;
+        background: linear-gradient(135deg, #14532d 0%, #166534 100%);
+        box-shadow: 0 8px 20px rgba(22, 163, 74, .18);
     }
 
     .rs-flow__step.is-current {
         border-color: #f59e0b;
-        background: #f59e0b;
-        box-shadow: 0 0 0 2px rgba(255, 255, 255, .08), 0 8px 20px rgba(15, 23, 42, .08);
+        background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+        box-shadow: 0 0 0 2px rgba(255, 255, 255, .08), 0 8px 20px rgba(245, 158, 11, .18);
     }
 
     .rs-flow__step.is-calcao {
-        border-color: #111827;
-        background: #111827;
+        border-color: #0f172a;
+        background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
     }
 
     .rs-flow__step.is-calcao .rs-flow__icon,
@@ -68,13 +74,25 @@
 
     .rs-flow__step.is-cancelled {
         border-color: #7f1d1d;
-        background: #111827;
+        background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
     }
 
     .rs-flow__icon,
     .rs-flow__label,
     .rs-flow__value {
         color: #fff;
+    }
+
+    .rs-flow__step.is-current .rs-flow__icon,
+    .rs-flow__step.is-current .rs-flow__label,
+    .rs-flow__step.is-current .rs-flow__value {
+        color: #fff7ed;
+    }
+
+    .rs-flow__step.is-done .rs-flow__icon,
+    .rs-flow__step.is-done .rs-flow__label,
+    .rs-flow__step.is-done .rs-flow__value {
+        color: #ecfdf5;
     }
 
     .rs-flow__icon {

@@ -11,6 +11,12 @@
 @section('meta_tags')
     @parent
     <link rel="shortcut icon" href="{{ $faviconUrl }}" />
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DeCars">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/icon-192.svg') }}">
 @stop
 
 @section('adminlte_css')
@@ -98,4 +104,14 @@
             });
         </script>
     @endif
+
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '/' }).catch(function (error) {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
+    </script>
 @stop

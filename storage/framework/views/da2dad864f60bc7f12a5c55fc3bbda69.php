@@ -9,6 +9,12 @@
 <?php $__env->startSection('meta_tags'); ?>
     <?php echo \Illuminate\View\Factory::parentPlaceholder('meta_tags'); ?>
     <link rel="shortcut icon" href="<?php echo e($faviconUrl); ?>" />
+    <link rel="manifest" href="<?php echo e(asset('manifest.webmanifest')); ?>">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DeCars">
+    <link rel="apple-touch-icon" href="<?php echo e(asset('pwa/icon-192.svg')); ?>">
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('adminlte_css'); ?>
@@ -96,6 +102,16 @@
             });
         </script>
     <?php endif; ?>
+
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('<?php echo e(asset('sw.js')); ?>', { scope: '/' }).catch(function (error) {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
+    </script>
 <?php $__env->stopSection(); ?>
 
 <?php echo $__env->make('adminlte::master', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Erickson\Dev\laragon\www\xpandCars\resources\views/vendor/adminlte/page.blade.php ENDPATH**/ ?>

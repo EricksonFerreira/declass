@@ -88,6 +88,10 @@ class SalvarAssinarContratoCheckoutAction
                     'data_assinatura' => now(),
                 ]);
 
+                $reserva->forceFill([
+                    'checkout_assinado_em' => now(),
+                ])->save();
+
                 $this->reservaService->adicionaLog(
                     (int) $reserva->id,
                     (int) auth()->id(),
@@ -106,6 +110,10 @@ class SalvarAssinarContratoCheckoutAction
             }
 
             $this->assinarTermoDevolucaoAction->handle($codigo, $request->input('assinatura'));
+
+            $reserva->forceFill([
+                'checkout_assinado_em' => now(),
+            ])->save();
 
             return response()->json(['success' => true]);
         } catch (\Throwable $e) {

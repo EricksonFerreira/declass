@@ -150,7 +150,9 @@
                     <article class="empresa-card" onclick="window.location='<?php echo e(route('empresa.show', $empresa->id)); ?>';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='<?php echo e(route('empresa.show', $empresa->id)); ?>';}">
                         <div class="empresa-card__head">
                             <?php if(!empty($empresa->logo_url)): ?>
-                                <img src="<?php echo e($empresa->logo_url); ?>" alt="Logo <?php echo e($empresa->nome); ?>" class="empresa-card__logo">
+                                <div class="empresa-card__logo empresa-card__logo--image">
+                                    <img src="<?php echo e($empresa->logo_url); ?>" alt="Logo <?php echo e($empresa->nome); ?>">
+                                </div>
                             <?php else: ?>
                                 <div class="empresa-card__logo empresa-card__logo--fallback"><?php echo e(strtoupper(mb_substr($empresa->nome ?? 'E', 0, 1))); ?></div>
                             <?php endif; ?>
@@ -167,23 +169,9 @@
                             <span class="badge badge-secondary"><?php echo e($moeda ?? 'Sem moeda'); ?></span>
                         </div>
                         <div class="empresa-card__footer">
-                            <a href="<?php echo e(route('empresa.show', $empresa->id)); ?>" class="btn btn-xs btn-success" onclick="event.stopPropagation();">
-                                <i class="fa fa-eye"></i> Ver
-                            </a>
                             <a href="<?php echo e(route('empresa.edit', $empresa->id)); ?>" class="btn btn-xs btn-warning" onclick="event.stopPropagation();">
                                 <i class="fa fa-edit"></i> Editar
                             </a>
-                            <button
-                                type="button"
-                                class="btn btn-xs btn-primary btn-atribuir-assinatura"
-                                data-toggle="modal"
-                                data-target="#modalAtribuirAssinatura"
-                                data-empresa-id="<?php echo e($empresa->id); ?>"
-                                data-empresa-nome="<?php echo e($empresa->nome); ?>"
-                                onclick="event.stopPropagation();"
-                            >
-                                <i class="fas fa-link mr-1"></i> Assinatura
-                            </button>
                         </div>
                     </article>
                 <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
@@ -532,8 +520,23 @@
         height: 48px;
         border-radius: 12px;
         flex: 0 0 48px;
-        object-fit: cover;
         border: 1px solid #e2e8f0;
+    }
+
+    .empresa-card__logo--image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        overflow: hidden;
+    }
+
+    .empresa-card__logo--image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        display: block;
+        padding: 4px;
     }
 
     .empresa-card__logo--fallback {
@@ -621,7 +624,7 @@
 <?php $__env->stopSection(); ?>
 
 <?php $__env->startSection('js'); ?>
-<script src="<?php echo e(asset('js/select2.min.js')); ?>"></script>
+<script src="/js/select2.min.js"></script>
 <script>
     (function () {
             var viewButtons = document.querySelectorAll('.empresa-view-toggle [data-view]');

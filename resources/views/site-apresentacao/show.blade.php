@@ -10,9 +10,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $titulo }}</title>
     <meta name="description" content="{{ $descricao }}">
+    <link rel="manifest" href="{{ asset('manifest.webmanifest') }}">
+    <meta name="theme-color" content="#0a1628">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="DeCars">
+    <link rel="apple-touch-icon" href="{{ asset('pwa/icon-192.svg') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '/' }).catch(function (error) {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
+    </script>
     <style>
         :root {
             --c1: {{ $corPrimaria }};

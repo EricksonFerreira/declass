@@ -1,7 +1,12 @@
 <?php
-    $step = auth()->user()?->empresa?->onboardingStep ?? null;
+    $user = auth()->user();
+    $empresa = $user?->empresa ?? null;
+    $step = $empresa?->onboardingStep ?? null;
+    $ehAdminEmpresa = (bool) ($user?->isAdministrador() ?? false) && (bool) $empresa;
+
+    if (! $ehAdminEmpresa) return;
     if (!$step || $step->concluido) return;
-    $planoAtivo = auth()->user()?->empresa?->planoAtivo()?->with('plano')->first()?->plano ?? null;
+    $planoAtivo = $empresa?->planoAtivo()?->with('plano')->first()?->plano ?? null;
     $pct        = $step->percentualConcluido($planoAtivo);
     $steps      = $step->stepsParaExibir($planoAtivo);
     $pendentes  = collect($steps)->where('feito', false);
