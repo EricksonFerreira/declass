@@ -10,6 +10,18 @@ class EmpresaBranding
 {
     public function empresaAtual(): ?Empresa
     {
+        $empresaContextId = (int) app(EmpresaContext::class)->empresaId();
+
+        if ($empresaContextId > 0) {
+            $empresa = Empresa::query()
+                ->select(['id', 'nome', 'logo_path', 'cor_primaria', 'cor_secundaria', 'cor_terciaria', 'dominio'])
+                ->find($empresaContextId);
+
+            if ($empresa) {
+                return $empresa;
+            }
+        }
+
         $empresaId = (int) session('empresa_context_id', 0);
 
         if ($empresaId <= 0) {
@@ -21,7 +33,7 @@ class EmpresaBranding
         }
 
         return Empresa::query()
-            ->select(['id', 'nome', 'logo_path'])
+            ->select(['id', 'nome', 'logo_path', 'cor_primaria', 'cor_secundaria', 'cor_terciaria', 'dominio'])
             ->find($empresaId);
     }
 
