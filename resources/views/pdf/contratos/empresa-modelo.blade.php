@@ -237,7 +237,7 @@ $@php
     <p><span class="numero">9.4.</span> A CONTRATADA poderá bloquear acessos que apresentem comportamento suspeito, risco de segurança, violação deste contrato ou uso indevido da plataforma.</p>
 
     <h2>Cláusula 10ª – Do Suporte</h2>
-    <p><span class="numero">10.1.</span> O suporte será prestado por meio de <strong>{{ $contrato['canal_suporte'] ?? 'WhatsApp e e-mail' }}</strong>, em dias úteis, no horário de <strong>{{ $contrato['horario_suporte'] ?? '-' }}</strong>.</p>
+    <p><span class="numero">10.1.</span> O suporte será prestado por meio de <strong>{{ $contrato['canal_suporte'] ?? 'canal de suporte do próprio sistema, whatsApp e e-mail' }}</strong>, em dias úteis, no horário de 09h às 18h.</p>
     <p><span class="numero">10.2.</span> O suporte compreende orientações de utilização, análise de falhas e esclarecimentos relacionados às funcionalidades contratadas.</p>
     <p><span class="numero">10.3.</span> Não estão incluídos no suporte padrão:</p>
     <p class="subitem">a) treinamento presencial;</p>
@@ -338,6 +338,7 @@ $@php
 
         <div class="assinatura-bloco">
             <br>
+            <br>
             <div class="linha-assinatura"></div>
             <div class="assinatura-nome">{{ $empresaDados['razao_social'] ?? $empresaDados['nome'] ?? '-' }}</div>
             <div>CNPJ: {{ $empresaDados['cnpj'] ?? '-' }}</div>
@@ -345,6 +346,7 @@ $@php
         </div>
 
         <div class="assinatura-bloco">
+            <br>
             <br>
             <div class="linha-assinatura"></div>
             <div class="assinatura-nome">{{ $contrato['razao_social'] ?? '-' }}</div>

@@ -48,9 +48,7 @@
                     <a href="<?php echo e(route('manutencao.planos.index')); ?>" class="btn-xp btn-xp--sm">
                         <i class="fas fa-clipboard-list"></i> Planos
                     </a>
-                    <a href="<?php echo e(route('veiculo.index')); ?>" class="btn-xp btn-xp--outline-light btn-xp--sm">
-                        <i class="fas fa-arrow-left"></i> Voltar
-                    </a>
+                    
                 </div>
             </div>
         </div>

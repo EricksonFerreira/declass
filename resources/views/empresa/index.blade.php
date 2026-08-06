@@ -49,6 +49,14 @@
                     <span class="badge badge-success ml-1">{{ $empresas->total() }}</span>
                 </h3>
                 <div class="d-flex align-items-center" style="gap:8px;">
+                    <div class="empresa-view-toggle">
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
+                            <i class="fas fa-th-large mr-1"></i> Cards
+                        </button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="table">
+                            <i class="fas fa-table mr-1"></i> Tabela
+                        </button>
+                    </div>
                     <form action="{{ route('empresa.setPerPage') }}" method="POST" class="mb-0">
                         @csrf
                         <x-per-page-selector :perPages="$perPages" :selectedPerPage="$perPage" />
@@ -58,7 +66,49 @@
             </div>
         </div>
 
-        <div class="card-body p-0 table-responsive">
+        <div class="card-body p-0 empresa-index-body" data-view="cards">
+            <div class="empresa-cards">
+                @forelse ($empresas as $empresa)
+                    @php
+                        $planoAtivo = $empresa->planoAtivo;
+                        $gateway = $empresa->gateway_pagamento ?? null;
+                        $moeda = $empresa->moeda_pagamento ?? null;
+                        $statusAtivo = ($empresa->ativo ?? 'S') === 'S';
+                    @endphp
+                    <article class="empresa-card" onclick="window.location='{{ route('empresa.show', $empresa->id) }}';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='{{ route('empresa.show', $empresa->id) }}';}">
+                        <div class="empresa-card__head">
+                            @if(!empty($empresa->logo_url))
+                                <div class="empresa-card__logo empresa-card__logo--image">
+                                    <img src="{{ $empresa->logo_url }}" alt="Logo {{ $empresa->nome }}">
+                                </div>
+                            @else
+                                <div class="empresa-card__logo empresa-card__logo--fallback">{{ strtoupper(mb_substr($empresa->nome ?? 'E', 0, 1)) }}</div>
+                            @endif
+                            <div class="empresa-card__meta">
+                                <div class="empresa-card__nome">{{ $empresa->nome }}</div>
+                                <div class="empresa-card__slug">Slug: {{ $empresa->slug }}</div>
+                                <div class="empresa-card__slug">{{ $empresa->email ?? '-' }}</div>
+                            </div>
+                        </div>
+                        <div class="empresa-card__chips">
+                            <span class="badge badge-{{ $statusAtivo ? 'success' : 'danger' }}">{{ $statusAtivo ? 'Ativa' : 'Inativa' }}</span>
+                            <span class="badge badge-light">{{ $planoAtivo?->plano?->nome ?? 'Sem plano' }}</span>
+                            <span class="badge badge-info">{{ $gateway ? strtoupper(str_replace('_', ' ', $gateway)) : 'Sem gateway' }}</span>
+                            <span class="badge badge-secondary">{{ $moeda ?? 'Sem moeda' }}</span>
+                        </div>
+                        <div class="empresa-card__footer">
+                            <a href="{{ route('empresa.edit', $empresa->id) }}" class="btn btn-xs btn-warning" onclick="event.stopPropagation();">
+                                <i class="fa fa-edit"></i> Editar
+                            </a>
+                        </div>
+                    </article>
+                @empty
+                    <div class="p-3 text-center text-muted">Nenhuma empresa encontrada.</div>
+                @endforelse
+            </div>
+        </div>
+
+        <div class="card-body p-0 table-responsive empresa-index-body d-none" data-view="table">
             <table class="table table-hover table-sm mb-0 empresa-table" style="font-size:13px;">
                 <thead class="thead-light">
                     <tr>
@@ -326,8 +376,114 @@
         margin: 0 !important;
     }
 
+    .empresa-view-toggle {
+        display: inline-flex;
+        gap: 6px;
+        padding: 3px;
+        border: 1px solid #dbe4f0;
+        border-radius: 999px;
+        background: #f8fafc;
+    }
+
+    .empresa-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .empresa-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        padding: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+        cursor: pointer;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .empresa-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, .10);
+    }
+
+    .empresa-card__head {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .empresa-card__logo,
+    .empresa-card__logo--fallback {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        flex: 0 0 48px;
+        border: 1px solid #e2e8f0;
+    }
+
+    .empresa-card__logo--image {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #000;
+        overflow: hidden;
+    }
+
+    .empresa-card__logo--image img {
+        max-width: 100%;
+        max-height: 100%;
+        object-fit: contain;
+        display: block;
+        padding: 4px;
+    }
+
+    .empresa-card__logo--fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: #fff;
+        background: #1f2937;
+    }
+
+    .empresa-card__nome {
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #0f172a;
+    }
+
+    .empresa-card__slug {
+        font-size: .78rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .empresa-card__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .empresa-card__footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
     .btn-atribuir-assinatura {
         width: fit-content;
+    }
+
+    .empresa-index-body[data-view="cards"] .table-responsive {
+        display: none;
+    }
+
+    .empresa-index-body[data-view="table"] .empresa-cards {
+        display: none;
     }
     .veiculo-section-title {
         font-size: .96rem;
@@ -368,9 +524,30 @@
 @stop
 
 @section('js')
-<script src="{{ asset('js/select2.min.js') }}"></script>
+<script src="/js/select2.min.js"></script>
 <script>
     (function () {
+            var viewButtons = document.querySelectorAll('.empresa-view-toggle [data-view]');
+            var viewBodies = document.querySelectorAll('.empresa-index-body');
+
+            function setEmpresaView(view) {
+                viewBodies.forEach(function (body) {
+                    body.classList.toggle('d-none', body.dataset.view !== view);
+                });
+                viewButtons.forEach(function (button) {
+                    button.classList.toggle('btn-secondary', button.dataset.view === view);
+                    button.classList.toggle('btn-outline-secondary', button.dataset.view !== view);
+                });
+            }
+
+            viewButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    setEmpresaView(button.dataset.view || 'cards');
+                });
+            });
+
+            setEmpresaView('cards');
+
             var $modal = $('#modalAtribuirAssinatura');
             var $form = $('#formAtribuirAssinatura');
             var $empresaId = $form.find('[name="empresa_id"]');
@@ -599,5 +776,3 @@
         </div>
     </div>
 </div>
-
-

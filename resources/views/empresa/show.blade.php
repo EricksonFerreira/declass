@@ -188,6 +188,14 @@
                     @endif
                     </div>
                 </div>
+                <div class="d-flex flex-wrap" style="gap:8px;">
+                    <a href="{{ route('empresa.atribuir-assinatura', $empresa->id) }}" class="rs-btn rs-btn--primary rs-btn--sm">
+                        <i class="fas fa-link mr-1"></i> Atribuir assinatura
+                    </a>
+                    <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--sm">
+                        <i class="fas fa-credit-card mr-1"></i> Ver assinaturas
+                    </a>
+                </div>
             </div>
         </div>
     </div>
@@ -266,6 +274,9 @@
                 @endif
                 <a href="{{ route('assinatura.meu-plano') }}" class="rs-btn rs-btn--sm">
                     <i class="fas fa-credit-card mr-1"></i> Assinatura
+                </a>
+                <a href="{{ route('empresa.atribuir-assinatura', $empresa->id) }}" class="rs-btn rs-btn--sm bg-primary text-white">
+                    <i class="fas fa-link mr-1"></i> Atribuir assinatura
                 </a>
             </li>
 
@@ -535,6 +546,19 @@
 
         </div>
     </div>
+
+    {{-- <div class="card mt-3">
+        <div class="card-body d-flex align-items-center justify-content-between flex-wrap" style="gap:12px;">
+            <div>
+                <div class="text-muted text-xs font-weight-bold text-uppercase">Assinatura</div>
+                <div class="font-weight-bold">Vincular ou trocar o plano desta empresa</div>
+                <div class="text-muted text-sm">Use esta ação para abrir a tela de atribuição já com a empresa selecionada.</div>
+            </div>
+            <a href="{{ route('empresa.atribuir-assinatura', $empresa->id) }}" class="rs-btn rs-btn--primary">
+                <i class="fas fa-link mr-1"></i> Abrir atribuição
+            </a>
+        </div>
+    </div> --}}
 
 </div>
 @stop

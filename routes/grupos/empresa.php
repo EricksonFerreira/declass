@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EmpresaController;
+use App\Http\Controllers\AssinaturaController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('can:acessar-superadmin')->prefix('empresa')->name('empresa.')->group(function () {
@@ -8,6 +9,7 @@ Route::middleware('can:acessar-superadmin')->prefix('empresa')->name('empresa.')
     Route::get('removerfiltro', [EmpresaController::class, 'removerFiltro'])->name('removerFiltro');
     Route::get('filtro', [EmpresaController::class, 'filtro'])->name('filtro');
     Route::get('{empresa}/armazenamento', [EmpresaController::class, 'armazenamento'])->name('armazenamento');
+    Route::get('{empresa}/atribuir-assinatura', [AssinaturaController::class, 'criarAtribuir'])->name('atribuir-assinatura');
     Route::post('{empresa}/contratos/gerar', [EmpresaController::class, 'gerarContrato'])->name('contratos.gerar');
     Route::get('{empresa}/contratos/{contrato}/download', [EmpresaController::class, 'downloadContrato'])->name('contratos.download');
     Route::post('{empresa}/contratos/{contrato}/assinar', [EmpresaController::class, 'uploadContratoAssinado'])->name('contratos.assinar');

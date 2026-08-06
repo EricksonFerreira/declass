@@ -31,9 +31,9 @@
                     </p>
                 </div>
                 <div class="d-flex flex-wrap" style="gap:8px;">
-                    <a href="{{ route('assinatura.index') }}" class="btn-xp btn-xp--outline btn-xp--sm">
-                        <i class="fas fa-arrow-left mr-1"></i> Voltar
-                    </a>
+                        <a href="{{ route('assinatura.index') }}" class="btn-xp btn-xp--outline btn-xp--sm">
+                            <i class="fas fa-arrow-left mr-1"></i> Voltar
+                        </a>
                 </div>
             </div>
         </div>
@@ -74,7 +74,7 @@
                                                     data-veiculos="{{ $emp->qtd_veiculos_ativos ?? 0 }}"
                                                     data-estacoes="{{ $emp->qtd_estacoes ?? 0 }}"
                                                     data-storage="{{ $emp->armazenamento_usado_mb ?? 0 }}"
-                                                    {{ request('empresa_id') == $emp->id ? 'selected' : '' }}
+                                                    {{ (int) ($empresaSelecionadaId ?? request('empresa_id')) === (int) $emp->id ? 'selected' : '' }}
                                                 >
                                                     {{ $emp->nome }}{{ $vinculada ? ' - Vinculada: ' . $planoAtualNome : ' - Sem plano' }}
                                                 </option>
@@ -90,7 +90,17 @@
                                         <select name="plano_id" id="plano_id" class="form-control form-control-sm" required>
                                             <option value="">Selecione o plano...</option>
                                             @foreach ($planos as $p)
-                                                <option value="{{ $p->id }}" data-mensal="{{ $p->valor_mensal }}" data-anual="{{ $p->valor_anual }}" data-storage="{{ $p->limite_armazenamento_mb ?? 0 }}">
+                                                <option
+                                                    value="{{ $p->id }}"
+                                                    data-mensal="{{ $p->valor_mensal }}"
+                                                    data-anual="{{ $p->valor_anual }}"
+                                                    data-storage="{{ $p->limite_armazenamento_mb ?? 0 }}"
+                                                    data-veiculo-adicional="{{ $p->valor_veiculo_adicional ?? 0 }}"
+                                                    data-filiais-adicionais="{{ $p->quantidade_filiais ?? 0 }}"
+                                                    data-filial-adicional="{{ $p->valor_filial_adicional ?? 0 }}"
+                                                    data-armazenamento-adicional="{{ $p->valor_armazenamento_adicional ?? 0 }}"
+                                                    data-armazenamento-adicional-qtd="{{ $p->quantidade_armazenamento_adicional ?? 0 }}"
+                                                >
                                                     {{ $p->nome }} - R$ {{ number_format($p->valor_mensal, 2, ',', '.') }}/mês
                                                 </option>
                                             @endforeach
@@ -126,13 +136,13 @@
                                             <div class="input-group-prepend">
                                                 <span class="input-group-text">R$</span>
                                             </div>
-                                            <input type="text" id="valorExibido" class="form-control" readonly required>
+                                            <input type="number" step="0.01" min="0" id="valorExibido" name="valor" class="form-control" required>
                                         </div>
                                     </div>
 
                                     <div class="col-md-4 mb-3">
-                                        <label class="mb-1">Armazenamento do plano</label>
-                                        <input type="text" class="form-control form-control-sm" id="planoStorage" readonly placeholder="Selecione um plano...">
+                                        <label class="mb-1">Armazenamento do plano (MB)</label>
+                                        <input type="number" step="1" min="0" class="form-control form-control-sm" id="planoStorage" name="armazenamento_mb" placeholder="Selecione um plano...">
                                     </div>
 
                                     <div class="col-12 mb-3">
@@ -149,20 +159,29 @@
                                                 <tbody>
                                                     <tr>
                                                         <td>Veículo adicional</td>
-                                                        <td class="text-right" id="veiculoUnit">R$ 3,00</td>
-                                                        <td class="text-center" id="veiculoQtd">0</td>
+                                                        <td class="text-right"><input type="number" step="0.01" min="0" id="veiculoUnit" name="valor_veiculo_adicional" class="form-control form-control-sm text-right" value="3.00"></td>
+                                                        <td class="text-center">
+                                                            <input type="number" min="0" step="1" id="veiculoQtd" name="veiculos_adicionais" class="form-control form-control-sm text-center" value="0">
+                                                        </td>
                                                         <td class="text-right" id="veiculoTotal">R$ 0,00</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Filial adicional</td>
-                                                        <td class="text-right" id="filialUnit">R$ 29,00</td>
-                                                        <td class="text-center" id="filialQtd">0</td>
+                                                        <td class="text-right"><input type="number" step="0.01" min="0" id="filialUnit" name="valor_filial_adicional" class="form-control form-control-sm text-right" value="29.00"></td>
+                                                        <td class="text-center">
+                                                            <input type="number" min="0" step="1" id="filialQtd" name="filiais_adicionais" class="form-control form-control-sm text-center" value="0">
+                                                        </td>
                                                         <td class="text-right" id="filialTotal">R$ 0,00</td>
                                                     </tr>
                                                     <tr>
                                                         <td>Armazenamento adicional</td>
-                                                        <td class="text-right" id="storageUnit">R$ 5,00 por 5 GB</td>
-                                                        <td class="text-center" id="storageQtd">0</td>
+                                                        <td class="text-right">
+                                                            <input type="number" step="0.01" min="0" id="storageUnit" name="valor_armazenamento_adicional" class="form-control form-control-sm text-right" value="5.00">
+                                                            <small class="text-muted d-block mt-1">por <input type="number" min="0" step="1" id="storageBlock" name="quantidade_armazenamento_adicional" class="form-control form-control-sm d-inline-block" style="width:80px;" value="5"> GB</small>
+                                                        </td>
+                                                        <td class="text-center">
+                                                            <input type="number" min="0" step="1" id="storageQtd" name="armazenamento_adicional_qtd" class="form-control form-control-sm text-center" value="0">
+                                                        </td>
                                                         <td class="text-right" id="storageTotal">R$ 0,00</td>
                                                     </tr>
                                                 </tbody>
@@ -323,7 +342,7 @@
 @stop
 
 @section('js')
-    <script src="{{ asset('js/select2.min.js') }}"></script>
+    <script src="/js/select2.min.js"></script>
     <script>
         (function() {
             const form = document.getElementById('formAtribuir');
@@ -347,52 +366,64 @@
                 const periodicidade = document.getElementById('periodicidade').value;
                 const valorEl = document.getElementById('valorExibido');
                 const storageEl = document.getElementById('planoStorage');
-                const veiculoUnit = 3;
-                const filialUnit = 29;
-                const storageUnit = 5;
-                const storageBlockGb = 5;
+                const veiculoUnit = document.getElementById('veiculoUnit');
+                const filialUnit = document.getElementById('filialUnit');
+                const storageUnit = document.getElementById('storageUnit');
+                const storageBlock = document.getElementById('storageBlock');
 
                 const empresaVeiculos = empresa ? parseInt(empresa.dataset.veiculos || 0, 10) : 0;
                 const empresaEstacoes = empresa ? parseInt(empresa.dataset.estacoes || 0, 10) : 0;
-                const empresaStorage = empresa ? parseFloat(empresa.dataset.storage || 0) : 0;
-
-                const planoVeiculos = plano ? parseInt(plano.dataset.veiculos || 0, 10) : 0;
-                const planoEstacoes = plano ? parseInt(plano.dataset.estacoes || 0, 10) : 0;
-                const planoStorageMb = plano ? parseFloat(plano.dataset.storage || 0) : 0;
 
                 if (plano && plano.value) {
                     const valor = periodicidade === 'anual'
                         ? parseFloat(plano.dataset.anual || 0)
                         : parseFloat(plano.dataset.mensal || 0);
-                    valorEl.value = valor.toFixed(2).replace('.', ',');
-                    const mb = parseInt(plano.dataset.storage || 0, 10);
-                    storageEl.value = mb >= 1024 ? (mb / 1024).toFixed(1) + ' GB' : mb + ' MB';
+                    if (!valorEl.value || Number.isNaN(parseFloat(valorEl.value))) {
+                        valorEl.value = valor.toFixed(2);
+                    }
+                    if (!storageEl.value || Number.isNaN(parseFloat(storageEl.value))) {
+                        storageEl.value = plano.dataset.storage || 0;
+                    }
+                    if (!veiculoUnit.value || Number.isNaN(parseFloat(veiculoUnit.value))) {
+                        veiculoUnit.value = plano.dataset.veiculoAdicional || 0;
+                    }
+                    if (!filialUnit.value || Number.isNaN(parseFloat(filialUnit.value))) {
+                        filialUnit.value = plano.dataset.filialAdicional || 0;
+                    }
+                    if (!storageUnit.value || Number.isNaN(parseFloat(storageUnit.value))) {
+                        storageUnit.value = plano.dataset.armazenamentoAdicional || 0;
+                    }
+                    if (!storageBlock.value || Number.isNaN(parseInt(storageBlock.value || 0, 10))) {
+                        storageBlock.value = plano.dataset.armazenamentoAdicionalQtd || 0;
+                    }
                 } else {
                     valorEl.value = '';
                     storageEl.value = '';
                 }
 
-                const veiculosExcedentes = Math.max(0, empresaVeiculos - planoVeiculos);
-                const filiaisExcedentes = Math.max(0, empresaEstacoes - planoEstacoes);
-                const storageExcedenteMb = Math.max(0, empresaStorage - planoStorageMb);
-                const storageQtd = storageExcedenteMb > 0 ? Math.ceil(storageExcedenteMb / (storageBlockGb * 1024)) : 0;
+                const valorBase = parseFloat(valorEl.value || 0);
+                const veiculoUnitValue = parseFloat(veiculoUnit.value || 0);
+                const filialUnitValue = parseFloat(filialUnit.value || 0);
+                const storageUnitValue = parseFloat(storageUnit.value || 0);
+                const storageBlockValue = Math.max(1, parseInt(storageBlock.value || 0, 10) || 1);
+                const veiculosExcedentes = Math.max(0, parseInt(document.getElementById('veiculoQtd').value || 0, 10));
+                const filiaisExcedentes = Math.max(0, parseInt(document.getElementById('filialQtd').value || 0, 10));
+                const storageQtd = Math.max(0, parseInt(document.getElementById('storageQtd').value || 0, 10));
 
-                const veiculoTotal = veiculosExcedentes * veiculoUnit;
-                const filialTotal = filiaisExcedentes * filialUnit;
-                const storageTotal = storageQtd * storageUnit;
-                const totalGeral = veiculoTotal + filialTotal + storageTotal;
+                const veiculoTotal = veiculosExcedentes * veiculoUnitValue;
+                const filialTotal = filiaisExcedentes * filialUnitValue;
+                const storageTotal = storageQtd * storageUnitValue;
+                const totalGeral = valorBase + veiculoTotal + filialTotal + storageTotal;
 
-                document.getElementById('veiculoUnit').textContent = 'R$ ' + veiculoUnit.toFixed(2).replace('.', ',');
-                document.getElementById('veiculoQtd').textContent = String(veiculosExcedentes);
+                document.getElementById('veiculoQtd').value = String(veiculosExcedentes);
                 document.getElementById('veiculoTotal').textContent = 'R$ ' + veiculoTotal.toFixed(2).replace('.', ',');
 
-                document.getElementById('filialUnit').textContent = 'R$ ' + filialUnit.toFixed(2).replace('.', ',');
-                document.getElementById('filialQtd').textContent = String(filiaisExcedentes);
+                document.getElementById('filialQtd').value = String(filiaisExcedentes);
                 document.getElementById('filialTotal').textContent = 'R$ ' + filialTotal.toFixed(2).replace('.', ',');
 
-                document.getElementById('storageUnit').textContent = 'R$ ' + storageUnit.toFixed(2).replace('.', ',') + ' por 5 GB';
-                document.getElementById('storageQtd').textContent = String(storageQtd);
+                document.getElementById('storageQtd').value = String(storageQtd);
                 document.getElementById('storageTotal').textContent = 'R$ ' + storageTotal.toFixed(2).replace('.', ',');
+                document.getElementById('storageBlock').value = String(storageBlockValue);
 
                 document.getElementById('totalGeral').textContent = 'R$ ' + totalGeral.toFixed(2).replace('.', ',');
             }
@@ -400,6 +431,15 @@
             document.getElementById('plano_id').addEventListener('change', atualizarPreview);
             document.getElementById('periodicidade').addEventListener('change', atualizarPreview);
             document.getElementById('empresa_id').addEventListener('change', atualizarPreview);
+            document.getElementById('valorExibido').addEventListener('input', atualizarPreview);
+            document.getElementById('planoStorage').addEventListener('input', atualizarPreview);
+            document.getElementById('veiculoUnit').addEventListener('input', atualizarPreview);
+            document.getElementById('filialUnit').addEventListener('input', atualizarPreview);
+            document.getElementById('storageUnit').addEventListener('input', atualizarPreview);
+            document.getElementById('storageBlock').addEventListener('input', atualizarPreview);
+            document.getElementById('veiculoQtd').addEventListener('input', atualizarPreview);
+            document.getElementById('filialQtd').addEventListener('input', atualizarPreview);
+            document.getElementById('storageQtd').addEventListener('input', atualizarPreview);
             atualizarPreview();
 
             form.addEventListener('submit', function() {

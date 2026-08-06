@@ -380,7 +380,7 @@ class AssinaturaController extends Controller
     }
 
     /** Exibe formulario para admin atribuir plano. */
-    public function criarAtribuir(Request $request)
+    public function criarAtribuir(Request $request, ?Empresa $empresa = null)
     {
         $empresas = Empresa::with(['planoAtivo.plano'])
             ->orderBy('nome')
@@ -396,13 +396,14 @@ class AssinaturaController extends Controller
 
         $planos = Plano::ativos()->get();
         $stripePublicKey = config('services.stripe.key');
+        $empresaSelecionadaId = $empresa?->id ?? $request->integer('empresa_id') ?: null;
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
             new \App\DTO\BreadCrumbItem('Assinaturas', route('assinatura.index')),
             new \App\DTO\BreadCrumbItem('Atribuir Plano'),
         ]);
 
-        return view('assinatura.atribuir', compact('empresas', 'planos', 'stripePublicKey', 'breadcrumb'))
+        return view('assinatura.atribuir', compact('empresas', 'planos', 'stripePublicKey', 'breadcrumb', 'empresaSelecionadaId'))
             ->with('titulo', 'Atribuir Plano');
     }
 
@@ -416,6 +417,11 @@ class AssinaturaController extends Controller
             'data_inicio' => 'required|date',
             'data_vencimento' => 'nullable|date|after_or_equal:data_inicio',
             'dia_vencimento' => 'nullable|integer|min:1|max:28',
+            'valor' => 'nullable|numeric|min:0',
+            'armazenamento_mb' => 'nullable|numeric|min:0',
+            'veiculos_adicionais' => 'nullable|integer|min:0',
+            'filiais_adicionais' => 'nullable|integer|min:0',
+            'armazenamento_adicional_qtd' => 'nullable|integer|min:0',
             'observacao' => 'nullable|string|max:500',
         ]);
 
@@ -439,6 +445,17 @@ class AssinaturaController extends Controller
             diaVencimento: $data['dia_vencimento'] ?? null,
             criadoPorUserId: Auth::id(),
         );
+
+        $metadados = (array) ($empresaPlano->metadados ?? []);
+        $metadados['ajustes_atribuir'] = [
+            'valor' => isset($data['valor']) ? (float) $data['valor'] : null,
+            'armazenamento_mb' => isset($data['armazenamento_mb']) ? (float) $data['armazenamento_mb'] : null,
+            'veiculos_adicionais' => isset($data['veiculos_adicionais']) ? (int) $data['veiculos_adicionais'] : null,
+            'filiais_adicionais' => isset($data['filiais_adicionais']) ? (int) $data['filiais_adicionais'] : null,
+            'armazenamento_adicional_qtd' => isset($data['armazenamento_adicional_qtd']) ? (int) $data['armazenamento_adicional_qtd'] : null,
+            'observacao' => $data['observacao'] ?? null,
+        ];
+        $empresaPlano->update(['metadados' => $metadados]);
 
         return redirect()->route('assinatura.index')
             ->with('success', 'Assinatura lançada com sucesso. O pagamento pode ser registrado depois.');

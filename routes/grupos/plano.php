@@ -29,6 +29,7 @@ Route::middleware('can:acessar-superadmin')->prefix('assinatura')->name('assinat
     Route::get('/ajuda', [AssinaturaController::class, 'ajuda'])->name('ajuda');
     Route::get('/regras', [AssinaturaController::class, 'regras'])->name('regras');
     Route::get('/atribuir', [AssinaturaController::class, 'criarAtribuir'])->name('atribuir');
+    Route::get('/empresa/{empresa}/atribuir-assinatura', [AssinaturaController::class, 'criarAtribuir'])->name('empresa.atribuir');
     Route::post('/atribuir', [AssinaturaController::class, 'atribuir'])->name('atribuir.processar');
     Route::get('/{assinatura}', [AssinaturaController::class, 'show'])->name('show');
     Route::patch('/{assinatura}', [AssinaturaController::class, 'update'])->name('update');

@@ -87,6 +87,59 @@
                 </div>
 
                 <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Valor veículo adicional (R$)</label>
+                            <input type="number" name="valor_veiculo_adicional" step="0.01" min="0"
+                                   class="form-control @error('valor_veiculo_adicional') is-invalid @enderror"
+                                   value="{{ old('valor_veiculo_adicional', $plano->valor_veiculo_adicional ?? '') }}"
+                                   placeholder="Ex.: 3,00">
+                            @error('valor_veiculo_adicional')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantidade de filiais</label>
+                            <input type="number" name="quantidade_filiais" step="1" min="0"
+                                   class="form-control @error('quantidade_filiais') is-invalid @enderror"
+                                   value="{{ old('quantidade_filiais', $plano->quantidade_filiais ?? '') }}"
+                                   placeholder="Ex.: 1">
+                            @error('quantidade_filiais')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Valor filial adicional (R$)</label>
+                            <input type="number" name="valor_filial_adicional" step="0.01" min="0"
+                                   class="form-control @error('valor_filial_adicional') is-invalid @enderror"
+                                   value="{{ old('valor_filial_adicional', $plano->valor_filial_adicional ?? '') }}"
+                                   placeholder="Ex.: 29,00">
+                            @error('valor_filial_adicional')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Valor armazenamento adicional (R$)</label>
+                            <input type="number" name="valor_armazenamento_adicional" step="0.01" min="0"
+                                   class="form-control @error('valor_armazenamento_adicional') is-invalid @enderror"
+                                   value="{{ old('valor_armazenamento_adicional', $plano->valor_armazenamento_adicional ?? '') }}"
+                                   placeholder="Ex.: 5,00">
+                            @error('valor_armazenamento_adicional')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label>Quantidade do armazenamento adicional</label>
+                            <input type="number" name="quantidade_armazenamento_adicional" step="1" min="0"
+                                   class="form-control @error('quantidade_armazenamento_adicional') is-invalid @enderror"
+                                   value="{{ old('quantidade_armazenamento_adicional', $plano->quantidade_armazenamento_adicional ?? '') }}"
+                                   placeholder="Ex.: 5">
+                            @error('quantidade_armazenamento_adicional')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     @foreach ([
                         ['site_vendas',   'globe',        'Site de Vendas Online'],
                         ['modulo_multas', 'file-invoice', 'Módulo de Multas'],

@@ -101,6 +101,14 @@
                     <span class="badge badge-success ml-1"><?php echo e($empresas->total()); ?></span>
                 </h3>
                 <div class="d-flex align-items-center" style="gap:8px;">
+                    <div class="empresa-view-toggle">
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="cards">
+                            <i class="fas fa-th-large mr-1"></i> Cards
+                        </button>
+                        <button type="button" class="btn btn-xs btn-outline-secondary" data-view="table">
+                            <i class="fas fa-table mr-1"></i> Tabela
+                        </button>
+                    </div>
                     <form action="<?php echo e(route('empresa.setPerPage')); ?>" method="POST" class="mb-0">
                         <?php echo csrf_field(); ?>
                         <?php if (isset($component)) { $__componentOriginal65c0c73c271c840668c600386ae808f3 = $component; } ?>
@@ -130,7 +138,61 @@
             </div>
         </div>
 
-        <div class="card-body p-0 table-responsive">
+        <div class="card-body p-0 empresa-index-body" data-view="cards">
+            <div class="empresa-cards">
+                <?php $__empty_1 = true; $__currentLoopData = $empresas; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $empresa): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php
+                        $planoAtivo = $empresa->planoAtivo;
+                        $gateway = $empresa->gateway_pagamento ?? null;
+                        $moeda = $empresa->moeda_pagamento ?? null;
+                        $statusAtivo = ($empresa->ativo ?? 'S') === 'S';
+                    ?>
+                    <article class="empresa-card" onclick="window.location='<?php echo e(route('empresa.show', $empresa->id)); ?>';" role="link" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){window.location='<?php echo e(route('empresa.show', $empresa->id)); ?>';}">
+                        <div class="empresa-card__head">
+                            <?php if(!empty($empresa->logo_url)): ?>
+                                <img src="<?php echo e($empresa->logo_url); ?>" alt="Logo <?php echo e($empresa->nome); ?>" class="empresa-card__logo">
+                            <?php else: ?>
+                                <div class="empresa-card__logo empresa-card__logo--fallback"><?php echo e(strtoupper(mb_substr($empresa->nome ?? 'E', 0, 1))); ?></div>
+                            <?php endif; ?>
+                            <div class="empresa-card__meta">
+                                <div class="empresa-card__nome"><?php echo e($empresa->nome); ?></div>
+                                <div class="empresa-card__slug">Slug: <?php echo e($empresa->slug); ?></div>
+                                <div class="empresa-card__slug"><?php echo e($empresa->email ?? '-'); ?></div>
+                            </div>
+                        </div>
+                        <div class="empresa-card__chips">
+                            <span class="badge badge-<?php echo e($statusAtivo ? 'success' : 'danger'); ?>"><?php echo e($statusAtivo ? 'Ativa' : 'Inativa'); ?></span>
+                            <span class="badge badge-light"><?php echo e($planoAtivo?->plano?->nome ?? 'Sem plano'); ?></span>
+                            <span class="badge badge-info"><?php echo e($gateway ? strtoupper(str_replace('_', ' ', $gateway)) : 'Sem gateway'); ?></span>
+                            <span class="badge badge-secondary"><?php echo e($moeda ?? 'Sem moeda'); ?></span>
+                        </div>
+                        <div class="empresa-card__footer">
+                            <a href="<?php echo e(route('empresa.show', $empresa->id)); ?>" class="btn btn-xs btn-success" onclick="event.stopPropagation();">
+                                <i class="fa fa-eye"></i> Ver
+                            </a>
+                            <a href="<?php echo e(route('empresa.edit', $empresa->id)); ?>" class="btn btn-xs btn-warning" onclick="event.stopPropagation();">
+                                <i class="fa fa-edit"></i> Editar
+                            </a>
+                            <button
+                                type="button"
+                                class="btn btn-xs btn-primary btn-atribuir-assinatura"
+                                data-toggle="modal"
+                                data-target="#modalAtribuirAssinatura"
+                                data-empresa-id="<?php echo e($empresa->id); ?>"
+                                data-empresa-nome="<?php echo e($empresa->nome); ?>"
+                                onclick="event.stopPropagation();"
+                            >
+                                <i class="fas fa-link mr-1"></i> Assinatura
+                            </button>
+                        </div>
+                    </article>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                    <div class="p-3 text-center text-muted">Nenhuma empresa encontrada.</div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="card-body p-0 table-responsive empresa-index-body d-none" data-view="table">
             <table class="table table-hover table-sm mb-0 empresa-table" style="font-size:13px;">
                 <thead class="thead-light">
                     <tr>
@@ -426,8 +488,99 @@
         margin: 0 !important;
     }
 
+    .empresa-view-toggle {
+        display: inline-flex;
+        gap: 6px;
+        padding: 3px;
+        border: 1px solid #dbe4f0;
+        border-radius: 999px;
+        background: #f8fafc;
+    }
+
+    .empresa-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .empresa-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        background: linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+        padding: 14px;
+        box-shadow: 0 8px 24px rgba(15, 23, 42, .06);
+        cursor: pointer;
+        transition: transform .15s ease, box-shadow .15s ease;
+    }
+
+    .empresa-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 30px rgba(15, 23, 42, .10);
+    }
+
+    .empresa-card__head {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+
+    .empresa-card__logo,
+    .empresa-card__logo--fallback {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        flex: 0 0 48px;
+        object-fit: cover;
+        border: 1px solid #e2e8f0;
+    }
+
+    .empresa-card__logo--fallback {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        color: #fff;
+        background: #1f2937;
+    }
+
+    .empresa-card__nome {
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.2;
+        color: #0f172a;
+    }
+
+    .empresa-card__slug {
+        font-size: .78rem;
+        color: #64748b;
+        margin-top: 2px;
+    }
+
+    .empresa-card__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-bottom: 12px;
+    }
+
+    .empresa-card__footer {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
     .btn-atribuir-assinatura {
         width: fit-content;
+    }
+
+    .empresa-index-body[data-view="cards"] .table-responsive {
+        display: none;
+    }
+
+    .empresa-index-body[data-view="table"] .empresa-cards {
+        display: none;
     }
     .veiculo-section-title {
         font-size: .96rem;
@@ -471,6 +624,27 @@
 <script src="<?php echo e(asset('js/select2.min.js')); ?>"></script>
 <script>
     (function () {
+            var viewButtons = document.querySelectorAll('.empresa-view-toggle [data-view]');
+            var viewBodies = document.querySelectorAll('.empresa-index-body');
+
+            function setEmpresaView(view) {
+                viewBodies.forEach(function (body) {
+                    body.classList.toggle('d-none', body.dataset.view !== view);
+                });
+                viewButtons.forEach(function (button) {
+                    button.classList.toggle('btn-secondary', button.dataset.view === view);
+                    button.classList.toggle('btn-outline-secondary', button.dataset.view !== view);
+                });
+            }
+
+            viewButtons.forEach(function (button) {
+                button.addEventListener('click', function () {
+                    setEmpresaView(button.dataset.view || 'cards');
+                });
+            });
+
+            setEmpresaView('cards');
+
             var $modal = $('#modalAtribuirAssinatura');
             var $form = $('#formAtribuirAssinatura');
             var $empresaId = $form.find('[name="empresa_id"]');
@@ -699,7 +873,5 @@
         </div>
     </div>
 </div>
-
-
 
 <?php echo $__env->make('adminlte::page', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH C:\Users\Erickson\Dev\laragon\www\xpandCars\resources\views/empresa/index.blade.php ENDPATH**/ ?>
