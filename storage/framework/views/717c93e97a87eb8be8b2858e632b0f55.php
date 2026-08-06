@@ -168,7 +168,7 @@
                                         <th>Item</th>
                                         <th>Valores</th>
                                         <th>Status</th>
-                                        <th class="d-none d-lg-table-cell">Responsáveis</th>
+                                        <th>Ação</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -198,11 +198,18 @@
 
                                                 </span>
                                             </td>
-                                            <td class="d-none d-lg-table-cell">
-                                                <div class="table-value-stack">
-                                                    <span><?php echo e($pendencia->usuarioInclusao?->nome ?? '-'); ?></span>
-                                                    <small><?php echo e($pendencia->usuarioAtualizacao?->nome ?? '-'); ?></small>
-                                                </div>
+                                            <td>
+                                                <?php if($pendencia->status === 'pendente' || $pendencia->status === 'atrasado'): ?>
+                                                    <form method="POST" action="<?php echo e(route('veiculo.manutencao.concluir', $pendencia->veiculo_id)); ?>" class="mb-0">
+                                                        <?php echo csrf_field(); ?>
+                                                        <input type="hidden" name="item_id" value="<?php echo e($pendencia->item_id); ?>">
+                                                        <button type="submit" class="btn btn-xs btn-success">
+                                                            <i class="fas fa-check mr-1"></i>Concluir
+                                                        </button>
+                                                    </form>
+                                                <?php else: ?>
+                                                    <span class="text-muted">-</span>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>

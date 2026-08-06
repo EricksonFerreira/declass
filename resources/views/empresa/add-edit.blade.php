@@ -148,6 +148,17 @@
                             label="Domínio" value="{{ $empresa->dominio ?? '' }}" />
                     </div>
                     <div class="form-group form-group-empresa col-4">
+                        @php
+                            $siteApresentacaoAtivo = old('site_apresentacao_ativo', $empresa->site_apresentacao_ativo ?? 'S');
+                        @endphp
+                        <label for="site_apresentacao_ativo">Site de vendas</label>
+                        <select class="form-control form-control-sm" id="site_apresentacao_ativo" name="site_apresentacao_ativo">
+                            <option value="S" {{ $siteApresentacaoAtivo === 'S' ? 'selected' : '' }}>Sim, quero site de vendas</option>
+                            <option value="N" {{ $siteApresentacaoAtivo === 'N' ? 'selected' : '' }}>Não, mostrar login no domínio</option>
+                        </select>
+                        <small class="text-muted d-block mt-1">Se desativado, o domínio da empresa abre direto a página de login do sistema.</small>
+                    </div>
+                    <div class="form-group form-group-empresa col-4">
                         <label for="site_tipo_reserva">Tipo de reserva no site</label>
                         @php
                             $siteTipoReserva = old('site_tipo_reserva', $empresa->site_tipo_reserva ?? 'ambas');
@@ -293,14 +304,15 @@
                     <div class="form-group form-group-empresa">
                         <label for="gateway_pagamento">Gateway de pagamento padrão</label>
                         <select name="gateway_pagamento" id="gateway_pagamento" class="form-control form-control-sm">
-                            @php
-                                $gatewaySelecionado = old('gateway_pagamento', $empresa->gateway_pagamento ?? 'stripe');
-                            @endphp
-                            <option value="stripe" {{ $gatewaySelecionado === 'stripe' ? 'selected' : '' }}>Stripe</option>
-                            <option value="mercado_livre" {{ $gatewaySelecionado === 'mercado_livre' ? 'selected' : '' }}>Mercado Livre</option>
-                            <option value="paypal" {{ $gatewaySelecionado === 'paypal' ? 'selected' : '' }}>PayPal</option>
-                        </select>
-                        <small class="text-muted d-block mt-1">Este gateway será usado como padrão para cobranças desta empresa.</small>
+                        @php
+                            $gatewaySelecionado = old('gateway_pagamento', $empresa->gateway_pagamento ?? 'stripe');
+                        @endphp
+                        <option value="nenhum" {{ $gatewaySelecionado === 'nenhum' ? 'selected' : '' }}>Nenhum gateway</option>
+                        <option value="stripe" {{ $gatewaySelecionado === 'stripe' ? 'selected' : '' }}>Stripe</option>
+                        <option value="mercado_livre" {{ $gatewaySelecionado === 'mercado_livre' ? 'selected' : '' }}>Mercado Livre</option>
+                        <option value="paypal" {{ $gatewaySelecionado === 'paypal' ? 'selected' : '' }}>PayPal</option>
+                    </select>
+                        <small class="text-muted d-block mt-1">Se selecionar "Nenhum", a reserva seguirá sem etapa de pagamento online e o cliente será levado direto para suas reservas.</small>
                     </div>
                 </div>
 

@@ -4,9 +4,14 @@ namespace App\Http\Controllers;
 
 use App\Models\GrupoFrota;
 use App\Models\ItemManutencaoPreventiva;
+use App\Models\PendenciaManutencaoPreventiva;
+use App\Models\ExecucaoManutencaoPreventiva;
+use App\Models\Veiculo;
 use App\Models\PlanoManutencaoPreventiva;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use App\Traits\AtualizaFiltrosTrait;
 use App\Traits\FiltroTrait;
 
@@ -64,29 +69,37 @@ class PlanoManutencaoPreventivaController extends Controller
             'veiculo_id' => 'nullable|integer|exists:veiculos,id',
             'grupo_frota_id' => 'nullable|exists:grupos_frota,id',
             'itens' => 'nullable|array',
-            'itens.*.id' => 'required|exists:itens_manutencao_preventiva,id',
+            'itens.*.id' => 'required|distinct|exists:itens_manutencao_preventiva,id',
             'itens.*.meses' => 'nullable|integer',
             'itens.*.km' => 'nullable|integer',
+        ], [
+            'itens.*.id.distinct' => 'Não é permitido adicionar o mesmo item mais de uma vez no plano.',
         ]);
 
-        $plano = PlanoManutencaoPreventiva::create([
-            'nome' => $dados['nome'],
-            'descricao' => $dados['descricao'],
-            'grupo_frota_id' => $dados['grupo_frota_id'] ?? null,
-            'veiculo_id' => null,
-        ]);
+        $plano = DB::transaction(function () use ($dados) {
+            $plano = PlanoManutencaoPreventiva::create([
+                'nome' => $dados['nome'],
+                'descricao' => $dados['descricao'],
+                'grupo_frota_id' => $dados['grupo_frota_id'] ?? null,
+                'veiculo_id' => $dados['veiculo_id'] ?? null,
+            ]);
 
-        if (!empty($dados['itens'])) {
-            foreach ($dados['itens'] as $item) {
-                if ($item['meses'] || $item['km']) {
-                    $plano->itens()->create([
-                        'item_id' => $item['id'],
-                        'frequencia_meses' => $item['meses'],
-                        'frequencia_km' => $item['km'],
-                    ]);
+            if (!empty($dados['itens'])) {
+                foreach ($dados['itens'] as $item) {
+                    if ($item['meses'] || $item['km']) {
+                        $plano->itens()->create([
+                            'item_id' => $item['id'],
+                            'frequencia_meses' => $item['meses'],
+                            'frequencia_km' => $item['km'],
+                        ]);
+                    }
                 }
             }
-        }
+
+            return $plano;
+        });
+
+        $this->sincronizarPendenciasDoPlano($plano);
 
         return redirect()->route('manutencao.planos.index')->with('success', 'Plano criado com sucesso.');
     }
@@ -104,6 +117,9 @@ class PlanoManutencaoPreventivaController extends Controller
     public function buscarItens(Request $request): JsonResponse
     {
         $q = trim((string) $request->input('q', ''));
+        $perPage = (int) $request->input('per_page', 12);
+        $perPage = max(4, min($perPage, 40));
+        $page = max(1, (int) $request->input('page', 1));
 
         $query = ItemManutencaoPreventiva::query()->orderBy('nome');
         if ($q !== '') {
@@ -113,13 +129,22 @@ class PlanoManutencaoPreventivaController extends Controller
             });
         }
 
-        $items = $query->limit(30)->get()->map(fn ($item) => [
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+        $items = $paginator->getCollection()->map(fn ($item) => [
             'id' => $item->id,
             'nome' => $item->nome,
             'descricao' => $item->descricao,
         ])->values();
 
-        return response()->json(['items' => $items]);
+        return response()->json([
+            'items' => $items,
+            'pagination' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
     }
 
     public function update(Request $request, PlanoManutencaoPreventiva $plano)
@@ -130,31 +155,38 @@ class PlanoManutencaoPreventivaController extends Controller
             'veiculo_id' => 'nullable|integer|exists:veiculos,id',
             'grupo_frota_id' => 'nullable|exists:grupos_frota,id',
             'itens' => 'nullable|array',
-            'itens.*.id' => 'required|exists:itens_manutencao_preventiva,id',
+            'itens.*.id' => 'required|distinct|exists:itens_manutencao_preventiva,id',
             'itens.*.meses' => 'nullable|integer',
             'itens.*.km' => 'nullable|integer',
+        ], [
+            'itens.*.id.distinct' => 'Não é permitido adicionar o mesmo item mais de uma vez no plano.',
         ]);
 
-        $plano->update([
-            'nome' => $dados['nome'],
-            'descricao' => $dados['descricao'],
-            'grupo_frota_id' => $dados['grupo_frota_id'] ?? null,
-            'veiculo_id' => null,
-        ]);
+        DB::transaction(function () use ($plano, $dados) {
+            $plano->update([
+                'nome' => $dados['nome'],
+                'descricao' => $dados['descricao'],
+                'grupo_frota_id' => $dados['grupo_frota_id'] ?? null,
+                'veiculo_id' => $dados['veiculo_id'] ?? null,
+            ]);
 
-        $plano->itens()->delete();
+            $plano->itens()->delete();
 
-        if (!empty($dados['itens'])) {
-            foreach ($dados['itens'] as $item) {
-                if ($item['meses'] || $item['km']) {
-                    $plano->itens()->create([
-                        'item_id' => $item['id'],
-                        'frequencia_meses' => $item['meses'],
-                        'frequencia_km' => $item['km'],
-                    ]);
+            if (!empty($dados['itens'])) {
+                foreach ($dados['itens'] as $item) {
+                    if ($item['meses'] || $item['km']) {
+                        $plano->itens()->create([
+                            'item_id' => $item['id'],
+                            'frequencia_meses' => $item['meses'],
+                            'frequencia_km' => $item['km'],
+                        ]);
+                    }
                 }
             }
-        }
+        });
+
+        $plano->load('itens');
+        $this->sincronizarPendenciasDoPlano($plano);
 
         return redirect()->route('manutencao.planos.index')->with('success', 'Plano atualizado com sucesso.');
     }
@@ -203,5 +235,73 @@ class PlanoManutencaoPreventivaController extends Controller
             ['name' => 'nome_like', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'grupo_frota_id', 'label' => 'Grupo de Frota', 'type' => 'select', 'typeWhere' => 'where', 'options' => $gruposOptions],
         ];
+    }
+
+    private function sincronizarPendenciasDoPlano(PlanoManutencaoPreventiva $plano): void
+    {
+        if (! $plano->grupo_frota_id) {
+            return;
+        }
+
+        $plano->loadMissing('itens');
+        if ($plano->itens->isEmpty()) {
+            return;
+        }
+
+        $veiculos = Veiculo::query()
+            ->where('grupo_frota_id', $plano->grupo_frota_id)
+            ->get();
+
+        foreach ($veiculos as $veiculo) {
+            $this->sincronizarPendenciasDoVeiculo($veiculo, $plano);
+        }
+    }
+
+    private function sincronizarPendenciasDoVeiculo(Veiculo $veiculo, PlanoManutencaoPreventiva $plano): void
+    {
+        $veiculo->loadMissing(['manutencoesPreventivas', 'pendenciasManutencaoPreventiva']);
+
+        foreach ($plano->itens as $planoItem) {
+            $itemId = (int) $planoItem->item_id;
+
+            $ultimaExecucao = $veiculo->manutencoesPreventivas
+                ->where('item_id', $itemId)
+                ->sortByDesc('data_execucao')
+                ->first();
+
+            $pendenciaAtual = $veiculo->pendenciasManutencaoPreventiva
+                ->where('item_id', $itemId)
+                ->whereIn('status', ['pendente', 'atrasado'])
+                ->sortByDesc('id')
+                ->first();
+
+            $baseData = $ultimaExecucao ? Carbon::parse($ultimaExecucao->data_execucao) : now();
+            $baseKm = $ultimaExecucao ? (int) $ultimaExecucao->km_execucao : (int) ($veiculo->kms ?? 0);
+
+            $dataPrevista = $planoItem->frequencia_meses
+                ? $baseData->copy()->addMonths((int) $planoItem->frequencia_meses)->toDateString()
+                : null;
+
+            $kmPrevisto = $planoItem->frequencia_km
+                ? $baseKm + (int) $planoItem->frequencia_km
+                : null;
+
+            if ($pendenciaAtual) {
+                $pendenciaAtual->update([
+                    'data_prevista' => $dataPrevista,
+                    'km_previsto' => $kmPrevisto,
+                ]);
+                continue;
+            }
+
+            PendenciaManutencaoPreventiva::create([
+                'empresa_id' => $veiculo->empresa_id,
+                'veiculo_id' => $veiculo->id,
+                'item_id' => $itemId,
+                'data_prevista' => $dataPrevista,
+                'km_previsto' => $kmPrevisto,
+                'status' => 'pendente',
+            ]);
+        }
     }
 }

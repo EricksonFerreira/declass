@@ -247,32 +247,27 @@
 
                         html += '</div>';
                         html += '<div class="table-responsive veiculo-busca-modal__table-scroll d-none d-md-block">';
-                        html += '<table class="table table-sm table-hover table-bordered mb-0 veiculo-busca-modal__table" style="font-size:.82rem">';
+                        html += '<table class="table table-sm table-hover table-bordered mb-0 veiculo-busca-modal__table" style="font-size:.82rem; table-layout:fixed; min-width:100%;">';
                         html += '<thead class="thead-light veiculo-busca-modal__thead"><tr>' +
-                            '<th>Placa</th><th>Nome</th><th>Marca</th><th>Modelo</th>' +
-                            '<th>Grupo</th><th>Tipo</th><th>Status</th>' +
-                            '<th>Ano Fab.</th><th>Ano Mod.</th><th>Cor</th>' +
-                            '<th>KMs</th><th>Ativo</th><th>Estacao</th>' +
-                            '<th class="text-center">Acao</th>' +
+                            '<th style="width:24%;">Ve?culo</th>' +
+                            '<th style="width:19%;">Identifica??o</th>' +
+                            '<th style="width:18%;">Classifica??o</th>' +
+                            '<th style="width:15%;">Situa??o</th>' +
+                            '<th style="width:12%;">Fabrica??o</th>' +
+                            '<th style="width:8%;">Localiza??o</th>' +
+                            '<th class="text-center" style="width:4%;">A??es</th>' +
                             '</tr></thead><tbody>';
 
                         data.veiculos.forEach(function (v) {
                             var label = buildLabel(v);
                             html += '<tr>' +
-                                '<td><strong>' + displayValue(v.placa) + '</strong></td>' +
-                                '<td>' + displayValue(v.nome) + '</td>' +
-                                '<td>' + displayValue(v.marca) + '</td>' +
-                                '<td>' + displayValue(v.modelo) + '</td>' +
-                                '<td>' + displayValue(v.grupo) + '</td>' +
-                                '<td>' + displayValue(v.tipo) + '</td>' +
-                                '<td><span class="badge badge-info">' + displayValue(v.status) + '</span></td>' +
-                                '<td>' + displayValue(v.ano_fab) + '</td>' +
-                                '<td>' + displayValue(v.ano_mod) + '</td>' +
-                                '<td>' + displayValue(v.cor) + '</td>' +
-                                '<td>' + displayValue(v.kms) + '</td>' +
-                                '<td>' + displayValue(v.ativo) + '</td>' +
-                                '<td>' + displayValue(v.estacao) + '</td>' +
-                                '<td class="text-center">' +
+                                '<td><strong class="d-block text-truncate">' + displayValue(v.nome) + '</strong><div class="text-muted small text-truncate">' + displayValue(v.marca) + ' ? ' + displayValue(v.tipo) + '</div></td>' +
+                                '<td><strong class="d-block">Placa: ' + displayValue(v.placa) + '</strong><div class="text-muted small text-truncate">C?digo: ' + displayValue(v.codigo || v.id) + '</div></td>' +
+                                '<td><strong class="d-block">Grupo: ' + displayValue(v.grupo) + '</strong><div class="text-muted small text-truncate">Cor: ' + displayValue(v.cor) + '</div></td>' +
+                                '<td><span class="badge badge-success d-inline-flex align-items-center mb-1"><i class="fas fa-circle mr-1" style="font-size:.45rem;"></i>' + displayValue(v.status) + '</span><div class="text-muted small text-truncate">Dispon?vel no sistema</div></td>' +
+                                '<td><strong class="d-block">' + displayValue(v.ano_fab) + ' / ' + displayValue(v.ano_mod) + '</strong><div class="text-muted small text-truncate">' + displayValue(v.kms) + ' km</div></td>' +
+                                '<td><strong class="d-block text-truncate">' + displayValue(v.estacao) + '</strong><div class="text-muted small">&nbsp;</div></td>' +
+                                '<td class="text-center align-middle">' +
                                 '<button type="button" class="btn btn-sm btn-success js-selecionar-veiculo" ' +
                                 'data-id="' + escapeAttr(v.id) + '" data-label="' + escapeAttr(label) + '" data-placa="' + escapeAttr(v.placa || '') + '" data-kms="' + escapeAttr(v.kms || '') + '" data-nivel="' + escapeAttr(v.nivel_combustivel || '') + '">' +
                                 '<i class="fas fa-check"></i>' +

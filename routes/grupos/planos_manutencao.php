@@ -9,6 +9,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('itens-manutencao-preventiva', ItemManutencaoPreventivaController::class)
         ->names('manutencao.itens')
         ->parameters(['itens-manutencao-preventiva' => 'item_manutencao']);
+    Route::post('itens-manutencao-preventiva/setperpage', [ItemManutencaoPreventivaController::class, 'setPerPage'])->name('manutencao.itens.setPerPage');
 
     Route::post('planos-manutencao/setperpage', [PlanoManutencaoPreventivaController::class, 'setPerPage'])->name('manutencao.planos.setPerPage');
     Route::get('planos-manutencao/removerfiltro', [PlanoManutencaoPreventivaController::class, 'removerFiltro'])->name('manutencao.planos.removerFiltro');

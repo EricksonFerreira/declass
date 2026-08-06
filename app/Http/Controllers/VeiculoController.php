@@ -580,14 +580,23 @@ class VeiculoController extends BaseController implements FiltroInterface, Resou
             $pendencia->update(['status' => 'concluida']);
         }
 
+        $kmAtual = (int) ($veiculo->kms ?? 0);
+        $kmComPreventiva = $planoItem->frequencia_km !== null
+            ? $kmAtual + (int) $planoItem->frequencia_km
+            : $kmAtual;
+
         \App\Models\ExecucaoManutencaoPreventiva::create([
             'empresa_id' => $veiculo->empresa_id,
             'veiculo_id' => $veiculo->id,
             'item_id' => (int) $dados['item_id'],
             'ordem_servico_id' => null,
             'data_execucao' => now()->toDateString(),
-            'km_execucao' => (int) ($veiculo->kms ?? 0),
+            'km_execucao' => $kmComPreventiva,
         ]);
+
+        if ($kmComPreventiva !== $kmAtual) {
+            $veiculo->forceFill(['kms' => $kmComPreventiva])->save();
+        }
 
         \App\Models\PendenciaManutencaoPreventiva::create([
             'empresa_id' => $veiculo->empresa_id,

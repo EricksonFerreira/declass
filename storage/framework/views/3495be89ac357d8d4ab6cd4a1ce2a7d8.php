@@ -31,6 +31,12 @@
     <title>DeCars | Software para Locadoras com Site de Reservas Online</title>
 
     <link rel="icon" type="image/x-icon" href="<?php echo e(asset('favicons/favicon.ico')); ?>">
+    <?php $manifestVersion = rawurlencode((string) ($empresa->id ?? '0')).'-'.substr(sha1(($empresa->nome ?? '').'|'.($empresa->logo_path ?? '').'|'.($empresa->cor_primaria ?? '')), 0, 12); ?>
+    <link rel="manifest" href="<?php echo e(route('site.manifest', ['v' => $manifestVersion])); ?>">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="<?php echo e($empresa->nome ?? 'DeCars'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo e(route('site.manifest.icon')); ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700;800;900&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -67,6 +73,15 @@
             }
         ]
     }
+    </script>
+    <script>
+        if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('<?php echo e(asset('sw.js')); ?>', { scope: '/' }).catch(function (error) {
+                    console.warn('Service worker registration failed:', error);
+                });
+            });
+        }
     </script>
     <script type="application/ld+json">
     {
@@ -2405,4 +2420,5 @@ document.addEventListener('DOMContentLoaded', function () {
 </script>
 
 </body>
-</html><?php /**PATH C:\Users\Erickson\Dev\laragon\www\xpandCars\resources\views/welcome.blade.php ENDPATH**/ ?>
+</html>
+<?php /**PATH C:\Users\Erickson\Dev\laragon\www\xpandCars\resources\views/welcome.blade.php ENDPATH**/ ?>

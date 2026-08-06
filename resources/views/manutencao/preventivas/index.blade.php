@@ -151,7 +151,7 @@
                                         <th>Item</th>
                                         <th>Valores</th>
                                         <th>Status</th>
-                                        <th class="d-none d-lg-table-cell">Responsáveis</th>
+                                        <th>Ação</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -179,11 +179,18 @@
                                                     {{ ucfirst($pendencia->status) }}
                                                 </span>
                                             </td>
-                                            <td class="d-none d-lg-table-cell">
-                                                <div class="table-value-stack">
-                                                    <span>{{ $pendencia->usuarioInclusao?->nome ?? '-' }}</span>
-                                                    <small>{{ $pendencia->usuarioAtualizacao?->nome ?? '-' }}</small>
-                                                </div>
+                                            <td>
+                                                @if($pendencia->status === 'pendente' || $pendencia->status === 'atrasado')
+                                                    <form method="POST" action="{{ route('veiculo.manutencao.concluir', $pendencia->veiculo_id) }}" class="mb-0">
+                                                        @csrf
+                                                        <input type="hidden" name="item_id" value="{{ $pendencia->item_id }}">
+                                                        <button type="submit" class="btn btn-xs btn-success">
+                                                            <i class="fas fa-check mr-1"></i>Concluir
+                                                        </button>
+                                                    </form>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
                                             </td>
                                         </tr>
                                     @empty

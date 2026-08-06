@@ -29,6 +29,9 @@
                 </div>
 
                 <div class="module-header-right">
+                    <a href="{{ route('manutencao.itens.index') }}" class="btn-xp btn-xp--outline-light btn-xp--sm">
+                        <i class="fas fa-list"></i> Itens
+                    </a>
                     <a href="{{ route('manutencao.planos.create') }}" class="btn-xp btn-xp--sm">
                         <i class="fas fa-plus"></i> Novo plano
                     </a>

@@ -27,6 +27,10 @@ class GatewayEmpresaConfigService
     {
         $gateway = strtolower((string) ($empresa->gateway_pagamento ?: 'stripe'));
 
+        if ($gateway === 'nenhum' || $gateway === 'none' || $gateway === 'sem_gateway') {
+            return '';
+        }
+
         return $gateway === 'mercadolivre' ? 'mercado_livre' : $gateway;
     }
 

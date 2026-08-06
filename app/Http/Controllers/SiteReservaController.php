@@ -76,6 +76,8 @@ class SiteReservaController extends Controller
         $estacoesDevolucao = $this->estacoesForEmpresa('checkout');
         $paises = $this->paisService->getAllForSelectSigla();
         $moedaEmpresa = strtoupper($this->gatewayEmpresaConfigService->moeda($empresa));
+        $gatewayPagamento = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $temGatewayPagamento = $gatewayPagamento !== '';
         $reservaSelecionarModelo = ($empresa->reserva_selecionar_modelo ?? 'N') === 'S';
 
         $prefill = [
@@ -120,6 +122,7 @@ class SiteReservaController extends Controller
             'gruposFrota' => $gruposFrota,
             'paises' => $paises,
             'moedaEmpresa' => $moedaEmpresa,
+            'temGatewayPagamento' => $temGatewayPagamento,
             'simboloMoedaEmpresa' => $this->simboloMoeda($moedaEmpresa),
             'isAuth' => auth()->check(),
             'authUserName' => auth()->user()?->nome,
@@ -602,7 +605,8 @@ class SiteReservaController extends Controller
             ])
         );
 
-        $pagamentoUrl = Route::has('site.reserva.pagamento')
+        $gatewayPadrao = $this->gatewayEmpresaConfigService->gateway($empresa);
+        $pagamentoUrl = Route::has('site.reserva.pagamento') && $gatewayPadrao !== ''
             ? route('site.reserva.pagamento', ['reserva' => $reserva->id])
             : null;
 
@@ -620,6 +624,26 @@ class SiteReservaController extends Controller
                     ->route('login')
                     ->with('success', 'Reserva #' . $reserva->id . ' criada. Faca login para continuar o pagamento.');
             }
+        }
+
+        if ($gatewayPadrao === '') {
+            if (auth()->check()) {
+                return redirect()
+                    ->route('reserva.minhas')
+                    ->with('success', 'Reserva #' . $reserva->id . ' criada com sucesso.');
+            }
+
+            session()->put('url.intended', route('reserva.minhas'));
+
+            if (Route::has('login')) {
+                return redirect()
+                    ->route('login')
+                    ->with('success', 'Reserva #' . $reserva->id . ' criada. Faça login para ver suas reservas.');
+            }
+
+            return redirect()
+                ->route('site.reserva.success', ['reserva' => $reserva->id])
+                ->with('success', 'Reserva #' . $reserva->id . ' criada com sucesso.');
         }
 
         return redirect()
@@ -812,6 +836,22 @@ class SiteReservaController extends Controller
         }
 
         $gatewayPadrao = $this->gatewayEmpresaConfigService->gateway($empresa);
+        if ($gatewayPadrao === '') {
+            if (auth()->check() && (int) auth()->id() === (int) $reservaItem->user_id) {
+                return redirect()
+                    ->route('reserva.minhas')
+                    ->with('success', 'Reserva #' . $reservaItem->id . ' concluída com sucesso.');
+            }
+
+            session()->put('url.intended', route('reserva.minhas'));
+
+            if (Route::has('login')) {
+                return redirect()->route('login');
+            }
+
+            return redirect($this->adminLoginFallbackUrl());
+        }
+
         $moedaPadrao = $this->gatewayEmpresaConfigService->moeda($empresa);
         $gatewayNome = [
             'stripe' => 'Stripe',
@@ -1345,6 +1385,12 @@ class SiteReservaController extends Controller
         }
 
         $gateway = $this->gatewayEmpresaConfigService->gateway($empresa);
+        if ($gateway === '') {
+            return redirect()
+                ->route('reserva.minhas')
+                ->with('success', 'Esta reserva não possui gateway de pagamento configurado.');
+        }
+
         $currency = $this->gatewayEmpresaConfigService->moeda($empresa);
         $credenciais = $this->gatewayEmpresaConfigService->credenciais($empresa, $gateway);
         $paymentType = (string) $request->input('payment_type', '');

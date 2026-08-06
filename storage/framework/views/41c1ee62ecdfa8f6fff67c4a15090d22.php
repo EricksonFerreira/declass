@@ -257,6 +257,44 @@ unset($__defined_vars); ?>
         font-weight: 700;
     }
 
+    .veiculo-busca-modal__filters {
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        gap: .75rem;
+        align-items: end;
+    }
+
+    .veiculo-busca-modal__filters .form-group {
+        margin-bottom: 0;
+        min-width: 0;
+    }
+
+    .veiculo-busca-modal__filters .veiculo-busca-modal__span-3 {
+        grid-column: span 3;
+    }
+
+    .veiculo-busca-modal__filters .veiculo-busca-modal__span-2 {
+        grid-column: span 2;
+    }
+
+    .veiculo-busca-modal__filters .veiculo-busca-modal__span-4 {
+        grid-column: span 4;
+    }
+
+    .veiculo-busca-modal__filters .veiculo-busca-modal__span-12 {
+        grid-column: span 12;
+    }
+
+    .veiculo-busca-modal__filters .veiculo-busca-modal__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+
+    .veiculo-busca-modal__filters .veiculo-busca-modal__actions .btn {
+        flex: 1 1 auto;
+    }
+
     @media (max-width: 767.98px) {
         .veiculo-busca-modal__body {
             padding: .75rem;
@@ -278,6 +316,22 @@ unset($__defined_vars); ?>
 
         .veiculo-busca-modal__card .btn {
             width: 100%;
+        }
+
+        .veiculo-busca-modal__filters {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .veiculo-busca-modal__filters .veiculo-busca-modal__span-3,
+        .veiculo-busca-modal__filters .veiculo-busca-modal__span-2,
+        .veiculo-busca-modal__filters .veiculo-busca-modal__span-4,
+        .veiculo-busca-modal__filters .veiculo-busca-modal__span-12 {
+            grid-column: span 2;
+        }
+
+        .veiculo-busca-modal__filters .veiculo-busca-modal__actions {
+            grid-column: span 2;
+            flex-direction: column;
         }
     }
 </style>
@@ -313,16 +367,16 @@ unset($__defined_vars); ?>
                     </div>
 
                     <div class="card-body py-3">
-                        <div class="row align-items-end">
-                            <div class="col-md-3 form-group mb-0">
+                        <div class="veiculo-busca-modal__filters">
+                            <div class="form-group veiculo-busca-modal__span-3">
                                 <label class="small mb-1">Placa</label>
                                 <input type="text" id="<?php echo e($prefix); ?>_fv_placa" class="form-control form-control-sm" placeholder="ABC-1234">
                             </div>
-                            <div class="col-md-3 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-3">
                                 <label class="small mb-1">Nome</label>
                                 <input type="text" id="<?php echo e($prefix); ?>_fv_nome" class="form-control form-control-sm" placeholder="Ex: Corolla">
                             </div>
-                            <div class="col-md-2 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-2">
                                 <label class="small mb-1">Marca</label>
                                 <select id="<?php echo e($prefix); ?>_fv_marca_id" class="form-control form-control-sm">
                                     <option value="">Todas as marcas</option>
@@ -331,7 +385,7 @@ unset($__defined_vars); ?>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
-                            <div class="col-md-2 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-2">
                                 <label class="small mb-1">Grupo de Frota</label>
                                 <select id="<?php echo e($prefix); ?>_fv_grupo_frota_id" class="form-control form-control-sm">
                                     <option value="">Todos os grupos</option>
@@ -340,7 +394,7 @@ unset($__defined_vars); ?>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
-                            <div class="col-md-2 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-2">
                                 <label class="small mb-1">Status</label>
                                 <select id="<?php echo e($prefix); ?>_fv_status_veiculo_id" class="form-control form-control-sm">
                                     <option value="">Todos os status</option>
@@ -349,7 +403,7 @@ unset($__defined_vars); ?>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
-                            <div class="col-md-4 d-flex align-items-end form-group mb-0 veiculo-busca-modal__toolbar" style="gap:.5rem;">
+                            <div class="form-group veiculo-busca-modal__span-12 veiculo-busca-modal__actions veiculo-busca-modal__toolbar">
                                 <button type="button" class="btn btn-primary btn-sm" id="<?php echo e($prefix); ?>_btnAplicarFiltroVeiculo">
                                     <i class="fas fa-search mr-1"></i> Buscar
                                 </button>
@@ -362,20 +416,20 @@ unset($__defined_vars); ?>
                             </div>
                         </div>
 
-                        <div id="<?php echo e($prefix); ?>_filtrosAvancados" class="row" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid #e2e8f0;">
-                            <div class="col-md-3 form-group mb-0">
+                        <div id="<?php echo e($prefix); ?>_filtrosAvancados" class="veiculo-busca-modal__filters" style="display:none;margin-top:1rem;padding-top:1rem;border-top:1px solid #e2e8f0;">
+                            <div class="form-group veiculo-busca-modal__span-3">
                                 <label class="small mb-1">Chassi</label>
                                 <input type="text" id="<?php echo e($prefix); ?>_fv_chassi" class="form-control form-control-sm" placeholder="Chassi">
                             </div>
-                            <div class="col-md-3 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-3">
                                 <label class="small mb-1">Cor</label>
                                 <input type="text" id="<?php echo e($prefix); ?>_fv_cor" class="form-control form-control-sm" placeholder="Preto">
                             </div>
-                            <div class="col-md-3 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-3">
                                 <label class="small mb-1">Modelo (texto)</label>
                                 <input type="text" id="<?php echo e($prefix); ?>_fv_modelo" class="form-control form-control-sm" placeholder="Modelo">
                             </div>
-                            <div class="col-md-3 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-3">
                                 <label class="small mb-1">Tipo de Frota</label>
                                 <select id="<?php echo e($prefix); ?>_fv_tipo_frota_id" class="form-control form-control-sm">
                                     <option value="">Todos os tipos</option>
@@ -384,19 +438,19 @@ unset($__defined_vars); ?>
                                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                                 </select>
                             </div>
-                            <div class="col-md-2 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-2">
                                 <label class="small mb-1">Ano modelo de</label>
                                 <input type="number" id="<?php echo e($prefix); ?>_fv_ano_de" class="form-control form-control-sm" placeholder="2015" min="1990" max="<?php echo e(date('Y')+1); ?>">
                             </div>
-                            <div class="col-md-2 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-2">
                                 <label class="small mb-1">Ano modelo ate</label>
                                 <input type="number" id="<?php echo e($prefix); ?>_fv_ano_ate" class="form-control form-control-sm" placeholder="<?php echo e(date('Y')); ?>" min="1990" max="<?php echo e(date('Y')+1); ?>">
                             </div>
-                            <div class="col-md-2 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-2">
                                 <label class="small mb-1">KMs ate</label>
                                 <input type="number" id="<?php echo e($prefix); ?>_fv_kms_ate" class="form-control form-control-sm" placeholder="100000" min="0">
                             </div>
-                            <div class="col-md-2 form-group mb-0">
+                            <div class="form-group veiculo-busca-modal__span-2">
                                 <label class="small mb-1">Ativo</label>
                                 <select id="<?php echo e($prefix); ?>_fv_ativo" class="form-control form-control-sm">
                                     <option value="">Todos</option>
@@ -426,7 +480,7 @@ unset($__defined_vars); ?>
     </div>
 </div>
 
-<?php if (! $__env->hasRenderedOnce('a1d1dff0-d766-49e3-8751-cdd178209f98')): $__env->markAsRenderedOnce('a1d1dff0-d766-49e3-8751-cdd178209f98'); ?>
+<?php if (! $__env->hasRenderedOnce('c137a926-f292-4820-9c5b-ef25c9af11a0')): $__env->markAsRenderedOnce('c137a926-f292-4820-9c5b-ef25c9af11a0'); ?>
     <script src="<?php echo e(asset('js/veiculo/busca-modal.js')); ?>"></script>
 <?php endif; ?>
 

@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use App\Models\Concerns\HasAuditColumns;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PlanoManutencaoItem extends Model
 {
-    use HasAuditColumns, HasFactory;
+    use HasFactory;
 
     protected $table = 'plano_manutencao_itens';
 

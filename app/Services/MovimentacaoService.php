@@ -652,12 +652,14 @@ class MovimentacaoService extends AbstractBaseService
         if (!SchemaCache::hasColumn('movimentacoes', 'gera_disponibilidade')) {
             unset($valor['gera_disponibilidade']);
         } else {
-            $valor['gera_disponibilidade'] = in_array($funcao, [
+            $geraDisponibilidadeEfetiva = $geraDisponibilidade || in_array($funcao, [
                 'adicionarAoEstoque',
                 'realizarCheckOut',
                 'registrarChegadaNaEstacao',
                 'registrarRetornoDaOficina',
-            ], true) ? 'S' : 'N';
+            ], true);
+
+            $valor['gera_disponibilidade'] = $geraDisponibilidadeEfetiva ? 'S' : 'N';
         }
 
         if ($dataChegadaPrevista !== null) {
@@ -669,7 +671,15 @@ class MovimentacaoService extends AbstractBaseService
             }
         }
 
-        $this->create($valor);
+        $movimentacao = $this->create($valor);
+
+        if (
+            $movimentacao instanceof Movimentacao
+            && SchemaCache::hasColumn('movimentacoes', 'gera_disponibilidade')
+            && $geraDisponibilidadeEfetiva
+        ) {
+            $movimentacao->forceFill(['gera_disponibilidade' => 'S'])->save();
+        }
     }
 
 

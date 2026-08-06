@@ -4448,6 +4448,8 @@
             }
         }
 
+        window.atualizarResumoOpcionaisReserva = atualizarResumoOpcionaisReserva;
+
         (function bindResumoOpcionaisReserva() {
             const originalAtualizarMinhaReserva = window.atualizarMinhaReserva;
             window.atualizarMinhaReserva = function() {
@@ -4458,6 +4460,10 @@
             };
 
             $(document).on('change click', '#opcionais input, #opcionais button', function() {
+                setTimeout(atualizarResumoOpcionaisReserva, 0);
+            });
+
+            $(document).on('input', '#opcionais .opcional-item__actions input, #opcionais .opcional-stepper__value', function() {
                 setTimeout(atualizarResumoOpcionaisReserva, 0);
             });
 

@@ -1,10 +1,14 @@
 ﻿@php
     $corPrimaria = $empresa->cor_primaria ?: '#1f4f7a';
     $corSecundaria = $empresa->cor_secundaria ?: '#14324d';
+    $temGatewayPagamento = isset($temGatewayPagamento) ? (bool) $temGatewayPagamento : true;
     $initialStepServer = isset($initialStepServer)
         ? (int) $initialStepServer
         : (int) old('step', $errors->any() ? 4 : 2);
     $initialStepServer = in_array($initialStepServer, [1, 2, 3, 4, 5], true) ? $initialStepServer : 2;
+    if (! $temGatewayPagamento && $initialStepServer === 5) {
+        $initialStepServer = 4;
+    }
     $isInitialStep1 = $initialStepServer === 1;
     $isInitialStep2 = $initialStepServer === 2;
     $isInitialStep3 = $initialStepServer === 3;
@@ -1236,7 +1240,9 @@
                         class="num">3</span><span>Opcionais</span></div>
                 <div class="step-pill {{ $isInitialStep4 ? 'active' : '' }}" data-step="4"><span
                         class="num">4</span><span>Cliente</span></div>
-                <div class="step-pill {{ $isInitialStep5 ? 'active' : 'disabled' }}" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
+                @if ($temGatewayPagamento)
+                    <div class="step-pill {{ $isInitialStep5 ? 'active' : 'disabled' }}" data-step="5"><span class="num">5</span><span>Pagamento</span></div>
+                @endif
             </div>
 
             <form id="reservaForm" class="body" method="POST" action="{{ route('site.reserva.store') }}" novalidate>
@@ -1542,15 +1548,14 @@
                         {{ !empty($isAuth) && $isAuth ? 'Escolha usar o usuario logado ou cadastrar outro.' : 'Escolha uma opcao para continuar.' }}
                     </div>
                     <div class="feedback" style="margin-top: 10px;">Ao finalizar, você sera direcionado para o
-                        pagamento.</div>
+                        {{ $temGatewayPagamento ? 'pagamento.' : 'seu painel de reservas.' }}</div>
                 </section>
 
                 <div class="actions">
                     <button type="button" class="btn btn-secondary hidden" id="btnPrev">Voltar</button>
                     <div class="right">
                         <button type="button" class="btn btn-primary" id="btnNext">Continuar</button>
-                        <button type="submit" class="btn btn-primary hidden" id="btnSubmit">Ir para
-                            pagamento</button>
+                        <button type="submit" class="btn btn-primary hidden" id="btnSubmit">{{ $temGatewayPagamento ? 'Ir para pagamento' : 'Finalizar reserva' }}</button>
                     </div>
                 </div>
             </form>
@@ -1693,8 +1698,10 @@
             let authUserEmail = @json($authUserEmail);
             const loginRedirectUrl = @json($loginRedirectUrl);
             const reservaSelecionarModelo = @json($reservaSelecionarModelo ?? false);
+            const temGatewayPagamento = @json($temGatewayPagamento);
             const initialStepServer = Number(@json($initialStepServer));
-            const initialStep = !Number.isNaN(initialStepServer) && initialStepServer >= 1 && initialStepServer <= 5 ?
+            const maxStep = temGatewayPagamento ? 5 : 4;
+            const initialStep = !Number.isNaN(initialStepServer) && initialStepServer >= 1 && initialStepServer <= maxStep ?
                 initialStepServer : 2;
             const state = {
                 step: initialStep,
@@ -2050,7 +2057,7 @@
             }
 
             function renderStep() {
-                const visualStep = state.step === 5 ? 4 : state.step;
+                const visualStep = Math.min(state.step, 4);
                 pills.forEach(p => p.classList.toggle('active', Number(p.dataset.step) === state.step));
                 panels.forEach(p => p.classList.toggle('active', Number(p.dataset.panel) === visualStep));
                 document.getElementById('btnPrev').classList.toggle('hidden', visualStep === 1);
@@ -2530,7 +2537,7 @@
             pills.forEach(function(pill) {
                 pill.addEventListener('click', function() {
                     let to = Number(pill.dataset.step || 1);
-                    if (to === 5) {
+                    if (to > maxStep) {
                         return;
                     }
                     if (to > 1 && !enforceStep1Gate(true)) {

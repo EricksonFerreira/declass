@@ -8,14 +8,14 @@
 
 @section('content')
     <div class="row justify-content-center">
-        <div class="col-12 col-xl-9">
+        <div class="col-12 col-xl-10">
             <div class="card manutencao-card shadow-sm border-0">
                 <div class="card-header manutencao-card__header border-0">
                     <div class="d-flex align-items-start justify-content-between flex-wrap" style="gap:.75rem;">
                         <div>
                             <div class="manutencao-card__eyebrow">Itens de manutenção preventiva</div>
                             <h4 class="mb-1">Novo item</h4>
-                            <p class="mb-0 text-muted">Cadastre um item reutilizável para os planos do sistema.</p>
+                            <p class="mb-0 text-muted">Cadastre um item reutilizável para usar em vários planos.</p>
                         </div>
                         <div class="manutencao-card__badge">
                             <i class="fas fa-tools mr-1"></i> Cadastro rápido
@@ -24,7 +24,7 @@
                 </div>
 
                 <div class="card-body p-0">
-                    <form method="POST" action="{{ route('manutencao.itens.store') }}" class="p-3 p-md-4">
+                    <form method="POST" action="{{ route('manutencao.itens.store') }}" class="p-3 p-md-4 js-form-item-manutencao">
                         @csrf
 
                         <div class="row">
@@ -32,6 +32,9 @@
                                 <div class="form-group">
                                     <label for="nome">Nome</label>
                                     <input type="text" id="nome" name="nome" class="form-control form-control-lg" value="{{ old('nome') }}" placeholder="Ex: Troca de óleo" required>
+                                    @error('nome')
+                                        <small class="text-danger d-block mt-1">{{ $message }}</small>
+                                    @enderror
                                 </div>
                             </div>
                             <div class="col-12 col-lg-4">
@@ -49,7 +52,9 @@
 
                         <div class="d-flex flex-column flex-md-row justify-content-end" style="gap:.75rem;">
                             <a href="{{ route('manutencao.itens.index') }}" class="btn btn-outline-secondary px-4">Cancelar</a>
-                            <button type="submit" class="btn btn-primary px-4">Salvar item</button>
+                            <button type="submit" class="btn btn-primary px-4 js-submit-item">
+                                <span class="js-submit-label">Salvar item</span>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -57,6 +62,41 @@
         </div>
     </div>
 @stop
+
+@section('js')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var form = document.querySelector('.js-form-item-manutencao');
+    if (!form) return;
+
+    var button = form.querySelector('.js-submit-item');
+    var submitting = false;
+
+    form.addEventListener('submit', function () {
+        if (submitting) return;
+        submitting = true;
+
+        if (button) {
+            button.disabled = true;
+            button.querySelector('.js-submit-label').textContent = 'Processando...';
+            button.querySelector('i')?.classList.add('d-none');
+        }
+    });
+
+    @if (session('success'))
+        if (window.Swal && typeof window.Swal.fire === 'function') {
+            window.Swal.fire({
+                icon: 'success',
+                title: 'Sucesso',
+                text: @json(session('success')),
+                confirmButtonColor: '#0d6efd'
+            });
+        }
+    @endif
+});
+</script>
+@endsection
 
 @section('css')
 <style>

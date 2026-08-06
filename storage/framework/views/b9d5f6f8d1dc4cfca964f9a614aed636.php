@@ -936,7 +936,7 @@
         const placaInput = document.querySelector('[name=placa_momento]');
 
         const hasVeiculoData = !!veiculoId && !!dataHora;
-        const byReserva = !!reservaId && (modo === 'auto' || modo === 'reservation' || modo === 'force' || hasVeiculoData);
+        const byReserva = !!reservaId && (modo === 'reservation' || (modo === 'auto' && hasVeiculoData));
         const byVeiculoData = hasVeiculoData && (modo === 'auto' || modo === 'vehicle' || modo === 'force' || !!reservaId);
 
         if (!byReserva && !byVeiculoData) {
@@ -952,7 +952,10 @@
         clearTimeout(multaReservaTimer);
         multaReservaTimer = setTimeout(() => {
             const params = new URLSearchParams();
-            if (byReserva && hasVeiculoData) {
+            if (modo === 'force' || byVeiculoData) {
+                params.set('veiculo_id', veiculoId);
+                params.set('data_hora', dataHora);
+            } else if (byReserva && hasVeiculoData) {
                 params.set('reserva_id', reservaId);
                 params.set('veiculo_id', veiculoId);
                 params.set('data_hora', dataHora);

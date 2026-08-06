@@ -372,15 +372,28 @@ return [
                             'icon' => 'fas fa-calendar-check',
                         ],
                          [
-                            'text' => 'Manut. Preventiva',
-                            'route' => 'manutencao.preventivas.index',
+                            'text' => 'Manutenção',
+                            // 'route' => 'manutencao.preventivas.index',
                             'icon' => 'fas fa-tools',
+                            'submenu' => [
+                                
+                                [
+                                   'text' => 'Manut. Preventiva',
+                                   'route' => 'manutencao.preventivas.index',
+                                   'icon' => 'fas fa-tools',
+                                ],
+                                [
+                                    'text' => 'Planos de Manut. Preventiva',
+                                    'route' => 'manutencao.planos.index',
+                                    'icon' => 'fas fa-clipboard-list',
+                                ],
+                                [
+                                    'text' => 'Itens de Manut. Preventiva',
+                                    'route' => 'manutencao.itens.index',
+                                    'icon' => 'fas fa-clipboard-list',
+                                ],
+                            ]
                         ],
-                         [
-                        'text' => 'Planos de Manut. Preventiva',
-                        'route' => 'manutencao.planos.index',
-                        'icon' => 'fas fa-clipboard-list',
-                    ],
                     ],
                 ],
                 [

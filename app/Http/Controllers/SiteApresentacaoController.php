@@ -114,8 +114,14 @@ class SiteApresentacaoController extends Controller
         $host = DomainNormalizer::normalize($request->getHost());
         $empresa = $this->resolveEmpresaByHost($host);
 
-        if (! $empresa || ($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->site_tipo_reserva ?? 'ambas') === 'nenhum') {
+        if (! $empresa) {
             return $this->defaultResponse();
+        }
+
+        if (($empresa->site_apresentacao_ativo ?? 'S') !== 'S' || ($empresa->site_tipo_reserva ?? 'ambas') === 'nenhum') {
+            return Route::has('login')
+                ? redirect()->route('login')
+                : redirect()->to('/login');
         }
 
         $this->activateEmpresaContext($empresa);
