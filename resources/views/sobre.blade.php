@@ -10,8 +10,8 @@
     <link rel="canonical" href="{{ url('/sobre') }}">
     <meta property="og:locale" content="pt_BR">
     <meta property="og:type" content="website">
-    <meta property="og:site_name" content="DeCars">
-    <meta property="og:title" content="Sobre a DeCars | Software da Sonyd Tech para Locadoras">
+    <meta property="og:site_name" content="{{ $empresa->nome ?? 'DeCars' }}">
+    <meta property="og:title" content="Sobre {{ $empresa->nome ?? 'DeCars' }} | Software para Locadoras">
     <meta property="og:description" content="Gestao de locadoras com site de reservas online, personalizacao e foco em conversao.">
     <meta property="og:url" content="{{ url('/sobre') }}">
     <meta property="og:image" content="{{ asset('assets/og/decars-share.png') }}">
@@ -20,17 +20,18 @@
     <meta property="og:image:width" content="1200">
     <meta property="og:image:height" content="630">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Sobre a DeCars | Software da Sonyd Tech para Locadoras">
+    <meta name="twitter:title" content="Sobre {{ $empresa->nome ?? 'DeCars' }} | Software para Locadoras">
     <meta name="twitter:description" content="Software para locadoras com site de reservas online e foco em vendas.">
     <meta name="twitter:image" content="{{ asset('assets/og/decars-share.png') }}">
     <meta name="theme-color" content="#0a1628">
-    <title>Sobre a DeCars | Software da Sonyd Tech para Locadoras</title>
+    <title>Sobre {{ $empresa->nome ?? 'DeCars' }} | Software para Locadoras</title>
 
     <link rel="icon" type="image/x-icon" href="{{ asset('favicons/favicon.ico') }}">
-    <link rel="manifest" href="{{ route('site.manifest') }}">
+    @php $manifestVersion = rawurlencode((string) ($empresa->id ?? '0')).'-'.substr(sha1(($empresa->nome ?? '').'|'.($empresa->logo_path ?? '').'|'.($empresa->cor_primaria ?? '')), 0, 12); @endphp
+    <link rel="manifest" href="{{ route('site.manifest', ['v' => $manifestVersion]) }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DeCars">
+    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome ?? 'DeCars' }}">
     <link rel="apple-touch-icon" href="{{ route('site.manifest.icon') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

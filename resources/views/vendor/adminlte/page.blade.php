@@ -8,12 +8,13 @@
     $faviconUrl = $empresaBranding->logoUrl();
     $empresaAtual = $empresaBranding->empresaAtual();
     $appName = $empresaAtual?->nome ?: config('app.name', 'DeCars');
+    $manifestVersion = rawurlencode((string) ($empresaAtual?->id ?? '0')).'-'.substr(sha1(($empresaAtual?->nome ?? '').'|'.($empresaAtual?->logo_path ?? '').'|'.($empresaAtual?->cor_primaria ?? '')), 0, 12);
 @endphp
 
 @section('meta_tags')
     @parent
     <link rel="shortcut icon" href="{{ $faviconUrl }}" />
-    <link rel="manifest" href="{{ route('site.manifest') }}">
+    <link rel="manifest" href="{{ route('site.manifest', ['v' => $manifestVersion]) }}">
     <meta name="theme-color" content="{{ $empresaAtual?->cor_primaria ?: '#0a1628' }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">

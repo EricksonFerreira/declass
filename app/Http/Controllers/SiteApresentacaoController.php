@@ -74,7 +74,10 @@ class SiteApresentacaoController extends Controller
                     'purpose' => 'any maskable',
                 ],
             ],
-        ])->header('Content-Type', 'application/manifest+json');
+        ])->header('Content-Type', 'application/manifest+json')
+          ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+          ->header('Pragma', 'no-cache')
+          ->header('Expires', '0');
     }
 
     public function icon(Request $request)
@@ -88,14 +91,18 @@ class SiteApresentacaoController extends Controller
                 $mimeType = Storage::disk('public')->mimeType($logoPath) ?: 'image/png';
                 return response(Storage::disk('public')->get($logoPath), 200)
                     ->header('Content-Type', $mimeType)
-                    ->header('Cache-Control', 'public, max-age=3600');
+                    ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                    ->header('Pragma', 'no-cache')
+                    ->header('Expires', '0');
             }
         }
 
         $fallback = public_path('favicons/favicon.ico');
         if (is_file($fallback)) {
             return response()->file($fallback, [
-                'Cache-Control' => 'public, max-age=3600',
+                'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+                'Pragma' => 'no-cache',
+                'Expires' => '0',
             ]);
         }
 

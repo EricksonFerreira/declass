@@ -10,11 +10,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $titulo }}</title>
     <meta name="description" content="{{ $descricao }}">
-    <link rel="manifest" href="{{ route('site.manifest') }}">
-    <meta name="theme-color" content="#0a1628">
+    @php $manifestVersion = rawurlencode((string) ($empresa->id ?? '0')).'-'.substr(sha1(($empresa->nome ?? '').'|'.($empresa->logo_path ?? '').'|'.($empresa->cor_primaria ?? '')), 0, 12); @endphp
+    <link rel="manifest" href="{{ route('site.manifest', ['v' => $manifestVersion]) }}">
+    <meta name="theme-color" content="{{ $empresa->cor_primaria ?: '#0a1628' }}">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="DeCars">
+    <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome }}">
     <link rel="apple-touch-icon" href="{{ route('site.manifest.icon') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
