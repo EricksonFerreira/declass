@@ -53,7 +53,6 @@ class SiteApresentacaoController extends Controller
         $appName = $empresa?->nome ?: config('app.name', 'DeCars');
         $shortName = mb_strimwidth($appName, 0, 12, '', 'UTF-8');
         $themeColor = $empresa?->cor_primaria ?: '#0a1628';
-        $iconUrl = $empresa?->logo_url ?: asset('favicons/favicon.ico');
         $startUrl = $empresa?->site_apresentacao_ativo === 'S' ? route('site.apresentacao') : url('/');
 
         return response()->json([
@@ -69,13 +68,38 @@ class SiteApresentacaoController extends Controller
             'orientation' => 'portrait-primary',
             'icons' => [
                 [
-                    'src' => $iconUrl,
+                    'src' => route('site.manifest.icon'),
                     'sizes' => 'any',
-                    'type' => 'image/x-icon',
+                    'type' => 'image/png',
                     'purpose' => 'any maskable',
                 ],
             ],
         ])->header('Content-Type', 'application/manifest+json');
+    }
+
+    public function icon(Request $request)
+    {
+        $host = DomainNormalizer::normalize($request->getHost());
+        $empresa = $this->resolveEmpresaByHost($host);
+
+        if ($empresa) {
+            $logoPath = is_string($empresa->logo_path ?? null) ? trim((string) $empresa->logo_path) : '';
+            if ($logoPath !== '' && Storage::disk('public')->exists($logoPath)) {
+                $mimeType = Storage::disk('public')->mimeType($logoPath) ?: 'image/png';
+                return response(Storage::disk('public')->get($logoPath), 200)
+                    ->header('Content-Type', $mimeType)
+                    ->header('Cache-Control', 'public, max-age=3600');
+            }
+        }
+
+        $fallback = public_path('favicons/favicon.ico');
+        if (is_file($fallback)) {
+            return response()->file($fallback, [
+                'Cache-Control' => 'public, max-age=3600',
+            ]);
+        }
+
+        abort(404);
     }
 
     public function index(Request $request): View|RedirectResponse|\Illuminate\Http\Response

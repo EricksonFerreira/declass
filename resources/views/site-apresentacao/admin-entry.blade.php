@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="{{ $empresa->nome }}">
-    <link rel="apple-touch-icon" href="{{ $empresa->logo_url ?: asset('favicons/favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ route('site.manifest.icon') }}">
     <script>
         if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
             window.addEventListener('load', function () {

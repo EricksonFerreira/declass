@@ -41,6 +41,7 @@ Route::post('/webhook/stripe', [StripeWebhookController::class, 'handle'])
 
 Route::get('/', [SiteApresentacaoController::class, 'index'])->name('site.apresentacao');
 Route::get('/manifest.webmanifest', [SiteApresentacaoController::class, 'manifest'])->name('site.manifest');
+Route::get('/pwa/icon', [SiteApresentacaoController::class, 'icon'])->name('site.manifest.icon');
 Route::get('/sobre', [SiteApresentacaoController::class, 'sobre'])->name('site.sobre');
 Route::get('/site/estacoes', [SiteApresentacaoController::class, 'estacoesOptions'])->name('site.apresentacao.estacoes');
 Route::get('/motorista-app', [SiteApresentacaoController::class, 'motoristaApp'])->name('site.apresentacao.motorista-app');
