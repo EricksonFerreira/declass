@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('movimentacoes')) {
             return;
         }
@@ -22,7 +21,6 @@ return new class extends Migration
             $table->dateTime('data_chegada_real')->nullable()->after('data_chegada_prevista');
     });
         Schema::enableForeignKeyConstraints();
-        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -31,12 +29,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
-        if (!Schema::hasTable('movimentacoes')) { Schema::enableForeignKeyConstraints(); return; }
         Schema::table('movimentacoes', function (Blueprint $table) {
             $table->dropColumn(['data_saida', 'data_chegada_prevista', 'data_chegada_real']);
     });
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

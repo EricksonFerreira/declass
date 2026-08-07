@@ -92,7 +92,7 @@
                     @php
                         $badge = $ass->status_badge;
                         $dias = $ass->diasParaVencer();
-                        $storageMb = $ass->plano->limite_armazenamento_mb ?? 0;
+                        $storageMb = $ass->plano?->limite_armazenamento_mb ?? 0;
                         $storageTxt = $storageMb >= 1024
                             ? number_format($storageMb / 1024, 1, ',', '.') . ' GB'
                             : $storageMb . ' MB';
@@ -116,7 +116,7 @@
                                 <div class="sa-card__id">ASSINATURA #{{ $ass->id }}</div>
                                 <div class="sa-card__title">{{ $nomeEmpresa }}</div>
                                 <div class="sa-card__sub">
-                                    {{ $ass->plano->nome }}@if ($ass->plano->destaque)
+                                    {{ $ass->plano?->nome ?? 'Sem plano' }}@if ($ass->plano?->destaque)
                                         <i class="fas fa-star text-warning ml-1" style="font-size:.7rem;"></i>
                                     @endif
                                 </div>

@@ -12,14 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('disponibilidade_inicial_veiculos')) { return; }
         Schema::create('disponibilidade_inicial_veiculos', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->nullable();
             $table->timestamps();
         });
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 
@@ -29,9 +27,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('disponibilidade_inicial_veiculos');
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

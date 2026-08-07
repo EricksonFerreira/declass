@@ -4,6 +4,8 @@ namespace App\Modules\Fiscal\Actions;
 
 use App\Models\DocumentoFiscal;
 use App\Models\CreditoTributario;
+use App\Models\ArquivoRastreado;
+use Illuminate\Support\Facades\Storage;
 use SimpleXMLElement;
 use Exception;
 
@@ -59,6 +61,10 @@ class ImportarNfeXmlAction
             $vIBS = round($vNF * 0.177, 2);
         }
 
+        // Save XML physically on local disk
+        $xmlPath = "nfe_entradas/nfe_{$chNFe}.xml";
+        Storage::disk('local')->put($xmlPath, $xmlContent);
+
         // 1. Create or Find DocumentoFiscal representing this input
         $documento = DocumentoFiscal::firstOrCreate(
             ['chave_acesso' => $chNFe],
@@ -74,6 +80,22 @@ class ImportarNfeXmlAction
                 'updated_at' => now()
             ]
         );
+
+        // Track XML file inside arquivos_rastreados
+        ArquivoRastreado::create([
+            'empresa_id' => $empresaId,
+            'user_id' => auth()->id(),
+            'modulo' => 'fiscal',
+            'entidade' => 'App\Models\DocumentoFiscal',
+            'entidade_id' => $documento->id,
+            'campo' => 'xml_completo',
+            'disk' => 'local',
+            'path' => $xmlPath,
+            'original_name' => "nfe_{$nNF}.xml",
+            'mime_type' => 'application/xml',
+            'size_bytes' => strlen($xmlContent),
+            'hash_sha1' => sha1($xmlContent),
+        ]);
 
         // 2. Register CBS Tax Credit
         if ($vCBS > 0) {

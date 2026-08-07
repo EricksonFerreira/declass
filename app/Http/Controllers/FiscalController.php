@@ -361,8 +361,25 @@ class FiscalController extends Controller
         $validated['nfse_ativo'] = $request->has('nfse_ativo');
 
         if ($request->hasFile('certificado_file')) {
-            $path = $request->file('certificado_file')->store('certificados', 'local');
+            $file = $request->file('certificado_file');
+            $path = $file->store('certificados', 'local');
             $validated['certificado_path'] = $path;
+
+            // Track file inside arquivos_rastreados
+            \App\Models\ArquivoRastreado::create([
+                'empresa_id' => $empresaId,
+                'user_id' => auth()->id(),
+                'modulo' => 'fiscal',
+                'entidade' => 'App\Models\Empresa',
+                'entidade_id' => $empresaId,
+                'campo' => 'certificado_path',
+                'disk' => 'local',
+                'path' => $path,
+                'original_name' => $file->getClientOriginalName(),
+                'mime_type' => $file->getClientMimeType(),
+                'size_bytes' => $file->getSize(),
+                'hash_sha1' => sha1_file($file->getRealPath()),
+            ]);
         }
 
         if (empty($validated['certificado_senha'])) {

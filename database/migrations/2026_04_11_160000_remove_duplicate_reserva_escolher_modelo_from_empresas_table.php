@@ -12,7 +12,6 @@ return new class extends Migration
         Schema::disableForeignKeyConstraints();
 
         if (!Schema::hasTable('empresas')) {
-            Schema::enableForeignKeyConstraints();
             return;
         }
 

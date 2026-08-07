@@ -6,7 +6,9 @@ use App\Modules\Fiscal\Gateways\NfseGatewayInterface;
 use App\Modules\Fiscal\DTO\DpsDTO;
 use App\Models\OperacaoFiscal;
 use App\Models\DocumentoFiscal;
+use App\Models\ArquivoRastreado;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class NfseNacionalService
 {
@@ -81,6 +83,27 @@ class NfseNacionalService
                     'emitida_em' => now(),
                 ]);
                 $operacao->update(['status' => 'AUTORIZADA']);
+
+                // Store NFS-e XML on disk and track in arquivos_rastreados
+                if ($response->xml) {
+                    $xmlPath = "nfse_saidas/nfse_{$response->chaveAcesso}.xml";
+                    Storage::disk('local')->put($xmlPath, $response->xml);
+
+                    ArquivoRastreado::create([
+                        'empresa_id' => $operacao->empresa_id,
+                        'user_id' => auth()->id(),
+                        'modulo' => 'fiscal',
+                        'entidade' => 'App\Models\DocumentoFiscal',
+                        'entidade_id' => $documento->id,
+                        'campo' => 'xml',
+                        'disk' => 'local',
+                        'path' => $xmlPath,
+                        'original_name' => "nfse_{$response->numeroNfse}.xml",
+                        'mime_type' => 'application/xml',
+                        'size_bytes' => strlen($response->xml),
+                        'hash_sha1' => sha1($response->xml),
+                    ]);
+                }
             } else {
                 $documento->update([
                     'status' => 'REJEITADA',

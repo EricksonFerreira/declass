@@ -9,7 +9,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::enableForeignKeyConstraints();
         if (Schema::hasTable('empresas')) {
             Schema::table('empresas', function (Blueprint $table) {
                 if (!Schema::hasColumn('empresas', 'regime_emissao')) {
@@ -17,12 +16,12 @@ return new class extends Migration
                 }
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::enableForeignKeyConstraints();
         if (Schema::hasTable('empresas')) {
             Schema::table('empresas', function (Blueprint $table) {
                 if (Schema::hasColumn('empresas', 'regime_emissao')) {
@@ -30,5 +29,6 @@ return new class extends Migration
                 }
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 };

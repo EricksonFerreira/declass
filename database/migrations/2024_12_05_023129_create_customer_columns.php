@@ -12,15 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
-        if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
         Schema::table('users', function (Blueprint $table) {
             $table->string('stripe_id')->nullable()->index();
             $table->string('pm_type')->nullable();
             $table->string('pm_last_four', 4)->nullable();
             $table->timestamp('trial_ends_at')->nullable();
     });
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 
@@ -30,8 +27,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
-        if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
         Schema::table('users', function (Blueprint $table) {
             $table->dropIndex([
                 'stripe_id',
@@ -44,7 +39,6 @@ return new class extends Migration
                 'trial_ends_at',
             ]);
     });
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

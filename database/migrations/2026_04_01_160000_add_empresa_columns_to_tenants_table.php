@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             Schema::create('empresas', function (Blueprint $table) {
                 $table->id();
@@ -23,7 +22,6 @@ return new class extends Migration
     });
         }
 
-        if (!Schema::hasTable('empresas')) { Schema::enableForeignKeyConstraints(); return; }
         Schema::table('empresas', function (Blueprint $table) {
             if (!Schema::hasColumn('empresas', 'cnpj')) {
                 $table->string('cnpj', 20)->nullable()->after('nome');
@@ -39,7 +37,6 @@ return new class extends Migration
             }
         });
         Schema::enableForeignKeyConstraints();
-        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -47,7 +44,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
         Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             return;
@@ -67,7 +63,6 @@ return new class extends Migration
                 $table->dropColumn('cnpj');
             }
         });
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

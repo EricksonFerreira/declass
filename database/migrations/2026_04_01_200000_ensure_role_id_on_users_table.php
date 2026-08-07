@@ -10,7 +10,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('users')) {
             return;
         }
@@ -32,12 +31,10 @@ return new class extends Migration
             ");
         }
         Schema::enableForeignKeyConstraints();
-        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
         Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('users') || !Schema::hasColumn('users', 'role_id')) {
             return;
@@ -51,7 +48,6 @@ return new class extends Migration
             ");
         }
 
-        if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
         Schema::table('users', function (Blueprint $table) {
             $indexes = collect(Schema::getIndexes('users'))->pluck('name')->toArray();
             if (in_array('users_role_id_index', $indexes)) {
@@ -59,7 +55,6 @@ return new class extends Migration
             }
             $table->dropColumn('role_id');
         });
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

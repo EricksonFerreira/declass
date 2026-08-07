@@ -593,34 +593,7 @@ return [
                 ],
             ]
         ],
-        [
-            'text' => 'Central de Ajuda (FAQ)',
-            'route' => 'assinatura.ajuda',
-            'icon' => 'fas fa-question-circle',
-        ],
-        [
-            'text' => 'Suporte',
-            'icon' => 'fas fa-headset',
-            'submenu' => [
-                [
-                    'text' => 'Criar chamado',
-                    'route' => 'chamado.create',
-                    'icon' => 'fas fa-plus-circle',
-                ],
-                [
-                    'text' => 'Meus chamados',
-                    'route' => 'chamado.meus',
-                    'icon' => 'fas fa-list',
-                ],
-                [
-                    'text' => 'Atendimento chamado',
-                    'route' => 'chamado.atendimento',
-                    'icon' => 'fas fa-headset',
-                    'can' => 'acessar-superadmin',
-                ],
-            ],
-        ],
-
+       
         [
             'text' => 'Configurações & Cadastros',
             'icon' => 'fas fa-cogs',
@@ -862,6 +835,35 @@ return [
                     ],
                 ],
             ],
+
+        ],
+
+        [
+            'text' => 'Suporte',
+            'icon' => 'fas fa-headset',
+            'submenu' => [
+                [
+                    'text' => 'Criar chamado',
+                    'route' => 'chamado.create',
+                    'icon' => 'fas fa-plus-circle',
+                ],
+                [
+                    'text' => 'Meus chamados',
+                    'route' => 'chamado.meus',
+                    'icon' => 'fas fa-list',
+                ],
+                [
+                    'text' => 'Atendimento chamado',
+                    'route' => 'chamado.atendimento',
+                    'icon' => 'fas fa-headset',
+                    'can' => 'acessar-superadmin',
+                ],
+            ],
+        ],
+        [
+            'text' => 'Central de Ajuda (FAQ)',
+            'route' => 'assinatura.ajuda',
+            'icon' => 'fas fa-question-circle',
         ],
     ],
     /*

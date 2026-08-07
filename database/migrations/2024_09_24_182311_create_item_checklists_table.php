@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('item_checklist')) { return; }
         Schema::create('item_checklists', function (Blueprint $table) {
             $table->id();
@@ -20,7 +19,6 @@ return new class extends Migration
             $table->string('ativo')->limit(2)->default('S');
             $table->timestamps();
         });
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 
@@ -30,9 +28,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('item_checklists');
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

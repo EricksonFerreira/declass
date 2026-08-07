@@ -66,7 +66,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
-        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             Schema::create('empresas', function (Blueprint $table) {
                 $table->id();
@@ -125,7 +124,6 @@ return new class extends Migration
             $this->addTenantColumnToTable($tableName, $defaultTenantId);
         }
         Schema::enableForeignKeyConstraints();
-        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -133,7 +131,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
         Schema::disableForeignKeyConstraints();
         foreach ($this->tenantTables as $tableName) {
             $this->dropTenantColumnFromTable($tableName);
@@ -149,7 +146,6 @@ return new class extends Migration
             }
 
             try {
-                if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
                 Schema::table('users', function (Blueprint $table) {
                     $table->unique('email', 'users_email_unique');
                 });
@@ -157,7 +153,6 @@ return new class extends Migration
                 // Ignore if the index already exists.
             }
 
-            if (!Schema::hasTable('users')) { Schema::enableForeignKeyConstraints(); return; }
             Schema::table('users', function (Blueprint $table) {
                 $table->dropIndex(['empresa_id']);
                 $table->dropColumn('empresa_id');
@@ -165,7 +160,6 @@ return new class extends Migration
         }
 
         Schema::dropIfExists('empresas');
-        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 

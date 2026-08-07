@@ -90,9 +90,7 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::disableForeignKeyConstraints();
         // No-op para evitar perda de dados em rollback.
-        Schema::enableForeignKeyConstraints();
     }
 
     private function ensureEmpresasTable(): void
