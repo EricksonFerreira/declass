@@ -66,6 +66,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('empresas')) {
             Schema::create('empresas', function (Blueprint $table) {
                 $table->id();
@@ -124,6 +125,7 @@ return new class extends Migration
             $this->addTenantColumnToTable($tableName, $defaultTenantId);
         }
         Schema::enableForeignKeyConstraints();
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -131,6 +133,7 @@ return new class extends Migration
      */
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::disableForeignKeyConstraints();
         foreach ($this->tenantTables as $tableName) {
             $this->dropTenantColumnFromTable($tableName);
@@ -162,6 +165,7 @@ return new class extends Migration
         }
 
         Schema::dropIfExists('empresas');
+        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 

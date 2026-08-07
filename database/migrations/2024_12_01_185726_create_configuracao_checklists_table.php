@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         if (Schema::hasTable('configuracao_checklist')) { return; }
         Schema::create('configuracao_checklists', function (Blueprint $table) {
             $table->id();
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->timestamps();
         });
         Schema::enableForeignKeyConstraints();
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -29,7 +31,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('configuracao_checklists');
+        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

@@ -12,11 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         Schema::create('caracteristica_grupos', function (Blueprint $table) {
             $table->id();
             $table->string('nome')->nullable();
             $table->timestamps();
     });
+        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 
@@ -26,7 +28,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('caracteristica_grupos');
+        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

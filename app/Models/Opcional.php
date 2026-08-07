@@ -17,6 +17,7 @@ class Opcional extends Model
         'preco_por_dia',
         'preco_integral',
         'tipo_opcional_id',
+        'codigo_servico_municipal',
         'descricao'
     ];
 

@@ -66,6 +66,7 @@ return new class extends Migration
 
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         $this->ensureEmpresasTable();
 
         $defaultEmpresaId = DB::table('empresas')->value('id');
@@ -84,11 +85,14 @@ return new class extends Migration
         }
 
         $this->ensureUsersUniqueByEmpresa();
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         // No-op para evitar perda de dados em rollback.
+        Schema::enableForeignKeyConstraints();
     }
 
     private function ensureEmpresasTable(): void

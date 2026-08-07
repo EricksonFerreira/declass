@@ -67,7 +67,7 @@
         </div>
 
         <!-- Links Cards -->
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-md-4 mb-3">
                 <div class="card fc-card">
                     <div class="card-header py-3">
@@ -125,6 +125,56 @@
                 </div>
             </div>
         </div>
+
+        <!-- Accountant Export Row -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card fc-card">
+                    <div class="card-header py-3">
+                        <h5 class="fc-title">
+                            <i class="fas fa-file-csv"></i>
+                            <div>
+                                <span>Fechamento e Apuração Contábil</span>
+                                <span class="fc-subtitle">Exportação consolidada para o contador importar nos sistemas do SPED/Comitê Gestor</span>
+                            </div>
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <form method="GET" action="{{ route('fiscal.exportar-contabil') }}" class="row align-items-end">
+                            <div class="col-md-4 mb-3">
+                                <label class="fc-label">Mês de Apuração</label>
+                                <select name="mes" class="form-control" required>
+                                    @php
+                                        $meses = [
+                                            1 => 'Janeiro', 2 => 'Fevereiro', 3 => 'Março', 4 => 'Abril',
+                                            5 => 'Maio', 6 => 'Junho', 7 => 'Julho', 8 => 'Agosto',
+                                            9 => 'Setembro', 10 => 'Outubro', 11 => 'Novembro', 12 => 'Dezembro'
+                                        ];
+                                    @endphp
+                                    @foreach ($meses as $num => $nome)
+                                        <option value="{{ sprintf('%02d', $num) }}" {{ date('m') == $num ? 'selected' : '' }}>
+                                            {{ $nome }}
+                                        </option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="fc-label">Ano de Apuração</label>
+                                <select name="ano" class="form-control" required>
+                                    @for ($y = date('Y') - 2; $y <= date('Y') + 2; $y++)
+                                        <option value="{{ $y }}" {{ date('Y') == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                    @endfor
+                                </select>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <button type="submit" class="btn btn-success fc-btn btn-block">
+                                    <i class="fas fa-download mr-1"></i> Exportar CSV de Fechamento
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-</div>
 @stop

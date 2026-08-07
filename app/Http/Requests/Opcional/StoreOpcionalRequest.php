@@ -33,6 +33,7 @@ class StoreOpcionalRequest extends FormRequest
                 Rule::unique('opcionais', 'nome')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'ativo' => 'required|string|max:1',
+            'codigo_servico_municipal' => 'nullable|string|max:20',
         ];
     }
 

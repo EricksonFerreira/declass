@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         Schema::create('cache', function (Blueprint $table) {
             $table->string('key')->primary();
             $table->mediumText('value');
@@ -24,6 +25,7 @@ return new class extends Migration
             $table->integer('expiration');
         });
         Schema::enableForeignKeyConstraints();
+        Schema::enableForeignKeyConstraints();
     }
 
     /**
@@ -32,8 +34,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('cache');
         Schema::dropIfExists('cache_locks');
+        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

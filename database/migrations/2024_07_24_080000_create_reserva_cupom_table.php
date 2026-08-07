@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration {
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
         if (!Schema::hasTable('reserva_cupom')) {
             Schema::create('reserva_cupom', function (Blueprint $table) {
                 $table->id();
@@ -15,11 +16,14 @@ return new class extends Migration {
                 $table->timestamps();
             });
         }
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('reserva_cupom');
+        Schema::enableForeignKeyConstraints();
     }
 };
 ?>

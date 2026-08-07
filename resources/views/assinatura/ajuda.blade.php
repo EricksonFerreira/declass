@@ -67,7 +67,7 @@
                                 </h5>
                             </div>
                             <div class="card-body p-3 bg-light">
-                                <div class="accordion" id="accordion-{{ $catSlug }}">
+                                <div class="accordion faq-accordion-scroll" id="accordion-{{ $catSlug }}">
                                     @foreach ($items as $j => $item)
                                         @php
                                             $collapseId = $item['id'] ?? ('faq-' . $catSlug . '-' . $j);
@@ -132,6 +132,27 @@
         /* Rotates chevron when opened */
         .btn[aria-expanded="true"] .btn-chevron {
             transform: rotate(180deg);
+        }
+        
+        /* Accordion Scroll & Premium Scrollbar */
+        .faq-accordion-scroll {
+            max-height: 520px;
+            overflow-y: auto;
+            padding-right: 8px;
+        }
+        .faq-accordion-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .faq-accordion-scroll::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .faq-accordion-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .faq-accordion-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 @endpush

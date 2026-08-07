@@ -63,6 +63,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         foreach ($this->tables as $tableName) {
             $this->renameColumnToEmpresaId($tableName);
         }
@@ -86,10 +87,12 @@ return new class extends Migration
             }
         }
         Schema::enableForeignKeyConstraints();
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::disableForeignKeyConstraints();
         foreach ($this->tables as $tableName) {
             $this->renameColumnToTenantId($tableName);
@@ -113,6 +116,7 @@ return new class extends Migration
                 // Ignore when index already exists.
             }
         }
+        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 

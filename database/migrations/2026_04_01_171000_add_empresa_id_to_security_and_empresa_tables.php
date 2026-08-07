@@ -21,6 +21,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::disableForeignKeyConstraints();
+        Schema::disableForeignKeyConstraints();
         $defaultEmpresaId = null;
 
         if (Schema::hasTable('empresas')) {
@@ -51,10 +52,12 @@ return new class extends Migration
             }
         }
         Schema::enableForeignKeyConstraints();
+        Schema::enableForeignKeyConstraints();
     }
 
     public function down(): void
     {
+        Schema::disableForeignKeyConstraints();
         Schema::disableForeignKeyConstraints();
         foreach ($this->tables as $tableName) {
             if (!Schema::hasTable($tableName) || !Schema::hasColumn($tableName, 'empresa_id')) {
@@ -66,6 +69,7 @@ return new class extends Migration
                 $table->dropColumn('empresa_id');
             });
         }
+        Schema::enableForeignKeyConstraints();
         Schema::enableForeignKeyConstraints();
     }
 };

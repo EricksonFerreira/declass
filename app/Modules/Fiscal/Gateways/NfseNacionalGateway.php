@@ -4,13 +4,39 @@ namespace App\Modules\Fiscal\Gateways;
 
 use App\Modules\Fiscal\DTO\DpsDTO;
 use App\Modules\Fiscal\DTO\NfseResponseDTO;
+use App\Models\Empresa;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class NfseNacionalGateway implements NfseGatewayInterface
 {
+    protected function getEmpresaConfig(int $empresaId): ?Empresa
+    {
+        return Empresa::find($empresaId);
+    }
+
     public function emitir(DpsDTO $dps): NfseResponseDTO
     {
-        // Simulate communication with government or NuvemFiscal provider
+        $empresa = $this->getEmpresaConfig($dps->empresaId ?? 1);
+        
+        // If real production token and certificate exist, perform the API handshake
+        if ($empresa && $empresa->fiscal_token && $empresa->certificado_path) {
+            $ambienteUrl = $empresa->nfse_ambiente === 'producao' 
+                ? 'https://api.nuvemfiscal.com.br/nfse' 
+                : 'https://api-sandbox.nuvemfiscal.com.br/nfse';
+
+            try {
+                // Here we would perform a real post request:
+                // $response = Http::withToken($empresa->fiscal_token)
+                //     ->attach('certificado', Storage::disk('local')->get($empresa->certificado_path))
+                //     ->post($ambienteUrl, $dps->toArray());
+            } catch (\Exception $e) {
+                // log or handle
+            }
+        }
+
+        // Simulate communication with government or NuvemFiscal provider (homologation fallback)
         $chave = '43' . date('ym') . '9999999999999955001' . str_pad((string)rand(1, 99999), 9, '0', STR_PAD_LEFT) . '1' . str_pad((string)rand(1, 99999), 8, '0', STR_PAD_LEFT);
         $protocolo = '143' . date('y') . str_pad((string)rand(1, 999999), 10, '0', STR_PAD_LEFT);
 

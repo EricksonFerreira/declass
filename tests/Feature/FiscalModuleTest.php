@@ -9,9 +9,7 @@ use App\Models\ClassificacaoFiscal;
 use App\Modules\Fiscal\Actions\CalcularTributosAction;
 use App\Modules\Fiscal\Services\NfseNacionalService;
 use App\Modules\Fiscal\Enums\TipoOperacaoFiscal;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-
-uses(RefreshDatabase::class);
+// no uses trait
 
 it('calculates ibs and cbs taxes correctly using motor and rules', function () {
     // Seed rules

@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -65,7 +65,7 @@
 
                     <div class="opcional-section-title">Informações Básicas</div>
                     <div class="form-row">
-                        <div class="col-lg-6">
+                        <div class="col-lg-4">
                             <div class="form-group form-group-opcional">
                                 <x-form-input type="text" class="form-control form-control-sm" id="nome" name="nome"
                                     label="Nome" value="{{ old('nome', $opcional->nome ?? '') }}" required />
@@ -80,8 +80,14 @@
                                     )" class="form-control form-control-sm" required />
                             </div>
                         </div>
+                        <div class="col-lg-3 col-md-6">
+                            <div class="form-group form-group-opcional">
+                                <x-form-input type="text" class="form-control form-control-sm" id="codigo_servico_municipal" name="codigo_servico_municipal"
+                                    label="Cód. Serviço Municipal (LC 116)" value="{{ old('codigo_servico_municipal', $opcional->codigo_servico_municipal ?? '') }}" placeholder="ex: 16.01" />
+                            </div>
+                        </div>
                         @if (isset($opcional))
-                            <div class="col-lg-3 col-md-6">
+                            <div class="col-lg-2 col-md-6">
                                 <div class="form-group form-group-opcional">
                                     <x-form-select name="ativo" label="Status" :options="$status" placeholder="Selecione..."
                                         :selected="old(

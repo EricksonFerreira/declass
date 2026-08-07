@@ -132,20 +132,35 @@ class FinalizarCheckoutReservaComumAction
                 'assinado' => 'S',
             ])->save();
 
-            // Gerar Operação Fiscal, Calcular Tributos e Despachar Emissão de NFS-e
-            $operacaoFiscal = \App\Models\OperacaoFiscal::create([
-                'empresa_id' => $reserva->empresa_id,
-                'locacao_id' => $reserva->id,
-                'tipo' => \App\Modules\Fiscal\Enums\TipoOperacaoFiscal::LOCACAO_VEICULO->value,
-                'data_fato_gerador' => now(),
-                'valor_operacao' => (float) ($reserva->valor_total_final ?? 0.0),
-                'valor_base_calculo' => (float) ($reserva->valor_total_final ?? 0.0),
-                'status' => 'PENDENTE',
-            ]);
+            // Gerar Operação Fiscal, Calcular Tributos e Despachar Emissão de NFS-e baseada no regime de emissão da empresa
+            $empresa = $reserva->empresa;
+            $regimeEmissao = $empresa ? ($empresa->regime_emissao ?? 'NFSE_APENAS') : 'NFSE_APENAS';
 
-            app(\App\Modules\Fiscal\Actions\CalcularTributosAction::class)->handle($operacaoFiscal);
+            if ($regimeEmissao !== 'RECIBO_APENAS') {
+                $valorBase = (float) ($reserva->valor_total_final ?? 0.0);
+                
+                if ($regimeEmissao === 'MISTO') {
+                    // No regime misto, apenas opcionais/servicos adicionais sofrem emissao de NFS-e
+                    $valorBase = (float) ($reserva->opcionais ? $reserva->opcionais->sum(function($op) {
+                        return $op->pivot->valor_total ?? ($op->valor_diaria ?? 0.0);
+                    }) : 0.0);
+                }
 
-            \App\Modules\Fiscal\Jobs\EmitirNfseJob::dispatch($operacaoFiscal->id);
+                if ($valorBase > 0) {
+                    $operacaoFiscal = \App\Models\OperacaoFiscal::create([
+                        'empresa_id' => $reserva->empresa_id,
+                        'locacao_id' => $reserva->id,
+                        'tipo' => \App\Modules\Fiscal\Enums\TipoOperacaoFiscal::LOCACAO_VEICULO->value,
+                        'data_fato_gerador' => now(),
+                        'valor_operacao' => (float) ($reserva->valor_total_final ?? 0.0),
+                        'valor_base_calculo' => $valorBase,
+                        'status' => 'PENDENTE',
+                    ]);
+
+                    app(\App\Modules\Fiscal\Actions\CalcularTributosAction::class)->handle($operacaoFiscal);
+                    \App\Modules\Fiscal\Jobs\EmitirNfseJob::dispatch($operacaoFiscal->id);
+                }
+            }
 
             DB::commit();
 

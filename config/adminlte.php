@@ -586,6 +586,11 @@ return [
                     'route' => 'fiscal.classificacoes',
                     'icon' => 'fas fa-tags',
                 ],
+                [
+                    'text' => 'Configurações Fiscais',
+                    'route' => 'fiscal.config',
+                    'icon' => 'fas fa-sliders-h',
+                ],
             ]
         ],
         [

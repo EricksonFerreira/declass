@@ -32,9 +32,13 @@
             <div class="alert alert-success shadow-sm mb-3" style="border-radius: 8px;">{{ session('success') }}</div>
         @endif
 
+        @if(session('error'))
+            <div class="alert alert-danger shadow-sm mb-3" style="border-radius: 8px;">{{ session('error') }}</div>
+        @endif
+
         <div class="card fc-card">
             <div class="card-header py-3">
-                <div class="fc-head d-flex justify-content-between align-items-center">
+                <div class="fc-head d-flex justify-content-between align-items-center flex-wrap" style="gap: 10px;">
                     <h5 class="fc-title mb-0">
                         <i class="fas fa-piggy-bank"></i>
                         <div>
@@ -42,9 +46,14 @@
                             <span class="fc-subtitle">Créditos de não cumulatividade gerados por aquisição de frota, insumos e serviços</span>
                         </div>
                     </h5>
-                    <a href="{{ route('fiscal.creditos.criar') }}" class="btn btn-primary fc-btn">
-                        <i class="fas fa-plus mr-1"></i> Apropriar Crédito
-                    </a>
+                    <div class="d-flex" style="gap: 8px;">
+                        <button type="button" class="btn btn-outline-primary fc-btn" data-toggle="modal" data-target="#importXmlModal">
+                            <i class="fas fa-file-upload mr-1"></i> Importar XML de NF-e
+                        </button>
+                        <a href="{{ route('fiscal.creditos.criar') }}" class="btn btn-primary fc-btn">
+                            <i class="fas fa-plus mr-1"></i> Apropriar Crédito
+                        </a>
+                    </div>
                 </div>
             </div>
             
@@ -100,6 +109,42 @@
                     {{ $creditos->links() }}
                 </div>
             @endif
+        </div>
+    </div>
+
+    <!-- XML Upload Modal -->
+    <div class="modal fade" id="importXmlModal" tabindex="-1" role="dialog" aria-labelledby="importXmlModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header bg-light">
+                    <h5 class="modal-title font-weight-bold text-dark" id="importXmlModalLabel">
+                        <i class="fas fa-file-invoice mr-2 text-primary"></i>
+                        Importar XML de NF-e
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <form action="{{ route('fiscal.creditos.importar-xml') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-body p-4">
+                        <p class="text-secondary text-sm mb-3">
+                            Faça o upload do arquivo XML (.xml) da nota fiscal eletrônica de compra (NF-e) do veículo ou da O.S. de manutenção. 
+                            O sistema lerá os impostos destacados de IBS/CBS e gerará o saldo de créditos automaticamente.
+                        </p>
+                        <div class="form-group mb-0">
+                            <label class="fc-label">Selecione o arquivo XML *</label>
+                            <input type="file" name="xml_file" class="form-control-file" accept=".xml" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light border-0">
+                        <button type="button" class="btn btn-outline-secondary fc-btn" data-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary fc-btn">
+                            <i class="fas fa-file-import mr-1"></i> Importar Nota
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 @stop

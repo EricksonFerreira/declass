@@ -36,6 +36,7 @@ class UpdateOpcionalRequest extends FormRequest
                     ->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
             'ativo' => 'required|string|max:1',
+            'codigo_servico_municipal' => 'nullable|string|max:20',
         ];
     }
 
