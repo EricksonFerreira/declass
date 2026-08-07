@@ -548,40 +548,40 @@ return [
                             'route' => 'financeiro.cupom_desconto.index',
                             'icon' => 'fas fa-percentage',
                         ],
-                        [
-                            'text' => 'Módulo Fiscal (Reforma)',
-                            'icon' => 'fas fa-balance-scale',
-                            'submenu' => [
-                                [
-                                    'text' => 'Dashboard',
-                                    'route' => 'fiscal.dashboard',
-                                    'icon' => 'fas fa-chart-line',
-                                ],
-                                [
-                                    'text' => 'Operações Fiscais',
-                                    'route' => 'fiscal.operacoes',
-                                    'icon' => 'fas fa-receipt',
-                                ],
-                                [
-                                    'text' => 'Notas Fiscais (Municipais)',
-                                    'route' => 'financeiro.nfse.index',
-                                    'icon' => 'fas fa-file-invoice',
-                                ],
-                                [
-                                    'text' => 'Regras Tributárias',
-                                    'route' => 'fiscal.regras',
-                                    'icon' => 'fas fa-cogs',
-                                ],
-                                [
-                                    'text' => 'Créditos Tributários',
-                                    'route' => 'fiscal.creditos',
-                                    'icon' => 'fas fa-piggy-bank',
-                                ],
-                            ]
-                        ],
                     ],
                 ],
             ],
+        ],
+        [
+            'text' => 'Módulo Fiscal (Reforma)',
+            'icon' => 'fas fa-balance-scale',
+            'submenu' => [
+                [
+                    'text' => 'Dashboard',
+                    'route' => 'fiscal.dashboard',
+                    'icon' => 'fas fa-chart-line',
+                ],
+                [
+                    'text' => 'Operações Fiscais',
+                    'route' => 'fiscal.operacoes',
+                    'icon' => 'fas fa-receipt',
+                ],
+                [
+                    'text' => 'Notas Fiscais (Municipais)',
+                    'route' => 'financeiro.nfse.index',
+                    'icon' => 'fas fa-file-invoice',
+                                ],
+                [
+                    'text' => 'Regras Tributárias',
+                    'route' => 'fiscal.regras',
+                    'icon' => 'fas fa-cogs',
+                ],
+                [
+                    'text' => 'Créditos Tributários',
+                    'route' => 'fiscal.creditos',
+                    'icon' => 'fas fa-piggy-bank',
+                ],
+            ]
         ],
         [
             'text' => 'Suporte',
