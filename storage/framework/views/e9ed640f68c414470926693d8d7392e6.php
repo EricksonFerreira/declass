@@ -64,16 +64,23 @@
             </div>
         </div>
 
+        <?php if(session('success')): ?>
+            <div class="alert alert-success shadow-sm mb-3" style="border-radius: 8px;"><?php echo e(session('success')); ?></div>
+        <?php endif; ?>
+
         <div class="card fc-card">
             <div class="card-header py-3">
-                <div class="fc-head">
-                    <h5 class="fc-title">
+                <div class="fc-head d-flex justify-content-between align-items-center">
+                    <h5 class="fc-title mb-0">
                         <i class="fas fa-piggy-bank"></i>
                         <div>
                             <span>Listagem de Créditos Apropriados</span>
                             <span class="fc-subtitle">Créditos de não cumulatividade gerados por aquisição de frota, insumos e serviços</span>
                         </div>
                     </h5>
+                    <a href="<?php echo e(route('fiscal.creditos.criar')); ?>" class="btn btn-primary fc-btn">
+                        <i class="fas fa-plus mr-1"></i> Apropriar Crédito
+                    </a>
                 </div>
             </div>
             
@@ -94,7 +101,7 @@
                     <tbody>
                         <?php $__empty_1 = true; $__currentLoopData = $creditos; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $credito): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr>
-                                <td><?php echo e($refId = $credito->id); ?></td>
+                                <td><?php echo e($credito->id); ?></td>
                                 <td><span class="badge badge-success"><?php echo e($credito->tributo); ?></span></td>
                                 <td><strong>R$ <?php echo e(number_format($credito->valor_original, 2, ',', '.')); ?></strong></td>
                                 <td>R$ <?php echo e(number_format($credito->valor_utilizado, 2, ',', '.')); ?></td>

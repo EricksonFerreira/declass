@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CondicoesGeraisSeeder::class,
             OsCategoriaSeeder::class,
             ChamadosSeeder::class,
+            FiscalSeeder::class,
         ]);
     }
 }
