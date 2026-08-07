@@ -132,7 +132,7 @@
             <p>Nenhuma movimentação registrada.</p>
         </div>
     @else
-        <div class="table-responsive">
+        <div class="table-responsive" style="max-height: 68vh; overflow: auto; border: 1px solid #e2e8f0; border-radius: 12px;">
             <table class="table table-hover xp-table" id="tabelaMov">
                 <thead>
                     <tr>
@@ -165,18 +165,18 @@
                             $mvDataSaida = $mov->data_saida ? \Carbon\Carbon::parse($mov->data_saida)->format('Y-m-d') : '';
                             $statusCor = strtolower((string) (optional($mov->statusMovimentacao)->cor ?? 'secondary'));
                             $statusBadgeClass = [
-                                'success' => 'bg-green',
-                                'info' => 'bg-blue',
-                                'primary' => 'bg-blue',
-                                'warning' => 'bg-amber',
-                                'orange' => 'bg-orange',
-                                'danger' => 'bg-red',
-                                'secondary' => 'bg-gray',
-                                'gray' => 'bg-gray',
-                                'grey' => 'bg-gray',
-                                'purple' => 'bg-purple',
-                                'teal' => 'bg-teal',
-                            ][$statusCor] ?? 'bg-gray';
+                                'success' => 'status-badge--green',
+                                'info' => 'status-badge--blue',
+                                'primary' => 'status-badge--blue',
+                                'warning' => 'status-badge--amber',
+                                'orange' => 'status-badge--orange',
+                                'danger' => 'status-badge--red',
+                                'secondary' => 'status-badge--gray',
+                                'gray' => 'status-badge--gray',
+                                'grey' => 'status-badge--gray',
+                                'purple' => 'status-badge--purple',
+                                'teal' => 'status-badge--teal',
+                            ][$statusCor] ?? 'status-badge--gray';
                         @endphp
                         <tr
                             data-mv-tipo="{{ $mvTipo }}"

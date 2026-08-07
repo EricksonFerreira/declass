@@ -654,8 +654,6 @@ class MovimentacaoService extends AbstractBaseService
         } else {
             $geraDisponibilidadeEfetiva = $geraDisponibilidade || in_array($funcao, [
                 'adicionarAoEstoque',
-                'realizarCheckOut',
-                'registrarChegadaNaEstacao',
                 'registrarRetornoDaOficina',
             ], true);
 
