@@ -325,16 +325,15 @@ class AssinaturaController extends Controller
 
     public function ajuda(): View
     {
-        $titulo = 'Ajuda (Planos)';
-        $subtitulo = 'FAQ interno para upgrades, downgrades, cancelamentos e cobranca';
+        $titulo = 'Central de Ajuda (FAQ)';
+        $subtitulo = 'Respostas rápidas e orientações sobre planos, faturamento, frota, reservas e o Módulo Fiscal';
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumb([
             new \App\DTO\BreadCrumbItem('Home', route('home')),
-            new \App\DTO\BreadCrumbItem('Planos', route('planos.hub')),
             new \App\DTO\BreadCrumbItem('Ajuda', null),
         ]);
 
         $ajudaPath = base_path('docs/ajuda-planos.md');
-        $ajudaMd = File::exists($ajudaPath) ? File::get($ajudaPath) : "# Ajuda - Planos\n\nArquivo nao encontrado: docs/ajuda-planos.md";
+        $ajudaMd = File::exists($ajudaPath) ? File::get($ajudaPath) : "# Geral\n\n## Arquivo não encontrado\nEdite o arquivo docs/ajuda-planos.md";
 
         $faqs = $this->parseFaqMarkdown($ajudaMd);
 
@@ -345,38 +344,53 @@ class AssinaturaController extends Controller
     {
         $md = str_replace(["\r\n", "\r"], "\n", $md);
 
-        $parts = preg_split('/^##\\s+/m', $md);
-        if (! $parts || count($parts) <= 1) {
-            return [[
-                'id' => 'faq-1',
-                'q' => 'Como usar este modulo?',
-                'aHtml' => Str::markdown('Edite o arquivo `docs/ajuda-planos.md` e crie perguntas usando titulos `##`.'),
-            ]];
-        }
+        $parts = preg_split('/^#\\s+/m', $md);
+        array_shift($parts); // remove header before first '#'
 
-        array_shift($parts); // ignora cabecalho antes do primeiro ##
-        $faqs = [];
-        foreach ($parts as $i => $chunk) {
-            $chunk = ltrim($chunk);
-            if ($chunk === '') {
+        $groupedFaqs = [];
+        $faqIndex = 1;
+
+        foreach ($parts as $part) {
+            $part = ltrim($part);
+            if ($part === '') {
                 continue;
             }
 
-            $lines = explode("\n", $chunk, 2);
-            $q = trim($lines[0] ?? '');
-            $a = trim($lines[1] ?? '');
-            if ($q === '') {
-                continue;
+            $lines = explode("\n", $part, 2);
+            $categoryName = trim($lines[0] ?? 'Geral');
+            $categoryContent = trim($lines[1] ?? '');
+
+            // Now parse questions (##) in this category
+            $qParts = preg_split('/^##\\s+/m', $categoryContent);
+            array_shift($qParts); // remove any text before first ##
+
+            $faqs = [];
+            foreach ($qParts as $qChunk) {
+                $qChunk = ltrim($qChunk);
+                if ($qChunk === '') {
+                    continue;
+                }
+
+                $qLines = explode("\n", $qChunk, 2);
+                $q = trim($qLines[0] ?? '');
+                $a = trim($qLines[1] ?? '');
+                if ($q === '') {
+                    continue;
+                }
+
+                $faqs[] = [
+                    'id' => 'faq-' . $faqIndex++,
+                    'q' => $q,
+                    'aHtml' => Str::markdown($a === '' ? '_' : $a),
+                ];
             }
 
-            $faqs[] = [
-                'id' => 'faq-'.($i + 1),
-                'q' => $q,
-                'aHtml' => Str::markdown($a === '' ? '_' : $a),
-            ];
+            if (!empty($faqs)) {
+                $groupedFaqs[$categoryName] = $faqs;
+            }
         }
 
-        return $faqs;
+        return $groupedFaqs;
     }
 
     /** Exibe formulario para admin atribuir plano. */
