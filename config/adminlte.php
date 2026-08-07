@@ -586,6 +586,11 @@ return [
                     'route' => 'fiscal.classificacoes',
                     'icon' => 'fas fa-tags',
                 ],
+                [
+                    'text' => 'Central de Ajuda (FAQ)',
+                    'route' => 'assinatura.ajuda',
+                    'icon' => 'fas fa-question-circle',
+                ],
             ]
         ],
         [

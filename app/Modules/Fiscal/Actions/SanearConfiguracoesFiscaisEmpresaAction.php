@@ -4,6 +4,7 @@ namespace App\Modules\Fiscal\Actions;
 
 use App\Models\Empresa;
 use App\Models\CreditoTributario;
+use App\Models\ClassificacaoFiscal;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -13,7 +14,38 @@ class SanearConfiguracoesFiscaisEmpresaAction
     {
         $empresa = Empresa::findOrFail($empresaId);
 
-        // 1. Update company default fiscal configurations
+        // 1. Seed Main NCM Classifications (Classificações Fiscais)
+        $ncms = [
+            [
+                'descricao' => 'Veículos de passageiros flex (cilindrada > 1000cm3 e <= 1500cm3)',
+                'ncm' => '87032210',
+                'tipo_bem' => 'Veículo Terrestre (Hatch/Sedan)',
+            ],
+            [
+                'descricao' => 'Veículos utilitários/SUVs (cilindrada > 1500cm3 e <= 3000cm3)',
+                'ncm' => '87032310',
+                'tipo_bem' => 'Veículo Terrestre (SUV/Médio)',
+            ],
+            [
+                'descricao' => 'Veículos de transporte coletivo (Vans/Minibus)',
+                'ncm' => '87021000',
+                'tipo_bem' => 'Veículo Terrestre (Vans)',
+            ],
+            [
+                'descricao' => 'Peças e Acessórios para Frota (Manutenção)',
+                'ncm' => '87082999',
+                'tipo_bem' => 'Peças/Insumos',
+            ],
+        ];
+
+        foreach ($ncms as $ncmData) {
+            ClassificacaoFiscal::firstOrCreate(
+                ['ncm' => $ncmData['ncm']],
+                $ncmData
+            );
+        }
+
+        // 2. Update company default fiscal configurations
         $empresa->update([
             'nfse_ativo' => 'S',
             'nfse_provedor' => $empresa->nfse_provedor ?: 'nuvemfiscal',
@@ -26,7 +58,7 @@ class SanearConfiguracoesFiscaisEmpresaAction
             'nfse_tributacao_issqn' => $empresa->nfse_tributacao_issqn ?: 1,
         ]);
 
-        // 2. Seed Municipal Settings if not exist
+        // 3. Seed Municipal Settings if not exist
         if (Schema::hasTable('tributos_municipais')) {
             $hasMunicipal = DB::table('tributos_municipais')
                 ->where('empresa_id', $empresa->id)
@@ -51,7 +83,7 @@ class SanearConfiguracoesFiscaisEmpresaAction
             }
         }
 
-        // 3. Seed mock Credits if company has none
+        // 4. Seed mock Credits if company has none
         $hasCredits = CreditoTributario::where('empresa_id', $empresa->id)->exists();
         if (!$hasCredits) {
             // CBS Credit
