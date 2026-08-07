@@ -581,6 +581,11 @@ return [
                     'route' => 'fiscal.creditos',
                     'icon' => 'fas fa-piggy-bank',
                 ],
+                [
+                    'text' => 'Classificações Fiscais (NCM)',
+                    'route' => 'fiscal.classificacoes',
+                    'icon' => 'fas fa-tags',
+                ],
             ]
         ],
         [

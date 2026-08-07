@@ -28,16 +28,23 @@
             </div>
         </div>
 
+        @if(session('success'))
+            <div class="alert alert-success shadow-sm mb-3" style="border-radius: 8px;">{{ session('success') }}</div>
+        @endif
+
         <div class="card fc-card">
             <div class="card-header py-3">
-                <div class="fc-head">
-                    <h5 class="fc-title">
+                <div class="fc-head d-flex justify-content-between align-items-center">
+                    <h5 class="fc-title mb-0">
                         <i class="fas fa-piggy-bank"></i>
                         <div>
                             <span>Listagem de Créditos Apropriados</span>
                             <span class="fc-subtitle">Créditos de não cumulatividade gerados por aquisição de frota, insumos e serviços</span>
                         </div>
                     </h5>
+                    <a href="{{ route('fiscal.creditos.criar') }}" class="btn btn-primary fc-btn">
+                        <i class="fas fa-plus mr-1"></i> Apropriar Crédito
+                    </a>
                 </div>
             </div>
             
@@ -58,7 +65,7 @@
                     <tbody>
                         @forelse($creditos as $credito)
                             <tr>
-                                <td>{{ $refId = $credito->id }}</td>
+                                <td>{{ $credito->id }}</td>
                                 <td><span class="badge badge-success">{{ $credito->tributo }}</span></td>
                                 <td><strong>R$ {{ number_format($credito->valor_original, 2, ',', '.') }}</strong></td>
                                 <td>R$ {{ number_format($credito->valor_utilizado, 2, ',', '.') }}</td>

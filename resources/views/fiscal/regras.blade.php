@@ -28,16 +28,23 @@
             </div>
         </div>
 
+        @if(session('success'))
+            <div class="alert alert-success shadow-sm mb-3" style="border-radius: 8px;">{{ session('success') }}</div>
+        @endif
+
         <div class="card fc-card">
             <div class="card-header py-3">
-                <div class="fc-head">
-                    <h5 class="fc-title">
+                <div class="fc-head d-flex justify-content-between align-items-center">
+                    <h5 class="fc-title mb-0">
                         <i class="fas fa-cogs"></i>
                         <div>
                             <span>Listagem de Regras Cadastradas</span>
                             <span class="fc-subtitle">Configurações de vigência e percentuais das alíquotas de IBS/CBS</span>
                         </div>
                     </h5>
+                    <a href="{{ route('fiscal.regras.criar') }}" class="btn btn-primary fc-btn">
+                        <i class="fas fa-plus mr-1"></i> Nova Regra
+                    </a>
                 </div>
             </div>
             
@@ -53,6 +60,7 @@
                             <th>Fim Vigência</th>
                             <th>Gera Crédito</th>
                             <th>Ativo</th>
+                            <th class="text-center">Ações</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -80,10 +88,24 @@
                                         </span>
                                     @endif
                                 </td>
+                                <td class="text-center py-2">
+                                    <div class="d-inline-flex gap-2" style="gap: 5px;">
+                                        <a href="{{ route('fiscal.regras.editar', $regra->id) }}" class="btn btn-xs btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <form action="{{ route('fiscal.regras.excluir', $regra->id) }}" method="POST" onsubmit="return confirm('Deseja excluir esta regra tributária?');" style="display:inline;">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-xs btn-outline-danger">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">
+                                <td colspan="9" class="text-center py-4 text-muted">
                                     Nenhuma regra tributária configurada.
                                 </td>
                             </tr>
