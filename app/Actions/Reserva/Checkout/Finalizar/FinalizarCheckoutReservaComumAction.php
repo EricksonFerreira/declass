@@ -132,6 +132,21 @@ class FinalizarCheckoutReservaComumAction
                 'assinado' => 'S',
             ])->save();
 
+            // Gerar Operação Fiscal, Calcular Tributos e Despachar Emissão de NFS-e
+            $operacaoFiscal = \App\Models\OperacaoFiscal::create([
+                'empresa_id' => $reserva->empresa_id,
+                'locacao_id' => $reserva->id,
+                'tipo' => \App\Modules\Fiscal\Enums\TipoOperacaoFiscal::LOCACAO_VEICULO->value,
+                'data_fato_gerador' => now(),
+                'valor_operacao' => (float) ($reserva->valor_total_final ?? 0.0),
+                'valor_base_calculo' => (float) ($reserva->valor_total_final ?? 0.0),
+                'status' => 'PENDENTE',
+            ]);
+
+            app(\App\Modules\Fiscal\Actions\CalcularTributosAction::class)->handle($operacaoFiscal);
+
+            \App\Modules\Fiscal\Jobs\EmitirNfseJob::dispatch($operacaoFiscal->id);
+
             DB::commit();
 
             return $checkout->fresh();

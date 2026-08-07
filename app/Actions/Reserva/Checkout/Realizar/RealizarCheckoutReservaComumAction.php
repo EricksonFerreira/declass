@@ -113,7 +113,7 @@ class RealizarCheckoutReservaComumAction
                     (int) $reserva->veiculo_id,
                     (int) $reserva->estacao_devolucao_id,
                     'Chegada real registrada no check-out da reserva '.$reserva->id,
-                    true
+                    false
                 );
             }
 

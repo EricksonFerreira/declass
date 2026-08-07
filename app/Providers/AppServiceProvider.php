@@ -44,6 +44,11 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(MovimentacaoService::class, function ($app) {
             return new MovimentacaoService($app->make(Movimentacao::class));
         });
+
+        $this->app->singleton(
+            \App\Modules\Fiscal\Gateways\NfseGatewayInterface::class,
+            \App\Modules\Fiscal\Gateways\NfseNacionalGateway::class
+        );
     }
 
     /**

@@ -100,6 +100,11 @@ class Veiculo extends Model
         return $this->belongsTo(StatusVeiculo::class, 'status_veiculo_id');
     }
 
+    public function classificacaoFiscal()
+    {
+        return $this->belongsTo(ClassificacaoFiscal::class, 'classificacao_fiscal_id');
+    }
+
     public function reservas()
     {
         return $this->hasMany(Reserva::class, 'veiculo_id');

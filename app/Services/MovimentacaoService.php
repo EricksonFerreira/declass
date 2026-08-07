@@ -476,6 +476,9 @@ class MovimentacaoService extends AbstractBaseService
 
         if (in_array($movimentacao->gera_disponibilidade, ['S', 's', 1, '1', true], true)) {
             $updates['data_hora_disponibilidade'] = $movimentacao->data_chegada_real ?? now();
+            $updates['disponivel'] = 'S';
+        } else {
+            $updates['disponivel'] = 'N';
         }
 
         if (!empty($updates)) {
