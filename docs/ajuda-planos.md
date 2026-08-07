@@ -22,3 +22,16 @@ Por padrao SaaS, o cancelamento apenas **desativa na proxima renovacao** (sem es
 ## Como o sistema decide se e upgrade ou downgrade?
 O sistema compara o **valor total do periodo** (mensal x anual) e as **regras de limite/recursos**. Mudancas que reduzem custo/limites tendem a ser downgrade (agendado). Mudancas que aumentam custo/compromisso tendem a ser upgrade (cobranca/ativacao imediata).
 
+## Como funciona o calculo de impostos do Modulo Fiscal na locacao de veiculos?
+De acordo com a **Reforma Tributaria (Lei Complementar 214/2025)**, a locacao de bens moveis (codigo `99.04.01`) passa a sofrer a incidencia do **IBS** e da **CBS**. O Modulo Fiscal de DeCars desacopla o calculo dos contratos e reservas, registrando o fato gerador (Operacao Fiscal) no fechamento da locacao e calculando os impostos aplicaveis de acordo com a vigencia legal.
+
+## Como sao gerados os creditos tributarios de IBS/CBS?
+Pelo principio da nao cumulatividade, os impostos recolhidos nas aquisicoes de veiculos para frota, pecas e servicos de manutencao geram creditos tributarios. O sistema permite o lancamento desses creditos para compensar automaticamente os debitos acumulados no faturamento das locacoes.
+
+## Como configurar novas aliquotas do Modulo Fiscal?
+As aliquotas sao configuraveis na tabela de regras tributarias (`regras_tributarias`) e possuem datas de vigencia (inicio e fim). Em 2026, iniciamos com o periodo de testes trazendo 0,9% de CBS e 0,1% de IBS. A partir de 2027, novas aliquotas parametrizadas entram em vigor sem a necessidade de alterar o codigo do sistema.
+
+## Como a NFS-e Nacional e emitida no fechamento da locacao?
+Ao finalizar a locacao, o sistema gera a Operacao Fiscal, calcula os tributos e enfileira o envio da declaracao no `EmitirNfseJob`. O processamento ocorre em background com tentativas de reprocessamento em caso de indisponibilidade dos servidores do governo. O status do documento e atualizado no painel para **AUTORIZADA** ou **REJEITADA**.
+
+

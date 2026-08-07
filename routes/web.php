@@ -188,6 +188,7 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
         'replicacao_base',
         'nfse',
         'financeiro',
+        'fiscal',
         'suporte',
         'config_chamados',
         'pais',
