@@ -453,7 +453,7 @@
                                 type="text"
                                 name="slug"
                                 value="{{ old('slug') }}"
-                                placeholder="ex.: minha-locadora"
+                                placeholder="ex.: minha-empresa"
                                 required autofocus autocomplete="organization"
                             >
                         </div>
