@@ -3,22 +3,15 @@
 namespace App\Providers;
 
 use App\Menu\CustomAdminLte;
-use App\Models\Estacao;
-use App\Models\Movimentacao;
 use App\Models\User;
-use App\Models\Veiculo;
 use App\Observers\OnboardingObserver;
-use App\Services\DisponibilidadeInicialVeiculoService;
-use App\Services\MovimentacaoService;
-use App\Services\VeiculoService;
 use App\Support\EmpresaContext;
+use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model as EloquentModel;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 use Illuminate\Support\ServiceProvider;
 use JeroenNoten\LaravelAdminLte\AdminLte;
 use Laravel\Cashier\Cashier;
@@ -33,22 +26,6 @@ class AppServiceProvider extends ServiceProvider
         Paginator::useBootstrapFour();
         $this->app->scoped(EmpresaContext::class, fn () => new EmpresaContext());
 
-
-        $this->app->singleton(VeiculoService::class, function ($app) {
-            return new VeiculoService(
-                $app->make(Veiculo::class),
-                $app->make(DisponibilidadeInicialVeiculoService::class)
-            );
-        });
-
-        $this->app->singleton(MovimentacaoService::class, function ($app) {
-            return new MovimentacaoService($app->make(Movimentacao::class));
-        });
-
-        $this->app->singleton(
-            \App\Modules\Fiscal\Gateways\NfseGatewayInterface::class,
-            \App\Modules\Fiscal\Gateways\NfseNacionalGateway::class
-        );
     }
 
     /**
@@ -100,21 +77,9 @@ class AppServiceProvider extends ServiceProvider
 
         $this->bootEmpresaScope();
 
-        $this->app->resolving(VeiculoService::class, function ($veiculoService, $app) {
-            $veiculoService->setMovimentacaoService($app->make(MovimentacaoService::class));
-        });
-
-        $this->app->resolving(MovimentacaoService::class, function ($movimentacaoService, $app) {
-            $movimentacaoService->setVeiculoService($app->make(VeiculoService::class));
-        });
-
         Cashier::useCustomerModel(User::class);
 
-        Veiculo::observe(OnboardingObserver::class);
-        Veiculo::observe(\App\Observers\VeiculoManutencaoObserver::class);
-        Estacao::observe(OnboardingObserver::class);
         User::observe(OnboardingObserver::class);
-        \App\Models\OrdemServico::observe(\App\Observers\OrdemServicoObserver::class);
 
         // Replace the AdminLTE singleton with our custom version that hides
         // orphan section headers (OPERAÇÃO, FROTA, etc.) when the user has
