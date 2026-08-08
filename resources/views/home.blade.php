@@ -710,6 +710,8 @@
 
 @section('content')
 
+@include('clockify._clockify_dashboard')
+
 {{-- ══ ALERTAS DA EMPRESA ══ --}}
 @if(isset($alertas) && $alertas->isNotEmpty())
 <div id="painelAlertas" style="margin-bottom:16px;">

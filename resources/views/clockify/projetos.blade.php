@@ -30,7 +30,7 @@
                                 <th style="width: 50px;" class="text-center">Cor</th>
                                 <th>Nome</th>
                                 <th>Cliente</th>
-                                <th>Orçamento</th>
+                                <th>Faturamento</th>
                                 <th>Planejamento de Entrega</th>
                                 <th class="text-center" style="width: 80px;">Status</th>
                                 <th style="width: 150px;" class="text-center">Ações</th>
@@ -54,14 +54,10 @@
                                     </td>
                                     <td class="align-middle">{{ $projeto->cliente->nome ?? '-' }}</td>
                                     <td class="align-middle">
-                                        @if($projeto->horas_orcadas > 0)
-                                            <div><strong>{{ number_format($projeto->horas_orcadas, 1, ',', '.') }} h</strong></div>
-                                            @if($projeto->valor_hora > 0)
-                                                <div class="text-xs text-muted">Tarifa: R$ {{ number_format($projeto->valor_hora, 2, ',', '.') }}/h</div>
-                                                <div class="text-xs font-weight-bold text-secondary">Custo: R$ {{ number_format($projeto->custo_orcado, 2, ',', '.') }}</div>
-                                            @endif
+                                        @if($projeto->valor_faturado > 0)
+                                            <div><strong>R$ {{ number_format($projeto->valor_faturado, 2, ',', '.') }}</strong></div>
                                         @else
-                                            <span class="text-muted text-xs">Não orçado</span>
+                                            <span class="text-muted text-xs">—</span>
                                         @endif
                                     </td>
                                     <td class="align-middle">
@@ -73,17 +69,8 @@
                                                 <span>Restam: <strong>{{ $projeto->dias_uteis_planejamento }} dias úteis</strong></span><br>
                                                 <span>Horas Planejadas: <strong>{{ number_format($projeto->horas_planejadas, 1, ',', '.') }} h</strong> ({{ number_format($projeto->horas_diarias_planejamento ?? 8, 1) }}h/dia)</span>
                                                 @if($projeto->valor_hora > 0)
-                                                    <br><span class="text-secondary font-weight-bold">Custo Previsto: R$ {{ number_format($projeto->custo_planejado, 2, ',', '.') }}</span>
-                                                @endif
-                                            </div>
-                                            <!-- Estudo de Metragem / Sizing check -->
-                                            <div class="mt-1">
-                                                @if($projeto->horas_orcadas > 0)
-                                                    @if($projeto->horas_planejadas <= $projeto->horas_orcadas)
-                                                        <span class="badge badge-success text-xs"><i class="fas fa-check-circle"></i> Metragem Ok</span>
-                                                    @else
-                                                        <span class="badge badge-danger text-xs" title="Horas planejadas excedem o orçamento!"><i class="fas fa-exclamation-triangle"></i> Excede Orçamento</span>
-                                                    @endif
+                                                    <br><span class="text-secondary font-weight-bold">Valor da Hora: R$ {{ number_format($projeto->valor_hora, 2, ',', '.') }}</span>
+                                                    <br><span class="text-dark font-weight-bold">Custo Previsto: R$ {{ number_format($projeto->custo_planejado, 2, ',', '.') }}</span>
                                                 @endif
                                             </div>
                                         @else
@@ -145,10 +132,16 @@
 
                         <!-- Budget Fields -->
                         <div class="row">
-                            <div class="col-12">
+                            <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="valor_faturado">Valor Faturado (R$)</label>
-                                    <input type="number" step="0.01" name="valor_faturado" id="valor_faturado" class="form-control form-control-sm" placeholder="Ex: 15000.00" />
+                                    <input type="text" name="valor_faturado" id="valor_faturado" class="form-control form-control-sm money-mask" placeholder="Ex: 15.000,00" />
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="valor_hora">Valor por Hora (R$)</label>
+                                    <input type="text" name="valor_hora" id="valor_hora" class="form-control form-control-sm money-mask" placeholder="Ex: 150,00" />
                                 </div>
                             </div>
                         </div>
@@ -197,6 +190,22 @@
                 });
             }
 
+            // Aplicar máscara monetária
+            if ($.fn.inputmask) {
+                $('.money-mask').inputmask('currency', {
+                    radixPoint: ',',
+                    groupSeparator: '.',
+                    allowMinus: false,
+                    prefix: 'R$ ',
+                    digits: 2,
+                    autoGroup: true,
+                    rightAlign: false,
+                    unmaskAsNumber: true,
+                    removeMaskOnSubmit: true
+                });
+            }
+        });
+
 
 
         function editProjeto(projeto) {
@@ -214,7 +223,7 @@
             $('#ativo').val(projeto.ativo ? "1" : "0");
             
             // Budget & Planning fields
-            $('#horas_orcadas').val(projeto.horas_orcadas);
+            $('#valor_faturado').val(projeto.valor_faturado);
             $('#valor_hora').val(projeto.valor_hora);
             
             $('#status-group').show();
@@ -231,6 +240,8 @@
             
             // Reset Select2
             $('#clockify_cliente_id').val('').trigger('change');
+            $('#valor_faturado').val('');
+            $('#valor_hora').val('');
 
             $('#status-group').hide();
             $('#cancel-btn').hide();

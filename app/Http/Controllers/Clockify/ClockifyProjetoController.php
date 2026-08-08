@@ -48,13 +48,14 @@ class ClockifyProjetoController extends Controller
     public function store(Request $request, SaveProjetoAction $action): RedirectResponse
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
-            'descricao' => 'nullable|string',
-            'cor' => 'nullable|string|max:7',
-            'publico' => 'nullable|boolean',
-            'valor_faturado' => 'nullable|numeric|min:0',
-            'data_entrega_previsao' => 'nullable|date',
+            'nome'                       => 'required|string|max:255',
+            'clockify_cliente_id'        => 'nullable|exists:clockify_clientes,id',
+            'descricao'                  => 'nullable|string',
+            'cor'                        => 'nullable|string|max:7',
+            'publico'                    => 'nullable|boolean',
+            'valor_faturado'             => 'nullable|string',
+            'valor_hora'                 => 'nullable|string',
+            'data_entrega_previsao'      => 'nullable|date',
             'horas_diarias_planejamento' => 'nullable|numeric|min:0',
         ]);
 
@@ -69,21 +70,21 @@ class ClockifyProjetoController extends Controller
     public function update(Request $request, $id, UpdateProjetoAction $action): RedirectResponse
     {
         $validated = $request->validate([
-            'nome' => 'required|string|max:255',
-            'clockify_cliente_id' => 'nullable|exists:clockify_clientes,id',
-            'descricao' => 'nullable|string',
-            'cor' => 'nullable|string|max:7',
-            'publico' => 'nullable|boolean',
-            'ativo' => 'nullable|boolean',
-
-            'valor_faturado' => 'nullable',
-            'data_entrega_previsao' => 'nullable|date',
+            'nome'                       => 'required|string|max:255',
+            'clockify_cliente_id'        => 'nullable|exists:clockify_clientes,id',
+            'descricao'                  => 'nullable|string',
+            'cor'                        => 'nullable|string|max:7',
+            'publico'                    => 'nullable|boolean',
+            'ativo'                      => 'nullable|boolean',
+            'valor_faturado'             => 'nullable|string',
+            'valor_hora'                 => 'nullable|string',
+            'data_entrega_previsao'      => 'nullable|date',
             'horas_diarias_planejamento' => 'nullable|numeric|min:0',
         ]);
 
         $action->handle((int) $id, array_merge($validated, [
             'publico' => $request->has('publico') ? (bool) $request->publico : true,
-            'ativo' => $request->has('ativo') ? (bool) $request->ativo : true,
+            'ativo'   => $request->has('ativo') ? (bool) $request->ativo : true,
         ]));
 
         return redirect()->route('clockify.projetos.show', $id)
