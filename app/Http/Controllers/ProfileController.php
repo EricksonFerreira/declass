@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\BreadcrumbService;
 use App\Models\User;
+use App\Services\BreadcrumbService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,9 +11,7 @@ use Illuminate\Validation\Rules\Password;
 
 class ProfileController extends Controller
 {
-    public function __construct(private BreadcrumbService $breadcrumbService)
-    {
-    }
+    public function __construct(private BreadcrumbService $breadcrumbService) {}
 
     public function edit(Request $request)
     {
@@ -59,7 +57,7 @@ class ProfileController extends Controller
 
     public function forcePasswordEdit(Request $request)
     {
-        if (!(bool) ($request->user()?->forcar_troca_senha ?? false)) {
+        if (! (bool) ($request->user()?->forcar_troca_senha ?? false)) {
             return redirect()->route('home');
         }
 
@@ -70,7 +68,7 @@ class ProfileController extends Controller
 
     public function forcePasswordUpdate(Request $request): RedirectResponse
     {
-        if (!(bool) ($request->user()?->forcar_troca_senha ?? false)) {
+        if (! (bool) ($request->user()?->forcar_troca_senha ?? false)) {
             return redirect()->route('home');
         }
 
@@ -105,10 +103,6 @@ class ProfileController extends Controller
 
     private function redirectPosTrocaSenha(User $user): string
     {
-        if ($user->isAdministrador()) {
-            return route('home');
-        }
-
-        return route('reserva.minhas');
+        return route('home');
     }
 }

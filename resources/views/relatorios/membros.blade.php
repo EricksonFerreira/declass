@@ -29,6 +29,7 @@
                             <tr>
                                 <th>Nome</th>
                                 <th>Email</th>
+                                <th>Cargo</th>
                                 <th>Ações</th>
                             </tr>
                         </thead>
@@ -37,10 +38,17 @@
                                 <tr>
                                     <td>{{ $user->name }}</td>
                                     <td>{{ $user->email }}</td>
+                                    <td>{{ $user->cargo ?? 'Sem Cargo' }}</td>
                                     <td>
                                         <button type="button" class="btn btn-xs btn-warning" onclick="editUser({{ json_encode($user) }})">
                                             <i class="fa fa-edit"></i> Editar
                                         </button>
+                                        <form action="{{ route('relatorios.membros.reset-password', $user->id) }}" method="POST" class="d-inline">
+                                            @csrf
+                                            <button type="button" class="btn btn-xs btn-info" onclick="confirmResetPassword(this)">
+                                                <i class="fa fa-key"></i> Resetar Senha
+                                            </button>
+                                        </form>
                                         <form action="{{ route('relatorios.membros.destroy', $user->id) }}" method="POST" class="d-inline">
                                             @csrf
                                             @method('DELETE')
@@ -50,7 +58,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="text-center text-muted py-3">Nenhum membro encontrado.</td>
+                                    <td colspan="4" class="text-center text-muted py-3">Nenhum membro encontrado.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -79,6 +87,10 @@
                         <div class="form-group">
                             <label for="email">Email</label>
                             <input type="email" name="email" id="email" class="form-control form-control-sm" placeholder="email@exemplo.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="cargo">Cargo <span class="text-danger">*</span></label>
+                            <input type="text" name="cargo" id="cargo" class="form-control form-control-sm" required placeholder="Ex: Desenvolvedor, Designer">
                         </div>
                     </div>
                     <div class="card-footer">
@@ -126,6 +138,7 @@
             $('#form-method').val('PUT');
             $('#name').val(user.name);
             $('#email').val(user.email);
+            $('#cargo').val(user.cargo);
             $('#cancel-btn').show();
             $('#form-card').removeClass('card-success').addClass('card-warning');
             $('#save-btn').removeClass('btn-success').addClass('btn-warning').text('Atualizar');
@@ -136,9 +149,28 @@
             $('#user-form').attr('action', '{{ route('relatorios.membros.store') }}');
             $('#form-method').val('POST');
             $('#user-form')[0].reset();
+            $('#cargo').val('');
             $('#cancel-btn').hide();
             $('#form-card').removeClass('card-warning').addClass('card-success');
             $('#save-btn').removeClass('btn-warning').addClass('btn-success').text('Salvar');
+        }
+
+        function confirmResetPassword(button) {
+            const form = $(button).closest('form');
+            Swal.fire({
+                title: 'Resetar Senha?',
+                text: "A senha do membro será resetada para 'Senh@123' e ele será forçado a alterá-la no próximo login.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#0ea5e9',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Sim, resetar!',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    form.submit();
+                }
+            });
         }
 
         // Confirmação SweetAlert2 ao deletar

@@ -3,31 +3,30 @@
 namespace App\Services;
 
 use App\Models\Empresa;
+use App\Support\SchemaCache;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use App\Support\SchemaCache;
 
 class EmpresaService extends AbstractBaseService
 {
     protected Model $model;
+
     private ReplicacaoBaseService $replicacaoBaseService;
-    private DefaultFrotaTemplateService $defaultFrotaTemplateService;
+
     private ?array $empresaColumnsCache = null;
 
     public function __construct(
         Empresa $empresa,
         ReplicacaoBaseService $replicacaoBaseService,
-        DefaultFrotaTemplateService $defaultFrotaTemplateService,
     ) {
         $this->model = $empresa;
         $this->replicacaoBaseService = $replicacaoBaseService;
-        $this->defaultFrotaTemplateService = $defaultFrotaTemplateService;
     }
 
     public function setModel(Model $model): void
     {
-        if (!$model instanceof Empresa) {
+        if (! $model instanceof Empresa) {
             throw new \InvalidArgumentException('Modelo esperado App\\Models\\Empresa');
         }
 
@@ -57,11 +56,12 @@ class EmpresaService extends AbstractBaseService
         $data = $this->sanitizeDataForExistingColumns($data);
         $item = $this->model->newQuery()->find($id);
 
-        if (!$item) {
+        if (! $item) {
             return null;
         }
 
         $item->update($data);
+
         return $item;
     }
 
@@ -79,7 +79,7 @@ class EmpresaService extends AbstractBaseService
             $this->seedDefaultTemplateCompanyData((int) $templateEmpresaId);
 
             $modulos = array_keys($this->replicacaoBaseService->modulosDisponiveis());
-            if (!empty($modulos)) {
+            if (! empty($modulos)) {
                 $this->replicacaoBaseService->replicar($templateEmpresaId, [(int) $empresa->id], $modulos);
             }
 
@@ -95,7 +95,7 @@ class EmpresaService extends AbstractBaseService
 
     private function resolveDefaultTemplateEmpresaId(): ?int
     {
-        if (!SchemaCache::hasTable('empresas')) {
+        if (! SchemaCache::hasTable('empresas')) {
             return null;
         }
 
@@ -131,13 +131,12 @@ class EmpresaService extends AbstractBaseService
     {
         $this->replicateGlobalRowsToEmpresa('dias_uteis', $empresaId, ['dia']);
         $this->replicateGlobalRowsToEmpresa('horarios_diarios', $empresaId, ['nome']);
-        $this->defaultFrotaTemplateService->seed($empresaId);
         $this->seedCondicoesGerais($empresaId);
     }
 
     private function seedCondicoesGerais(int $empresaId): void
     {
-        if (!SchemaCache::hasTable('termo_consentimento')) {
+        if (! SchemaCache::hasTable('termo_consentimento')) {
             return;
         }
 
@@ -194,11 +193,11 @@ class EmpresaService extends AbstractBaseService
      * Copia linhas globais (empresa_id nulo) para a empresa informada, respeitando
      * uma chave natural simples para evitar duplicidade.
      *
-     * @param array<int, string> $uniqueColumns
+     * @param  array<int, string>  $uniqueColumns
      */
     private function replicateGlobalRowsToEmpresa(string $table, int $empresaId, array $uniqueColumns): void
     {
-        if (!SchemaCache::hasTable($table) || !SchemaCache::hasColumn($table, 'empresa_id')) {
+        if (! SchemaCache::hasTable($table) || ! SchemaCache::hasColumn($table, 'empresa_id')) {
             return;
         }
 
@@ -261,8 +260,9 @@ class EmpresaService extends AbstractBaseService
             return $this->empresaColumnsCache;
         }
 
-        if (!SchemaCache::hasTable($this->model->getTable())) {
+        if (! SchemaCache::hasTable($this->model->getTable())) {
             $this->empresaColumnsCache = [];
+
             return $this->empresaColumnsCache;
         }
 

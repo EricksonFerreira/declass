@@ -403,8 +403,8 @@ return [
                     'icon' => 'fas fa-plane',
                 ],
                 [
-                    'text' => 'Membros',
-                    'route' => 'relatorios.membros',
+                    'text' => 'Usuários',
+                    'route' => 'usuario.index',
                     'icon' => 'fas fa-users',
                 ],
             ],
@@ -427,6 +427,18 @@ return [
                     'text' => 'Horas trabalhadas',
                     'route' => 'relatorios.horas-trabalhadas',
                     'icon' => 'fas fa-clock',
+                ],
+            ],
+        ],
+        [
+            'text' => 'Configurações',
+            'icon' => 'fas fa-cogs',
+            'can' => 'acessar-superadmin',
+            'submenu' => [
+                [
+                    'text' => 'Empresas',
+                    'route' => 'empresa.index',
+                    'icon' => 'fas fa-building',
                 ],
             ],
         ],

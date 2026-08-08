@@ -96,6 +96,9 @@ Route::prefix(trim((string) config('app.admin_prefix', 'admin'), '/'))->group(fu
     Route::get('relatorios/membros', [\App\Http\Controllers\Clockify\ReportController::class, 'membros'])->middleware('auth')->name('relatorios.membros');
     Route::delete('relatorios/membros/{user}', [\App\Http\Controllers\Clockify\ReportController::class, 'destroyMembro'])->middleware('auth')->name('relatorios.membros.destroy');
     Route::post('relatorios/membros/store', [\App\Http\Controllers\Clockify\ReportController::class, 'storeMembro'])->middleware('auth')->name('relatorios.membros.store');
+    Route::put('relatorios/membros/{user}', [\App\Http\Controllers\Clockify\ReportController::class, 'updateMembro'])->middleware('auth')->name('relatorios.membros.update');
+    Route::post('relatorios/membros/{user}/reset-password', [\App\Http\Controllers\Clockify\ReportController::class, 'resetPassword'])->middleware('auth')->name('relatorios.membros.reset-password');
+
 
     Route::middleware('auth')->group(function (): void {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

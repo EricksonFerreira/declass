@@ -1,4 +1,4 @@
-﻿@extends('adminlte::page')
+@extends('adminlte::page')
 
 @section('title', $titulo)
 
@@ -80,47 +80,30 @@
                         <div class="ux-card__head">
                             <div class="ux-card__avatar">{{ $iniciais }}</div>
                             <div class="ux-card__head-info">
-                                <div class="ux-card__id">USUÁRIO #{{ $usuario->id }}</div>
                                 <div class="ux-card__title">{{ $usuario->nome }}</div>
                                 <div class="ux-card__sub">{{ $usuario->email ?: 'Sem e-mail' }}</div>
-                            </div>
-                            <div class="ux-card__badges">
-                                @if ($usuario->tipoUsuario)
-                                    <span class="ux-card__badge ux-card__badge--blue">{{ $usuario->tipoUsuario->name }}</span>
-                                @endif
-                                <span class="ux-card__badge {{ count($pendenciasUsuario) > 0 ? 'ux-card__badge--amber' : (\Carbon\Carbon::parse($usuario->data_validade_carta_conducao ?? now()->toDateString())->isPast() ? 'ux-card__badge--red' : 'ux-card__badge--green') }}">
-                                    {{ $statusUsuario }}
-                                </span>
-                                @if (count($pendenciasUsuario) > 0)
-                                    <span class="ux-card__badge ux-card__badge--gray">{{ count($pendenciasUsuario) }} pendência(s)</span>
-                                @endif
                             </div>
                         </div>
 
                         <div class="ux-card__meta">
                             <div class="ux-card__meta-row">
-                                <span class="ux-card__meta-label"><i class="fas fa-phone-alt mr-1"></i>Celular</span>
-                                <strong class="ux-card__meta-value">{{ $usuario->celular ?: 'Sem celular' }}</strong>
+                                <span class="ux-card__meta-label"><i class="fas fa-user-tag mr-1"></i>Cargo</span>
+                                <strong class="ux-card__meta-value">{{ $usuario->cargo ?: 'Sem cargo' }}</strong>
                             </div>
                             <div class="ux-card__meta-row">
-                                <span class="ux-card__meta-label"><i class="fas fa-map-marker-alt mr-1"></i>Cidade</span>
-                                <strong class="ux-card__meta-value">{{ $usuario->cidade ?: '—' }}</strong>
-                            </div>
-                            <div class="ux-card__meta-row ux-card__meta-row--full">
-                                <span class="ux-card__meta-label"><i class="fas fa-calendar mr-1"></i>Cadastro</span>
-                                <strong class="ux-card__meta-value">{{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '—' }}</strong>
+                                <span class="ux-card__meta-label"><i class="fas fa-phone-alt mr-1"></i>Celular</span>
+                                <strong class="ux-card__meta-value">{{ $usuario->celular ?: 'Sem celular' }}</strong>
                             </div>
                         </div>
 
                         <div class="ux-card__foot">
-                            @if ($canMetodoPagamento)
-                                <a class="btn btn-xs btn-success" href="{{ route('usuario.metodoPagamento', $usuario->id) }}">
-                                    <i class="fas fa-credit-card mr-1"></i>Pagamento
-                                </a>
-                            @endif
-
                             @if ($canEditar)
-                                <a class="btn btn-xs btn-warning" href="{{ route('usuario.edit', $usuario->id) }}">
+                                <a class="btn btn-xs btn-warning btn-editar-usuario" href="{{ route('usuario.edit', $usuario->id) }}"
+                                   data-id="{{ $usuario->id }}"
+                                   data-nome="{{ $usuario->nome }}"
+                                   data-email="{{ $usuario->email }}"
+                                   data-celular="{{ $usuario->celular }}"
+                                   data-cargo="{{ $usuario->cargo }}">
                                     <i class="fas fa-edit mr-1"></i>Editar
                                 </a>
                             @endif
@@ -177,8 +160,7 @@
                             <th class="pl-3" style="min-width: 220px;">Usuário</th>
                             <th style="min-width: 220px;">Contato</th>
                             <th style="width: 140px;">Regra</th>
-                            <th>Cidade</th>
-                            <th >Cadastro</th>
+                            <th>Cargo</th>
                             <th class="text-center" style="min-width: 300px;">Ações</th>
                         </tr>
                     </thead>
@@ -218,26 +200,21 @@
                                 </td>
 
                                 <td class="align-middle">
-                                    {{ $usuario->cidade ?: '—' }}
+                                    {{ $usuario->cargo ?: 'Sem cargo' }}
                                 </td>
 
-                                <td class="align-middle">
-                                    <span class="text-muted">{{ $usuario->created_at ? $usuario->created_at->format('d/m/Y') : '—' }}</span>
-                                </td>
 
                                 <td class="align-middle text-center">
                                     @if ($temAlgumaAcao)
                                         <div class="acoes-usuario">
-                                            @if ($canMetodoPagamento)
-                                                <a class="btn btn-xs btn-success"
-                                                    href="{{ route('usuario.metodoPagamento', $usuario->id) }}">
-                                                    <i class="fas fa-credit-card mr-1"></i> Pagamento
-                                                </a>
-                                            @endif
-
                                             @if ($canEditar)
-                                                <a class="btn btn-xs btn-warning"
-                                                    href="{{ route('usuario.edit', $usuario->id) }}">
+                                                <a class="btn btn-xs btn-warning btn-editar-usuario"
+                                                    href="{{ route('usuario.edit', $usuario->id) }}"
+                                                    data-id="{{ $usuario->id }}"
+                                                    data-nome="{{ $usuario->nome }}"
+                                                    data-email="{{ $usuario->email }}"
+                                                    data-celular="{{ $usuario->celular }}"
+                                                    data-cargo="{{ $usuario->cargo }}">
                                                     <i class="fas fa-edit mr-1"></i> Editar
                                                 </a>
                                             @endif
@@ -299,6 +276,39 @@
         @endif
     </div>
 
+    <x-side-drawer id="sideDrawer" title="Cadastrar Usuário" formId="drawerForm" action="{{ route('usuario.store') }}">
+        <div class="form-group">
+            <label for="drawer_nome">Nome <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm @error('nome') is-invalid @enderror" id="drawer_nome" name="nome" value="{{ old('nome') }}" required>
+            @error('nome')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="drawer_email">E-mail <span class="text-danger">*</span></label>
+            <input type="email" class="form-control form-control-sm @error('email') is-invalid @enderror" id="drawer_email" name="email" value="{{ old('email') }}" required>
+            @error('email')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="drawer_celular">Celular <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm @error('celular') is-invalid @enderror" id="drawer_celular" name="celular" value="{{ old('celular') }}" placeholder="(99) 99999-9999" required>
+            @error('celular')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+
+        <div class="form-group">
+            <label for="drawer_cargo">Cargo <span class="text-danger">*</span></label>
+            <input type="text" class="form-control form-control-sm @error('cargo') is-invalid @enderror" id="drawer_cargo" name="cargo" value="{{ old('cargo') }}" required>
+            @error('cargo')
+                <span class="invalid-feedback">{{ $message }}</span>
+            @enderror
+        </div>
+    </x-side-drawer>
 @stop
 
 @section('css')
@@ -548,10 +558,88 @@
 @stop
 
 @section('js')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.mask/1.14.16/jquery.mask.min.js"></script>
     <script src="{{ asset('js/sweetAlert.min.js') }}"></script>
     <script>
         $(function () {
             const senhaPadrao = 'Senh@123';
+
+            // Side Drawer Controller
+            const $drawer = $('#sideDrawer');
+            const $backdrop = $('#sideDrawerBackdrop');
+            const $form = $('#drawerForm');
+            const $method = $('#drawerFormMethod');
+            const $title = $('#sideDrawerTitle');
+
+            // Load masks if available
+            if (typeof $.fn.mask !== 'undefined') {
+                $('#drawer_celular').mask('(00) 00000-0000');
+            }
+
+            function abrirDrawer(titulo, action, method, data = null) {
+                $title.text(titulo);
+                $form.attr('action', action);
+                $method.val(method);
+                
+                // Clear validation errors
+                $form.find('.is-invalid').removeClass('is-invalid');
+                $form.find('.invalid-feedback').remove();
+                
+                if (data) {
+                    $('#drawer_nome').val(data.nome);
+                    $('#drawer_email').val(data.email);
+                    $('#drawer_celular').val(data.celular);
+                    $('#drawer_cargo').val(data.cargo);
+                } else {
+                    $form[0].reset();
+                }
+                
+                $backdrop.addClass('show');
+                $drawer.addClass('open');
+            }
+
+            function fecharDrawer() {
+                $drawer.removeClass('open');
+                $backdrop.removeClass('show');
+            }
+
+            // Intercept "Cadastrar" button clicks
+            $(document).on('click', 'a[href$="/usuario/create"], .btn-cadastrar-novo, a[href*="usuario/create"]', function (e) {
+                e.preventDefault();
+                abrirDrawer('Cadastrar Usuário', "{{ route('usuario.store') }}", 'POST');
+            });
+
+            // Intercept "Editar" button clicks
+            $(document).on('click', '.btn-editar-usuario', function (e) {
+                e.preventDefault();
+                const $btn = $(this);
+                const id = $btn.data('id');
+                const action = `/admin/usuario/${id}`;
+                abrirDrawer('Editar Usuário', action, 'PUT', {
+                    nome: $btn.data('nome'),
+                    email: $btn.data('email'),
+                    celular: $btn.data('celular'),
+                    cargo: $btn.data('cargo')
+                });
+            });
+
+            $('#closeSideDrawer, #cancelSideDrawer, #sideDrawerBackdrop').on('click', function () {
+                fecharDrawer();
+            });
+
+            @if ($errors->any())
+                abrirDrawer(
+                    "{{ old('_method', 'POST') === 'PUT' ? 'Editar Usuário' : 'Cadastrar Usuário' }}",
+                    "{{ old('_method', 'POST') === 'PUT' ? route('usuario.update', old('id', 0)) : route('usuario.store') }}",
+                    "{{ old('_method', 'POST') === 'PUT' ? 'PUT' : 'POST' }}",
+                    "{{ old('_method', 'POST') === 'PUT' }}" ? {
+                        nome: "{{ old('nome') }}",
+                        email: "{{ old('email') }}",
+                        celular: "{{ old('celular') }}",
+                        cargo: "{{ old('cargo') }}"
+                    } : null
+                );
+            @endif
 
             function escaparHtml(texto) {
                 return String(texto ?? '')

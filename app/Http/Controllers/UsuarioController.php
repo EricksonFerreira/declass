@@ -3,62 +3,45 @@
 namespace App\Http\Controllers;
 
 // Exceptions
-use App\Exceptions\ClienteNaoEncontradoException;
-use App\Exceptions\JaExisteClienteComEmailException;
-use App\Exceptions\MultiplosClientesComEmailException;
-
 use App\Http\Controllers\Interfaces\FiltroInterface;
 use App\Http\Controllers\Interfaces\ResourceInterface;
 use App\Http\Requests\Usuario\StoreUsuarioRequest;
 use App\Http\Requests\Usuario\UpdatePasswordUsuarioRequest;
 use App\Http\Requests\Usuario\UpdateUsuarioRequest;
-use App\Models\Pais;
 use App\Models\User;
 use App\Services\BreadcrumbService;
-use App\Services\EstacaoService;
-use App\Services\PaisService;
 use App\Services\RegraService;
 use App\Services\UsuarioService;
-use App\Traits\AtualizaFiltrosTrait;
-use Illuminate\Http\Request;
-use App\Traits\FiltroTrait;
-use App\Services\ClienteStripeService;
 use App\Support\SchemaCache;
-use App\Services\Pagamentos\GatewayEmpresaConfigService;
-use Illuminate\Support\Facades\Log;
+use App\Traits\AtualizaFiltrosTrait;
+use App\Traits\FiltroTrait;
+use Illuminate\Http\Request;
 
 class UsuarioController extends BaseController implements FiltroInterface, ResourceInterface
 {
     private const SENHA_PADRAO_ACESSO = 'Senh@123';
 
-    use FiltroTrait;
     use AtualizaFiltrosTrait;
+    use FiltroTrait;
+
     protected $usuarioService;
+
     protected $breadcrumbService;
+
     protected $regraService;
+
     protected $paisService;
-    protected $estacaoService;
-    protected $clienteStripeService;
-    protected $gatewayEmpresaConfigService;
 
     public function __construct(
         UsuarioService $usuarioService,
         BreadcrumbService $breadcrumbService,
         RegraService $regraService,
-        PaisService $paisService,
-        EstacaoService $estacaoService,
-        ClienteStripeService $clienteStripeService,
-        GatewayEmpresaConfigService $gatewayEmpresaConfigService
     ) {
-        $this->titulo = "Usuários";
+        $this->titulo = 'Usuários';
         $this->nomeFiltro = 'usuario';
         $this->usuarioService = $usuarioService;
         $this->breadcrumbService = $breadcrumbService;
         $this->regraService = $regraService;
-        $this->paisService = $paisService;
-        $this->estacaoService = $estacaoService;
-        $this->clienteStripeService = $clienteStripeService;
-        $this->gatewayEmpresaConfigService = $gatewayEmpresaConfigService;
     }
 
     public function index()
@@ -112,19 +95,14 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         $sexo = [
             'M' => 'Masculino',
             'F' => 'Feminino',
-            'O' => 'Outro'
+            'O' => 'Outro',
         ];
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbCreate('Usuarios', 'usuario.index', 'Criar');
 
-        $paises = $this->paisService->getAllForSelectSigla();
-        $estacoes = $this->estacaoService->getAllAtivos();
-
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
         [$metodo, $rota] = $this->getFormMethodAndRoute();
-        $acessoTodasEstacoes = true;
-        $estacoesSelecionadas = [];
 
-        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'paises', 'estacoes', 'acessoTodasEstacoes', 'estacoesSelecionadas', 'rota'))->with('titulo', $this->titulo);
+        return view('usuario.add-edit', compact('breadcrumb', 'sexo', 'metodo', 'tiposUsuario', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function store(StoreUsuarioRequest $request)
@@ -136,7 +114,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
             if ($isCadastroReserva) {
                 $roleClienteId = $this->regraService->getClienteRoleId();
-                if (!$roleClienteId) {
+                if (! $roleClienteId) {
                     $errors = [
                         'role_id' => ['Cadastre uma regra "Cliente" para permitir cadastro rapido na reserva.'],
                     ];
@@ -166,7 +144,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
             $stripeSecret = $this->resolveStripeSecret(null, isset($data['empresa_id']) ? (int) $data['empresa_id'] : null);
 
-            if (!empty(trim((string) $data['email']))) {
+            if (! empty(trim((string) $data['email']))) {
                 $query = User::query()->whereRaw('LOWER(email) = ?', [mb_strtolower(trim((string) $data['email']))]);
                 if (SchemaCache::hasColumn('users', 'empresa_id')) {
                     $query->where('empresa_id', (int) ($data['empresa_id'] ?? auth()->user()?->empresa_id ?? 0));
@@ -180,15 +158,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 }
             }
 
-            // Cria o cliente no Stripe
-            $cliente = $this->clienteStripeService->criarCliente($data['email'], $data['nome'], $stripeSecret);
-
-            if (!$cliente || empty($cliente->id)) {
-                throw new \RuntimeException('Nao foi possivel identificar o cliente no Stripe.');
-            }
-
             // Cria o usuario no sistema
-            $data['stripe_id'] = $cliente->id;
             $usuario = $this->usuarioService->createUser($data);
 
             if ($request->expectsJson()) {
@@ -212,7 +182,8 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
                 ], 422);
             }
 
-            $mensagemErro = 'Nao foi possivel cadastrar o usuario no momento.' == $e->getMessage() ? $e->getMessage() : 'Nao foi possivel cadastrar o usuario no momento. Erro: ' . $e->getMessage();
+            $mensagemErro = $e->getMessage() == 'Nao foi possivel cadastrar o usuario no momento.' ? $e->getMessage() : 'Nao foi possivel cadastrar o usuario no momento. Erro: '.$e->getMessage();
+
             return redirect()
                 ->back()
                 ->withInput()
@@ -233,7 +204,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             uniqid('', true),
         ]);
 
-        return 'reserva+' . implode('-', $partes) . '@sem-email.local';
+        return 'reserva+'.implode('-', $partes).'@sem-email.local';
     }
 
     public function selectOptions(Request $request)
@@ -306,14 +277,14 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
         }
 
         $usuarios = $query->limit(80)->get()->map(fn ($u) => [
-            'id'          => $u->id,
-            'nome'        => $u->nome ?? ('Usuario #' . $u->id),
-            'email'       => $u->email ?? '',
-            'documento'   => $u->numero_identificacao ?? '',
-            'telefone'    => $u->telefone ?? '',
-            'perfil'      => $u->regra?->name ?? '',
-            'nascimento'  => $u->data_nascimento ? \Carbon\Carbon::parse($u->data_nascimento)->format('d/m/Y') : '',
-            'cadastro'    => $u->created_at ? $u->created_at->format('d/m/Y') : '',
+            'id' => $u->id,
+            'nome' => $u->nome ?? ('Usuario #'.$u->id),
+            'email' => $u->email ?? '',
+            'documento' => $u->numero_identificacao ?? '',
+            'telefone' => $u->telefone ?? '',
+            'perfil' => $u->regra?->name ?? '',
+            'nascimento' => $u->data_nascimento ? \Carbon\Carbon::parse($u->data_nascimento)->format('d/m/Y') : '',
+            'cadastro' => $u->created_at ? $u->created_at->format('d/m/Y') : '',
         ]);
 
         return response()->json(['usuarios' => $usuarios]);
@@ -322,236 +293,39 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     public function edit($id)
     {
         $usuario = $this->usuarioService->getById($id);
-        if (!$usuario) {
+        if (! $usuario) {
             abort(403, 'Sem acesso a este usuario.');
         }
-
-        $stripeSecret = $this->resolveStripeSecret($usuario);
-
-        try {
-            if ($usuario->stripe_id) {
-                try {
-                    $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
-                } catch (\Stripe\Exception\InvalidRequestException $e) {
-                        Log::warning('Stripe customer invalid when loading user payment methods - attempting reconcile', ['user_id' => $usuario->id, 'stripe_id' => $usuario->stripe_id, 'exception' => $e->getMessage()]);
-                    try {
-                        $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
-                        if (!empty($novoStripeId) && $novoStripeId !== ($usuario->stripe_id ?? '')) {
-                            $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $novoStripeId]);
-                            $usuario = $this->usuarioService->getById($usuario->id);
-                        }
-                        $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
-                    } catch (\Exception $e2) {
-                            Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (usuario.edit)', ['exception' => $e2->getMessage()]);
-                        $metodosPagamento = [];
-                    }
-                }
-            } else {
-                $metodosPagamento = [];
-            }
-        } catch (\Exception $e) {
-            $metodosPagamento = [];
-        }
-
         $sexo = [
             'M' => 'Masculino',
             'F' => 'Feminino',
-            'O' => 'Outro'
+            'O' => 'Outro',
         ];
 
         $tiposUsuario = $this->regraService->getAllTiposUsuarios();
 
-        $paises = $this->paisService->getAllForSelectSigla();
-        $estacoes = $this->estacaoService->getAllAtivos();
-        $acessoTodasEstacoes = $usuario->hasAcessoTodasEstacoes();
-        $estacoesSelecionadas = $usuario->estacoesPermitidas()->pluck('estacoes.id')->map(fn ($id) => (int) $id)->all();
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
         [$metodo, $rota] = $this->getFormMethodAndRoute($usuario);
 
-        return view('usuario.add-edit', compact('metodosPagamento', 'usuario', 'breadcrumb', 'tiposUsuario', 'sexo', 'paises', 'estacoes', 'acessoTodasEstacoes', 'estacoesSelecionadas', 'metodo', 'rota'))->with('titulo', $this->titulo);
+        return view('usuario.add-edit', compact('usuario', 'breadcrumb', 'tiposUsuario', 'sexo', 'metodo', 'rota'))->with('titulo', $this->titulo);
     }
 
     public function update(UpdateUsuarioRequest $request, $id)
     {
         $usuario = $this->usuarioService->getById($id);
-        if (!$usuario) {
+        if (! $usuario) {
             abort(403, 'Sem acesso para editar este usuario.');
         }
 
-        // if (isset($request->stripeToken)) {
-        //     $cliente = $this->clienteStripeService->getClienteByEmail($usuario->email);
-
-        //     if ($cliente->data == []) {
-        //         throw new ClienteNaoEncontradoException();
-        //     }
-
-        //     if (count($cliente->data) > 1) {
-        //         throw new MultiplosClientesComEmailException();
-        //     }
-
-        //     $cliente = $cliente->data[0];
-        //     $this->clienteStripeService->createPaymentMethod($cliente->id, $request->stripeToken);
-        // }
-
         $this->usuarioService->updateUser($id, $request->all());
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
-    }
-
-    public function metodoPagamento($usuarioId)
-    {
-        $usuario = $this->usuarioService->getById($usuarioId);
-        if (!$usuario) {
-            abort(403, 'Sem acesso a este usuario.');
-        }
-
-        $stripeSecret = $this->resolveStripeSecret($usuario);
-
-        if($usuario->stripe_id == null){
-            return $this->redirecionaRotaRedirect('usuario.index', 'Usuário não possui código Stripe','error');
-        }
-
-        try {
-            $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
-        } catch (\Stripe\Exception\InvalidRequestException $e) {
-            Log::warning('Stripe customer invalid when loading user payment methods (metodoPagamento) - attempting reconcile', ['user_id' => $usuario->id, 'stripe_id' => $usuario->stripe_id, 'exception' => $e->getMessage()]);
-            try {
-                $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
-                if (!empty($novoStripeId) && $novoStripeId !== ($usuario->stripe_id ?? '')) {
-                    $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $novoStripeId]);
-                    $usuario = $this->usuarioService->getById($usuario->id);
-                }
-                $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
-            } catch (\Exception $e2) {
-                Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (usuario.metodoPagamento)', ['exception' => $e2->getMessage()]);
-                $metodosPagamento = [];
-            }
-        } catch (\Exception $e) {
-            $metodosPagamento = [];
-        }
-
-        $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Editar: $usuario->nome");
-        $metodo = 'POST';
-        $rota = route('usuario.adicionarMetodoPagamento', $usuarioId);
-        // Prefer company-specific publishable key when available
-        $empresa = null;
-        if (!empty($usuario->empresa_id)) {
-            $empresa = $this->gatewayEmpresaConfigService->empresaPorId((int) $usuario->empresa_id);
-        }
-        if (!$empresa) {
-            $empresa = $this->gatewayEmpresaConfigService->empresaAtual();
-        }
-        $stripePublicKey = $empresa?->stripe_public_key ?? config('services.stripe.key') ?? env('STRIPE_KEY');
-
-        return view(
-            'usuario.metodoPagamento',
-            compact(
-                'metodosPagamento',
-                'breadcrumb',
-                'usuarioId',
-                'metodo',
-                'rota',
-                'stripePublicKey'
-            )
-        )
-            ->with('titulo', 'Métodos de Pagamento');
-    }
-
-    public function adicionarMetodoPagamento(Request $request, $usuarioId)
-    {
-        $stripeToken = $request->input('stripeToken');
-        if ($stripeToken) {
-
-            $usuario = $this->usuarioService->getById($usuarioId);
-            if (!$usuario) {
-                abort(403, 'Sem acesso a este usuario.');
-            }
-            $stripeSecret = $this->resolveStripeSecret($usuario);
-            try {
-                // Garante que exista um cliente válido no Stripe (procura por email ou cria)
-                $stripeIdValido = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
-                if (!empty($stripeIdValido) && $stripeIdValido !== ($usuario->stripe_id ?? '')) {
-                    $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $stripeIdValido]);
-                    $usuario = $this->usuarioService->getById($usuario->id);
-                }
-
-                // Agora cria o método de pagamento vinculado ao cliente garantido
-                $this->clienteStripeService->criarMetodoPagamento($usuario->stripe_id, $stripeToken, $stripeSecret);
-            } catch (\Stripe\Exception\ApiErrorException $e) {
-                Log::error('Erro Stripe ao adicionar metodo de pagamento', ['user_id' => $usuario->id, 'exception' => $e->getMessage()]);
-                if ($request->expectsJson()) {
-                    return response()->json(['message' => 'Nao foi possivel adicionar o metodo de pagamento no provedor.'], 422);
-                }
-                return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Metodo de pagamento nao adicionado no provedor.', 'error');
-            } catch (\Exception $e) {
-                Log::error('Erro ao adicionar metodo de pagamento', ['user_id' => $usuario->id, 'exception' => $e->getMessage()]);
-                if ($request->expectsJson()) {
-                    return response()->json(['message' => 'Nao foi possivel adicionar o metodo de pagamento.'], 422);
-                }
-                return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Metodo de pagamento nao adicionado!', 'error');
-            }
-
-            if ($request->expectsJson()) {
-                try {
-                    $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
-                } catch (\Stripe\Exception\InvalidRequestException $e) {
-                    Log::warning('Stripe customer invalid when listing methods after add - attempting reconcile', ['user_id' => $usuario->id, 'stripe_id' => $usuario->stripe_id, 'exception' => $e->getMessage()]);
-                    try {
-                        $novoStripeId = $this->clienteStripeService->garantirClienteValido($usuario->stripe_id, $usuario->email ?? '', $usuario->nome ?? 'Cliente', $stripeSecret);
-                        if (!empty($novoStripeId) && $novoStripeId !== ($usuario->stripe_id ?? '')) {
-                            $this->usuarioService->updateUser($usuario->id, ['stripe_id' => $novoStripeId]);
-                            $usuario = $this->usuarioService->getById($usuario->id);
-                        }
-                        $metodosPagamento = $this->clienteStripeService->listarMetodosPagamento($usuario->stripe_id, $stripeSecret);
-                    } catch (\Exception $e2) {
-                        Log::warning('Erro ao reconciliar cliente Stripe ou ao listar métodos após reconcile (usuario.adicionarMetodoPagamento)', ['exception' => $e2->getMessage()]);
-                        $metodosPagamento = [];
-                    }
-                } catch (\Exception $e) {
-                    $metodosPagamento = [];
-                }
-                $metodos = collect($metodosPagamento)->map(function ($metodo) {
-                    return [
-                        'id' => (string) $metodo['id'],
-                        'brand' => (string) ($metodo['card']->brand ?? ''),
-                        'last4' => (string) ($metodo['card']->last4 ?? ''),
-                        'exp_month' => (string) ($metodo['card']->exp_month ?? ''),
-                        'exp_year' => (string) ($metodo['card']->exp_year ?? ''),
-                    ];
-                })->values()->all();
-
-                return response()->json([
-                    'message' => 'Metodo de pagamento adicionado com sucesso.',
-                    'metodos' => $metodos,
-                ]);
-            }
-
-            return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento adicionado com sucesso!');
-        }
-
-        if ($request->expectsJson()) {
-            return response()->json([
-                'message' => 'Metodo de pagamento não adicionado.',
-            ], 422);
-        }
-
-        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'MÃ©todo de pagamento não adicionado!', 'error');
-    }
-
-    public function excluirMetodoPagamento($usuarioId, $metodoId)
-    {
-        $usuario = $this->usuarioService->getById($usuarioId);
-        if (!$usuario) {
-            abort(403, 'Sem acesso a este usuario.');
-        }
-
-        $this->clienteStripeService->deletarMetodoPagamento($metodoId, $this->resolveStripeSecret($usuario));
-        return $this->redirecionaRotaRedirect('usuario.metodoPagamento', 'Metodo de pagamento excluido com sucesso!');
     }
 
     public function alterarSenha($id)
     {
         $usuario = $this->usuarioService->getById($id);
-        if (!$usuario) {
+        if (! $usuario) {
             abort(403, 'Sem acesso a este usuario.');
         }
         $breadcrumb = $this->breadcrumbService->prepararBreadcrumbEdit('Usuarios', 'usuario.index', "Alterar Senha: $usuario->nome");
@@ -592,15 +366,17 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     public function destroy($id)
     {
         $success = $this->usuarioService->delete($id);
-        if (!$success) {
+        if (! $success) {
             abort(403, 'Sem acesso para excluir este usuario.');
         }
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
     public function filtro(Request $request)
     {
         $this->criarFiltros($request, $this->nomeFiltro);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -608,6 +384,7 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
     {
         $atributo = $request->input('atributo') ?? null;
         $this->removeSessao($this->nomeFiltro, $atributo);
+
         return $this->redirecionaRotaRedirect($this->nomeFiltro);
     }
 
@@ -628,19 +405,10 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
 
     public function obterFiltrosPrincipais()
     {
-        $tiposUsuarios = $this->regraService->getAllTiposUsuarios();
-        $dataTiposUsuarios = [];
-        $dataTiposUsuarios[] = ['value' => '', 'label' => 'Selecione o status', 'selected' => false];
-
-        foreach ($tiposUsuarios as $key => $value) {
-            $dataTiposUsuarios[] = ['value' => $key, 'label' => $value, 'selected' => false];
-        }
         return [
             ['name' => 'nome', 'label' => 'Nome', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'email', 'label' => 'E-mail', 'type' => 'text', 'typeWhere' => 'like'],
             ['name' => 'celular', 'label' => 'Celular', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'cidade', 'label' => 'Cidade', 'type' => 'text', 'typeWhere' => 'like'],
-            ['name' => 'role_id', 'label' => 'Regra de Usuário', 'type' => 'select', 'typeWhere' => 'where', 'options' => $dataTiposUsuarios],
         ];
     }
 
@@ -670,18 +438,5 @@ class UsuarioController extends BaseController implements FiltroInterface, Resou
             'POST',
             route('usuario.store'),
         ];
-    }
-
-    private function resolveStripeSecret(?User $usuario = null, ?int $empresaId = null): ?string
-    {
-        $empresaId = $empresaId
-            ?? ($usuario?->empresa_id ? (int) $usuario->empresa_id : null)
-            ?? $this->gatewayEmpresaConfigService->empresaIdAtual();
-
-        $empresa = $empresaId
-            ? $this->gatewayEmpresaConfigService->empresaPorId($empresaId)
-            : $this->gatewayEmpresaConfigService->empresaAtual();
-
-        return $empresa?->stripe_secret ?: config('services.stripe.secret');
     }
 }

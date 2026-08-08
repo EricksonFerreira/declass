@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -52,14 +52,6 @@ class AuthenticatedSessionController extends Controller
 
     private function redirectPosLogin(?User $user): string
     {
-        if (!$user) {
-            return route('home');
-        }
-
-        if ($user->isAdministrador()) {
-            return route('home');
-        }
-
-        return route('reserva.minhas');
+        return route('home');
     }
 }

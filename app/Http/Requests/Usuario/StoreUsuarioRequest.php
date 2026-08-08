@@ -12,7 +12,7 @@ class StoreUsuarioRequest extends FormRequest
 {
     protected function prepareForValidation(): void
     {
-        if ($this->filled('tipo_usuario_id') && !$this->filled('role_id')) {
+        if ($this->filled('tipo_usuario_id') && ! $this->filled('role_id')) {
             $this->merge([
                 'role_id' => $this->input('tipo_usuario_id'),
             ]);
@@ -22,6 +22,15 @@ class StoreUsuarioRequest extends FormRequest
             'acesso_todas_estacoes' => $this->boolean('acesso_todas_estacoes'),
             'cadastro_reserva' => $this->boolean('cadastro_reserva'),
         ]);
+
+        if (! $this->filled('role_id')) {
+            $colaboradorRole = \App\Models\Regra::where('name', 'colaborador_administrativo')
+                ->orWhere('name', 'Colaborador Administrativo')
+                ->first();
+            $this->merge([
+                'role_id' => $colaboradorRole?->id ?? 8,
+            ]);
+        }
     }
 
     public function authorize(): bool
@@ -42,23 +51,25 @@ class StoreUsuarioRequest extends FormRequest
                 'max:150',
                 Rule::unique('users', 'email')->where(fn ($query) => $query->where('empresa_id', $empresaId)),
             ],
-            'sexo' => [$isCadastroReserva ? 'nullable' : 'required', 'string', 'max:1'],
-            'data_nascimento' => [$isCadastroReserva ? 'nullable' : 'required', 'date', 'before:' . Carbon::now()->subYears(16)->format('Y-m-d')],
-            'local_nascimento' => [$isCadastroReserva ? 'nullable' : 'required', 'string', 'max:100'],
+            'sexo' => 'nullable|string|max:1',
+            'data_nascimento' => 'nullable|date',
+            'local_nascimento' => 'nullable|string|max:100',
             'telefone' => 'nullable|string|max:20',
             'celular' => ['required', 'string', 'max:20', 'regex:/^\(\d{2}\) \d{5}-\d{4}$/'],
-            'pais_sigla' => [$isCadastroReserva ? 'nullable' : 'required', 'string', 'max:2'],
-            'zip_code' => [$isCadastroReserva ? 'nullable' : 'required', 'string', 'max:20'],
-            'cidade' => [$isCadastroReserva ? 'nullable' : 'required', 'string', 'max:100'],
-            'endereco' => [$isCadastroReserva ? 'nullable' : 'required', 'string', 'max:255'],
-            'numero_identificacao' => [$isCadastroReserva ? 'nullable' : 'required', 'string', 'max:20'],
+            'pais_sigla' => 'nullable|string|max:2',
+            'zip_code' => 'nullable|string|max:20',
+            'cidade' => 'nullable|string|max:100',
+            'endereco' => 'nullable|string|max:255',
+            'numero_identificacao' => 'nullable|string|max:20',
             'role_id' => [$isCadastroReserva ? 'nullable' : 'required', 'integer', 'exists:roles,id'],
+            'cargo' => 'required|string|max:255',
+            'ativo' => 'nullable|boolean',
             'password' => ['nullable', 'string', 'max:20'],
             'confirmacao_senha' => ['nullable', 'string', 'max:20'],
             'numero_carta_conducao' => 'nullable|string|max:20',
             'local_emissao_carta_conducao' => 'nullable|string|max:100',
             'pais_emissao_carta_conducao' => 'nullable|string|max:2',
-            'data_emissao_carta_conducao' => 'nullable|date|before:' . Carbon::now()->format('Y-m-d'),
+            'data_emissao_carta_conducao' => 'nullable|date|before:'.Carbon::now()->format('Y-m-d'),
             'data_validade_carta_conducao' => 'nullable|date|after:data_emissao_carta_conducao',
             'cadastro_reserva' => 'nullable|boolean',
             'acesso_todas_estacoes' => 'nullable|boolean',
@@ -89,6 +100,7 @@ class StoreUsuarioRequest extends FormRequest
                 if (! $acessoTodas) {
                     $v->errors()->add('acesso_todas_estacoes', 'Para o perfil Gerente, o acesso deve ser a todas as estacoes.');
                 }
+
                 return;
             }
 
@@ -99,6 +111,7 @@ class StoreUsuarioRequest extends FormRequest
                 if ($count !== 1) {
                     $v->errors()->add('estacoes', 'Para Colaborador Administrativo, selecione exatamente 1 estacao.');
                 }
+
                 return;
             }
 
@@ -109,6 +122,7 @@ class StoreUsuarioRequest extends FormRequest
                 if ($count < 1 || $count > 3) {
                     $v->errors()->add('estacoes', 'Para Colaborador Chefe, selecione de 1 a 3 estacoes.');
                 }
+
                 return;
             }
 

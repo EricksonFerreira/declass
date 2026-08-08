@@ -49,6 +49,8 @@ class User extends Authenticatable implements MustVerifyEmail
         'forcar_troca_senha',
         'foto_perfil',
         'saldo_atual',
+        'cargo',
+        'ativo',
     ];
 
     /**

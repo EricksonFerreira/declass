@@ -19,14 +19,26 @@ class ReportController extends Controller
 
     public function membros()
     {
-        $users = User::paginate(15);
+        $search = request('search');
+        $users = User::where('empresa_id', auth()->user()->empresa_id)
+            ->when($search, function ($query, $search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nome', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->paginate(15);
+
         $breadcrumb = [
             ['name' => 'Home', 'url' => route('home')],
             ['name' => 'Painel', 'url' => route('home')],
             ['name' => 'Membros', 'active' => true],
         ];
 
-        return View::make('relatorios.membros', ['users' => $users, 'breadcrumb' => $breadcrumb]);
+        return View::make('relatorios.membros', [
+            'users' => $users,
+            'breadcrumb' => $breadcrumb,
+        ]);
     }
 
     // New method to store a new member (user)
@@ -35,16 +47,48 @@ class ReportController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'password' => 'required|string|min:6',
+            'cargo' => 'required|string|max:255',
         ]);
+        $validated['password'] = 'Senh@123';
         $action->handle($validated);
 
         return redirect()->route('relatorios.membros')->with('success', 'Membro criado com sucesso.');
     }
 
+    public function updateMembro(Request $request, $id)
+    {
+        $user = User::where('empresa_id', auth()->user()->empresa_id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,'.$user->id,
+            'cargo' => 'required|string|max:255',
+        ]);
+
+        $user->update([
+            'nome' => $validated['name'],
+            'email' => $validated['email'],
+            'cargo' => $validated['cargo'],
+        ]);
+
+        return redirect()->route('relatorios.membros')->with('success', 'Membro atualizado com sucesso.');
+    }
+
+    public function resetPassword(Request $request, $id)
+    {
+        $user = User::where('empresa_id', auth()->user()->empresa_id)->findOrFail($id);
+
+        $user->update([
+            'password' => \Illuminate\Support\Facades\Hash::make('Senh@123'),
+            'forcar_troca_senha' => true,
+        ]);
+
+        return redirect()->route('relatorios.membros')->with('success', 'Senha do membro resetada com sucesso para "Senh@123". Ele será forçado a mudá-la no primeiro acesso.');
+    }
+
     public function destroyMembro($id)
     {
-        $user = User::findOrFail($id);
+        $user = User::where('empresa_id', auth()->user()->empresa_id)->findOrFail($id);
         $user->delete();
 
         return redirect()->route('relatorios.membros')->with('success', 'Membro excluído com sucesso.');
@@ -58,6 +102,7 @@ class ReportController extends Controller
             ['name' => 'Relatórios', 'url' => route('relatorios.index')],
             ['name' => 'Horas Trabalhadas', 'active' => true],
         ];
+
         return View::make('relatorios.horas-trabalhadas', ['breadcrumb' => $breadcrumb]);
     }
 
