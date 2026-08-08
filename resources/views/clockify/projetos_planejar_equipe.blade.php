@@ -82,13 +82,16 @@
     // Build JS-safe data about existing allocations keyed by user_id
     $alocacoesJs = [];
     foreach ($alocacoes as $userId => $userAlocs) {
-        $first = $userAlocs->first();
-        $alocacoesJs[$userId] = [
-            'data_inicio'  => $first->data_inicio  ?? null,
-            'data_fim'     => $first->data_fim      ?? null,
-            'horas_por_dia'=> $first->horas_por_dia ?? 8,
-            'observacao'   => $first->observacao    ?? '',
-        ];
+        foreach ($userAlocs as $aloc) {
+            $cronId = $aloc->clockify_projeto_cronograma_id ?? 'all';
+            $alocacoesJs[$userId][$cronId] = [
+                'cronograma_id'=> $aloc->clockify_projeto_cronograma_id,
+                'data_inicio'  => $aloc->data_inicio  ? $aloc->data_inicio->format('Y-m-d') : null,
+                'data_fim'     => $aloc->data_fim     ? $aloc->data_fim->format('Y-m-d') : null,
+                'horas_por_dia'=> $aloc->horas_por_dia ?? 8,
+                'observacao'   => $aloc->observacao    ?? '',
+            ];
+        }
     }
 @endphp
 
@@ -214,9 +217,13 @@
                                             <tbody>
                                                 @foreach($time->users as $idx => $user)
                                                     @php
-                                                        $aloc = $alocacoesJs[$user->id] ?? null;
+                                                        $userAlocs = $alocacoesJs[$user->id] ?? null;
+                                                        // Tenta pegar a alocação específica desta etapa ou a primeira disponível
+                                                        $aloc = null;
+                                                        if ($userAlocs) {
+                                                            $aloc = reset($userAlocs); // Pega a primeira alocação encontrada
+                                                        }
                                                         $isAllocated = $aloc !== null;
-                                                        // unique key: teamId_userIdx
                                                         $key = $time->id . '_' . $idx;
                                                     @endphp
                                                     <tr class="member-row {{ $isAllocated ? 'member-row-allocated' : '' }}"
@@ -284,7 +291,7 @@
                                                                    min="{{ $dataInicioGlobal }}"
                                                                    max="{{ $dataFimGlobal }}"
                                                                    {{ $isAllocated ? 'required' : '' }}
-                                                                   value="{{ $aloc['data_inicio'] ? \Carbon\Carbon::parse($aloc['data_inicio'])->format('Y-m-d') : '' }}"
+                                                                   value="{{ ($aloc && $aloc['data_inicio']) ? $aloc['data_inicio'] : '' }}"
                                                                    onchange="validateDateRange('{{ $key }}')">
                                                             @if($dataInicioGlobal)
                                                                 <span class="date-hint">mín: {{ \Carbon\Carbon::parse($dataInicioGlobal)->format('d/m/Y') }}</span>
@@ -298,7 +305,7 @@
                                                                    min="{{ $dataInicioGlobal }}"
                                                                    max="{{ $dataFimGlobal }}"
                                                                    {{ $isAllocated ? 'required' : '' }}
-                                                                   value="{{ $aloc['data_fim'] ? \Carbon\Carbon::parse($aloc['data_fim'])->format('Y-m-d') : '' }}"
+                                                                   value="{{ ($aloc && $aloc['data_fim']) ? $aloc['data_fim'] : '' }}"
                                                                    onchange="validateDateRange('{{ $key }}')">
                                                             @if($dataFimGlobal)
                                                                 <span class="date-hint">máx: {{ \Carbon\Carbon::parse($dataFimGlobal)->format('d/m/Y') }}</span>
